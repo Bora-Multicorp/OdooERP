@@ -11,8 +11,10 @@
 
     # always loaded
     'data': [
-        #'security/res_group.xml',
-        #'views/custom_partner.xml',
+        'security/ir.model.access.csv',
+        'views/custom_partner.xml',
+        'views/master_view.xml',
+        'data/master_data.xml',
     ],
 
 }

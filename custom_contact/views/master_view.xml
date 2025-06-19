@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Type -->
+        <record id="res_partner_location_type_view_form" model="ir.ui.view">
+            <field name="name">Type</field>
+            <field name="model">res.partner.location.type</field>
+            <field name="arch" type="xml">
+                <form string="Type">
+                    <sheet>
+                        <group col="4">
+                            <field name="name"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="res_partner_location_type_view_list" model="ir.ui.view">
+            <field name="name">Type</field>
+            <field name="model">res.partner.location.type</field>
+            <field name="arch" type="xml">
+                <list string="Type" editable="bottom">
+                    <field name="name"/>
+                </list>
+            </field>
+        </record>
+
+        <record id="res_partner_location_type_view_search" model="ir.ui.view">
+            <field name="name">res.partner.location.type.view.search</field>
+            <field name="model">res.partner.location.type</field>
+            <field name="arch" type="xml">
+                <search string="Search Location Type">
+                    <field name="name"/>
+                </search>
+            </field>
+        </record>
+
+        <record id="res_partner_location_type_action" model="ir.actions.act_window">
+            <field name="name">Type</field>
+            <field name="res_model">res.partner.location.type</field>
+            <field name="view_mode">list,form</field>
+            <field name="search_view_id" ref="res_partner_location_type_view_search"/>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Create an Type
+                </p>
+            </field>
+        </record>
+
+        <!-- Address Type -->
+        <record id="res_partner_address_type_view_form" model="ir.ui.view">
+            <field name="name">Address Type</field>
+            <field name="model">res.partner.address.type</field>
+            <field name="arch" type="xml">
+                <form string="Address Type">
+                    <sheet>
+                        <group col="4">
+                            <field name="name"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="res_partner_address_type_view_list" model="ir.ui.view">
+            <field name="name">Address Type</field>
+            <field name="model">res.partner.address.type</field>
+            <field name="arch" type="xml">
+                <list string="Address Type" editable="bottom">
+                    <field name="name"/>
+                </list>
+            </field>
+        </record>
+
+        <record id="res_partner_address_type_view_search" model="ir.ui.view">
+            <field name="name">res.partner.address.type.view.search</field>
+            <field name="model">res.partner.address.type</field>
+            <field name="arch" type="xml">
+                <search string="Search Address Type">
+                    <field name="name"/>
+                </search>
+            </field>
+        </record>
+
+        <record id="res_partner_address_type_action" model="ir.actions.act_window">
+            <field name="name">Address Type</field>
+            <field name="res_model">res.partner.address.type</field>
+            <field name="view_mode">list,form</field>
+            <field name="search_view_id" ref="res_partner_address_type_view_search"/>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Create an Address Type
+                </p>
+            </field>
+        </record>
+
+        <menuitem id="res_partner_location_type_menu" name="Type" action="custom_contact.res_partner_location_type_action"
+                  parent="contacts.res_partner_menu_config" sequence="4"/>
+        <menuitem id="res_partner_address_type_menu" name="Address Type" action="custom_contact.res_partner_address_type_action"
+                  parent="contacts.res_partner_menu_config" sequence="4"/>
+
+    </data>
+</odoo>

@@ -16,3 +16,8 @@ class CustomContact(models.Model):
                 for node in arch.xpath('//form | //kanban | //list'):
                     node.set('create', 'false')
         return arch, view
+
+    custom_type = fields.Many2one('res.partner.location.type', tracking=True, help='Contact Location Type', copy=False)
+    custom_address_type = fields.Many2one('res.partner.address.type', tracking=True, help='Contact Address Type', copy=False)
+    tally_name = fields.Char(string="Tally Name", tracking=True)
+    purpose = fields.Char(string="Purpose", tracking=True)
