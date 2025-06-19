@@ -1,4 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <odoo>
+    <record id="view_partner_form" model="ir.ui.view">
+        <field name="name">res.partner.form.inherit.custom.fields</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook/page[@name='contact_addresses']/field[@name='child_ids']/form/sheet/group/group[2]"
+                   position="after">
+                <group>
+                    <field name="custom_type" widget="selection"/>
+                    <field name="custom_address_type" widget="selection"/>
+                    <field name="tally_name"/>
+                    <field name="purpose"/>
+                </group>
+            </xpath>
+            <!--<xpath expr="//notebook/page[@name='contact_addresses']/field[@name='child_ids']/form/sheet/group/group[2]/field[@name='mobile']"
+                   position="after">
+                <field name="tally_name"/>
+                <field name="purpose"/>
+            </xpath>-->
+        </field>
+    </record>
 
 </odoo>
