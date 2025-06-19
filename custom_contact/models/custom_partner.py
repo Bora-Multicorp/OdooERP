@@ -17,7 +17,7 @@ class CustomContact(models.Model):
                     node.set('create', 'false')
         return arch, view
 
-    custom_type = fields.Many2one('res.partner.location.type', tracking=True, help='Contact Location Type', copy=False)
-    custom_address_type = fields.Many2one('res.partner.address.type', tracking=True, help='Contact Address Type', copy=False)
+    custom_type = fields.Many2one('res.partner.location.type', string="Type", tracking=True, help='Contact Location Type', copy=False)
+    custom_address_type = fields.Many2one('res.partner.address.type', string="Address Type", tracking=True, help='Contact Address Type', copy=False)
     tally_name = fields.Char(string="Tally Name", tracking=True)
     purpose = fields.Char(string="Purpose", tracking=True)
