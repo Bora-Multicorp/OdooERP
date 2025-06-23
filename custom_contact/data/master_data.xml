@@ -39,6 +39,46 @@
         <record id="res_partner_address_type_dreame" model="res.partner.address.type">
             <field name="name">Dreame</field>
         </record>
-
+        <!-- Constitution of Business -->
+        <record id="constitution_business_sole_proprietor" model="constitution.business">
+            <field name="name">Sole Proprietor</field>
+        </record>
+        <record id="constitution_business_partnership" model="constitution.business">
+            <field name="name">Partnership</field>
+        </record>
+        <record id="constitution_business_pvt_ltd_co" model="constitution.business">
+            <field name="name">Pvt Ltd Co.</field>
+        </record>
+        <record id="constitution_business_llp" model="constitution.business">
+            <field name="name">LLP</field>
+        </record>
+        <record id="constitution_business_huf" model="constitution.business">
+            <field name="name">HUF(Karta)</field>
+        </record>
+        <record id="constitution_business_other" model="constitution.business">
+            <field name="name">Other:</field>
+        </record>
+        <!-- Number of Managing Partner / Directors -->
+        <record id="number_partner_director_1" model="number.partner.director">
+            <field name="name">1</field>
+        </record>
+        <record id="number_partner_director_2" model="number.partner.director">
+            <field name="name">2</field>
+        </record>
+        <record id="number_partner_director_3" model="number.partner.director">
+            <field name="name">3</field>
+        </record>
+        <record id="number_partner_director_4" model="number.partner.director">
+            <field name="name">4</field>
+        </record>
+        <record id="number_partner_director_5" model="number.partner.director">
+            <field name="name">5</field>
+        </record>
+        <record id="number_partner_director_6" model="number.partner.director">
+            <field name="name">6</field>
+        </record>
+        <record id="number_partner_director_7" model="number.partner.director">
+            <field name="name">7</field>
+        </record>
     </data>
 </odoo>

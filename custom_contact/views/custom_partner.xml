@@ -14,10 +14,50 @@
                     <field name="purpose"/>
                 </group>
             </xpath>
-            <!--<xpath expr="//notebook/page[@name='contact_addresses']/field[@name='child_ids']/form/sheet/group/group[2]/field[@name='mobile']"
-                   position="after">
-                <field name="tally_name"/>
-                <field name="purpose"/>
+            <xpath expr="//form/sheet" position="before">
+                <header>
+                    <button name="%(vendor_kyc_wizard_action)d" string="Vendor/Customer KYC" type="action"
+                            class="btn btn-primary"
+                            display="always"/>
+                </header>
+            </xpath>
+            <xpath expr="//field[@name='vat']" position="after">
+                <field name="is_vendor"/>
+                <field name="is_customer"/>
+            </xpath>
+
+
+            <!--<xpath expr="//notebook/page[@name='internal_notes]" position="after">
+                <page name="vendor_customer_details" string="Vendor/Customer KYC Details">
+                    <group>
+                        <field name="vendor_customer_email"/>
+                        <field name="point_of_contact"/>
+                        <field name="business_name"/>
+                        <field name="trade_name"/>
+                        <field name="address"/>
+                        <field name="city"/>
+                        <field name="pincode"/>
+                        <field name="add_address"/>
+                        <field name="add_city"/>
+                        <field name="add_pincode"/>
+                        <field name="contact_no"/>
+                        <field name="email_add"/>
+                        <field name="const_business"/>
+                        <field name="no_partner_director"/>
+                        <field name="name_owner"/>
+                        <field name="bus_contact_number"/>
+                        <field name="email_address"/>
+                        <field name="aadhaar_card"/>
+                        <field name="pan_card"/>
+                        <field name="gst_no"/>
+                        <field name="udyam_cert_no"/>
+                        <field name="gst_cert" widget="many2many_binary"/>
+                        <field name="shop_documents" widget="many2many_binary"/>
+                        <field name="gst_return_duration"/>
+                        <field name="shop_photos" widget="many2many_binary"/>
+                        <field name="shop_videos" widget="many2many_binary"/>
+                    </group>
+                </page>
             </xpath>-->
         </field>
     </record>
