@@ -71,6 +71,13 @@ class VendorKycWizard(models.TransientModel):
         required=True,
         help="Short Video / Walkway from outdoor / indoor. Must include - signage Board with GST Number."
     )
+    bank_name = fields.Char("Bank Name", required=True)
+    account_no = fields.Char("Account Number", required=True)
+    ifsc_code = fields.Char("IFSC Code", required=True)
+    bank_address = fields.Text("Bank Address", required=True)
+    cancelled_cheque = fields.Many2many('ir.attachment', 'vendor_kyc_cancel_cheque_rel', 'wizard_id', 'attachment_id',
+                                   string="Cancelled Cheque", required=True,
+                                   help="Short Video / Walkway from outdoor / indoor. Must include - signage Board with GST Number.")
 
     @api.model
     def default_get(self, fields_list):
