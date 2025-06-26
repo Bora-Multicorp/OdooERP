@@ -12,10 +12,10 @@
     # always loaded
     'data': [
         'security/ir.model.access.csv',
+        'data/master_data.xml',
         'wizard/vendor_kyc_views.xml',
         'views/custom_partner.xml',
         'views/master_view.xml',
-        'data/master_data.xml',
 
     ],
 

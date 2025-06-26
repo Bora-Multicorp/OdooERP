@@ -26,39 +26,39 @@
                 <field name="is_customer"/>
             </xpath>
 
-
-            <!--<xpath expr="//notebook/page[@name='internal_notes]" position="after">
+            <xpath expr="//notebook" position="inside">
                 <page name="vendor_customer_details" string="Vendor/Customer KYC Details">
                     <group>
-                        <field name="vendor_customer_email"/>
+                        <!--<field name="vendor_customer_email"/>-->
                         <field name="point_of_contact"/>
-                        <field name="business_name"/>
-                        <field name="trade_name"/>
-                        <field name="address"/>
-                        <field name="city"/>
-                        <field name="pincode"/>
-                        <field name="add_address"/>
-                        <field name="add_city"/>
-                        <field name="add_pincode"/>
-                        <field name="contact_no"/>
-                        <field name="email_add"/>
+                        <field name="business_legal_name"/>
+                        <field name="business_trade_name"/>
+                        <field name="business_street"/>
+                        <field name="business_city"/>
+                        <field name="business_pincode"/>
+                        <field name="additional_street"/>
+                        <field name="additional_city"/>
+                        <field name="additional_zip"/>
+                        <field name="additional_phone"/>
+                        <field name="additional_email"/>
                         <field name="const_business"/>
                         <field name="no_partner_director"/>
-                        <field name="name_owner"/>
-                        <field name="bus_contact_number"/>
-                        <field name="email_address"/>
+                        <field name="director_name"/>
+                        <field name="director_phone"/>
+                        <field name="director_email"/>
                         <field name="aadhaar_card"/>
                         <field name="pan_card"/>
                         <field name="gst_no"/>
-                        <field name="udyam_cert_no"/>
-                        <field name="gst_cert" widget="many2many_binary"/>
-                        <field name="shop_documents" widget="many2many_binary"/>
+                        <field name="udyam_number"/>
+                        <field name="gst_certificate" widget="many2many_binary"/>
+                        <field name="udyam_document" widget="many2many_binary"/>
                         <field name="gst_return_duration"/>
                         <field name="shop_photos" widget="many2many_binary"/>
                         <field name="shop_videos" widget="many2many_binary"/>
+                        <field name="bank_cheque_attachments" widget="many2many_binary"/>
                     </group>
                 </page>
-            </xpath>-->
+            </xpath>
         </field>
     </record>
 

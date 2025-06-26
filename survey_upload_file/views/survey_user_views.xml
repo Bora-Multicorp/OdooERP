@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Inherit USER INPUTS Form View -->
+    <record id="inherit_survey_user_input_view_form" model="ir.ui.view">
+        <field name="name">survey.user_input.view.form.inherit</field>
+        <field name="model">survey.user_input</field>
+        <field name="inherit_id" ref="survey.survey_user_input_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//button[@name='action_print_answers']" position="after">
+                <button name="action_testing" string="Test" type="object" class="btn-primary" invisible="1"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!--    Inherited the survey.user_input.line to add fields -->
+    <record id="survey_user_input_line_view_form" model="ir.ui.view">
+        <field name="name">survey.user_input.line.view.form.inherit.survey.upload.file</field>
+        <field name="model">survey.user_input.line</field>
+        <field name="inherit_id" ref="survey.survey_user_input_line_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='suggested_answer_id']" position="after">
+                <field name="value_file_data_ids">
+                    <list>
+                        <field name="name"/>
+                        <field name="file_size"/>
+                        <field name="type"/>
+                    </list>
+                </field>
+            </xpath>
+        </field>
+    </record>
+</odoo>
