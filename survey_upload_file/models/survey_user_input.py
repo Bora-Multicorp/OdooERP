@@ -84,12 +84,7 @@ class SurveyUserInput(models.Model):
         if not vendor_survey or self.survey_id != vendor_survey:
             return  # We only process the vendor KYC form
 
-        partner = self.partner_id
-        if not partner:
-            return  # No linked contact
-
         Q = self.env.ref  # shortcut
-
         # Map question IDs to partner field names
         question_map = {
             # Basic text/char fields
@@ -105,13 +100,17 @@ class SurveyUserInput(models.Model):
             Q("survey_upload_file.additional_pincode_kyc_survey").id: "additional_zip",
             Q("survey_upload_file.additional_contact_no_kyc_survey").id: "additional_phone",
             Q("survey_upload_file.additional_email_kyc_survey").id: "additional_email",
-            Q("survey_upload_file.business_constitution_kyc_survey").id: "const_business",
+            #Q("survey_upload_file.business_constitution_kyc_survey").id: "const_business",
             Q("survey_upload_file.director_name_kyc_survey").id: "director_name",
             Q("survey_upload_file.director_contact_no_kyc_survey").id: "director_phone",
             Q("survey_upload_file.director_email_kyc_survey").id: "director_email",
             Q("survey_upload_file.gst_no_kyc_survey").id: "gst_no",
             Q("survey_upload_file.udyam_certificate_kyc_survey").id: "udyam_number",
             Q("survey_upload_file.gst_duration_kyc_survey").id: "gst_return_duration",
+            Q("survey_upload_file.bank_name_kyc_survey").id: "bank_name",
+            Q("survey_upload_file.account_no_kyc_survey").id: "account_no",
+            Q("survey_upload_file.ifsc_code_kyc_survey").id: "ifsc_code",
+            Q("survey_upload_file.bank_address_kyc_survey").id: "bank_address",
 
             # File uploads
             Q("survey_upload_file.aadhaar_card_kyc_survey").id: "aadhaar_card",
@@ -134,7 +133,6 @@ class SurveyUserInput(models.Model):
             # Text inputs
             if qtype in ("char_box", "text_box"):
                 values[field_name] = line.value_char_box
-
             # Choice fields
             elif qtype == "simple_choice":
                 # single-select radio
@@ -143,7 +141,6 @@ class SurveyUserInput(models.Model):
                     values[field_name] = line.suggested_answer_id.value
                 elif line.value_char_box:  # respondent typed “Other”
                     values[field_name] = line.value_char_box
-
             elif qtype == "multiple_choice":
                 keys = line.suggested_answer_ids.mapped("value")  # ['key1', 'key2', ...]
                 if keys:
@@ -153,13 +150,11 @@ class SurveyUserInput(models.Model):
                 elif line.value_char_box:
                     values[field_name] = line.value_char_box
 
-
             # File uploads
             elif qtype == "upload_file":
                 files = line.value_file_data_ids
                 if not files:
                     continue
-
                 # Store multiple file attachments, store as relationship
                 if not line.question_id.upload_multiple_file:
                     # Single file upload (e.g., to Binary field)
@@ -167,8 +162,14 @@ class SurveyUserInput(models.Model):
                 else:
                     # Multiple file upload (Many2many)
                     values[field_name] = [(6, 0, files.ids)]
-
-
         if values:
-            partner.write(values)
+            if self.partner_id:
+                #self.partner_id.write(values)
+                values['partner_id'] = self.partner_id.id
+                self.env['res.partner.kyc.detail'].create(values)
+            elif self.email:
+                partner = self.env['res.partner'].search([('email', '=', self.email)], limit=1)
+                #partner.write(values)
+                values['partner_id'] = partner.id
+                self.env['res.partner.kyc.detail'].create(values)
 

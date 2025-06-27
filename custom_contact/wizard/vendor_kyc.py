@@ -8,76 +8,57 @@ class VendorKycWizard(models.TransientModel):
     _description = 'Vendor KYC Wizard'
 
     partner_id = fields.Many2one('res.partner', string='Contact', domain="[('id', '=', active_id)]")
-    email = fields.Char("Email", required=1)
-    point_of_contact = fields.Char("Point of Contact", required=1)
-    business_name = fields.Char("Business Legal Name", required=1)
-    trade_name = fields.Char("Business Trade Name", required=1)
-    street = fields.Char("Address", required=1)
-    street2 = fields.Char("Address")
-    city = fields.Char("City", required=1)
-    pincode = fields.Char("Pincode", required=1)
-    add_address = fields.Char("Address")
-    add_city = fields.Char("City")
-    add_pincode = fields.Char("Pincode")
-    contact_no = fields.Char("Contact Number")
-    email_add = fields.Char("Email Address")
-    const_business = fields.Many2one('constitution.business', string="Constitution of Business")
-    other_business = fields.Char()
-    no_partner_director = fields.Many2one('number.partner.director', string="Number of Managing Partner / Directors")
-    name_owner = fields.Char(string="Name of the Owner / Director", required=1)
-    bus_contact_number = fields.Char(string="Contact Number", required=1)
-    email_address = fields.Char(string="Email Address", required=1)
-    aadhaar_card = fields.Binary(string="Aadhaar Card", required=1)
-    pan_card = fields.Binary(string="PAN Card (Proprietor)", required=1)
-    gst_no = fields.Char(string="GST Number", required=1)
-    udyam_cert_no = fields.Char(string="Udyam Certificate Number")
-    gst_cert = fields.Many2many('ir.attachment',
-        'vendor_kyc_gst_cert_rel',
-        'wizard_id',
-        'attachment_id',
-        string="Company GST Certificate",
-        required=True
-    )
+    email = fields.Char("Email", required=True)
+    point_of_contact = fields.Char("Point of Contact", required=True)
+    business_legal_name = fields.Char("Business Legal Name", required=True)
+    business_trade_name = fields.Char("Business Trade Name", required=True)
+    business_street = fields.Char("Address", required=True)
+    business_city = fields.Char("City", required=True)
+    business_pincode = fields.Char("Pincode", required=True)
+    additional_street = fields.Char("Address")
+    additional_city = fields.Char("City")
+    additional_zip = fields.Char("Pincode")
+    additional_phone = fields.Char("Contact Number", required=True)
+    additional_email = fields.Char("Email Address")
+    const_business = fields.Selection([('Sole Proprietor', 'Sole Proprietor'),
+                                              ('Partnership', 'Partnership'),
+                                              ('Pvt Ltd Co.', 'Pvt Ltd Co.'),
+                                              ('LLP', 'LLP'),
+                                              ('HUF(Karta)', 'HUF(Karta)'),
+                                              ], string="Constitution of Business", required=True)
+    # const_business = fields.Many2one('constitution.business', string="Constitution of Business", required=True)
+    other_business = fields.Char("If Other, Specify?")
+    # no_partner_director = fields.Many2one('number.partner.director', string="Number of Managing Partner / Directors")
+    director_name = fields.Char(string="Name of the Owner / Director", required=True)
+    director_phone = fields.Char(string="Contact Number", required=True)
+    director_email = fields.Char(string="Email Address", required=True)
+    aadhaar_card = fields.Binary(string="Aadhaar Card")
+    pan_card = fields.Binary(string="PAN Card (Proprietor)")
+    gst_no = fields.Char(string="GST Number", required=True)
+    udyam_number = fields.Char(string="Udyam Certificate Number")
+    gst_certificate = fields.Many2many('ir.attachment', 'vendor_kyc_gst_cert_rel', 'wizard_id', 'attachment_id',
+                                       string="Company GST Certificate", required=True)
 
-    shop_documents = fields.Many2many(
-        'ir.attachment',
-        'vendor_kyc_shop_documents_rel',
-        'wizard_id',
-        'attachment_id',
-        string="Shop Act documents / Udyam Documents",
-        required=True
-    )
+    udyam_document = fields.Many2many('ir.attachment', 'vendor_kyc_shop_documents_rel', 'wizard_id', 'attachment_id',
+                                      string="Shop Act documents / Udyam Documents", required=True)
 
-    gst_return_duration = fields.Selection(
-        [('monthly', 'Monthly'), ('quarterly', 'Quarterly')],
-        required=True,
-        string="GST Return duration"
-    )
+    gst_return_duration = fields.Selection([('Monthly', 'Monthly'), ('Quarterly', 'Quarterly')],
+                                           required=True, string="GST Return duration")
 
-    shop_photos = fields.Many2many('ir.attachment',
-        'vendor_kyc_shop_photos_rel',
-        'wizard_id',
-        'attachment_id',
-        string="Shop Photos",
-        required=True,
-        help="Short Video / Walkway from outdoor / indoor. Must include - signage Board with GST Number."
-    )
-
-    shop_videos = fields.Many2many('ir.attachment',
-        'vendor_kyc_shop_videos_rel',
-        'wizard_id',
-        'attachment_id',
-        string="Shop Videos",
-        required=True,
-        help="Short Video / Walkway from outdoor / indoor. Must include - signage Board with GST Number."
-    )
-    bank_name = fields.Char("Bank Name", required=True)
-    account_no = fields.Char("Account Number", required=True)
-    ifsc_code = fields.Char("IFSC Code", required=True)
-    bank_address = fields.Text("Bank Address", required=True)
-    cancelled_cheque = fields.Many2many('ir.attachment', 'vendor_kyc_cancel_cheque_rel', 'wizard_id', 'attachment_id',
-                                   string="Cancelled Cheque", required=True,
+    shop_photos = fields.Many2many('ir.attachment', 'vendor_kyc_shop_photos_rel', 'wizard_id', 'attachment_id',
+                                   string="Shop Photos", required=True,
                                    help="Short Video / Walkway from outdoor / indoor. Must include - signage Board with GST Number.")
+
+    shop_videos = fields.Many2many('ir.attachment', 'vendor_kyc_shop_videos_rel', 'wizard_id', 'attachment_id',
+                                   string="Shop Videos", required=True,
+                                   help="Short Video / Walkway from outdoor / indoor. Must include - signage Board with GST Number.")
+
+    bank_name = fields.Char(string="Bank Name", required=True)
+    account_no = fields.Char(string="Account Number", required=True)
+    ifsc_code = fields.Char(string="IFSC Code", required=True)
+    bank_address = fields.Char(string="Bank Address", required=True)
+    bank_cheque_attachments = fields.Many2many('ir.attachment', 'vendor_kyc_bank_cheque_rel', 'wizard_id',
+                                               'attachment_id', string="Cancelled Cheques")
 
     @api.model
     def default_get(self, fields_list):
@@ -88,63 +69,55 @@ class VendorKycWizard(models.TransientModel):
             previous_record = self.env[res_model].browse(res_id)
             if previous_record:
                 values['email'] = previous_record.email
-                values['street'] = previous_record.street
-                values['street2'] = previous_record.street2
-                values['city'] = previous_record.city
-                values['state_id'] = previous_record.state_id.id
-                values['pincode'] = previous_record.zip
-                values['country_id'] = previous_record.country_id.id
-                values['mobile'] = previous_record.mobile
+                # values['street'] = previous_record.street
+                # values['street2'] = previous_record.street2
+                # values['city'] = previous_record.city
+                # values['state_id'] = previous_record.state_id.id
+                # values['pincode'] = previous_record.zip
+                # values['country_id'] = previous_record.country_id.id
+                # values['mobile'] = previous_record.mobile
 
             return values
 
     def action_vendor_kyc_done(self):
         self.ensure_one()
-        partner = self.partner_id
 
-        if not partner:
+        if not self.partner_id:
             return
 
-        # Basic field mappings (many fields share the same name)
-        values = {
-            'vendor_customer_email': self.email,
+        self.env['res.partner.kyc.detail'].create({
+            'partner_id': self.partner_id.id,
+            'email': self.email,
             'point_of_contact': self.point_of_contact,
-            'business_name': self.business_name,
-            'trade_name': self.trade_name,
-            'city': self.city,
-            'pincode': self.pincode,
-            'add_address': self.add_address,
-            'add_city': self.add_city,
-            'add_pincode': self.add_pincode,
-            'contact_no': self.contact_no,
-            'email_add': self.email_add,
-            'const_business': self.const_business.id,
-            'no_partner_director': self.no_partner_director.id,
-            'name_owner': self.name_owner,
-            'bus_contact_number': self.bus_contact_number,
-            'email_address': self.email_address,
+            'business_legal_name': self.business_legal_name,
+            'business_trade_name': self.business_trade_name,
+            'business_street': self.business_street,
+            'business_city': self.business_city,
+            'business_pincode': self.business_pincode,
+            'additional_street': self.additional_street,
+            'additional_city': self.additional_city,
+            'additional_zip': self.additional_zip,
+            'additional_phone': self.additional_phone,
+            'additional_email': self.additional_email,
+            'const_business': self.const_business,
+            'other_business': self.other_business,
+            'director_name': self.director_name,
+            'director_phone': self.director_phone,
+            'director_email': self.director_email,
             'aadhaar_card': self.aadhaar_card,
             'pan_card': self.pan_card,
             'gst_no': self.gst_no,
-            'udyam_cert_no': self.udyam_cert_no,
+            'udyam_number': self.udyam_number,
+            'gst_certificate': [(6, 0, self.gst_certificate.ids)],
+            'udyam_document': [(6, 0, self.udyam_document.ids)],
             'gst_return_duration': self.gst_return_duration,
-
-        }
-
-        # Write basic fields
-        partner.write(values)
-
-        # Write many2many fields separately
-        partner.gst_cert = [(6, 0, self.gst_cert.ids)]
-        partner.shop_documents = [(6, 0, self.shop_documents.ids)]
-        partner.shop_photos = [(6, 0, self.shop_photos.ids)]
-        partner.shop_videos = [(6, 0, self.shop_videos.ids)]
-
-        # Write customer/vendor option
-        # if self.vendor_customer == 'vendor':
-        #     partner.write({'supplier_rank': 1})
-        # else:
-        #     partner.write({'customer_rank': 1})
+            'shop_photos': [(6, 0, self.shop_photos.ids)],
+            'shop_videos': [(6, 0, self.shop_videos.ids)],
+            'bank_name': self.bank_name,
+            'account_no': self.account_no,
+            'ifsc_code': self.ifsc_code,
+            'bank_address': self.bank_address,
+            'bank_cheque_attachments': [(6, 0, self.bank_cheque_attachments.ids)],
+        })
 
         return {'type': 'ir.actions.act_window_close'}
-

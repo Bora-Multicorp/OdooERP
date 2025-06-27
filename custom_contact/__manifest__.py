@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 {
-    'name': "custom_contact",
+    'name': "Vendor KYC",
 
     'summary': "Custom Contact",
     'category': 'Uncategorized',
