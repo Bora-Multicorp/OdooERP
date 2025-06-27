@@ -72,7 +72,9 @@ class SurveyUserInput(models.Model):
             'value_file_data_ids': [(6, 0, attachment_ids)],
         }
 
-    #def action_testing(self):
+    def action_testing(self):
+        pass
+
     def _mark_done(self):
         super()._mark_done()  # Ensure the base behavior is triggered
 
