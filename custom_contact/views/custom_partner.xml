@@ -21,7 +21,8 @@
         <field name="inherit_id" ref="sale.view_order_form"/>
         <field name="arch" type="xml">
             <xpath expr="//field[@name='partner_id']" position="replace">
-                <field name="partner_id" widget="res_partner_many2one" options="{'no_create': True, 'no_create_edit': True}"
+                <field name="partner_id" widget="res_partner_many2one"
+                       options="{'no_create': True, 'no_create_edit': True}"
                        context="{'res_partner_search_mode': 'customer', 'show_address': 1, 'show_vat': True}"
                        placeholder="Type to find a customer..." readonly="state in ['cancel', 'sale']"/>
             </xpath>
@@ -44,46 +45,100 @@
             <xpath expr="//form/sheet" position="before">
                 <header>
                     <button name="%(vendor_kyc_wizard_action)d" string="Vendor/Customer KYC" type="action"
-                            class="btn btn-primary"
+                            class="btn btn-primary" invisible="is_kyc"
                             display="always"/>
                 </header>
             </xpath>
-            <xpath expr="//field[@name='vat']" position="after">
+            <xpath expr="//field[@name='category_id']" position="after">
                 <field name="is_vendor"/>
                 <field name="is_customer"/>
+                <field name="is_kyc" readonly="0"/>
+                <field name="is_expiry"/>
             </xpath>
 
             <xpath expr="//notebook" position="inside">
                 <page name="vendor_customer_details" string="Vendor/Customer KYC Details">
-                    <group>
-                        <!--<field name="vendor_customer_email"/>-->
-                        <field name="point_of_contact"/>
-                        <field name="business_legal_name"/>
-                        <field name="business_trade_name"/>
-                        <field name="business_street"/>
-                        <field name="business_city"/>
-                        <field name="business_pincode"/>
-                        <field name="additional_street"/>
-                        <field name="additional_city"/>
-                        <field name="additional_zip"/>
-                        <field name="additional_phone"/>
-                        <field name="additional_email"/>
-                        <field name="const_business"/>
-                        <field name="no_partner_director"/>
-                        <field name="director_name"/>
-                        <field name="director_phone"/>
-                        <field name="director_email"/>
-                        <field name="aadhaar_card"/>
-                        <field name="pan_card"/>
-                        <field name="gst_no"/>
-                        <field name="udyam_number"/>
-                        <field name="gst_certificate" widget="many2many_binary"/>
-                        <field name="udyam_document" widget="many2many_binary"/>
-                        <field name="gst_return_duration"/>
-                        <field name="shop_photos" widget="many2many_binary"/>
-                        <field name="shop_videos" widget="many2many_binary"/>
-                        <field name="bank_cheque_attachments" widget="many2many_binary"/>
-                    </group>
+                    <field name="kyc_details">
+                        <list create="False" edit="False" delete="False">
+                            <field name="email"/>
+                            <field name="point_of_contact"/>
+                            <field name="business_legal_name"/>
+                            <field name="business_trade_name"/>
+                            <!--<field name="const_business"/>-->
+                            <!--<field name="no_partner_director"/>-->
+                            <field name="director_name"/>
+                            <field name="director_phone"/>
+                            <field name="director_email"/>
+                            <field name="deadline"/>
+                            <field name="state"/>
+                        </list>
+                        <form create="False" edit="False" delete="False">
+                            <header>
+                                <field name="state" widget="statusbar"/>
+                            </header>
+                            <notebook>
+                                <page string="KYC Form (Company Details)" name="kyc_company_details">
+                                    <group>
+                                        <field name="email" placeholder="Your Answer"/>
+                                        <field name="point_of_contact" placeholder="Your Answer"/>
+                                    </group>
+                                    <group string="Principal Place of Business">
+                                        <field name="business_legal_name" placeholder="Your Answer"/>
+                                        <field name="business_trade_name" placeholder="Your Answer"/>
+                                    </group>
+                                    <group>
+                                        <field name="business_street" placeholder="Your Answer"/>
+                                        <field name="business_city" placeholder="Your Answer"/>
+                                        <field name="business_pincode" placeholder="Your Answer"/>
+                                    </group>
+                                    <group string="Additional Place of Business">
+                                        <field name="additional_street" placeholder="Your Answer"/>
+                                        <field name="additional_city" placeholder="Your Answer"/>
+                                        <field name="additional_zip" placeholder="Your Answer"/>
+                                        <field name="additional_phone" placeholder="Your Answer"/>
+                                        <field name="additional_email" placeholder="Your Answer"/>
+                                    </group>
+                                    <group>
+                                        <field name="const_business" widget="radio"/>
+                                        <field name="other_business" string="Please Specify"/>
+                                        <!--<field name="other_business" string="Please Specify"
+                                               placeholder="If Other Please Specify"
+                                               invisible="const_business != %(custom_contact.constitution_business_other)d"
+                                               required="const_business == %(custom_contact.constitution_business_other)d"/>-->
+                                        <!--<field name="no_partner_director" widget="radio"/>-->
+                                    </group>
+                                </page>
+                                <page string="KYC_Sole_Proprietor" name="kyc_sole_proprietor">
+                                    <group string="Director / Owner Details">
+                                        <field name="director_name" placeholder="Your Answer"/>
+                                        <field name="director_phone" placeholder="Your Answer"/>
+                                        <field name="director_email" placeholder="Your Answer"/>
+                                        <field name="aadhaar_card" placeholder="Your Answer" />
+                                        <field name="pan_card" placeholder="Your Answer"
+                                               options="{'size': [80, 80]}"/>
+                                        <field name="gst_no" placeholder="Your Answer"/>
+                                        <field name="udyam_number" placeholder="Your Answer"/>
+                                        <field name="gst_certificate" widget="many2many_binary"/>
+                                        <field name="udyam_document" widget="many2many_binary"/>
+                                        <field name="gst_return_duration" placeholder="Your Answer"/>
+                                        <field name="shop_photos" widget="many2many_binary"/>
+                                        <field name="shop_videos" widget="many2many_binary"/>
+                                    </group>
+                                </page>
+                                <page string="Bank Details" name="bank_details">
+                                    <group string="(Please provide all required bank Details Carefully)">
+                                    </group>
+                                    <group>
+                                        <field name="bank_name" placeholder="Your Answer"/>
+                                        <field name="account_no" placeholder="Your Answer"/>
+                                        <field name="ifsc_code" placeholder="Your Answer"/>
+                                        <field name="bank_address" placeholder="Your Answer"/>
+                                        <field name="bank_cheque_attachments" widget="many2many_binary"/>
+                                    </group>
+                                </page>
+                            </notebook>
+                        </form>
+                    </field>
                 </page>
             </xpath>
         </field>

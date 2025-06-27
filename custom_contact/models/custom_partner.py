@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from email.policy import default
+
 from odoo import api, fields, models
 
 
@@ -25,9 +27,20 @@ class CustomContact(models.Model):
     tally_name = fields.Char(string="Tally Name", tracking=True)
     purpose = fields.Char(string="Purpose", tracking=True)
     # Customer/Vendor KYC Details
-    is_vendor = fields.Boolean(string="Vendor")
-    is_customer = fields.Boolean(string="Customer")
-    #vendor_customer_email = fields.Char("Email")
+    is_vendor = fields.Boolean(string="Is Vendor?")
+    is_customer = fields.Boolean(string="Is Customer?")
+    is_kyc = fields.Boolean(string="Is KYC?")
+    is_expiry = fields.Boolean(string="Is Expiry?")
+
+    kyc_details = fields.One2many("res.partner.kyc.detail", "partner_id", string="KYC Details", tracking=True)
+
+
+class ContactKYCDetail(models.Model):
+    _name = 'res.partner.kyc.detail'
+    _description = 'Contact KYC Details'
+
+    partner_id = fields.Many2one('res.partner', string="Contact")
+    email = fields.Char("Email")
     point_of_contact = fields.Char("Point of Contact / Purchase Manager (Bora Multicorp)")
     business_legal_name = fields.Char("Business Legal Name")
     business_trade_name = fields.Char("Business Trade Name")
@@ -39,8 +52,15 @@ class CustomContact(models.Model):
     additional_zip = fields.Char("Pincode")
     additional_phone = fields.Char("Contact Number")
     additional_email = fields.Char("Email Address")
-    const_business = fields.Many2one('constitution.business', string="Constitution of Business")
-    no_partner_director = fields.Many2one('number.partner.director', string="Number of Managing Partner / Directors")
+    const_business = fields.Selection([('Sole Proprietor', 'Sole Proprietor'),
+                                       ('Partnership', 'Partnership'),
+                                       ('Pvt Ltd Co.', 'Pvt Ltd Co.'),
+                                       ('LLP', 'LLP'),
+                                       ('HUF(Karta)', 'HUF(Karta)'),
+                                       ], string="Constitution of Business", required=False)
+    # const_business = fields.Many2one('constitution.business', string="Constitution of Business", required=True)
+    other_business = fields.Char("If Other, Specify?")
+    # no_partner_director = fields.Many2one('number.partner.director', string="Number of Managing Partner / Directors")
     director_name = fields.Char(string="Name of the Owner / Director")
     director_phone = fields.Char(string="Contact Number")
     director_email = fields.Char(string="Email Address")
@@ -49,7 +69,7 @@ class CustomContact(models.Model):
     gst_no = fields.Char(string="GST Number")
     udyam_number = fields.Char(string="Udyam Certificate Number")
     gst_certificate = fields.Many2many('ir.attachment', 'vendor_kyc_gst_cert_rel1', 'wizard_id', 'attachment_id',
-                                string="Company GST Certificate", required=True)
+                                       string="Company GST Certificate", required=True)
 
     udyam_document = fields.Many2many('ir.attachment', 'vendor_kyc_shop_documents_rel1', 'wizard_id', 'attachment_id',
                                       string="Shop Act documents / Udyam Documents", required=True)
@@ -64,5 +84,14 @@ class CustomContact(models.Model):
     shop_videos = fields.Many2many('ir.attachment', 'vendor_kyc_shop_videos_rel1', 'wizard_id', 'attachment_id',
                                    string="Shop Videos", required=True,
                                    help="Short Video / Walkway from outdoor / indoor. Must include - signage Board with GST Number.")
-    bank_cheque_attachments = fields.Many2many('ir.attachment', 'vendor_kyc_bank_cheque_rel1', 'wizard_id', 'attachment_id',
-                                               string="Cancelled Cheques")
+
+    bank_name = fields.Char(string="Bank Name", required=True)
+    account_no = fields.Char(string="Account Number", required=True)
+    ifsc_code = fields.Char(string="IFSC Code", required=True)
+    bank_address = fields.Char(string="Bank Address", required=True)
+    bank_cheque_attachments = fields.Many2many('ir.attachment', 'vendor_kyc_bank_cheque_rel1', 'wizard_id',
+                                               'attachment_id', string="Cancelled Cheques")
+
+    deadline = fields.Date('Deadline Date')
+    state = fields.Selection([('draft', 'Draft'), ('running', 'Running'), ('expired', 'Expired')], default='draft',
+                             required=True, string="Status")
