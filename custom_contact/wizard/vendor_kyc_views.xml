@@ -1,0 +1,100 @@
+<?xml version="1.0"?>
+<odoo>
+    <record id="vendor_kyc_wizard_view_form" model="ir.ui.view">
+        <field name="name">vendor.kyc.wizard.form</field>
+        <field name="model">vendor.kyc.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Vendor KYC">
+                <sheet>
+                    <group>
+                        <field name="partner_id" readonly="1" invisible="1"/>
+                        <field name="email"/>
+                        <field name="point_of_contact"
+                               placeholder="Point of Contact / Purchase Manager (Bora Multicorp)"/>
+                    </group>
+                    <!--<group string="Point of Contact / Purchase Manager (Bora Multicorp)">
+                        <field name="point_of_contact"/>
+                    </group>-->
+
+                    <notebook>
+                        <page string="KYC Form (Company Details)" name="kyc_company_details">
+                            <group>
+                                <field name="business_name" placeholder="Your Answer"/>
+                                <field name="trade_name" placeholder="Your Answer"/>
+                            </group>
+                            <group string="Principal Place of Business">
+                                <group>
+                                    <div class="o_address_format">
+                                        <field name="street" placeholder="Street..." class="o_address_street"/>
+                                        <field name="street2" placeholder="Street 2..." class="o_address_street"/>
+                                        <field name="city" placeholder="City" class="o_address_city"/>
+                                        <field name="pincode" placeholder="Pincode" class="o_address_zip"/>
+                                    </div>
+                                </group>
+                            </group>
+                            <group string="Additional Place of Business">
+                                <field name="add_address" placeholder="Your Answer"/>
+                                <field name="add_city" placeholder="Your Answer"/>
+                                <field name="add_pincode" placeholder="Your Answer"/>
+                                <field name="contact_no" placeholder="Your Answer"/>
+                                <field name="email_add" placeholder="Your Answer"/>
+                            </group>
+                            <group>
+                                <field name="const_business" widget="radio"/>
+                                <field name="other_business" string="Please Specify"
+                                       placeholder="If Other Please Specify"
+                                       invisible="const_business != %(custom_contact.constitution_business_other)d"
+                                       required="const_business == %(custom_contact.constitution_business_other)d"/>
+                                <field name="no_partner_director" widget="radio"/>
+                            </group>
+                        </page>
+                        <page string="KYC_Sole_Proprietor" name="kyc_sole_proprietor">
+                            <group string="Director / Owner Details">
+                                <field name="name_owner" placeholder="Your Answer"/>
+                                <field name="bus_contact_number" placeholder="Your Answer"/>
+                                <field name="email_address" placeholder="Your Answer"/>
+                                <field name="aadhaar_card" placeholder="Your Answer"/>
+                                <field name="pan_card" placeholder="Your Answer"/>
+                                <field name="gst_no" placeholder="Your Answer"/>
+                                <field name="udyam_cert_no" placeholder="Your Answer"/>
+                                <field name="gst_cert" widget="many2many_binary"/>
+                                <field name="shop_documents" widget="many2many_binary"/>
+                                <field name="gst_return_duration" placeholder="Your Answer"/>
+                                <field name="shop_photos" widget="many2many_binary"/>
+                                <field name="shop_videos" widget="many2many_binary"/>
+                            </group>
+                        </page>
+                        <page string="Bank Details" name="bank_details">
+                            <group string="(Please provide all required bank Details Carefully)">
+                            </group>
+                            <group>
+                                <field name="bank_name" placeholder="Your Answer"/>
+                                <field name="account_no" placeholder="Your Answer"/>
+                                <field name="ifsc_code" placeholder="Your Answer"/>
+                                <field name="bank_address" placeholder="Your Answer"/>
+                                <field name="shop_videos" widget="many2many_binary"/>
+                            </group>
+                        </page>
+                    </notebook>
+                    <footer>
+                        <button name="action_vendor_kyc_done" string="Done" type="object" class="btn-primary"/>
+                        <button string="Cancel" class="btn-secondary" special="cancel" data-hotkey="x"/>
+                    </footer>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="vendor_kyc_wizard_action" model="ir.actions.act_window">
+        <field name="name">KYC Form</field>
+        <field name="res_model">vendor.kyc.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="vendor_kyc_wizard_view_form"/>
+        <field name="target">new</field>
+        <field name="binding_model_id" ref="base.model_res_partner"/>
+        <field name="context">{
+            'default_partner_id': active_id,
+            }
+        </field>
+    </record>
+</odoo>

@@ -14,5 +14,16 @@ class PartnerAddressType(models.Model):
 
     name = fields.Char('Address Type', required=True)
 
+class ConstitutionofBusiness(models.Model):
+    _name = "constitution.business"
+    _description = "Constitution of Business"
+
+    name = fields.Char('Name', required=True)
+
+class NumberManagingPartnerDirectors (models.Model):
+    _name = "number.partner.director"
+    _description = "Number of Managing Partner / Directors"
+
+    name = fields.Char('Name', required=True)
 
 

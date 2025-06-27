@@ -1,3 +1,6 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_res_partner_location_type,res_partner_location_type,model_res_partner_location_type,base.group_user,1,1,1,1
 access_res_partner_address_type,res_partner_address_type,model_res_partner_address_type,base.group_user,1,1,1,1
+access_vendor_kyc_wizard,vendor_kyc_wizard,model_vendor_kyc_wizard,base.group_user,1,1,1,1
+access_constitution_business,constitution_business,model_constitution_business,base.group_user,1,1,1,1
+access_number_partner_director,number_partner_director,model_number_partner_director,base.group_user,1,1,1,1
