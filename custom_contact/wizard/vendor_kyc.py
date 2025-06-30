@@ -85,7 +85,7 @@ class VendorKycWizard(models.TransientModel):
         if not self.partner_id:
             return
 
-        self.env['res.partner.kyc.detail'].create({
+        self.env['res.partner.kyc.approval'].create({
             'partner_id': self.partner_id.id,
             'email': self.email,
             'point_of_contact': self.point_of_contact,
