@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<odoo>
+    <record id="vendor_approval_config_view_form" model="ir.ui.view">
+        <field name="name">vendor.approval.config.view.form</field>
+        <field name="model">vendor.approval.config</field>
+        <field name="arch" type="xml">
+            <form string="Vendor Approval User Settings" class="oe_form_configuration o_base_settings">
+                <div class="o_control_panel">
+                    <div class="o_panel">
+                        <div class="title h2 mb0 mt4 text-muted hidden-xs">Settings</div>
+                    </div>
+                    <header>
+                        <button string="Save" type="object" name="set_config_values" class="oe_highlight"/>
+                        <button string="Discard" type="object" name="cancel" special="cancel"/>
+                    </header>
+                </div>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="vendor_approval_users" widget="many2many_tags"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="action_vendor_approval_config" model="ir.actions.act_window">
+        <field name="name">Vendor Approvla Settings</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">vendor.approval.config</field>
+        <field name="view_mode">form</field>
+        <field name="target">inline</field>
+    </record>
+
+    <menuitem id="menu_vendor_approval_config" name="Vendor Approval Users"
+                  action="custom_contact.action_vendor_approval_config"
+                  parent="contacts.res_partner_menu_config" sequence="4"/>
+
+</odoo>
