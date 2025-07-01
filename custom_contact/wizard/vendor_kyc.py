@@ -32,8 +32,8 @@ class VendorKycWizard(models.TransientModel):
     director_name = fields.Char(string="Name of the Owner / Director", required=True)
     director_phone = fields.Char(string="Contact Number", required=True)
     director_email = fields.Char(string="Email Address", required=True)
-    aadhaar_card = fields.Binary(string="Aadhaar Card")
-    pan_card = fields.Binary(string="PAN Card (Proprietor)")
+    aadhaar_card = fields.Binary(string="Aadhaar Card", required=True)
+    pan_card = fields.Binary(string="PAN Card (Proprietor)", required=True)
     gst_no = fields.Char(string="GST Number", required=True)
     udyam_number = fields.Char(string="Udyam Certificate Number")
     gst_certificate = fields.Many2many('ir.attachment', 'vendor_kyc_gst_cert_rel', 'wizard_id', 'attachment_id',
@@ -58,7 +58,7 @@ class VendorKycWizard(models.TransientModel):
     ifsc_code = fields.Char(string="IFSC Code", required=True)
     bank_address = fields.Char(string="Bank Address", required=True)
     bank_cheque_attachments = fields.Many2many('ir.attachment', 'vendor_kyc_bank_cheque_rel', 'wizard_id',
-                                               'attachment_id', string="Cancelled Cheques")
+                                               'attachment_id', string="Cancelled Cheques", required=True)
 
     @api.model
     def default_get(self, fields_list):
