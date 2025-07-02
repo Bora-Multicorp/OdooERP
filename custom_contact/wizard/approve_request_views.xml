@@ -6,7 +6,7 @@
         <field name="arch" type="xml">
             <form string="Approve Request Form">
                 <group>
-                    <field name="approval_user_id" readonly="1"/>
+                    <field name="kyc_approval_id" readonly="1"/>
                     <field name="remark"/>
                 </group>
                 <footer>
@@ -24,7 +24,7 @@
         <field name="target">new</field>
         <field name="binding_model_id" ref="model_approve_request_wizard"/>
         <field name="context">{
-            'default_approval_user_id': active_id,
+            'default_kyc_approval_id': active_id,
             }
         </field>
     </record>

@@ -1,11 +1,59 @@
 # -*- coding: utf-8 -*-
 
 from odoo import api, fields, models, _
+from odoo.exceptions import ValidationError
+import re
 
 
 class VendorKycWizard(models.TransientModel):
     _name = 'vendor.kyc.wizard'
     _description = 'Vendor KYC Wizard'
+
+    # @api.onchange('additional_phone', 'director_phone')
+    # def _onchange_phone_numbers(self):
+    #     phone_pattern = re.compile(r'^\+?[0-9]{7,15}$')
+    #     for field_label, number in [('Additional Contact Number', self.additional_phone),
+    #                                 ('Director Contact Number', self.director_phone)]:
+    #         if number and not phone_pattern.match(number):
+    #             return {
+    #                 'warning': {
+    #                     'title': "Invalid Phone Number",
+    #                     'message': f"{field_label} must be a valid phone number (e.g., +911234567890 or 1234567890)."
+    #                 }
+    #             }
+
+    # @api.onchange('email', 'additional_email', 'director_email')
+    # def _onchange_email_format(self):
+    #     email_pattern = re.compile(r'^[\w\.-]+@[\w\.-]+\.\w{2,}$')
+    #     for label, email in [('Email', self.email),
+    #                          ('Additional Email', self.additional_email),
+    #                          ('Director Email', self.director_email)]:
+    #         if email and not email_pattern.match(email):
+    #             return {
+    #                 'warning': {
+    #                     'title': "Invalid Email Format",
+    #                     'message': f"{label} must be a valid email address (e.g., user@example.com)."
+    #                 }
+    #             }
+
+    @api.constrains('additional_phone', 'director_phone')
+    def _check_phone_numbers(self):
+        phone_pattern = re.compile(r'^\+?[0-9]{10,14}$')  # Accepts optional '+' and 7–15 digits
+        for rec in self:
+            for field_label, number in [('Additional Contact Number', rec.additional_phone),
+                                        ('Director Contact Number', rec.director_phone)]:
+                if number and not phone_pattern.match(number):
+                    raise ValidationError(
+                        f"{field_label} must be a valid phone number (e.g., +911234567890 or 1234567890).")
+
+    @api.constrains('email', 'additional_email', 'director_email')
+    def _check_email_format(self):
+        email_pattern = re.compile(r'^[\w\.-]+@[\w\.-]+\.\w{2,}$')  # More flexible TLD length
+        for rec in self:
+            for label, email in [('Email', rec.email), ('Additional Email', rec.additional_email),
+                                 ('Director Email', rec.director_email)]:
+                if email and not email_pattern.match(email):
+                    raise ValidationError(f"{label} must be a valid email address (e.g., user@example.com).")
 
     partner_id = fields.Many2one('res.partner', string='Contact', domain="[('id', '=', active_id)]")
     email = fields.Char("Email", required=True)
@@ -21,19 +69,20 @@ class VendorKycWizard(models.TransientModel):
     additional_phone = fields.Char("Contact Number", required=True)
     additional_email = fields.Char("Email Address")
     const_business = fields.Selection([('Sole Proprietor', 'Sole Proprietor'),
-                                              ('Partnership', 'Partnership'),
-                                              ('Pvt Ltd Co.', 'Pvt Ltd Co.'),
-                                              ('LLP', 'LLP'),
-                                              ('HUF(Karta)', 'HUF(Karta)'),
-                                              ], string="Constitution of Business", required=True)
+                                       ('Partnership', 'Partnership'),
+                                       ('Pvt Ltd Co.', 'Pvt Ltd Co.'),
+                                       ('LLP', 'LLP'),
+                                       ('HUF(Karta)', 'HUF(Karta)'),
+                                       ('Other', 'Other'),
+                                       ], string="Constitution of Business", required=True)
     # const_business = fields.Many2one('constitution.business', string="Constitution of Business", required=True)
     other_business = fields.Char("If Other, Specify?")
     # no_partner_director = fields.Many2one('number.partner.director', string="Number of Managing Partner / Directors")
     director_name = fields.Char(string="Name of the Owner / Director", required=True)
     director_phone = fields.Char(string="Contact Number", required=True)
     director_email = fields.Char(string="Email Address", required=True)
-    aadhaar_card = fields.Binary(string="Aadhaar Card")
-    pan_card = fields.Binary(string="PAN Card (Proprietor)")
+    aadhaar_card = fields.Binary(string="Aadhaar Card", required=True)
+    pan_card = fields.Binary(string="PAN Card (Proprietor)", required=True)
     gst_no = fields.Char(string="GST Number", required=True)
     udyam_number = fields.Char(string="Udyam Certificate Number")
     gst_certificate = fields.Many2many('ir.attachment', 'vendor_kyc_gst_cert_rel', 'wizard_id', 'attachment_id',
@@ -58,7 +107,7 @@ class VendorKycWizard(models.TransientModel):
     ifsc_code = fields.Char(string="IFSC Code", required=True)
     bank_address = fields.Char(string="Bank Address", required=True)
     bank_cheque_attachments = fields.Many2many('ir.attachment', 'vendor_kyc_bank_cheque_rel', 'wizard_id',
-                                               'attachment_id', string="Cancelled Cheques")
+                                               'attachment_id', string="Cancelled Cheques", required=True)
 
     @api.model
     def default_get(self, fields_list):
@@ -85,7 +134,7 @@ class VendorKycWizard(models.TransientModel):
         if not self.partner_id:
             return
 
-        self.env['res.partner.kyc.approval'].create({
+        kyc_record = self.env['res.partner.kyc.approval'].create({
             'partner_id': self.partner_id.id,
             'email': self.email,
             'point_of_contact': self.point_of_contact,
@@ -119,5 +168,24 @@ class VendorKycWizard(models.TransientModel):
             'bank_address': self.bank_address,
             'bank_cheque_attachments': [(6, 0, self.bank_cheque_attachments.ids)],
         })
+        for attach in kyc_record:
+            if attach.gst_certificate:
+                attach.gst_certificate.write({'res_model': 'res.partner.kyc.approval', 'res_id': attach.id})
+            if attach.udyam_document:
+                attach.udyam_document.write({'res_model': 'res.partner.kyc.approval', 'res_id': attach.id})
+            if attach.shop_photos:
+                attach.shop_photos.write({'res_model': 'res.partner.kyc.approval', 'res_id': attach.id})
+            if attach.shop_videos:
+                attach.shop_videos.write({'res_model': 'res.partner.kyc.approval', 'res_id': attach.id})
+            if attach.bank_cheque_attachments:
+                attach.bank_cheque_attachments.write({'res_model': 'res.partner.kyc.approval', 'res_id': attach.id})
+
+
+        self.partner_id.write({'email': self.email, 'is_kyc': True,
+                               'vat': self.gst_no,
+                               'street': self.business_street,
+                               'city': self.business_city,
+                               'zip': self.business_pincode
+                               })
 
         return {'type': 'ir.actions.act_window_close'}

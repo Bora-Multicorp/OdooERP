@@ -27,10 +27,28 @@ class CustomContact(models.Model):
     tally_name = fields.Char(string="Tally Name", tracking=True)
     purpose = fields.Char(string="Purpose", tracking=True)
     # Customer/Vendor KYC Details
-    is_vendor = fields.Boolean(string="Is Vendor?")
-    is_customer = fields.Boolean(string="Is Customer?")
-    is_kyc = fields.Boolean(string="Is KYC?")
-    is_expiry = fields.Boolean(string="Is Expiry?")
+    is_vendor = fields.Boolean(string="Is Vendor?", tracking=True)
+    is_customer = fields.Boolean(string="Is Customer?", tracking=True)
+    is_kyc = fields.Boolean(string="Is KYC?", tracking=True)
+    is_approved = fields.Boolean(string="Is Approved?", tracking=True)
+    deadline = fields.Date('KYC Deadline', tracking=True)
 
     kyc_details = fields.One2many('res.partner.kyc.approval', 'partner_id', string="KYC Details", tracking=True)
+
+    def write(self, vals):
+        res = super().write(vals)
+        if vals.get('is_approved') is True:
+            for record in self:
+                if record.is_vendor:
+                    record.supplier_rank = (record.supplier_rank or 0) + 1
+                if record.is_customer:
+                    record.customer_rank = (record.customer_rank or 0) + 1
+        return res
+
+    def confirm_rekyc(self):
+        self.write({'is_kyc': False, 'is_approved': False, 'deadline': False})
+        if self.is_vendor:
+             self.write({'supplier_rank': 0})
+        if self.is_customer:
+             self.write({'customer_rank': 0})
 

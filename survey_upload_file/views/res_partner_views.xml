@@ -14,7 +14,7 @@
                             icon="fa-star"
                             groups="sales_team.group_sale_salesman"
                             context="{'default_partner_id': id}">
-                            <field string="Survey" name="survey_count" widget="statinfo"/>
+                            <field string="KYC Survey" name="survey_count" widget="statinfo"/>
                         </button>
                     </div>
                 </data>

@@ -11,62 +11,58 @@
                         <field name="email" placeholder="Your Answer"/>
                         <field name="point_of_contact" placeholder="Your Answer"/>
                     </group>
-                    <notebook>
-                        <page string="KYC Form (Company Details)" name="kyc_company_details">
-                            <group string="Principal Place of Business">
-                                <field name="business_legal_name" placeholder="Your Answer"/>
-                                <field name="business_trade_name" placeholder="Your Answer"/>
-                            </group>
-                            <group>
-                                <field name="business_street" placeholder="Your Answer"/>
-                                <field name="business_city" placeholder="Your Answer"/>
-                                <field name="business_pincode" placeholder="Your Answer"/>
-                            </group>
-                            <group string="Additional Place of Business">
-                                <field name="additional_street" placeholder="Your Answer"/>
-                                <field name="additional_city" placeholder="Your Answer"/>
-                                <field name="additional_zip" placeholder="Your Answer"/>
-                                <field name="additional_phone" placeholder="Your Answer"/>
-                                <field name="additional_email" placeholder="Your Answer"/>
-                            </group>
-                            <group>
-                                <field name="const_business"/>
-                                <field name="other_business" string="Please Specify"/>
-                                <!--<field name="other_business" string="Please Specify"
-                                       placeholder="If Other Please Specify"
-                                       invisible="const_business != %(custom_contact.constitution_business_other)d"
-                                       required="const_business == %(custom_contact.constitution_business_other)d"/>-->
-                                <!--<field name="no_partner_director" widget="radio"/>-->
-                            </group>
-                        </page>
-                        <page string="KYC_Sole_Proprietor" name="kyc_sole_proprietor">
-                            <group string="Director / Owner Details">
-                                <field name="director_name" placeholder="Your Answer"/>
-                                <field name="director_phone" placeholder="Your Answer"/>
-                                <field name="director_email" placeholder="Your Answer"/>
-                                <field name="aadhaar_card" placeholder="Your Answer" widget="image"/>
-                                <field name="pan_card" placeholder="Your Answer" widget="image"/>
-                                <field name="gst_no" placeholder="Your Answer"/>
-                                <field name="udyam_number" placeholder="Your Answer"/>
-                                <field name="gst_certificate" widget="many2many_binary"/>
-                                <field name="udyam_document" widget="many2many_binary"/>
-                                <field name="gst_return_duration" placeholder="Your Answer"/>
-                                <field name="shop_photos" widget="many2many_binary"/>
-                                <field name="shop_videos" widget="many2many_binary"/>
-                            </group>
-                        </page>
-                        <page string="Bank Details" name="bank_details">
-                            <group string="(Please provide all required bank Details Carefully)">
-                            </group>
-                            <group>
-                                <field name="bank_name" placeholder="Your Answer"/>
-                                <field name="account_no" placeholder="Your Answer"/>
-                                <field name="ifsc_code" placeholder="Your Answer"/>
-                                <field name="bank_address" placeholder="Your Answer"/>
-                                <field name="bank_cheque_attachments" widget="many2many_binary"/>
-                            </group>
-                        </page>
-                    </notebook>
+                    <group string="KYC Form (Company Details)" name="kyc_company_details">
+                        <group string="Principal Place of Business">
+                            <field name="business_legal_name" placeholder="Your Answer"/>
+                            <field name="business_trade_name" placeholder="Your Answer"/>
+                            <field name="business_street" placeholder="Your Answer"/>
+                            <field name="business_city" placeholder="Your Answer"/>
+                            <field name="business_pincode" placeholder="Your Answer"/>
+                        </group>
+                        <group string="Additional Place of Business">
+                            <field name="additional_street" placeholder="Your Answer"/>
+                            <field name="additional_city" placeholder="Your Answer"/>
+                            <field name="additional_zip" placeholder="Your Answer"/>
+                            <field name="additional_phone" placeholder="Your Answer"/>
+                            <field name="additional_email" placeholder="Your Answer"/>
+                        </group>
+                        <group>
+                            <field name="const_business" widget="radio"/>
+                            <field name="other_business" string="Please Specify"
+                                   invisible="const_business != 'Other'"
+                                   required="const_business == 'Other'"/>
+                            <!--<field name="other_business" string="Please Specify"
+                                   placeholder="If Other Please Specify"
+                                   invisible="const_business != %(custom_contact.constitution_business_other)d"
+                                   required="const_business == %(custom_contact.constitution_business_other)d"/>-->
+                            <!--<field name="no_partner_director" widget="radio"/>-->
+                        </group>
+                    </group>
+                    <group string="KYC_Sole_Proprietor" name="kyc_sole_proprietor">
+                        <group string="Director / Owner Details">
+                            <field name="director_name" placeholder="Your Answer"/>
+                            <field name="director_phone" placeholder="Your Answer"/>
+                            <field name="director_email" placeholder="Your Answer"/>
+                            <field name="aadhaar_card" placeholder="Your Answer" widget="image"/>
+                            <field name="pan_card" placeholder="Your Answer" widget="image"/>
+                            <field name="gst_no" placeholder="Your Answer"/>
+                            <field name="udyam_number" placeholder="Your Answer"/>
+                            <field name="gst_certificate" widget="many2many_binary"/>
+                            <field name="udyam_document" widget="many2many_binary"/>
+                            <field name="gst_return_duration" placeholder="Your Answer"/>
+                            <field name="shop_photos" widget="many2many_binary"/>
+                            <field name="shop_videos" widget="many2many_binary"/>
+                        </group>
+                    </group>
+                    <group string="Bank Details(Please provide all required bank Details Carefully)" name="bank_details">
+                        <group>
+                            <field name="bank_name" placeholder="Your Answer"/>
+                            <field name="account_no" placeholder="Your Answer"/>
+                            <field name="ifsc_code" placeholder="Your Answer"/>
+                            <field name="bank_address" placeholder="Your Answer"/>
+                            <field name="bank_cheque_attachments" widget="many2many_binary"/>
+                        </group>
+                    </group>
                     <footer>
                         <button name="action_vendor_kyc_done" string="Done" type="object" class="btn-primary"/>
                         <button string="Cancel" class="btn-secondary" special="cancel" data-hotkey="x"/>

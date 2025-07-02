@@ -166,10 +166,15 @@ class SurveyUserInput(models.Model):
             if self.partner_id:
                 #self.partner_id.write(values)
                 values['partner_id'] = self.partner_id.id
-                self.env['res.partner.kyc.detail'].create(values)
+                res = self.env['res.partner.kyc.approval'].create(values)
+                if res:
+                    self.partner_id.write({'is_kyc': True})
             elif self.email:
                 partner = self.env['res.partner'].search([('email', '=', self.email)], limit=1)
+
                 #partner.write(values)
                 values['partner_id'] = partner.id
-                self.env['res.partner.kyc.detail'].create(values)
+                res = self.env['res.partner.kyc.approval'].create(values)
+                if res:
+                    partner.write({'is_kyc': True})
 
