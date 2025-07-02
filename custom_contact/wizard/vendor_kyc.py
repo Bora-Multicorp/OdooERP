@@ -1,11 +1,58 @@
 # -*- coding: utf-8 -*-
 
 from odoo import api, fields, models, _
-
+from odoo.exceptions import ValidationError
+import re
 
 class VendorKycWizard(models.TransientModel):
     _name = 'vendor.kyc.wizard'
     _description = 'Vendor KYC Wizard'
+
+    # @api.onchange('additional_phone', 'director_phone')
+    # def _onchange_phone_numbers(self):
+    #     phone_pattern = re.compile(r'^\+?[0-9]{7,15}$')
+    #     for field_label, number in [('Additional Contact Number', self.additional_phone),
+    #                                 ('Director Contact Number', self.director_phone)]:
+    #         if number and not phone_pattern.match(number):
+    #             return {
+    #                 'warning': {
+    #                     'title': "Invalid Phone Number",
+    #                     'message': f"{field_label} must be a valid phone number (e.g., +911234567890 or 1234567890)."
+    #                 }
+    #             }
+
+    # @api.onchange('email', 'additional_email', 'director_email')
+    # def _onchange_email_format(self):
+    #     email_pattern = re.compile(r'^[\w\.-]+@[\w\.-]+\.\w{2,}$')
+    #     for label, email in [('Email', self.email),
+    #                          ('Additional Email', self.additional_email),
+    #                          ('Director Email', self.director_email)]:
+    #         if email and not email_pattern.match(email):
+    #             return {
+    #                 'warning': {
+    #                     'title': "Invalid Email Format",
+    #                     'message': f"{label} must be a valid email address (e.g., user@example.com)."
+    #                 }
+    #             }
+
+    @api.constrains('additional_phone', 'director_phone')
+    def _check_phone_numbers(self):
+        phone_pattern = re.compile(r'^\+?[0-9]{10,14}$')  # Accepts optional '+' and 7–15 digits
+        for rec in self:
+            for field_label, number in [('Additional Contact Number', rec.additional_phone),
+                                        ('Director Contact Number', rec.director_phone)]:
+                if number and not phone_pattern.match(number):
+                    raise ValidationError(
+                        f"{field_label} must be a valid phone number (e.g., +911234567890 or 1234567890).")
+
+    @api.constrains('email', 'additional_email', 'director_email')
+    def _check_email_format(self):
+        email_pattern = re.compile(r'^[\w\.-]+@[\w\.-]+\.\w{2,}$')  # More flexible TLD length
+        for rec in self:
+            for label, email in [('Email', rec.email), ('Additional Email', rec.additional_email),
+                                 ('Director Email', rec.director_email)]:
+                if email and not email_pattern.match(email):
+                    raise ValidationError(f"{label} must be a valid email address (e.g., user@example.com).")
 
     partner_id = fields.Many2one('res.partner', string='Contact', domain="[('id', '=', active_id)]")
     email = fields.Char("Email", required=True)
@@ -21,11 +68,12 @@ class VendorKycWizard(models.TransientModel):
     additional_phone = fields.Char("Contact Number", required=True)
     additional_email = fields.Char("Email Address")
     const_business = fields.Selection([('Sole Proprietor', 'Sole Proprietor'),
-                                              ('Partnership', 'Partnership'),
-                                              ('Pvt Ltd Co.', 'Pvt Ltd Co.'),
-                                              ('LLP', 'LLP'),
-                                              ('HUF(Karta)', 'HUF(Karta)'),
-                                              ], string="Constitution of Business", required=True)
+                                       ('Partnership', 'Partnership'),
+                                       ('Pvt Ltd Co.', 'Pvt Ltd Co.'),
+                                       ('LLP', 'LLP'),
+                                       ('HUF(Karta)', 'HUF(Karta)'),
+                                       ('Other', 'Other'),
+                                       ], string="Constitution of Business", required=True)
     # const_business = fields.Many2one('constitution.business', string="Constitution of Business", required=True)
     other_business = fields.Char("If Other, Specify?")
     # no_partner_director = fields.Many2one('number.partner.director', string="Number of Managing Partner / Directors")
@@ -119,5 +167,6 @@ class VendorKycWizard(models.TransientModel):
             'bank_address': self.bank_address,
             'bank_cheque_attachments': [(6, 0, self.bank_cheque_attachments.ids)],
         })
+        self.partner_id.write({'email': self.email, 'is_kyc': True})
 
         return {'type': 'ir.actions.act_window_close'}

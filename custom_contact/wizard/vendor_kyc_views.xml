@@ -30,8 +30,10 @@
                                 <field name="additional_email" placeholder="Your Answer"/>
                             </group>
                             <group>
-                                <field name="const_business"/>
-                                <field name="other_business" string="Please Specify"/>
+                                <field name="const_business" widget="radio"/>
+                                <field name="other_business" string="Please Specify"
+                                       invisible="const_business != 'Other'"
+                                       required="const_business == 'Other'"/>
                                 <!--<field name="other_business" string="Please Specify"
                                        placeholder="If Other Please Specify"
                                        invisible="const_business != %(custom_contact.constitution_business_other)d"

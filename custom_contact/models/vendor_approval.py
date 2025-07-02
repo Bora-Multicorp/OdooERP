@@ -1,15 +1,28 @@
 # -*- coding: utf-8 -*-
 
 from odoo import api, fields, models
+from dateutil.relativedelta import relativedelta
 
 class ContactKYCApproval(models.Model):
     _name = 'res.partner.kyc.approval'
     _description = 'Contact KYC approvals'
     _rec_name = 'partner_id'
 
-    def confirm_submit_form(self):
-        if self.id:
-            self.write({'state': 'pending'})
+    @api.model
+    def default_get(self, fields_list):
+        defaults = super().default_get(fields_list)
+        vendor_approval_users = self.env['vendor.approval.config'].sudo().search([])
+
+        if vendor_approval_users:
+            approval_user_vals = []
+            for approval in vendor_approval_users:
+                approval_user_vals.append((0, 0, {
+                    'sequence': approval.sequence,
+                    'user_id': approval.user_id.id,
+                    # 'job_id': user.employee_id.job_title or '',  # fallback to empty if not set
+                }))
+            defaults['approval_users_ids'] = approval_user_vals
+        return defaults
 
     partner_id = fields.Many2one('res.partner', string="Contact")
     email = fields.Char("Email")
@@ -29,6 +42,7 @@ class ContactKYCApproval(models.Model):
                                        ('Pvt Ltd Co.', 'Pvt Ltd Co.'),
                                        ('LLP', 'LLP'),
                                        ('HUF(Karta)', 'HUF(Karta)'),
+                                       ('Other', 'Other'),
                                        ], string="Constitution of Business", required=False)
     # const_business = fields.Many2one('constitution.business', string="Constitution of Business", required=True)
     other_business = fields.Char("If Other, Specify?")
@@ -71,8 +85,50 @@ class ContactKYCApproval(models.Model):
                               ('rejected', 'Rejected'),
                               ('expired', 'Expired')], default='draft', required=True, string="Status")
     approval_users_ids = fields.One2many('approval.users', 'kyc_approval_id', 'Approval Authorities',
-                                          help='Approval Authority Details')
+                                         help='Approval Authority Details')
+    assigned_to = fields.Many2one('res.users', string='Assigned To')
+    existing_user_ids = fields.Many2many('res.users', compute='_compute_approval_user_ids', store=False)
+    is_approved = fields.Boolean(related='partner_id.is_approved', store=True)
 
+    @api.depends('existing_user_ids.user_id')
+    def _compute_approval_user_ids(self):
+        for record in self:
+            # Get the user_ids from related approval_detail_ids
+            user_ids = record.existing_user_ids.mapped('user_id')
+            # Assign the collected users to approval_user_ids
+            record.existing_user_ids = [(6, 0, user_ids.ids)]
+
+    def confirm_submit_form(self):
+        if self.id:
+            self.write({'state': 'pending'})
+            self._update_assigned_to()
+
+    def _update_assigned_to(self):
+        for rec in self:
+            next_user = None
+            for line in sorted(rec.approval_users_ids, key=lambda x: x.sequence):
+                if not line.state:
+                    next_user = line.user_id
+                    break
+            rec.assigned_to = next_user
+
+    def _update_state_based_on_approvals(self):
+        for rec in self:
+            states = rec.approval_users_ids.mapped('state')
+            if any(s == 'reject' for s in states):
+                rec.state = 'rejected'
+            elif states and all(s == 'approve' for s in states):
+                rec.state = 'confirmed'
+
+    def write(self, vals):
+        res = super().write(vals)
+        if vals.get('state') == 'confirmed':
+            for record in self:
+                if record.partner_id and not record.partner_id.is_approved:
+                    record.partner_id.write({'is_approved': True})
+                    # Set deadline to 1 year from now
+                    record.write({'deadline': fields.Datetime.now() + relativedelta(years=1)})
+        return res
 
 class ApprovalUsers(models.Model):
     _name = "approval.users"
@@ -87,3 +143,17 @@ class ApprovalUsers(models.Model):
     state = fields.Selection([('approve', 'Approved'), ('reject', 'Rejected')], string="Action")
     remark = fields.Text('Remarks', tracking=True)
     action_date = fields.Datetime(string="Action Date")
+
+    def write(self, vals):
+        res = super().write(vals)
+        for rec in self:
+            if rec.kyc_approval_id:
+                rec.kyc_approval_id._update_state_based_on_approvals()
+        return res
+
+    @api.model
+    def create(self, vals):
+        res = super().create(vals)
+        if res.kyc_approval_id:
+            res.kyc_approval_id._update_state_based_on_approvals()
+        return res
