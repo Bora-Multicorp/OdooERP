@@ -3,7 +3,7 @@
     <data>
         <!-- Vendor Kyc Form -->
         <record model="survey.survey" id="vendor_kyc_form_survey">
-            <field name="title">Vendor KYC Form</field>
+            <field name="title">Bora Multicorp</field>
             <field name="survey_type">survey</field>
             <field name="user_id" ref="base.user_admin"/>
             <field name="access_mode">public</field>
@@ -15,8 +15,6 @@
             <field name="attempts_limit">1</field>
             <field name="description" type="html">
                 <h2>Welcome to Bora Multicorp</h2>
-                <p>Vendor Registration Form
-                </p>
                 <p>The name, email, and photo associated with your Google account will be recorded when you upload files
                     and submit this form
                 </p>
@@ -90,12 +88,12 @@
         </record>-->
         <!-- Address -->
         <record model="survey.question" id="business_address_kyc_survey">
-            <field name="title">Address</field>
+            <field name="title">Principal Place of Business(Address)</field>
             <field name="survey_id" ref="vendor_kyc_form_survey"/>
             <field name="sequence">7</field>
             <field name="question_type">char_box</field>
             <field name="constr_mandatory">True</field>
-            <field name="question_placeholder">Your Answer</field>
+            <field name="question_placeholder">Address</field>
         </record>
         <!-- City -->
         <record model="survey.question" id="business_city_kyc_survey">
@@ -124,12 +122,13 @@
         </record>-->
         <!-- Additional Address -->
         <record model="survey.question" id="additional_address_kyc_survey">
-            <field name="title">Address</field>
+            <field name="title">Additional Place of Business
+                (Address)</field>
             <field name="survey_id" ref="vendor_kyc_form_survey"/>
             <field name="sequence">11</field>
             <field name="question_type">char_box</field>
             <field name="constr_mandatory">False</field>
-            <field name="question_placeholder">Your Answer</field>
+            <field name="question_placeholder">Address</field>
         </record>
         <!-- Additional City -->
         <record model="survey.question" id="additional_city_kyc_survey">
@@ -210,6 +209,10 @@
             <field name="sequence">20</field>
             <field name="question_type" eval="False"/>
             <field name="is_page" eval="True"/>
+            <field name="description" type="html">
+                <h3>(Director / Owner Details)</h3>
+                <br/>
+            </field>
         </record>
         <!-- Director / Owner Details  -->
         <!--<record model="survey.question" id="director_owner_details_kyc_survey">
