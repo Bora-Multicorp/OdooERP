@@ -165,6 +165,7 @@
             <field name="sequence">15</field>
             <field name="question_type">char_box</field>
             <field name="constr_mandatory">False</field>
+            <field name="validation_email">True</field>
             <field name="question_placeholder">Your Answer</field>
         </record>
         <!-- Constitution of Business -->
@@ -239,6 +240,7 @@
             <field name="survey_id" ref="vendor_kyc_form_survey"/>
             <field name="sequence">24</field>
             <field name="question_type">char_box</field>
+            <field name="validation_email">True</field>
             <field name="constr_mandatory">True</field>
         </record>
         <!-- Aadhaar Card -->
