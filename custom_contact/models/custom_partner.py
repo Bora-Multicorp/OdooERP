@@ -46,7 +46,7 @@ class CustomContact(models.Model):
         return res
 
     def confirm_rekyc(self):
-        self.write({'is_kyc': False, 'is_approved': False})
+        self.write({'is_kyc': False, 'is_approved': False, 'deadline': False})
         if self.is_vendor:
              self.write({'supplier_rank': 0})
         if self.is_customer:

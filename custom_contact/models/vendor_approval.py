@@ -103,6 +103,9 @@ class ContactKYCApproval(models.Model):
             self.write({'state': 'pending'})
             self._update_assigned_to()
 
+    def approve_by_manager(self):
+        self.write({'state': 'confirmed'})
+
     def _update_assigned_to(self):
         for rec in self:
             next_user = None
@@ -125,7 +128,7 @@ class ContactKYCApproval(models.Model):
         if vals.get('state') == 'confirmed':
             for record in self:
                 if record.partner_id and not record.partner_id.is_approved:
-                    record.partner_id.write({'is_approved': True})
+                    record.partner_id.write({'is_approved': True, 'deadline': fields.Datetime.now() + relativedelta(years=1)})
                     # Set deadline to 1 year from now
                     record.write({'deadline': fields.Datetime.now() + relativedelta(years=1)})
         return res

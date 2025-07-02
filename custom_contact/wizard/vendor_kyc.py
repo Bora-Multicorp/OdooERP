@@ -4,6 +4,7 @@ from odoo import api, fields, models, _
 from odoo.exceptions import ValidationError
 import re
 
+
 class VendorKycWizard(models.TransientModel):
     _name = 'vendor.kyc.wizard'
     _description = 'Vendor KYC Wizard'
@@ -133,7 +134,7 @@ class VendorKycWizard(models.TransientModel):
         if not self.partner_id:
             return
 
-        self.env['res.partner.kyc.approval'].create({
+        kyc_record = self.env['res.partner.kyc.approval'].create({
             'partner_id': self.partner_id.id,
             'email': self.email,
             'point_of_contact': self.point_of_contact,
@@ -167,6 +168,24 @@ class VendorKycWizard(models.TransientModel):
             'bank_address': self.bank_address,
             'bank_cheque_attachments': [(6, 0, self.bank_cheque_attachments.ids)],
         })
-        self.partner_id.write({'email': self.email, 'is_kyc': True})
+        for attach in kyc_record:
+            if attach.gst_certificate:
+                attach.gst_certificate.write({'res_model': 'res.partner.kyc.approval', 'res_id': attach.id})
+            if attach.udyam_document:
+                attach.udyam_document.write({'res_model': 'res.partner.kyc.approval', 'res_id': attach.id})
+            if attach.shop_photos:
+                attach.shop_photos.write({'res_model': 'res.partner.kyc.approval', 'res_id': attach.id})
+            if attach.shop_videos:
+                attach.shop_videos.write({'res_model': 'res.partner.kyc.approval', 'res_id': attach.id})
+            if attach.bank_cheque_attachments:
+                attach.bank_cheque_attachments.write({'res_model': 'res.partner.kyc.approval', 'res_id': attach.id})
+
+
+        self.partner_id.write({'email': self.email, 'is_kyc': True,
+                               'vat': self.gst_no,
+                               'street': self.business_street,
+                               'city': self.business_city,
+                               'zip': self.business_pincode
+                               })
 
         return {'type': 'ir.actions.act_window_close'}

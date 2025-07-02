@@ -88,15 +88,15 @@
                             display="always"/>
                     <button name="confirm_rekyc" string="Re-KYC" type="object" class="oe_highlight"
                             confirm="Do you want to process Re-KYC?"
-                            invisible="not is_approved or (deadline and deadline &gt;= context_today())"/>
+                            invisible="not is_approved or (deadline and deadline &lt;= context_today())"/>
                 </header>
             </xpath>
             <xpath expr="//field[@name='category_id']" position="after">
                 <field name="is_vendor" readonly="is_kyc"/>
                 <field name="is_customer" readonly="is_kyc"/>
                 <field name="is_kyc" readonly="1"/>
-                <field name="is_approved" readonly="1"/>
-                <field name="deadline" readonly="0"/>
+                <field name="is_approved" readonly="1" invisible="not is_approved"/>
+                <field name="deadline" readonly="1" invisible="not deadline"/>
             </xpath>
 
             <xpath expr="//notebook" position="inside">
