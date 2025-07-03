@@ -8,14 +8,16 @@
             <field name="arch" type="xml">
                 <form string="KYC Approval" create="false" delete="false">
                     <header>
-                        <button name="confirm_submit_form" string="Submit for Approval" type="object" class="oe_highlight"
+                        <button name="confirm_submit_form" string="Submit for Approval" type="object"
+                                class="oe_highlight"
                                 confirm="Do you want to submit the request?"
                                 invisible="state != 'draft' or is_approved"/>
                         <button name="%(approve_request_wizard_action)d" string="Approve" type="action"
                                 invisible="state in ('draft', 'confirmed', 'rejected', 'expired') or assigned_to != uid or is_approved"/>
                         <button name="%(reject_request_wizard_action)d" string="Reject" type="action"
                                 invisible="state in ('draft', 'confirmed', 'rejected', 'expired') or assigned_to != uid or is_approved"/>
-                        <button name="approve_by_manager" string="Approval By Manager" type="object" class="oe_highlight"
+                        <button name="approve_by_manager" string="Approval By Manager" type="object"
+                                class="oe_highlight"
                                 confirm="Do you want to Approve the request?" invisible="1"/>
                         <field name="state" widget="statusbar"/>
                     </header>
@@ -54,7 +56,7 @@
                                     <!--<field name="no_partner_director" widget="radio"/>-->
                                 </group>
                             </page>
-                            <page string="KYC_Sole_Proprietor" name="kyc_sole_proprietor">
+                            <page string="Director/Owner Details" name="kyc_sole_proprietor">
                                 <group string="Director / Owner Details">
                                     <field name="director_name" placeholder="Your Answer"/>
                                     <field name="director_phone" placeholder="Your Answer"/>
@@ -64,11 +66,15 @@
                                            options="{'size': [80, 80]}"/>
                                     <field name="gst_no" placeholder="Your Answer"/>
                                     <field name="udyam_number" placeholder="Your Answer"/>
-                                    <field name="gst_certificate" widget="many2many_binary"/>
-                                    <field name="udyam_document" widget="many2many_binary"/>
+                                    <field name="gst_certificate" widget="many2many_binary"
+                                           options="{'accepted_file_extensions': 'image/*'}"/>
+                                    <field name="udyam_document" widget="many2many_binary"
+                                           options="{'accepted_file_extensions': 'image/*'}"/>
                                     <field name="gst_return_duration" placeholder="Your Answer"/>
-                                    <field name="shop_photos" widget="many2many_binary"/>
-                                    <field name="shop_videos" widget="many2many_binary"/>
+                                    <field name="shop_photos" widget="many2many_binary"
+                                           options="{'accepted_file_extensions': 'image/*'}"/>
+                                    <field name="shop_videos" widget="many2many_binary"
+                                           options="{'accepted_file_extensions': 'image/*'}"/>
                                 </group>
                             </page>
                             <page string="Bank Details" name="bank_details">

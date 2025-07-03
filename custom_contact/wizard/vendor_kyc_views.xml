@@ -38,7 +38,7 @@
                             <!--<field name="no_partner_director" widget="radio"/>-->
                         </group>
                     </group>
-                    <group string="KYC_Sole_Proprietor" name="kyc_sole_proprietor">
+                    <group string="Director/Owner Details" name="kyc_sole_proprietor">
                         <group string="Director / Owner Details">
                             <field name="director_name" placeholder="Your Answer"/>
                             <field name="director_phone" placeholder="Your Answer"/>
@@ -47,14 +47,19 @@
                             <field name="pan_card" placeholder="Your Answer" widget="image"/>
                             <field name="gst_no" placeholder="Your Answer"/>
                             <field name="udyam_number" placeholder="Your Answer"/>
-                            <field name="gst_certificate" widget="many2many_binary"/>
-                            <field name="udyam_document" widget="many2many_binary"/>
+                            <field name="gst_certificate" widget="many2many_binary"
+                                   options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 5}"/>
+                            <field name="udyam_document" widget="many2many_binary"
+                                   options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 5}"/>
                             <field name="gst_return_duration" placeholder="Your Answer"/>
-                            <field name="shop_photos" widget="many2many_binary"/>
-                            <field name="shop_videos" widget="many2many_binary"/>
+                            <field name="shop_photos" widget="many2many_binary"
+                                   options="{'accepted_file_extensions': 'image/*', 'number_of_files': 10}"/>
+                            <field name="shop_videos" widget="many2many_binary"
+                                   options="{'accepted_file_extensions': 'video/*', 'number_of_files': 10}"/>
                         </group>
                     </group>
-                    <group string="Bank Details(Please provide all required bank Details Carefully)" name="bank_details">
+                    <group string="Bank Details(Please provide all required bank Details Carefully)"
+                           name="bank_details">
                         <group>
                             <field name="bank_name" placeholder="Your Answer"/>
                             <field name="account_no" placeholder="Your Answer"/>
