@@ -70,17 +70,16 @@ class InheritSurvey(models.Model):
         return res
 
     # Inherit Share method for change Share a Survey name to share a Fact Find Form
-    # def action_send_survey(self):
-    #     """ Inherit the original method """
-    #     result = super(InheritSurvey, self).action_send_survey()
-    #     result['name'] = "Share a Form"
-    #     if self.survey_category.is_fff:
-    #         if 'name' in result:
-    #             result['name'] = "Share a Form"
-    #     return result
+    def action_send_survey(self):
+        """ Inherit the original method """
+        result = super(InheritSurvey, self).action_send_survey()
+        if 'name' in result:
+            result['name'] = "Share KYC Form"
+        return result
 
     # Overide Start Survey method for change Start Survey name to start
     def action_start_survey(self, answer=None):
+        print('11111111111')
         """ Open the website page with the survey form """
         self.ensure_one()
         url = '%s?%s' % (self.get_start_url(),

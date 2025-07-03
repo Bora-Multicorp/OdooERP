@@ -16,10 +16,10 @@
                     <field string="Send by Email" name="send_email" widget="boolean_toggle" options="{'autosave': False}"
                                    invisible="survey_access_mode != 'public' or send_by_sms == True"/>
                 </xpath>
-                <!--<xpath expr="//label[@for='survey_start_url']" position="replace">
+                <xpath expr="//label[@for='survey_start_url']" position="replace">
                     <label class="o_survey_label_survey_start_url" for="survey_start_url" string="Form Link"
-                           invisible="survey_access_mode != 'public'"/>
-                </xpath>-->
+                                 invisible="survey_access_mode != 'public'"/>
+                </xpath>
                 <xpath expr="//footer" position="inside">
                     <button name="send_sms" type="object" string="Send SMS" invisible="send_by_sms == False"/>
                 </xpath>

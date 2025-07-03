@@ -5,4 +5,6 @@ from . import vendor_approval
 from . import custom_partner
 #from . import purchase_order
 #from . import sale_order
+from . import survey
+from . import survey_user_input
 from . import vendor_approval_res_config

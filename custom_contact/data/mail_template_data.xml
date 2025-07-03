@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="survey.mail_template_user_input_invite" model="mail.template">
+            <field name="name">KYC Form: Invite</field>
+            <field name="model_id" ref="survey.model_survey_user_input"/>
+            <field name="subject">{{ object.survey_id.display_name }} survey</field>
+            <field name="email_from">{{ user.email_formatted }}</field>
+            <field name="email_to">{{ (object.partner_id.email_formatted or object.email) }}</field>
+            <field name="description">Sent to user when you share a KYC form</field>
+            <field name="body_html" type="html">
+                <div style="margin: 0px; padding: 0px; font-size: 13px;">
+                    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+                        Dear
+                        <t t-out="object.partner_id.name or 'participant'">User</t>
+                        <br/>
+                        <br/>
+                        <!--<t t-if="object.survey_id.certification">
+                            You have been invited to take a new certification.
+                        </t>
+                        <t t-else="">
+                            We are conducting a survey and your response would be appreciated.
+                        </t>-->
+                        We are sharing a KYC form and your response would be appreciated.
+                        <div style="margin: 16px 0px 16px 0px;">
+                            <a t-att-href="(object.get_start_url())"
+                               style="background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;">
+                                <!--<t t-if="object.survey_id.certification">
+                                    Start Certification
+                                </t>
+                                <t t-else="">
+                                    Start Survey
+                                </t>-->
+                                Start
+                            </a>
+                        </div>
+                        <!--<t t-if="object.deadline">
+                            Please response the form till <t t-out="format_date(object.deadline) or ''">
+                            Deadline</t>.
+                            <br/>
+                            <br/>
+                        </t>-->
+                        <t t-if="object.survey_id.certification">
+                            We wish you good luck!
+                        </t>
+                        <t t-else="">
+                            Thank you.
+                        </t>
+                    </p>
+                </div>
+            </field>
+            <field name="lang">{{ object.partner_id.lang }}</field>
+            <field name="auto_delete" eval="False"/>
+        </record>
+    </data>
+
+</odoo>
