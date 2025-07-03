@@ -253,7 +253,7 @@
             <field name="sequence">25</field>
             <field name="question_type">upload_file</field>
             <field name="upload_multiple_file">False</field>
-            <field name="constr_mandatory">True</field>
+            <field name="constr_mandatory">False</field>
         </record>
         <!-- PAN Card (Proprietor)  -->
         <record model="survey.question" id="pan_card_kyc_survey">
@@ -262,7 +262,7 @@
             <field name="sequence">26</field>
             <field name="question_type">upload_file</field>
             <field name="upload_multiple_file">False</field>
-            <field name="constr_mandatory">True</field>
+            <field name="constr_mandatory">False</field>
         </record>
         <!-- GST Number -->
         <record model="survey.question" id="gst_no_kyc_survey">
@@ -287,7 +287,7 @@
             <field name="sequence">29</field>
             <field name="question_type">upload_file</field>
             <field name="upload_multiple_file">True</field>
-            <field name="constr_mandatory">True</field>
+            <field name="constr_mandatory">False</field>
         </record>
         <!-- Shop Act documents / Udyam Documents -->
         <record model="survey.question" id="udyam_document_kyc_survey">
@@ -296,7 +296,7 @@
             <field name="sequence">30</field>
             <field name="question_type">upload_file</field>
             <field name="upload_multiple_file">True</field>
-            <field name="constr_mandatory">True</field>
+            <field name="constr_mandatory">False</field>
         </record>
         <!-- GST Return duration -->
         <record model="survey.question" id="gst_duration_kyc_survey">
@@ -323,7 +323,7 @@
             <field name="sequence">32</field>
             <field name="question_type">upload_file</field>
             <field name="upload_multiple_file">True</field>
-            <field name="constr_mandatory">True</field>
+            <field name="constr_mandatory">False</field>
         </record>
         <!-- Shop Videos -->
         <record model="survey.question" id="shop_videos_kyc_survey">
@@ -332,7 +332,7 @@
             <field name="sequence">33</field>
             <field name="question_type">upload_file</field>
             <field name="upload_multiple_file">True</field>
-            <field name="constr_mandatory">True</field>
+            <field name="constr_mandatory">False</field>
         </record>
 
 
@@ -394,7 +394,7 @@
             <field name="sequence">47</field>
             <field name="question_type">upload_file</field>
             <field name="upload_multiple_file">True</field>
-            <field name="constr_mandatory">True</field>
+            <field name="constr_mandatory">False</field>
         </record>
 
     </data>
