@@ -70,11 +70,11 @@ class SurveyUserInput(models.Model):
         """
         datas_list, names_list = answer  # unpack
 
-        if not (isinstance(datas_list, list) and isinstance(names_list, list)):
-            raise UserError("Invalid file upload payload.")
-
-        if len(datas_list) != len(names_list):
-            raise UserError("Mismatch between filenames and file data.")
+        # if not (isinstance(datas_list, list) and isinstance(names_list, list)):
+        #     raise UserError("Invalid file upload payload.")
+        #
+        # if len(datas_list) != len(names_list):
+        #     raise UserError("Mismatch between filenames and file data.")
 
         attachment_ids = []
         for datas_b64, fname in zip(datas_list, names_list):
