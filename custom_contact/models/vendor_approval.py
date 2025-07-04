@@ -55,26 +55,26 @@ class ContactKYCApproval(models.Model):
     gst_no = fields.Char(string="GST Number")
     udyam_number = fields.Char(string="Udyam Certificate Number")
     gst_certificate = fields.Many2many('ir.attachment', 'vendor_kyc_gst_cert_rel1', 'wizard_id', 'attachment_id',
-                                       string="Company GST Certificate", required=True)
+                                       string="Company GST Certificate", required=False)
 
     udyam_document = fields.Many2many('ir.attachment', 'vendor_kyc_shop_documents_rel1', 'wizard_id', 'attachment_id',
                                       string="Shop Act documents / Udyam Documents", required=True)
 
     gst_return_duration = fields.Selection([('Monthly', 'Monthly'), ('Quarterly', 'Quarterly')],
-                                           required=True, string="GST Return duration")
+                                           required=False, string="GST Return duration")
 
     shop_photos = fields.Many2many('ir.attachment', 'vendor_kyc_shop_photos_rel1', 'wizard_id', 'attachment_id',
-                                   string="Shop Photos", required=True,
+                                   string="Shop Photos", required=False,
                                    help="Short Video / Walkway from outdoor / indoor. Must include - signage Board with GST Number.")
 
     shop_videos = fields.Many2many('ir.attachment', 'vendor_kyc_shop_videos_rel1', 'wizard_id', 'attachment_id',
-                                   string="Shop Videos", required=True,
+                                   string="Shop Videos", required=False,
                                    help="Short Video / Walkway from outdoor / indoor. Must include - signage Board with GST Number.")
 
-    bank_name = fields.Char(string="Bank Name", required=True)
-    account_no = fields.Char(string="Account Number", required=True)
-    ifsc_code = fields.Char(string="IFSC Code", required=True)
-    bank_address = fields.Char(string="Bank Address", required=True)
+    bank_name = fields.Char(string="Bank Name", required=False)
+    account_no = fields.Char(string="Account Number", required=False)
+    ifsc_code = fields.Char(string="IFSC Code", required=False)
+    bank_address = fields.Char(string="Bank Address", required=False)
     bank_cheque_attachments = fields.Many2many('ir.attachment', 'vendor_kyc_bank_cheque_rel1', 'wizard_id',
                                                'attachment_id', string="Cancelled Cheques")
 
@@ -83,7 +83,7 @@ class ContactKYCApproval(models.Model):
                               ('pending', 'Pending Approval'),
                               ('confirmed', 'Confirmed'),
                               ('rejected', 'Rejected'),
-                              ('expired', 'Expired')], default='draft', required=True, string="Status")
+                              ('expired', 'Expired')], default='draft', required=False, string="Status")
     approval_users_ids = fields.One2many('approval.users', 'kyc_approval_id', 'Approval Authorities',
                                          help='Approval Authority Details')
     assigned_to = fields.Many2one('res.users', string='Assigned To')
