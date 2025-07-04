@@ -146,9 +146,46 @@
             </field>
         </record>
 
-        <!-- Remove the Survey Questions menu -->
-        <record id="survey.survey_menu_questions" model="ir.ui.menu">
-            <field name="active" eval="False"/>
+        <!-- Create New Vendor Registration Survey Action -->
+        <record model="ir.actions.act_window" id="vendor_registration_action_survey_form">
+            <field name="name">Vendor Registration Form</field>
+            <field name="res_model">survey.survey</field>
+            <field name="view_mode">kanban,list,form,activity</field>
+            <!--<field name="domain">[('survey_category.is_claim','=',True)]</field>-->
+            <field name="help" type="html">
+                <p>
+                    No Survey Found
+                </p>
+                <p>
+                    Ready to test? Pick a sample or create one from scratch...
+                </p>
+            </field>
         </record>
+
+        <!-- Vendor Registration Form Menu -->
+        <menuitem name="Vendor Registration Form" id="menu_vendor_registration_survey_form" action="vendor_registration_action_survey_form"
+                  parent="contacts.menu_contacts" sequence="4"/>
+
+        <!-- Create New Vendor Registration Response Action  -->
+        <record model="ir.actions.act_window" id="vendor_registration_action_survey_user_input">
+            <field name="name">Vendor Registration Response</field>
+            <field name="res_model">survey.user_input</field>
+            <field name="view_mode">list,kanban,form</field>
+            <!--<field name="domain">[('survey_id.survey_category.is_claim','=',True)]</field>-->
+            <field name="context">{'search_default_group_by_survey': True}</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_empty_folder">
+                    No answers yet!
+                </p>
+                <p>
+                    You can share your links through different means: email, invite shortcut, live presentation, ...
+                </p>
+            </field>
+        </record>
+
+        <!-- Vendor Registration Form Response Menu -->
+        <menuitem name="Vendor Registration Form Response" id="menu_vendor_registration_survey_form_response" action="vendor_registration_action_survey_user_input"
+                  parent="contacts.menu_contacts" sequence="5"/>
+
     </data>
 </odoo>
