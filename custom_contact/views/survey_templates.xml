@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Overide start survey template for change name to start-->
+        <template id="survey.survey_fill_form_start" name="Survey: start form content">
+        <div class="wrap o_survey_start">
+            <div class='mb32'>
+                <div t-field='survey.description' class="oe_no_empty pb-5 text-break"/>
+                <t t-if="answer.is_session_answer">
+                    <div class="fw-bold">
+                        The session will begin automatically when the host starts.
+                    </div>
+                </t>
+                <t t-else="">
+                    <div t-if="survey.is_time_limited">
+                        <p>
+                            <span t-if="not survey.certification">Time limit for this survey: </span>
+                            <span t-else="">Time limit for this certification: </span>
+                            <span class="fw-bold text-danger" t-field="survey.time_limit" t-options="{'widget': 'duration', 'unit': 'minute'}"></span>
+                        </p>
+                    </div>
+                    <button type="submit" value="start" class="btn btn-primary btn-lg disabled">
+                        <t t-if="survey.certification">
+                            <!--Start Certification-->
+                            Start
+                        </t>
+                        <t t-else="">
+                            <!--Start Survey-->
+                            Start
+                        </t>
+                    </button>
+                    <span class="o_survey_enter fw-bold text-muted ms-2 d-none d-md-inline">or press Enter</span>
+                </t>
+            </div>
+        </div>
+    </template>
+    </data>
+</odoo>

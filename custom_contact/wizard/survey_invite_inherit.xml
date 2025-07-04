@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="inherit_survey_invite_view_form" model="ir.ui.view">
+            <field name="name">survey.invite.view.form.inherit</field>
+            <field name="model">survey.invite</field>
+            <field name="inherit_id" ref="survey.survey_invite_view_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='send_email']" position="after">
+                    <field name="send_by_sms" widget="boolean_toggle" options="{'autosave': False}" invisible="send_email == True"/>
+                    <field name="sms_recipient" invisible="send_by_sms == False"/>
+                    <field name="mobile_no"  widget="phone" invisible="send_by_sms == False" required="send_by_sms == True"/>
+                    <!--options="{'enable_sms': false}"-->
+                </xpath>
+                <xpath expr="//field[@name='send_email']" position="replace">
+                    <field string="Send by Email" name="send_email" widget="boolean_toggle" options="{'autosave': False}"
+                                   invisible="survey_access_mode != 'public' or send_by_sms == True"/>
+                </xpath>
+                <xpath expr="//label[@for='survey_start_url']" position="replace">
+                    <label class="o_survey_label_survey_start_url" for="survey_start_url" string="Form Link"
+                                 invisible="survey_access_mode != 'public'"/>
+                </xpath>
+                <xpath expr="//footer" position="inside">
+                    <button name="send_sms" type="object" string="Send SMS" invisible="send_by_sms == False"/>
+                </xpath>
+            </field>
+        </record>
+
+    </data>
+</odoo>

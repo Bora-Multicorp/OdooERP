@@ -1,0 +1,401 @@
+<?xml version ="1.0" encoding="utf-8" ?>
+<odoo>
+    <data>
+        <!-- Vendor Kyc Form -->
+        <record model="survey.survey" id="vendor_kyc_form_survey">
+            <field name="title">Bora Multicorp</field>
+            <field name="survey_type">survey</field>
+            <field name="user_id" ref="base.user_admin"/>
+            <field name="access_mode">public</field>
+            <field name="questions_layout">page_per_section</field>
+            <field name="users_can_go_back" eval="True"/>
+            <field name="users_login_required" eval="False"/>
+            <!--<field name="survey_image" type="base64" file="survey_management/static/description/img/corbiz_logo.jpg"/>-->
+            <field name="is_attempts_limited" eval="True"/>
+            <field name="attempts_limit">1</field>
+            <field name="description" type="html">
+                <h2>Welcome to Bora Multicorp</h2>
+                <p>The name, email, and photo associated with your Google account will be recorded when you upload files
+                    and submit this form
+                </p>
+                <p>Any files that are uploaded will be shared outside of the organization they belong to.
+                </p>
+            </field>
+        </record>
+        <!-- Page1: -->
+        <record model="survey.question" id="vendor_kyc_form_survey_p1">
+            <field name="title"></field>
+            <field name="survey_id" ref="vendor_kyc_form_survey"/>
+            <field name="sequence">1</field>
+            <field name="question_type" eval="False"/>
+            <field name="is_page" eval="True"/>
+        </record>
+        <!-- Email -->
+        <record model="survey.question" id="email_kyc_survey">
+            <field name="title">Email</field>
+            <field name="survey_id" ref="vendor_kyc_form_survey"/>
+            <field name="sequence">2</field>
+            <field name="question_type">char_box</field>
+            <field name="constr_mandatory">True</field>
+            <field name="validation_email">True</field>
+            <field name="save_as_email">True</field>
+            <field name="question_placeholder">Your Answer</field>
+        </record>
+        <!-- Point of Contact / Purchase Manager (Bora Multicorp) -->
+        <record model="survey.question" id="point_of_contact_kyc_survey">
+            <field name="title">Point of Contact / Purchase Manager (Bora Multicorp)</field>
+            <field name="survey_id" ref="vendor_kyc_form_survey"/>
+            <field name="sequence">3</field>
+            <field name="question_type">char_box</field>
+            <field name="constr_mandatory">True</field>
+            <field name="question_placeholder">Your Answer</field>
+        </record>
+        <!-- Page2: KYC Form (Company Details)-->
+        <record model="survey.question" id="vendor_kyc_form_survey_p2">
+            <field name="title">KYC Form (Company Details)</field>
+            <field name="survey_id" ref="vendor_kyc_form_survey"/>
+            <field name="sequence">4</field>
+            <field name="question_type" eval="False"/>
+            <field name="is_page" eval="True"/>
+        </record>
+        <!-- Business Legal Name -->
+        <record model="survey.question" id="business_name_kyc_survey">
+            <field name="title">Business Legal Name</field>
+            <field name="survey_id" ref="vendor_kyc_form_survey"/>
+            <field name="sequence">5</field>
+            <field name="question_type">char_box</field>
+            <field name="constr_mandatory">True</field>
+            <field name="question_placeholder">Your Answer</field>
+        </record>
+        <!-- Business Trade Name -->
+        <record model="survey.question" id="business_trade_name_kyc_survey">
+            <field name="title">Business Trade Name</field>
+            <field name="survey_id" ref="vendor_kyc_form_survey"/>
+            <field name="sequence">6</field>
+            <field name="question_type">char_box</field>
+            <field name="constr_mandatory">True</field>
+            <field name="question_placeholder">Your Answer</field>
+            <field name="description" type="html">
+                <p>If same name as above, Please fill the name again</p>
+            </field>
+        </record>
+        <!-- Principal Place of Business -->
+        <!--<record model="survey.question" id="principal_places_kyc_survey">
+            <field name="title">Principal Place of Business</field>
+            <field name="survey_id" ref="vendor_kyc_form_survey"/>
+            <field name="sequence">7</field>
+            <field name="question_type" eval="False"/>
+        </record>-->
+        <!-- Address -->
+        <record model="survey.question" id="business_address_kyc_survey">
+            <field name="title">Principal Place of Business(Address)</field>
+            <field name="survey_id" ref="vendor_kyc_form_survey"/>
+            <field name="sequence">7</field>
+            <field name="question_type">char_box</field>
+            <field name="constr_mandatory">True</field>
+            <field name="question_placeholder">Address</field>
+        </record>
+        <!-- City -->
+        <record model="survey.question" id="business_city_kyc_survey">
+            <field name="title">City</field>
+            <field name="survey_id" ref="vendor_kyc_form_survey"/>
+            <field name="sequence">8</field>
+            <field name="question_type">char_box</field>
+            <field name="constr_mandatory">True</field>
+            <field name="question_placeholder">Your Answer</field>
+        </record>
+        <!-- Pincode -->
+        <record model="survey.question" id="business_pincode_kyc_survey">
+            <field name="title">Pincode</field>
+            <field name="survey_id" ref="vendor_kyc_form_survey"/>
+            <field name="sequence">9</field>
+            <field name="question_type">char_box</field>
+            <field name="constr_mandatory">True</field>
+            <field name="question_placeholder">Your Answer</field>
+        </record>
+        <!-- Additional Place of Business -->
+        <!--<record model="survey.question" id="additional_places_kyc_survey">
+            <field name="title">Additional Place of Business</field>
+            <field name="survey_id" ref="vendor_kyc_form_survey"/>
+            <field name="sequence">10</field>
+            <field name="question_type" eval="False"/>
+        </record>-->
+        <!-- Additional Address -->
+        <record model="survey.question" id="additional_address_kyc_survey">
+            <field name="title">Additional Place of Business
+                (Address)</field>
+            <field name="survey_id" ref="vendor_kyc_form_survey"/>
+            <field name="sequence">11</field>
+            <field name="question_type">char_box</field>
+            <field name="constr_mandatory">False</field>
+            <field name="question_placeholder">Address</field>
+        </record>
+        <!-- Additional City -->
+        <record model="survey.question" id="additional_city_kyc_survey">
+            <field name="title">City</field>
+            <field name="survey_id" ref="vendor_kyc_form_survey"/>
+            <field name="sequence">12</field>
+            <field name="question_type">char_box</field>
+            <field name="constr_mandatory">False</field>
+            <field name="question_placeholder">Your Answer</field>
+        </record>
+        <!-- Additional Pincode -->
+        <record model="survey.question" id="additional_pincode_kyc_survey">
+            <field name="title">Pincode</field>
+            <field name="survey_id" ref="vendor_kyc_form_survey"/>
+            <field name="sequence">13</field>
+            <field name="question_type">char_box</field>
+            <field name="constr_mandatory">False</field>
+            <field name="question_placeholder">Your Answer</field>
+        </record>
+        <!-- Additional Contact Number -->
+        <record model="survey.question" id="additional_contact_no_kyc_survey">
+            <field name="title">Contact Number</field>
+            <field name="survey_id" ref="vendor_kyc_form_survey"/>
+            <field name="sequence">14</field>
+            <field name="question_type">char_box</field>
+            <field name="constr_mandatory">True</field>
+            <field name="question_placeholder">Your Answer</field>
+        </record>
+        <!-- Additional Email Address -->
+        <record model="survey.question" id="additional_email_kyc_survey">
+            <field name="title">Email Address</field>
+            <field name="survey_id" ref="vendor_kyc_form_survey"/>
+            <field name="sequence">15</field>
+            <field name="question_type">char_box</field>
+            <field name="constr_mandatory">False</field>
+            <field name="validation_email">True</field>
+            <field name="question_placeholder">Your Answer</field>
+        </record>
+        <!-- Constitution of Business -->
+        <record model="survey.question" id="business_constitution_kyc_survey">
+            <field name="title">Constitution of Business</field>
+            <field name="survey_id" ref="vendor_kyc_form_survey"/>
+            <field name="sequence">16</field>
+            <field name="question_type">simple_choice</field>
+            <field name="comments_allowed" eval="True"/>
+            <field name="comment_count_as_answer" eval="True"/>
+            <field name="constr_mandatory" eval="True"/>
+        </record>
+        <record model="survey.question.answer" id="business_constitution_kyc_survey_sug1">
+            <field name="question_id" ref="business_constitution_kyc_survey"/>
+            <field name="sequence">1</field>
+            <field name="value">Sole Proprietor</field>
+        </record>
+        <record model="survey.question.answer" id="business_constitution_kyc_survey_sug2">
+            <field name="question_id" ref="business_constitution_kyc_survey"/>
+            <field name="sequence">2</field>
+            <field name="value">Partnership</field>
+        </record>
+        <record model="survey.question.answer" id="business_constitution_kyc_survey_sug3">
+            <field name="question_id" ref="business_constitution_kyc_survey"/>
+            <field name="sequence">3</field>
+            <field name="value">Pvt Ltd Co.</field>
+        </record>
+        <record model="survey.question.answer" id="business_constitution_kyc_survey_sug4">
+            <field name="question_id" ref="business_constitution_kyc_survey"/>
+            <field name="sequence">4</field>
+            <field name="value">LLP</field>
+        </record>
+        <record model="survey.question.answer" id="business_constitution_kyc_survey_sug5">
+            <field name="question_id" ref="business_constitution_kyc_survey"/>
+            <field name="sequence">5</field>
+            <field name="value">HUF(Karta)</field>
+        </record>
+        <!-- Page3: Director/Owner Details-->
+        <record model="survey.question" id="vendor_kyc_form_survey_p3">
+            <field name="title">Director/Owner Details</field>
+            <field name="survey_id" ref="vendor_kyc_form_survey"/>
+            <field name="sequence">20</field>
+            <field name="question_type" eval="False"/>
+            <field name="is_page" eval="True"/>
+            <!--<field name="description" type="html">
+                <h3>(Director / Owner Details)</h3>
+                <br/>
+            </field>-->
+        </record>
+        <!-- Director / Owner Details  -->
+        <!--<record model="survey.question" id="director_owner_details_kyc_survey">
+            <field name="title">Director / Owner Details</field>
+            <field name="survey_id" ref="vendor_kyc_form_survey"/>
+            <field name="sequence">21</field>
+            <field name="question_type" eval="False"/>
+        </record>-->
+        <!-- Name of the Owner / Director -->
+        <record model="survey.question" id="director_name_kyc_survey">
+            <field name="title">Name of the Owner / Director</field>
+            <field name="survey_id" ref="vendor_kyc_form_survey"/>
+            <field name="sequence">22</field>
+            <field name="question_type">char_box</field>
+            <field name="constr_mandatory">True</field>
+        </record>
+        <!-- Contact Number -->
+        <record model="survey.question" id="director_contact_no_kyc_survey">
+            <field name="title">Contact Number</field>
+            <field name="survey_id" ref="vendor_kyc_form_survey"/>
+            <field name="sequence">23</field>
+            <field name="question_type">char_box</field>
+            <field name="constr_mandatory">True</field>
+        </record>
+        <!-- Email Address -->
+        <record model="survey.question" id="director_email_kyc_survey">
+            <field name="title">Email Address</field>
+            <field name="survey_id" ref="vendor_kyc_form_survey"/>
+            <field name="sequence">24</field>
+            <field name="question_type">char_box</field>
+            <field name="validation_email">True</field>
+            <field name="constr_mandatory">True</field>
+        </record>
+        <!-- Aadhaar Card -->
+        <record model="survey.question" id="aadhaar_card_kyc_survey">
+            <field name="title">Aadhaar Card</field>
+            <field name="survey_id" ref="vendor_kyc_form_survey"/>
+            <field name="sequence">25</field>
+            <field name="question_type">upload_file</field>
+            <field name="upload_multiple_file">False</field>
+            <field name="constr_mandatory">False</field>
+        </record>
+        <!-- PAN Card (Proprietor)  -->
+        <record model="survey.question" id="pan_card_kyc_survey">
+            <field name="title">PAN Card (Proprietor)</field>
+            <field name="survey_id" ref="vendor_kyc_form_survey"/>
+            <field name="sequence">26</field>
+            <field name="question_type">upload_file</field>
+            <field name="upload_multiple_file">False</field>
+            <field name="constr_mandatory">False</field>
+        </record>
+        <!-- GST Number -->
+        <record model="survey.question" id="gst_no_kyc_survey">
+            <field name="title">GST Number</field>
+            <field name="survey_id" ref="vendor_kyc_form_survey"/>
+            <field name="sequence">27</field>
+            <field name="question_type">char_box</field>
+            <field name="constr_mandatory">True</field>
+        </record>
+        <!-- Udyam Certificate Number -->
+        <record model="survey.question" id="udyam_certificate_kyc_survey">
+            <field name="title">Udyam Certificate Number</field>
+            <field name="survey_id" ref="vendor_kyc_form_survey"/>
+            <field name="sequence">28</field>
+            <field name="question_type">char_box</field>
+            <field name="constr_mandatory">True</field>
+        </record>
+        <!-- Company GST Certificate -->
+        <record model="survey.question" id="gst_certificate_kyc_survey">
+            <field name="title">Company GST Certificate</field>
+            <field name="survey_id" ref="vendor_kyc_form_survey"/>
+            <field name="sequence">29</field>
+            <field name="question_type">upload_file</field>
+            <field name="upload_multiple_file">True</field>
+            <field name="constr_mandatory">False</field>
+        </record>
+        <!-- Shop Act documents / Udyam Documents -->
+        <record model="survey.question" id="udyam_document_kyc_survey">
+            <field name="title">Shop Act documents / Udyam Documents</field>
+            <field name="survey_id" ref="vendor_kyc_form_survey"/>
+            <field name="sequence">30</field>
+            <field name="question_type">upload_file</field>
+            <field name="upload_multiple_file">True</field>
+            <field name="constr_mandatory">False</field>
+        </record>
+        <!-- GST Return duration -->
+        <record model="survey.question" id="gst_duration_kyc_survey">
+            <field name="title">GST Return duration</field>
+            <field name="survey_id" ref="vendor_kyc_form_survey"/>
+            <field name="sequence">31</field>
+            <field name="question_type">simple_choice</field>
+            <field name="constr_mandatory" eval="True"/>
+        </record>
+        <record model="survey.question.answer" id="gst_duration_kyc_survey_sug1">
+            <field name="question_id" ref="gst_duration_kyc_survey"/>
+            <field name="sequence">1</field>
+            <field name="value">Monthly</field>
+        </record>
+        <record model="survey.question.answer" id="gst_duration_kyc_survey_sug2">
+            <field name="question_id" ref="gst_duration_kyc_survey"/>
+            <field name="sequence">2</field>
+            <field name="value">Quarterly</field>
+        </record>
+        <!-- Shop Photos -->
+        <record model="survey.question" id="shop_photos_kyc_survey">
+            <field name="title">Shop Photos</field>
+            <field name="survey_id" ref="vendor_kyc_form_survey"/>
+            <field name="sequence">32</field>
+            <field name="question_type">upload_file</field>
+            <field name="upload_multiple_file">True</field>
+            <field name="constr_mandatory">False</field>
+        </record>
+        <!-- Shop Videos -->
+        <record model="survey.question" id="shop_videos_kyc_survey">
+            <field name="title">Shop Videos</field>
+            <field name="survey_id" ref="vendor_kyc_form_survey"/>
+            <field name="sequence">33</field>
+            <field name="question_type">upload_file</field>
+            <field name="upload_multiple_file">True</field>
+            <field name="constr_mandatory">False</field>
+        </record>
+
+
+        <!-- Page4: Bank Details-->
+        <record model="survey.question" id="vendor_kyc_form_survey_p4">
+            <field name="title">Bank Details</field>
+            <field name="survey_id" ref="vendor_kyc_form_survey"/>
+            <field name="sequence">41</field>
+            <field name="question_type" eval="False"/>
+            <field name="is_page" eval="True"/>
+            <field name="description" type="html">
+                <p>Please provide all required bank Details Carefully</p>
+            </field>
+        </record>
+        <!-- Please provide all required bank Details Carefully  -->
+        <!--<record model="survey.question" id="bank_details_kyc_survey">
+            <field name="title">Please provide all required bank Details Carefully</field>
+            <field name="survey_id" ref="vendor_kyc_form_survey"/>
+            <field name="sequence">42</field>
+            <field name="question_type" eval="False"/>
+        </record>-->
+        <!-- Bank Name -->
+        <record model="survey.question" id="bank_name_kyc_survey">
+            <field name="title">Bank Name</field>
+            <field name="survey_id" ref="vendor_kyc_form_survey"/>
+            <field name="sequence">43</field>
+            <field name="question_type">char_box</field>
+            <field name="constr_mandatory">True</field>
+        </record>
+        <!-- Account Number -->
+        <record model="survey.question" id="account_no_kyc_survey">
+            <field name="title">Account Number</field>
+            <field name="survey_id" ref="vendor_kyc_form_survey"/>
+            <field name="sequence">44</field>
+            <field name="question_type">char_box</field>
+            <field name="constr_mandatory">True</field>
+        </record>
+        <!-- IFSC Code -->
+        <record model="survey.question" id="ifsc_code_kyc_survey">
+            <field name="title">IFSC Code</field>
+            <field name="survey_id" ref="vendor_kyc_form_survey"/>
+            <field name="sequence">45</field>
+            <field name="question_type">char_box</field>
+            <field name="constr_mandatory">True</field>
+        </record>
+        <!-- Bank Address -->
+        <record model="survey.question" id="bank_address_kyc_survey">
+            <field name="title">Bank Address</field>
+            <field name="survey_id" ref="vendor_kyc_form_survey"/>
+            <field name="sequence">46</field>
+            <field name="question_type">char_box</field>
+            <field name="constr_mandatory">True</field>
+        </record>
+
+        <!-- Cancelled Cheque -->
+        <record model="survey.question" id="cancel_cheque_kyc_survey">
+            <field name="title">Cancelled Cheque</field>
+            <field name="survey_id" ref="vendor_kyc_form_survey"/>
+            <field name="sequence">47</field>
+            <field name="question_type">upload_file</field>
+            <field name="upload_multiple_file">True</field>
+            <field name="constr_mandatory">False</field>
+        </record>
+
+    </data>
+</odoo>
