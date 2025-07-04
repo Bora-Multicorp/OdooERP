@@ -92,7 +92,7 @@
             </xpath>
             <xpath expr="//form/sheet" position="before">
                 <header>
-                    <button name="%(vendor_kyc_wizard_action)d" string="Vendor/Customer KYC" type="action"
+                    <button name="%(vendor_kyc_wizard_action)d" string="KYC Form" type="action"
                             class="btn btn-primary" invisible="is_kyc or (not is_vendor and not is_customer)"
                             display="always"/>
                     <button name="confirm_rekyc" string="Re-KYC" type="object" class="oe_highlight"
@@ -109,7 +109,7 @@
             </xpath>
 
             <xpath expr="//notebook" position="inside">
-                <page name="vendor_customer_details" string="Vendor/Customer KYC Details">
+                <page name="vendor_customer_details" string="KYC Form Details">
                     <field name="kyc_details">
                         <list create="False" edit="False" delete="False">
                             <field name="email"/>

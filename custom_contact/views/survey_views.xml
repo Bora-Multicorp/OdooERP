@@ -1,6 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <data>
+        <!-- Inherit USER INPUTS Form View -->
+        <record id="inherit_survey_user_input_view_form" model="ir.ui.view">
+            <field name="name">survey.user_input.view.form.inherit</field>
+            <field name="model">survey.user_input</field>
+            <field name="inherit_id" ref="survey.survey_user_input_view_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//button[@name='action_print_answers']" position="after">
+                    <button name="action_testing" string="Test" type="object" class="btn-primary" invisible="1"/>
+                </xpath>
+            </field>
+        </record>
         <!-- Inherit Survey Form View -->
         <record id="inherit_survey_survey_view_form" model="ir.ui.view">
             <field name="name">survey.survey.view.form.inherit</field>
@@ -163,7 +174,8 @@
         </record>
 
         <!-- Vendor Registration Form Menu -->
-        <menuitem name="Vendor Registration Form" id="menu_vendor_registration_survey_form" action="vendor_registration_action_survey_form"
+        <menuitem name="Vendor Registration Form" id="menu_vendor_registration_survey_form"
+                  action="vendor_registration_action_survey_form"
                   parent="contacts.menu_contacts" sequence="4"/>
 
         <!-- Create New Vendor Registration Response Action  -->
@@ -184,7 +196,8 @@
         </record>
 
         <!-- Vendor Registration Form Response Menu -->
-        <menuitem name="Vendor Registration Form Response" id="menu_vendor_registration_survey_form_response" action="vendor_registration_action_survey_user_input"
+        <menuitem name="Vendor Registration Form Response" id="menu_vendor_registration_survey_form_response"
+                  action="vendor_registration_action_survey_user_input"
                   parent="contacts.menu_contacts" sequence="5"/>
 
     </data>
