@@ -202,17 +202,17 @@
             <field name="sequence">5</field>
             <field name="value">HUF(Karta)</field>
         </record>
-        <!-- Page3: KYC_Sole_Proprietor-->
+        <!-- Page3: Director/Owner Details-->
         <record model="survey.question" id="vendor_kyc_form_survey_p3">
-            <field name="title">KYC_Sole_Proprietor</field>
+            <field name="title">Director/Owner Details</field>
             <field name="survey_id" ref="vendor_kyc_form_survey"/>
             <field name="sequence">20</field>
             <field name="question_type" eval="False"/>
             <field name="is_page" eval="True"/>
-            <field name="description" type="html">
+            <!--<field name="description" type="html">
                 <h3>(Director / Owner Details)</h3>
                 <br/>
-            </field>
+            </field>-->
         </record>
         <!-- Director / Owner Details  -->
         <!--<record model="survey.question" id="director_owner_details_kyc_survey">

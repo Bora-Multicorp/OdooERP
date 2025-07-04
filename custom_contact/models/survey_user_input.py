@@ -98,16 +98,13 @@ class SurveyUserInput(models.Model):
                     # Multiple file upload (Many2many)
                     values[field_name] = [(6, 0, files.ids)]
         if values:
-            print('111111111')
             if self.partner_id:
-                print('22222222222')
                 #self.partner_id.write(values)
                 values['partner_id'] = self.partner_id.id
                 res = self.env['res.partner.kyc.approval'].create(values)
                 if res:
                     self.partner_id.write({'is_kyc': True})
             elif self.email:
-                print('3333333333')
                 partner = self.env['res.partner'].search([('email', '=', self.email)], limit=1)
 
                 #partner.write(values)

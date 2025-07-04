@@ -1,17 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <data>
-        <!-- Inherit USER INPUTS Form View -->
-        <record id="inherit_survey_user_input_view_form" model="ir.ui.view">
-            <field name="name">survey.user_input.view.form.inherit</field>
-            <field name="model">survey.user_input</field>
-            <field name="inherit_id" ref="survey.survey_user_input_view_form"/>
-            <field name="arch" type="xml">
-                <xpath expr="//button[@name='action_print_answers']" position="after">
-                    <button name="action_testing" string="Test" type="object" class="btn-primary" invisible="1"/>
-                </xpath>
-            </field>
-        </record>
         <!-- Inherit Survey Form View -->
         <record id="inherit_survey_survey_view_form" model="ir.ui.view">
             <field name="name">survey.survey.view.form.inherit</field>
@@ -153,6 +142,65 @@
 
                 <xpath expr="//field[@name='question_and_page_ids']" position="attributes">
                     <attribute name="invisible">1</attribute>
+                </xpath>
+            </field>
+        </record>
+
+
+        <!-- Inherit USER INPUTS Form View -->
+        <record id="inherit_survey_user_input_view_form" model="ir.ui.view">
+            <field name="name">survey.user_input.view.form.inherit</field>
+            <field name="model">survey.user_input</field>
+            <field name="inherit_id" ref="survey.survey_user_input_view_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//button[@name='action_print_answers']" position="after">
+                    <button name="action_testing" string="Test" type="object" class="btn-primary" invisible="1"/>
+                </xpath>
+                <xpath expr="//field[@name='survey_id']" position="replace">
+                    <field name="survey_id" string="Form"/>
+                </xpath>
+                <xpath expr="//field[@name='test_entry']" position="attributes">
+                    <attribute name="invisible">1</attribute>
+                </xpath>
+                <xpath expr="//field[@name='access_token']" position="attributes">
+                    <attribute name="invisible">1</attribute>
+                </xpath>
+            </field>
+        </record>
+
+        <!-- Inherit USER INPUTS Tree View -->
+        <record id="inherit_survey_user_input_view_tree" model="ir.ui.view">
+            <field name="name">survey.user_input.view.tree.inherit</field>
+            <field name="model">survey.user_input</field>
+            <field name="inherit_id" ref="survey.survey_user_input_view_tree"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='survey_id']" position="replace">
+                    <field name="survey_id" string="Form"/>
+                </xpath>
+                <xpath expr="//field[@name='attempts_number']" position="attributes">
+                    <attribute name="column_invisible">1</attribute>
+                </xpath>
+                <xpath expr="//field[@name='scoring_success']" position="attributes">
+                    <attribute name="column_invisible">1</attribute>
+                </xpath>
+                <xpath expr="//field[@name='scoring_percentage']" position="attributes">
+                    <attribute name="column_invisible">1</attribute>
+                </xpath>
+                <xpath expr="//field[@name='deadline']" position="attributes">
+                    <attribute name="column_invisible">1</attribute>
+                </xpath>
+            </field>
+        </record>
+
+        <!-- Inherit USER INPUTS Search View -->
+        <record id="survey_management_view_search_inherit" model="ir.ui.view">
+            <field name="name">survey.management.search.inherit</field>
+            <field name="model">survey.user_input</field>
+            <field name="inherit_id" ref="survey.survey_user_input_view_search"/>
+            <field name="arch" type="xml">
+                <xpath expr="//filter[@name='group_by_survey']" position="replace">
+                    <filter name="group_by_survey" string="Forms" domain="[]"
+                            context="{'group_by': 'survey_id'}"/>
                 </xpath>
             </field>
         </record>
