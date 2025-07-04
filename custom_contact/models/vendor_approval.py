@@ -3,6 +3,7 @@
 from odoo import api, fields, models
 from dateutil.relativedelta import relativedelta
 
+
 class ContactKYCApproval(models.Model):
     _name = 'res.partner.kyc.approval'
     _description = 'Contact KYC approvals'
@@ -23,6 +24,14 @@ class ContactKYCApproval(models.Model):
                 }))
             defaults['approval_users_ids'] = approval_user_vals
         return defaults
+
+    @api.depends('approval_users_ids.user_id')
+    def _compute_existing_users(self):
+        for record in self:
+            if record.approval_users_ids:
+                record.existing_user_ids = [(6, 0, record.approval_users_ids.mapped('user_id').ids)]
+            else:
+                record.existing_user_ids = [(6, 0, [])]
 
     partner_id = fields.Many2one('res.partner', string="Contact")
     email = fields.Char("Email")
@@ -58,7 +67,7 @@ class ContactKYCApproval(models.Model):
                                        string="Company GST Certificate", required=False)
 
     udyam_document = fields.Many2many('ir.attachment', 'vendor_kyc_shop_documents_rel1', 'wizard_id', 'attachment_id',
-                                      string="Shop Act documents / Udyam Documents", required=True)
+                                      string="Shop Act documents / Udyam Documents", required=False)
 
     gst_return_duration = fields.Selection([('Monthly', 'Monthly'), ('Quarterly', 'Quarterly')],
                                            required=False, string="GST Return duration")
@@ -87,16 +96,12 @@ class ContactKYCApproval(models.Model):
     approval_users_ids = fields.One2many('approval.users', 'kyc_approval_id', 'Approval Authorities',
                                          help='Approval Authority Details')
     assigned_to = fields.Many2one('res.users', string='Assigned To')
-    existing_user_ids = fields.Many2many('res.users', compute='_compute_approval_user_ids', store=False)
+    existing_user_ids = fields.Many2many('res.users', compute='_compute_existing_users', store=True)
     is_approved = fields.Boolean(related='partner_id.is_approved', store=True)
-
-    @api.depends('existing_user_ids.user_id')
-    def _compute_approval_user_ids(self):
-        for record in self:
-            # Get the user_ids from related approval_detail_ids
-            user_ids = record.existing_user_ids.mapped('user_id')
-            # Assign the collected users to approval_user_ids
-            record.existing_user_ids = [(6, 0, user_ids.ids)]
+    approval_date = fields.Datetime(string="Approval Date", tracking=True)
+    is_rejected = fields.Boolean()
+    rejection_date = fields.Datetime(string="Rejection Date", tracking=True)
+    rejection_reason = fields.Text('Rejection Reason', tracking=True)
 
     def confirm_submit_form(self):
         if self.id:
@@ -123,15 +128,35 @@ class ContactKYCApproval(models.Model):
             elif states and all(s == 'approve' for s in states):
                 rec.state = 'confirmed'
 
+    from dateutil.relativedelta import relativedelta
+    from odoo import fields
+
     def write(self, vals):
         res = super().write(vals)
         if vals.get('state') == 'confirmed':
             for record in self:
                 if record.partner_id and not record.partner_id.is_approved:
-                    record.partner_id.write({'is_approved': True, 'deadline': fields.Datetime.now() + relativedelta(years=1)})
-                    # Set deadline to 1 year from now
-                    record.write({'deadline': fields.Datetime.now() + relativedelta(years=1)})
+                    now = fields.Datetime.now()
+                    one_year = now + relativedelta(years=1)
+                    # Update partner and record
+                    record.partner_id.write({
+                        'is_approved': True,
+                        'deadline': one_year,
+                    })
+                    record.write({
+                        'approval_date': now,
+                        'deadline': one_year,
+                    })
+                    # Send email to all approval users
+                    approval_template = self.env.ref('custom_contact.kyc_approval_email_template', raise_if_not_found=False)
+                    if approval_template and record.existing_user_ids:
+                        email_list = [user.email_formatted for user in record.existing_user_ids if user.email]
+                        if email_list:
+                            approval_template.send_mail(record.id, force_send=True,
+                                                        email_values={'email_from': self.env.user.email_formatted,
+                                                                      'email_to': ','.join(email_list), })
         return res
+
 
 class ApprovalUsers(models.Model):
     _name = "approval.users"

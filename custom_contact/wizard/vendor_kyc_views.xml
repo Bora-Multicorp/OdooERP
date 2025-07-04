@@ -39,7 +39,7 @@
                         </group>
                     </group>
                     <group string="Director/Owner Details" name="kyc_sole_proprietor">
-                        <group string="Director / Owner Details">
+                        <group>
                             <field name="director_name" placeholder="Your Answer"/>
                             <field name="director_phone" placeholder="Your Answer"/>
                             <field name="director_email" placeholder="Your Answer"/>

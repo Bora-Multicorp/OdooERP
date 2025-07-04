@@ -1,11 +1,29 @@
 # -*- coding: utf-8 -*-
 from email.policy import default
 
-from odoo import api, fields, models
-
+from odoo import api, fields, models, _
+from odoo.exceptions import ValidationError
 
 class CustomContact(models.Model):
     _inherit = 'res.partner'
+
+    _sql_constraints = [
+        # SQL-level constraint (optional if email is NULLable)
+        ('unique_email', 'UNIQUE(email)', 'Email address must be unique.')
+    ]
+
+    @api.constrains('email')
+    def _check_duplicate_email(self):
+        for rec in self:
+            if rec.email:
+                existing = self.env['res.partner'].search([
+                    ('email', '=', rec.email),
+                    ('id', '!=', rec.id)
+                ], limit=1)
+                if existing:
+                    raise ValidationError(
+                        _("The email address '%s' is already used by another contact.") % rec.email
+                    )
 
     @api.model
     def _get_view(self, view_id=None, view_type='form', **options):

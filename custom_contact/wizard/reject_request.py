@@ -2,6 +2,7 @@
 
 from odoo import api, fields, models
 
+
 class RejectRequestWizard(models.TransientModel):
     _name = 'reject.request.wizard'
     _description = 'Reject Request Form'
@@ -26,7 +27,10 @@ class RejectRequestWizard(models.TransientModel):
                 'remark': self.remark,
                 'action_date': fields.Datetime.now(),
             })
+            approval.write(
+                {'rejection_date': fields.Datetime.now(), 'rejection_reason': self.remark, 'assigned_to': False,
+                 'is_rejected': True})
             # Recompute the next approver
-            approval._update_assigned_to()
+            # approval._update_assigned_to()
 
         return {'type': 'ir.actions.act_window_close'}
