@@ -128,9 +128,6 @@ class ContactKYCApproval(models.Model):
             elif states and all(s == 'approve' for s in states):
                 rec.state = 'confirmed'
 
-    from dateutil.relativedelta import relativedelta
-    from odoo import fields
-
     def write(self, vals):
         res = super().write(vals)
         if vals.get('state') == 'confirmed':

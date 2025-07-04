@@ -4,9 +4,9 @@ from odoo import models, _
 from odoo.exceptions import UserError
 import base64
 
+
 class SurveyUserInput(models.Model):
     _inherit = "survey.user_input"
-
 
     def action_testing(self):
         pass
@@ -36,7 +36,7 @@ class SurveyUserInput(models.Model):
             Q("custom_contact.additional_pincode_kyc_survey").id: "additional_zip",
             Q("custom_contact.additional_contact_no_kyc_survey").id: "additional_phone",
             Q("custom_contact.additional_email_kyc_survey").id: "additional_email",
-            #Q("custom_contact.business_constitution_kyc_survey").id: "const_business",
+            # Q("custom_contact.business_constitution_kyc_survey").id: "const_business",
             Q("custom_contact.director_name_kyc_survey").id: "director_name",
             Q("custom_contact.director_contact_no_kyc_survey").id: "director_phone",
             Q("custom_contact.director_email_kyc_survey").id: "director_email",
@@ -99,16 +99,20 @@ class SurveyUserInput(models.Model):
                     values[field_name] = [(6, 0, files.ids)]
         if values:
             if self.partner_id:
-                #self.partner_id.write(values)
+                # self.partner_id.write(values)
                 values['partner_id'] = self.partner_id.id
                 res = self.env['res.partner.kyc.approval'].create(values)
                 if res:
-                    self.partner_id.write({'is_kyc': True})
+                    self.partner_id.write({'is_kyc': True, 'rejection_date': False,
+                                           'rejection_reason': False,
+                                           'is_rejected': False, })
             elif self.email:
                 partner = self.env['res.partner'].search([('email', '=', self.email)], limit=1)
 
-                #partner.write(values)
+                # partner.write(values)
                 values['partner_id'] = partner.id
                 res = self.env['res.partner.kyc.approval'].create(values)
                 if res:
-                    partner.write({'is_kyc': True})
+                    partner.write({'is_kyc': True, 'rejection_date': False,
+                                   'rejection_reason': False,
+                                   'is_rejected': False, })

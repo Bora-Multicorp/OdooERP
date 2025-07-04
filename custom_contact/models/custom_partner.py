@@ -49,6 +49,10 @@ class CustomContact(models.Model):
     is_customer = fields.Boolean(string="Is Customer?", tracking=True)
     is_kyc = fields.Boolean(string="Is KYC?", tracking=True)
     is_approved = fields.Boolean(string="Is Approved?", tracking=True)
+    approval_date = fields.Datetime(string="Approval Date", tracking=True)
+    is_rejected = fields.Boolean(string="Is Rejected?", tracking=True)
+    rejection_date = fields.Datetime(string="Rejection Date", tracking=True)
+    rejection_reason = fields.Text('Rejection Reason', tracking=True)
     deadline = fields.Date('KYC Deadline', tracking=True)
 
     kyc_details = fields.One2many('res.partner.kyc.approval', 'partner_id', string="KYC Details", tracking=True)
