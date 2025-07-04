@@ -156,7 +156,10 @@ class VendorKycWizard(models.TransientModel):
                                'vat': self.gst_no,
                                'street': self.business_street,
                                'city': self.business_city,
-                               'zip': self.business_pincode
+                               'zip': self.business_pincode,
+                               'rejection_date': False,
+                               'rejection_reason': False,
+                               'is_rejected': False,
                                })
 
         return {'type': 'ir.actions.act_window_close'}

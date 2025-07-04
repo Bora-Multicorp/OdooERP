@@ -10,7 +10,7 @@
                     <field name="remark"/>
                 </group>
                 <footer>
-                    <button name="action_reject_request" string="Submit" type="object" class="btn-primary"/>
+                    <button name="action_reject_request" string="Reject" type="object" class="btn-primary"/>
                     <button string="Cancel" class="btn-secondary" special="cancel" data-hotkey="x"/>
                 </footer>
             </form>
