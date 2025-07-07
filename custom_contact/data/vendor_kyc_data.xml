@@ -221,6 +221,49 @@
             <field name="sequence">21</field>
             <field name="question_type" eval="False"/>
         </record>-->
+        <!-- Number of Managing Partner / Directors -->
+        <record model="survey.question" id="no_of_director_kyc_survey">
+            <field name="title">Number of Managing Partner / Directors</field>
+            <field name="survey_id" ref="vendor_kyc_form_survey"/>
+            <field name="sequence">21</field>
+            <field name="question_type">simple_choice</field>
+            <field name="constr_mandatory" eval="False"/>
+        </record>
+        <record model="survey.question.answer" id="no_of_director_kyc_survey_sug1">
+            <field name="question_id" ref="business_constitution_kyc_survey"/>
+            <field name="sequence">1</field>
+            <field name="value">1</field>
+        </record>
+        <record model="survey.question.answer" id="no_of_director_kyc_survey_sug2">
+            <field name="question_id" ref="business_constitution_kyc_survey"/>
+            <field name="sequence">2</field>
+            <field name="value">2</field>
+        </record>
+        <record model="survey.question.answer" id="no_of_director_kyc_survey_sug3">
+            <field name="question_id" ref="business_constitution_kyc_survey"/>
+            <field name="sequence">3</field>
+            <field name="value">3</field>
+        </record>
+        <record model="survey.question.answer" id="no_of_director_kyc_survey_sug4">
+            <field name="question_id" ref="business_constitution_kyc_survey"/>
+            <field name="sequence">4</field>
+            <field name="value">4</field>
+        </record>
+        <record model="survey.question.answer" id="no_of_director_kyc_survey_sug5">
+            <field name="question_id" ref="business_constitution_kyc_survey"/>
+            <field name="sequence">5</field>
+            <field name="value">5</field>
+        </record>
+        <record model="survey.question.answer" id="no_of_director_kyc_survey_sug6">
+            <field name="question_id" ref="business_constitution_kyc_survey"/>
+            <field name="sequence">6</field>
+            <field name="value">6</field>
+        </record>
+        <record model="survey.question.answer" id="no_of_director_kyc_survey_sug7">
+            <field name="question_id" ref="business_constitution_kyc_survey"/>
+            <field name="sequence">7</field>
+            <field name="value">7</field>
+        </record>
         <!-- Name of the Owner / Director -->
         <record model="survey.question" id="director_name_kyc_survey">
             <field name="title">Name of the Owner / Director</field>
@@ -255,13 +298,21 @@
             <field name="upload_multiple_file">False</field>
             <field name="constr_mandatory">False</field>
         </record>
-        <!-- PAN Card (Proprietor)  -->
+        <!-- PAN Card  -->
         <record model="survey.question" id="pan_card_kyc_survey">
-            <field name="title">PAN Card (Proprietor)</field>
+            <field name="title">PAN Card</field>
             <field name="survey_id" ref="vendor_kyc_form_survey"/>
             <field name="sequence">26</field>
             <field name="question_type">upload_file</field>
             <field name="upload_multiple_file">False</field>
+            <field name="constr_mandatory">False</field>
+        </record>
+        <!-- PAN Number (Company)  -->
+        <record model="survey.question" id="pan_card_no_kyc_survey">
+            <field name="title">PAN Number (Company)</field>
+            <field name="survey_id" ref="vendor_kyc_form_survey"/>
+            <field name="sequence">26</field>
+            <field name="question_type">char_box</field>
             <field name="constr_mandatory">False</field>
         </record>
         <!-- GST Number -->
@@ -289,9 +340,26 @@
             <field name="upload_multiple_file">True</field>
             <field name="constr_mandatory">False</field>
         </record>
-        <!-- Shop Act documents / Udyam Documents -->
+        <!-- GST Number -->
+        <record model="survey.question" id="gst_no_kyc_survey">
+            <field name="title">GST Number</field>
+            <field name="survey_id" ref="vendor_kyc_form_survey"/>
+            <field name="sequence">29</field>
+            <field name="question_type">char_box</field>
+            <field name="constr_mandatory">False</field>
+        </record>
+        <!-- Shop Act documents -->
+        <record model="survey.question" id="shop_act_document_kyc_survey">
+            <field name="title">Shop Act documents</field>
+            <field name="survey_id" ref="vendor_kyc_form_survey"/>
+            <field name="sequence">30</field>
+            <field name="question_type">upload_file</field>
+            <field name="upload_multiple_file">True</field>
+            <field name="constr_mandatory">False</field>
+        </record>
+        <!-- Udyam Documents -->
         <record model="survey.question" id="udyam_document_kyc_survey">
-            <field name="title">Shop Act documents / Udyam Documents</field>
+            <field name="title">Udyam Documents</field>
             <field name="survey_id" ref="vendor_kyc_form_survey"/>
             <field name="sequence">30</field>
             <field name="question_type">upload_file</field>
@@ -334,7 +402,49 @@
             <field name="upload_multiple_file">True</field>
             <field name="constr_mandatory">False</field>
         </record>
-
+        <!-- Google Location of Shop  -->
+        <record model="survey.question" id="google_location_kyc_survey">
+            <field name="title">Google Location of Shop</field>
+            <field name="survey_id" ref="vendor_kyc_form_survey"/>
+            <field name="sequence">34</field>
+            <field name="question_type">char_box</field>
+            <field name="constr_mandatory">False</field>
+        </record>
+        <!-- Partnership Deed or LLP Deed  -->
+        <record model="survey.question" id="partnership_llp_kyc_survey">
+            <field name="title">Partnership Deed or LLP Deed</field>
+            <field name="survey_id" ref="vendor_kyc_form_survey"/>
+            <field name="sequence">35</field>
+            <field name="question_type">upload_file</field>
+            <field name="upload_multiple_file">False</field>
+            <field name="constr_mandatory">False</field>
+        </record>
+        <!-- MOA or AOA  -->
+        <record model="survey.question" id="moa_aoa_kyc_survey">
+            <field name="title">MOA or AOA</field>
+            <field name="survey_id" ref="vendor_kyc_form_survey"/>
+            <field name="sequence">36</field>
+            <field name="question_type">upload_file</field>
+            <field name="upload_multiple_file">True</field>
+            <field name="constr_mandatory">False</field>
+        </record>
+        <!-- CIN number -->
+        <record model="survey.question" id="cin_no_kyc_survey">
+            <field name="title">CIN number</field>
+            <field name="survey_id" ref="vendor_kyc_form_survey"/>
+            <field name="sequence">37</field>
+            <field name="question_type">char_box</field>
+            <field name="constr_mandatory">False</field>
+        </record>
+        <!-- Electricity bill -->
+        <record model="survey.question" id="electricity_bill_kyc_survey">
+            <field name="title">Electricity bill</field>
+            <field name="survey_id" ref="vendor_kyc_form_survey"/>
+            <field name="sequence">38</field>
+            <field name="question_type">upload_file</field>
+            <field name="upload_multiple_file">True</field>
+            <field name="constr_mandatory">False</field>
+        </record>
 
         <!-- Page4: Bank Details-->
         <record model="survey.question" id="vendor_kyc_form_survey_p4">

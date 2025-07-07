@@ -4,6 +4,7 @@ access_res_partner_address_type,res_partner_address_type,model_res_partner_addre
 access_vendor_kyc_wizard,vendor_kyc_wizard,model_vendor_kyc_wizard,base.group_user,1,1,1,1
 access_constitution_business,constitution_business,model_constitution_business,base.group_user,1,1,1,1
 access_number_partner_director,number_partner_director,model_number_partner_director,base.group_user,1,1,1,1
+access_director_detail,director_detail,model_director_detail,base.group_user,1,1,1,1
 access_res_partner_kyc_approval,res_partner_kyc_approval,model_res_partner_kyc_approval,base.group_user,1,1,1,1
 access_approval_users,approval_users,model_approval_users,base.group_user,1,1,1,1
 access_approve_request_wizard,approve.request.wizard,model_approve_request_wizard,base.group_user,1,1,1,1

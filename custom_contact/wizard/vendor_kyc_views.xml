@@ -38,13 +38,36 @@
                             <!--<field name="no_partner_director" widget="radio"/>-->
                         </group>
                     </group>
-                    <group string="Director/Owner Details" name="kyc_sole_proprietor">
+                    <group string="Director/Owner Details" name="kyc_sole_proprietor"
+                           invisible="const_business != 'Partnership'"
+                           required="const_business == 'Partnership'">
+                        <field name="no_partner_director" widget="radio"/>
+                        <field name="directors_detail" placeholder="Director/Partner"
+                               invisible="const_business != 'Partnership'"
+                               required="const_business == 'Partnership'">
+                            <list editable="bottom">
+                                <field name="name"/>
+                                <field name="contact_no"/>
+                                <field name="email"/>
+                                <field name="aadhaar_card"/>
+                                <field name="pan_card"/>
+                            </list>
+                            <form>
+                                <field name="name"/>
+                                <field name="contact_no"/>
+                                <field name="email"/>
+                                <field name="aadhaar_card"/>
+                                <field name="pan_card"/>
+                            </form>
+                        </field>
+
                         <group>
                             <field name="director_name" placeholder="Your Answer"/>
                             <field name="director_phone" placeholder="Your Answer"/>
                             <field name="director_email" placeholder="Your Answer"/>
                             <field name="aadhaar_card" placeholder="Your Answer" widget="image"/>
                             <field name="pan_card" placeholder="Your Answer" widget="image"/>
+                            <field name="pan_no" placeholder="Your Answer"/>
                             <field name="gst_no" placeholder="Your Answer"/>
                             <field name="udyam_number" placeholder="Your Answer"/>
                             <field name="gst_certificate" widget="many2many_binary"
@@ -55,6 +78,13 @@
                             <field name="shop_photos" widget="many2many_binary"
                                    options="{'accepted_file_extensions': 'image/*', 'number_of_files': 10}"/>
                             <field name="shop_videos" widget="many2many_binary"
+                                   options="{'accepted_file_extensions': 'video/*', 'number_of_files': 10}"/>
+                            <field name="google_location" placeholder="Your Answer"/>
+                            <field name="partner_llp"/>
+                            <field name="moa_aoa" widget="many2many_binary"
+                                   options="{'accepted_file_extensions': 'video/*', 'number_of_files': 10}"/>
+                            <field name="cin_no" placeholder="Your Answer"/>
+                            <field name="electricity_bill" widget="many2many_binary"
                                    options="{'accepted_file_extensions': 'video/*', 'number_of_files': 10}"/>
                         </group>
                     </group>

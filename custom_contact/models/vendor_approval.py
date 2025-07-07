@@ -79,7 +79,26 @@ class ContactKYCApproval(models.Model):
     shop_videos = fields.Many2many('ir.attachment', 'vendor_kyc_shop_videos_rel1', 'wizard_id', 'attachment_id',
                                    string="Shop Videos", required=False,
                                    help="Short Video / Walkway from outdoor / indoor. Must include - signage Board with GST Number.")
-
+    ##### Partnership/PrivateCo./LLP
+    no_partner_director = fields.Selection([('1', '1'),
+                                            ('2', '2'),
+                                            ('3', '3'),
+                                            ('4', '4'),
+                                            ('5', '5'),
+                                            ('6', '6'),
+                                            ('7', '7')], string="Number of Managing Partner / Directors")
+    directors_detail = fields.One2many('director.details', 'kyc_approval_id', string="KYC Details", tracking=True)
+    pan_no = fields.Char(string="PAN Number", required=False)
+    google_location = fields.Char(string="Google Location of Shop")
+    partner_llp = fields.Binary(string="Partnership Deed or LLP Deed", required=False)
+    moa_aoa = fields.Many2many('ir.attachment', 'vendor_kyc_moa_aoa_rel1', 'wizard_id', 'attachment_id',
+                               string="MOA or AOA (for Pvt. Ltd. Company)", required=False)
+    cin_no = fields.Char(string="CIN number", required=False)
+    electricity_bill = fields.Many2many('ir.attachment', 'vendor_kyc_electricity_bill_rel1', 'wizard_id',
+                                        'attachment_id',
+                                        string="Electricity bill", required=False)
+    #####
+    ##### Bank Details
     bank_name = fields.Char(string="Bank Name", required=False)
     account_no = fields.Char(string="Account Number", required=False)
     ifsc_code = fields.Char(string="IFSC Code", required=False)
@@ -161,8 +180,8 @@ class ApprovalUsers(models.Model):
     _description = "Approval Users"
     _order = "sequence"
 
-    sequence = fields.Integer(string='Sequence')
     kyc_approval_id = fields.Many2one('res.partner.kyc.approval', string="KYC Approval")
+    sequence = fields.Integer(string='Sequence')
     job_id = fields.Char(string="Designation", readonly=True)
     user_id = fields.Many2one('res.users', string='User', required=True)
     state = fields.Selection([('approve', 'Approved'), ('reject', 'Rejected')], string="Action")
@@ -182,3 +201,16 @@ class ApprovalUsers(models.Model):
         if res.kyc_approval_id:
             res.kyc_approval_id._update_state_based_on_approvals()
         return res
+
+
+class DirectorDetails(models.Model):
+    _name = "director.details"
+    _rec_name = 'name'
+    _description = "Directors Details"
+
+    kyc_approval_id = fields.Many2one('res.partner.kyc.approval', string="KYC Approval")
+    name = fields.Char(string="Name", readonly=True)
+    contact_no = fields.Char(string="Contact Number")
+    email = fields.Char(string="E-mail Address", readonly=True)
+    aadhaar_card = fields.Char(string="Aadhaar Card", readonly=True)
+    pan_card = fields.Char(string="PAN Card", readonly=True)
