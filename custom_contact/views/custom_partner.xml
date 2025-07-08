@@ -97,7 +97,8 @@
                             display="always"/>
                     <button name="confirm_rekyc" string="Re-KYC" type="object" class="oe_highlight"
                             confirm="Do you want to process Re-KYC?"
-                            invisible="not is_approved or (deadline and deadline &lt;= context_today())"/>
+                            invisible="not is_approved and not is_rejected"/>
+                            <!--invisible="not is_approved or (deadline and deadline &lt;= context_today())"/>-->
                 </header>
             </xpath>
             <xpath expr="//field[@name='category_id']" position="after">

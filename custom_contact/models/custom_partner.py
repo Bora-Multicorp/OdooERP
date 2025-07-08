@@ -106,6 +106,21 @@ class CustomContact(models.Model):
         action['domain'] = ['|', ('partner_id', '=', self.id), ('email', '=', self.email)]
         return action
 
+    # def trigger_email_kyc_expiry_follow_up(self):
+    #     pending_requests = self.search([('state', '=', 'pending')])
+    #
+    #
+    #     template = self.env.ref('custom_contact.pending_request_follow_up_email_template')
+    #
+    #     for user, requests in:
+    #
+    #
+    #         # Send email
+    #         template.with_context({
+    #             'user': user,
+    #             'pending_requests': sorted_reqs,
+    #         }).send_mail(sorted_reqs[0].id, force_send=True)
+
 
 
 

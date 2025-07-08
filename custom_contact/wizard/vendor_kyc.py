@@ -55,7 +55,8 @@ class VendorKycWizard(models.TransientModel):
     director_phone = fields.Char(string="Contact Number", required=False)
     director_email = fields.Char(string="Email Address", required=False)
     aadhaar_card = fields.Binary(string="Aadhaar Card", required=False)
-    pan_card = fields.Binary(string="PAN Card (Proprietor)", required=False)
+    pan_card = fields.Binary(string="PAN Card", required=False)
+
     gst_no = fields.Char(string="GST Number", required=False)
     udyam_number = fields.Char(string="Udyam Certificate Number")
     gst_certificate = fields.Many2many('ir.attachment', 'vendor_kyc_gst_cert_rel', 'wizard_id', 'attachment_id',
@@ -74,7 +75,26 @@ class VendorKycWizard(models.TransientModel):
     shop_videos = fields.Many2many('ir.attachment', 'vendor_kyc_shop_videos_rel', 'wizard_id', 'attachment_id',
                                    string="Shop Videos", required=False,
                                    help="Short Video / Walkway from outdoor / indoor. Must include - signage Board with GST Number.")
-
+    ##### Partnership/PrivateCo./LLP
+    no_partner_director = fields.Selection([('1', '1'),
+                                            ('2', '2'),
+                                            ('3', '3'),
+                                            ('4', '4'),
+                                            ('5', '5'),
+                                            ('6', '6'),
+                                            ('7', '7')], string="Number of Managing Partner / Directors")
+    directors_detail = fields.One2many('director.detail', 'kyc_wizard_id', string="KYC Details", tracking=True)
+    pan_no = fields.Char(string="PAN Number", required=False)
+    google_location = fields.Char(string="Google Location of Shop")
+    partner_llp = fields.Binary(string="Partnership Deed or LLP Deed", required=False)
+    moa_aoa = fields.Many2many('ir.attachment', 'vendor_kyc_moa_aoa_rel', 'wizard_id', 'attachment_id',
+                               string="MOA or AOA (for Pvt. Ltd. Company)", required=False)
+    cin_no = fields.Char(string="CIN number", required=False)
+    electricity_bill = fields.Many2many('ir.attachment', 'vendor_kyc_electricity_bill_rel', 'wizard_id',
+                                        'attachment_id',
+                                        string="Electricity bill", required=False)
+    #####
+    ##### Bank Details
     bank_name = fields.Char(string="Bank Name", required=False)
     account_no = fields.Char(string="Account Number", required=False)
     ifsc_code = fields.Char(string="IFSC Code", required=False)
@@ -105,7 +125,18 @@ class VendorKycWizard(models.TransientModel):
         if not self.partner_id:
             return
 
-        kyc_record = self.env['res.partner.kyc.approval'].create({
+        # Prepare director detail lines
+        directors_data = [
+            (0, 0, {
+                'name': director.name,
+                'contact_no': director.contact_no,
+                'email': director.email,
+                'aadhaar_card': director.aadhaar_card,
+                'pan_card': director.pan_card,
+            }) for director in self.directors_detail
+        ]
+
+        kyc_vals = {
             'partner_id': self.partner_id.id,
             'email': self.email,
             'point_of_contact': self.point_of_contact,
@@ -128,6 +159,14 @@ class VendorKycWizard(models.TransientModel):
             'pan_card': self.pan_card,
             'gst_no': self.gst_no,
             'udyam_number': self.udyam_number,
+            'no_partner_director': self.no_partner_director,
+            'directors_detail': directors_data,
+            'pan_no': self.pan_no,
+            'google_location': self.google_location,
+            'partner_llp': self.partner_llp,
+            'moa_aoa': [(6, 0, self.moa_aoa.ids)],
+            'cin_no': self.cin_no,
+            'electricity_bill': [(6, 0, self.electricity_bill.ids)],
             'gst_certificate': [(6, 0, self.gst_certificate.ids)],
             'udyam_document': [(6, 0, self.udyam_document.ids)],
             'gst_return_duration': self.gst_return_duration,
@@ -138,28 +177,48 @@ class VendorKycWizard(models.TransientModel):
             'ifsc_code': self.ifsc_code,
             'bank_address': self.bank_address,
             'bank_cheque_attachments': [(6, 0, self.bank_cheque_attachments.ids)],
+        }
+
+        kyc_record = self.env['res.partner.kyc.approval'].create(kyc_vals)
+
+        # Ensure uploaded attachments are linked correctly to kyc record
+        all_attachments = (
+                self.gst_certificate |
+                self.udyam_document |
+                self.shop_photos |
+                self.shop_videos |
+                self.bank_cheque_attachments
+        )
+        if all_attachments:
+            all_attachments.write({
+                'res_model': 'res.partner.kyc.approval',
+                'res_id': kyc_record.id
+            })
+
+        # Update linked partner
+        self.partner_id.write({
+            'email': self.email,
+            'is_kyc': True,
+            'vat': self.gst_no,
+            'street': self.business_street,
+            'city': self.business_city,
+            'zip': self.business_pincode,
+            'rejection_date': False,
+            'rejection_reason': False,
+            'is_rejected': False,
         })
-        for attach in kyc_record:
-            if attach.gst_certificate:
-                attach.gst_certificate.write({'res_model': 'res.partner.kyc.approval', 'res_id': attach.id})
-            if attach.udyam_document:
-                attach.udyam_document.write({'res_model': 'res.partner.kyc.approval', 'res_id': attach.id})
-            if attach.shop_photos:
-                attach.shop_photos.write({'res_model': 'res.partner.kyc.approval', 'res_id': attach.id})
-            if attach.shop_videos:
-                attach.shop_videos.write({'res_model': 'res.partner.kyc.approval', 'res_id': attach.id})
-            if attach.bank_cheque_attachments:
-                attach.bank_cheque_attachments.write({'res_model': 'res.partner.kyc.approval', 'res_id': attach.id})
-
-
-        self.partner_id.write({'email': self.email, 'is_kyc': True,
-                               'vat': self.gst_no,
-                               'street': self.business_street,
-                               'city': self.business_city,
-                               'zip': self.business_pincode,
-                               'rejection_date': False,
-                               'rejection_reason': False,
-                               'is_rejected': False,
-                               })
 
         return {'type': 'ir.actions.act_window_close'}
+
+
+class DirectorDetail(models.TransientModel):
+    _name = "director.detail"
+    _rec_name = 'name'
+    _description = "Directors Detail"
+
+    kyc_wizard_id = fields.Many2one('vendor.kyc.wizard', string="KYC Approval")
+    name = fields.Char(string="Name", readonly=True)
+    contact_no = fields.Char(string="Contact Number")
+    email = fields.Char(string="E-mail Address", readonly=True)
+    aadhaar_card = fields.Char(string="Aadhaar Card", readonly=True)
+    pan_card = fields.Char(string="PAN Card", readonly=True)

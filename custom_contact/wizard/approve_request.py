@@ -6,7 +6,7 @@ class ApproveRequestWizard(models.TransientModel):
     _name = 'approve.request.wizard'
     _description = 'Approve Request Form'
 
-    kyc_approval_id = fields.Many2one('res.partner.kyc.approval', string="Approval for Vendor", domain="[('id', '=', active_id)]")
+    kyc_approval_id = fields.Many2one('res.partner.kyc.approval', string="Approval for", domain="[('id', '=', active_id)]")
     remark = fields.Char('Remark', required=True)
 
     def action_approve_request(self):
