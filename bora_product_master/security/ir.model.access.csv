@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_bora_product_brand,bora_product.product_brand,model_product_brand,base.group_user,1,1,1,1
+access_bora_product_model,bora_product.product_model,model_product_model,base.group_user,1,1,1,1
