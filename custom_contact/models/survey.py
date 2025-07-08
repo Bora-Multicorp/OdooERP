@@ -54,6 +54,7 @@ class InheritSurvey(models.Model):
 
 
     survey_image = fields.Image("Survey Image")
+    vendor_reg_url = fields.Char("Vendor Registration URL")
     #quotation_content = fields.Html("Quotation Content", tracking=True)
     sms_history = fields.One2many("sms.history", "survey_id", string="Sms History", tracking=True)
 

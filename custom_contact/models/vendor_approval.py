@@ -63,20 +63,20 @@ class ContactKYCApproval(models.Model):
     pan_card = fields.Binary(string="PAN Card (Proprietor)")
     gst_no = fields.Char(string="GST Number")
     udyam_number = fields.Char(string="Udyam Certificate Number")
-    gst_certificate = fields.Many2many('ir.attachment', 'vendor_kyc_gst_cert_rel1', 'wizard_id', 'attachment_id',
+    gst_certificate = fields.Many2many('ir.attachment', 'vendor_kyc_gst_cert_rels', 'partner_id', 'attachment_id',
                                        string="Company GST Certificate", required=False)
 
-    udyam_document = fields.Many2many('ir.attachment', 'vendor_kyc_shop_documents_rel1', 'wizard_id', 'attachment_id',
+    udyam_document = fields.Many2many('ir.attachment', 'vendor_kyc_shop_documents_rels', 'partner_id', 'attachment_id',
                                       string="Shop Act documents / Udyam Documents", required=False)
 
     gst_return_duration = fields.Selection([('Monthly', 'Monthly'), ('Quarterly', 'Quarterly')],
                                            required=False, string="GST Return duration")
 
-    shop_photos = fields.Many2many('ir.attachment', 'vendor_kyc_shop_photos_rel1', 'wizard_id', 'attachment_id',
+    shop_photos = fields.Many2many('ir.attachment', 'vendor_kyc_shop_photos_rels', 'partner_id', 'attachment_id',
                                    string="Shop Photos", required=False,
                                    help="Short Video / Walkway from outdoor / indoor. Must include - signage Board with GST Number.")
 
-    shop_videos = fields.Many2many('ir.attachment', 'vendor_kyc_shop_videos_rel1', 'wizard_id', 'attachment_id',
+    shop_videos = fields.Many2many('ir.attachment', 'vendor_kyc_shop_videos_rels', 'partner_id', 'attachment_id',
                                    string="Shop Videos", required=False,
                                    help="Short Video / Walkway from outdoor / indoor. Must include - signage Board with GST Number.")
     ##### Partnership/PrivateCo./LLP
@@ -91,20 +91,17 @@ class ContactKYCApproval(models.Model):
     pan_no = fields.Char(string="PAN Number", required=False)
     google_location = fields.Char(string="Google Location of Shop")
     partner_llp = fields.Binary(string="Partnership Deed or LLP Deed", required=False)
-    moa_aoa = fields.Many2many('ir.attachment', 'vendor_kyc_moa_aoa_rel1', 'wizard_id', 'attachment_id',
+    moa_aoa = fields.Many2many('ir.attachment', 'vendor_kyc_moa_aoa_rels', 'partner_id', 'attachment_id',
                                string="MOA or AOA (for Pvt. Ltd. Company)", required=False)
     cin_no = fields.Char(string="CIN number", required=False)
-    electricity_bill = fields.Many2many('ir.attachment', 'vendor_kyc_electricity_bill_rel1', 'wizard_id',
+    electricity_bill = fields.Many2many('ir.attachment', 'vendor_kyc_electricity_bill_rels', 'partner_id',
                                         'attachment_id',
                                         string="Electricity bill", required=False)
     #####
     ##### Bank Details
-    bank_name = fields.Char(string="Bank Name", required=False)
-    account_no = fields.Char(string="Account Number", required=False)
-    ifsc_code = fields.Char(string="IFSC Code", required=False)
-    bank_address = fields.Char(string="Bank Address", required=False)
-    bank_cheque_attachments = fields.Many2many('ir.attachment', 'vendor_kyc_bank_cheque_rel1', 'wizard_id',
-                                               'attachment_id', string="Cancelled Cheques")
+    bank_detail = fields.One2many('bank.details', 'kyc_approval_id', string="Banks Detail")
+    ##### Address Details
+    address_detail = fields.One2many('address.details', 'kyc_approval_id', string="Address Detail")
 
     deadline = fields.Date('Deadline Date')
     state = fields.Selection([('draft', 'Draft'),
@@ -202,15 +199,43 @@ class ApprovalUsers(models.Model):
             res.kyc_approval_id._update_state_based_on_approvals()
         return res
 
-
+### Directors Details
 class DirectorDetails(models.Model):
     _name = "director.details"
     _rec_name = 'name'
     _description = "Directors Details"
 
     kyc_approval_id = fields.Many2one('res.partner.kyc.approval', string="KYC Approval")
-    name = fields.Char(string="Name", readonly=True)
+    name = fields.Char(string="Name")
     contact_no = fields.Char(string="Contact Number")
-    email = fields.Char(string="E-mail Address", readonly=True)
-    aadhaar_card = fields.Char(string="Aadhaar Card", readonly=True)
-    pan_card = fields.Char(string="PAN Card", readonly=True)
+    email = fields.Char(string="E-mail Address")
+    aadhaar_card = fields.Binary(string="Aadhaar Card")
+    pan_card = fields.Binary(string="PAN Card")
+
+##### Bank Details
+class BankDetail(models.Model):
+    _name = "bank.details"
+    _rec_name = 'bank_name'
+    _description = "Bank Details"
+
+    kyc_approval_id = fields.Many2one('res.partner.kyc.approval', string="KYC Approval")
+    bank_name = fields.Char(string="Bank Name", required=False)
+    account_no = fields.Char(string="Account Number", required=False)
+    ifsc_code = fields.Char(string="IFSC Code", required=False)
+    bank_address = fields.Char(string="Bank Address", required=False)
+    bank_cheque_attachments = fields.Many2many('ir.attachment', 'vendor_bank_detail_cheque_rel', 'kyc_approval_id',
+                                               'attachment_id', string="Cancelled Cheques", required=False)
+
+##### Principal Place of Business
+class AddressDetail(models.Model):
+    _name = "address.details"
+    _description = "Address Details"
+
+    kyc_approval_id = fields.Many2one('res.partner.kyc.approval', string="KYC Approval")
+    business_street = fields.Char("Address", required=False)
+    business_city = fields.Char("City", required=False)
+    business_pincode = fields.Char("Pincode", required=False)
+    business_phone = fields.Char("Contact Number", required=False)
+    business_email = fields.Char("Email Address")
+    business_state_id = fields.Many2one('res.country.state', string='Business State', domain="[('country_id', '=?', business_country_id)]")
+    business_country_id = fields.Many2one('res.country', string='Business Country')

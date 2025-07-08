@@ -55,6 +55,10 @@
                 <!--<xpath expr="//field[@name='background_image']" position="after">
                     <field name="survey_image" widget="image" class="oe_avatar" readonly="id"/>
                 </xpath>-->
+
+                <xpath expr="//field[@name='user_id']" position="after">
+                    <field name="vendor_reg_url"/>
+                </xpath>
                 <xpath expr="//field[@name='question_and_page_ids']/list/field[@name='question_type']"
                        position="attributes">
                     <attribute name="column_invisible">1</attribute>

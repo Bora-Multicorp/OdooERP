@@ -230,37 +230,37 @@
             <field name="constr_mandatory" eval="False"/>
         </record>
         <record model="survey.question.answer" id="no_of_director_kyc_survey_sug1">
-            <field name="question_id" ref="business_constitution_kyc_survey"/>
+            <field name="question_id" ref="no_of_director_kyc_survey"/>
             <field name="sequence">1</field>
             <field name="value">1</field>
         </record>
         <record model="survey.question.answer" id="no_of_director_kyc_survey_sug2">
-            <field name="question_id" ref="business_constitution_kyc_survey"/>
+            <field name="question_id" ref="no_of_director_kyc_survey"/>
             <field name="sequence">2</field>
             <field name="value">2</field>
         </record>
         <record model="survey.question.answer" id="no_of_director_kyc_survey_sug3">
-            <field name="question_id" ref="business_constitution_kyc_survey"/>
+            <field name="question_id" ref="no_of_director_kyc_survey"/>
             <field name="sequence">3</field>
             <field name="value">3</field>
         </record>
         <record model="survey.question.answer" id="no_of_director_kyc_survey_sug4">
-            <field name="question_id" ref="business_constitution_kyc_survey"/>
+            <field name="question_id" ref="no_of_director_kyc_survey"/>
             <field name="sequence">4</field>
             <field name="value">4</field>
         </record>
         <record model="survey.question.answer" id="no_of_director_kyc_survey_sug5">
-            <field name="question_id" ref="business_constitution_kyc_survey"/>
+            <field name="question_id" ref="no_of_director_kyc_survey"/>
             <field name="sequence">5</field>
             <field name="value">5</field>
         </record>
         <record model="survey.question.answer" id="no_of_director_kyc_survey_sug6">
-            <field name="question_id" ref="business_constitution_kyc_survey"/>
+            <field name="question_id" ref="no_of_director_kyc_survey"/>
             <field name="sequence">6</field>
             <field name="value">6</field>
         </record>
         <record model="survey.question.answer" id="no_of_director_kyc_survey_sug7">
-            <field name="question_id" ref="business_constitution_kyc_survey"/>
+            <field name="question_id" ref="no_of_director_kyc_survey"/>
             <field name="sequence">7</field>
             <field name="value">7</field>
         </record>
