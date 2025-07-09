@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-from odoo import api, fields, models
+from odoo import api, fields, models, _
 from dateutil.relativedelta import relativedelta
-
+from odoo.exceptions import ValidationError
 
 class ContactKYCApproval(models.Model):
     _name = 'res.partner.kyc.approval'
@@ -120,6 +120,8 @@ class ContactKYCApproval(models.Model):
     rejection_reason = fields.Text('Rejection Reason', tracking=True)
 
     def confirm_submit_form(self):
+        if not self.approval_users_ids:
+            raise ValidationError(_("Please Add Approval Authority before Submit Request"))
         if self.id:
             self.write({'state': 'pending'})
             self._update_assigned_to()
