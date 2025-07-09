@@ -118,7 +118,7 @@
                     <field name="kyc_details">
                         <list create="False" edit="False" delete="False">
                             <field name="email"/>
-                            <field name="point_of_contact"/>
+                            <field name="point_of_contact" />
                             <field name="business_legal_name"/>
                             <field name="business_trade_name"/>
                             <!--<field name="const_business"/>-->

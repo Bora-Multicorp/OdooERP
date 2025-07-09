@@ -9,7 +9,7 @@
                     <group>
                         <field name="partner_id" readonly="1" invisible="1"/>
                         <field name="email" placeholder="Your Answer"/>
-                        <field name="point_of_contact" placeholder="Your Answer" style="text-transform: uppercase;"/>
+                        <field name="point_of_contact" placeholder="Your Answer" widget="upper_case"/>
                     </group>
                     <group string="KYC Form (Company Details)" name="kyc_company_details">
                         <field name="business_legal_name" placeholder="Your Answer"/>

@@ -445,6 +445,7 @@
             <field name="upload_multiple_file">True</field>
             <field name="constr_mandatory">False</field>
         </record>
+        
 
         <!-- Page4: Bank Details-->
         <record model="survey.question" id="vendor_kyc_form_survey_p4">
