@@ -27,44 +27,56 @@ class VendorKycWizard(models.TransientModel):
                 if email and not email_pattern.match(email):
                     raise ValidationError(f"{label} must be a valid email address (e.g., user@example.com).")
 
+    @api.constrains('pan_no')
+    def _check_pan_card_no_format(self):
+        pan_pattern = re.compile(r'^[A-Z]{5}[0-9]{4}[A-Z]$')
+        for rec in self:
+            if rec.pan_no and not pan_pattern.match(rec.pan_no.upper()):
+                raise ValidationError(
+                    _("PAN Card Number must be in the format: 5 letters, 4 digits, and 1 letter (e.g., ABCDE1234F).")
+                )
+
     partner_id = fields.Many2one('res.partner', string='Contact', domain="[('id', '=', active_id)]")
     email = fields.Char("Email", required=True)
-    point_of_contact = fields.Char("Point of Contact", required=False)
-    business_legal_name = fields.Char("Business Legal Name", required=False)
-    business_trade_name = fields.Char("Business Trade Name", required=False)
+    point_of_contact = fields.Char("Point of Contact", required=True)
+    user_id = fields.Many2one('res.users', string="Point of Contact to Vendor", default=lambda self: self.env.user, readonly=1)
+    business_legal_name = fields.Char("Business Legal Name", required=True)
+    business_trade_name = fields.Char("Business Trade Name", required=True)
     const_business = fields.Selection([('Sole Proprietor', 'Sole Proprietor'),
                                        ('Partnership', 'Partnership'),
                                        ('Pvt Ltd Co.', 'Pvt Ltd Co.'),
                                        ('LLP', 'LLP'),
                                        ('HUF(Karta)', 'HUF(Karta)'),
                                        ('Other', 'Other'),
-                                       ], string="Constitution of Business", required=False)
+                                       ], string="Constitution of Business", required=True)
     # const_business = fields.Many2one('constitution.business', string="Constitution of Business", required=True)
     other_business = fields.Char("If Other, Specify?")
     # no_partner_director = fields.Many2one('number.partner.director', string="Number of Managing Partner / Directors")
-    director_name = fields.Char(string="Name of the Owner / Director", required=False)
-    director_phone = fields.Char(string="Contact Number", required=False)
-    director_email = fields.Char(string="Email Address", required=False)
-    aadhaar_card = fields.Binary(string="Aadhaar Card", required=False)
-    pan_card = fields.Binary(string="PAN Card", required=False)
+    director_name = fields.Char(string="Name of the Owner / Director")
+    director_phone = fields.Char(string="Contact Number")
+    director_email = fields.Char(string="Email Address")
+    aadhaar_card = fields.Binary(string="Aadhaar Card")
+    pan_card = fields.Binary(string="PAN Card")
 
-    gst_no = fields.Char(string="GST Number", required=False)
+    gst_no = fields.Char(string="GST Number", required=True)
     udyam_number = fields.Char(string="Udyam Certificate Number")
     gst_certificate = fields.Many2many('ir.attachment', 'vendor_kyc_gst_cert_rel', 'wizard_id', 'attachment_id',
-                                       string="Company GST Certificate", required=False)
+                                       string="Company GST Certificate", required=True)
 
     udyam_document = fields.Many2many('ir.attachment', 'vendor_kyc_shop_documents_rel', 'wizard_id', 'attachment_id',
-                                      string="Shop Act documents / Udyam Documents", required=False)
+                                      string="Udyam Documents", required=True)
+    shop_act_document = fields.Many2many('ir.attachment', 'vendor_kyc_shop_act_documents_rel', 'wizard_id', 'attachment_id',
+                                      string="Shop Act documents", required=True)
 
     gst_return_duration = fields.Selection([('Monthly', 'Monthly'), ('Quarterly', 'Quarterly')],
-                                           required=False, string="GST Return duration")
+                                           required=True, string="GST Return duration")
 
     shop_photos = fields.Many2many('ir.attachment', 'vendor_kyc_shop_photos_rel', 'wizard_id', 'attachment_id',
-                                   string="Shop Photos", required=False,
+                                   string="Shop Photos", required=True,
                                    help="Short Video / Walkway from outdoor / indoor. Must include - signage Board with GST Number.")
 
     shop_videos = fields.Many2many('ir.attachment', 'vendor_kyc_shop_videos_rel', 'wizard_id', 'attachment_id',
-                                   string="Shop Videos", required=False,
+                                   string="Shop Videos", required=True,
                                    help="Short Video / Walkway from outdoor / indoor. Must include - signage Board with GST Number.")
     ##### Partnership/PrivateCo./LLP
     no_partner_director = fields.Selection([('1', '1'),
@@ -77,16 +89,29 @@ class VendorKycWizard(models.TransientModel):
     directors_detail = fields.One2many('director.detail', 'kyc_wizard_id', string="Directors Detail")
     bank_detail = fields.One2many('bank.detail', 'kyc_wizard_id', string="Banks Detail")
     address_detail = fields.One2many('address.detail', 'kyc_wizard_id', string="Address Detail")
-    pan_no = fields.Char(string="PAN Number", required=False)
+    pan_no = fields.Char(string="PAN Number(Company)")
+    pan_card_document = fields.Many2many('ir.attachment', 'pan_card_company_documents_rel', 'wizard_id', 'attachment_id',
+                                      string="PAN Card Document(Company)")
     google_location = fields.Char(string="Google Location of Shop")
-    partner_llp = fields.Binary(string="Partnership Deed or LLP Deed", required=False)
+    partner_llp = fields.Binary(string="Partnership Deed or LLP Deed")
     moa_aoa = fields.Many2many('ir.attachment', 'vendor_kyc_moa_aoa_rel', 'wizard_id', 'attachment_id',
-                               string="MOA or AOA (for Pvt. Ltd. Company)", required=False)
-    cin_no = fields.Char(string="CIN number", required=False)
+                               string="MOA or AOA (for Pvt. Ltd. Company)")
+    cin_no = fields.Char(string="CIN number")
     electricity_bill = fields.Many2many('ir.attachment', 'vendor_kyc_electricity_bill_rel', 'wizard_id',
                                         'attachment_id',
-                                        string="Electricity bill", required=False)
+                                        string="Electricity bill", required=True)
     #####
+
+    @api.constrains('no_partner_director', 'directors_detail')
+    def _check_director_limit(self):
+        for rec in self:
+            if rec.no_partner_director:
+                expected = int(rec.no_partner_director)
+                actual = len(rec.directors_detail)
+                if actual != expected:
+                    raise ValidationError(
+                        _("You must add exactly %s director(s). You have added %s.") % (expected, actual)
+                    )
 
     @api.model
     def default_get(self, fields_list):
@@ -215,6 +240,7 @@ class DirectorDetail(models.TransientModel):
     _description = "Directors Detail"
 
     kyc_wizard_id = fields.Many2one('vendor.kyc.wizard', string="KYC Approval")
+    designation = fields.Char(string="Designation")
     name = fields.Char(string="Name")
     contact_no = fields.Char(string="Contact Number")
     email = fields.Char(string="E-mail Address")
