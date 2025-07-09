@@ -31,15 +31,15 @@
                             </t>
                         </button>
                         <span class="o_survey_enter fw-bold text-muted ms-2 d-none d-md-inline">or press Enter</span>
-                        <!--<t t-if="survey.vendor_reg_url">
-                                <a t-att-href="survey.vendor_reg_url"
-                                   class="btn btn-sm btn-primary me-2"
-                                   target="_blank"
-                                   rel="noopener noreferrer">
-                                    <i class="fa fa-youtube-play"/>
-                                    <t t-esc="'Help(Watch Video)'"/>
-                                </a>
-                            </t>-->
+                        <t t-if="survey.vendor_reg_url">
+                            <a t-att-href="survey.vendor_reg_url"
+                               class="btn btn-sm btn-primary me-2"
+                               target="_blank"
+                               rel="noopener noreferrer">
+                                <i class="fa fa-youtube-play"/>
+                                <t t-esc="'Help(Watch Vendor Registration Process)'"/>
+                            </a>
+                        </t>
                     </t>
                 </div>
             </div>
@@ -60,7 +60,8 @@
         <!-- Overide Question: free text box(To add 'text-uppercase')-->
         <template id="survey.question_text_box" name="Question: free text box">
             <div class="o_survey_comment_container h-auto p-0">
-                <textarea class="form-control o_survey_question_text_box bg-transparent rounded-0 p-0 text-uppercase" rows="3"
+                <textarea class="form-control o_survey_question_text_box bg-transparent rounded-0 p-0 text-uppercase"
+                          rows="3"
                           t-att-name="question.id" t-att-placeholder="question.question_placeholder"
                           t-att-data-question-type="question.question_type">
                     <t t-if="answer_lines" t-esc="answer_lines[0].value_text_box or None"/>
