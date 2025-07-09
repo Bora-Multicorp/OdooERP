@@ -44,13 +44,9 @@
                                required="const_business == %(custom_contact.constitution_business_other)d"/>-->
                         <!--<field name="no_partner_director" widget="radio"/>-->
                     </group>
-                    <group string="Director/Owner Details" name="kyc_sole_proprietor"
-                           invisible="const_business != 'Partnership'"
-                           required="const_business == 'Partnership'">
+                    <group string="Director/Owner Details" name="kyc_sole_proprietor">
                         <field name="no_partner_director" widget="radio" options="{'horizontal': true}"/>
-                        <field name="directors_detail" string="Director/Partner"
-                               invisible="const_business != 'Partnership'"
-                               required="const_business == 'Partnership'">
+                        <field name="directors_detail" string="Director/Partner">
                             <list editable="bottom">
                                 <field name="name"/>
                                 <field name="contact_no"/>
