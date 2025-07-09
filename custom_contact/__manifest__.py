@@ -7,7 +7,7 @@
     'version': '0.1',
     'license': 'LGPL-3',
     # any module necessary for this one to work correctly
-    'depends': ['base', 'contacts', 'account', 'accountant', 'purchase', 'sale', 'survey', 'survey_upload_file'],
+    'depends': ['base', 'contacts', 'account', 'accountant', 'purchase', 'sale', 'survey', 'survey_upload_file', 'case_sensitive_widget'],
     # always loaded
     'data': [
         'security/ir.model.access.csv',
@@ -23,7 +23,7 @@
         'views/master_view.xml',
         'views/survey_views.xml',
         'views/vendor_approval_views.xml',
-        #'views/survey_templates.xml',
+        'views/survey_templates.xml',
     ],
 
 }

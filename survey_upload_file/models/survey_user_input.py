@@ -19,86 +19,96 @@
 #    If not, see <http://www.gnu.org/licenses/>.
 #
 ##############################################################################
-from odoo import models,_
+from odoo import models, _, fields
 from odoo.exceptions import UserError
 import base64
+import binascii
 
 class SurveyUserInput(models.Model):
-    """
-    This class extends the 'survey.user_input' model to add custom
-    functionality for saving user answers.
-
-    Methods:
-        _save_lines: Save the user's answer for the given question
-        _save_line_file:Save the user's file upload answer for the given
-        question
-        _get_line_answer_file_upload_values:
-        Get the values to use when creating or updating a user input line
-        for a file upload answer
-    """
     _inherit = "survey.user_input"
 
-    def _save_lines(self, question, answer, comment=None,
-                    overwrite_existing=False):
-        """Save the user's answer for the given question."""
+    def _save_lines(self, question, answer, comment=None, overwrite_existing=True):
+        """Extended to handle 'upload_file' in addition to all standard types."""
         old_answers = self.env['survey.user_input.line'].search([
             ('user_input_id', '=', self.id),
-            ('question_id', '=', question.id), ])
-        if question.question_type == 'upload_file':
-            res = self._save_line_file(question, old_answers, answer)
-        else:
-            res = super()._save_lines(question, answer, comment, overwrite_existing)
-        return res
+            ('question_id', '=', question.id)
+        ])
 
-    def _save_line_file(self, question, old_answers, answer):
-        """
-        Store files uploaded for an `upload_file` question.
-        `answer` must be a tuple/list →  ([base64_1, base64_2 …], [name1, name2 …])
-        """
-        vals = self._get_line_answer_file_upload_values(question, answer)
+        if old_answers and not overwrite_existing:
+            raise UserError(_("This answer cannot be overwritten."))
+
+        if question.question_type == 'upload_file':
+            self._save_line_file_upload(question, old_answers, answer)
+
+        elif question.question_type in ['char_box', 'text_box', 'scale', 'numerical_box', 'date', 'datetime']:
+            self._save_line_simple_answer(question, old_answers, answer)
+            if question.save_as_email and answer:
+                self.write({'email': answer})
+            if question.save_as_nickname and answer:
+                self.write({'nickname': answer})
+
+        elif question.question_type in ['simple_choice', 'multiple_choice']:
+            self._save_line_choice(question, old_answers, answer, comment)
+
+        elif question.question_type == 'matrix':
+            self._save_line_matrix(question, old_answers, answer, comment)
+
+        else:
+            raise AttributeError(question.question_type + ": This type of question has no saving function")
+
+    def _save_line_file_upload(self, question, old_answers, answer):
+        """Save a file upload answer (custom 'upload_file' type)."""
+        vals = self._get_line_answer_file_upload_values(question, 'upload_file', answer)
         if old_answers:
             old_answers.write(vals)
-            return old_answers
-        return self.env['survey.user_input.line'].create(vals)
+        else:
+            self.env['survey.user_input.line'].create(vals)
 
-    def _get_line_answer_file_upload_values(self, question, answer):
-        """
-        Build vals for survey.user_input.line with attachments.
-        Expected structure of `answer`:
-            answer[0] → list of *base64 strings*
-            answer[1] → list of filenames (same length)
-        """
-        datas_list, names_list = answer  # unpack
-
-        # if not (isinstance(datas_list, list) and isinstance(names_list, list)):
-        #     raise UserError("Invalid file upload payload.")
-        #
-        # if len(datas_list) != len(names_list):
-        #     raise UserError("Mismatch between filenames and file data.")
-
-        attachment_ids = []
-        for datas_b64, fname in zip(datas_list, names_list):
-            # sanity-check base64
-            try:
-                base64.b64decode(datas_b64, validate=True)
-            except Exception as e:
-                raise UserError(_(f"File '{fname}' is not valid base64: {e}"))
-
-            attachment = self.env['ir.attachment'].create({
-                'name': fname,
-                'type': 'binary',
-                'datas': datas_b64,
-                'res_model': 'survey.user_input',
-                'res_id': self.id,
-            })
-            attachment_ids.append(attachment.id)
-
-        return {
+    def _get_line_answer_file_upload_values(self, question, answer_type, answer):
+        """Prepare values for a user input line with file uploads."""
+        vals = {
             'user_input_id': self.id,
             'question_id': question.id,
             'skipped': False,
-            'answer_type': 'upload_file',
-            # many2many or o2m depending on your line model
-            'value_file_data_ids': [(6, 0, attachment_ids)],
+            'answer_type': answer_type,
         }
+
+        if answer_type == 'upload_file':
+            if not answer or not isinstance(answer, (list, tuple)) or len(answer) < 2:
+                return vals
+
+            file_data = answer[0]
+            file_name = answer[1]
+
+            if isinstance(file_data, str):
+                file_data = [file_data]
+            if isinstance(file_name, str):
+                file_name = [file_name]
+
+            attachment_ids = []
+            for data, name in zip(file_data, file_name):
+                if not self._is_valid_base64(data):
+                    continue
+                attachment = self.env['ir.attachment'].create({
+                    'name': name,
+                    'type': 'binary',
+                    'datas': data,
+                    'res_model': 'survey.user_input',
+                    'res_id': self.id,
+                })
+                attachment_ids.append(attachment.id)
+
+            vals['value_file_data_ids'] = [(6, 0, attachment_ids)]
+
+        return vals
+
+    def _is_valid_base64(self, s):
+        """Check if a string is valid base64."""
+        try:
+            if not s or not isinstance(s, str):
+                return False
+            base64.b64decode(s, validate=True)
+            return True
+        except (binascii.Error, ValueError, TypeError):
+            return False
 
