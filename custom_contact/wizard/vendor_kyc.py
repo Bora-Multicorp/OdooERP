@@ -11,12 +11,13 @@ class VendorKycWizard(models.TransientModel):
 
     @api.constrains('director_phone')
     def _check_phone_numbers(self):
-        phone_pattern = re.compile(r'^\+?[0-9]{10,14}$')  # Accepts optional '+' and 7–15 digits
+        phone_pattern = re.compile(r'^[0-9]{10}$')  # Exactly 10 digits, no +, no spaces
         for rec in self:
-            for field_label, number in [('Director Contact Number', rec.director_phone)]:
-                if number and not phone_pattern.match(number):
-                    raise ValidationError(
-                        f"{field_label} must be a valid phone number (e.g., +911234567890 or 1234567890).")
+            number = rec.director_phone
+            if number and not phone_pattern.match(number):
+                raise ValidationError(
+                    _("Director Contact Number must be exactly 10 digits (e.g., 9876543210).")
+                )
 
     @api.constrains('email', 'director_email')
     def _check_email_format(self):
@@ -85,7 +86,7 @@ class VendorKycWizard(models.TransientModel):
                                             ('4', '4'),
                                             ('5', '5'),
                                             ('6', '6'),
-                                            ('7', '7')], string="Number of Managing Partner / Directors")
+                                            ('7', '7')], string="Number of Managing Partner / Directors",required=True)
     directors_detail = fields.One2many('director.detail', 'kyc_wizard_id', string="Directors Detail")
     bank_detail = fields.One2many('bank.detail', 'kyc_wizard_id', string="Banks Detail")
     address_detail = fields.One2many('address.detail', 'kyc_wizard_id', string="Address Detail")
@@ -101,6 +102,17 @@ class VendorKycWizard(models.TransientModel):
                                         'attachment_id',
                                         string="Electricity bill", required=True)
     #####
+    @api.constrains('address_detail')
+    def _check_minimum_address(self):
+        for rec in self:
+            if not rec.address_detail:
+                raise ValidationError(_("Please add at least one address detail."))
+
+    @api.constrains('bank_detail')
+    def _check_minimum_bank(self):
+        for rec in self:
+            if not rec.bank_detail:
+                raise ValidationError(_("Please add at least one bank detail."))
 
     @api.constrains('no_partner_director', 'directors_detail')
     def _check_director_limit(self):
@@ -191,8 +203,10 @@ class VendorKycWizard(models.TransientModel):
             'moa_aoa': [(6, 0, self.moa_aoa.ids)],
             'cin_no': self.cin_no,
             'electricity_bill': [(6, 0, self.electricity_bill.ids)],
+            'pan_card_document': [(6, 0, self.pan_card_document.ids)],
             'gst_certificate': [(6, 0, self.gst_certificate.ids)],
             'udyam_document': [(6, 0, self.udyam_document.ids)],
+            'shop_act_document': [(6, 0, self.shop_act_document.ids)],
             'gst_return_duration': self.gst_return_duration,
             'shop_photos': [(6, 0, self.shop_photos.ids)],
             'shop_videos': [(6, 0, self.shop_videos.ids)],
@@ -205,7 +219,11 @@ class VendorKycWizard(models.TransientModel):
         all_attachments = (
                 self.gst_certificate |
                 self.udyam_document |
+                self.shop_act_document |
                 self.shop_photos |
+                self.electricity_bill |
+                self.moa_aoa |
+                self.pan_card_document |
                 self.shop_videos
         )
         if all_attachments:
@@ -240,12 +258,12 @@ class DirectorDetail(models.TransientModel):
     _description = "Directors Detail"
 
     kyc_wizard_id = fields.Many2one('vendor.kyc.wizard', string="KYC Approval")
-    designation = fields.Char(string="Designation")
-    name = fields.Char(string="Name")
-    contact_no = fields.Char(string="Contact Number")
-    email = fields.Char(string="E-mail Address")
-    aadhaar_card = fields.Binary(string="Aadhaar Card")
-    pan_card = fields.Binary(string="PAN Card")
+    designation = fields.Char(string="Designation", required=True)
+    name = fields.Char(string="Name", required=True)
+    contact_no = fields.Char(string="Contact Number", required=True)
+    email = fields.Char(string="E-mail Address", required=True)
+    aadhaar_card = fields.Binary(string="Aadhaar Card", required=True)
+    pan_card = fields.Binary(string="PAN Card", required=True)
 
 ##### Bank Details
 class BankDetail(models.TransientModel):
@@ -254,10 +272,10 @@ class BankDetail(models.TransientModel):
     _description = "Bank Detail"
 
     kyc_wizard_id = fields.Many2one('vendor.kyc.wizard', string="KYC Approval")
-    bank_name = fields.Char(string="Bank Name", required=False)
-    account_no = fields.Char(string="Account Number", required=False)
-    ifsc_code = fields.Char(string="IFSC Code", required=False)
-    bank_address = fields.Char(string="Bank Address", required=False)
+    bank_name = fields.Char(string="Bank Name", required=True)
+    account_no = fields.Char(string="Account Number", required=True)
+    ifsc_code = fields.Char(string="IFSC Code", required=True)
+    bank_address = fields.Char(string="Bank Address", required=True)
     bank_cheque_attachments = fields.Many2many('ir.attachment', 'wizard_bank_detail_cheque_rel', 'kyc_wizard_id',
                                                'attachment_id', string="Cancelled Cheques", required=False)
 
@@ -267,11 +285,11 @@ class AddressDetail(models.TransientModel):
     _description = "Address Detail"
 
     kyc_wizard_id = fields.Many2one('vendor.kyc.wizard', string="KYC Approval")
-    business_street = fields.Char("Address", required=False)
-    business_city = fields.Char("City", required=False)
-    business_pincode = fields.Char("Pincode", required=False)
-    business_phone = fields.Char("Contact Number", required=False)
-    business_email = fields.Char("Email Address")
+    business_street = fields.Char("Address", required=True)
+    business_city = fields.Char("City", required=True)
+    business_pincode = fields.Char("Pincode", required=True)
+    business_phone = fields.Char("Contact Number", required=True)
+    business_email = fields.Char("Email Address", required=True)
     business_state_id = fields.Many2one('res.country.state', string='Business State', domain="[('country_id', '=?', business_country_id)]")
     business_country_id = fields.Many2one('res.country', string='Business Country')
 

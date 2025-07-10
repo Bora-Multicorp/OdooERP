@@ -65,6 +65,11 @@ class ContactKYCApproval(models.Model):
     udyam_number = fields.Char(string="Udyam Certificate Number")
     gst_certificate = fields.Many2many('ir.attachment', 'vendor_kyc_gst_cert_rels', 'partner_id', 'attachment_id',
                                        string="Company GST Certificate", required=False)
+    shop_act_document = fields.Many2many('ir.attachment', 'vendor_kyc_shop_act_documents_rels', 'partner_id',
+                                         'attachment_id',
+                                         string="Shop Act documents", required=False)
+    pan_card_document = fields.Many2many('ir.attachment', 'pan_card_company_documents_rels', 'partner_id', 'attachment_id',
+                                      string="PAN Card Document(Company)")
 
     udyam_document = fields.Many2many('ir.attachment', 'vendor_kyc_shop_documents_rels', 'partner_id', 'attachment_id',
                                       string="Shop Act documents / Udyam Documents", required=False)

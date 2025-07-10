@@ -96,6 +96,10 @@
                                    options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 5}"/>
                             <field name="udyam_document" widget="many2many_binary"
                                    options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 5}"/>
+                            <field name="shop_act_document" widget="many2many_binary"
+                                   options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 5}"/>
+                            <field name="pan_card_document" widget="many2many_binary"
+                                   options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 5}"/>
                             <field name="gst_return_duration" placeholder="Your Answer"/>
                             <field name="shop_photos" widget="many2many_binary"
                                    options="{'accepted_file_extensions': 'image/*', 'number_of_files': 10}"/>
@@ -107,7 +111,7 @@
                                    options="{'accepted_file_extensions': 'video/*', 'number_of_files': 10}"/>
                             <field name="cin_no" placeholder="Your Answer"/>
                             <field name="electricity_bill" widget="many2many_binary"
-                                   options="{'accepted_file_extensions': 'video/*', 'number_of_files': 10}"/>
+                                   options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 10}"/>
                         </group>
                         <group string="Bank Details(Please provide all required bank Details Carefully)"
                                name="bank_details">
