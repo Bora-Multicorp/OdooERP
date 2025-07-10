@@ -118,7 +118,7 @@
                     <field name="kyc_details">
                         <list create="False" edit="False" delete="False">
                             <field name="email"/>
-                            <field name="point_of_contact" />
+                            <field name="point_of_contact"/>
                             <field name="business_legal_name"/>
                             <field name="business_trade_name"/>
                             <!--<field name="const_business"/>-->
@@ -135,26 +135,20 @@
                             </header>
                             <sheet>
                                 <group>
-                                    <field name="partner_id" readonly="1"/>
+                                    <field name="partner_id" readonly="1" invisible="1"/>
                                     <field name="email" placeholder="Your Answer"/>
-                                    <field name="point_of_contact" placeholder="Your Answer"/>
-                                </group>
-                                <group>
-                                    <field name="is_approved" readonly="1" invisible="not is_approved"/>
-                                    <field name="approval_date" readonly="1" invisible="not approval_date"/>
-                                    <field name="is_rejected" readonly="1" invisible="not is_rejected"/>
-                                    <field name="rejection_date" readonly="1" invisible="not rejection_date"/>
-                                    <field name="rejection_reason" readonly="1" invisible="not rejection_reason"/>
+                                    <field name="point_of_contact" placeholder="Your Answer" widget="upper_case"/>
+                                    <!--<field name="user_id"
+                                           options="{'no_open': True, 'no_create': True, 'no_create_edit': True}"/>-->
                                 </group>
                                 <group string="KYC Form (Company Details)" name="kyc_company_details">
-                                    <group string="Principal Place of Business">
-                                        <field name="business_legal_name" placeholder="Your Answer"/>
-                                        <field name="business_trade_name" placeholder="Your Answer"/>
-                                    </group>
+                                    <field name="business_legal_name" placeholder="Your Answer" widget="upper_case"/>
+                                    <field name="business_trade_name" placeholder="Your Answer" widget="upper_case"/>
                                     <field name="address_detail">
                                         <list editable="bottom">
-                                            <field name="business_street" placeholder="Your Answer"/>
-                                            <field name="business_city" placeholder="Your Answer"/>
+                                            <field name="business_street" placeholder="Your Answer"
+                                                   widget="upper_case"/>
+                                            <field name="business_city" placeholder="Your Answer" widget="upper_case"/>
                                             <field name="business_pincode" placeholder="Your Answer"/>
                                             <field name="business_phone" placeholder="Your Answer"/>
                                             <field name="business_email" placeholder="Your Answer"/>
@@ -164,8 +158,9 @@
                                                    options="{'no_create': True, 'no_create_edit': True}"/>
                                         </list>
                                         <form>
-                                            <field name="business_street" placeholder="Your Answer"/>
-                                            <field name="business_city" placeholder="Your Answer"/>
+                                            <field name="business_street" placeholder="Your Answer"
+                                                   widget="upper_case"/>
+                                            <field name="business_city" placeholder="Your Answer" widget="upper_case"/>
                                             <field name="business_pincode" placeholder="Your Answer"/>
                                             <field name="business_phone" placeholder="Your Answer"/>
                                             <field name="business_email" placeholder="Your Answer"/>
@@ -175,74 +170,100 @@
                                                    options="{'no_create': True, 'no_create_edit': True}"/>
                                         </form>
                                     </field>
-                                    <group>
-                                        <field name="const_business" widget="radio"/>
-                                        <field name="other_business" string="Please Specify"/>
-                                        <!--<field name="other_business" string="Please Specify"
-                                               placeholder="If Other Please Specify"
-                                               invisible="const_business != %(custom_contact.constitution_business_other)d"
-                                               required="const_business == %(custom_contact.constitution_business_other)d"/>-->
-                                        <!--<field name="no_partner_director" widget="radio"/>-->
-                                    </group>
+                                    <field name="const_business" widget="radio"/>
+                                    <field name="other_business" string="Please Specify"
+                                           invisible="const_business != 'Other'"
+                                           required="const_business == 'Other'"/>
+                                    <!--<field name="other_business" string="Please Specify"
+                                           placeholder="If Other Please Specify"
+                                           invisible="const_business != %(custom_contact.constitution_business_other)d"
+                                           required="const_business == %(custom_contact.constitution_business_other)d"/>-->
+                                    <!--<field name="no_partner_director" widget="radio"/>-->
                                 </group>
                                 <group string="Director/Owner Details" name="kyc_sole_proprietor">
-                                    <field name="no_partner_director" widget="radio" options="{'horizontal': true}"/>
-                                    <field name="directors_detail" string="Director/Partner">
+                                    <field name="no_partner_director" widget="radio" options="{'horizontal': true}"
+                                           invisible="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
+                                    <field name="directors_detail" string="Director/Partner"
+                                           invisible="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']">
                                         <list editable="bottom">
-                                            <field name="name"/>
+                                            <field name="designation" widget="upper_case"/>
+                                            <field name="name" widget="upper_case"/>
                                             <field name="contact_no"/>
                                             <field name="email"/>
-                                            <field name="aadhaar_card"/>
-                                            <field name="pan_card"/>
+                                            <field name="aadhaar_card" widget="image" filename="filename"/>
+                                            <field name="pan_card" widget="image" filename="filename"/>
                                         </list>
                                         <form>
-                                            <field name="name"/>
+                                            <field name="designation" widget="upper_case"/>
+                                            <field name="name" widget="upper_case"/>
                                             <field name="contact_no"/>
                                             <field name="email"/>
-                                            <field name="aadhaar_card"/>
-                                            <field name="pan_card"/>
+                                            <field name="aadhaar_card" widget="image"/>
+                                            <field name="pan_card" widget="image"/>
                                         </form>
                                     </field>
-                                    <field name="director_name" placeholder="Your Answer"/>
-                                    <field name="director_phone" placeholder="Your Answer"/>
-                                    <field name="director_email" placeholder="Your Answer"/>
-                                    <field name="aadhaar_card" placeholder="Your Answer" widget="image"/>
-                                    <field name="pan_card" placeholder="Your Answer" widget="image"/>
-                                    <field name="pan_no" placeholder="Your Answer"/>
-                                    <field name="gst_no" placeholder="Your Answer"/>
-                                    <field name="udyam_number" placeholder="Your Answer"/>
+                                    <field name="director_name" placeholder="Your Answer"
+                                           required="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"
+                                           invisible="const_business in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
+                                    <field name="director_phone" placeholder="Your Answer"
+                                           required="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"
+                                           invisible="const_business in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
+                                    <field name="director_email" placeholder="Your Answer"
+                                           required="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"
+                                           invisible="const_business in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
+                                    <field name="aadhaar_card" placeholder="Your Answer" widget="image"
+                                           required="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"
+                                           invisible="const_business in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
+                                    <field name="pan_card" placeholder="Your Answer" widget="image"
+                                           required="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"
+                                           invisible="const_business in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
+                                    <field name="pan_no" placeholder="Your Answer" widget="upper_case"
+                                           invisible="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
+                                    <field name="pan_card_document" widget="many2many_binary"
+                                           options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 5}"
+                                           required="const_business in ['Partnership', 'Pvt Ltd Co.', 'LLP']"
+                                           invisible="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
+                                    <field name="gst_no" placeholder="Your Answer" widget="upper_case"/>
+                                    <field name="udyam_number" placeholder="Your Answer" widget="upper_case"/>
                                     <field name="gst_certificate" widget="many2many_binary"
                                            options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 5}"/>
                                     <field name="udyam_document" widget="many2many_binary"
+                                           options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 5}"/>
+                                    <field name="shop_act_document" widget="many2many_binary"
                                            options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 5}"/>
                                     <field name="gst_return_duration" placeholder="Your Answer"/>
                                     <field name="shop_photos" widget="many2many_binary"
                                            options="{'accepted_file_extensions': 'image/*', 'number_of_files': 10}"/>
                                     <field name="shop_videos" widget="many2many_binary"
                                            options="{'accepted_file_extensions': 'video/*', 'number_of_files': 10}"/>
-                                    <field name="google_location" placeholder="Your Answer"/>
-                                    <field name="partner_llp"/>
+                                    <field name="google_location" placeholder="Your Answer"
+                                           invisible="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
+                                    <field name="partner_llp"
+                                           invisible="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
                                     <field name="moa_aoa" widget="many2many_binary"
-                                           options="{'accepted_file_extensions': 'video/*', 'number_of_files': 10}"/>
-                                    <field name="cin_no" placeholder="Your Answer"/>
+                                           options="{'accepted_file_extensions': 'video/*', 'number_of_files': 10}"
+                                           invisible="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
+                                    <field name="cin_no" placeholder="Your Answer" widget="upper_case"
+                                           invisible="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
                                     <field name="electricity_bill" widget="many2many_binary"
-                                           options="{'accepted_file_extensions': 'video/*', 'number_of_files': 10}"/>
+                                           options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 10}"
+                                           invisible="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
                                 </group>
                                 <group string="Bank Details(Please provide all required bank Details Carefully)"
                                        name="bank_details">
                                     <field name="bank_detail">
                                         <list editable="bottom">
-                                            <field name="bank_name" placeholder="Your Answer"/>
+                                            <field name="bank_name" placeholder="Your Answer" widget="upper_case"/>
                                             <field name="account_no" placeholder="Your Answer"/>
-                                            <field name="ifsc_code" placeholder="Your Answer"/>
-                                            <field name="bank_address" placeholder="Your Answer"/>
+                                            <field name="ifsc_code" placeholder="Your Answer" widget="upper_case"/>
+                                            <field name="bank_address" placeholder="Your Answer" widget="upper_case"/>
                                             <field name="bank_cheque_attachments" widget="many2many_binary"/>
                                         </list>
                                         <form>
-                                            <field name="bank_name" placeholder="Your Answer"/>
+                                            <field name="bank_name" placeholder="Your Answer" widget="upper_case"/>
                                             <field name="account_no" placeholder="Your Answer"/>
-                                            <field name="ifsc_code" placeholder="Your Answer"/>
-                                            <field name="bank_address" placeholder="Your Answer"/>
+                                            <field name="ifsc_code" placeholder="Your Answer" widget="upper_case"/>
+                                            <field name="bank_address" placeholder="Your Answer" widget="upper_case"/>
                                             <field name="bank_cheque_attachments" widget="many2many_binary"/>
                                         </form>
                                     </field>
