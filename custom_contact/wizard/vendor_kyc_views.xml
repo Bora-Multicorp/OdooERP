@@ -53,8 +53,8 @@
                                 <field name="name" widget="upper_case"/>
                                 <field name="contact_no"/>
                                 <field name="email"/>
-                                <field name="aadhaar_card" widget="image"/>
-                                <field name="pan_card" widget="image"/>
+                                <field name="aadhaar_card" widget="image" filename="filename"/>
+                                <field name="pan_card" widget="image" filename="filename"/>
                             </list>
                             <form>
                                 <field name="designation" widget="upper_case"/>

@@ -213,6 +213,7 @@ class DirectorDetails(models.Model):
     _description = "Directors Details"
 
     kyc_approval_id = fields.Many2one('res.partner.kyc.approval', string="KYC Approval")
+    designation = fields.Char(string="Designation")
     name = fields.Char(string="Name")
     contact_no = fields.Char(string="Contact Number")
     email = fields.Char(string="E-mail Address")

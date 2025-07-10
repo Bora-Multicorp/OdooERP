@@ -148,37 +148,51 @@ class VendorKycWizard(models.TransientModel):
         if not self.partner_id:
             return
 
-        # Prepare director detail lines
-        directors_data = [
-            (0, 0, {
-                'name': director.name,
-                'contact_no': director.contact_no,
-                'email': director.email,
-                'aadhaar_card': director.aadhaar_card,
-                'pan_card': director.pan_card,
-            }) for director in self.directors_detail
-        ]
-        # Prepare bank detail lines
-        bank_data = [
-            (0, 0, {
-                'bank_name': bank.bank_name,
-                'account_no': bank.account_no,
-                'ifsc_code': bank.ifsc_code,
-                'bank_address': bank.bank_address,
-                'bank_cheque_attachments': [(6, 0, bank.bank_cheque_attachments.ids)],
-            }) for bank in self.bank_detail
-        ]
-        # Prepare Address detail lines
-        address_data = [
-            (0, 0, {
-                'business_street': address.business_street,
-                'business_city': address.business_city,
-                'business_pincode': address.business_pincode,
-                'business_phone': address.business_phone,
-                'business_email': address.business_email,
-            }) for address in self.address_detail
-        ]
+        def prepare_one2many(lines, fields_map, many2many_fields=None):
+            result = []
+            many2many_fields = many2many_fields or []
+            for line in lines:
+                item = {k: getattr(line, v) for k, v in fields_map.items()}
+                for m2m_field in many2many_fields:
+                    item[m2m_field] = [(6, 0, getattr(line, m2m_field).ids)]
+                result.append((0, 0, item))
+            return result
 
+        # Prepare related data
+        directors_data = prepare_one2many(
+            self.directors_detail,
+            fields_map={
+                'name': 'name',
+                'contact_no': 'contact_no',
+                'email': 'email',
+                'aadhaar_card': 'aadhaar_card',
+                'pan_card': 'pan_card',
+            }
+        )
+
+        bank_data = prepare_one2many(
+            self.bank_detail,
+            fields_map={
+                'bank_name': 'bank_name',
+                'account_no': 'account_no',
+                'ifsc_code': 'ifsc_code',
+                'bank_address': 'bank_address',
+            },
+            many2many_fields=['bank_cheque_attachments']
+        )
+
+        address_data = prepare_one2many(
+            self.address_detail,
+            fields_map={
+                'business_street': 'business_street',
+                'business_city': 'business_city',
+                'business_pincode': 'business_pincode',
+                'business_phone': 'business_phone',
+                'business_email': 'business_email',
+            }
+        )
+
+        # Prepare main record values
         kyc_vals = {
             'partner_id': self.partner_id.id,
             'email': self.email,
@@ -213,25 +227,29 @@ class VendorKycWizard(models.TransientModel):
             'bank_detail': bank_data,
         }
 
+        # Create the KYC record
         kyc_record = self.env['res.partner.kyc.approval'].create(kyc_vals)
 
-        # Ensure uploaded attachments are linked correctly to kyc record
-        all_attachments = (
-                self.gst_certificate |
-                self.udyam_document |
-                self.shop_act_document |
-                self.shop_photos |
-                self.electricity_bill |
-                self.moa_aoa |
-                self.pan_card_document |
-                self.shop_videos
-        )
+        # Link attachments to the new KYC record
+        attachment_fields = [
+            self.gst_certificate,
+            self.udyam_document,
+            self.shop_act_document,
+            self.shop_photos,
+            self.electricity_bill,
+            self.moa_aoa,
+            self.pan_card_document,
+            self.shop_videos,
+        ]
+        all_attachments = sum((attachments for attachments in attachment_fields if attachments),
+                              self.env['ir.attachment'])
         if all_attachments:
             all_attachments.write({
                 'res_model': 'res.partner.kyc.approval',
-                'res_id': kyc_record.id
+                'res_id': kyc_record.id,
             })
-        # Set res_model and res_id for bank cheque attachments
+
+        # Link bank cheque attachments separately
         for bank in kyc_record.bank_detail:
             if bank.bank_cheque_attachments:
                 bank.bank_cheque_attachments.write({
@@ -239,11 +257,11 @@ class VendorKycWizard(models.TransientModel):
                     'res_id': kyc_record.id,
                 })
 
-        # Update linked partner
+        # Update Partner
         self.partner_id.write({
             'email': self.email,
-            'is_kyc': True,
             'vat': self.gst_no,
+            'is_kyc': True,
             'rejection_date': False,
             'rejection_reason': False,
             'is_rejected': False,
