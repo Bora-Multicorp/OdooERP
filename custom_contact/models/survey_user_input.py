@@ -4,7 +4,6 @@ from odoo import models, _
 from odoo.exceptions import UserError
 import base64
 
-
 class SurveyUserInput(models.Model):
     _inherit = "survey.user_input"
 
@@ -56,6 +55,9 @@ class SurveyUserInput(models.Model):
             Q("custom_contact.shop_photos_kyc_survey").id: "shop_photos",
             Q("custom_contact.shop_videos_kyc_survey").id: "shop_videos",
             #Q("custom_contact.cancel_cheque_kyc_survey").id: "bank_cheque_attachments",
+            # Q("custom_contact.matrix_bank_address_kyc_survey").id: "bank_detail",
+            # Q("custom_contact.matrix_director_detail_kyc_survey").id: "directors_detail",
+            # Q("custom_contact.matrix_address_detail_kyc_survey").id: "address_detail",
         }
         values = {}
         for line in self.user_input_line_ids:
@@ -97,6 +99,46 @@ class SurveyUserInput(models.Model):
                 else:
                     # Multiple file upload (Many2many)
                     values[field_name] = [(6, 0, files.ids)]
+
+            # Matrix Data
+            # elif qtype == "matrix":
+            #     matrix_lines = self.user_input_line_ids.filtered(
+            #         lambda l: l.question_id.id == line.question_id.id and
+            #                   l.matrix_row_id and l.suggested_answer_id
+            #     )
+            #
+            #     row_data_map = {}
+            #     for ml in matrix_lines:
+            #         row_key = ml.matrix_row_id.id
+            #         col_key = ml.suggested_answer_id.value
+            #         if row_key not in row_data_map:
+            #             row_data_map[row_key] = {}
+            #         row_data_map[row_key][col_key] = ml.value_char_box or ml.suggested_answer_id.value
+            #
+            #     if line.question_id.id == Q("custom_contact.matrix_bank_address_kyc_survey").id:
+            #         values['bank_detail'] = [(0, 0, {
+            #             'bank_name': row.get('Bank Name'),
+            #             'account_no': row.get('Account Number'),
+            #             'ifsc_code': row.get('IFSC Code'),
+            #             'bank_address': row.get('Bank Address'),
+            #         }) for row in row_data_map.values()]
+            #
+            #     elif line.question_id.id == Q("custom_contact.matrix_director_detail_kyc_survey").id:
+            #         values['directors_detail'] = [(0, 0, {
+            #             'name': row.get('Name'),
+            #             'contact_no': row.get('Contact Number'),
+            #             'email': row.get('Email Address'),
+            #         }) for row in row_data_map.values()]
+            #
+            #     elif line.question_id.id == Q("custom_contact.matrix_address_detail_kyc_survey").id:
+            #         values['address_detail'] = [(0, 0, {
+            #             'business_street': row.get('Address'),
+            #             'business_city': row.get('City'),
+            #             'business_pincode': row.get('Pincode'),
+            #             'business_phone': row.get('Contact Number'),
+            #             'business_email': row.get('Email Address'),
+            #         }) for row in row_data_map.values()]
+
         if values:
             if self.partner_id:
                 # self.partner_id.write(values)
