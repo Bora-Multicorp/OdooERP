@@ -8,10 +8,10 @@ class SurveyUserInput(models.Model):
     _inherit = "survey.user_input"
 
     def action_testing(self):
-        pass
-
-    def _mark_done(self):
-        super()._mark_done()  # Ensure the base behavior is triggered
+    #     pass
+    #
+    # def _mark_done(self):
+    #     super()._mark_done()  # Ensure the base behavior is triggered
         vendor_survey = self.env.ref(
             "custom_contact.vendor_kyc_form_survey", raise_if_not_found=False
         )
