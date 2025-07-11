@@ -671,7 +671,7 @@
         </record>
         <record model="survey.question.answer" id="matrix_bank_address_kyc_survey_col5">
             <field name="question_id" ref="matrix_bank_address_kyc_survey"/>
-            <field name="sequence">4</field>
+            <field name="sequence">5</field>
             <field name="value">Cancelled Cheque</field>
             <field name="sh_value_type">que_sh_file</field>
         </record>

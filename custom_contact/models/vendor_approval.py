@@ -4,7 +4,6 @@ from odoo import api, fields, models, _
 from dateutil.relativedelta import relativedelta
 from odoo.exceptions import ValidationError
 
-
 class ContactKYCApproval(models.Model):
     _name = 'res.partner.kyc.approval'
     _description = 'Contact KYC approvals'
