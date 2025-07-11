@@ -20,13 +20,13 @@ class ApproveRequestWizard(models.TransientModel):
         )
 
         if approval_line:
-            approval_line.write({
+            approval_line.sudo().write({
                 'state': 'approve',
                 'remark': self.remark,
                 'action_date': fields.Datetime.now(),
             })
             # Recompute the next approver
-            approval._update_assigned_to()
+            approval.sudo()._update_assigned_to()
 
         return {'type': 'ir.actions.act_window_close'}
 

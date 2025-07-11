@@ -31,7 +31,7 @@ class RejectRequestWizard(models.TransientModel):
                 {'rejection_date': fields.Datetime.now(), 'rejection_reason': self.remark, 'assigned_to': False,
                  'is_rejected': True})
             approval.partner_id.sudo().write({'rejection_date': fields.Datetime.now(), 'rejection_reason': self.remark,
-                                              'is_rejected': True, 'is_kyc': False})
+                                              'is_rejected': True})
             # Recompute the next approver
             # approval._update_assigned_to()
 
