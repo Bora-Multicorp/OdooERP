@@ -46,7 +46,7 @@
                         <!--<field name="no_partner_director" widget="radio"/>-->
                     </group>
                     <group string="Director/Owner Details" name="kyc_sole_proprietor">
-                        <field name="no_partner_director" widget="radio" options="{'horizontal': true}"  invisible="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
+                        <field name="no_partner_director" widget="radio" options="{'horizontal': true}" invisible="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
                         <field name="directors_detail" string="Director/Partner"  required="const_business in ['Partnership', 'Pvt Ltd Co.', 'LLP']" invisible="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']">
                             <list editable="bottom">
                                 <field name="designation" widget="upper_case"/>
@@ -65,7 +65,7 @@
                                 <field name="pan_card" widget="image"/>
                             </form>
                         </field>
-                        <field name="director_name" placeholder="Your Answer"  required="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']" invisible="const_business in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
+                        <field name="director_name" placeholder="Your Answer"  required="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']" invisible="const_business in ['Partnership', 'Pvt Ltd Co.', 'LLP']" widget="upper_case"/>
                         <field name="director_phone" placeholder="Your Answer" required="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']" invisible="const_business in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
                         <field name="director_email" placeholder="Your Answer"  required="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']" invisible="const_business in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
                         <field name="aadhaar_card" placeholder="Your Answer" widget="image" required="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']" invisible="const_business in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>

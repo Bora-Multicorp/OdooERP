@@ -9,6 +9,9 @@
                 <field name="gst_status"/>
                 <field name="pan_blocked"/>
             </xpath>
+            <xpath expr="//field[@name='l10n_in_pan']" position="attributes">
+                <attribute name="readonly">parent_id or gst_status in ['cancelled', 'suo_moto']</attribute>
+            </xpath>
         </field>
     </record>
 </odoo>
