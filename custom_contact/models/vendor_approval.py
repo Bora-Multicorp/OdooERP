@@ -110,7 +110,7 @@ class ContactKYCApproval(models.Model):
     google_location = fields.Char(string="Google Location of Shop", required=True)
     partner_llp = fields.Binary(string="Partnership Deed or LLP Deed", required=False)
     moa_aoa = fields.Many2many('ir.attachment', 'vendor_kyc_moa_aoa_rels', 'partner_id', 'attachment_id',
-                               string="MOA or AOA (for Pvt. Ltd. Company)", required=False)
+                               string="MOA or AOA ", required=False)
     cin_no = fields.Char(string="CIN number", required=False)
     electricity_bill = fields.Many2many('ir.attachment', 'vendor_kyc_electricity_bill_rels', 'partner_id',
                                         'attachment_id',
