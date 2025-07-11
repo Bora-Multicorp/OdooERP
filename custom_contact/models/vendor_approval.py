@@ -94,7 +94,7 @@ class ContactKYCApproval(models.Model):
                                             ('7', '7')], string="Number of Managing Partner / Directors")
     directors_detail = fields.One2many('director.details', 'kyc_approval_id', string="KYC Details", tracking=True)
     pan_no = fields.Char(string="PAN Number", required=False)
-    google_location = fields.Char(string="Google Location of Shop")
+    google_location = fields.Char(string="Google Location of Shop", required=True)
     partner_llp = fields.Binary(string="Partnership Deed or LLP Deed", required=False)
     moa_aoa = fields.Many2many('ir.attachment', 'vendor_kyc_moa_aoa_rels', 'partner_id', 'attachment_id',
                                string="MOA or AOA (for Pvt. Ltd. Company)", required=False)
@@ -102,6 +102,8 @@ class ContactKYCApproval(models.Model):
     electricity_bill = fields.Many2many('ir.attachment', 'vendor_kyc_electricity_bill_rels', 'partner_id',
                                         'attachment_id',
                                         string="Electricity bill", required=False)
+    incorporation_certificate = fields.Many2many('ir.attachment', 'incorportaion_certificate_rels', 'partner_id', 'attachment_id',
+                                      string="Incorporation Certificate")
     #####
     ##### Bank Details
     bank_detail = fields.One2many('bank.details', 'kyc_approval_id', string="Banks Detail")
