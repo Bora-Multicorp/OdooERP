@@ -27,7 +27,7 @@
                     </header>
                     <sheet>
                         <group>
-                            <field name="partner_id" readonly="1" invisible="1"/>
+                            <field name="partner_id" readonly="1"/>
                             <field name="email" placeholder="Your Answer" readonly="state not in ('draft')"/>
                             <field name="point_of_contact" placeholder="Your Answer" widget="upper_case" readonly="state not in ('draft')"/>
                             <!--<field name="user_id"

@@ -87,11 +87,10 @@ class SurveyUserInput(models.Model):
 
                     value_field = f"value_{ml.answer_type}"
                     value = getattr(ml, value_field, None)
-                    if isinstance(value, models.BaseModel):  # file or m2o
+                    if isinstance(value, models.BaseModel):
                         value = value.id
                     row_data_map[row_key][col_key] = value
 
-                # Map matrix data into One2many fields
                 if line.question_id.id == Q("custom_contact.matrix_bank_address_kyc_survey").id:
                     bank_details = []
 
@@ -104,6 +103,7 @@ class SurveyUserInput(models.Model):
                                 'type': 'binary',
                                 'datas': cheque_data,
                                 'res_model': 'bank.details',
+                                'res_id': 0,  # temp dummy ID
                             })
                             attachments.append(attachment.id)
 
@@ -135,12 +135,16 @@ class SurveyUserInput(models.Model):
                         'business_email': row.get('Email Address'),
                     }) for row in row_data_map.values()]
 
-        # Create or update KYC record
         if values:
             if self.partner_id:
                 values['partner_id'] = self.partner_id.id
                 res = self.env['res.partner.kyc.approval'].create(values)
                 if res:
+                    # Update attachments with correct res_id
+                    for bank in res.bank_detail:
+                        for attachment in bank.bank_cheque_attachments:
+                            attachment.write({'res_id': bank.id})
+
                     self.partner_id.write({'is_kyc': True, 'rejection_date': False,
                                            'rejection_reason': False, 'is_rejected': False})
             elif self.email:
@@ -148,6 +152,13 @@ class SurveyUserInput(models.Model):
                 values['partner_id'] = partner.id
                 res = self.env['res.partner.kyc.approval'].create(values)
                 if res:
+                    for bank in res.bank_detail:
+                        for attachment in bank.bank_cheque_attachments:
+                            attachment.write({'res_id': bank.id})
+
                     partner.write({'is_kyc': True, 'rejection_date': False,
                                    'rejection_reason': False, 'is_rejected': False})
+
+
+
 
