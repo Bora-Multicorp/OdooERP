@@ -19,21 +19,24 @@
                         <button name="approve_by_manager" string="Approval By Manager" type="object"
                                 class="oe_highlight"
                                 confirm="Do you want to Approve the request?" invisible="1"/>
+                        <button name="set_as_draft" string="Set As Draft" type="object"
+                                class="oe_highlight" confirm="Do you want to submit?"
+                                invisible="state != 'rejected'"/>
                         <field name="state" widget="statusbar"
                                statusbar_colors='{"pending":"blue", "confirmed":"green", "rejected":"red"}'/>
                     </header>
                     <sheet>
                         <group>
                             <field name="partner_id" readonly="1" invisible="1"/>
-                            <field name="email" placeholder="Your Answer"/>
-                            <field name="point_of_contact" placeholder="Your Answer" widget="upper_case"/>
+                            <field name="email" placeholder="Your Answer" readonly="state not in ('draft')"/>
+                            <field name="point_of_contact" placeholder="Your Answer" widget="upper_case" readonly="state not in ('draft')"/>
                             <!--<field name="user_id"
                                    options="{'no_open': True, 'no_create': True, 'no_create_edit': True}"/>-->
                         </group>
                         <group string="KYC Form (Company Details)" name="kyc_company_details">
-                            <field name="business_legal_name" placeholder="Your Answer" widget="upper_case"/>
-                            <field name="business_trade_name" placeholder="Your Answer" widget="upper_case"/>
-                            <field name="address_detail">
+                            <field name="business_legal_name" placeholder="Your Answer" widget="upper_case" readonly="state not in ('draft')"/>
+                            <field name="business_trade_name" placeholder="Your Answer" widget="upper_case" readonly="state not in ('draft')"/>
+                            <field name="address_detail" readonly="state not in ('draft')">
                                 <list editable="bottom">
                                     <field name="business_street" placeholder="Your Answer" widget="upper_case"/>
                                     <field name="business_city" placeholder="Your Answer" widget="upper_case"/>
@@ -57,8 +60,9 @@
                                            options="{'no_create': True, 'no_create_edit': True}"/>
                                 </form>
                             </field>
-                            <field name="const_business" widget="radio"/>
+                            <field name="const_business" widget="radio" readonly="state not in ['draft']"/>
                             <field name="other_business" string="Please Specify"
+                                   readonly="state not in ['draft']"
                                    invisible="const_business != 'Other'"
                                    required="const_business == 'Other'"/>
                             <!--<field name="other_business" string="Please Specify"
@@ -69,8 +73,9 @@
                         </group>
                         <group string="Director/Owner Details" name="kyc_sole_proprietor">
                             <field name="no_partner_director" widget="radio" options="{'horizontal': true}"
+                                   readonly="state not in ['draft']"
                                    invisible="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
-                            <field name="directors_detail" string="Director/Partner"
+                            <field name="directors_detail" string="Director/Partner" readonly="state not in ['draft']"
                                    invisible="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']">
                                 <list editable="bottom">
                                     <field name="designation" widget="upper_case"/>
@@ -90,55 +95,71 @@
                                 </form>
                             </field>
                             <field name="director_name" placeholder="Your Answer"
+                                   readonly="state not in ['draft']"
                                    required="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"
                                    invisible="const_business in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
                             <field name="director_phone" placeholder="Your Answer"
+                                   readonly="state not in ['draft']"
                                    required="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"
                                    invisible="const_business in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
                             <field name="director_email" placeholder="Your Answer"
+                                   readonly="state not in ['draft']"
                                    required="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"
                                    invisible="const_business in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
                             <field name="aadhaar_card" placeholder="Your Answer" widget="image"
+                                   readonly="state not in ['draft']"
                                    required="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"
                                    invisible="const_business in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
                             <field name="pan_card" placeholder="Your Answer" widget="image"
+                                   readonly="state not in ['draft']"
                                    required="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"
                                    invisible="const_business in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
                             <field name="pan_no" placeholder="Your Answer" widget="upper_case"
                                    invisible="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
                             <field name="pan_card_document" widget="many2many_binary"
                                    options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 5}"
+                                   readonly="state not in ['draft']"
                                    required="const_business in ['Partnership', 'Pvt Ltd Co.', 'LLP']"
                                    invisible="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
-                            <field name="gst_no" placeholder="Your Answer" widget="upper_case"/>
-                            <field name="udyam_number" placeholder="Your Answer" widget="upper_case"/>
+                            <field name="gst_no" placeholder="Your Answer" widget="upper_case" readonly="state not in ['draft']"/>
+                            <field name="udyam_number" placeholder="Your Answer" widget="upper_case" readonly="state not in ['draft']"/>
                             <field name="gst_certificate" widget="many2many_binary"
+                                   readonly="state not in ['draft']"
                                    options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 5}"/>
                             <field name="udyam_document" widget="many2many_binary"
+                                   readonly="state not in ['draft']"
                                    options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 5}"/>
                             <field name="shop_act_document" widget="many2many_binary"
+                                   readonly="state not in ['draft']"
                                    options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 5}"/>
-                            <field name="gst_return_duration" placeholder="Your Answer"/>
+                            <field name="gst_return_duration" placeholder="Your Answer" readonly="state not in ['draft']"/>
                             <field name="shop_photos" widget="many2many_binary"
+                                   readonly="state not in ['draft']"
                                    options="{'accepted_file_extensions': 'image/*', 'number_of_files': 10}"/>
                             <field name="shop_videos" widget="many2many_binary"
+                                   readonly="state not in ['draft']"
                                    options="{'accepted_file_extensions': 'video/*', 'number_of_files': 10}"/>
                             <field name="google_location" placeholder="Your Answer"
+                                   readonly="state not in ['draft']"
                                    invisible="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
                             <field name="partner_llp"
+                                   readonly="state not in ['draft']"
                                    invisible="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
                             <field name="moa_aoa" widget="many2many_binary"
+                                   readonly="state not in ['draft']"
                                    options="{'accepted_file_extensions': 'video/*', 'number_of_files': 10}"
                                    invisible="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
                             <field name="cin_no" placeholder="Your Answer" widget="upper_case"
+                                   readonly="state not in ['draft']"
                                    invisible="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
                             <field name="electricity_bill" widget="many2many_binary"
+                                   readonly="state not in ['draft']"
                                    options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 10}"
                                    invisible="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
                         </group>
                         <group string="Bank Details(Please provide all required bank Details Carefully)"
                                name="bank_details">
-                            <field name="bank_detail">
+                            <field name="bank_detail" readonly="state not in ['draft']">
                                 <list editable="bottom">
                                     <field name="bank_name" placeholder="Your Answer" widget="upper_case"/>
                                     <field name="account_no" placeholder="Your Answer"/>
@@ -156,7 +177,7 @@
                             </field>
                         </group>
                         <notebook>
-                            <page string="Approval Authorities" name="approval_users">
+                            <page string="Approval Authorities" name="approval_users" readonly="state not in ['draft']">
                                 <group>
                                     <field name="assigned_to"
                                            options="{'no_edit': True, 'no_create': True, 'no_open': True}"
