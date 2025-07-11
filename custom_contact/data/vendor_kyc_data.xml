@@ -513,7 +513,7 @@
             <field name="constr_mandatory">True</field>
         </record>
         <!-- Google Location of Shop  -->
-        <record model="survey.question" id="google_location_kyc_survey">
+        <record model="survey.question" id="comp_google_loc_kyc_survey">
             <field name="title">Google Location of Shop</field>
             <field name="survey_id" ref="vendor_kyc_form_survey"/>
             <field name="sequence">34</field>

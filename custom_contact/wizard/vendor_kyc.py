@@ -143,7 +143,7 @@ class VendorKycWizard(models.TransientModel):
                                       string="PAN Card Document(Company)")
     incorporation_certificate = fields.Many2many('ir.attachment', 'incorportaion_certificate_rel', 'wizard_id', 'attachment_id',
                                       string="Incorporation Certificate")
-    google_location = fields.Char(string="Google Location of Shop", required=True)
+    comp_google_loc = fields.Char(string="Google Location of Shop", required=True)
     partner_llp = fields.Binary(string="Partnership Deed or LLP Deed")
     moa_aoa = fields.Many2many('ir.attachment', 'vendor_kyc_moa_aoa_rel', 'wizard_id', 'attachment_id',
                                string="MOA or AOA")
@@ -272,7 +272,7 @@ class VendorKycWizard(models.TransientModel):
             'no_partner_director': self.no_partner_director,
             'directors_detail': directors_data,
             'pan_no': self.pan_no,
-            'google_location': self.google_location,
+            'comp_google_loc': self.comp_google_loc,
             'partner_llp': self.partner_llp,
             'moa_aoa': [(6, 0, self.moa_aoa.ids)],
             'cin_no': self.cin_no,
