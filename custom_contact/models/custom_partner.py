@@ -89,13 +89,6 @@ class CustomContact(models.Model):
                     record.customer_rank = (record.customer_rank or 0) + 1
         return res
 
-    def confirm_rekyc(self):
-        self.write({'is_kyc': False, 'is_approved': False, 'deadline': False})
-        if self.is_vendor:
-             self.write({'supplier_rank': 0})
-        if self.is_customer:
-             self.write({'customer_rank': 0})
-
     survey_ids = fields.One2many('survey.user_input', 'partner_id', string='Surveys')
     survey_count = fields.Integer(string="Survey Count",
                                   groups='sales_team.group_sale_salesman',

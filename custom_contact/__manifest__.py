@@ -17,6 +17,7 @@
         'wizard/vendor_kyc_views.xml',
         'wizard/approve_request_views.xml',
         'wizard/reject_request_views.xml',
+        'wizard/re_kyc_request_views.xml',
         'wizard/survey_invite_inherit.xml',
         'views/vendor_approval_res_config.xml',
         'views/custom_partner.xml',

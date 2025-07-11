@@ -8,6 +8,7 @@ class ContactKYCApproval(models.Model):
     _name = 'res.partner.kyc.approval'
     _description = 'Contact KYC approvals'
     _rec_name = 'partner_id'
+    _inherit = ['mail.thread', 'mail.activity.mixin']
 
     # @api.model
     # def _get_view(self, view_id=None, view_type='form', **options):
@@ -109,7 +110,7 @@ class ContactKYCApproval(models.Model):
     google_location = fields.Char(string="Google Location of Shop", required=True)
     partner_llp = fields.Binary(string="Partnership Deed or LLP Deed", required=False)
     moa_aoa = fields.Many2many('ir.attachment', 'vendor_kyc_moa_aoa_rels', 'partner_id', 'attachment_id',
-                               string="MOA or AOA (for Pvt. Ltd. Company)", required=False)
+                               string="MOA or AOA ", required=False)
     cin_no = fields.Char(string="CIN number", required=False)
     electricity_bill = fields.Many2many('ir.attachment', 'vendor_kyc_electricity_bill_rels', 'partner_id',
                                         'attachment_id',
@@ -122,19 +123,19 @@ class ContactKYCApproval(models.Model):
     ##### Address Details
     address_detail = fields.One2many('address.details', 'kyc_approval_id', string="Address Detail")
 
-    deadline = fields.Date('Deadline Date')
+    deadline = fields.Date('Deadline Date', tracking=True)
     state = fields.Selection([('draft', 'Draft'),
                               ('pending', 'Pending Approval'),
                               ('confirmed', 'Confirmed'),
                               ('rejected', 'Rejected'),
-                              ('expired', 'Expired')], default='draft', required=False, string="Status")
+                              ('expired', 'Expired')], default='draft', required=False, string="Status", tracking=True)
     approval_users_ids = fields.One2many('approval.users', 'kyc_approval_id', 'Approval Authorities',
                                          help='Approval Authority Details')
-    assigned_to = fields.Many2one('res.users', string='Assigned To')
+    assigned_to = fields.Many2one('res.users', string='Assigned To', tracking=True)
     existing_user_ids = fields.Many2many('res.users', compute='_compute_existing_users', store=True)
     is_approved = fields.Boolean(related='partner_id.is_approved', store=True)
     approval_date = fields.Datetime(string="Approval Date", tracking=True)
-    is_rejected = fields.Boolean()
+    is_rejected = fields.Boolean(tracking=True)
     rejection_date = fields.Datetime(string="Rejection Date", tracking=True)
     rejection_reason = fields.Text('Rejection Reason', tracking=True)
 
@@ -146,13 +147,26 @@ class ContactKYCApproval(models.Model):
             self._update_assigned_to()
 
     def set_as_draft(self):
-        if not self.approval_users_ids:
-            raise ValidationError(_("Please Add Approval Authority before Submit Request"))
         if self.id:
-            self.write(
-                {'state': 'draft', 'rejection_date': False, 'rejection_reason': False, 'is_rejected': False})
-            self.partner_id.sudo().write({'rejection_date': False, 'rejection_reason': False,
-                                          'is_rejected': False, 'is_kyc': True})
+            self.write({
+                'state': 'draft',
+                'rejection_date': False,
+                'rejection_reason': False,
+                'is_rejected': False,
+            })
+            self.partner_id.sudo().write({
+                'rejection_date': False,
+                'rejection_reason': False,
+                'is_rejected': False,
+                'is_kyc': True,
+            })
+
+            # Reset approval users' decision fields
+            self.approval_users_ids.write({
+                'state': False,
+                'remark': False,
+                'action_date': False,
+            })
 
     def approve_by_manager(self):
         self.write({'state': 'confirmed'})

@@ -146,7 +146,7 @@ class VendorKycWizard(models.TransientModel):
     google_location = fields.Char(string="Google Location of Shop", required=True)
     partner_llp = fields.Binary(string="Partnership Deed or LLP Deed")
     moa_aoa = fields.Many2many('ir.attachment', 'vendor_kyc_moa_aoa_rel', 'wizard_id', 'attachment_id',
-                               string="MOA or AOA (for Pvt. Ltd. Company)")
+                               string="MOA or AOA")
     cin_no = fields.Char(string="CIN number")
     electricity_bill = fields.Many2many('ir.attachment', 'vendor_kyc_electricity_bill_rel', 'wizard_id',
                                         'attachment_id',
@@ -202,7 +202,14 @@ class VendorKycWizard(models.TransientModel):
             result = []
             many2many_fields = many2many_fields or []
             for line in lines:
-                item = {k: getattr(line, v) for k, v in fields_map.items()}
+                item = {}
+                for target_field, source_field in fields_map.items():
+                    value = getattr(line, source_field)
+                    # Convert M2O records to their ID
+                    if isinstance(value, models.BaseModel):
+                        item[target_field] = value.id
+                    else:
+                        item[target_field] = value
                 for m2m_field in many2many_fields:
                     item[m2m_field] = [(6, 0, getattr(line, m2m_field).ids)]
                 result.append((0, 0, item))
@@ -213,6 +220,7 @@ class VendorKycWizard(models.TransientModel):
             self.directors_detail,
             fields_map={
                 'name': 'name',
+                'designation': 'designation',
                 'contact_no': 'contact_no',
                 'email': 'email',
                 'aadhaar_card': 'aadhaar_card',
@@ -239,6 +247,8 @@ class VendorKycWizard(models.TransientModel):
                 'business_pincode': 'business_pincode',
                 'business_phone': 'business_phone',
                 'business_email': 'business_email',
+                'business_state_id': 'business_state_id',
+                'business_country_id': 'business_country_id',
             }
         )
 
@@ -331,7 +341,7 @@ class DirectorDetail(models.TransientModel):
     designation = fields.Char(string="Designation", required=True)
     name = fields.Char(string="Name", required=True)
     contact_no = fields.Char(string="Contact Number", required=True)
-    email = fields.Char(string="E-mail Address", required=True)
+    email = fields.Char(string="E-mail", required=True)
     aadhaar_card = fields.Binary(string="Aadhaar Card", required=True)
     pan_card = fields.Binary(string="PAN Card", required=True)
 
@@ -359,9 +369,9 @@ class AddressDetail(models.TransientModel):
     business_city = fields.Char("City", required=True)
     business_pincode = fields.Char("Pincode", required=True)
     business_phone = fields.Char("Contact Number", required=True)
-    business_email = fields.Char("Email Address", required=True)
-    business_state_id = fields.Many2one('res.country.state', string='Business State', domain="[('country_id', '=?', business_country_id)]")
-    business_country_id = fields.Many2one('res.country', string='Business Country')
+    business_email = fields.Char("Email", required=True)
+    business_state_id = fields.Many2one('res.country.state', string='State', domain="[('country_id', '=?', business_country_id)]")
+    business_country_id = fields.Many2one('res.country', string='Country')
 
     @api.onchange('business_country_id')
     def _onchange_country_id(self):
