@@ -37,6 +37,7 @@ class SurveyUserInput(models.Model):
             # Q("custom_contact.additional_email_kyc_survey").id: "additional_email",
             Q("custom_contact.business_constitution_kyc_survey").id: "const_business",
             Q("custom_contact.director_name_kyc_survey").id: "director_name",
+            Q("custom_contact.designation_kyc_survey").id: "designation",
             Q("custom_contact.director_contact_no_kyc_survey").id: "director_phone",
             Q("custom_contact.director_email_kyc_survey").id: "director_email",
             Q("custom_contact.gst_no_kyc_survey").id: "gst_no",

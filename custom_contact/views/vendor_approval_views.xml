@@ -71,12 +71,14 @@
                                    required="const_business == %(custom_contact.constitution_business_other)d"/>-->
                             <!--<field name="no_partner_director" widget="radio"/>-->
                         </group>
-                        <group string="Director/Owner Details" name="kyc_sole_proprietor">
+                        <!--<group string="Director/Owner Details" name="kyc_sole_proprietor">
                             <field name="no_partner_director" widget="radio" options="{'horizontal': true}"
                                    readonly="state not in ['draft']"
                                    invisible="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
-                            <field name="directors_detail" string="Director/Partner" readonly="state not in ['draft']"
-                                   invisible="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']">
+                            <field name="directors_detail" string="Director/Partner" 
+                                   readonly="state not in ['draft']"
+                                   invisible="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']" 
+                                   required="const_business in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
                                 <list editable="bottom">
                                     <field name="designation" widget="upper_case"/>
                                     <field name="name" widget="upper_case"/>
@@ -142,12 +144,17 @@
                             <field name="google_location" placeholder="Your Answer"
                                    readonly="state not in ['draft']"
                                    invisible="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
+                               <field name="incorporation_certificate" widget="many2many_binary"
+                               options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 5}" 
+                                      required="const_business in ['Pvt Ltd Co.', 'LLP']" 
+                                      invisible="const_business not in ['Pvt Ltd Co.', 'LLP']"/>
                             <field name="partner_llp"
                                    readonly="state not in ['draft']"
                                    invisible="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
                             <field name="moa_aoa" widget="many2many_binary"
                                    readonly="state not in ['draft']"
-                                   options="{'accepted_file_extensions': 'video/*', 'number_of_files': 10}"
+                                   options="{'accepted_file_extensions': 'video/*', 'number_of_files': 10}" 
+                                   required="const_business in ['Pvt Ltd Co.']"
                                    invisible="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
                             <field name="cin_no" placeholder="Your Answer" widget="upper_case"
                                    readonly="state not in ['draft']"
@@ -156,7 +163,7 @@
                                    readonly="state not in ['draft']"
                                    options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 10}"
                                    invisible="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
-                        </group>
+                        </group>-->
                         <group string="Bank Details(Please provide all required bank Details Carefully)"
                                name="bank_details">
                             <field name="bank_detail" readonly="state not in ['draft']">
