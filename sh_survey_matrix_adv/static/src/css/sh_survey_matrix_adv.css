@@ -1,0 +1,32 @@
+.o_survey_form .o_survey_question_matrix td,
+.o_survey_print .o_survey_question_matrix td,
+.o_survey_session_manage .o_survey_question_matrix td,
+.o_survey_quick_access .o_survey_question_matrix td {
+    min-width: 0px !important;
+}
+
+/* Date time field formatting in matrix field*/
+
+/* Chrome, Firefox, Opera, Safari 10.1+ */
+table.o_survey_question_matrix .o_survey_question_datetime::placeholder {color: #212529;font-weight: 400;}
+/* Microsoft Edge AND Internet Explorer 10-11 */
+table.o_survey_question_matrix .o_survey_question_datetime::-ms-input-placeholder{color: #212529;font-weight: 400;}
+
+
+table.o_survey_question_matrix i.cls_custom_datetime{
+    color: #000;
+    font-size: 14px;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    right: 1rem;
+    font-weight: 500;
+    cursor: none;
+    z-index: 5;
+}
+/* Date time field formatting in matrix field*/
+
+
+.hide-row {
+    display: none;
+}
