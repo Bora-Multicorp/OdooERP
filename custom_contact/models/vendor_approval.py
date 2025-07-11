@@ -4,10 +4,22 @@ from odoo import api, fields, models, _
 from dateutil.relativedelta import relativedelta
 from odoo.exceptions import ValidationError
 
+
 class ContactKYCApproval(models.Model):
     _name = 'res.partner.kyc.approval'
     _description = 'Contact KYC approvals'
     _rec_name = 'partner_id'
+
+    # @api.model
+    # def _get_view(self, view_id=None, view_type='form', **options):
+    #     self.clear_caches()
+    #     arch, view = super()._get_view(view_id, view_type, **options)
+    #     if view_type == 'form':
+    #         for field in arch.xpath("//field"):
+    #
+    #             print('1111111111111', field, field.get('name'))
+    #             field.set('readonly', '1')
+    #     return arch, view
 
     @api.model
     def default_get(self, fields_list):
@@ -68,8 +80,9 @@ class ContactKYCApproval(models.Model):
     shop_act_document = fields.Many2many('ir.attachment', 'vendor_kyc_shop_act_documents_rels', 'partner_id',
                                          'attachment_id',
                                          string="Shop Act documents", required=False)
-    pan_card_document = fields.Many2many('ir.attachment', 'pan_card_company_documents_rels', 'partner_id', 'attachment_id',
-                                      string="PAN Card Document(Company)")
+    pan_card_document = fields.Many2many('ir.attachment', 'pan_card_company_documents_rels', 'partner_id',
+                                         'attachment_id',
+                                         string="PAN Card Document(Company)")
 
     udyam_document = fields.Many2many('ir.attachment', 'vendor_kyc_shop_documents_rels', 'partner_id', 'attachment_id',
                                       string="Shop Act documents / Udyam Documents", required=False)
@@ -133,6 +146,15 @@ class ContactKYCApproval(models.Model):
             self.write({'state': 'pending'})
             self._update_assigned_to()
 
+    def set_as_draft(self):
+        if not self.approval_users_ids:
+            raise ValidationError(_("Please Add Approval Authority before Submit Request"))
+        if self.id:
+            self.write(
+                {'state': 'draft', 'rejection_date': False, 'rejection_reason': False, 'is_rejected': False})
+            self.partner_id.sudo().write({'rejection_date': False, 'rejection_reason': False,
+                                          'is_rejected': False, 'is_kyc': True})
+
     def approve_by_manager(self):
         self.write({'state': 'confirmed'})
 
@@ -170,7 +192,8 @@ class ContactKYCApproval(models.Model):
                         'deadline': one_year,
                     })
                     # Send email to all approval users
-                    approval_template = self.env.ref('custom_contact.kyc_approval_email_template', raise_if_not_found=False)
+                    approval_template = self.env.ref('custom_contact.kyc_approval_email_template',
+                                                     raise_if_not_found=False)
                     if approval_template and record.existing_user_ids:
                         email_list = [user.email_formatted for user in record.existing_user_ids if user.email]
                         if email_list:
@@ -208,6 +231,7 @@ class ApprovalUsers(models.Model):
             res.kyc_approval_id._update_state_based_on_approvals()
         return res
 
+
 ### Directors Details
 class DirectorDetails(models.Model):
     _name = "director.details"
@@ -221,6 +245,7 @@ class DirectorDetails(models.Model):
     email = fields.Char(string="E-mail Address")
     aadhaar_card = fields.Binary(string="Aadhaar Card")
     pan_card = fields.Binary(string="PAN Card")
+
 
 ##### Bank Details
 class BankDetail(models.Model):
@@ -236,6 +261,7 @@ class BankDetail(models.Model):
     bank_cheque_attachments = fields.Many2many('ir.attachment', 'vendor_bank_detail_cheque_rel', 'kyc_approval_id',
                                                'attachment_id', string="Cancelled Cheques", required=False)
 
+
 ##### Principal Place of Business
 class AddressDetail(models.Model):
     _name = "address.details"
@@ -247,5 +273,6 @@ class AddressDetail(models.Model):
     business_pincode = fields.Char("Pincode", required=False)
     business_phone = fields.Char("Contact Number", required=False)
     business_email = fields.Char("Email Address")
-    business_state_id = fields.Many2one('res.country.state', string='Business State', domain="[('country_id', '=?', business_country_id)]")
+    business_state_id = fields.Many2one('res.country.state', string='Business State',
+                                        domain="[('country_id', '=?', business_country_id)]")
     business_country_id = fields.Many2one('res.country', string='Business Country')
