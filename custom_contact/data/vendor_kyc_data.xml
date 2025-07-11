@@ -333,7 +333,7 @@
         <record model="survey.question.answer" id="matrix_director_detail_kyc_survey_col1">
             <field name="question_id" ref="matrix_director_detail_kyc_survey"/>
             <field name="sequence">1</field>
-            <field name="value">>Name of the Owner / Director</field>
+            <field name="value">Name of the Owner / Director</field>
         </record>
         <record model="survey.question.answer" id="matrix_director_detail_kyc_survey_col2">
             <field name="question_id" ref="matrix_director_detail_kyc_survey"/>
