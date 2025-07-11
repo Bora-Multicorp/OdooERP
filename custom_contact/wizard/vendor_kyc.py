@@ -66,6 +66,16 @@ class VendorKycWizard(models.TransientModel):
                         "Business Address Email must be valid.\nInvalid Value: %s"
                     ) % addr.business_email)
 
+    @api.constrains('address_detail')
+    def _check_pincode_format(self):
+        pincode_pattern = re.compile(r'^\d{6}$')  # Indian pincode: exactly 6 digits
+        for rec in self:
+            for addr in rec.address_detail:
+                if addr.business_pincode and not pincode_pattern.match(addr.business_pincode):
+                    raise ValidationError(_(
+                        "Invalid Pincode: '%s'. It must be exactly 6 digits (e.g., 400001)."
+                    ) % addr.business_pincode)
+
     @api.constrains('pan_no')
     def _check_pan_card_no_format(self):
         pan_pattern = re.compile(r'^[A-Z]{5}[0-9]{4}[A-Z]$')
@@ -126,7 +136,7 @@ class VendorKycWizard(models.TransientModel):
                                             ('6', '6'),
                                             ('7', '7')], string="Number of Managing Partner / Directors")
     directors_detail = fields.One2many('director.detail', 'kyc_wizard_id', string="Directors Detail")
-    bank_detail = fields.One2many('bank.detail', 'kyc_wizard_id', string="Banks Detail")
+    bank_detail = fields.One2many('bank.detail', 'kyc_wizard_id', string="Bank Detail")
     address_detail = fields.One2many('address.detail', 'kyc_wizard_id', string="Address Detail")
     pan_no = fields.Char(string="PAN Number(Company)")
     pan_card_document = fields.Many2many('ir.attachment', 'pan_card_company_documents_rel', 'wizard_id', 'attachment_id',
