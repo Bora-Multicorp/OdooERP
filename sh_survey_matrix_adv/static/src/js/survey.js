@@ -19,6 +19,23 @@ $(document).on("change", ".sh_file_input", function (ev) {
     }
 });
 
+$(document).off('click', '.add-item-btn').on('click', '.add-item-btn', function(ev) {
+    //var find_row = $('table.table-borderless').find('tr.hide-row:first');
+    var data_name = $(ev.currentTarget).attr('data-name')
+    var find_row = $('table.table-borderless[data-name=' + data_name +']').find('tr.hide-row:first');
+    //var rowCount = $('#myTable tr').length;
+    if (! find_row.length){
+       alert('Maximum Limit reached to add records');
+    }
+    find_row.removeClass('hide-row');
+});
+
+$(document).off('click', '.delete-item-btn').on('click', '.delete-item-btn', function(ev) {
+    var find_row = $(ev.target).closest('tr');
+    $(ev.target).closest('tr').addClass('hide-row');
+});
+
+
 SurveyFormWidget.include({
     _prepareSubmitAnswersMatrix: function (params, $matrixTable) {
         var self = this;
