@@ -1,0 +1,42 @@
+.js_cls_sh_many2many_select_div .placeholder{background:transparent;}
+.filter-multi-select > .viewbar > .selected-items > .item{color:#000 !important;border: 1px solid grey;}
+.filter-multi-select > .viewbar > .selected-items > .item > button{color:#000 !important;}
+.filter-multi-select .dropdown-item .custom-checkbox:checked ~ .custom-control-label::before{background: #212121 !important;}
+
+.js_question-wrapper .o_survey_question_email_box,
+.js_cls_sh_many2one_wrapper input,
+.js_cls_sh_many2many_wrapper input,
+.js_cls_sh_address_wrapper .js_cls_street,
+.js_cls_sh_address_wrapper .js_cls_street2,
+.js_cls_sh_address_wrapper .js_cls_city,
+.js_cls_sh_address_wrapper .js_cls_zip,
+.js_cls_sh_address_wrapper .js_cls_country_id,
+.js_cls_sh_address_wrapper .js_cls_state_id,
+.js_question-wrapper .o_survey_question_color_box,
+.js_question-wrapper .js_cls_tmpl_sh_location,
+.js_cls_sh_many2many_wrapper .js_cls_sh_many2many_select_div .viewbar.form-control.dropdown-toggle{
+    border: 0px;
+    border-radius: 0 !important;
+    border-bottom: 1px solid o-color(o-color-1);
+    height: 33px;
+    padding: 5px !important;
+}
+
+.js_question-wrapper input[type="file"]{
+    border: 1px solid #35979c;
+}
+
+.js_question-wrapper .o_survey_question_email_box:focus,
+.js_cls_sh_many2one_wrapper input:focus,
+.js_cls_sh_many2many_wrapper input:focus,
+.js_cls_sh_address_wrapper .js_cls_street:focus,
+.js_cls_sh_address_wrapper .js_cls_street2:focus,
+.js_cls_sh_address_wrapper .js_cls_city:focus,
+.js_cls_sh_address_wrapper .js_cls_zip:focus,
+.js_cls_sh_address_wrapper .js_cls_country_id:focus,
+.js_cls_sh_address_wrapper .js_cls_state_id:focus,
+.js_cls_sh_address_wrapper .js_cls_sh_many2many_select_div .viewbar.form-control.dropdown-toggle:focus{
+    box-shadow: none;
+}
+.js_cls_sh_signature_wrapper .js_cls_sh_signature_pad > div:first-child,
+.js_cls_sh_signature_wrapper .js_cls_sh_signature_pad > div:first-child + canvas.jSignature{display: none !important;}
