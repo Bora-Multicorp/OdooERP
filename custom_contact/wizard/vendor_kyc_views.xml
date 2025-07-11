@@ -47,7 +47,7 @@
                     </group>
                     <group string="Director/Owner Details" name="kyc_sole_proprietor">
                         <field name="no_partner_director" widget="radio" options="{'horizontal': true}"  invisible="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
-                        <field name="directors_detail" string="Director/Partner"  invisible="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']">
+                        <field name="directors_detail" string="Director/Partner"  required="const_business in ['Partnership', 'Pvt Ltd Co.', 'LLP']" invisible="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']">
                             <list editable="bottom">
                                 <field name="designation" widget="upper_case"/>
                                 <field name="name" widget="upper_case"/>
@@ -77,6 +77,8 @@
                         <field name="udyam_number" placeholder="Your Answer"  widget="upper_case"/>
                         <field name="gst_certificate" widget="many2many_binary"
                                options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 5}"/>
+                        <field name="incorporation_certificate" widget="many2many_binary"
+                               options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 5}" required="const_business in ['Pvt Ltd Co.', 'LLP']" invisible="const_business not in ['Pvt Ltd Co.', 'LLP']"/>
                         <field name="udyam_document" widget="many2many_binary"
                                options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 5}"/>
                         <field name="shop_act_document" widget="many2many_binary"
@@ -86,10 +88,10 @@
                                options="{'accepted_file_extensions': 'image/*', 'number_of_files': 10}"/>
                         <field name="shop_videos" widget="many2many_binary"
                                options="{'accepted_file_extensions': 'video/*', 'number_of_files': 10}"/>
-                        <field name="google_location" placeholder="Your Answer" invisible="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
+                        <field name="google_location" placeholder="Your Answer"/>
                         <field name="partner_llp" invisible="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
                         <field name="moa_aoa" widget="many2many_binary"
-                               options="{'accepted_file_extensions': 'video/*', 'number_of_files': 10}" invisible="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
+                               options="{'accepted_file_extensions': 'video/*', 'number_of_files': 10}" required="const_business in ['Pvt Ltd Co.']" invisible="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
                         <field name="cin_no" placeholder="Your Answer" widget="upper_case" invisible="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
                         <field name="electricity_bill" widget="many2many_binary"
                                options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 10}" invisible="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>

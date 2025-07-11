@@ -3,6 +3,7 @@ from email.policy import default
 
 from odoo import api, fields, models, _
 from odoo.exceptions import ValidationError
+import re
 
 class CustomContact(models.Model):
     _inherit = 'res.partner'
@@ -14,8 +15,16 @@ class CustomContact(models.Model):
 
     @api.constrains('email')
     def _check_duplicate_email(self):
+        email_pattern = re.compile(r'^[\w\.-]+@[\w\.-]+\.\w+$')  # Basic email format
         for rec in self:
             if rec.email:
+                # Check valid email format
+                if not email_pattern.match(rec.email):
+                    raise ValidationError(_(
+                        "Email must be valid (e.g., user@example.com). %s"
+                    ) % rec.email)
+
+                # Check duplicate email
                 existing = self.env['res.partner'].search([
                     ('email', '=', rec.email),
                     ('id', '!=', rec.id)
@@ -24,6 +33,19 @@ class CustomContact(models.Model):
                     raise ValidationError(
                         _("The email address '%s' is already used by another contact.") % rec.email
                     )
+
+    @api.constrains('phone', 'mobile')
+    def _check_phone_mobile_number(self):
+        phone_pattern = re.compile(r'^\d{10}$')  # Exactly 10 digits
+        for rec in self:
+            if rec.phone and not phone_pattern.match(rec.phone):
+                raise ValidationError(_(
+                    "Phone number must be exactly 10 digits.\nInvalid Value: %s"
+                ) % rec.phone)
+            if rec.mobile and not phone_pattern.match(rec.mobile):
+                raise ValidationError(_(
+                    "Mobile number must be exactly 10 digits.\nInvalid Value: %s"
+                ) % rec.mobile)
 
     @api.model
     def _get_view(self, view_id=None, view_type='form', **options):

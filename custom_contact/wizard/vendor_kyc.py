@@ -9,24 +9,62 @@ class VendorKycWizard(models.TransientModel):
     _name = 'vendor.kyc.wizard'
     _description = 'Vendor KYC Wizard'
 
-    @api.constrains('director_phone')
+    @api.constrains('director_phone', 'directors_detail', 'address_detail')
     def _check_phone_numbers(self):
-        phone_pattern = re.compile(r'^[0-9]{10}$')  # Exactly 10 digits, no +, no spaces
+        phone_pattern = re.compile(r'^[0-9]{10}$')  # Only 10-digit numbers
         for rec in self:
-            number = rec.director_phone
-            if number and not phone_pattern.match(number):
-                raise ValidationError(
-                    _("Director Contact Number must be exactly 10 digits (e.g., 9876543210).")
-                )
+            # Wizard-level director phone
+            if rec.director_phone and not phone_pattern.match(rec.director_phone):
+                raise ValidationError(_(
+                    "Director Contact Number must be exactly 10 digits (e.g., 9876543210).\n"
+                    "Invalid Value: %s"
+                ) % rec.director_phone)
 
-    @api.constrains('email', 'director_email')
+            # One2many: Director Detail Contact Numbers
+            for line in rec.directors_detail:
+                if line.contact_no and not phone_pattern.match(line.contact_no):
+                    raise ValidationError(_(
+                        "Director Detail Contact Number must be exactly 10 digits.\n"
+                        "Invalid Value: %s"
+                    ) % line.contact_no)
+
+            # One2many: Address Detail Contact Numbers
+            for addr in rec.address_detail:
+                if addr.business_phone and not phone_pattern.match(addr.business_phone):
+                    raise ValidationError(_(
+                        "Business Address Contact Number must be exactly 10 digits.\n"
+                        "Invalid Value: %s"
+                    ) % addr.business_phone)
+
+    @api.constrains('email', 'director_email', 'directors_detail', 'address_detail')
     def _check_email_format(self):
-        email_pattern = re.compile(r'^[\w\.-]+@[\w\.-]+\.\w{2,}$')  # More flexible TLD length
+        email_pattern = re.compile(r'^[\w\.-]+@[\w\.-]+\.\w{2,}$')
         for rec in self:
-            for label, email in [('Email', rec.email),
-                                 ('Director Email', rec.director_email)]:
-                if email and not email_pattern.match(email):
-                    raise ValidationError(f"{label} must be a valid email address (e.g., user@example.com).")
+            # Main Email
+            if rec.email and not email_pattern.match(rec.email):
+                raise ValidationError(_(
+                    "Email must be valid (e.g., user@example.com).\nInvalid Value: %s"
+                ) % rec.email)
+
+            # Director Email
+            if rec.director_email and not email_pattern.match(rec.director_email):
+                raise ValidationError(_(
+                    "Email must be valid (e.g., user@example.com).\nInvalid Value: %s"
+                ) % rec.director_email)
+
+            # One2many: Director Detail Emails
+            for line in rec.directors_detail:
+                if line.email and not email_pattern.match(line.email):
+                    raise ValidationError(_(
+                        "Email must be valid.\nInvalid Value: %s"
+                    ) % line.email)
+
+            # One2many: Address Detail Emails
+            for addr in rec.address_detail:
+                if addr.business_email and not email_pattern.match(addr.business_email):
+                    raise ValidationError(_(
+                        "Business Address Email must be valid.\nInvalid Value: %s"
+                    ) % addr.business_email)
 
     @api.constrains('pan_no')
     def _check_pan_card_no_format(self):
@@ -60,9 +98,9 @@ class VendorKycWizard(models.TransientModel):
     pan_card = fields.Binary(string="PAN Card")
 
     gst_no = fields.Char(string="GST Number", required=True)
-    udyam_number = fields.Char(string="Udyam Certificate Number")
+    udyam_number = fields.Char(string="Udyam Certificate Number", required=True)
     gst_certificate = fields.Many2many('ir.attachment', 'vendor_kyc_gst_cert_rel', 'wizard_id', 'attachment_id',
-                                       string="Company GST Certificate", required=True)
+                                       string="GST Certificate(Latest)", required=True)
 
     udyam_document = fields.Many2many('ir.attachment', 'vendor_kyc_shop_documents_rel', 'wizard_id', 'attachment_id',
                                       string="Udyam Documents", required=True)
@@ -86,14 +124,16 @@ class VendorKycWizard(models.TransientModel):
                                             ('4', '4'),
                                             ('5', '5'),
                                             ('6', '6'),
-                                            ('7', '7')], string="Number of Managing Partner / Directors",required=True)
+                                            ('7', '7')], string="Number of Managing Partner / Directors")
     directors_detail = fields.One2many('director.detail', 'kyc_wizard_id', string="Directors Detail")
     bank_detail = fields.One2many('bank.detail', 'kyc_wizard_id', string="Banks Detail")
     address_detail = fields.One2many('address.detail', 'kyc_wizard_id', string="Address Detail")
     pan_no = fields.Char(string="PAN Number(Company)")
     pan_card_document = fields.Many2many('ir.attachment', 'pan_card_company_documents_rel', 'wizard_id', 'attachment_id',
                                       string="PAN Card Document(Company)")
-    google_location = fields.Char(string="Google Location of Shop")
+    incorporation_certificate = fields.Many2many('ir.attachment', 'incorportaion_certificate_rel', 'wizard_id', 'attachment_id',
+                                      string="Incorporation Certificate")
+    google_location = fields.Char(string="Google Location of Shop", required=True)
     partner_llp = fields.Binary(string="Partnership Deed or LLP Deed")
     moa_aoa = fields.Many2many('ir.attachment', 'vendor_kyc_moa_aoa_rel', 'wizard_id', 'attachment_id',
                                string="MOA or AOA (for Pvt. Ltd. Company)")
@@ -218,6 +258,7 @@ class VendorKycWizard(models.TransientModel):
             'cin_no': self.cin_no,
             'electricity_bill': [(6, 0, self.electricity_bill.ids)],
             'pan_card_document': [(6, 0, self.pan_card_document.ids)],
+            'incorporation_certificate': [(6, 0, self.incorporation_certificate.ids)],
             'gst_certificate': [(6, 0, self.gst_certificate.ids)],
             'udyam_document': [(6, 0, self.udyam_document.ids)],
             'shop_act_document': [(6, 0, self.shop_act_document.ids)],
@@ -239,6 +280,7 @@ class VendorKycWizard(models.TransientModel):
             self.electricity_bill,
             self.moa_aoa,
             self.pan_card_document,
+            self.incorporation_certificate,
             self.shop_videos,
         ]
         all_attachments = sum((attachments for attachments in attachment_fields if attachments),
@@ -295,7 +337,7 @@ class BankDetail(models.TransientModel):
     ifsc_code = fields.Char(string="IFSC Code", required=True)
     bank_address = fields.Char(string="Bank Address", required=True)
     bank_cheque_attachments = fields.Many2many('ir.attachment', 'wizard_bank_detail_cheque_rel', 'kyc_wizard_id',
-                                               'attachment_id', string="Cancelled Cheques", required=False)
+                                               'attachment_id', string="Cancelled Cheques", required=True)
 
 ##### Principal Place of Business
 class AddressDetail(models.TransientModel):
