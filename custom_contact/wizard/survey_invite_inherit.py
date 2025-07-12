@@ -54,7 +54,6 @@ class InheritSurveyInvite(models.TransientModel):
 
         response = requests.request("POST", url, headers=headers, data=payload)
 
-        print(response.text)
         resp = json.loads(response.text)
 
         if resp['message'] and resp['message'] == 'Token expired':

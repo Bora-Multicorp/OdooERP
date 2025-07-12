@@ -80,7 +80,6 @@ class InheritSurvey(models.Model):
 
     # Overide Start Survey method for change Start Survey name to start
     def action_start_survey(self, answer=None):
-        print('11111111111')
         """ Open the website page with the survey form """
         self.ensure_one()
         url = '%s?%s' % (self.get_start_url(),
