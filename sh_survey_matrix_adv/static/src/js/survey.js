@@ -19,6 +19,52 @@ $(document).on("change", ".sh_file_input", function (ev) {
     }
 });
 
+$(document).on("change", "input.o_survey_form_choice_item", function (event) {
+    const $input = $(event.target);
+    const selectedOptionId = $input.val();  // This is like 84 (answer_id)
+    const selectedLabel = $input.closest("label").find("span").text().trim();  // This gives 1, 2, etc.
+    const maxCount = parseInt(selectedLabel || 0);
+    console.log('Selected Option ID:', selectedOptionId);
+    console.log('Selected Label (Human Readable):', selectedLabel);
+    //const matrixQuestionId = "206";  // The `data-name` of your <table>
+    //const $matrixTable = $(`table.table-borderless[data-name='${matrixQuestionId}']`);
+    // Step 1: Find the header <div> that contains the Director Details heading
+    const $headingDiv = $("div.mb-4:contains('Director Details')").filter(function () {
+        return $(this).text().trim().startsWith("Director Details");
+    });
+    // Step 2: Get the matrix table that comes after the heading
+    const $matrixTable = $headingDiv.nextAll("table[data-question-type='matrix']").first();
+    if (!$matrixTable.length) {
+        console.warn('Matrix table not found!');
+        return;
+    }
+    const $rows = $matrixTable.find("tr");
+    $rows.addClass("hide-row");
+    $rows.slice(0, maxCount+1).removeClass("hide-row");
+});
+
+//let matrixHidden = false;
+//
+//function hideInitialMatrixRows() {
+//    if (matrixHidden) return;  // Ensure it runs only once
+//
+//    $("table.o_survey_question_matrix").each(function () {
+//        const $rows = $(this).find("tbody > tr");
+//        if ($rows.length > 1) {
+//            $rows.addClass("hide-row");
+//            $rows.first().removeClass("hide-row");
+//        }
+//    });
+//
+//    matrixHidden = true;  // Mark it so it won't run again
+//}
+//
+//// Wait for DOM load
+//setTimeout(() => {
+//    hideInitialMatrixRows();
+//}, 1000);  // Adjust timeout based on rendering delay
+
+
 $(document).off('click', '.add-item-btn').on('click', '.add-item-btn', function(ev) {
     //var find_row = $('table.table-borderless').find('tr.hide-row:first');
     var data_name = $(ev.currentTarget).attr('data-name')
@@ -37,6 +83,27 @@ $(document).off('click', '.delete-item-btn').on('click', '.delete-item-btn', fun
 
 
 SurveyFormWidget.include({
+
+    start() {
+        return this._super(...arguments).then(() => {
+            // Only hide rows once, after widget is fully initialized
+            this._hideInitialMatrixRowsOnce();
+        });
+    },
+
+    _hideInitialMatrixRowsOnce() {
+        if (this._matrixHidden) return;
+
+        this.$("table.o_survey_question_matrix").each(function () {
+            const $rows = $(this).find("tbody > tr");
+            if ($rows.length > 1) {
+                $rows.addClass("hide-row");
+                $rows.first().removeClass("hide-row");
+            }
+        });
+        this._matrixHidden = true;
+    },
+
     _prepareSubmitAnswersMatrix: function (params, $matrixTable) {
         var self = this;
         const questionId = $matrixTable.data('name');
