@@ -53,8 +53,8 @@ class SurveyUserInput(models.Model):
         elif question.question_type == 'matrix':
             self._save_line_matrix(question, old_answers, answer, comment)
 
-        else:
-            raise AttributeError(question.question_type + ": This type of question has no saving function")
+        # else:
+        #     raise AttributeError(question.question_type + ": This type of question has no saving function")
 
     def _save_line_file_upload(self, question, old_answers, answer):
         """Save a file upload answer (custom 'upload_file' type)."""
