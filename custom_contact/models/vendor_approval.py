@@ -48,6 +48,7 @@ class ContactKYCApproval(models.Model):
     partner_id = fields.Many2one('res.partner', string="Contact")
     email = fields.Char("Email")
     point_of_contact = fields.Char("Point of Contact / Purchase Manager (Bora Multicorp)")
+    poc_user = fields.Many2one('res.users', string="Point of Contact to Vendor")
     business_legal_name = fields.Char("Business Legal Name")
     business_trade_name = fields.Char("Business Trade Name")
     business_street = fields.Char("Address")
@@ -73,6 +74,7 @@ class ContactKYCApproval(models.Model):
     director_email = fields.Char(string="Email Address")
     aadhaar_card = fields.Binary(string="Aadhaar Card")
     pan_card = fields.Binary(string="PAN Card (Proprietor)")
+    aadhaar_pan_link = fields.Boolean('Aadhar and PAN card linking?')
     gst_no = fields.Char(string="GST Number")
     udyam_number = fields.Char(string="Udyam Certificate Number")
     gst_certificate = fields.Many2many('ir.attachment', 'vendor_kyc_gst_cert_rels', 'partner_id', 'attachment_id',

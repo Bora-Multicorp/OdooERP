@@ -42,5 +42,6 @@
               name="Vendor Approval Users"
               parent="contacts.res_partner_menu_config"
               action="action_vendor_approval_config"
+              groups="base.user_admin"
               sequence="100"/>
 </odoo>

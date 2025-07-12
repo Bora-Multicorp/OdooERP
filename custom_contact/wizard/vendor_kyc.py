@@ -119,7 +119,7 @@ class VendorKycWizard(models.TransientModel):
     partner_id = fields.Many2one('res.partner', string='Contact', domain="[('id', '=', active_id)]")
     email = fields.Char("Email", required=True)
     point_of_contact = fields.Char("Point of Contact", required=True)
-    user_id = fields.Many2one('res.users', string="Point of Contact to Vendor", default=lambda self: self.env.user,
+    poc_user = fields.Many2one('res.users', string="Point of Contact to Vendor", default=lambda self: self.env.user,
                               readonly=1)
     business_legal_name = fields.Char("Business Legal Name", required=True)
     business_trade_name = fields.Char("Business Trade Name", required=True)
@@ -138,7 +138,7 @@ class VendorKycWizard(models.TransientModel):
     director_email = fields.Char(string="Email Address")
     aadhaar_card = fields.Binary(string="Aadhaar Card")
     pan_card = fields.Binary(string="PAN Card")
-
+    aadhaar_pan_link = fields.Boolean('Aadhar and PAN card linking?')
     gst_no = fields.Char(string="GST Number", required=True)
     udyam_number = fields.Char(string="Udyam Certificate Number", required=True)
     gst_certificate = fields.Many2many('ir.attachment', 'vendor_kyc_gst_cert_rel', 'wizard_id', 'attachment_id',
@@ -293,6 +293,7 @@ class VendorKycWizard(models.TransientModel):
             'partner_id': self.partner_id.id,
             'email': self.email,
             'point_of_contact': self.point_of_contact,
+            'poc_user': self.poc_user.id,
             'business_legal_name': self.business_legal_name,
             'business_trade_name': self.business_trade_name,
             'address_detail': address_data,
@@ -304,6 +305,7 @@ class VendorKycWizard(models.TransientModel):
             'aadhaar_card': self.aadhaar_card,
             'pan_card': self.pan_card,
             'gst_no': self.gst_no,
+            'aadhaar_pan_link': self.aadhaar_pan_link,
             'udyam_number': self.udyam_number,
             'no_partner_director': self.no_partner_director,
             'directors_detail': directors_data,

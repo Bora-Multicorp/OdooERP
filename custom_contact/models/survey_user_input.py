@@ -26,6 +26,7 @@ class SurveyUserInput(models.Model):
             Q("custom_contact.business_trade_name_kyc_survey").id: "business_trade_name",
             Q("custom_contact.business_constitution_kyc_survey").id: "const_business",
             Q("custom_contact.gst_no_kyc_survey").id: "gst_no",
+            Q("custom_contact.aadhaar_pan_link_kyc_survey").id: "aadhaar_pan_link",
             Q("custom_contact.udyam_certificate_kyc_survey").id: "udyam_number",
             Q("custom_contact.gst_duration_kyc_survey").id: "gst_return_duration",
             Q("custom_contact.gst_certificate_kyc_survey").id: "gst_certificate",
