@@ -287,7 +287,6 @@ class VendorKycWizard(models.TransientModel):
             'shop_videos': [(6, 0, self.shop_videos.ids)],
             'bank_detail': bank_data,
         }
-
         # Create the KYC record
         kyc_record = self.env['res.partner.kyc.approval'].create(kyc_vals)
 

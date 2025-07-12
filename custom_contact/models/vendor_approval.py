@@ -179,6 +179,17 @@ class ContactKYCApproval(models.Model):
                     next_user = line.user_id
                     break
             rec.assigned_to = next_user
+            # Send email to assign to user
+            assign_to_template = self.env.ref('custom_contact.assign_to_email_template',
+                                             raise_if_not_found=False)
+            if rec.assigned_to and assign_to_template and rec.existing_user_ids:
+                email_list = [user.email_formatted for user in rec.existing_user_ids if user.email]
+                if email_list:
+                    assign_to_template.send_mail(rec.id, force_send=True,
+                                                email_values={'email_from': self.env.user.email_formatted,
+                                                              'email_to': rec.assigned_to.email_formatted,
+                                                              'email_cc': ','.join(email_list),
+                                                              })
 
     def _update_state_based_on_approvals(self):
         for rec in self:
