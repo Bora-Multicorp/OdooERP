@@ -209,6 +209,21 @@
             </field>
         </record>
 
+        <!-- QUESTIONS -->
+        <record id="inherit_survey_management_question_form" model="ir.ui.view">
+            <field name="name">inherit.survey.management.questino.form</field>
+            <field name="model">survey.question</field>
+            <field name="inherit_id" ref="survey.survey_question_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='constr_mandatory']" position="after">
+                    <field name="is_pan" invisible="question_type != 'char_box'"/>
+                    <field name="is_gstin" invisible="question_type != 'char_box'"/>
+                    <field name="is_udyam" invisible="question_type != 'char_box'"/>
+                    <field name="is_cin" invisible="question_type != 'char_box'"/>
+                </xpath>
+            </field>
+        </record>
+
         <!-- Create New Vendor Registration Survey Action -->
         <record model="ir.actions.act_window" id="vendor_registration_action_survey_form">
             <field name="name">Vendor Registration Form</field>

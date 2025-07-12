@@ -507,6 +507,7 @@
             <field name="sequence">26</field>
             <field name="question_type">char_box</field>
             <field name="constr_mandatory">True</field>
+            <field name="is_pan">True</field>
             <field name="triggering_answer_ids"
                    eval="[Command.link(ref('business_constitution_kyc_survey_sug2')), Command.link(ref('business_constitution_kyc_survey_sug3')),Command.link(ref('business_constitution_kyc_survey_sug4'))]"/>
         </record>
@@ -517,6 +518,7 @@
             <field name="sequence">27</field>
             <field name="question_type">char_box</field>
             <field name="constr_mandatory">True</field>
+            <field name="is_gstin">True</field>
         </record>
         <!-- Udyam Certificate Number -->
         <record model="survey.question" id="udyam_certificate_kyc_survey">
@@ -525,6 +527,7 @@
             <field name="sequence">28</field>
             <field name="question_type">char_box</field>
             <field name="constr_mandatory">False</field>
+            <field name="is_udyam">True</field>
         </record>
         <!-- Company GST Certificate -->
         <record model="survey.question" id="gst_certificate_kyc_survey">
@@ -636,6 +639,7 @@
             <field name="sequence">37</field>
             <field name="question_type">char_box</field>
             <field name="constr_mandatory">False</field>
+            <field name="is_cin">True</field>
             <field name="triggering_answer_ids"
                    eval="[Command.link(ref('business_constitution_kyc_survey_sug2')), Command.link(ref('business_constitution_kyc_survey_sug3')),Command.link(ref('business_constitution_kyc_survey_sug4'))]"/>
         </record>
