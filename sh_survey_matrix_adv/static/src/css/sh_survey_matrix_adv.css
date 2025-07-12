@@ -28,5 +28,6 @@ table.o_survey_question_matrix i.cls_custom_datetime{
 
 
 .hide-row {
-    display: none;
+    display: none !important;
 }
+
