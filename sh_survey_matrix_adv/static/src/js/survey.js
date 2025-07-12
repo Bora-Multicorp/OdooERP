@@ -24,8 +24,6 @@ $(document).on("change", "input.o_survey_form_choice_item", function (event) {
     const selectedOptionId = $input.val();  // This is like 84 (answer_id)
     const selectedLabel = $input.closest("label").find("span").text().trim();  // This gives 1, 2, etc.
     const maxCount = parseInt(selectedLabel || 0);
-    console.log('Selected Option ID:', selectedOptionId);
-    console.log('Selected Label (Human Readable):', selectedLabel);
     //const matrixQuestionId = "206";  // The `data-name` of your <table>
     //const $matrixTable = $(`table.table-borderless[data-name='${matrixQuestionId}']`);
     // Step 1: Find the header <div> that contains the Director Details heading
@@ -81,28 +79,54 @@ $(document).off('click', '.delete-item-btn').on('click', '.delete-item-btn', fun
     $(ev.target).closest('tr').addClass('hide-row');
 });
 
+function waitForMatrixTableAndHide() {
+    const $visibleMatrix = $("table.o_survey_question_matrix:visible");
 
-SurveyFormWidget.include({
-
-    start() {
-        return this._super(...arguments).then(() => {
-            // Only hide rows once, after widget is fully initialized
-            this._hideInitialMatrixRowsOnce();
-        });
-    },
-
-    _hideInitialMatrixRowsOnce() {
-        if (this._matrixHidden) return;
-
-        this.$("table.o_survey_question_matrix").each(function () {
+    if ($visibleMatrix.length > 0) {
+        $visibleMatrix.each(function () {
             const $rows = $(this).find("tbody > tr");
+
             if ($rows.length > 1) {
                 $rows.addClass("hide-row");
                 $rows.first().removeClass("hide-row");
             }
         });
-        this._matrixHidden = true;
-    },
+    } else {
+        // Retry again after delay, DOM probably not ready yet
+        setTimeout(waitForMatrixTableAndHide, 50);
+    }
+}
+
+// Triggered on survey page navigation
+$(document).on("click", "button[type='submit'][value='next'], #next_page", function () {
+    // Start loop after page changes
+    setTimeout(waitForMatrixTableAndHide, 100);
+});
+
+
+
+
+
+SurveyFormWidget.include({
+
+//    start() {
+//        return this._super(...arguments).then(() => {
+//            this._hideInitialMatrixRowsOnce();
+//        });
+//    },
+//
+//    _hideInitialMatrixRowsOnce() {
+//        if (this._matrixHidden) return;
+//
+//        this.$("table.o_survey_question_matrix").each(function () {
+//            const $rows = $(this).find("tbody > tr");
+//            if ($rows.length > 1) {
+//                $rows.addClass("hide-row");
+//                $rows.first().removeClass("hide-row");
+//            }
+//        });
+//        this._matrixHidden = true;
+//    },
 
     _prepareSubmitAnswersMatrix: function (params, $matrixTable) {
         var self = this;
@@ -114,6 +138,16 @@ SurveyFormWidget.include({
 
         $matrixTable.find('.sh_textarea').each(function () {
             params = self._prepareSubmitAnswerMatrixCustom(params, $matrixTable.data('name'), $(this).data('rowId'), $(this).data("col-id"), this.value);
+        });
+
+        $matrixTable.find(".sh_m2o").each(function () {
+            if (this.type != "file") {
+                if ($(this).data("col-id") == this.value && $(this).prop("checked") == true) {
+                    params = self._prepareSubmitAnswerMatrix(params, $matrixTable.data("name"), $(this).data("rowId"), this.value);
+                } else if ($(this).data("col-id") != this.value) {
+                    params = self._prepareSubmitAnswerMatrixCustom(params, $matrixTable.data("name"), $(this).data("rowId"), $(this).data("col-id"), this.value);
+                }
+            }
         });
 
         // IN ORDER TO FIX ONE COMMENT SUBMITED WITH TEXTAREAD INPUT

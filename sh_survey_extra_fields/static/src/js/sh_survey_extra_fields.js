@@ -2,7 +2,7 @@
 
 import { _t } from "@web/core/l10n/translation";
 import SurveyFormWidget from '@survey/js/survey_form';
-import { jsonrpc } from "@web/core/network/rpc_service";
+import { rpc } from "@web/core/network/rpc";
 import {
     deserializeDate,
     deserializeDateTime,
@@ -313,7 +313,7 @@ SurveyFormWidget.include({
         var $countrySelects = self.$target.find(".js_cls_country_id");
         
         if ($countrySelects.length) {
-            jsonrpc("/survey/get_countries").then(function (data) {
+            rpc("/survey/get_countries").then(function (data) {
                 jQuery.each(data.countries, function (key, value) {
                     var opt = $("<option>").text(value.name).attr("value", value.id);
                     $countrySelects.append(opt);
@@ -334,7 +334,7 @@ SurveyFormWidget.include({
             var ansValue = $(this).attr("value") || false;
                 var model_id = $(this).attr("data-model_id") || false;
                 if (model_id) {
-                    jsonrpc("/survey/get_many2one_field_data", {
+                    rpc("/survey/get_many2one_field_data", {
                         'model_id': parseInt(model_id),
                     }).then(function (data) {
                         jQuery.each(data.records, function (key, value) {
@@ -361,7 +361,7 @@ SurveyFormWidget.include({
             $m2oSelects.each(function (index, element) {
                 var model_id = $(this).attr("data-model_id") || false;
                 if (model_id) {
-                    jsonrpc("/survey/get_many2many_field_data", {
+                    rpc("/survey/get_many2many_field_data", {
                         'model_id': parseInt(model_id),
                     }).then(function (data) {
                         jQuery.each(data.records, function (key, value) {
@@ -435,7 +435,7 @@ SurveyFormWidget.include({
             return;
         }
         var url = "/survey/get_ountry_info/" + $(ev.currentTarget).val()
-        jsonrpc(url).then(function (data) {
+        rpc(url).then(function (data) {
             // populate states and display
             var $stateSelect = $countrySelect.closest(".js_cls_sh_address_wrapper").find(".js_cls_state_id");
             // dont reload state at first loading (done in qweb)
