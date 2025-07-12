@@ -118,6 +118,7 @@
                         <list create="False" edit="False" delete="False">
                             <field name="email"/>
                             <field name="point_of_contact"/>
+                            <field name="poc_user" options="{'no_open': True, 'no_create': True, 'no_create_edit': True}"/>
                             <field name="business_legal_name"/>
                             <field name="business_trade_name"/>
                             <!--<field name="const_business"/>-->

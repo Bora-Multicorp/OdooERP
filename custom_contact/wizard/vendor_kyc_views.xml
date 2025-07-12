@@ -10,7 +10,7 @@
                         <field name="partner_id" readonly="1" invisible="1"/>
                         <field name="email" placeholder="Your Answer"/>
                         <field name="point_of_contact" placeholder="Your Answer" widget="upper_case"/>
-                        <field name="user_id" options="{'no_open': True, 'no_create': True, 'no_create_edit': True}"/>
+                        <field name="poc_user" options="{'no_open': True, 'no_create': True, 'no_create_edit': True}"/>
                     </group>
                     <group string="KYC Form (Company Details)" name="kyc_company_details">
                         <field name="business_legal_name" placeholder="Your Answer" widget="upper_case"/>
@@ -73,6 +73,7 @@
                         <field name="pan_no" placeholder="Your Answer" widget="upper_case" invisible="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
                         <field name="pan_card_document" widget="many2many_binary"
                                options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 5}" required="const_business in ['Partnership', 'Pvt Ltd Co.', 'LLP']" invisible="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
+                        <field name="aadhaar_pan_link" required="1"/>
                         <field name="gst_no" placeholder="Your Answer" widget="upper_case"/>
                         <field name="udyam_number" placeholder="Your Answer"  widget="upper_case"/>
                         <field name="gst_certificate" widget="many2many_binary"
