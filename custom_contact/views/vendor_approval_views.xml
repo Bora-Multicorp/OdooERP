@@ -150,6 +150,7 @@
                                       invisible="const_business not in ['Pvt Ltd Co.', 'LLP']"/>
                             <field name="partner_llp"
                                    readonly="state not in ['draft']"
+                                   required="const_business in ['Partnership', 'LLP']"
                                    invisible="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
                             <field name="moa_aoa" widget="many2many_binary"
                                    readonly="state not in ['draft']"

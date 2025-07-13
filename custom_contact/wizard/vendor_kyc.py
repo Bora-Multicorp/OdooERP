@@ -146,7 +146,7 @@ class VendorKycWizard(models.TransientModel):
     google_location = fields.Char(string="Google Location of Shop", required=True)
     partner_llp = fields.Binary(string="Partnership Deed or LLP Deed")
     moa_aoa = fields.Many2many('ir.attachment', 'vendor_kyc_moa_aoa_rel', 'wizard_id', 'attachment_id',
-                               string="MOA or AOA (for Pvt. Ltd. Company)")
+                               string="MOA or AOA")
     cin_no = fields.Char(string="CIN number")
     electricity_bill = fields.Many2many('ir.attachment', 'vendor_kyc_electricity_bill_rel', 'wizard_id',
                                         'attachment_id',
@@ -213,6 +213,7 @@ class VendorKycWizard(models.TransientModel):
             self.directors_detail,
             fields_map={
                 'name': 'name',
+                'designation': 'designation',
                 'contact_no': 'contact_no',
                 'email': 'email',
                 'aadhaar_card': 'aadhaar_card',
@@ -239,6 +240,7 @@ class VendorKycWizard(models.TransientModel):
                 'business_pincode': 'business_pincode',
                 'business_phone': 'business_phone',
                 'business_email': 'business_email',
+
             }
         )
 
