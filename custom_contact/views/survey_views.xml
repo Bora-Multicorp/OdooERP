@@ -158,7 +158,7 @@
             <field name="inherit_id" ref="survey.survey_user_input_view_form"/>
             <field name="arch" type="xml">
                 <xpath expr="//button[@name='action_print_answers']" position="after">
-                    <button name="action_testing" string="Test" type="object" class="btn-primary" invisible="1"/>
+                    <button name="action_testing" string="Test" type="object" class="btn-primary" invisible="0"/>
                 </xpath>
                 <xpath expr="//field[@name='survey_id']" position="replace">
                     <field name="survey_id" string="Form"/>
@@ -205,6 +205,21 @@
                 <xpath expr="//filter[@name='group_by_survey']" position="replace">
                     <filter name="group_by_survey" string="Forms" domain="[]"
                             context="{'group_by': 'survey_id'}"/>
+                </xpath>
+            </field>
+        </record>
+
+        <!-- QUESTIONS -->
+        <record id="inherit_survey_management_question_form" model="ir.ui.view">
+            <field name="name">inherit.survey.management.questino.form</field>
+            <field name="model">survey.question</field>
+            <field name="inherit_id" ref="survey.survey_question_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='constr_mandatory']" position="after">
+                    <field name="is_pan" invisible="question_type != 'char_box'"/>
+                    <field name="is_gstin" invisible="question_type != 'char_box'"/>
+                    <field name="is_udyam" invisible="question_type != 'char_box'"/>
+                    <field name="is_cin" invisible="question_type != 'char_box'"/>
                 </xpath>
             </field>
         </record>

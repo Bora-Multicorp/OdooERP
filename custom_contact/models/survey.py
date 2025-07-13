@@ -80,7 +80,6 @@ class InheritSurvey(models.Model):
 
     # Overide Start Survey method for change Start Survey name to start
     def action_start_survey(self, answer=None):
-        print('11111111111')
         """ Open the website page with the survey form """
         self.ensure_one()
         url = '%s?%s' % (self.get_start_url(),
@@ -91,6 +90,57 @@ class InheritSurvey(models.Model):
             'target': 'self',
             'url': url,
         }
+class InheritSurveyQuestion(models.Model):
+    _inherit = "survey.question"
+
+    is_pan = fields.Boolean("Is PAN")
+    #is_mobile = fields.Boolean("Is Mobile")
+    #is_pincode = fields.Boolean("Is Pincode")
+    is_gstin = fields.Boolean("Is GSTIN")
+    is_udyam = fields.Boolean("Is Udyam")
+    is_cin = fields.Boolean("Is CIN number")
+
+    def _validate_char_box(self, answer):
+        errors = {}
+
+        if self.is_pan:
+            if answer and not re.fullmatch(r'[A-Z]{5}[0-9]{4}[A-Z]', answer.upper()):
+                errors[self.id] = _(
+                    'Invalid PAN: "%s". Format must be 5 uppercase letters, 4 digits, 1 letter (e.g., ABCDE1234F).'
+                ) % answer
+
+        # if self.is_mobile:
+        #     if answer and not re.fullmatch(r'[6-9]\d{9}', answer):
+        #         errors[self.id] = _(
+        #             'Invalid Mobile Number: "%s". It must be exactly 10 digits and start with 6-9 (e.g., 9876543210).'
+        #         ) % answer
+        #
+        # if self.is_pincode:
+        #     if answer and not re.fullmatch(r'\d{6}', answer):
+        #         errors[self.id] = _(
+        #             'Invalid Pincode: "%s". It must be exactly 6 digits (e.g., 400001).'
+        #         ) % answer
+
+        if self.is_gstin:
+            if answer and not re.fullmatch(r'\d{2}[A-Z]{5}\d{4}[A-Z]{1}[A-Z\d]{1}Z[A-Z\d]{1}', answer.upper()):
+                errors[self.id] = _(
+                    'Invalid GSTIN: "%s". Format must be 15 characters-(e.g.,12ABCDE1234F1Z5).'
+                ) % answer
+
+        if self.is_udyam:
+            if answer and not re.fullmatch(r'^UDYAM-[A-Z]{2}-\d{2}-\d{7}$', answer.upper()):
+                errors[self.id] = _(
+                    'Invalid Udyam No: "%s". Format is UDYAM-XX-00-0000000(e.g.,UDYAM-MH-12-1234567).'
+                ) % answer
+
+        if self.is_cin:
+            if answer and not re.fullmatch(r'[UL][0-9]{5}[A-Z]{2}[0-9]{4}[A-Z]{3}[0-9]{6}', answer.upper()):
+                errors[self.id] = _(
+                    'Invalid CIN: "%s".\nExpected format: U12345MH2000PLC123456\n'
+                    #'(1 letter + 5 digits + 2 letters + 4 digits + 3 letters + 6 digits).'
+                ) % answer
+        return errors
+
 
 class SMSHistoryMaintain(models.Model):
     _name = 'sms.history'

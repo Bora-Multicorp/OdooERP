@@ -13,30 +13,44 @@ publicWidget.registry.SurveyFormUpload = publicWidget.Widget.extend(SurveyPreloa
 //            this.rpc = this.bindService("rpc");
         },
         /** On adding file function */
-        _onFileChange: function(event) {
+_onFileChange: function(event) {
     var self = this;
     var files = event.target.files;
     var fileNames = [];
     var dataURLs = [];
 
+    const allowedTypes = [
+        'image/jpeg', 'image/png', 'image/jpg', 'image/gif',
+        'image/bmp', 'image/webp', 'image/svg+xml',
+        'video/mp4', 'video/mpeg', 'video/ogg',
+        'video/webm', 'video/avi', 'video/quicktime',
+        'application/pdf'
+    ];
+
     for (let i = 0; i < files.length; i++) {
         const file = files[i];
-        const reader = new FileReader();
 
+        // ✅ Validate MIME type
+        if (!allowedTypes.includes(file.type)) {
+            alert(`Invalid file type: ${file.name}\n\nOnly images, videos, and PDFs files are allowed.`);
+            event.target.value = '';  // Clear the input
+            return;
+        }
+
+        const reader = new FileReader();
         reader.onload = function(e) {
             const dataURL = e.target.result.split(',')[1];
             fileNames.push(file.name);
             dataURLs.push(dataURL);
 
-            const $input = $(event.target);  // 🔧 Fix: use only current input
+            const $input = $(event.target);
             $input.attr('data-oe-data', JSON.stringify(dataURLs));
             $input.attr('data-oe-file_name', JSON.stringify(fileNames));
 
-            // Find the fileList div next to this input
             const $fileListContainer = $input.closest('.form-group').find('.fileList');
             if (!$fileListContainer.length) return;
 
-            $fileListContainer.empty();  // clear previous contents
+            $fileListContainer.empty();
 
             const ul = $('<ul/>');
             fileNames.forEach(function(name) {
@@ -57,6 +71,7 @@ publicWidget.registry.SurveyFormUpload = publicWidget.Widget.extend(SurveyPreloa
         reader.readAsDataURL(file);
     }
 },
+
 
     });
 export default publicWidget.registry.SurveyFormUpload;

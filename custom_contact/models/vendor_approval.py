@@ -8,6 +8,7 @@ class ContactKYCApproval(models.Model):
     _name = 'res.partner.kyc.approval'
     _description = 'Contact KYC approvals'
     _rec_name = 'partner_id'
+    _inherit = ['mail.thread', 'mail.activity.mixin']
 
     # @api.model
     # def _get_view(self, view_id=None, view_type='form', **options):
@@ -47,6 +48,7 @@ class ContactKYCApproval(models.Model):
     partner_id = fields.Many2one('res.partner', string="Contact")
     email = fields.Char("Email")
     point_of_contact = fields.Char("Point of Contact / Purchase Manager (Bora Multicorp)")
+    poc_user = fields.Many2one('res.users', string="Point of Contact to Vendor")
     business_legal_name = fields.Char("Business Legal Name")
     business_trade_name = fields.Char("Business Trade Name")
     business_street = fields.Char("Address")
@@ -72,6 +74,7 @@ class ContactKYCApproval(models.Model):
     director_email = fields.Char(string="Email Address")
     aadhaar_card = fields.Binary(string="Aadhaar Card")
     pan_card = fields.Binary(string="PAN Card (Proprietor)")
+    aadhaar_pan_link = fields.Boolean('Aadhar and PAN card linking?')
     gst_no = fields.Char(string="GST Number")
     udyam_number = fields.Char(string="Udyam Certificate Number")
     gst_certificate = fields.Many2many('ir.attachment', 'vendor_kyc_gst_cert_rels', 'partner_id', 'attachment_id',
@@ -106,10 +109,11 @@ class ContactKYCApproval(models.Model):
                                             ('7', '7')], string="Number of Managing Partner / Directors")
     directors_detail = fields.One2many('director.details', 'kyc_approval_id', string="KYC Details", tracking=True)
     pan_no = fields.Char(string="PAN Number", required=False)
-    google_location = fields.Char(string="Google Location of Shop", required=True)
+    comp_google_loc = fields.Char(string="Google Location of Shop", required=False)
     partner_llp = fields.Binary(string="Partnership Deed or LLP Deed", required=False)
     moa_aoa = fields.Many2many('ir.attachment', 'vendor_kyc_moa_aoa_rels', 'partner_id', 'attachment_id',
                                string="MOA or AOA")
+
     cin_no = fields.Char(string="CIN number", required=False)
     electricity_bill = fields.Many2many('ir.attachment', 'vendor_kyc_electricity_bill_rels', 'partner_id',
                                         'attachment_id',
@@ -122,19 +126,19 @@ class ContactKYCApproval(models.Model):
     ##### Address Details
     address_detail = fields.One2many('address.details', 'kyc_approval_id', string="Address Detail")
 
-    deadline = fields.Date('Deadline Date')
+    deadline = fields.Date('Deadline Date', tracking=True)
     state = fields.Selection([('draft', 'Draft'),
                               ('pending', 'Pending Approval'),
                               ('confirmed', 'Confirmed'),
                               ('rejected', 'Rejected'),
-                              ('expired', 'Expired')], default='draft', required=False, string="Status")
+                              ('expired', 'Expired')], default='draft', required=False, string="Status", tracking=True)
     approval_users_ids = fields.One2many('approval.users', 'kyc_approval_id', 'Approval Authorities',
                                          help='Approval Authority Details')
-    assigned_to = fields.Many2one('res.users', string='Assigned To')
+    assigned_to = fields.Many2one('res.users', string='Assigned To', tracking=True)
     existing_user_ids = fields.Many2many('res.users', compute='_compute_existing_users', store=True)
     is_approved = fields.Boolean(related='partner_id.is_approved', store=True)
     approval_date = fields.Datetime(string="Approval Date", tracking=True)
-    is_rejected = fields.Boolean()
+    is_rejected = fields.Boolean(tracking=True)
     rejection_date = fields.Datetime(string="Rejection Date", tracking=True)
     rejection_reason = fields.Text('Rejection Reason', tracking=True)
 
@@ -146,13 +150,26 @@ class ContactKYCApproval(models.Model):
             self._update_assigned_to()
 
     def set_as_draft(self):
-        if not self.approval_users_ids:
-            raise ValidationError(_("Please Add Approval Authority before Submit Request"))
         if self.id:
-            self.write(
-                {'state': 'draft', 'rejection_date': False, 'rejection_reason': False, 'is_rejected': False})
-            self.partner_id.sudo().write({'rejection_date': False, 'rejection_reason': False,
-                                          'is_rejected': False, 'is_kyc': True})
+            self.write({
+                'state': 'draft',
+                'rejection_date': False,
+                'rejection_reason': False,
+                'is_rejected': False,
+            })
+            self.partner_id.sudo().write({
+                'rejection_date': False,
+                'rejection_reason': False,
+                'is_rejected': False,
+                'is_kyc': True,
+            })
+
+            # Reset approval users' decision fields
+            self.approval_users_ids.write({
+                'state': False,
+                'remark': False,
+                'action_date': False,
+            })
 
     def approve_by_manager(self):
         self.write({'state': 'confirmed'})
@@ -165,6 +182,17 @@ class ContactKYCApproval(models.Model):
                     next_user = line.user_id
                     break
             rec.assigned_to = next_user
+            # Send email to assign to user
+            assign_to_template = self.env.ref('custom_contact.assign_to_email_template',
+                                             raise_if_not_found=False)
+            if rec.assigned_to and assign_to_template and rec.existing_user_ids:
+                email_list = [user.email_formatted for user in rec.existing_user_ids if user.email]
+                if email_list:
+                    assign_to_template.send_mail(rec.id, force_send=True,
+                                                email_values={'email_from': self.env.user.email_formatted,
+                                                              'email_to': rec.assigned_to.email_formatted,
+                                                              'email_cc': ','.join(email_list),
+                                                              })
 
     def _update_state_based_on_approvals(self):
         for rec in self:
@@ -199,6 +227,17 @@ class ContactKYCApproval(models.Model):
                             approval_template.send_mail(record.id, force_send=True,
                                                         email_values={'email_from': self.env.user.email_formatted,
                                                                       'email_to': ','.join(email_list), })
+        if vals.get('state') == 'rejected':
+            for record in self:
+                # Send reject email to all users
+                rejection_template = self.env.ref('custom_contact.kyc_rejection_email_template',
+                                                 raise_if_not_found=False)
+                if record.partner_id and record.existing_user_ids and rejection_template:
+                    email_list = [user.email_formatted for user in record.existing_user_ids if user.email]
+                    if email_list:
+                        rejection_template.send_mail(record.id, force_send=True,
+                                                    email_values={'email_from': self.env.user.email_formatted,
+                                                                  'email_to': ','.join(email_list)})
         return res
 
 

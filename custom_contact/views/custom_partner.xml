@@ -95,9 +95,8 @@
                     <button name="%(vendor_kyc_wizard_action)d" string="KYC Form" type="action"
                             class="btn btn-primary" invisible="is_kyc or (not is_vendor and not is_customer)"
                             display="always"/>
-                    <button name="confirm_rekyc" string="Re-KYC" type="object" class="oe_highlight"
-                            confirm="Do you want to process Re-KYC?"
-                            invisible="not is_approved and not is_rejected"/>
+                    <button name="%(rekyc_request_wizard_action)d" string="Re-KYC" type="action"
+                            class="oe_highlight" invisible="not is_approved"/>
                     <!--invisible="not is_approved or (deadline and deadline &lt;= context_today())"/>-->
                 </header>
             </xpath>
@@ -107,7 +106,7 @@
                 <field name="is_kyc" readonly="1"/>
                 <field name="is_approved" readonly="1" invisible="not is_approved"/>
                 <field name="approval_date" readonly="1" invisible="not approval_date"/>
-                <field name="deadline" readonly="1" invisible="not deadline"/>
+                <field name="deadline"/>
                 <field name="is_rejected" readonly="1" invisible="not is_rejected"/>
                 <field name="rejection_date" readonly="1" invisible="not rejection_date"/>
                 <field name="rejection_reason" readonly="1" invisible="not rejection_reason"/>
@@ -119,6 +118,7 @@
                         <list create="False" edit="False" delete="False">
                             <field name="email"/>
                             <field name="point_of_contact"/>
+                            <field name="poc_user" options="{'no_open': True, 'no_create': True, 'no_create_edit': True}"/>
                             <field name="business_legal_name"/>
                             <field name="business_trade_name"/>
                             <!--<field name="const_business"/>-->
@@ -223,6 +223,7 @@
                                            options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 5}"
                                            required="const_business in ['Partnership', 'Pvt Ltd Co.', 'LLP']"
                                            invisible="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
+                                    <field name="aadhaar_pan_link"/>
                                     <field name="gst_no" placeholder="Your Answer" widget="upper_case"/>
                                     <field name="udyam_number" placeholder="Your Answer" widget="upper_case"/>
                                     <field name="gst_certificate" widget="many2many_binary"
@@ -236,7 +237,7 @@
                                            options="{'accepted_file_extensions': 'image/*', 'number_of_files': 10}"/>
                                     <field name="shop_videos" widget="many2many_binary"
                                            options="{'accepted_file_extensions': 'video/*', 'number_of_files': 10}"/>
-                                    <field name="google_location" placeholder="Your Answer"
+                                    <field name="comp_google_loc" placeholder="Your Answer"
                                            invisible="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
                                     <field name="partner_llp"
                                            invisible="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>

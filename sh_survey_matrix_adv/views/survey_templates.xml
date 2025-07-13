@@ -49,6 +49,11 @@
                                  t-att-data-model_id="col_label.que_sh_many2one_model_id.id if col_label.que_sh_many2one_model_id else False"
                                  t-att-name="'%s_%s' % (question.id, row_label.id)">
                             <option value="">Select...</option>
+                            <option t-if="answer and answer.value_ans_sh_many2one"
+                                    t-att-value="answer.value_ans_sh_many2one"
+                                    selected="selected">
+                                <t t-esc="answer.value_ans_sh_many2one"/>
+                            </option>
                        </select>
 <!--                        <div class="form-row js_cls_sh_many2one_wrapper">-->
 <!--                              <div class="form-group col-lg-12">-->

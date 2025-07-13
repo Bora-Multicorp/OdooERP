@@ -94,6 +94,7 @@
             <field name="sequence">8</field>
             <field name="question_type">matrix</field>
             <field name="matrix_subtype">sh_custom_matrix</field>
+            <field name="add_an_item" eval="True"/>
             <field name="constr_mandatory" eval="True"/>
         </record>
 
@@ -114,30 +115,80 @@
             <field name="sequence">3</field>
             <field name="value">Pincode</field>
             <field name="sh_value_type">textbox</field>
+            <!--<field name="is_pincode" eval="True"/>-->
         </record>
         <record model="survey.question.answer" id="matrix_address_detail_kyc_survey_col4">
             <field name="question_id" ref="matrix_address_detail_kyc_survey"/>
             <field name="sequence">4</field>
             <field name="value">Contact Number</field>
             <field name="sh_value_type">textbox</field>
+            <!--<field name="is_mobile" eval="True"/>-->
         </record>
         <record model="survey.question.answer" id="matrix_address_detail_kyc_survey_col5">
             <field name="question_id" ref="matrix_address_detail_kyc_survey"/>
             <field name="sequence">5</field>
-            <field name="value">Email Address</field>
+            <field name="value">Email</field>
             <field name="sh_value_type">textbox</field>
+            <!--<field name="is_email" eval="True"/>-->
         </record>
-
+        <record model="survey.question.answer" id="matrix_address_detail_kyc_survey_col6">
+            <field name="question_id" ref="matrix_address_detail_kyc_survey"/>
+            <field name="sequence">5</field>
+            <field name="value">State</field>
+            <field name="sh_value_type">que_sh_many2one</field>
+            <field name="que_sh_many2one_model_id" ref="base.model_res_country_state"/>
+        </record>
         <record model="survey.question.answer" id="matrix_address_detail_kyc_survey_row1">
             <field name="matrix_question_id" ref="matrix_address_detail_kyc_survey"/>
             <field name="sequence">1</field>
-            <field name="value"/>
+            <field name="value">1</field>
         </record>
         <record model="survey.question.answer" id="matrix_address_detail_kyc_survey_row2">
             <field name="matrix_question_id" ref="matrix_address_detail_kyc_survey"/>
             <field name="sequence">2</field>
-            <field name="value"/>
+            <field name="value">2</field>
         </record>
+        <record model="survey.question.answer" id="matrix_address_detail_kyc_survey_row3">
+            <field name="matrix_question_id" ref="matrix_address_detail_kyc_survey"/>
+            <field name="sequence">3</field>
+            <field name="value">3</field>
+        </record>
+        <record model="survey.question.answer" id="matrix_address_detail_kyc_survey_row4">
+            <field name="matrix_question_id" ref="matrix_address_detail_kyc_survey"/>
+            <field name="sequence">4</field>
+            <field name="value">4</field>
+        </record>
+        <record model="survey.question.answer" id="matrix_address_detail_kyc_survey_row5">
+            <field name="matrix_question_id" ref="matrix_address_detail_kyc_survey"/>
+            <field name="sequence">5</field>
+            <field name="value">5</field>
+        </record>
+        <record model="survey.question.answer" id="matrix_address_detail_kyc_survey_row6">
+            <field name="matrix_question_id" ref="matrix_address_detail_kyc_survey"/>
+            <field name="sequence">6</field>
+            <field name="value">6</field>
+        </record>
+        <record model="survey.question.answer" id="matrix_address_detail_kyc_survey_row7">
+            <field name="matrix_question_id" ref="matrix_address_detail_kyc_survey"/>
+            <field name="sequence">7</field>
+            <field name="value">7</field>
+        </record>
+        <record model="survey.question.answer" id="matrix_address_detail_kyc_survey_row8">
+            <field name="matrix_question_id" ref="matrix_address_detail_kyc_survey"/>
+            <field name="sequence">8</field>
+            <field name="value">8</field>
+        </record>
+        <record model="survey.question.answer" id="matrix_address_detail_kyc_survey_row9">
+            <field name="matrix_question_id" ref="matrix_address_detail_kyc_survey"/>
+            <field name="sequence">9</field>
+            <field name="value">9</field>
+        </record>
+        <record model="survey.question.answer" id="matrix_address_detail_kyc_survey_row10">
+            <field name="matrix_question_id" ref="matrix_address_detail_kyc_survey"/>
+            <field name="sequence">10</field>
+            <field name="value">10</field>
+        </record>
+
         <!--&lt;!&ndash; Address &ndash;&gt;
         <record model="survey.question" id="business_address_kyc_survey">
             <field name="title">Principal Place of Business(Address)</field>
@@ -282,7 +333,9 @@
             <field name="question_type">simple_choice</field>
             <field name="constr_mandatory" eval="True"/>
             <field name="triggering_answer_ids"
-                   eval="[Command.link(ref('business_constitution_kyc_survey_sug2')), Command.link(ref('business_constitution_kyc_survey_sug3')),Command.link(ref('business_constitution_kyc_survey_sug4'))]"/>
+                   eval="[Command.link(ref('business_constitution_kyc_survey_sug2')),
+                   Command.link(ref('business_constitution_kyc_survey_sug3')),
+                   Command.link(ref('business_constitution_kyc_survey_sug4'))]"/>
         </record>
         <record model="survey.question.answer" id="no_of_director_kyc_survey_sug1">
             <field name="question_id" ref="no_of_director_kyc_survey"/>
@@ -327,7 +380,8 @@
             <field name="sequence">22</field>
             <field name="question_type">matrix</field>
             <field name="matrix_subtype">sh_custom_matrix</field>
-            <field name="constr_mandatory" eval="True"/>
+            <field name="add_an_item" eval="False"/>
+            <field name="constr_mandatory" eval="False"/>
         </record>
 
         <record model="survey.question.answer" id="matrix_director_detail_kyc_survey_col1">
@@ -364,13 +418,39 @@
         <record model="survey.question.answer" id="matrix_director_detail_kyc_survey_row1">
             <field name="matrix_question_id" ref="matrix_director_detail_kyc_survey"/>
             <field name="sequence">1</field>
-            <field name="value"/>
+            <field name="value">1</field>
         </record>
         <record model="survey.question.answer" id="matrix_director_detail_kyc_survey_row2">
             <field name="matrix_question_id" ref="matrix_director_detail_kyc_survey"/>
             <field name="sequence">2</field>
-            <field name="value"/>
+            <field name="value">2</field>
         </record>
+        <record model="survey.question.answer" id="matrix_director_detail_kyc_survey_row3">
+            <field name="matrix_question_id" ref="matrix_director_detail_kyc_survey"/>
+            <field name="sequence">3</field>
+            <field name="value">3</field>
+        </record>
+        <record model="survey.question.answer" id="matrix_director_detail_kyc_survey_row4">
+            <field name="matrix_question_id" ref="matrix_director_detail_kyc_survey"/>
+            <field name="sequence">4</field>
+            <field name="value">4</field>
+        </record>
+        <record model="survey.question.answer" id="matrix_director_detail_kyc_survey_row5">
+            <field name="matrix_question_id" ref="matrix_director_detail_kyc_survey"/>
+            <field name="sequence">5</field>
+            <field name="value">5</field>
+        </record>
+        <record model="survey.question.answer" id="matrix_director_detail_kyc_survey_row6">
+            <field name="matrix_question_id" ref="matrix_director_detail_kyc_survey"/>
+            <field name="sequence">6</field>
+            <field name="value">6</field>
+        </record>
+        <record model="survey.question.answer" id="matrix_director_detail_kyc_survey_row7">
+            <field name="matrix_question_id" ref="matrix_director_detail_kyc_survey"/>
+            <field name="sequence">7</field>
+            <field name="value">7</field>
+        </record>
+
         <!--&lt;!&ndash;Name of the Owner / Director&ndash;&gt;
         <record model="survey.question" id="director_name_kyc_survey">
             <field name="title">Name of the Owner / Director</field>
@@ -430,8 +510,22 @@
             <field name="sequence">26</field>
             <field name="question_type">char_box</field>
             <field name="constr_mandatory">True</field>
+            <field name="is_pan">True</field>
             <field name="triggering_answer_ids"
                    eval="[Command.link(ref('business_constitution_kyc_survey_sug2')), Command.link(ref('business_constitution_kyc_survey_sug3')),Command.link(ref('business_constitution_kyc_survey_sug4'))]"/>
+        </record>
+        <!-- Aadhar and PAN card linking? -->
+        <record model="survey.question" id="aadhaar_pan_link_kyc_survey">
+            <field name="title">Aadhar and PAN card linking?</field>
+            <field name="survey_id" ref="vendor_kyc_form_survey"/>
+            <field name="sequence">26</field>
+            <field name="question_type">simple_choice</field>
+            <field name="constr_mandatory">True</field>
+        </record>
+        <record model="survey.question.answer" id="aadhaar_pan_link_kyc_survey_sug1">
+            <field name="question_id" ref="aadhaar_pan_link_kyc_survey"/>
+            <field name="sequence">1</field>
+            <field name="value">yes</field>
         </record>
         <!-- GST Number -->
         <record model="survey.question" id="gst_no_kyc_survey">
@@ -440,6 +534,7 @@
             <field name="sequence">27</field>
             <field name="question_type">char_box</field>
             <field name="constr_mandatory">True</field>
+            <field name="is_gstin">True</field>
         </record>
         <!-- Udyam Certificate Number -->
         <record model="survey.question" id="udyam_certificate_kyc_survey">
@@ -448,6 +543,7 @@
             <field name="sequence">28</field>
             <field name="question_type">char_box</field>
             <field name="constr_mandatory">False</field>
+            <field name="is_udyam">True</field>
         </record>
         <!-- Company GST Certificate -->
         <record model="survey.question" id="gst_certificate_kyc_survey">
@@ -521,7 +617,7 @@
             <field name="constr_mandatory">True</field>
         </record>
         <!-- Google Location of Shop  -->
-        <record model="survey.question" id="google_location_kyc_survey">
+        <record model="survey.question" id="comp_google_loc_kyc_survey">
             <field name="title">Google Location of Shop</field>
             <field name="survey_id" ref="vendor_kyc_form_survey"/>
             <field name="sequence">34</field>
@@ -559,6 +655,7 @@
             <field name="sequence">37</field>
             <field name="question_type">char_box</field>
             <field name="constr_mandatory">False</field>
+            <field name="is_cin">True</field>
             <field name="triggering_answer_ids"
                    eval="[Command.link(ref('business_constitution_kyc_survey_sug2')), Command.link(ref('business_constitution_kyc_survey_sug3')),Command.link(ref('business_constitution_kyc_survey_sug4'))]"/>
         </record>
@@ -643,6 +740,7 @@
             <field name="sequence">47</field>
             <field name="question_type">matrix</field>
             <field name="matrix_subtype">sh_custom_matrix</field>
+            <field name="add_an_item" eval="True"/>
             <field name="constr_mandatory" eval="True"/>
         </record>
         <record model="survey.question.answer" id="matrix_bank_address_kyc_survey_col1">
@@ -690,6 +788,16 @@
             <field name="sequence">3</field>
             <field name="value"></field>
         </record>
+        <!--<record model="survey.question.answer" id="matrix_bank_address_kyc_survey_row4">
+            <field name="matrix_question_id" ref="matrix_bank_address_kyc_survey"/>
+            <field name="sequence">4</field>
+            <field name="value"></field>
+        </record>
+        <record model="survey.question.answer" id="matrix_bank_address_kyc_survey_row5">
+            <field name="matrix_question_id" ref="matrix_bank_address_kyc_survey"/>
+            <field name="sequence">5</field>
+            <field name="value"></field>
+        </record>-->
 
     </data>
 </odoo>

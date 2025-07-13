@@ -4,6 +4,7 @@ from email.policy import default
 from odoo import api, fields, models, _
 from odoo.exceptions import ValidationError
 import re
+from datetime import timedelta, date
 
 class CustomContact(models.Model):
     _inherit = 'res.partner'
@@ -89,13 +90,6 @@ class CustomContact(models.Model):
                     record.customer_rank = (record.customer_rank or 0) + 1
         return res
 
-    def confirm_rekyc(self):
-        self.write({'is_kyc': False, 'is_approved': False, 'deadline': False})
-        if self.is_vendor:
-             self.write({'supplier_rank': 0})
-        if self.is_customer:
-             self.write({'customer_rank': 0})
-
     survey_ids = fields.One2many('survey.user_input', 'partner_id', string='Surveys')
     survey_count = fields.Integer(string="Survey Count",
                                   groups='sales_team.group_sale_salesman',
@@ -128,21 +122,50 @@ class CustomContact(models.Model):
         action['domain'] = ['|', ('partner_id', '=', self.id), ('email', '=', self.email)]
         return action
 
-    # def trigger_email_kyc_expiry_follow_up(self):
-    #     pending_requests = self.search([('state', '=', 'pending')])
-    #
-    #
-    #     template = self.env.ref('custom_contact.pending_request_follow_up_email_template')
-    #
-    #     for user, requests in:
-    #
-    #
-    #         # Send email
-    #         template.with_context({
-    #             'user': user,
-    #             'pending_requests': sorted_reqs,
-    #         }).send_mail(sorted_reqs[0].id, force_send=True)
+    def trigger_email_kyc_expiry_follow_up(self):
+        today = fields.Date.today()
+        template = self.env.ref('custom_contact.kyc_expiry_reminder_template', raise_if_not_found=False)
 
+        # Day 0: KYC Expired
+        expired_partners = self.search([('deadline', '=', today)])
+        for partner in expired_partners:
+            if template:
+                template.with_context(mail_body_type='expired').send_mail(partner.id, force_send=True)
 
+            update_vals = {
+                'deadline': False,
+                'is_kyc': False,
+                'is_approved': False,
+            }
+            if partner.is_vendor:
+                update_vals['supplier_rank'] = 0
+            if partner.is_customer:
+                update_vals['customer_rank'] = 0
+
+            partner.write(update_vals)
+
+            # Optional: log note in chatter
+            partner.message_post(
+                body="KYC Expired: Deadline reached. Status reset.",
+                message_type="comment",
+                subtype_xmlid="mail.mt_note",
+            )
+
+        # Day 1–3: KYC Reminders
+        for days_left in [1, 2, 3]:
+            target_date = today + timedelta(days=days_left)
+            partners = self.search([('deadline', '=', target_date)])
+            for partner in partners:
+                if template:
+                    template.with_context(
+                        mail_body_type='reminder',
+                        days_left=days_left
+                    ).send_mail(
+                        partner.id,
+                        force_send=True,
+                        email_values={
+                            'subject': f"KYC will expire in {days_left} day{'s' if days_left > 1 else ''}"
+                        }
+                    )
 
 

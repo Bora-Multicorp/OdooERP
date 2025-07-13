@@ -19,7 +19,7 @@
     "assets" : {
         "survey.survey_assets" : [
             "sh_survey_extra_fields/static/src/scss/sh_survey_extra_fields.scss",
-            #"sh_survey_extra_fields/static/src/js/sh_survey_extra_fields.js",
+            "sh_survey_extra_fields/static/src/js/sh_survey_extra_fields.js",
             #"sh_survey_extra_fields/static/src/lib/filter-multi-select-bundle.min.js",
             #"sh_survey_extra_fields/static/src/lib/bootstrap-multiselect.js",
             "sh_survey_extra_fields/static/src/css/filter_multi_select.css",
