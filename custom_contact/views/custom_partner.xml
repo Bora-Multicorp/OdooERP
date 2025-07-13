@@ -106,7 +106,7 @@
                 <field name="is_kyc" readonly="1"/>
                 <field name="is_approved" readonly="1" invisible="not is_approved"/>
                 <field name="approval_date" readonly="1" invisible="not approval_date"/>
-                <field name="deadline"/>
+                <field name="deadline" readonly="1" invisible="not deadline"/>
                 <field name="is_rejected" readonly="1" invisible="not is_rejected"/>
                 <field name="rejection_date" readonly="1" invisible="not rejection_date"/>
                 <field name="rejection_reason" readonly="1" invisible="not rejection_reason"/>
