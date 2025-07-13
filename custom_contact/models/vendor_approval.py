@@ -226,6 +226,17 @@ class ContactKYCApproval(models.Model):
                             approval_template.send_mail(record.id, force_send=True,
                                                         email_values={'email_from': self.env.user.email_formatted,
                                                                       'email_to': ','.join(email_list), })
+        if vals.get('state') == 'rejected':
+            for record in self:
+                # Send reject email to all users
+                rejection_template = self.env.ref('custom_contact.kyc_rejection_email_template',
+                                                 raise_if_not_found=False)
+                if record.partner_id and record.existing_user_ids and rejection_template:
+                    email_list = [user.email_formatted for user in record.existing_user_ids if user.email]
+                    if email_list:
+                        rejection_template.send_mail(record.id, force_send=True,
+                                                    email_values={'email_from': self.env.user.email_formatted,
+                                                                  'email_to': ','.join(email_list)})
         return res
 
 
