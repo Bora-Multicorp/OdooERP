@@ -126,11 +126,20 @@ class CustomContact(models.Model):
         today = fields.Date.today()
         template = self.env.ref('custom_contact.kyc_expiry_reminder_template', raise_if_not_found=False)
 
+        # Get email_formatted list from approval config
+        approval_users = self.env['vendor.approval.config'].search([])
+        email_list = [user.user_id.email_formatted for user in approval_users if user.user_id and user.user_id.email]
+        email_to = ','.join(email_list) if email_list else False
+
         # Day 0: KYC Expired
         expired_partners = self.search([('deadline', '=', today)])
         for partner in expired_partners:
-            if template:
-                template.with_context(mail_body_type='expired').send_mail(partner.id, force_send=True)
+            if template and email_to:
+                template.with_context(mail_body_type='expired').send_mail(
+                    partner.id,
+                    force_send=True,
+                    email_values={'email_to': email_to}
+                )
 
             update_vals = {
                 'deadline': False,
@@ -144,7 +153,7 @@ class CustomContact(models.Model):
 
             partner.write(update_vals)
 
-            # Optional: log note in chatter
+            # Log note in chatter
             partner.message_post(
                 body="KYC Expired: Deadline reached. Status reset.",
                 message_type="comment",
@@ -156,16 +165,14 @@ class CustomContact(models.Model):
             target_date = today + timedelta(days=days_left)
             partners = self.search([('deadline', '=', target_date)])
             for partner in partners:
-                if template:
+                if template and email_to:
                     template.with_context(
                         mail_body_type='reminder',
                         days_left=days_left
                     ).send_mail(
                         partner.id,
                         force_send=True,
-                        email_values={
-                            'subject': f"KYC will expire in {days_left} day{'s' if days_left > 1 else ''}"
-                        }
+                        email_values={'email_to': email_to}
                     )
 
 
