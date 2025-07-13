@@ -14,6 +14,7 @@
         'security/ir.model.access.csv',
         'data/master_data.xml',
         'data/mail_template_data.xml',
+        'data/kyc_expiry_request_cron.xml',
         'data/vendor_kyc_data.xml',
         'wizard/vendor_kyc_views.xml',
         'wizard/approve_request_views.xml',
