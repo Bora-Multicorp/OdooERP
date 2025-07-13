@@ -5,7 +5,7 @@ from odoo import models, fields, api, _
 from datetime import datetime
 import textwrap
 from odoo.exceptions import ValidationError
-
+import re
 
 class survey_question(models.Model):
     _inherit = 'survey.question'
@@ -44,6 +44,33 @@ class SurveyLabel(models.Model):
     sh_matrix_range_step = fields.Integer(string='Step')
     row_hide = fields.Boolean(string='Is Hide')
     que_sh_many2one_model_id = fields.Many2one(comodel_name="ir.model", string="Model ")
+    # is_email = fields.Boolean("Is Email")
+    # is_mobile = fields.Boolean("Is Mobile")
+    # is_pincode = fields.Boolean("Is Pincode")
+
+    # def _validate_char_box(self, answer):
+    #     errors = {}
+    #
+    #     if self.is_email:
+    #         email_pattern = r'^[\w\.-]+@[\w\.-]+\.\w{2,}$'
+    #         if answer and not re.fullmatch(email_pattern, answer):
+    #             errors[self.id] = _(
+    #                 'Invalid Email: "%s". Please enter a valid email address (e.g., user@example.com).'
+    #             ) % answer
+    #
+    #     if self.is_mobile:
+    #         if answer and not re.fullmatch(r'[6-9]\d{9}', answer):
+    #             errors[self.id] = _(
+    #                 'Invalid Mobile Number: "%s". It must be exactly 10 digits and start with 6-9 (e.g., 9876543210).'
+    #             ) % answer
+    #
+    #     if self.is_pincode:
+    #         if answer and not re.fullmatch(r'\d{6}', answer):
+    #             errors[self.id] = _(
+    #                 'Invalid Pincode: "%s". It must be exactly 6 digits (e.g., 400001).'
+    #             ) % answer
+    #
+    #     return errors
 
 class survey_user_input(models.Model):
     _inherit = 'survey.user_input'

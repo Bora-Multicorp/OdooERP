@@ -14,6 +14,9 @@
                 <field name="sh_matrix_range_min" column_invisible="parent.matrix_subtype != 'sh_custom_matrix'"/>
                 <field name="sh_matrix_range_max" column_invisible="parent.matrix_subtype != 'sh_custom_matrix'"/>
                 <field name="sh_matrix_range_step" column_invisible="parent.matrix_subtype != 'sh_custom_matrix'"/>
+                <!--<field name="is_email" column_invisible="parent.matrix_subtype != 'sh_custom_matrix'"/>
+                <field name="is_mobile" column_invisible="parent.matrix_subtype != 'sh_custom_matrix'"/>
+                <field name="is_pincode" column_invisible="parent.matrix_subtype != 'sh_custom_matrix'"/>-->
                 <field name="que_sh_many2one_model_id" domain="[('transient','=',False)]" options='{"no_open": True, "no_create": True}'/>
             </xpath>
             <xpath expr="//field[@name='matrix_row_ids']//list//field[@name='value']" position="after">
