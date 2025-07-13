@@ -512,7 +512,22 @@
             <field name="constr_mandatory">True</field>
             <field name="is_pan">True</field>
             <field name="triggering_answer_ids"
-                   eval="[Command.link(ref('business_constitution_kyc_survey_sug2')), Command.link(ref('business_constitution_kyc_survey_sug3')),Command.link(ref('business_constitution_kyc_survey_sug4'))]"/>
+                   eval="[Command.link(ref('business_constitution_kyc_survey_sug2')),
+                   Command.link(ref('business_constitution_kyc_survey_sug3')),
+                   Command.link(ref('business_constitution_kyc_survey_sug4'))]"/>
+        </record>
+        <!-- PAN Card Document(Company) -->
+        <record model="survey.question" id="pan_card_document_kyc_survey">
+            <field name="title">PAN Card Document(Company)</field>
+            <field name="survey_id" ref="vendor_kyc_form_survey"/>
+            <field name="sequence">26</field>
+            <field name="question_type">upload_file</field>
+            <field name="upload_multiple_file">True</field>
+            <field name="constr_mandatory">False</field>
+            <field name="triggering_answer_ids"
+                   eval="[Command.link(ref('business_constitution_kyc_survey_sug2')),
+                   Command.link(ref('business_constitution_kyc_survey_sug3')),
+                   Command.link(ref('business_constitution_kyc_survey_sug4'))]"/>
         </record>
         <!-- Aadhar and PAN card linking? -->
         <record model="survey.question" id="aadhaar_pan_link_kyc_survey">
@@ -622,9 +637,22 @@
             <field name="survey_id" ref="vendor_kyc_form_survey"/>
             <field name="sequence">34</field>
             <field name="question_type">char_box</field>
+            <field name="question_placeholder">eg. Lat : 22.3511148 Long: 78.6677428</field>
             <field name="constr_mandatory">False</field>
             <field name="triggering_answer_ids"
                    eval="[Command.link(ref('business_constitution_kyc_survey_sug2')), Command.link(ref('business_constitution_kyc_survey_sug3')),Command.link(ref('business_constitution_kyc_survey_sug4'))]"/>
+        </record>
+        <!-- Incorporation Certificate -->
+        <record model="survey.question" id="incorporation_certificate_kyc_survey">
+            <field name="title">Incorporation Certificate</field>
+            <field name="survey_id" ref="vendor_kyc_form_survey"/>
+            <field name="sequence">34</field>
+            <field name="question_type">upload_file</field>
+            <field name="upload_multiple_file">True</field>
+            <field name="constr_mandatory">False</field>
+            <field name="triggering_answer_ids"
+                   eval="[Command.link(ref('business_constitution_kyc_survey_sug3')),
+                   Command.link(ref('business_constitution_kyc_survey_sug4'))]"/>
         </record>
         <!-- Partnership Deed or LLP Deed  -->
         <record model="survey.question" id="partnership_llp_kyc_survey">
@@ -635,7 +663,9 @@
             <field name="upload_multiple_file">False</field>
             <field name="constr_mandatory">False</field>
             <field name="triggering_answer_ids"
-                   eval="[Command.link(ref('business_constitution_kyc_survey_sug2')), Command.link(ref('business_constitution_kyc_survey_sug3')),Command.link(ref('business_constitution_kyc_survey_sug4'))]"/>
+                   eval="[Command.link(ref('business_constitution_kyc_survey_sug2')),
+                   Command.link(ref('business_constitution_kyc_survey_sug3')),
+                   Command.link(ref('business_constitution_kyc_survey_sug4'))]"/>
         </record>
         <!-- MOA or AOA  -->
         <record model="survey.question" id="moa_aoa_kyc_survey">
@@ -646,7 +676,9 @@
             <field name="upload_multiple_file">True</field>
             <field name="constr_mandatory">False</field>
             <field name="triggering_answer_ids"
-                   eval="[Command.link(ref('business_constitution_kyc_survey_sug2')), Command.link(ref('business_constitution_kyc_survey_sug3')),Command.link(ref('business_constitution_kyc_survey_sug4'))]"/>
+                   eval="[Command.link(ref('business_constitution_kyc_survey_sug2')),
+                   Command.link(ref('business_constitution_kyc_survey_sug3')),
+                   Command.link(ref('business_constitution_kyc_survey_sug4'))]"/>
         </record>
         <!-- CIN number -->
         <record model="survey.question" id="cin_no_kyc_survey">

@@ -158,7 +158,7 @@
             <field name="inherit_id" ref="survey.survey_user_input_view_form"/>
             <field name="arch" type="xml">
                 <xpath expr="//button[@name='action_print_answers']" position="after">
-                    <button name="action_testing" string="Test" type="object" class="btn-primary" invisible="0"/>
+                    <button name="action_testing" string="Test" type="object" class="btn-primary" invisible="1"/>
                 </xpath>
                 <xpath expr="//field[@name='survey_id']" position="replace">
                     <field name="survey_id" string="Form"/>
