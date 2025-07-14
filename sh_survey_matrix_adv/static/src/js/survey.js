@@ -225,7 +225,7 @@ SurveyFormWidget.include({
         }
         else if (colId != data) {
             const key = rowId + "_" + colId;
-            if (rowId in value) {
+             if (value[key]) {
                 value[key].push(data);
             } else {
                 value[key] = [data];

@@ -320,6 +320,7 @@
             <field name="sequence">20</field>
             <field name="question_type" eval="False"/>
             <field name="is_page" eval="True"/>
+            <field name="constr_mandatory" eval="True"/>
             <!--<field name="description" type="html">
                 <h3>(Director / Owner Details)</h3>
                 <br/>
