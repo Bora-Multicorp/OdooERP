@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- QUESTIONS -->
+    <record id="sh_survey_extra_fields_survey_que_form_view" model="ir.ui.view">
+        <field name="name">sh.survey.extra.fields.survey.que.form.view</field>
+        <field name="model">survey.question</field>
+        <field name="inherit_id" ref="survey.survey_question_form" />
+        <field name="arch" type="xml">
+            <!-- for textbox pattern validation -->
+            <xpath expr="//page[1]" position="inside">
+                <group>
+                    <field name="validation_is_sh_textbox_pattern" invisible="question_type != 'char_box'"/>
+                    <field
+                        name="validation_sh_textbox_pattern"
+                        placeholder="[0-9]{4}"
+                        invisible="question_type != 'char_box' or validation_is_sh_textbox_pattern == False"
+                        required="validation_is_sh_textbox_pattern == True"
+                    />
+                    <field name="validation_sh_textbox_placeholder" placeholder="Ex. Custom Placeholder" invisible="question_type != 'char_box' or validation_is_sh_textbox_pattern == False" />
+                </group>
+            </xpath>
+
+            <!-- BELOW XPATH IS FOR TO DISPLAY (validation_required) Validate entry? BOOLEAN IN OUR CUSTOM FIELD ALOS. -->
+            <field name="validation_required" position="attributes">
+                <attribute name="invisible">question_type not in ['char_box', 'numerical_box', 'date', 'datetime', 'que_sh_time','que_sh_range','que_sh_week','que_sh_month','que_sh_password' ]</attribute>
+            </field>
+
+            <!-- Global validation setting -->
+            <field name="validation_required" invisible="question_type not in ['char_box', 'numerical_box', 'date', 'datetime']" />
+
+            <field name="validation_error_msg" position="before">
+                <field name="validation_sh_time_step" placeholder="60 (In seconds)" invisible="question_type != 'que_sh_time'" />
+
+                <field name="validation_sh_range_step" invisible="question_type != 'que_sh_range'" />
+
+                <field name="validation_sh_week_step" placeholder="1" invisible="question_type != 'que_sh_week'"/>
+                
+                <field name="validation_sh_month_step" placeholder="1" invisible="question_type != 'que_sh_month'"/>
+            </field>
+
+            <!-- MIN Validation-->
+            <xpath expr="//field[@name='validation_length_min']" position="before">
+                <field name="validation_sh_time_min" nolabel="1"
+                        placeholder="Min time Ex. 9:00" invisible="question_type != 'que_sh_time'"
+                        required="validation_required and question_type == 'que_sh_time'"/>
+                
+                <field name="validation_sh_range_min" nolabel="1"
+                    invisible="question_type != 'que_sh_range'"
+                    required="validation_required and question_type == 'que_sh_range'"/>
+                
+                <field name="validation_sh_week_min" nolabel="1"
+                    placeholder="Min Week 2018-W18"
+                    invisible="question_type != 'que_sh_week'"
+                    required="validation_required and question_type == 'que_sh_week'"/>
+                
+                <field name="validation_sh_month_min" nolabel="1"
+                    placeholder="Min Ex. 2018-03" invisible="question_type != 'que_sh_month'"
+                    required="validation_required and question_type == 'que_sh_month'"/>
+                
+                <field name="validation_sh_password_minlen" nolabel="1"
+                    placeholder="Length Ex. 1" invisible="question_type != 'que_sh_password'"
+                    required="validation_required and question_type == 'que_sh_password'"/>
+            </xpath>
+
+            <!-- MAX Validation-->
+            <xpath expr="//field[@name='validation_length_max']" position="before">
+                <field name="validation_sh_time_max" placeholder="Max time Ex. 18:00" nolabel="1"
+                    invisible="question_type != 'que_sh_time'"
+                    required="validation_required and question_type == 'que_sh_time'"/>
+
+                <field name="validation_sh_range_max" nolabel="1"
+                    invisible="question_type != 'que_sh_range'"
+                    required="validation_required and question_type == 'que_sh_range'" />
+                
+                <field name="validation_sh_week_max" nolabel="1"
+                    placeholder="Max Week 2018-W26" invisible="question_type != 'que_sh_week'"
+                    required="validation_required and question_type == 'que_sh_week'"/>
+
+                <field name="validation_sh_month_max" nolabel="1"
+                    placeholder="Max Ex. 2018-05" invisible="question_type != 'que_sh_month'"
+                    required="validation_required and question_type == 'que_sh_month'"/>
+                
+                <field name="validation_sh_password_maxlen" nolabel="1"
+                    placeholder="Length Ex. 8" invisible="question_type != 'que_sh_password'"
+                    required="validation_required and question_type == 'que_sh_password'"/>
+            </xpath>
+
+            <xpath expr="//page[@name='answers']" position="inside">
+                <!-- Many2one -->
+                <group class="many2one_model_answer_option" invisible="question_type not in ['que_sh_many2one']" required="question_type in ['que_sh_many2one']">
+                    <field name="que_sh_many2one_model_id" domain="[('transient','=',False)]" options='{"no_open": True, "no_create": True}' />
+                </group>
+
+                <!-- Many2many -->
+                <group class="many2many_model_answer_option" invisible="question_type not in ['que_sh_many2many']" required="question_type in ['que_sh_many2many']">
+                    <field name="que_sh_many2many_model_id" domain="[('transient','=',False)]" options='{"no_open": True, "no_create": True}' />
+                </group>
+
+                <!-- Adddress Options -->
+                <div class="row address_answer_options">
+                    <div></div>
+                    <div class="col-12" invisible="question_type != 'que_sh_address'">
+                        <div>
+                            <div class='d-flex'>
+                                <field name="sh_is_show_street" nolabel="1" />
+                                <div style='width: 25%;'>
+                                    <label for="sh_is_show_street"/>
+                                </div>
+                                <div style='width: 25%;' invisible="sh_is_show_street != True">
+                                    <label for="sh_is_show_street_label"/>
+                                </div>
+                                <field name='sh_is_show_street_label' nolabel="1" required="sh_is_show_street == True" invisible="sh_is_show_street != True" placeholder='Street Label' style='width: 25%;'/>
+                            </div>
+
+                            <div class='d-flex'>
+                                <field name="sh_is_show_street2" nolabel="1" />
+                                <div style='width: 25%;'>
+                                    <label for="sh_is_show_street2" />
+                                </div>
+                                <div style='width: 25%;' invisible="sh_is_show_street2 != True">
+                                    <label for="sh_is_show_street2_label"/>
+                                </div>
+                                <field name='sh_is_show_street2_label' nolabel="1" required="sh_is_show_street2 == True" invisible="sh_is_show_street2 != True" placeholder='Street 2 Label' style='width: 25%;'/>
+                            </div>
+
+
+
+                            <div class='d-flex'>
+                                <field name="sh_is_show_zip" nolabel="1" />
+                                <div style='width: 25%;'>
+                                    <label for="sh_is_show_zip" />
+                                </div>
+                                <div style='width: 25%;' invisible="sh_is_show_zip != True">
+                                    <label for="sh_is_show_zip_label"/>
+                                </div>
+                                <field name='sh_is_show_zip_label' nolabel="1" required="sh_is_show_zip == True" invisible="sh_is_show_zip != True" placeholder='Zip Label' style='width: 25%;'/>
+                            </div>
+
+                            
+                            <div class='d-flex'>
+                                <field name="sh_is_show_city" nolabel="1" />
+                                <div style='width: 25%;'>
+                                    <label for="sh_is_show_city" />
+                                </div>
+                                <div style='width: 25%;' invisible="sh_is_show_city != True">
+                                    <label for="sh_is_show_city_label"/>
+                                </div>
+                                <field name='sh_is_show_city_label' nolabel="1" required="sh_is_show_city == True" invisible="sh_is_show_city != True" placeholder='City Label' style='width: 25%;'/>
+                            </div>
+
+                            <div class='d-flex'>
+                                <field name="sh_is_show_state_id" nolabel="1" />
+                                <div style='width: 25%;'>
+                                    <label for="sh_is_show_state_id" />
+                                </div>
+                                <div style='width: 25%;' invisible="sh_is_show_state_id != True">
+                                    <label for="sh_is_show_state_id_label"/>
+                                </div>
+                                <field name='sh_is_show_state_id_label' nolabel="1" required="sh_is_show_state_id == True" invisible="sh_is_show_state_id != True" placeholder='State Label' style='width: 25%;'/>
+                            </div>
+                            
+                            <div class='d-flex'>
+                                <field name="sh_is_show_country_id" nolabel="1" />
+                                <div style='width: 25%;'>
+                                    <label for="sh_is_show_country_id" />
+                                </div>
+                                <div style='width: 25%;' invisible="sh_is_show_country_id != True">
+                                    <label for="sh_is_show_country_id_label"/>
+                                </div>
+                                <field name='sh_is_show_country_id_label' nolabel="1" required="sh_is_show_country_id == True" invisible="sh_is_show_country_id != True" placeholder='Country Label' style='width: 25%;'/>
+                            </div>
+                            
+                        </div>
+                    </div>
+                </div>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- USER INPUT LINES
+            .. note:: these views are useful mainly for technical users/administrators -->
+    <record id="sh_survey_extra_fields_survey_user_input_line_form" model="ir.ui.view">
+        <field name="name">sh.survey.extra.fields.survey.user.input.line.form</field>
+        <field name="model">survey.user_input.line</field>
+        <field name="inherit_id" ref="survey.survey_user_input_line_view_form" />
+        <field name="arch" type="xml">
+            <field name="value_text_box" position="after">
+                <field name="value_ans_sh_color" colspan="2" invisible="answer_type != 'ans_sh_color'"/>
+                <field name="value_ans_sh_email" colspan="2" invisible="answer_type != 'ans_sh_email'" />
+                <field name="value_ans_sh_url" colspan="2" invisible="answer_type != 'ans_sh_url'" />
+                <field name="value_ans_sh_time" colspan="2" invisible="answer_type != 'ans_sh_time'" />
+                <field name="value_ans_sh_range" colspan="2" invisible="answer_type != 'ans_sh_range'" />
+                <field name="value_ans_sh_week" colspan="2" invisible="answer_type != 'ans_sh_week'" />
+                <field name="value_ans_sh_month" colspan="2" invisible="answer_type != 'ans_sh_month'" />
+                <field name="value_ans_sh_password" colspan="2" invisible="answer_type != 'ans_sh_password'" />
+
+                <field name="value_ans_sh_file" filename="value_ans_sh_file_fname" readonly="1" widget="binary" colspan="2" invisible="answer_type != 'ans_sh_file'"/>
+                <field name="value_ans_sh_file_fname" invisible="1" />
+
+                <field name="access_token" readonly="1" invisible="1" />
+
+                <field name="value_ans_sh_signature" style="width: 100%; height: auto;" widget="image" colspan="2" invisible="answer_type != 'ans_sh_signature'"/>
+
+                <field name="value_ans_sh_street" colspan="2" invisible="answer_type != 'ans_sh_address'" />
+                <field name="value_ans_sh_street2" colspan="2" invisible="answer_type != 'ans_sh_address'" />
+                <field name="value_ans_sh_zip" colspan="2" invisible="answer_type != 'ans_sh_address'" />
+                <field name="value_ans_sh_city" colspan="2" invisible="answer_type != 'ans_sh_address'" />
+                <field name="value_ans_sh_state_id" colspan="2" invisible="answer_type != 'ans_sh_address'" />
+                <field name="value_ans_sh_country_id" colspan="2" invisible="answer_type != 'ans_sh_address'" />
+
+                <field name="value_ans_sh_many2one" colspan="2" invisible="answer_type != 'ans_sh_many2one'" />
+
+                <field name="value_ans_sh_many2many" colspan="2" invisible="answer_type != 'ans_sh_many2many'" />
+            </field>
+
+            <field name="suggested_answer_id" position="replace">
+                <field name="suggested_answer_id" colspan="2" />
+            </field>
+        </field>
+    </record>
+</odoo>

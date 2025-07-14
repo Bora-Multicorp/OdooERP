@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<odoo>
+    <record id="rekyc_request_wizard_view_form" model="ir.ui.view">
+        <field name="name">rekyc.request.wizard.form</field>
+        <field name="model">rekyc.request.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Re-KYC Reason">
+                <sheet>
+                    <group>
+                        <field name="partner_id" readonly="1"/>
+                        <field name="remark" placeholder="Reason For Re-KYC(eg. Business Change)"/>
+                    </group>
+                    <footer>
+                        <button name="action_rekyc_request" string="Done" type="object" class="btn-primary"/>
+                        <button string="Cancel" class="btn-secondary" special="cancel" data-hotkey="x"/>
+                    </footer>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="rekyc_request_wizard_action" model="ir.actions.act_window">
+        <field name="name">Re-KYC Reason</field>
+        <field name="res_model">rekyc.request.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="rekyc_request_wizard_view_form"/>
+        <field name="target">new</field>
+        <field name="binding_model_id" ref="base.model_res_partner"/>
+        <field name="context">{
+            'default_partner_id': active_id,
+            }
+        </field>
+    </record>
+</odoo>
