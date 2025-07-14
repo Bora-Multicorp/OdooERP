@@ -30,6 +30,8 @@ class SurveyController(http.Controller):
                                                                                      post.get('row_label')))
                                                                                  ], limit=1)
             if input_line_id:
-                download_url += '/web/content/survey.user_input.line/' + \
-                    str(input_line_id.id)+'/value_ans_sh_file?download=true'
+                filename = input_line_id.value_ans_sh_file_fname
+                download_url += f'/web/content/survey.user_input.line/{input_line_id.id}/value_ans_sh_file?download=true&filename={filename}'
+                #download_url += '/web/content/survey.user_input.line/' + \
+                #    str(input_line_id.id)+'/value_ans_sh_file?download=true&filename={filename}'
         return request.redirect(download_url)

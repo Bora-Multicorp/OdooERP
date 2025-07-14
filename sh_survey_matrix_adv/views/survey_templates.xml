@@ -218,10 +218,16 @@
                     </t>
 
                     <t t-if="col_label.sh_value_type == 'que_sh_file'">
-                        <t t-if="review">
-                            <a t-att-href="'/survey/matrix/download/'+str(question.id)+'/'+str(row_label.id)+'/'+str(col_label.id)+'/'+str(answer.user_input_id.access_token)">Click here to download file</a>
+                        <t t-if="review and answer.value_ans_sh_file">
+                            <a t-att-href="'/survey/matrix/download/'+str(question.id)+'/'+str(row_label.id)+'/'+str(col_label.id)+'/'+str(answer.user_input_id.access_token)">
+                                <!--Click here to download file-->
+                                <span class="fa fa-download"/>
+                                <span t-esc="answer.value_ans_sh_file_fname"/>
+                            </a>
                         </t>
-                        <t t-else="">
+                        <t t-if="review and not answer.value_ans_sh_file">
+                        </t>
+                        <t t-if="not review">
                             <input type="file" class="form-control o_survey_question_email_box sh_file_input"
                             t-att-name="'%s_%s' % (question.id, row_label.id)"
                             t-att-id="sh_survey_matrix_adv_file_id"

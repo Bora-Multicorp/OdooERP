@@ -6,6 +6,7 @@ from datetime import datetime
 import textwrap
 from odoo.exceptions import ValidationError
 import re
+import json
 
 class survey_question(models.Model):
     _inherit = 'survey.question'
@@ -76,6 +77,17 @@ class survey_user_input(models.Model):
     _inherit = 'survey.user_input'
     _description = 'Survey User Input for custom matrix'
 
+    def parse_uploaded_file_data(self, data_value):
+        file_name = 'uploaded_file'
+        if isinstance(data_value, str):
+            try:
+                data_value = json.loads(data_value)
+            except json.JSONDecodeError:
+                return '', file_name
+        if isinstance(data_value, dict):
+            return data_value.get('value', ''), data_value.get('filename', file_name)
+        return '', file_name
+
     def _save_line_matrix(self, question, old_answers, answers, comment):
         """
             REPLACE BY SOFTHEALER TECHNOLOGIES
@@ -143,8 +155,9 @@ class survey_user_input(models.Model):
                                     vals = self.sh_get_line_answer_values(
                                         question, answer, data_value, 'ans_sh_password')
                                 elif answer_id.sh_value_type == 'que_sh_file':
-                                    vals = self.sh_get_line_answer_values(
-                                        question, answer, data_value, 'ans_sh_file')
+                                    data_value, file_name = self.parse_uploaded_file_data(data_value)
+                                    vals = self.sh_get_line_answer_values(question, answer, data_value, 'ans_sh_file')
+                                    vals['value_ans_sh_file_fname'] = file_name
                                 vals['matrix_row_id'] = int(
                                     row_key.split('_')[0])
                             else:
