@@ -73,7 +73,7 @@
                         <field name="pan_no" placeholder="Your Answer" widget="upper_case" invisible="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
                         <field name="pan_card_document" widget="many2many_binary"
                                options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 5}" required="const_business in ['Partnership', 'Pvt Ltd Co.', 'LLP']" invisible="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
-                        <field name="aadhaar_pan_link"/>
+                        <field name="aadhaar_pan_link" widget="radio" options="{'horizontal': true}"/>
                         <field name="gst_no" placeholder="Your Answer" widget="upper_case"/>
                         <field name="license_registered" placeholder="Your Answer" widget="upper_case" invisible="const_business in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
                         <field name="udyam_number" placeholder="Your Answer"  widget="upper_case"/>

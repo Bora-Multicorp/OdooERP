@@ -14,6 +14,19 @@ class CustomContact(models.Model):
         ('unique_email', 'UNIQUE(email)', 'Email address must be unique.')
     ]
 
+    @api.constrains('city', 'zip')
+    def _check_city_zip_format(self):
+        for rec in self:
+            # Validate City (optional: only letters and spaces)
+            if rec.city and not re.fullmatch(r"[A-Za-z\s\-]+", rec.city):
+                raise ValidationError(
+                    _("City must contain only letters, spaces, or hyphens.\nInvalid Value: %s") % rec.city)
+
+            # Validate Zip (Pincode): exactly 6 digits
+            if rec.zip and not re.fullmatch(r"\d{6}", rec.zip):
+                raise ValidationError(
+                    _("Pincode must be exactly 6 digits (e.g., 400001).\nInvalid Value: %s") % rec.zip)
+
     @api.constrains('email')
     def _check_duplicate_email(self):
         email_pattern = re.compile(r'^[\w\.-]+@[\w\.-]+\.\w+$')  # Basic email format
@@ -41,8 +54,46 @@ class CustomContact(models.Model):
         for rec in self:
             if rec.l10n_in_pan and not pan_pattern.match(rec.l10n_in_pan.upper()):
                 raise ValidationError(
-                    _("PAN Card Number must be in the format: 5 letters, 4 digits, and 1 letter (e.g., ABCDE1234F).")
+                    _("PAN Number must be in the format: 5 letters, 4 digits, and 1 letter (e.g., ABCDE1234F).")
                 )
+
+    # @api.onchange('phone', 'mobile', 'country_id')
+    # def _onchange_validate_phone_numbers(self):
+    #     for rec in self:
+    #         country = rec.country_id
+    #         phone_code = country.phone_code or ''
+    #         country_name = country.name or 'the selected country'
+    #
+    #         def validate_number(value, label):
+    #             if not value:
+    #                 return None
+    #
+    #             clean_number = re.sub(r'[\s\-()]', '', value)
+    #             if not re.fullmatch(r'\+?\d{7,15}', clean_number):
+    #                 return f"{label} must be a valid phone number with 7–15 digits (e.g., +{phone_code}XXXXXXXXXX) for {country_name}.\nInvalid Value: {value}"
+    #             if phone_code and not clean_number.startswith(f"+{phone_code}") and not clean_number.startswith(
+    #                     phone_code):
+    #                 return f"{label} should start with the country code +{phone_code} (for {country_name}).\nInvalid Value: {value}"
+    #
+    #         phone_warning = validate_number(rec.phone, "Phone")
+    #         mobile_warning = validate_number(rec.mobile, "Mobile")
+    #
+    #         if phone_warning or mobile_warning:
+    #             return {
+    #                 'warning': {
+    #                     'title': "Phone Number Format Warning",
+    #                     'message': f"{phone_warning or ''}\n{mobile_warning or ''}".strip()
+    #                 }
+    #             }
+
+    @api.constrains('vat')
+    def _check_gst_no_format(self):
+        gst_pattern = re.compile(r'^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$')
+        for rec in self:
+            if rec.vat and not gst_pattern.match(rec.vat.upper()):
+                raise ValidationError(_(
+                    "Invalid GST Number: '%s'. It must follow the 15-character format (e.g., 27ABCDE1234F1Z5)."
+                ) % rec.vat)
 
     @api.constrains('phone', 'mobile')
     def _check_phone_mobile_number(self):

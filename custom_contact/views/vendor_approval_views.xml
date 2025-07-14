@@ -133,7 +133,7 @@
                                    readonly="state not in ['draft']"
                                    required="const_business in ['Partnership', 'Pvt Ltd Co.', 'LLP']"
                                    invisible="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
-                            <field name="aadhaar_pan_link" readonly="state not in ['draft']"/>
+                            <field name="aadhaar_pan_link" widget="radio" options="{'horizontal': true}" readonly="state not in ['draft']"/>
                             <field name="gst_no" placeholder="Your Answer" widget="upper_case"
                                    readonly="state not in ['draft']"/>
                             <field name="license_registered" placeholder="Your Answer" widget="upper_case"
