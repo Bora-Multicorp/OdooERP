@@ -638,9 +638,11 @@
             <field name="sequence">34</field>
             <field name="question_type">char_box</field>
             <field name="question_placeholder">eg. Lat : 22.3511148 Long: 78.6677428</field>
-            <field name="constr_mandatory">False</field>
-            <field name="triggering_answer_ids"
-                   eval="[Command.link(ref('business_constitution_kyc_survey_sug2')), Command.link(ref('business_constitution_kyc_survey_sug3')),Command.link(ref('business_constitution_kyc_survey_sug4'))]"/>
+            <field name="constr_mandatory">True</field>
+            <!--<field name="triggering_answer_ids"
+                   eval="[Command.link(ref('business_constitution_kyc_survey_sug2')),
+                   Command.link(ref('business_constitution_kyc_survey_sug3')),
+                   Command.link(ref('business_constitution_kyc_survey_sug4'))]"/>-->
         </record>
         <!-- Incorporation Certificate -->
         <record model="survey.question" id="incorporation_certificate_kyc_survey">
