@@ -12,7 +12,13 @@ $(document).on("change", ".sh_file_input", function (ev) {
         fr.onload = function () {
             file_data = fr.result;
             if (file_data) {
-                $(ev.currentTarget).parent().find(".sh_file_input_data").val(file_data.split(",")[1]);
+                //$(ev.currentTarget).parent().find(".sh_file_input_data").val(file_data.split(",")[1]);
+                const base64Content = file_data.split(",")[1];
+                const fileName = file.name;
+                console.log("fileNamefileName", fileName);
+                const $textInput = $i.parent().find(".sh_file_input_data");
+                $textInput.val(base64Content);
+                $textInput.attr("data-filename", fileName);
             }
         };
         fr.readAsDataURL(file);
@@ -149,6 +155,19 @@ SurveyFormWidget.include({
                     params = self._prepareSubmitAnswerMatrixCustom(params, $matrixTable.data("name"), $(this).data("rowId"), $(this).data("col-id"), this.value);
                 }
             }
+        });
+
+        $matrixTable.find(".sh_file_input_data").each(function () {
+            const rowId = $(this).data("rowId");
+            const colId = $(this).data("col-id");
+            const base64Content = this.value;
+            const fileName = $(this).data("filename");
+            const jsonData = JSON.stringify({
+                value: base64Content,
+                filename: fileName,
+            });
+            console.log("jsonData", jsonData)
+            params = self._prepareSubmitAnswerMatrixCustom(params, questionId, rowId, colId, jsonData);
         });
 
         $matrixTable.find(".sh_m2o").each(function () {
