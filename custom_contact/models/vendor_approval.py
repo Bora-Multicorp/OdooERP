@@ -76,6 +76,7 @@ class ContactKYCApproval(models.Model):
     pan_card = fields.Binary(string="PAN Card (Proprietor)")
     aadhaar_pan_link = fields.Boolean('Aadhar and PAN card linking?')
     gst_no = fields.Char(string="GST Number")
+    license_registered = fields.Char(string="Any licenses registered (As per Local/State Government requirements)")
     udyam_number = fields.Char(string="Udyam Certificate Number")
     gst_certificate = fields.Many2many('ir.attachment', 'vendor_kyc_gst_cert_rels', 'partner_id', 'attachment_id',
                                        string="Company GST Certificate", required=False)
