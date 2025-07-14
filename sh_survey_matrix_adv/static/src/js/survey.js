@@ -224,14 +224,15 @@ SurveyFormWidget.include({
             value['comment'] = colId;
         }
         else if (colId != data) {
+            const key = rowId + "_" + colId;
             if (rowId in value) {
-                value[rowId + "_" + colId].push(data);
+                value[key].push(data);
             } else {
-                value[rowId + "_" + colId] = [data];
+                value[key] = [data];
             }
         }
         else {
-            if (rowId in value) {
+           if (value[rowId]) {
                 value[rowId].push(colId);
             } else {
                 value[rowId] = [colId];
