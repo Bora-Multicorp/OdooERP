@@ -88,7 +88,7 @@ class ContactKYCApproval(models.Model):
                                          string="PAN Card Document(Company)")
 
     udyam_document = fields.Many2many('ir.attachment', 'vendor_kyc_shop_documents_rels', 'partner_id', 'attachment_id',
-                                      string="Shop Act documents / Udyam Documents", required=False)
+                                      string="Udyam Documents", required=False)
 
     gst_return_duration = fields.Selection([('Monthly', 'Monthly'), ('Quarterly', 'Quarterly')],
                                            required=False, string="GST Return duration")

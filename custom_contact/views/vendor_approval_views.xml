@@ -147,6 +147,7 @@
                                    readonly="state not in ['draft']"/>
                                <field name="incorporation_certificate" widget="many2many_binary"
                                options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 5}"
+                                      readonly="state not in ['draft']"
                                       required="const_business in ['Pvt Ltd Co.', 'LLP']"
                                       invisible="const_business not in ['Pvt Ltd Co.', 'LLP']"/>
                             <field name="partner_llp" widget="image"
