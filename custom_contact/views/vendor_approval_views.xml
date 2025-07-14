@@ -116,7 +116,7 @@
                                    readonly="state not in ['draft']"
                                    required="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"
                                    invisible="const_business in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
-                            <field name="pan_no" placeholder="Your Answer" widget="upper_case"
+                            <field name="pan_no" placeholder="Your Answer" widget="upper_case" readonly="state not in ['draft']"
                                    invisible="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
                             <field name="pan_card_document" widget="many2many_binary"
                                    options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 5}"
@@ -125,6 +125,7 @@
                                    invisible="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
                             <field name="aadhaar_pan_link" readonly="state not in ['draft']"/>
                             <field name="gst_no" placeholder="Your Answer" widget="upper_case" readonly="state not in ['draft']"/>
+                            <field name="license_registered" placeholder="Your Answer" widget="upper_case" readonly="state not in ['draft']"  invisible="const_business in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
                             <field name="udyam_number" placeholder="Your Answer" widget="upper_case" readonly="state not in ['draft']"/>
                             <field name="gst_certificate" widget="many2many_binary"
                                    readonly="state not in ['draft']"
@@ -143,14 +144,14 @@
                                    readonly="state not in ['draft']"
                                    options="{'accepted_file_extensions': 'video/*', 'number_of_files': 10}"/>
                             <field name="comp_google_loc" placeholder="eg. Lat : 22.3511148 Long: 78.6677428"
-                                   readonly="state not in ['draft']"
-                                   invisible="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
+                                   readonly="state not in ['draft']"/>
                                <field name="incorporation_certificate" widget="many2many_binary"
                                options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 5}"
                                       required="const_business in ['Pvt Ltd Co.', 'LLP']"
                                       invisible="const_business not in ['Pvt Ltd Co.', 'LLP']"/>
                             <field name="partner_llp" widget="image"
                                    readonly="state not in ['draft']"
+                                   required="const_business in ['Partnership', 'LLP']"
                                    invisible="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
                             <field name="moa_aoa" widget="many2many_binary"
                                    readonly="state not in ['draft']"
