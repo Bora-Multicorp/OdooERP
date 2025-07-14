@@ -426,6 +426,7 @@ class VendorKycWizard(models.TransientModel):
         self.partner_id.write({
             'email': self.email,
             'vat': self.gst_no,
+            'l10n_in_pan': self.pan_no,
             'is_kyc': True,
             'rejection_date': False,
             'rejection_reason': False,
