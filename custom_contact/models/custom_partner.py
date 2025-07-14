@@ -35,6 +35,15 @@ class CustomContact(models.Model):
                         _("The email address '%s' is already used by another contact.") % rec.email
                     )
 
+    @api.constrains('l10n_in_pan')
+    def _check_pan_card_no_format(self):
+        pan_pattern = re.compile(r'^[A-Z]{5}[0-9]{4}[A-Z]$')
+        for rec in self:
+            if rec.l10n_in_pan and not pan_pattern.match(rec.l10n_in_pan.upper()):
+                raise ValidationError(
+                    _("PAN Card Number must be in the format: 5 letters, 4 digits, and 1 letter (e.g., ABCDE1234F).")
+                )
+
     @api.constrains('phone', 'mobile')
     def _check_phone_mobile_number(self):
         phone_pattern = re.compile(r'^\d{10}$')  # Exactly 10 digits
