@@ -27,13 +27,35 @@ _onFileChange: function(event) {
         'application/pdf'
     ];
 
+    const allowedVideoTypes = [
+        'video/mp4', 'video/mpeg', 'video/ogg',
+        'video/webm', 'video/avi', 'video/quicktime'
+    ];
+
+    // 🔍 Detect question label text
+    const labelText = $(event.target)
+        .closest('.js_question-wrapper')
+        .find('.o_survey_question_title, h3 span')
+        .first()
+        .text()
+        .trim();
+
+    const isVideoOnly = labelText.toLowerCase().includes('shop videos');
+
     for (let i = 0; i < files.length; i++) {
         const file = files[i];
 
-        // ✅ Validate MIME type
+        // 🔒 Restrict to videos only for "Shop Videos" field
+        if (isVideoOnly && !allowedVideoTypes.includes(file.type)) {
+            alert(`Invalid file type for "${labelText}". Only video files are allowed.`);
+            event.target.value = ''; // Reset the input
+            return;
+        }
+
+        // ✅ Basic allowed file types validation
         if (!allowedTypes.includes(file.type)) {
-            alert(`Invalid file type: ${file.name}\n\nOnly images, videos, and PDFs files are allowed.`);
-            event.target.value = '';  // Clear the input
+            alert(`Invalid file type: ${file.name}\n\nOnly images, videos, and PDFs are allowed.`);
+            event.target.value = ''; // Reset input
             return;
         }
 
@@ -71,7 +93,6 @@ _onFileChange: function(event) {
         reader.readAsDataURL(file);
     }
 },
-
 
     });
 export default publicWidget.registry.SurveyFormUpload;
