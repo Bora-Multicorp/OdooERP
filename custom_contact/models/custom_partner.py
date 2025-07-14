@@ -43,6 +43,14 @@ class CustomContact(models.Model):
                 raise ValidationError(
                     _("PAN Card Number must be in the format: 5 letters, 4 digits, and 1 letter (e.g., ABCDE1234F).")
                 )
+    @api.constrains('vat')
+    def _check_gst_no_format(self):
+        gst_pattern = re.compile(r'^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$')
+        for rec in self:
+            if rec.vat and not gst_pattern.match(rec.vat.upper()):
+                raise ValidationError(_(
+                    "Invalid GST Number: '%s'. It must follow the 15-character format (e.g., 27ABCDE1234F1Z5)."
+                ) % rec.vat)
 
     @api.constrains('phone', 'mobile')
     def _check_phone_mobile_number(self):
