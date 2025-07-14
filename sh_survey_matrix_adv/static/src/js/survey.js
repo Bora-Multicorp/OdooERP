@@ -15,7 +15,6 @@ $(document).on("change", ".sh_file_input", function (ev) {
                 //$(ev.currentTarget).parent().find(".sh_file_input_data").val(file_data.split(",")[1]);
                 const base64Content = file_data.split(",")[1];
                 const fileName = file.name;
-                console.log("fileNamefileName", fileName);
                 const $textInput = $i.parent().find(".sh_file_input_data");
                 $textInput.val(base64Content);
                 $textInput.attr("data-filename", fileName);
@@ -27,46 +26,31 @@ $(document).on("change", ".sh_file_input", function (ev) {
 
 $(document).on("change", "input.o_survey_form_choice_item", function (event) {
     const $input = $(event.target);
-    const selectedOptionId = $input.val();  // This is like 84 (answer_id)
-    const selectedLabel = $input.closest("label").find("span").text().trim();  // This gives 1, 2, etc.
-    const maxCount = parseInt(selectedLabel || 0);
-    //const matrixQuestionId = "206";  // The `data-name` of your <table>
-    //const $matrixTable = $(`table.table-borderless[data-name='${matrixQuestionId}']`);
-    // Step 1: Find the header <div> that contains the Director Details heading
+    const selectedOptionId = $input.val();
+    const selectedLabel = $input.closest("label").find("span").text().trim();
+    let maxCount = parseInt(selectedLabel || 0);
+    let directorCount = 0;
+    if (selectedLabel === "Sole Proprietor") {
+        directorCount = 1;
+        sessionStorage.setItem("director_details_count", directorCount);
+    }
+   if (Number.isInteger(maxCount) && maxCount > 0) {
     const $headingDiv = $("div.mb-4:contains('Director Details')").filter(function () {
         return $(this).text().trim().startsWith("Director Details");
     });
-    // Step 2: Get the matrix table that comes after the heading
+
     const $matrixTable = $headingDiv.nextAll("table[data-question-type='matrix']").first();
     if (!$matrixTable.length) {
-        console.warn('Matrix table not found!');
+        //console.warn('Matrix table not found!');
         return;
     }
+
     const $rows = $matrixTable.find("tr");
     $rows.addClass("hide-row");
-    $rows.slice(0, maxCount+1).removeClass("hide-row");
-});
+    $rows.slice(0, maxCount + 1).removeClass("hide-row");
+}
 
-//let matrixHidden = false;
-//
-//function hideInitialMatrixRows() {
-//    if (matrixHidden) return;  // Ensure it runs only once
-//
-//    $("table.o_survey_question_matrix").each(function () {
-//        const $rows = $(this).find("tbody > tr");
-//        if ($rows.length > 1) {
-//            $rows.addClass("hide-row");
-//            $rows.first().removeClass("hide-row");
-//        }
-//    });
-//
-//    matrixHidden = true;  // Mark it so it won't run again
-//}
-//
-//// Wait for DOM load
-//setTimeout(() => {
-//    hideInitialMatrixRows();
-//}, 1000);  // Adjust timeout based on rendering delay
+});
 
 
 $(document).off('click', '.add-item-btn').on('click', '.add-item-btn', function(ev) {
@@ -87,7 +71,6 @@ $(document).off('click', '.delete-item-btn').on('click', '.delete-item-btn', fun
 
 function waitForMatrixTableAndHide() {
     const $visibleMatrix = $("table.o_survey_question_matrix:visible");
-
     if ($visibleMatrix.length > 0) {
         $visibleMatrix.each(function () {
             const $rows = $(this).find("tbody > tr");
@@ -103,10 +86,46 @@ function waitForMatrixTableAndHide() {
     }
 }
 
+function showDirectorDetailsMatrix(maxCount) {
+    if (!Number.isInteger(maxCount) || maxCount <= 0) {
+        //console.warn("Invalid or zero maxCount, skipping.");
+        return;
+    }
+
+    //console.log("Looking for heading...");
+    const $headingSpan = $("span.text-break").filter(function () {
+        return $(this).text().trim().includes("Director Details");
+    });
+
+    if (!$headingSpan.length) {
+        //console.warn("Heading not found.");
+        return;
+    }
+
+    const $headingDiv = $headingSpan.closest("div.mb-4");
+    const $matrixTable = $headingDiv.nextAll("table[data-question-type='matrix']").first();
+
+    if (!$matrixTable.length) {
+        //console.warn("Matrix table not found.");
+        return;
+    }
+
+    const $rows = $matrixTable.find("tr");
+    $rows.addClass("hide-row");
+    $rows.slice(0, maxCount + 1).removeClass("hide-row");
+    //console.log(`✅ Showing ${maxCount} matrix rows`);
+}
+
+
 // Triggered on survey page navigation
 $(document).on("click", "button[type='submit'][value='next'], #next_page", function () {
     // Start loop after page changes
     setTimeout(waitForMatrixTableAndHide, 100);
+    setTimeout(function () {
+        const directorCount = parseInt(sessionStorage.getItem("director_details_count") || "0");
+        //console.log("Retrieved maxCount from session:", directorCount);
+        showDirectorDetailsMatrix(directorCount);
+    }, 500); // Adjust delay if needed
 });
 
 
@@ -114,25 +133,6 @@ $(document).on("click", "button[type='submit'][value='next'], #next_page", funct
 
 
 SurveyFormWidget.include({
-
-//    start() {
-//        return this._super(...arguments).then(() => {
-//            this._hideInitialMatrixRowsOnce();
-//        });
-//    },
-//
-//    _hideInitialMatrixRowsOnce() {
-//        if (this._matrixHidden) return;
-//
-//        this.$("table.o_survey_question_matrix").each(function () {
-//            const $rows = $(this).find("tbody > tr");
-//            if ($rows.length > 1) {
-//                $rows.addClass("hide-row");
-//                $rows.first().removeClass("hide-row");
-//            }
-//        });
-//        this._matrixHidden = true;
-//    },
 
     _prepareSubmitAnswersMatrix: function (params, $matrixTable) {
         var self = this;
@@ -166,7 +166,7 @@ SurveyFormWidget.include({
                 value: base64Content,
                 filename: fileName,
             });
-            console.log("jsonData", jsonData)
+            //console.log("jsonData", jsonData)
             params = self._prepareSubmitAnswerMatrixCustom(params, questionId, rowId, colId, jsonData);
         });
 
