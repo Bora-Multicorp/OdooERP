@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Type -->
+        <record id="res_partner_location_type_apob" model="res.partner.location.type">
+            <field name="name">APOB</field>
+        </record>
+        <record id="res_partner_location_type_ppob" model="res.partner.location.type">
+            <field name="name">PPOB</field>
+        </record>
+        <!-- Address Type -->
+        <record id="res_partner_address_type_actual_warehouse" model="res.partner.address.type">
+            <field name="name">Actual Warehouse</field>
+        </record>
+        <record id="res_partner_address_type_ecom_warehouse" model="res.partner.address.type">
+            <field name="name">Ecom Warehouse</field>
+        </record>
+        <record id="res_partner_address_type_warehouse" model="res.partner.address.type">
+            <field name="name">Warehouse</field>
+        </record>
+        <record id="res_partner_address_type_office" model="res.partner.address.type">
+            <field name="name">Office</field>
+        </record>
+        <record id="res_partner_address_type_comm_add" model="res.partner.address.type">
+            <field name="name">Communication Address</field>
+        </record>
+        <record id="res_partner_address_type_no_used" model="res.partner.address.type">
+            <field name="name">Not to be used</field>
+        </record>
+        <record id="res_partner_address_type_vivo" model="res.partner.address.type">
+            <field name="name">Vivo</field>
+        </record>
+        <record id="res_partner_address_type_factory" model="res.partner.address.type">
+            <field name="name">Factory</field>
+        </record>
+        <record id="res_partner_address_type_otek_office" model="res.partner.address.type">
+            <field name="name">OTEk Office</field>
+        </record>
+        <record id="res_partner_address_type_dreame" model="res.partner.address.type">
+            <field name="name">Dreame</field>
+        </record>
+        <!-- Constitution of Business -->
+        <record id="constitution_business_sole_proprietor" model="constitution.business">
+            <field name="name">Sole Proprietor</field>
+        </record>
+        <record id="constitution_business_partnership" model="constitution.business">
+            <field name="name">Partnership</field>
+        </record>
+        <record id="constitution_business_pvt_ltd_co" model="constitution.business">
+            <field name="name">Pvt Ltd Co.</field>
+        </record>
+        <record id="constitution_business_llp" model="constitution.business">
+            <field name="name">LLP</field>
+        </record>
+        <record id="constitution_business_huf" model="constitution.business">
+            <field name="name">HUF(Karta)</field>
+        </record>
+        <record id="constitution_business_other" model="constitution.business">
+            <field name="name">Other:</field>
+        </record>
+        <!-- Number of Managing Partner / Directors -->
+        <record id="number_partner_director_1" model="number.partner.director">
+            <field name="name">1</field>
+        </record>
+        <record id="number_partner_director_2" model="number.partner.director">
+            <field name="name">2</field>
+        </record>
+        <record id="number_partner_director_3" model="number.partner.director">
+            <field name="name">3</field>
+        </record>
+        <record id="number_partner_director_4" model="number.partner.director">
+            <field name="name">4</field>
+        </record>
+        <record id="number_partner_director_5" model="number.partner.director">
+            <field name="name">5</field>
+        </record>
+        <record id="number_partner_director_6" model="number.partner.director">
+            <field name="name">6</field>
+        </record>
+        <record id="number_partner_director_7" model="number.partner.director">
+            <field name="name">7</field>
+        </record>
+    </data>
+</odoo>

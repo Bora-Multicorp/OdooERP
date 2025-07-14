@@ -1,0 +1,22 @@
+<?xml version="1.0" ?>
+<odoo>
+    <record model="ir.ui.view" id="inherit_view_partner_form">
+        <field name="name">res.partner.form</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <!--<xpath expr="//page[@name='general_information']//field[@name='company_id']"
+                   position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>-->
+            <xpath expr="//group[@name='misc']/field[@name='company_id']" position="after">
+                <field name="company_ids" widget="many2many_tags" string="Multi Companies"
+                       options="{'no_create': True}"/>
+            </xpath>
+            <!-- Trick for allowing to set this field via Form -->
+            <!--<xpath expr="//header" position="inside">
+                <field name="company_id" class="invisible"/>
+            </xpath>-->
+        </field>
+    </record>
+</odoo>

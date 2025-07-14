@@ -1,0 +1,246 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="survey.mail_template_user_input_invite" model="mail.template">
+            <field name="name">KYC Form: Invite</field>
+            <field name="model_id" ref="survey.model_survey_user_input"/>
+            <field name="subject">{{ object.survey_id.display_name }} survey</field>
+            <field name="email_from">{{ user.email_formatted }}</field>
+            <field name="email_to">{{ (object.partner_id.email_formatted or object.email) }}</field>
+            <field name="description">Sent to user when you share a KYC form</field>
+            <field name="body_html" type="html">
+                <div style="margin: 0px; padding: 0px; font-size: 13px;">
+                    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+                        Dear
+                        <t t-out="object.partner_id.name or 'participant'">User</t>
+                        <br/>
+                        <br/>
+                        <!--<t t-if="object.survey_id.certification">
+                            You have been invited to take a new certification.
+                        </t>
+                        <t t-else="">
+                            We are conducting a survey and your response would be appreciated.
+                        </t>-->
+                        We are sharing a KYC form and your response would be appreciated.
+                        <div style="margin: 16px 0px 16px 0px;">
+                            <a t-att-href="(object.get_start_url())"
+                               style="background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;">
+                                <!--<t t-if="object.survey_id.certification">
+                                    Start Certification
+                                </t>
+                                <t t-else="">
+                                    Start Survey
+                                </t>-->
+                                Start
+                            </a>
+                        </div>
+                        <!--<t t-if="object.deadline">
+                            Please response the form till <t t-out="format_date(object.deadline) or ''">
+                            Deadline</t>.
+                            <br/>
+                            <br/>
+                        </t>-->
+                        <t t-if="object.survey_id.certification">
+                            We wish you good luck!
+                        </t>
+                        <t t-else="">
+                            Thank you.
+                        </t>
+                    </p>
+                </div>
+            </field>
+            <field name="lang">{{ object.partner_id.lang }}</field>
+            <field name="auto_delete" eval="False"/>
+        </record>
+
+        <!-- KYC Approval 'Assign To' Email Template -->
+        <record id="assign_to_email_template" model="mail.template">
+            <field name="name">Assign To KYC Approved Template</field>
+            <field name="model_id" ref="model_res_partner_kyc_approval"/>
+            <field name="subject">KYC Approval for : {{ object.partner_id.name }}</field>
+            <field name="description">Assign To KYC Approved Template</field>
+            <field name="auto_delete" eval="False"/>
+            <field name="body_html" type="html">
+                <div>
+                    <p>Dear <t t-out="object.assigned_to.name"/>,</p>
+                    <p>KYC Approval is assigned to you for following Details:</p>
+                    <table style="width:60%; border-collapse: collapse; font-family: Arial, sans-serif;">
+                        <tr>
+                            <td style="padding: 8px; border: 1px solid #ddd;">
+                                <strong>Name</strong>
+                            </td>
+                            <td style="padding: 8px; border: 1px solid #ddd;">
+                                <t t-out="object.partner_id.name or ''"></t>
+                            </td>
+                        </tr>
+                    </table>
+                    <table style="width: 60%; border-collapse: collapse; font-family: Arial, sans-serif;">
+                        <thead>
+                            <tr>
+                                <th style="padding: 8px; border: 1px solid #ddd;">Approver Name</th>
+                                <th style="padding: 8px; border: 1px solid #ddd;">Action Date</th>
+                                <th style="padding: 8px; border: 1px solid #ddd;">Remarks</th>
+                                <th style="padding: 8px; border: 1px solid #ddd;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-foreach="object.approval_users_ids" t-as="line">
+                                <tr>
+                                    <td style="padding: 8px; border: 1px solid #ddd;">
+                                        <t t-out="line.user_id.name or ''"/>
+                                    </td>
+                                    <td style="padding: 8px; border: 1px solid #ddd;">
+                                        <t t-out="line.action_date or ''"/>
+                                    </td>
+                                    <td style="padding: 8px; border: 1px solid #ddd;">
+                                        <t t-out="line.remark or ''"/>
+                                    </td>
+                                    <td style="padding: 8px; border: 1px solid #ddd;">
+                                        <t t-out="line.state or ''"/>
+                                    </td>
+                                </tr>
+                            </t>
+                        </tbody>
+                    </table>
+                    <br/>
+                    <p>Thanks and Regards.</p>
+                </div>
+            </field>
+        </record>
+
+        <!-- KYC Approval Email Template -->
+        <record id="kyc_approval_email_template" model="mail.template">
+            <field name="name">KYC Approved Template</field>
+            <field name="model_id" ref="model_res_partner_kyc_approval"/>
+            <field name="subject">KYC is approved for : {{ object.partner_id.name }}</field>
+            <field name="description">KYC Approved Email Template</field>
+            <field name="auto_delete" eval="False"/>
+            <field name="body_html" type="html">
+                <div>
+                    <p>Dear Sir/Madam</p>
+                    <p>KYC is Approved for following:</p>
+                    <table style="width:60%; border-collapse: collapse; font-family: Arial, sans-serif;">
+                        <tr>
+                            <td style="padding: 8px; border: 1px solid #ddd;">
+                                <strong>Name</strong>
+                            </td>
+                            <td style="padding: 8px; border: 1px solid #ddd;">
+                                <t t-out="object.partner_id.name or ''"></t>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="width:20%;padding:8px;border:1px solid #ddd;">
+                                <strong>Approval Date</strong>
+                            </td>
+                            <td style="width:20%;padding:8px;border:1px solid #ddd;">
+                                <t t-out="format_datetime(object.approval_date)"></t>
+                            </td>
+                        </tr>
+                    </table>
+                    <table style="width: 60%; border-collapse: collapse; font-family: Arial, sans-serif;">
+                        <thead>
+                            <tr>
+                                <th style="padding: 8px; border: 1px solid #ddd;">Approver Name</th>
+                                <th style="padding: 8px; border: 1px solid #ddd;">Action Date</th>
+                                <th style="padding: 8px; border: 1px solid #ddd;">Remarks</th>
+                                <th style="padding: 8px; border: 1px solid #ddd;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-foreach="object.approval_users_ids" t-as="line">
+                                <tr>
+                                    <td style="padding: 8px; border: 1px solid #ddd;">
+                                        <t t-out="line.user_id.name or ''"/>
+                                    </td>
+                                    <td style="padding: 8px; border: 1px solid #ddd;">
+                                        <t t-out="line.action_date or ''"/>
+                                    </td>
+                                    <td style="padding: 8px; border: 1px solid #ddd;">
+                                        <t t-out="line.remark or ''"/>
+                                    </td>
+                                    <td style="padding: 8px; border: 1px solid #ddd;">
+                                        <t t-out="line.state or ''"/>
+                                    </td>
+                                </tr>
+                            </t>
+                        </tbody>
+                    </table>
+                    <br/>
+                    <p>Thanks and Regards.</p>
+                </div>
+            </field>
+        </record>
+
+        <!-- KYC Rejection Email Template -->
+        <record id="kyc_rejection_email_template" model="mail.template">
+            <field name="name">KYC Rejection Template</field>
+            <field name="model_id" ref="model_res_partner_kyc_approval"/>
+            <field name="subject">KYC is rejected for : {{ object.partner_id.name }}</field>
+            <field name="description">KYC Rejection Email Template</field>
+            <field name="auto_delete" eval="False"/>
+            <field name="body_html" type="html">
+                <div>
+                    <p>Dear Sir/Madam</p>
+                    <p>KYC is Rejected for following:</p>
+                    <table style="width:60%; border-collapse: collapse; font-family: Arial, sans-serif;">
+                        <tr>
+                            <td style="padding: 8px; border: 1px solid #ddd;">
+                                <strong>Name</strong>
+                            </td>
+                            <td style="padding: 8px; border: 1px solid #ddd;">
+                                <t t-out="object.partner_id.name or ''"></t>
+                            </td>
+                        </tr>
+                        <!--<tr>
+                            <td style="width:20%;padding:8px;border:1px solid #ddd;">
+                                <strong>Rejection Date</strong>
+                            </td>
+                            <td style="width:20%;padding:8px;border:1px solid #ddd;">
+                                <t t-out="format_datetime(object.rejection_date)"></t>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="width:20%;padding:8px;border:1px solid #ddd;">
+                                <strong>Rejection Reason</strong>
+                            </td>
+                            <td style="width:20%;padding:8px;border:1px solid #ddd;">
+                                <t t-out="object.rejection_reason or ''"></t>
+                            </td>
+                        </tr>-->
+                    </table>
+                    <table style="width: 60%; border-collapse: collapse; font-family: Arial, sans-serif;">
+                        <thead>
+                            <tr>
+                                <th style="padding: 8px; border: 1px solid #ddd;">Name</th>
+                                <th style="padding: 8px; border: 1px solid #ddd;">Action Date</th>
+                                <th style="padding: 8px; border: 1px solid #ddd;">Remarks</th>
+                                <th style="padding: 8px; border: 1px solid #ddd;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-foreach="object.approval_users_ids" t-as="line">
+                                <tr>
+                                    <td style="padding: 8px; border: 1px solid #ddd;">
+                                        <t t-out="line.user_id.name or ''"/>
+                                    </td>
+                                    <td style="padding: 8px; border: 1px solid #ddd;">
+                                        <t t-out="line.action_date or ''"/>
+                                    </td>
+                                    <td style="padding: 8px; border: 1px solid #ddd;">
+                                        <t t-out="line.remark or ''"/>
+                                    </td>
+                                    <td style="padding: 8px; border: 1px solid #ddd;">
+                                        <t t-out="line.state or ''"/>
+                                    </td>
+                                </tr>
+                            </t>
+                        </tbody>
+                    </table>
+                    <br/>
+                    <p>Thanks and Regards.</p>
+                </div>
+            </field>
+        </record>
+    </data>
+</odoo>
