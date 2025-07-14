@@ -8,8 +8,8 @@
     "license": "AGPL-3",
     'depends': ['contacts','purchase','sale'],
     "data": [
-             # "security/security.xml",
-             # "security/ir.model.access.csv",
+             "security/security.xml",
+             "security/ir.model.access.csv",
              "views/custom_pan_block.xml",
              "views/custom_purchase.xml",
              "views/custom_sale.xml"],

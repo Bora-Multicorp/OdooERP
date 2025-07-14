@@ -161,9 +161,10 @@
                             <field name="comp_google_loc" placeholder="eg. Lat : 22.3511148 Long: 78.6677428"
                                    readonly="state not in ['draft']"/>
                             <field name="incorporation_certificate" widget="many2many_binary"
-                                   options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 5}"
-                                   required="const_business in ['Pvt Ltd Co.', 'LLP']"
-                                   invisible="const_business not in ['Pvt Ltd Co.', 'LLP']"/>
+                               options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 5}"
+                                      readonly="state not in ['draft']"
+                                      required="const_business in ['Pvt Ltd Co.', 'LLP']"
+                                      invisible="const_business not in ['Pvt Ltd Co.', 'LLP']"/>
                             <field name="partner_llp" widget="image"
                                    readonly="state not in ['draft']"
                                    required="const_business in ['Partnership', 'LLP']"
