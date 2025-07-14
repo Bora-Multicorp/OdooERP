@@ -132,12 +132,23 @@ SurveyFormWidget.include({
         var self = this;
         const questionId = $matrixTable.data('name');
 
-        $matrixTable.find('input:text').each(function () {
-            params = self._prepareSubmitAnswerMatrixCustom(params, $matrixTable.data('name'), $(this).data('rowId'), $(this).data("col-id"), this.value);
+        $matrixTable.find("input").each(function () {
+            if (this.type != "file") {
+                if ($(this).data("col-id") == this.value && $(this).prop("checked") == true) {
+                    params = self._prepareSubmitAnswerMatrix(params, $matrixTable.data("name"), $(this).data("rowId"), this.value);
+                } else if ($(this).data("col-id") != this.value) {
+                    params = self._prepareSubmitAnswerMatrixCustom(params, $matrixTable.data("name"), $(this).data("rowId"), $(this).data("col-id"), this.value);
+                }
+            }
         });
-
-        $matrixTable.find('.sh_textarea').each(function () {
-            params = self._prepareSubmitAnswerMatrixCustom(params, $matrixTable.data('name'), $(this).data('rowId'), $(this).data("col-id"), this.value);
+        $matrixTable.find(".sh_textarea").each(function () {
+            if (this.type != "file") {
+                if ($(this).data("col-id") == this.value && $(this).prop("checked") == true) {
+                    params = self._prepareSubmitAnswerMatrix(params, $matrixTable.data("name"), $(this).data("rowId"), this.value);
+                } else if ($(this).data("col-id") != this.value) {
+                    params = self._prepareSubmitAnswerMatrixCustom(params, $matrixTable.data("name"), $(this).data("rowId"), $(this).data("col-id"), this.value);
+                }
+            }
         });
 
         $matrixTable.find(".sh_m2o").each(function () {
@@ -158,6 +169,33 @@ SurveyFormWidget.include({
         }
 
         params = self._prepareSubmitComment(params, $matrixTable.closest(".js_question-wrapper"), $matrixTable.data("name"), true);
+        return params;
+    },
+
+     /**
+     * Will automatically focus on the first input to allow the user to complete directly the survey,
+     * without having to manually get the focus (only if the input has the right type - can write something inside -)
+     */
+    _focusOnFirstInput: function () {
+        this._super.apply(this, arguments);
+
+        if (this.$("input[type='range']").length) {
+            this.$("input[type='range']").trigger('input')
+        }
+    },
+
+    _prepareSubmitAnswerMatrix: function (params, questionId, rowId, colId, isComment) {
+        var value = questionId in params ? params[questionId] : {};
+        if (isComment) {
+            value["comment"] = colId;
+        } else {
+            if (rowId in value) {
+                value[rowId].push(colId);
+            } else {
+                value[rowId] = [colId];
+            }
+        }
+        params[questionId] = value;
         return params;
     },
 
