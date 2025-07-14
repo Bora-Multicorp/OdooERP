@@ -123,9 +123,9 @@
                             <field name="business_trade_name"/>
                             <!--<field name="const_business"/>-->
                             <!--<field name="no_partner_director"/>-->
-                            <field name="director_name"/>
+                            <!--<field name="director_name"/>
                             <field name="director_phone"/>
-                            <field name="director_email"/>
+                            <field name="director_email"/>-->
                             <field name="deadline"/>
                             <field name="state"/>
                         </list>
@@ -223,7 +223,7 @@
                                            options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 5}"
                                            required="const_business in ['Partnership', 'Pvt Ltd Co.', 'LLP']"
                                            invisible="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
-                                    <field name="aadhaar_pan_link"/>
+                                    <field name="aadhaar_pan_link" widget="radio" options="{'horizontal': true}"/>
                                     <field name="gst_no" placeholder="Your Answer" widget="upper_case"/>
                                     <field name="udyam_number" placeholder="Your Answer" widget="upper_case"/>
                                     <field name="gst_certificate" widget="many2many_binary"
