@@ -144,6 +144,12 @@ class SurveyUserInput(models.Model):
                         'business_pincode': row.get('Pincode'),
                         'business_phone': row.get('Contact Number'),
                         'business_email': row.get('Email'),
+                        'business_state_id': self.env['res.country.state'].search(
+                            [('name', '=', row.get('State'))], limit=1
+                        ).id or False,
+                        'business_country_id': self.env['res.country'].search(
+                            [('name', '=', row.get('Country'))], limit=1
+                        ).id or False,
                     }) for row in row_data_map.values()]
 
         if values:

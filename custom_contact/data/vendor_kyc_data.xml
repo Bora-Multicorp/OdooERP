@@ -133,10 +133,17 @@
         </record>
         <record model="survey.question.answer" id="matrix_address_detail_kyc_survey_col6">
             <field name="question_id" ref="matrix_address_detail_kyc_survey"/>
-            <field name="sequence">5</field>
+            <field name="sequence">6</field>
             <field name="value">State</field>
             <field name="sh_value_type">que_sh_many2one</field>
             <field name="que_sh_many2one_model_id" ref="base.model_res_country_state"/>
+        </record>
+        <record model="survey.question.answer" id="matrix_address_detail_kyc_survey_col7">
+            <field name="question_id" ref="matrix_address_detail_kyc_survey"/>
+            <field name="sequence">7</field>
+            <field name="value">Country</field>
+            <field name="sh_value_type">que_sh_many2one</field>
+            <field name="que_sh_many2one_model_id" ref="base.model_res_country"/>
         </record>
         <record model="survey.question.answer" id="matrix_address_detail_kyc_survey_row1">
             <field name="matrix_question_id" ref="matrix_address_detail_kyc_survey"/>
@@ -542,6 +549,12 @@
             <field name="sequence">1</field>
             <field name="value">yes</field>
         </record>
+       <record model="survey.question.answer" id="aadhaar_pan_link_kyc_survey_sug2">
+            <field name="question_id" ref="aadhaar_pan_link_kyc_survey"/>
+            <field name="sequence">2</field>
+            <field name="value">no</field>
+        </record>
+
         <!-- GST Number -->
         <record model="survey.question" id="gst_no_kyc_survey">
             <field name="title">GST Number</field>
@@ -639,8 +652,10 @@
             <field name="question_type">char_box</field>
             <field name="question_placeholder">eg. Lat : 22.3511148 Long: 78.6677428</field>
             <field name="constr_mandatory">False</field>
-            <field name="triggering_answer_ids"
-                   eval="[Command.link(ref('business_constitution_kyc_survey_sug2')), Command.link(ref('business_constitution_kyc_survey_sug3')),Command.link(ref('business_constitution_kyc_survey_sug4'))]"/>
+            <!--<field name="triggering_answer_ids"
+                   eval="[Command.link(ref('business_constitution_kyc_survey_sug2')),
+                   Command.link(ref('business_constitution_kyc_survey_sug3')),
+                   Command.link(ref('business_constitution_kyc_survey_sug4'))]"/>-->
         </record>
         <!-- Incorporation Certificate -->
         <record model="survey.question" id="incorporation_certificate_kyc_survey">

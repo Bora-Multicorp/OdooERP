@@ -107,6 +107,34 @@ class VendorKycWizard(models.TransientModel):
                     "(e.g., UDYAM-MH-12-1234567)."
                 ) % rec.udyam_number)
 
+    @api.constrains('gst_no')
+    def _check_gst_no_format(self):
+        gst_pattern = re.compile(r'^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$')
+        for rec in self:
+            if rec.gst_no and not gst_pattern.match(rec.gst_no.upper()):
+                raise ValidationError(_(
+                    "Invalid GST Number: '%s'. It must follow the 15-character format (e.g., 27ABCDE1234F1Z5)."
+                ) % rec.gst_no)
+
+    @api.constrains('comp_google_loc')
+    def _check_lat_long_format(self):
+        pattern = re.compile(r'Lat\s*:\s*(-?\d+(\.\d+)?)[,\s]+Long\s*:\s*(-?\d+(\.\d+)?)', re.IGNORECASE)
+        for rec in self:
+            if rec.comp_google_loc:
+                match = pattern.search(rec.comp_google_loc.strip())
+                if not match:
+                    raise ValidationError(_(
+                        "Invalid format for Google Location.\nPlease use the format:\nLat : <value> Long: <value>\n"
+                        "Example: Lat : 22.3511148 Long: 78.6677428"
+                    ))
+                lat = float(match.group(1))
+                lon = float(match.group(3))
+                if not (-90 <= lat <= 90 and -180 <= lon <= 180):
+                    raise ValidationError(_(
+                        "Latitude must be between -90 and 90.\nLongitude must be between -180 and 180.\n"
+                        "Your input: Lat = %s, Long = %s"
+                    ) % (lat, lon))
+
     @api.constrains('cin_no')
     def _check_cin_format(self):
         pattern = re.compile(r'^([LU])\d{5}[A-Z]{2}\d{4}[A-Z]{3}\d{6}$')
@@ -138,9 +166,10 @@ class VendorKycWizard(models.TransientModel):
     director_email = fields.Char(string="Email Address")
     aadhaar_card = fields.Binary(string="Aadhaar Card")
     pan_card = fields.Binary(string="PAN Card")
-    aadhaar_pan_link = fields.Boolean('Aadhar and PAN card linking?')
+    aadhaar_pan_link = fields.Selection([('yes','Yes'),('no','No')],string='Aadhar and PAN card linking?', required=True)
     gst_no = fields.Char(string="GST Number", required=True)
     udyam_number = fields.Char(string="Udyam Certificate Number", required=True)
+    license_registered = fields.Char(string="Any licenses registered (As per Local/State Government requirements)")
     gst_certificate = fields.Many2many('ir.attachment', 'vendor_kyc_gst_cert_rel', 'wizard_id', 'attachment_id',
                                        string="GST Certificate(Latest)", required=True)
 
@@ -228,6 +257,41 @@ class VendorKycWizard(models.TransientModel):
 
             return values
 
+    @api.onchange('const_business')
+    def _onchange_const_business_clear_fields(self):
+        self.other_business = False
+        self.director_name = False
+        self.director_phone = False
+        self.director_email = False
+        self.aadhaar_card = False
+        self.pan_card = False
+        self.aadhaar_pan_link = False
+        self.gst_no = False
+        self.license_registered = False
+        self.udyam_number = False
+        self.no_partner_director = False
+        self.pan_no = False
+        self.comp_google_loc = False
+        self.partner_llp = False
+        self.cin_no = False
+        self.gst_return_duration = False
+
+        # Clear binary/many2many fields
+        self.moa_aoa = [(5, 0, 0)]
+        self.electricity_bill = [(5, 0, 0)]
+        self.pan_card_document = [(5, 0, 0)]
+        self.incorporation_certificate = [(5, 0, 0)]
+        self.gst_certificate = [(5, 0, 0)]
+        self.udyam_document = [(5, 0, 0)]
+        self.shop_act_document = [(5, 0, 0)]
+        self.shop_photos = [(5, 0, 0)]
+        self.shop_videos = [(5, 0, 0)]
+
+        # Clear One2many lines
+        self.directors_detail = [(5, 0, 0)]
+        self.bank_detail = [(5, 0, 0)]
+        self.address_detail = [(5, 0, 0)]
+
     def action_vendor_kyc_done(self):
         self.ensure_one()
 
@@ -285,6 +349,7 @@ class VendorKycWizard(models.TransientModel):
                 'business_email': 'business_email',
                 'business_state_id': 'business_state_id',
                 'business_country_id': 'business_country_id',
+
             }
         )
 
@@ -305,6 +370,7 @@ class VendorKycWizard(models.TransientModel):
             'aadhaar_card': self.aadhaar_card,
             'pan_card': self.pan_card,
             'gst_no': self.gst_no,
+            'license_registered': self.license_registered,
             'aadhaar_pan_link': self.aadhaar_pan_link,
             'udyam_number': self.udyam_number,
             'no_partner_director': self.no_partner_director,
@@ -360,6 +426,7 @@ class VendorKycWizard(models.TransientModel):
         self.partner_id.write({
             'email': self.email,
             'vat': self.gst_no,
+            'l10n_in_pan': self.pan_no,
             'is_kyc': True,
             'rejection_date': False,
             'rejection_reason': False,
@@ -397,6 +464,26 @@ class BankDetail(models.TransientModel):
     bank_address = fields.Char(string="Bank Address", required=True)
     bank_cheque_attachments = fields.Many2many('ir.attachment', 'wizard_bank_detail_cheque_rel', 'kyc_wizard_id',
                                                'attachment_id', string="Cancelled Cheques", required=True)
+
+    @api.constrains('account_no', 'ifsc_code')
+    def _check_account_and_ifsc(self):
+        account_pattern = re.compile(r'^\d{9,18}$')  # Only digits, 9 to 18 characters
+        ifsc_pattern = re.compile(r'^[A-Z]{4}0[0-9A-Z]{6}$')  # Standard IFSC format
+
+        for rec in self:
+            if not account_pattern.fullmatch(rec.account_no or ''):
+                raise ValidationError(_(
+                    "Invalid Bank Account Number:\n"
+                    "→ Must be 9 to 18 digits only.\n"
+                    "→ You entered: %s"
+                ) % (rec.account_no or ''))
+
+            if not ifsc_pattern.fullmatch((rec.ifsc_code or '').upper()):
+                raise ValidationError(_(
+                    "Invalid IFSC Code:\n"
+                    "→ Must follow format: 4 letters, 0, then 6 digits (e.g., SBIN0001234)\n"
+                    "→ You entered: %s"
+                ) % (rec.ifsc_code or ''))
 
 
 ##### Principal Place of Business

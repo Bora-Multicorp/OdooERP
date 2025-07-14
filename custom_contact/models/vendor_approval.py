@@ -74,8 +74,9 @@ class ContactKYCApproval(models.Model):
     director_email = fields.Char(string="Email Address")
     aadhaar_card = fields.Binary(string="Aadhaar Card")
     pan_card = fields.Binary(string="PAN Card (Proprietor)")
-    aadhaar_pan_link = fields.Boolean('Aadhar and PAN card linking?')
+    aadhaar_pan_link = fields.Selection([('yes','Yes'),('no','No')],string='Aadhar and PAN card linking?',required=True)
     gst_no = fields.Char(string="GST Number")
+    license_registered = fields.Char(string="Any licenses registered (As per Local/State Government requirements)")
     udyam_number = fields.Char(string="Udyam Certificate Number")
     gst_certificate = fields.Many2many('ir.attachment', 'vendor_kyc_gst_cert_rels', 'partner_id', 'attachment_id',
                                        string="Company GST Certificate", required=False)
@@ -87,7 +88,7 @@ class ContactKYCApproval(models.Model):
                                          string="PAN Card Document(Company)")
 
     udyam_document = fields.Many2many('ir.attachment', 'vendor_kyc_shop_documents_rels', 'partner_id', 'attachment_id',
-                                      string="Shop Act documents / Udyam Documents", required=False)
+                                      string="Udyam Documents", required=False)
 
     gst_return_duration = fields.Selection([('Monthly', 'Monthly'), ('Quarterly', 'Quarterly')],
                                            required=False, string="GST Return duration")
@@ -112,7 +113,8 @@ class ContactKYCApproval(models.Model):
     comp_google_loc = fields.Char(string="Google Location of Shop", required=False)
     partner_llp = fields.Binary(string="Partnership Deed or LLP Deed", required=False)
     moa_aoa = fields.Many2many('ir.attachment', 'vendor_kyc_moa_aoa_rels', 'partner_id', 'attachment_id',
-                               string="MOA or AOA ", required=False)
+                               string="MOA or AOA")
+
     cin_no = fields.Char(string="CIN number", required=False)
     electricity_bill = fields.Many2many('ir.attachment', 'vendor_kyc_electricity_bill_rels', 'partner_id',
                                         'attachment_id',
