@@ -166,7 +166,7 @@ class VendorKycWizard(models.TransientModel):
     director_email = fields.Char(string="Email Address")
     aadhaar_card = fields.Binary(string="Aadhaar Card")
     pan_card = fields.Binary(string="PAN Card")
-    aadhaar_pan_link = fields.Boolean('Aadhar and PAN card linking?', required=True)
+    aadhaar_pan_link = fields.Boolean('Aadhar and PAN card linking?')
     gst_no = fields.Char(string="GST Number", required=True)
     udyam_number = fields.Char(string="Udyam Certificate Number", required=True)
     license_registered = fields.Char(string="Any licenses registered (As per Local/State Government requirements)")
@@ -463,6 +463,26 @@ class BankDetail(models.TransientModel):
     bank_address = fields.Char(string="Bank Address", required=True)
     bank_cheque_attachments = fields.Many2many('ir.attachment', 'wizard_bank_detail_cheque_rel', 'kyc_wizard_id',
                                                'attachment_id', string="Cancelled Cheques", required=True)
+
+    @api.constrains('account_no', 'ifsc_code')
+    def _check_account_and_ifsc(self):
+        account_pattern = re.compile(r'^\d{9,18}$')  # Only digits, 9 to 18 characters
+        ifsc_pattern = re.compile(r'^[A-Z]{4}0[0-9A-Z]{6}$')  # Standard IFSC format
+
+        for rec in self:
+            if not account_pattern.fullmatch(rec.account_no or ''):
+                raise ValidationError(_(
+                    "Invalid Bank Account Number:\n"
+                    "→ Must be 9 to 18 digits only.\n"
+                    "→ You entered: %s"
+                ) % (rec.account_no or ''))
+
+            if not ifsc_pattern.fullmatch((rec.ifsc_code or '').upper()):
+                raise ValidationError(_(
+                    "Invalid IFSC Code:\n"
+                    "→ Must follow format: 4 letters, 0, then 6 digits (e.g., SBIN0001234)\n"
+                    "→ You entered: %s"
+                ) % (rec.ifsc_code or ''))
 
 
 ##### Principal Place of Business
