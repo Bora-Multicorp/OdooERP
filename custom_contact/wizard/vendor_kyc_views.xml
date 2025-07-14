@@ -89,8 +89,9 @@
                                options="{'accepted_file_extensions': 'image/*', 'number_of_files': 10}"/>
                         <field name="shop_videos" widget="many2many_binary"
                                options="{'accepted_file_extensions': 'video/*', 'number_of_files': 10}"/>
-                        <field name="comp_google_loc" placeholder="Your Answer"/>
-                        <field name="partner_llp" required="const_business in ['Partnership', 'LLP']" invisible="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
+                        <field name="comp_google_loc" placeholder="eg. Lat : 22.3511148 Long: 78.6677428"/>
+                        <field name="partner_llp" widget="image"
+                               required="const_business in ['Partnership', 'LLP']" invisible="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
                         <field name="moa_aoa" widget="many2many_binary"
                                options="{'accepted_file_extensions': 'video/*', 'number_of_files': 10}" required="const_business in ['Pvt Ltd Co.']" invisible="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
                         <field name="cin_no" placeholder="Your Answer" widget="upper_case" invisible="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>

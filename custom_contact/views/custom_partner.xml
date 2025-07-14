@@ -106,7 +106,7 @@
                 <field name="is_kyc" readonly="1"/>
                 <field name="is_approved" readonly="1" invisible="not is_approved"/>
                 <field name="approval_date" readonly="1" invisible="not approval_date"/>
-                <field name="deadline"/>
+                <field name="deadline" readonly="1" invisible="not deadline"/>
                 <field name="is_rejected" readonly="1" invisible="not is_rejected"/>
                 <field name="rejection_date" readonly="1" invisible="not rejection_date"/>
                 <field name="rejection_reason" readonly="1" invisible="not rejection_reason"/>
@@ -237,9 +237,9 @@
                                            options="{'accepted_file_extensions': 'image/*', 'number_of_files': 10}"/>
                                     <field name="shop_videos" widget="many2many_binary"
                                            options="{'accepted_file_extensions': 'video/*', 'number_of_files': 10}"/>
-                                    <field name="comp_google_loc" placeholder="Your Answer"
+                                    <field name="comp_google_loc" placeholder="eg. Lat : 22.3511148 Long: 78.6677428"
                                            invisible="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
-                                    <field name="partner_llp"
+                                    <field name="partner_llp" widget="image"
                                            invisible="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
                                     <field name="moa_aoa" widget="many2many_binary"
                                            options="{'accepted_file_extensions': 'video/*', 'number_of_files': 10}"

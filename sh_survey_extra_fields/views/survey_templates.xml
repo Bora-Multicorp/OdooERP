@@ -14,7 +14,7 @@
 	        <t t-if="question.validation_is_sh_textbox_pattern">
 	            <input
 	                type="text"
-	                class="form-control o_survey_question_text_box bg-transparent text-dark rounded-0 p-0"
+	                class="form-control o_survey_question_text_box bg-transparent text-dark rounded-0 p-0 text-uppercase"
 	                t-attf-pattern="#{question.validation_sh_textbox_pattern}"
 	                t-attf-placeholder="#{question.validation_sh_textbox_placeholder}"
 	                t-att-name="question.id"
@@ -28,7 +28,7 @@
 	        <t t-else="">
 	            <input
 	                t-att-type="'email' if question.validation_email else 'text'"
-	                class="form-control o_survey_question_text_box bg-transparent text-dark rounded-0 p-0"
+	                class="form-control o_survey_question_text_box bg-transparent text-dark rounded-0 p-0 text-uppercase"
 	                t-att-name="question.id"
 	                t-att-value="answer_lines[0].value_char_box if answer_lines else None"
 	                t-att-data-question-type="question.question_type"
@@ -55,7 +55,7 @@
 	<template id="tmpl_sh_email" name="SH email">
 	    <input
 	        type="email"
-	        class="form-control o_survey_question_email_box bg-transparent text-dark rounded-0 p-0"
+	        class="form-control o_survey_question_email_box bg-transparent text-dark rounded-0 p-0 text-uppercase"
 	        t-att-name="question.id"
 	        t-att-value="answer_lines[0].value_ans_sh_email if answer_lines else None"
 	        placeholder="example@domain.com"
@@ -261,7 +261,7 @@
 
     <template id="tmpl_sh_address" name="SH Address">
 	    <div class="form-row js_cls_sh_address_wrapper row">
-	        <div t-if="question.sh_is_show_street" class="form-group col-lg-12 mb-2">
+	        <div t-if="question.sh_is_show_street" class="form-group col-lg-12 mb-2 text-uppercase">
 				<b t-if='question.sh_is_show_street_label' t-field='question.sh_is_show_street_label'></b>
 	            <input type="text" t-att-data-question-type="question.question_type" t-att-name="question.id" class="js_cls_street form-control" />
 	        </div>
@@ -315,7 +315,7 @@ Many2one
 	            t-att-name="question.id" class="js_cls_sh_many2one_select form-control">
 	                <option value="">Select...</option>
 	            </select> -->
-	         <input t-attf-list="m2o_selection_#{question.id}" class='form-control' style="width:100%;"
+	         <input t-attf-list="m2o_selection_#{question.id}" class='form-control text-uppercase' style="width:100%;"
 	            type="text"  t-att-data-question-type="question.question_type"
 				t-att-value="answer_lines[0].suggested_answer_id.value if answer_lines else None"
 	            t-att-data-model_id="question.que_sh_many2one_model_id.id if question.que_sh_many2one_model_id else False"
