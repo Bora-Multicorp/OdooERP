@@ -16,8 +16,8 @@
                 <xpath expr="//form/header" position="inside">
                     <button name="confirm_submit_form" string="Submit for Approval" type="object"
                                 class="oe_highlight"
-                                confirm="Do you want to submit the request?"/>
-                                <!-- invisible="state != 'draft' or is_approved"/> -->
+                                confirm="Do you want to submit the request?"
+                                invisible="state != 'draft' or is_approved"/>
                     <button name="%(approve_request_wizard_action)d" string="Approve" type="action"
                                 invisible="state in ('draft', 'confirmed', 'rejected', 'expired') or assigned_to != uid or is_approved"/>
                     <button name="%(reject_request_wizard_action)d" string="Reject" type="action"
