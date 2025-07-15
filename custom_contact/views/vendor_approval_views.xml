@@ -158,8 +158,8 @@
                             <field name="shop_videos" widget="many2many_binary"
                                    readonly="state not in ['draft']"
                                    options="{'accepted_file_extensions': 'video/*', 'number_of_files': 10}"/>
-                            <field name="comp_google_loc" placeholder="eg. Lat : 22.3511148 Long: 78.6677428"
-                                   readonly="state not in ['draft']"/>
+<!--                            <field name="comp_google_loc" placeholder="eg. Lat : 22.3511148 Long: 78.6677428"-->
+<!--                                   readonly="state not in ['draft']"/>-->
                             <field name="incorporation_certificate" widget="many2many_binary"
                                options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 5}"
                                       readonly="state not in ['draft']"
@@ -169,6 +169,8 @@
                                    readonly="state not in ['draft']"
                                    required="const_business in ['Partnership', 'LLP']"
                                    invisible="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
+                             <field name="comp_google_loc" placeholder="eg. Lat : 22.3511148 Long: 78.6677428"
+                                   readonly="state not in ['draft']"/>
                             <field name="moa_aoa" widget="many2many_binary"
                                    readonly="state not in ['draft']"
                                    options="{'accepted_file_extensions': 'video/*', 'number_of_files': 10}"
