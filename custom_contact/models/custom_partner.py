@@ -97,8 +97,8 @@ class CustomContact(models.Model):
 
     @api.constrains('phone', 'mobile')
     def _check_phone_mobile_number(self):
-        phone_pattern = re.compile(r'^\d{10}$')  # Exactly 10 digits
-        mobile_pattern = re.compile(r'^(\d{10}|\d{12})$')  # Exactly 10 OR 12 digits
+        phone_pattern = re.compile(r'^\d{10}$')  # Phone: exactly 10 digits
+        mobile_pattern = re.compile(r'^(\+?\d{10,12})$')  # Mobile: 10–12 digits, optional +
 
         for rec in self:
             if rec.phone and not phone_pattern.fullmatch(rec.phone):
@@ -108,7 +108,9 @@ class CustomContact(models.Model):
 
             if rec.mobile and not mobile_pattern.fullmatch(rec.mobile):
                 raise ValidationError(_(
-                    "Mobile number must be either 10 or 12 digits.\nInvalid Value: %s"
+                    "Mobile number must be 10 to 12 digits.\n"
+                    "It may start with a '+' for international code (e.g., +91, +44).\n"
+                    "Examples: 9876543210, +919876543210, 441234567890\nInvalid Value: %s"
                 ) % rec.mobile)
 
     @api.model
