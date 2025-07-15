@@ -5,7 +5,7 @@
     'category': 'Uncategorized',
     'version': '0.1',
     # any module necessary for this one to work correctly
-    'depends': ['base', 'product'],
+    'depends': ['base', 'product', 'stock', 'bus'],
     # always loaded
     'data': [
         'security/ir.model.access.csv',
@@ -19,6 +19,12 @@
     'assets': {
         'web.assets_backend': [
             'product_approval/static/src/xml/ribbon.xml',
+            'product_approval/static/src/js/backend_notification.js',
+            # 'product_approval/static/src/xml/backend_notification.xml',
         ],
     },
+    'installable': True,
+    'auto_install': False,
+    'application': False,
+    'license': 'Other proprietary',
 }

@@ -17,6 +17,6 @@
       </field>
     </record>
     <menuitem id="pending_approval_product_menu" name="Product Approval Queue" action="pending_approval_products_list_action"
-            parent="stock.menu_stock_inventory_control" sequence="200" groups="product.group_product_variant"/>
+            parent="stock.menu_stock_inventory_control" sequence="200"/>
   </data>
 </odoo>

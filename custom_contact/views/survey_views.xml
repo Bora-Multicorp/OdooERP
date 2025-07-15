@@ -263,9 +263,9 @@
         </record>
 
         <!-- Vendor Registration Form Response Menu -->
-        <menuitem name="Vendor Registration Form Response" id="menu_vendor_registration_survey_form_response"
+        <!--<menuitem name="Vendor Registration Form Response" id="menu_vendor_registration_survey_form_response"
                   action="vendor_registration_action_survey_user_input"
-                  parent="contacts.menu_contacts" sequence="5"/>
+                  parent="contacts.menu_contacts" sequence="5"/>-->
 
     </data>
 </odoo>

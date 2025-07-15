@@ -37,7 +37,7 @@
         <!--<field name="context">{'module' : 'contact', 'bin_size': False}</field>-->
     </record>
 
-    <!-- Menu item under Contacts > Configuration -->
+    <!-- Menu item under Inventory > Configuration -->
     <menuitem id="menu_product_approval_config"
               name="Product Approval Users"
               parent="stock.menu_stock_config_settings"
