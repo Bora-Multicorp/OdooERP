@@ -9,16 +9,16 @@ class VendorKycWizard(models.TransientModel):
     _name = 'vendor.kyc.wizard'
     _description = 'Vendor KYC Wizard'
 
-    @api.constrains('address_detail')
-    def _check_duplicate_address_emails(self):
+    @api.constrains('directors_detail')
+    def _check_duplicate_directors_detail_emails(self):
         for wizard in self:
             emails = []
-            for line in wizard.address_detail:
-                if line.business_email:
-                    lower_email = line.business_email.lower()
+            for line in wizard.directors_detail:
+                if line.email:
+                    lower_email = line.email.lower()
                     if lower_email in emails:
                         raise ValidationError(
-                            _("Duplicate email address found in Address Details: %s") % line.business_email
+                            _("Duplicate email address found in Directors Details: %s") % line.email
                         )
                     emails.append(lower_email)
 
