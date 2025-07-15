@@ -7,7 +7,12 @@ class ApproveRequestWizard(models.TransientModel):
     _description = 'Approve Request Form'
 
     product_approval_id = fields.Many2one('product.template', string="Approval for Product", domain="[('id', '=', active_id)]")
+
+
     remark = fields.Char('Remark', required=True)
+
+
+
 
     def action_approve_request(self):
         self.ensure_one()

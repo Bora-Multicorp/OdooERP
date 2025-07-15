@@ -8,13 +8,12 @@
                 <xpath expr="//field[@name='company_ids']" position="replace"/>
                 <xpath expr="//field[@name='default_code']" position="replace"/>
                 <xpath expr="//field[@name='barcode']" position="replace"/>
-                <xpath expr="//field[@name='avatax_category_id']" position="replace"/>
+                <!-- <xpath expr="//field[@name='avatax_category_id']" position="replace"/> -->
                 <xpath expr="//field[@name='supplier_taxes_id']" position="replace"/>
                 <xpath expr="//field[@name='categ_id']" position="replace"/>
                 <xpath expr="//field[@name='invoice_policy']" position="replace"/>
                 <xpath expr="//field[@name='lot_valuated']" position="replace"/>
                 <xpath expr="//field[@name='product_tooltip']" position="replace"/>
-                <xpath expr="//field[@name='tracking']" position="replace"/>
                 <xpath expr="//field[@name='type']" position="replace"/>
                 <xpath expr="//field[@name='combo_ids']" position="replace"/>
                 <xpath expr="//label[@for='list_price']" position="replace"/>
@@ -24,9 +23,9 @@
                 <xpath expr="//div[@name='list_price_uom']" position="replace"/>
                 <xpath expr="//div[@name='taxes_div']" position="replace"/>
                 <xpath expr="//div[@name='standard_price_uom']" position="replace"/>
-                <!-- <xpath expr="//div[@class='o_row w-100']" position="replace"/> -->
                 <xpath expr="//div[hasclass('o_row') and hasclass('w-100')]" position="inside"/>
                 <xpath expr="//button[@name='%(stock.action_product_replenish)d']" position="replace"/>
+                <xpath expr="//div[contains(@class, 'o_row') and .//field[@name='is_storable']]" position="replace"/>
             </field>
         </record>
         <record id="view_product_template_form_inherit2" model="ir.ui.view">
@@ -35,7 +34,8 @@
             <field name="inherit_id" ref="product.product_template_only_form_view"/>
             <field name="arch" type="xml">
                 <field name="name" position="attributes">
-                    <attribute name="placeholder">e.g. iPhone 14 Pro Max</attribute>
+                    <attribute name="placeholder">e.g. IPHONE 16</attribute>
+                    <attribute name="widget">upper_case</attribute>
                 </field>
                 <xpath expr="//group[@name='group_general']" position="attributes">
                     <attribute name="string">Product Configuration</attribute>
