@@ -36,7 +36,7 @@
                             <field name="email" placeholder="Your Answer" readonly="state not in ('draft')"/>
                             <field name="point_of_contact" placeholder="Your Answer" widget="upper_case"
                                    readonly="state not in ('draft')"/>
-                            <field name="poc_user" widget="upper_case"
+                            <field name="poc_user"
                                    options="{'no_open': True, 'no_create': True, 'no_create_edit': True}"
                                    readonly="state not in ('draft')"/>
                         </group>
