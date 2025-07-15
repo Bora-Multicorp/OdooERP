@@ -17,10 +17,10 @@ class CustomContact(models.Model):
     @api.constrains('city', 'zip')
     def _check_city_zip_format(self):
         for rec in self:
-            # Validate City (optional: only letters and spaces)
-            if rec.city and not re.fullmatch(r"[A-Za-z\s\-]+", rec.city):
+            # Validate City: only letters and spaces
+            if rec.city and not re.fullmatch(r"[A-Za-z\s]+", rec.city):
                 raise ValidationError(
-                    _("City must contain only letters, spaces, or hyphens.\nInvalid Value: %s") % rec.city)
+                    _("City must contain only letters and spaces.\nInvalid Value: %s") % rec.city)
 
             # Validate Zip (Pincode): exactly 6 digits
             if rec.zip and not re.fullmatch(r"\d{6}", rec.zip):
@@ -98,14 +98,17 @@ class CustomContact(models.Model):
     @api.constrains('phone', 'mobile')
     def _check_phone_mobile_number(self):
         phone_pattern = re.compile(r'^\d{10}$')  # Exactly 10 digits
+        mobile_pattern = re.compile(r'^(\d{10}|\d{12})$')  # Exactly 10 OR 12 digits
+
         for rec in self:
-            if rec.phone and not phone_pattern.match(rec.phone):
+            if rec.phone and not phone_pattern.fullmatch(rec.phone):
                 raise ValidationError(_(
                     "Phone number must be exactly 10 digits.\nInvalid Value: %s"
                 ) % rec.phone)
-            if rec.mobile and not phone_pattern.match(rec.mobile):
+
+            if rec.mobile and not mobile_pattern.fullmatch(rec.mobile):
                 raise ValidationError(_(
-                    "Mobile number must be exactly 10 digits.\nInvalid Value: %s"
+                    "Mobile number must be either 10 or 12 digits.\nInvalid Value: %s"
                 ) % rec.mobile)
 
     @api.model
