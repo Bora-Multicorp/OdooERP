@@ -1,9 +1,0 @@
-<odoo>
-    <data>
-        <template id="assets_backend_inherit_stock_barcode" inherit_id="web.assets_backend">
-            <xpath expr="." position="inside">
-                <script type="text/javascript" src="/your_module_name/static/src/js/stock_barcode_extension.js"/>
-            </xpath>
-        </template>
-    </data>
-</odoo>

@@ -7,10 +7,10 @@
             <form string="Reject Request Form">
                 <group>
                     <field name="product_approval_id" readonly="1"/>
-                    <field name="remark"/>
+                    <field name="remark"  placeholder="Enter remarks for rejection"/>
                 </group>
                 <footer>
-                    <button name="action_reject_request" string="Submit" type="object" class="btn-primary"/>
+                    <button name="action_reject_request" string="Reject" type="object" class="btn-primary"/>
                     <button string="Cancel" class="btn-secondary" special="cancel" data-hotkey="x"/>
                 </footer>
             </form>

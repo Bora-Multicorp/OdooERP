@@ -18,29 +18,35 @@
     'version': '0.1',
 
     # any module necessary for this one to work correctly
-    'depends': ['base', 'product', 'stock',  'product_multi_company', 'product_multi_images', 'product_dimension', 'product_approval'],
-    'assets': {
-        'web.assets_backend': [
-            '/bora_product_master/static/src/js/stock_barcode_extension.js',
-        ],
-    },
+    'depends': ['base', 'product', 'stock', 'purchase', 'sale_management', 'product_multi_company', 'product_multi_images', 'product_dimension', 'product_approval', 'case_sensitive_widget', 'stock_barcode'],
 
     # always loaded
     'data': [
         'data/product_type.xml',
         'data/product_sku_sequance.xml',
+        'data/inventory_traceability_config.xml',
         'views/stock_move_inherit_view.xml',
         'views/product_template_inherit_view.xml',
         'views/stock_quant_inherit_view.xml',
         'views/imei_search.xml',
         'views/product_product_inherit_view.xml',
         'views/sku_internal_ref_search.xml',
+        'wizards/activation_status_wizard_view.xml',
         'security/ir.model.access.csv',
+        # 'static/src/xml/assets.xml',
         # 'views/barcode_loader.xml',
         # 'security/ir_rules.xml'
         # 'views/templates.xml',
-        'views/assets.xml',
     ],
+
+    'assets': {
+        'web.assets_backend': [
+            '/bora_product_master/static/sample/IMEI_ACTIVATION_SAMPLE_REPORT.xlsx',
+            '/bora_product_master/static/src/js/barcode_focus_change.js',
+            # '/bora_product_master/static/sec/js/inventory_dashboard_button.js'
+        ],
+    },
+
     # only loaded in demonstration mode
     # 'demo': [
     #     'demo/demo.xml',

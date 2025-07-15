@@ -46,7 +46,7 @@ class ProductTemplateInherit(models.Model):
         ('none', 'By Quantity')],
         string="Tracking", required=True, default='serial', # Not having a default value here causes issues when migrating.
         compute='_compute_tracking', store=True, readonly=False, precompute=True,
-        help="Ensure the traceability of a storable product in your warehouse.")
+        help="Ensure the traceability of a storable product in your warehouse.")    
 
 
     @api.depends('is_storable')

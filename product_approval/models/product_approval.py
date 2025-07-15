@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 
-from odoo import api, fields, models
+from odoo import api, fields, models, _
 from dateutil.relativedelta import relativedelta
-from odoo.exceptions import UserError
+from odoo.exceptions import UserError, ValidationError 
+from lxml import etree
 
 
 class ProductApproval(models.Model): 
     _inherit = 'product.template'
     _description = 'Product approvals'
-    _rec_name = 'product_id' 
 
     is_hidden = fields.Boolean(default=False) 
 
@@ -25,19 +25,21 @@ class ProductApproval(models.Model):
                 approval_user_vals.append((0, 0, {
                     'sequence': approval.sequence,
                     'user_id': approval.user_id.id,
-                    # 'job_id': user.employee_id.job_title or '',  # fallback to empty if not set
                 }))
             defaults['approval_users_ids'] = approval_user_vals
         return defaults
 
     product_id = fields.Many2one('product.template', string="Product")
 
+
     state = fields.Selection([
         ('draft', 'Draft'),
         ('pending', 'Pending Approval'),
         ('confirmed', 'Confirmed'),
         ('rejected', 'Rejected')
-    ], default='draft', string='Status', tracking=True)    
+    ], default='draft', string='Status', tracking=True)
+
+        
 
     approval_users_ids = fields.One2many('product.approval.users', 'product_approval_id', 'Approval Authorities',
                                          help='Approval Authority Details')
@@ -62,15 +64,6 @@ class ProductApproval(models.Model):
             else:
                 record.existing_user_ids = [(6, 0, [])]
 
-    # @api.depends('state')
-    # def _compute_statusbar_state(self):
-    #     for rec in self:
-    #         if rec.state == 'rejected':
-    #             rec.statusbar_state = 'rejected'
-    #         elif rec.state == 'confirmed':
-    #             rec.statusbar_state = 'confirmed'
-    #         else:
-    #             rec.statusbar_state = rec.state
 
     def action_unarchive(self):
         for record in self:
@@ -79,6 +72,9 @@ class ProductApproval(models.Model):
         return super(ProductApproval, self).action_unarchive()
 
     def confirm_submit_form(self):
+        if not self.approval_users_ids:
+            raise ValidationError(_("Please Add Approval Authority before Submit Request."))
+
         if self.id:
             self.write({'state': 'pending'})
             self._update_assigned_to()
@@ -108,23 +104,43 @@ class ProductApproval(models.Model):
         for vals in vals_list:
             vals['is_hidden'] = True
             vals['active'] = False  # Archive product by default
+
         return super(ProductApproval, self).create(vals_list)
 
-    def write(self, vals):
-        res = super().write(vals)
-        if vals.get('state') == 'confirmed':
-            for record in self:
-                record.write({'active': True})
-                # Send email to all approval users
-                approval_template = self.env.ref('product_approval_email_template', raise_if_not_found=False)
-                if approval_template and record.existing_user_ids:
-                    email_list = [user.email_formatted for user in record.existing_user_ids if user.email]
-                    if email_list:
-                        approval_template.send_mail(record.id, force_send=True,
-                        email_values={'email_from': self.env.user.email_formatted,
-                                                  'email_to': ','.join(email_list), })
+        # res = super(ProductApproval, self).create(vals_list)
+        # if res.product_approval_id:
+        #     res.product_approval_id._update_state_based_on_approvals()
+        # return res 
 
-        return res
+    def write(self, vals):
+        if self.state != 'draft': 
+            print("---------- in Draft -----------")
+
+            channel = (self._cr.dbname, 'res.partner', self.env.uid)  # User-specific channel
+            notification_type = 'my_custom_notification'
+            message = {
+                'product_id': self.id,
+                'product_name': self.name,
+                'status_changed_to': 'Approved',
+                'user': self.env.user.name,
+            }
+
+            self.env['bus.bus']._sendone(channel, notification_type, message)
+            return
+        else:
+            res = super().write(vals)
+            if vals.get('state') == 'confirmed':
+                for record in self:
+                    record.write({'active': True})
+                    # Send email to all approval users
+                    approval_template = self.env.ref('product_approval_email_template', raise_if_not_found=False)
+                    if approval_template and record.existing_user_ids:
+                        email_list = [user.email_formatted for user in record.existing_user_ids if user.email]
+                        if email_list:
+                            approval_template.send_mail(record.id, force_send=True,
+                            email_values={'email_from': self.env.user.email_formatted,
+                                                    'email_to': ','.join(email_list), })
+            return res
 
 class ProductApprovalUsers(models.Model):
     _name = "product.approval.users"
@@ -137,7 +153,7 @@ class ProductApprovalUsers(models.Model):
     job_id = fields.Char(string="Designation", readonly=True)
     user_id = fields.Many2one('res.users', string='User', required=True)
     state = fields.Selection([('approve', 'Approved'), ('reject', 'Rejected')], string="Action")
-    remark = fields.Text('Remarks', tracking=True)
+    remark = fields.Char('Remarks', tracking=True)
     action_date = fields.Datetime(string="Action Date")
 
     def write(self, vals):
@@ -146,10 +162,20 @@ class ProductApprovalUsers(models.Model):
             if rec.product_approval_id:
                 rec.product_approval_id._update_state_based_on_approvals()
         return res
+    
+    @api.model_create_multi
+    def create(self, vals_list):
+        res_list = super(ProductApprovalUsers, self).create(vals_list)
+        for res in res_list:
+            if res.product_approval_id:
+                res.product_approval_id._update_state_based_on_approvals()
+        return res_list
 
-    @api.model
-    def create(self, vals):
-        res = super().create(vals)
-        if res.product_approval_id:
-            res.product_approval_id._update_state_based_on_approvals()
-        return res 
+
+
+    # @api.model
+    # def create(self, vals):
+    #     res = super().create(vals)
+    #     if res.product_approval_id:
+    #         res.product_approval_id._update_state_based_on_approvals()
+    #     return res 

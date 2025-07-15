@@ -6,7 +6,7 @@ class RejectRequestWizard(models.TransientModel):
     _name = 'reject.request.wizard'
     _description = 'Reject Request Form'
 
-    product_approval_id = fields.Many2one('product.template', string="Approval for Product",
+    product_approval_id = fields.Many2one('product.template', string="Rejection of Product",
                                       domain="[('id', '=', active_id)]")
     remark = fields.Char('Remark', required=True)
 

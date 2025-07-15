@@ -16,44 +16,94 @@ class ProductApprovalConfig(models.Model):
         ('unique_sequence', 'unique(sequence)', 'Each sequence must be unique.'),
     ]
 
-    @api.model
-    def create(self, vals):
-        if not vals.get('sequence'):
-            seq_str = self.env['ir.sequence'].next_by_code('product.approval.config')
-            try:
-                vals['sequence'] = int(seq_str)
-            except (ValueError, TypeError):
-                raise ValidationError(_("Failed to generate a valid sequence number."))
-
-        if int(vals['sequence']) <= 0:
-            raise ValidationError(_("Sequence must be a positive number."))
-
-        if vals.get('user_id') and self.search([('user_id', '=', vals['user_id'])]):
+    def _validate_unique_user(self, user_id, exclude_ids=None):
+        domain = [('user_id', '=', user_id)]
+        if exclude_ids:
+            domain.append(('id', 'not in', exclude_ids))
+        if self.search_count(domain):
             raise ValidationError(_("This user is already added to the approval list."))
 
-        if self.search([('sequence', '=', vals['sequence'])]):
+    def _validate_unique_sequence(self, sequence, exclude_ids=None):
+        domain = [('sequence', '=', sequence)]
+        if exclude_ids:
+            domain.append(('id', 'not in', exclude_ids))
+        if self.search_count(domain):
             raise ValidationError(_("This sequence number is already used. Please choose a different one."))
 
-        return super().create(vals)
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        for vals in vals_list:
+            if not vals.get('sequence'):
+                seq_str = self.env['ir.sequence'].next_by_code('product.approval.config')
+                try:
+                    vals['sequence'] = int(seq_str)
+                except (ValueError, TypeError):
+                    raise ValidationError(_("Failed to generate a valid sequence number."))
+
+            # Validate sequence and user_id
+            if vals['sequence'] <= 0:
+                raise ValidationError(_("Sequence must be a positive number."))
+
+            self._validate_unique_user(vals.get('user_id'))
+            self._validate_unique_sequence(vals.get('sequence'))
+
+
+        res_list = super(ProductApprovalConfig, self).create(vals_list)
+        for res in res_list:
+            res._update_draft_product_approvals()
+        return res_list
+
+
+    # @api.model
+    # def create(self, vals):
+    #     if not vals.get('sequence'):
+    #         seq_str = self.env['ir.sequence'].next_by_code('product.approval.config')
+    #         try:
+    #             vals['sequence'] = int(seq_str)
+    #         except (ValueError, TypeError):
+    #             raise ValidationError(_("Failed to generate a valid sequence number."))
+
+    #     # Validate sequence and user_id
+    #     if vals['sequence'] <= 0:
+    #         raise ValidationError(_("Sequence must be a positive number."))
+
+    #     self._validate_unique_user(vals.get('user_id'))
+    #     self._validate_unique_sequence(vals.get('sequence'))
+
+    #     res = super().create(vals)
+    #     res._update_draft_product_approvals()
+    #     return res
 
     def write(self, vals):
-        if vals.get('sequence') in [0]:
-            raise ValidationError(_("Sequence must be a non-zero positive number."))
+        for rec in self:
+            if 'sequence' in vals:
+                if vals['sequence'] <= 0:
+                    raise ValidationError(_("Sequence must be a positive number."))
+                rec._validate_unique_sequence(vals['sequence'], exclude_ids=rec.ids)
 
-        if vals.get('user_id'):
-            existing_user = self.search([
-                ('user_id', '=', vals['user_id']),
-                ('id', '!=', self.id)
-            ])
-            if existing_user:
-                raise ValidationError(_("This user is already added to the approval list."))
+            if 'user_id' in vals:
+                rec._validate_unique_user(vals['user_id'], exclude_ids=rec.ids)
 
-        if vals.get('sequence'):
-            existing_seq = self.search([
-                ('sequence', '=', vals['sequence']),
-                ('id', '!=', self.id)
-            ])
-            if existing_seq:
-                raise ValidationError(_("This sequence number is already used. Please choose a different one."))
+        res = super().write(vals)
+        self._update_draft_product_approvals()
+        return res
 
-        return super(ProductApprovalConfig, self).write(vals)
+    def unlink(self):
+        res = super().unlink()
+        self._update_draft_product_approvals()
+        return res
+
+    def _update_draft_product_approvals(self):
+        """Update approval_users_ids on draft product records."""
+        product_approvals = self.env['product.template'].search([('state', '=', 'draft')])
+        config_users = self.search([]).sorted(key=lambda r: r.sequence)
+
+        for product in product_approvals:
+            approval_lines = [(5, 0, 0)]  # Clear existing first
+            for config in config_users:
+                approval_lines.append((0, 0, {
+                    'sequence': config.sequence,
+                    'user_id': config.user_id.id,
+                }))
+            product.write({'approval_users_ids': approval_lines})

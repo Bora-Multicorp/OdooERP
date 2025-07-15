@@ -7,6 +7,9 @@
             <field name="model">product.template</field>
             <field name="inherit_id" ref="product.product_template_only_form_view"/>
             <field name="arch" type="xml">
+                <xpath expr="//button[@name='action_update_quantity_on_hand']" position="attributes">
+                    <attribute name="invisible">state != 'confirmed' or not is_storable</attribute>
+                </xpath>
                 <xpath expr="//div[@name='options']" position="after">
                     <field name="is_hidden" invisible="True"/>
                 </xpath>
@@ -22,13 +25,17 @@
                     <button name="approve_by_manager" string="Approval By Manager" type="object"
                                 class="oe_highlight"
                                 confirm="Do you want to Approve the request?" invisible="1"/>
-                    <field name="state" widget="statusbar"/>
-
-
+                    <field name="state" widget="statusbar" statusbar_visible="draft,pending" invisible="state in ('confirmed', 'rejected')"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,pending,confirmed" invisible="state in ('draft', 'pending', 'rejected')"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,pending,rejected" invisible="state in ('draft', 'pending', 'confirmed')"/>
+                    <!-- <field name="state" widget="statusbar" statusbar_visible="draft,pending,rejected">
+                        <attribute name="invisible">state == 'draft' or 'pending' or 'confirmed'</attribute>
+                    </field> -->
                 </xpath>
                 <xpath expr="//sheet/notebook" position="inside">
                     <page string="Approval Authorities" name="approval_users" invisible="not is_hidden">
                         <field name="product_id" readonly="1"/>
+                        <!-- <field name="name1" invisible="0"/> -->
                         <field name="is_approved" invisible="1"/>
                         <group>
                             <field name="assigned_to"
@@ -64,7 +71,7 @@
             <field name="model">product.template</field>
             <field name="arch" type="xml">
                 <list string="Product Approval" create="false" delete="false">
-                    <field name="product_id" string="Product"/>
+                    <!-- <field name="product_id" string="Product"/> -->
                     <!-- <field name="email"/> -->
                     <field name="assigned_to"/>
                     <field name="create_date"/>

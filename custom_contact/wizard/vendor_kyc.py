@@ -9,6 +9,19 @@ class VendorKycWizard(models.TransientModel):
     _name = 'vendor.kyc.wizard'
     _description = 'Vendor KYC Wizard'
 
+    @api.constrains('address_detail')
+    def _check_duplicate_address_emails(self):
+        for wizard in self:
+            emails = []
+            for line in wizard.address_detail:
+                if line.business_email:
+                    lower_email = line.business_email.lower()
+                    if lower_email in emails:
+                        raise ValidationError(
+                            _("Duplicate email address found in Address Details: %s") % line.business_email
+                        )
+                    emails.append(lower_email)
+
     @api.constrains('director_phone', 'directors_detail', 'address_detail')
     def _check_phone_numbers(self):
         phone_pattern = re.compile(r'^[0-9]{10}$')  # Validates 10-digit numbers
@@ -241,56 +254,53 @@ class VendorKycWizard(models.TransientModel):
                     )
 
     @api.model
-    def default_get(self, fields_list):
-        values = super().default_get(fields_list)
+    def default_get(self, fields):
+        values = super().default_get(fields)
         res_id = self._context.get('active_id')
         res_model = self._context.get('active_model')
         if res_id and res_model:
-            previous_record = self.env[res_model].browse(res_id)
-            if previous_record:
-                values['email'] = previous_record.email
-                # values['street'] = previous_record.street
-                # values['street2'] = previous_record.street2
-                # values['city'] = previous_record.city
-                # values['pincode'] = previous_record.zip
-                # values['mobile'] = previous_record.mobile
+            record = self.env[res_model].browse(res_id)
+            values.update(
+                email=record.email,
+                gst_no=record.vat,
+                pan_no=record.l10n_in_pan,
+            )
+        return values
 
-            return values
-
-    @api.onchange('const_business')
-    def _onchange_const_business_clear_fields(self):
-        self.other_business = False
-        self.director_name = False
-        self.director_phone = False
-        self.director_email = False
-        self.aadhaar_card = False
-        self.pan_card = False
-        self.aadhaar_pan_link = False
-        self.gst_no = False
-        self.license_registered = False
-        self.udyam_number = False
-        self.no_partner_director = False
-        self.pan_no = False
-        self.comp_google_loc = False
-        self.partner_llp = False
-        self.cin_no = False
-        self.gst_return_duration = False
-
-        # Clear binary/many2many fields
-        self.moa_aoa = [(5, 0, 0)]
-        self.electricity_bill = [(5, 0, 0)]
-        self.pan_card_document = [(5, 0, 0)]
-        self.incorporation_certificate = [(5, 0, 0)]
-        self.gst_certificate = [(5, 0, 0)]
-        self.udyam_document = [(5, 0, 0)]
-        self.shop_act_document = [(5, 0, 0)]
-        self.shop_photos = [(5, 0, 0)]
-        self.shop_videos = [(5, 0, 0)]
-
-        # Clear One2many lines
-        self.directors_detail = [(5, 0, 0)]
-        self.bank_detail = [(5, 0, 0)]
-        self.address_detail = [(5, 0, 0)]
+    # @api.onchange('const_business')
+    # def _onchange_const_business_clear_fields(self):
+    #     self.other_business = False
+    #     self.director_name = False
+    #     self.director_phone = False
+    #     self.director_email = False
+    #     self.aadhaar_card = False
+    #     self.pan_card = False
+    #     self.aadhaar_pan_link = False
+    #     self.gst_no = False
+    #     self.license_registered = False
+    #     self.udyam_number = False
+    #     self.no_partner_director = False
+    #     self.pan_no = False
+    #     self.comp_google_loc = False
+    #     self.partner_llp = False
+    #     self.cin_no = False
+    #     self.gst_return_duration = False
+    #
+    #     # Clear binary/many2many fields
+    #     self.moa_aoa = [(5, 0, 0)]
+    #     self.electricity_bill = [(5, 0, 0)]
+    #     self.pan_card_document = [(5, 0, 0)]
+    #     self.incorporation_certificate = [(5, 0, 0)]
+    #     self.gst_certificate = [(5, 0, 0)]
+    #     self.udyam_document = [(5, 0, 0)]
+    #     self.shop_act_document = [(5, 0, 0)]
+    #     self.shop_photos = [(5, 0, 0)]
+    #     self.shop_videos = [(5, 0, 0)]
+    #
+    #     # Clear One2many lines
+    #     self.directors_detail = [(5, 0, 0)]
+    #     self.bank_detail = [(5, 0, 0)]
+    #     self.address_detail = [(5, 0, 0)]
 
     def action_vendor_kyc_done(self):
         self.ensure_one()
