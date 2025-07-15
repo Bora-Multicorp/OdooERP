@@ -2,8 +2,8 @@
 
 from odoo import api, fields, models
 
-class ApproveRequestWizard(models.TransientModel):
-    _name = 'approve.request.wizard'
+class ApproveProductWizard(models.TransientModel):
+    _name = 'approve.product.wizard'
     _description = 'Approve Request Form'
 
     product_approval_id = fields.Many2one('product.template', string="Approval for Product", domain="[('id', '=', active_id)]")
@@ -14,7 +14,7 @@ class ApproveRequestWizard(models.TransientModel):
 
 
 
-    def action_approve_request(self):
+    def action_approve_product(self):
         self.ensure_one()
         approval = self.product_approval_id
         current_user = self.env.user
