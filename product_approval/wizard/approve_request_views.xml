@@ -10,7 +10,7 @@
                     <field name="remark" placeholder="Enter remarks for approval"/>
                 </group>
                 <footer>
-                    <button name="action_approve_product" string="Arrpove" type="object" class="btn-primary"/>
+                    <button name="action_approve_product" string="Approve" type="object" class="btn-primary"/>
                     <button string="Cancel" class="btn-secondary" special="cancel" data-hotkey="x"/>
                 </footer>
             </form> 
