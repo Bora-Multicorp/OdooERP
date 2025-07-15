@@ -89,6 +89,7 @@ class ProductApproval(models.Model):
                 if not line.state:
                     next_user = line.user_id
                     break
+            print("------- next_user =",next_user)
             rec.assigned_to = next_user
 
     def _update_state_based_on_approvals(self):
@@ -113,21 +114,21 @@ class ProductApproval(models.Model):
         # return res 
 
     def write(self, vals):
-        if self.state != 'draft': 
-            print("---------- in Draft -----------")
+        # if self.state != 'draft': 
+        #     print("---------- in Draft -----------")
 
-            channel = (self._cr.dbname, 'res.partner', self.env.uid)  # User-specific channel
-            notification_type = 'my_custom_notification'
-            message = {
-                'product_id': self.id,
-                'product_name': self.name,
-                'status_changed_to': 'Approved',
-                'user': self.env.user.name,
-            }
+        #     channel = (self._cr.dbname, 'res.partner', self.env.uid)  # User-specific channel
+        #     notification_type = 'my_custom_notification'
+        #     message = {
+        #         'product_id': self.id,
+        #         'product_name': self.name,
+        #         'status_changed_to': 'Approved',
+        #         'user': self.env.user.name,
+        #     }
 
-            self.env['bus.bus']._sendone(channel, notification_type, message)
-            return
-        else:
+        #     self.env['bus.bus']._sendone(channel, notification_type, message)
+        #     return
+        # else:
             res = super().write(vals)
             if vals.get('state') == 'confirmed':
                 for record in self:
