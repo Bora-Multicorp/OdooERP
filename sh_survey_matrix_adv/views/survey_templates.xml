@@ -218,14 +218,16 @@
                     </t>
 
                     <t t-if="col_label.sh_value_type == 'que_sh_file'">
-                        <t t-if="review and answer.value_ans_sh_file">
-                            <a t-att-href="'/survey/matrix/download/'+str(question.id)+'/'+str(row_label.id)+'/'+str(col_label.id)+'/'+str(answer.user_input_id.access_token)">
+                       <t t-foreach="answer" t-as="ans">
+                        <t t-if="review and ans.value_ans_sh_file">
+                            <a t-att-href="'/survey/matrix/download/'+str(question.id)+'/'+str(row_label.id)+'/'+str(col_label.id)+'/'+str(ans.user_input_id.access_token)">
                                 <!--Click here to download file-->
                                 <span class="fa fa-download"/>
-                                <span t-esc="answer.value_ans_sh_file_fname"/>
+                                <span t-esc="ans.value_ans_sh_file_fname"/>
                             </a>
                         </t>
-                        <t t-if="review and not answer.value_ans_sh_file">
+                      </t>
+                        <t t-if="review and not any(ans.value_ans_sh_file for ans in answer)">
                         </t>
                         <t t-if="not review">
                             <input type="file" class="form-control o_survey_question_email_box sh_file_input"
