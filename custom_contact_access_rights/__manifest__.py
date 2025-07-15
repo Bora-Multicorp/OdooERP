@@ -6,7 +6,7 @@
     "author": "",
     "website": "",
     "license": "AGPL-3",
-    'depends': ['contacts','purchase','sale'],
+    'depends': ['l10n_in','contacts','purchase','sale'],
     "data": [
              "security/security.xml",
              "security/ir.model.access.csv",

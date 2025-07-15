@@ -6,7 +6,7 @@ from odoo.exceptions import ValidationError
 class ResPartner(models.Model):
     _inherit = 'res.partner'
 
-    gst_status = fields.Selection([('active','Active'),('cancelled','Cancelled'),('suo_moto','Suo Moto')], default="active")
+    gst_status = fields.Selection([('active','Active'),('cancelled','Cancelled'),('suo_moto','Suo Moto'),('suspended','Suspended')], default="active")
     pan_blocked = fields.Boolean(
         string="Blocked by PAN",
         compute="_compute_pan_blocked",
@@ -25,7 +25,7 @@ class ResPartner(models.Model):
                 ('l10n_in_pan', '=', partner.l10n_in_pan)
             ])
 
-            if any(p.gst_status in ['cancelled', 'suo_moto'] for p in related_partners):
+            if any(p.gst_status in ['cancelled', 'suo_moto', 'suspended'] for p in related_partners):
                 partner.pan_blocked = True
             else:
                 partner.pan_blocked = False
@@ -37,7 +37,7 @@ class ResPartner(models.Model):
             if pan:
                 existing = self.env['res.partner'].sudo().search([
                     ('l10n_in_pan', '=', pan),
-                    ('gst_status', 'in', ['cancelled', 'suo_moto'])
+                    ('gst_status', 'in', ['cancelled', 'suo_moto', 'suspended'])
                 ], limit=1)
                 if existing:
                     raise ValidationError(_(

@@ -54,15 +54,15 @@ class CustomContact(models.Model):
 
     @api.constrains('phone', 'mobile')
     def _check_phone_mobile_number(self):
-        phone_pattern = re.compile(r'^\d{10}$')  # Exactly 10 digits
+        phone_pattern = re.compile(r'^(?:\+91|91)?[6-9]\d{9}$')  # Optional +91 or 91, followed by 10 digits
         for rec in self:
             if rec.phone and not phone_pattern.match(rec.phone):
                 raise ValidationError(_(
-                    "Phone number must be exactly 10 digits.\nInvalid Value: %s"
+                    "Phone number must be valid Indian format (e.g., 9876543210, 919876543210, or +919876543210).\nInvalid Value: %s"
                 ) % rec.phone)
             if rec.mobile and not phone_pattern.match(rec.mobile):
                 raise ValidationError(_(
-                    "Mobile number must be exactly 10 digits.\nInvalid Value: %s"
+                    "Mobile number must be valid Indian format (e.g., 9876543210, 919876543210, or +919876543210).\nInvalid Value: %s"
                 ) % rec.mobile)
 
     @api.model
