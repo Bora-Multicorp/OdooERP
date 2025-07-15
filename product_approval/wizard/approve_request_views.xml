@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <odoo>
-    <record id="approve_request_wizard_view_form" model="ir.ui.view">
-        <field name="name">approve.request.wizard.form</field>
-        <field name="model">approve.request.wizard</field>
+    <record id="approve_product_wizard_view_form" model="ir.ui.view">
+        <field name="name">approve.product.wizard.form</field>
+        <field name="model">approve.product.wizard</field>
         <field name="arch" type="xml">
             <form string="Approve Request Form">
                 <group>
@@ -10,19 +10,19 @@
                     <field name="remark" placeholder="Enter remarks for approval"/>
                 </group>
                 <footer>
-                    <button name="action_approve_request" string="Arrpove" type="object" class="btn-primary"/>
+                    <button name="action_approve_product" string="Arrpove" type="object" class="btn-primary"/>
                     <button string="Cancel" class="btn-secondary" special="cancel" data-hotkey="x"/>
                 </footer>
             </form> 
         </field>
     </record>
-    <record id="approve_request_wizard_action" model="ir.actions.act_window">
-        <field name="name">Approve Request</field>
-        <field name="res_model">approve.request.wizard</field>
+    <record id="approve_product_wizard_action" model="ir.actions.act_window">
+        <field name="name">Approve Product</field>
+        <field name="res_model">approve.product.wizard</field>
         <field name="view_mode">form</field>
-        <field name="view_id" ref="approve_request_wizard_view_form"/>
+        <field name="view_id" ref="approve_product_wizard_view_form"/>
         <field name="target">new</field>
-        <field name="binding_model_id" ref="model_approve_request_wizard"/>
+        <field name="binding_model_id" ref="model_approve_product_wizard"/>
         <field name="context">{
             'default_product_approval_id': active_id,
             }
