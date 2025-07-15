@@ -246,11 +246,11 @@ class SurveyQuestion(models.Model):
                 else:
                     filled_ans.append(True)
             if True not in filled_ans:
-                return {self.id: self.constr_error_msg or 'This question requires an answer111.'}
+                return {self.id: self.constr_error_msg or 'This question requires an answer.'}
         if not self.add_an_item and self.constr_mandatory:
             for row in answers:
                 if answers[row] == ['']:
-                    return {self.id: self.constr_error_msg or 'This question requires an answer22222.'}
+                    return {self.id: self.constr_error_msg or 'This question requires an answer.'}
                     #return {self.id: self.constr_error_msg or _('This question requires an answer.')}
         return {}
     
