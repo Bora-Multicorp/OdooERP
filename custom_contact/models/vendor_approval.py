@@ -305,6 +305,7 @@ class BankDetail(models.Model):
 class AddressDetail(models.Model):
     _name = "address.details"
     _description = "Address Details"
+    _rec_name = 'kyc_approval_id'
 
     kyc_approval_id = fields.Many2one('res.partner.kyc.approval', string="KYC Approval")
     business_street = fields.Char("Address", required=False)
