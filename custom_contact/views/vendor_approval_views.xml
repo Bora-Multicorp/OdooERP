@@ -171,7 +171,7 @@
                                       readonly="state not in ['draft']"
                                       required="const_business in ['Pvt Ltd Co.', 'LLP']"
                                       invisible="const_business not in ['Pvt Ltd Co.', 'LLP']"/>
-                            <field name="partner_llp_filename" readonly="1" invisible="1"/>
+                            <field name="partner_llp_filename" invisible="1"/>
                             <field name="partner_llp" filename="partner_llp_filename"
                                    readonly="state not in ['draft']"
                                    required="const_business in ['Partnership', 'LLP']"
