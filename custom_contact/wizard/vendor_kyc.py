@@ -178,7 +178,9 @@ class VendorKycWizard(models.TransientModel):
     director_phone = fields.Char(string="Contact Number")
     director_email = fields.Char(string="Email Address")
     aadhaar_card = fields.Binary(string="Aadhaar Card")
+    aadhaar_card_filename = fields.Char(readonly=True)
     pan_card = fields.Binary(string="PAN Card")
+    pan_card_filename = fields.Char(readonly=True)
     aadhaar_pan_link = fields.Selection([('yes','Yes'),('no','No')],string='Aadhar and PAN card linking?', required=True)
     gst_no = fields.Char(string="GST Number", required=True)
     udyam_number = fields.Char(string="Udyam Certificate Number", required=True)
@@ -221,6 +223,7 @@ class VendorKycWizard(models.TransientModel):
                                                  'attachment_id',
                                                  string="Incorporation Certificate")
     comp_google_loc = fields.Char(string="Google Location of Shop", required=True)
+    partner_llp_filename = fields.Char()
     partner_llp = fields.Binary(string="Partnership Deed or LLP Deed")
     moa_aoa = fields.Many2many('ir.attachment', 'vendor_kyc_moa_aoa_rel', 'wizard_id', 'attachment_id',
                                string="MOA or AOA")
@@ -458,7 +461,9 @@ class DirectorDetail(models.TransientModel):
     contact_no = fields.Char(string="Contact Number", required=True)
     email = fields.Char(string="E-mail", required=True)
     aadhaar_card = fields.Binary(string="Aadhaar Card", required=True)
+    aadhaar_card_filename = fields.Char()
     pan_card = fields.Binary(string="PAN Card", required=True)
+    pan_card_filename = fields.Char()
 
 
 ##### Bank Details

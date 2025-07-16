@@ -118,7 +118,8 @@
                         <list create="False" edit="False" delete="False">
                             <field name="email"/>
                             <field name="point_of_contact"/>
-                            <field name="poc_user" options="{'no_open': True, 'no_create': True, 'no_create_edit': True}"/>
+                            <field name="poc_user"
+                                   options="{'no_open': True, 'no_create': True, 'no_create_edit': True}"/>
                             <field name="business_legal_name"/>
                             <field name="business_trade_name"/>
                             <!--<field name="const_business"/>-->
@@ -190,16 +191,21 @@
                                             <field name="name" widget="upper_case"/>
                                             <field name="contact_no"/>
                                             <field name="email"/>
-                                            <field name="aadhaar_card" widget="image" filename="filename"/>
-                                            <field name="pan_card" widget="image" filename="filename"/>
+
+                                            <field name="aadhaar_card_filename" column_invisible="1"/>
+                                            <field name="aadhaar_card" filename="aadhaar_card_filename" options="{'accepted_file_extensions': 'image/*, .pdf'}"/>
+                                            <field name="pan_card_filename" readonly="1" column_invisible="1"/>
+                                            <field name="pan_card" filename="pan_card_filename"/>
                                         </list>
                                         <form>
                                             <field name="designation" widget="upper_case"/>
                                             <field name="name" widget="upper_case"/>
                                             <field name="contact_no"/>
                                             <field name="email"/>
-                                            <field name="aadhaar_card" widget="image"/>
-                                            <field name="pan_card" widget="image"/>
+                                            <field name="aadhaar_card_filename" invisible="1"/>
+                                            <field name="aadhaar_card" filename="aadhaar_card_filename" options="{'accepted_file_extensions': 'image/*, .pdf'}"/>
+                                            <field name="pan_card_filename" readonly="1" invisible="1"/>
+                                            <field name="pan_card" filename="pan_card_filename" options="{'accepted_file_extensions': 'image/*, .pdf'}"/>
                                         </form>
                                     </field>
                                     <field name="director_name" placeholder="Your Answer"
@@ -211,10 +217,12 @@
                                     <field name="director_email" placeholder="Your Answer"
                                            required="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"
                                            invisible="const_business in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
-                                    <field name="aadhaar_card" placeholder="Your Answer" widget="image"
+                                    <field name="aadhaar_card_filename" invisible="1"/>
+                                    <field name="aadhaar_card" filename="aadhaar_card_filename" options="{'accepted_file_extensions': 'image/*, .pdf'}"
                                            required="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"
                                            invisible="const_business in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
-                                    <field name="pan_card" placeholder="Your Answer" widget="image"
+                                    <field name="pan_card_filename" readonly="1" invisible="1"/>
+                                    <field name="pan_card" filename="pan_card_filename" options="{'accepted_file_extensions': 'image/*, .pdf'}"
                                            required="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"
                                            invisible="const_business in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
                                     <field name="pan_no" placeholder="Your Answer" widget="upper_case"
@@ -239,7 +247,8 @@
                                            options="{'accepted_file_extensions': 'video/*', 'number_of_files': 10}"/>
                                     <field name="comp_google_loc" placeholder="eg. Lat : 22.3511148 Long: 78.6677428"
                                            invisible="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
-                                    <field name="partner_llp" widget="image"
+                                    <field name="partner_llp_filename" invisible="1"/>
+                                    <field name="partner_llp" filename="partner_llp_filename"
                                            invisible="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
                                     <field name="moa_aoa" widget="many2many_binary"
                                            options="{'accepted_file_extensions': 'video/*', 'number_of_files': 10}"
