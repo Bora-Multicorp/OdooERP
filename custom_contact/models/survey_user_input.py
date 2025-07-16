@@ -30,6 +30,7 @@ class SurveyUserInput(models.Model):
             Q("custom_contact.pan_card_no_kyc_survey").id: "pan_no",
             Q("custom_contact.pan_card_document_kyc_survey").id: "pan_card_document",
             Q("custom_contact.aadhaar_pan_link_kyc_survey").id: "aadhaar_pan_link",
+            Q("custom_contact.registration_kyc_survey").id: "license_registered",
             Q("custom_contact.udyam_certificate_kyc_survey").id: "udyam_number",
             Q("custom_contact.gst_duration_kyc_survey").id: "gst_return_duration",
             Q("custom_contact.gst_certificate_kyc_survey").id: "gst_certificate",
