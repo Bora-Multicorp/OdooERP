@@ -10,30 +10,26 @@ class StockMove(models.Model):
     show_IMEI_field = fields.Boolean(string='Show IMEI Field 1', compute='_compute_show_imei_fields')
     show_IMEI_field2 = fields.Boolean(string='Show IMEI Field 2', compute='_compute_show_imei_fields')
 
-
-
-    # @api.depends('product_id.is_mobile_category_selected')
     def _compute_show_imei_fields(self):
         for rec in self:
             if rec.product_id.is_mobile_category_selected:
-                if rec.product_id.is_dual_sim:
-                    rec.show_IMEI_field = True
-                    rec.show_IMEI_field2 = True
-                else:
-                    rec.show_IMEI_field = True
-                    rec.show_IMEI_field2 = False
-                    
-                    
+                rec.show_IMEI_field = True
+                rec.show_IMEI_field2 = rec.product_id.is_dual_sim
+            else:
+                rec.show_IMEI_field = False
+                rec.show_IMEI_field2 = False
+
                     
 
 
 class StockMoveLine(models.Model):
     _inherit = 'stock.move.line'
 
-    imei = fields.Char(string='IMEI')
+    imei = fields.Char(string='IMEI') 
     imei2 = fields.Char(string='IMEI 2')
     # activation_date = fields.Date(string="Activation Date", help="Mobile phone activation date.")
     # activation_status = fields.Boolean(string='Is Active', help="Indicates if the mobile phone is activated or not.")
+    
     
     def validate_imei(self):
 
@@ -90,7 +86,6 @@ class StockPickingInherit(models.Model):
     _inherit = 'stock.picking'
 
     def button_validate(self):
-        print("---------- button_validate ---------")
         for picking in self:
             for line in picking.move_line_ids:
                 line.validate_imei()  # your custom IMEI validator

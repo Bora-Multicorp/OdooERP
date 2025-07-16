@@ -1,6 +1,6 @@
 from odoo import models, fields, api
 
-class StockPickingInherit(models.Model):
+class StockPickingInherit(models.Model): 
     _inherit = 'stock.picking'
 
     imei_search = fields.Char("IMEI Search", compute="_compute_imei_search", store=True, index=True)
@@ -22,6 +22,7 @@ class StockPickingInherit(models.Model):
                 imeis.update(filter(None, quants.mapped('imei2')))
 
             picking.imei_search = ','.join(imeis)
+    
 
 
 

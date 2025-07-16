@@ -58,7 +58,6 @@ class ActivationStatusWizard(models.TransientModel):
 
         return {'type': 'ir.actions.client', 'tag': 'reload'}
 
-
     def _process_data(self, data_list):
         records = []
         for idx, row in enumerate(data_list, start=1):
@@ -117,29 +116,49 @@ class ActivationStatusWizard(models.TransientModel):
         except Exception as e:
             raise ValidationError(f"Error grabbing purchase date from: {date_containing_string}")
 
+    # Custom override to test
+
+
     def _update_status_in_inventory(self, file_arraay_data):
+
         for idx, item in enumerate(file_arraay_data, start=1):
-            try:
-                imei = item.get('imei')
-                activation_date_as_string = item.get('activation_date')
-
-                try:
-                    activation_date = datetime.strptime(activation_date_as_string, '%d %b %Y').date()
-                except ValueError:
-                    raise ValueError(f"Invalid date format at item {idx}: '{activation_date_as_string}' (expected format: 'dd MMM YYYY')")
+            imei = item.get('imei')
+            activation_date_as_string = item.get('activation_date')
+            activation_date = datetime.strptime(activation_date_as_string, '%d %b %Y').date()
 
 
-
-                quant = self.env['stock.quant'].search([('imei', '=', imei)], limit=1)
-                if not quant:
-                    quant = self.env['stock.quant'].search([('imei2', '=', imei)], limit=1)
-
-                if quant:
+            quants = self.env['stock.quant'].search([], order='create_date desc')
+            # quants = self.env['stock.quant'].search([])
+            for quant in quants:
+                if quant.imei == imei or quant.imei2 == imei:
                     quant.write({'activation_status': True, 'activation_date': activation_date})
-                else:
-                    raise ValueError(f"No stock quant found for IMEI: {imei}")
-            except Exception as e:
-                raise ValueError(f"Error updating inventory status for item {idx}: {e}")
+                    break
 
 
 
+
+        # for idx, item in enumerate(file_arraay_data, start=1):
+        #     try:
+        #         imei = item.get('imei')
+        #         activation_date_as_string = item.get('activation_date')
+
+        #         try:
+        #             activation_date = datetime.strptime(activation_date_as_string, '%d %b %Y').date()
+        #         except ValueError:
+        #             raise ValueError(f"Invalid date format at item {idx}: '{activation_date_as_string}' (expected format: 'dd MMM YYYY')")
+
+
+        #         quant = self.env['stock.quant'].search([('imei', '=', imei)], limit=1)
+        #         if not quant:
+        #             quant = self.env['stock.quant'].search([('imei2', '=', imei)], limit=1)
+
+        #         if quant:
+        #             quant.write({'activation_status': True, 'activation_date': activation_date})
+        #         else:
+        #             raise ValueError(f"No stock quant found for IMEI: {imei}")
+        #     except Exception as e:
+        #         raise ValueError(f"Error updating inventory status for item {idx}: {e}")
+
+
+
+ 
