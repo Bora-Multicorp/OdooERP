@@ -115,16 +115,18 @@
             <field name="sequence">3</field>
             <field name="value">Pincode</field>
             <field name="sh_value_type">textbox</field>
-<!--              <field name="constr_mandatory" eval="True"/>-->
-<!--            <field name="is_pincode" eval="True"/>-->
+            <!--              <field name="constr_mandatory" eval="True"/>-->
+            <!--            <field name="is_pincode" eval="True"/>-->
+
         </record>
         <record model="survey.question.answer" id="matrix_address_detail_kyc_survey_col4">
             <field name="question_id" ref="matrix_address_detail_kyc_survey"/>
             <field name="sequence">4</field>
             <field name="value">Contact Number</field>
             <field name="sh_value_type">textbox</field>
-<!--            <field name="constr_mandatory" eval="True"/>-->
-<!--            <field name="is_mobile" eval="True"/>-->
+            <!--            <field name="constr_mandatory" eval="True"/>-->
+            <!--            <field name="is_mobile" eval="True"/>-->
+
         </record>
         <record model="survey.question.answer" id="matrix_address_detail_kyc_survey_col5">
             <field name="question_id" ref="matrix_address_detail_kyc_survey"/>
@@ -551,11 +553,12 @@
             <field name="sequence">1</field>
             <field name="value">yes</field>
         </record>
-       <record model="survey.question.answer" id="aadhaar_pan_link_kyc_survey_sug2">
+        <record model="survey.question.answer" id="aadhaar_pan_link_kyc_survey_sug2">
             <field name="question_id" ref="aadhaar_pan_link_kyc_survey"/>
             <field name="sequence">2</field>
             <field name="value">no</field>
         </record>
+
         <record model="survey.question" id="registration_kyc_survey">
             <field name="title">Any licenses registered (As per Local/State Government requirements)</field>
             <field name="survey_id" ref="vendor_kyc_form_survey"/>
@@ -566,7 +569,6 @@
                    eval="[Command.link(ref('business_constitution_kyc_survey_sug1')),
                    Command.link(ref('business_constitution_kyc_survey_sug5'))]"/>
         </record>
-
         <!-- GST Number -->
         <record model="survey.question" id="gst_no_kyc_survey">
             <field name="title">GST Number</field>
@@ -576,7 +578,6 @@
             <field name="constr_mandatory">True</field>
             <field name="is_gstin">True</field>
         </record>
-
         <!-- Udyam Certificate Number -->
         <record model="survey.question" id="udyam_certificate_kyc_survey">
             <field name="title">Udyam Certificate Number</field>
@@ -588,7 +589,7 @@
         </record>
         <!-- Company GST Certificate -->
         <record model="survey.question" id="gst_certificate_kyc_survey">
-            <field name="title">GST Certificate</field>
+            <field name="title">Company GST Certificate</field>
             <field name="survey_id" ref="vendor_kyc_form_survey"/>
             <field name="sequence">29</field>
             <field name="question_type">upload_file</field>

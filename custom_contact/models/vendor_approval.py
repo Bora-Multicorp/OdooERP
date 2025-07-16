@@ -73,7 +73,9 @@ class ContactKYCApproval(models.Model):
     director_phone = fields.Char(string="Contact Number")
     director_email = fields.Char(string="Email Address")
     aadhaar_card = fields.Binary(string="Aadhaar Card")
+    aadhaar_card_filename = fields.Char()
     pan_card = fields.Binary(string="PAN Card (Proprietor)")
+    pan_card_filename = fields.Char()
     aadhaar_pan_link = fields.Selection([('yes','Yes'),('no','No')],string='Aadhar and PAN card linking?',required=True)
     gst_no = fields.Char(string="GST Number")
     license_registered = fields.Char(string="Any licenses registered (As per Local/State Government requirements)")
@@ -111,6 +113,7 @@ class ContactKYCApproval(models.Model):
     directors_detail = fields.One2many('director.details', 'kyc_approval_id', string="KYC Details", tracking=True)
     pan_no = fields.Char(string="PAN Number", required=False)
     comp_google_loc = fields.Char(string="Google Location of Shop", required=False)
+    partner_llp_filename = fields.Char()
     partner_llp = fields.Binary(string="Partnership Deed or LLP Deed", required=False)
     moa_aoa = fields.Many2many('ir.attachment', 'vendor_kyc_moa_aoa_rels', 'partner_id', 'attachment_id',
                                string="MOA or AOA")
@@ -283,7 +286,9 @@ class DirectorDetails(models.Model):
     contact_no = fields.Char(string="Contact Number")
     email = fields.Char(string="E-mail Address")
     aadhaar_card = fields.Binary(string="Aadhaar Card")
+    aadhaar_card_filename = fields.Char()
     pan_card = fields.Binary(string="PAN Card")
+    pan_card_filename = fields.Char()
 
 
 ##### Bank Details
