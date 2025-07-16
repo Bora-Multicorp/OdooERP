@@ -7,8 +7,9 @@ class VendorApprovalConfig(models.Model):
     _description = "Vendor Approval Settings"
     _rec_name = 'user_id'
 
-    sequence = fields.Integer(string='Sequence', required=True)
-    user_id = fields.Many2one('res.users', string='Approval User', required=True)
+
+    sequence = fields.Integer(string='Sequence', required=False)
+    user_id = fields.Many2one('res.users', string='Approval User', required=False)
 
     _sql_constraints = [
         ('unique_user_id', 'unique(user_id)', 'Each approval user must be unique.'),

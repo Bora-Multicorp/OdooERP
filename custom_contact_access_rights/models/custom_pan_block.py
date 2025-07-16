@@ -45,6 +45,7 @@ class ResPartner(models.Model):
                                               pan, existing.gst_status))
         return super().create(vals_list)
 
+
     def write(self, vals):
         old_pan_map = {
             partner.id: partner.l10n_in_pan
@@ -82,13 +83,3 @@ class ResPartner(models.Model):
                         to_update.write({'gst_status': new_status})
 
         return res
-
-
-
-
-
-
-
-
-
-
