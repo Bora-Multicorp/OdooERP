@@ -10,9 +10,11 @@ class StockQuantInherit(models.Model):
 
     imei = fields.Char(string='IMEI')
     imei2 = fields.Char(string='IMEI 2')
-    activation_date = fields.Date(string="Activation Date", help="Mobile phone activation date.")
     remaining_months = fields.Char(string="Remaining Months", compute="_compute_remaining_months", store=True)
+    activation_date = fields.Date(string="Activation Date", help="Mobile phone activation date.")
     activation_status = fields.Boolean(string='Active', help="Indicates if the mobile phone is activated or not.")
+
+        
 
         
     @api.model
@@ -41,25 +43,41 @@ class StockQuantInherit(models.Model):
                 rec.activation_status = False
                 rec.remaining_months = False  # or "" to keep it blank
 
-
     @api.model_create_multi
     def create(self, vals_list):
-
+        print('-------------- create- ---------------')
         for vals in vals_list:
-            move_line = self.env['stock.move.line'].search([
-                ('lot_id', '=', vals.get('lot_id'))
-            ], limit=1)
-            if move_line:
-                if move_line.imei:
-                    vals['imei'] = move_line.imei
-                if move_line.imei2:
-                    vals['imei2'] = move_line.imei2
+            lot_id = vals.get('lot_id')
+            if lot_id:
+                move_line = self.env['stock.move.line'].search([
+                    ('lot_id', '=', lot_id)
+                ], limit=1)
+                if move_line:
+                    vals['imei'] = move_line.imei or ''
+                    vals['imei2'] = move_line.imei2 or ''
 
         self._check_all_validations()
+        return super(StockQuantInherit, self).create(vals_list)
 
-        records = super(StockQuantInherit, self).create(vals_list)
 
-        return records
+    # @api.model_create_multi
+    # def create(self, vals_list):
+
+    #     for vals in vals_list:
+    #         move_line = self.env['stock.move.line'].search([
+    #             ('lot_id', '=', vals.get('lot_id'))
+    #         ], limit=1)
+    #         if move_line:
+    #             if move_line.imei:
+    #                 vals['imei'] = move_line.imei
+    #             if move_line.imei2:
+    #                 vals['imei2'] = move_line.imei2
+
+    #     self._check_all_validations()
+
+    #     records = super(StockQuantInherit, self).create(vals_list)
+
+    #     return records
     
 
     def write(self, vals):

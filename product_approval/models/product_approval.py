@@ -83,13 +83,13 @@ class ProductApproval(models.Model):
         self.write({'state': 'confirmed'})
 
     def _update_assigned_to(self):
+        print("-------- _update_assigned_to")
         for rec in self:
             next_user = None
             for line in sorted(rec.approval_users_ids, key=lambda x: x.sequence):
                 if not line.state:
                     next_user = line.user_id
                     break
-            print("------- next_user =",next_user)
             rec.assigned_to = next_user
 
     def _update_state_based_on_approvals(self):
@@ -114,20 +114,17 @@ class ProductApproval(models.Model):
         # return res 
 
     def write(self, vals):
-        # if self.state != 'draft': 
-        #     print("---------- in Draft -----------")
 
-        #     channel = (self._cr.dbname, 'res.partner', self.env.uid)  # User-specific channel
-        #     notification_type = 'my_custom_notification'
-        #     message = {
-        #         'product_id': self.id,
-        #         'product_name': self.name,
-        #         'status_changed_to': 'Approved',
-        #         'user': self.env.user.name,
-        #     }
 
-        #     self.env['bus.bus']._sendone(channel, notification_type, message)
-        #     return
+        # if self.assigned_to.id or self.state == 'confirmed': 
+
+        #     approved_to_in_vals = vals.get('assigned_to')
+        #     if approved_to_in_vals:
+        #         vals = {}
+        #         vals['assigned_to'] = approved_to_in_vals
+        #         res = super().write(vals)
+        #     return res
+        
         # else:
             res = super().write(vals)
             if vals.get('state') == 'confirmed':
@@ -141,7 +138,8 @@ class ProductApproval(models.Model):
                             approval_template.send_mail(record.id, force_send=True,
                             email_values={'email_from': self.env.user.email_formatted,
                                                     'email_to': ','.join(email_list), })
-            return res
+            # return res
+
 
 class ProductApprovalUsers(models.Model):
     _name = "product.approval.users"

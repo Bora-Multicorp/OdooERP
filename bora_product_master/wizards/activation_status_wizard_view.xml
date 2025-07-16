@@ -13,14 +13,18 @@
                         <button name="action_process_file" string="Submit" type="object" class="btn-primary"/>
                         <button string="Cancel" class="btn-secondary" special="cancel" data-hotkey="x"/>
                         <div style="margin-left:auto;">
-                            <a href="/bora_product_master/static/sample/IMEI_ACTIVATION_SAMPLE_REPORT.xlsx"
+
+
+                            <!-- <a href="/bora_product_master/static/sample/IMEI_ACTIVATION_SAMPLE_REPORT.xlsx"
    class="btn btn-outline-secondary"
    download="IMEI_ACTIVATION_SAMPLE_REPORT.xlsx"
    target="_blank"
    style="float: right;">
 
                         Download Sample Format File
-                    </a>
+                    </a> -->
+                    <a class="btn btn-primary" role="button" type="object" name="your_method_name">Download Sample Format File</a>
+
                         </div>
                     </footer>
                 </form>

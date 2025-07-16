@@ -24,7 +24,13 @@ class ApproveProductWizard(models.TransientModel):
             lambda l: l.user_id == current_user and not l.state
         )
 
+
+        print("---------   action_approve_product", approval_line)
+
+
         if approval_line:
+            print("--------- *******   action_approve_product", approval_line)
+
             approval_line.write({
                 'state': 'approve',
                 'remark': self.remark,
