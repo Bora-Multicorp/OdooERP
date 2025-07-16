@@ -93,16 +93,20 @@
                                     <field name="name" widget="upper_case"/>
                                     <field name="contact_no"/>
                                     <field name="email"/>
-                                    <field name="aadhaar_card" widget="image" filename="filename"/>
-                                    <field name="pan_card" widget="image" filename="filename"/>
+                                    <field name="aadhaar_card_filename" column_invisible="1"/>
+                                    <field name="aadhaar_card" filename="aadhaar_card_filename" options="{'accepted_file_extensions': 'image/*, .pdf'}"/>
+                                    <field name="pan_card_filename" readonly="1" column_invisible="1"/>
+                                    <field name="pan_card" filename="pan_card_filename" options="{'accepted_file_extensions': 'image/*, .pdf'}"/>
                                 </list>
                                 <form>
                                     <field name="designation" widget="upper_case"/>
                                     <field name="name" widget="upper_case"/>
                                     <field name="contact_no"/>
                                     <field name="email"/>
-                                    <field name="aadhaar_card" widget="image"/>
-                                    <field name="pan_card" widget="image"/>
+                                    <field name="aadhaar_card_filename" invisible="1"/>
+                                    <field name="aadhaar_card" filename="aadhaar_card_filename" options="{'accepted_file_extensions': 'image/*, .pdf'}"/>
+                                    <field name="pan_card_filename" readonly="1" invisible="1"/>
+                                    <field name="pan_card" filename="pan_card_filename" options="{'accepted_file_extensions': 'image/*, .pdf'}"/>
                                 </form>
                             </field>
                             <field name="director_name" placeholder="Your Answer"
@@ -117,11 +121,13 @@
                                    readonly="state not in ['draft']"
                                    required="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"
                                    invisible="const_business in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
-                            <field name="aadhaar_card" placeholder="Your Answer" widget="image"
+                            <field name="aadhaar_card_filename" invisible="1"/>
+                            <field name="aadhaar_card" filename="aadhaar_card_filename" options="{'accepted_file_extensions': 'image/*, .pdf'}"
                                    readonly="state not in ['draft']"
                                    required="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"
                                    invisible="const_business in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
-                            <field name="pan_card" placeholder="Your Answer" widget="image"
+                            <field name="pan_card_filename" invisible="1"/>
+                            <field name="pan_card" filename="pan_card_filename"
                                    readonly="state not in ['draft']"
                                    required="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"
                                    invisible="const_business in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
@@ -165,7 +171,8 @@
                                       readonly="state not in ['draft']"
                                       required="const_business in ['Pvt Ltd Co.', 'LLP']"
                                       invisible="const_business not in ['Pvt Ltd Co.', 'LLP']"/>
-                            <field name="partner_llp" widget="image"
+                            <field name="partner_llp_filename" readonly="1" invisible="1"/>
+                            <field name="partner_llp" filename="partner_llp_filename"
                                    readonly="state not in ['draft']"
                                    required="const_business in ['Partnership', 'LLP']"
                                    invisible="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>

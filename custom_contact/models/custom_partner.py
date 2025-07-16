@@ -95,18 +95,21 @@ class CustomContact(models.Model):
                     "Invalid GST Number: '%s'. It must follow the 15-character format (e.g., 27ABCDE1234F1Z5)."
                 ) % rec.vat)
 
-    @api.constrains('phone', 'mobile')
-    def _check_phone_mobile_number(self):
-        phone_pattern = re.compile(r'^\d{10}$')  # Exactly 10 digits
-        for rec in self:
-            if rec.phone and not phone_pattern.match(rec.phone):
-                raise ValidationError(_(
-                    "Phone number must be exactly 10 digits.\nInvalid Value: %s"
-                ) % rec.phone)
-            if rec.mobile and not phone_pattern.match(rec.mobile):
-                raise ValidationError(_(
-                    "Mobile number must be exactly 10 digits.\nInvalid Value: %s"
-                ) % rec.mobile)
+    # @api.constrains('phone', 'mobile')
+    # def _check_phone_mobile_number(self):
+    #     phone_pattern = re.compile(r'^\d{10}$')  # Phone: exactly 10 digits
+    #     mobile_pattern = re.compile(r"^(\+\d{1,3}\s?)?(\d{4,5}\s?\d{3}\s?\d{3})$|^(\d{10})$")
+    #
+    #     for rec in self:
+    #         if rec.phone and not phone_pattern.fullmatch(rec.phone):
+    #             raise ValidationError(_(
+    #                 "Phone number must be exactly 10 digits.\nInvalid Value: %s"
+    #             ) % rec.phone)
+    #
+    #         if rec.mobile and not mobile_pattern.fullmatch(rec.mobile):
+    #             raise ValidationError(_(
+    #                 "Invalid mobile number format. Please use a format like '+91 6789 432 345' or '1234567890'.\nInvalid Value: %s"
+    #             ) % rec.mobile)
 
     @api.model
     def _get_view(self, view_id=None, view_type='form', **options):
