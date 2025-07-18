@@ -11,7 +11,7 @@
                         <list editable="bottom">
                             <field name="packing_material_id"/>
                             <field name="box_type"/>
-                            <field name="carton_type"/>
+<!--                            <field name="carton_type"/>-->
                             <field name="apply_by"/>
                             <field name="qty_per_unit"/>
                         </list>
