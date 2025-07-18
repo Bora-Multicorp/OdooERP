@@ -10,10 +10,10 @@ class PackingMaterialLine(models.Model):
     packing_material_id = fields.Many2one(
         'product.product', required=True, string="Packing Material"
     )
-    carton_type = fields.Selection([
-        ('loose', 'Loose Carton'),
-        ('master', 'Master Carton')
-    ], string="Carton Type", required=True)
+    # carton_type = fields.Selection([
+    #     ('loose', 'Loose Carton'),
+    #     ('master', 'Master Carton')
+    # ], string="Carton Type", required=False)
 
     qty_per_unit = fields.Float(string="Qty per Unit/Kg", required=True, default=1.0)
 

@@ -202,24 +202,24 @@ class VendorKycWizard(models.TransientModel):
                     "Invalid GST Number: '%s'. It must follow the 15-character format (e.g., 27ABCDE1234F1Z5)."
                 ) % rec.gst_no)
 
-    @api.constrains('comp_google_loc')
-    def _check_lat_long_format(self):
-        pattern = re.compile(r'Lat\s*:\s*(-?\d+(\.\d+)?)[,\s]+Long\s*:\s*(-?\d+(\.\d+)?)', re.IGNORECASE)
-        for rec in self:
-            if rec.comp_google_loc:
-                match = pattern.search(rec.comp_google_loc.strip())
-                if not match:
-                    raise ValidationError(_(
-                        "Invalid format for Google Location.\nPlease use the format:\nLat : <value> Long: <value>\n"
-                        "Example: Lat : 22.3511148 Long: 78.6677428"
-                    ))
-                lat = float(match.group(1))
-                lon = float(match.group(3))
-                if not (-90 <= lat <= 90 and -180 <= lon <= 180):
-                    raise ValidationError(_(
-                        "Latitude must be between -90 and 90.\nLongitude must be between -180 and 180.\n"
-                        "Your input: Lat = %s, Long = %s"
-                    ) % (lat, lon))
+    # @api.constrains('comp_google_loc')
+    # def _check_lat_long_format(self):
+    #     pattern = re.compile(r'Lat\s*:\s*(-?\d+(\.\d+)?)[,\s]+Long\s*:\s*(-?\d+(\.\d+)?)', re.IGNORECASE)
+    #     for rec in self:
+    #         if rec.comp_google_loc:
+    #             match = pattern.search(rec.comp_google_loc.strip())
+    #             if not match:
+    #                 raise ValidationError(_(
+    #                     "Invalid format for Google Location.\nPlease use the format:\nLat : <value> Long: <value>\n"
+    #                     "Example: Lat : 22.3511148 Long: 78.6677428"
+    #                 ))
+    #             lat = float(match.group(1))
+    #             lon = float(match.group(3))
+    #             if not (-90 <= lat <= 90 and -180 <= lon <= 180):
+    #                 raise ValidationError(_(
+    #                     "Latitude must be between -90 and 90.\nLongitude must be between -180 and 180.\n"
+    #                     "Your input: Lat = %s, Long = %s"
+    #                 ) % (lat, lon))
 
     @api.constrains('cin_no')
     def _check_cin_format(self):
@@ -354,40 +354,18 @@ class VendorKycWizard(models.TransientModel):
             )
         return values
 
-    # @api.onchange('const_business')
-    # def _onchange_const_business_clear_fields(self):
-    #     self.other_business = False
-    #     self.director_name = False
-    #     self.director_phone = False
-    #     self.director_email = False
-    #     self.aadhaar_card = False
-    #     self.pan_card = False
-    #     self.aadhaar_pan_link = False
-    #     self.gst_no = False
-    #     self.license_registered = False
-    #     self.udyam_number = False
-    #     self.no_partner_director = False
-    #     self.pan_no = False
-    #     self.comp_google_loc = False
-    #     self.partner_llp = False
-    #     self.cin_no = False
-    #     self.gst_return_duration = False
-    #
-    #     # Clear binary/many2many fields
-    #     self.moa_aoa = [(5, 0, 0)]
-    #     self.electricity_bill = [(5, 0, 0)]
-    #     self.pan_card_document = [(5, 0, 0)]
-    #     self.incorporation_certificate = [(5, 0, 0)]
-    #     self.gst_certificate = [(5, 0, 0)]
-    #     self.udyam_document = [(5, 0, 0)]
-    #     self.shop_act_document = [(5, 0, 0)]
-    #     self.shop_photos = [(5, 0, 0)]
-    #     self.shop_videos = [(5, 0, 0)]
-    #
-    #     # Clear One2many lines
-    #     self.directors_detail = [(5, 0, 0)]
-    #     self.bank_detail = [(5, 0, 0)]
-    #     self.address_detail = [(5, 0, 0)]
+    @api.onchange('const_business')
+    def _onchange_const_business_clear_fields(self):
+        # Clear simple fields
+        for field in [
+            'other_business',
+            'director_name',
+            'director_phone',
+            'director_email',
+            'aadhaar_card',
+            'pan_card'
+        ]:
+            setattr(self, field, False)
 
     def action_vendor_kyc_done(self):
         self.ensure_one()
