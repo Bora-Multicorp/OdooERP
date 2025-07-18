@@ -9,6 +9,79 @@ class VendorKycWizard(models.TransientModel):
     _name = 'vendor.kyc.wizard'
     _description = 'Vendor KYC Wizard'
 
+    @api.constrains(
+        'aadhaar_card', 'pan_card', 'partner_llp',
+        'gst_certificate', 'udyam_document', 'shop_act_document',
+        'shop_photos', 'shop_videos', 'incorporation_certificate',
+        'moa_aoa', 'electricity_bill',
+        'directors_detail', 'bank_detail'  # include O2M
+    )
+    def _check_attachments(self):
+        max_binary_sizes = {
+            'aadhaar_card': 10 * 1024 * 1024,  # 10 MB
+            'pan_card': 1 * 1024 * 1024,  # 1 MB
+            'partner_llp': 10 * 1024 * 1024,  # 10 MB
+        }
+
+        max_attachment_sizes = {
+            'gst_certificate': 10 * 1024 * 1024,
+            'udyam_document': 10 * 1024 * 1024,
+            'shop_act_document': 10 * 1024 * 1024,
+            'shop_photos': 100 * 1024 * 1024,
+            'shop_videos': 100 * 1024 * 1024,
+            'incorporation_certificate': 100 * 1024 * 1024,
+            'moa_aoa': 100 * 1024 * 1024,
+            'electricity_bill': 100 * 1024 * 1024,
+        }
+
+        for rec in self:
+            # ✅ Validate Binary fields on wizard
+            for field_name, max_size in max_binary_sizes.items():
+                data = rec[field_name]
+                if data and isinstance(data, bytes):
+                    actual_size = len(data)
+                    if actual_size > max_size:
+                        raise ValidationError(_(
+                            "%s exceeds the allowed limit. Uploaded: %.2f MB, Max allowed: %d MB"
+                        ) % (field_name.replace('_', ' ').title(),
+                             actual_size / (1024 * 1024),
+                             max_size // (1024 * 1024)))
+
+            # ✅ Validate ir.attachment M2M fields on wizard
+            for field_name, max_size in max_attachment_sizes.items():
+                attachments = rec[field_name]
+                if attachments:
+                    for attachment in attachments:
+                        if attachment.file_size and attachment.file_size > max_size:
+                            raise ValidationError(_(
+                                "%s file '%s' exceeds the allowed size. Uploaded: %.2f MB, Max allowed: %d MB"
+                            ) % (field_name.replace('_', ' ').title(),
+                                 attachment.name,
+                                 attachment.file_size / (1024 * 1024),
+                                 max_size // (1024 * 1024)))
+
+            # ✅ Validate binary fields in directors_detail
+            for line in rec.directors_detail:
+                if line.aadhaar_card and isinstance(line.aadhaar_card, bytes):
+                    if len(line.aadhaar_card) > 10 * 1024 * 1024:
+                        raise ValidationError(_(
+                            "Director Aadhaar Card for '%s' exceeds 10 MB (Uploaded: %.2f MB)"
+                        ) % (line.name, len(line.aadhaar_card) / (1024 * 1024)))
+                if line.pan_card and isinstance(line.pan_card, bytes):
+                    if len(line.pan_card) > 1 * 1024 * 1024:
+                        raise ValidationError(_(
+                            "Director PAN Card for '%s' exceeds 1 MB (Uploaded: %.2f MB)"
+                        ) % (line.name, len(line.pan_card) / (1024 * 1024)))
+
+            # ✅ Validate attachments in bank_detail
+            for line in rec.bank_detail:
+                for attachment in line.bank_cheque_attachments:
+                    if attachment.file_size and attachment.file_size > 10 * 1024 * 1024:
+                        raise ValidationError(_(
+                            "Bank cheque file '%s' for Bank '%s' exceeds 10 MB (Uploaded: %.2f MB)"
+                        ) % (attachment.name, line.bank_name, attachment.file_size / (1024 * 1024)))
+
+
     @api.constrains('directors_detail')
     def _check_duplicate_directors_detail_emails(self):
         for wizard in self:
@@ -157,12 +230,21 @@ class VendorKycWizard(models.TransientModel):
                     "Invalid CIN Number: '%s'. Expected format is like 'L12345MH2020PLC123456'."
                 ) % rec.cin_no)
 
+    @api.onchange('is_same_trade_name', 'business_legal_name')
+    def _onchange_trade_name_sync(self):
+        for rec in self:
+            if rec.is_same_trade_name:
+                rec.business_trade_name = rec.business_legal_name
+            else:
+                rec.business_trade_name = False
+
     partner_id = fields.Many2one('res.partner', string='Contact', domain="[('id', '=', active_id)]")
     email = fields.Char("Email", required=True)
     point_of_contact = fields.Char("Point of Contact", required=True)
     poc_user = fields.Many2one('res.users', string="Point of Contact to Vendor", default=lambda self: self.env.user,
-                              readonly=1)
+                               readonly=1)
     business_legal_name = fields.Char("Business Legal Name", required=True)
+    is_same_trade_name = fields.Boolean(string="If Trade Name is same as Legal Name", help="Tick if trade name is same as legal name")
     business_trade_name = fields.Char("Business Trade Name", required=True)
     const_business = fields.Selection([('Sole Proprietor', 'Sole Proprietor'),
                                        ('Partnership', 'Partnership'),
@@ -181,7 +263,8 @@ class VendorKycWizard(models.TransientModel):
     aadhaar_card_filename = fields.Char(readonly=True)
     pan_card = fields.Binary(string="PAN Card")
     pan_card_filename = fields.Char(readonly=True)
-    aadhaar_pan_link = fields.Selection([('yes','Yes'),('no','No')],string='Aadhar and PAN card linking?', required=True)
+    aadhaar_pan_link = fields.Selection([('yes', 'Yes'), ('no', 'No')], string='Aadhar and PAN card linking?',
+                                        required=True)
     gst_no = fields.Char(string="GST Number", required=True)
     udyam_number = fields.Char(string="Udyam Certificate Number", required=True)
     license_registered = fields.Char(string="Any licenses registered (As per Local/State Government requirements)")
@@ -374,6 +457,7 @@ class VendorKycWizard(models.TransientModel):
             'point_of_contact': self.point_of_contact,
             'poc_user': self.poc_user.id,
             'business_legal_name': self.business_legal_name,
+            'is_same_trade_name': self.is_same_trade_name,
             'business_trade_name': self.business_trade_name,
             'address_detail': address_data,
             'const_business': self.const_business,
@@ -382,7 +466,9 @@ class VendorKycWizard(models.TransientModel):
             'director_phone': self.director_phone,
             'director_email': self.director_email,
             'aadhaar_card': self.aadhaar_card,
+            'aadhaar_card_filename': self.aadhaar_card_filename,
             'pan_card': self.pan_card,
+            'pan_card_filename': self.pan_card_filename,
             'gst_no': self.gst_no,
             'license_registered': self.license_registered,
             'aadhaar_pan_link': self.aadhaar_pan_link,
@@ -519,10 +605,14 @@ class AddressDetail(models.TransientModel):
 
     @api.onchange('business_country_id')
     def _onchange_country_id(self):
-        if self.business_country_id and self.business_country_id != self.business_state_id.country_id:
-            self.business_state_id = False
+        for rec in self:
+            # Clear the state if it doesn't belong to the selected country
+            if rec.business_state_id and rec.business_state_id.country_id != rec.business_country_id:
+                rec.business_state_id = False
 
     @api.onchange('business_state_id')
-    def _onchange_state(self):
-        if self.business_state_id.country_id and self.business_country_id != self.business_state_id.country_id:
-            self.business_country_id = self.business_state_id.country_id
+    def _onchange_state_id(self):
+        for rec in self:
+            # Automatically set country based on state
+            if rec.business_state_id:
+                rec.business_country_id = rec.business_state_id.country_id
