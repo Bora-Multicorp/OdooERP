@@ -1,9 +1,11 @@
+import logging
 # -*- coding: utf-8 -*-
 
 from odoo import api, fields, models, _
 from dateutil.relativedelta import relativedelta
 from odoo.exceptions import UserError, ValidationError 
 from lxml import etree
+_logger = logging.getLogger(__name__)
 
 
 class ProductApproval(models.Model): 
@@ -83,7 +85,6 @@ class ProductApproval(models.Model):
         self.write({'state': 'confirmed'})
 
     def _update_assigned_to(self):
-        print("-------- _update_assigned_to")
         for rec in self:
             next_user = None
             for line in sorted(rec.approval_users_ids, key=lambda x: x.sequence):
@@ -106,17 +107,20 @@ class ProductApproval(models.Model):
             vals['is_hidden'] = True
             vals['active'] = False  # Archive product by default
 
-        return super(ProductApproval, self).create(vals_list)
+        templates = super(ProductApproval, self).create(vals_list)
+        for template in templates:
+            template.product_variant_ids.write({
+                'active': False,
+                # 'is_hidden': True,
+            })
 
-        # res = super(ProductApproval, self).create(vals_list)
-        # if res.product_approval_id:
-        #     res.product_approval_id._update_state_based_on_approvals()
-        # return res 
+        return templates
+
+
 
     def write(self, vals):
 
 
-        # if self.assigned_to.id or self.state == 'confirmed': 
 
         #     approved_to_in_vals = vals.get('assigned_to')
         #     if approved_to_in_vals:
@@ -126,19 +130,33 @@ class ProductApproval(models.Model):
         #     return res
         
         # else:
-            res = super().write(vals)
-            if vals.get('state') == 'confirmed':
-                for record in self:
-                    record.write({'active': True})
-                    # Send email to all approval users
-                    approval_template = self.env.ref('product_approval_email_template', raise_if_not_found=False)
-                    if approval_template and record.existing_user_ids:
-                        email_list = [user.email_formatted for user in record.existing_user_ids if user.email]
-                        if email_list:
-                            approval_template.send_mail(record.id, force_send=True,
-                            email_values={'email_from': self.env.user.email_formatted,
-                                                    'email_to': ','.join(email_list), })
-            # return res
+        res = super().write(vals)
+
+        if not self.active:
+            for variant_id in self.product_variant_ids:
+                variant_id.write({
+                    'active': False,
+                    # 'is_hidden': True,
+                })
+
+        if vals.get('state') == 'confirmed':
+            for record in self:
+                record.write({'active': True})
+                for variant in record.product_variant_ids:
+                    variant.write({
+                        'active': True,
+                        # 'is_hidden': True,
+                    })
+
+                # Send email to all approval users
+                approval_template = self.env.ref('product_approval_email_template', raise_if_not_found=False)
+                if approval_template and record.existing_user_ids:
+                    email_list = [user.email_formatted for user in record.existing_user_ids if user.email]
+                    if email_list:
+                        approval_template.send_mail(record.id, force_send=True,
+                        email_values={'email_from': self.env.user.email_formatted,
+                                                'email_to': ','.join(email_list), })
+        return res
 
 
 class ProductApprovalUsers(models.Model):

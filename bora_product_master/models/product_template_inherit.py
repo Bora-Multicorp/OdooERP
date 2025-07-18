@@ -170,20 +170,6 @@ class ProductTemplateInherit(models.Model):
         return records
 
 
-    # @api.model
-    # def create(self, vals):
-    #     # 1. capitalize product name
-    #     if vals.get('name'):
-    #         vals['name'] = vals['name'].upper()
-
-    #     # 2. Make product archied
-    #     records = super().create(vals)
-
-    #     # 3. Generate SKUs
-    #     for rec in records:
-    #         rec._generate_and_assign_sku()
-
-    #     return records
 
     def write(self, vals):
         self._validate_fields(self)
