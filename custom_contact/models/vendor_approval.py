@@ -50,6 +50,7 @@ class ContactKYCApproval(models.Model):
     point_of_contact = fields.Char("Point of Contact / Purchase Manager (Bora Multicorp)")
     poc_user = fields.Many2one('res.users', string="Point of Contact to Vendor")
     business_legal_name = fields.Char("Business Legal Name")
+    is_same_trade_name = fields.Boolean(string="If Trade Name is same as Legal Name", help="Tick if trade name is same as legal name")
     business_trade_name = fields.Char("Business Trade Name")
     business_street = fields.Char("Address")
     business_city = fields.Char("City")

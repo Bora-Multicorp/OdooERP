@@ -120,6 +120,7 @@
                             <field name="point_of_contact"/>
                             <field name="poc_user" options="{'no_open': True, 'no_create': True, 'no_create_edit': True}"/>
                             <field name="business_legal_name"/>
+                            <field name="is_same_trade_name"/>
                             <field name="business_trade_name"/>
                             <!--<field name="const_business"/>-->
                             <!--<field name="no_partner_director"/>-->
@@ -143,6 +144,7 @@
                                 </group>
                                 <group string="KYC Form (Company Details)" name="kyc_company_details">
                                     <field name="business_legal_name" placeholder="Your Answer" widget="upper_case"/>
+                                    <field name="is_same_trade_name"/>
                                     <field name="business_trade_name" placeholder="Your Answer" widget="upper_case"/>
                                     <field name="address_detail">
                                         <list editable="bottom">
