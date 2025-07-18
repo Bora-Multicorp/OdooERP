@@ -43,6 +43,7 @@
                         <group string="KYC Form (Company Details)" name="kyc_company_details">
                             <field name="business_legal_name" placeholder="Your Answer" widget="upper_case"
                                    readonly="state not in ('draft')"/>
+                            <field name="is_same_trade_name" readonly="state not in ('draft')"/>
                             <field name="business_trade_name" placeholder="Your Answer" widget="upper_case"
                                    readonly="state not in ('draft')"/>
                             <field name="address_detail" readonly="state not in ('draft')">
@@ -93,7 +94,6 @@
                                     <field name="name" widget="upper_case"/>
                                     <field name="contact_no"/>
                                     <field name="email"/>
-
                                     <field name="aadhaar_card_filename" column_invisible="1"/>
                                     <field name="aadhaar_card" filename="aadhaar_card_filename" options="{'accepted_file_extensions': 'image/*, .pdf'}"/>
                                     <field name="pan_card_filename" readonly="1" column_invisible="1"/>
