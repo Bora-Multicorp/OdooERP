@@ -54,37 +54,8 @@ class CustomContact(models.Model):
         for rec in self:
             if rec.l10n_in_pan and not pan_pattern.match(rec.l10n_in_pan.upper()):
                 raise ValidationError(
-                    _("PAN Number must be in the format: 5 letters, 4 digits, and 1 letter (e.g., ABCDE1234F).")
-                )
+                    _("PAN Number must be in the format: 5 letters, 4 digits, and 1 letter (e.g., ABCDE1234F)."))
 
-    # @api.onchange('phone', 'mobile', 'country_id')
-    # def _onchange_validate_phone_numbers(self):
-    #     for rec in self:
-    #         country = rec.country_id
-    #         phone_code = country.phone_code or ''
-    #         country_name = country.name or 'the selected country'
-    #
-    #         def validate_number(value, label):
-    #             if not value:
-    #                 return None
-    #
-    #             clean_number = re.sub(r'[\s\-()]', '', value)
-    #             if not re.fullmatch(r'\+?\d{7,15}', clean_number):
-    #                 return f"{label} must be a valid phone number with 7–15 digits (e.g., +{phone_code}XXXXXXXXXX) for {country_name}.\nInvalid Value: {value}"
-    #             if phone_code and not clean_number.startswith(f"+{phone_code}") and not clean_number.startswith(
-    #                     phone_code):
-    #                 return f"{label} should start with the country code +{phone_code} (for {country_name}).\nInvalid Value: {value}"
-    #
-    #         phone_warning = validate_number(rec.phone, "Phone")
-    #         mobile_warning = validate_number(rec.mobile, "Mobile")
-    #
-    #         if phone_warning or mobile_warning:
-    #             return {
-    #                 'warning': {
-    #                     'title': "Phone Number Format Warning",
-    #                     'message': f"{phone_warning or ''}\n{mobile_warning or ''}".strip()
-    #                 }
-    #             }
 
     @api.constrains('vat')
     def _check_gst_no_format(self):
@@ -95,22 +66,25 @@ class CustomContact(models.Model):
                     "Invalid GST Number: '%s'. It must follow the 15-character format (e.g., 27ABCDE1234F1Z5)."
                 ) % rec.vat)
 
-
     # @api.constrains('phone', 'mobile')
     # def _check_phone_mobile_number(self):
-    #     phone_pattern = re.compile(r'^\d{10}$')  # Phone: exactly 10 digits
-    #     mobile_pattern = re.compile(r"^(\+\d{1,3}\s?)?(\d{4,5}\s?\d{3}\s?\d{3})$|^(\d{10})$")
+    #     phone_pattern = re.compile(r'^\d{10}$')
+    #     mobile_pattern = re.compile(r'^(\+?\d{1,3})?\d{10}$')  # Only up to country code + 10 digits
     #
     #     for rec in self:
-    #         if rec.phone and not phone_pattern.fullmatch(rec.phone):
-    #             raise ValidationError(_(
-    #                 "Phone number must be exactly 10 digits.\nInvalid Value: %s"
-    #             ) % rec.phone)
+    #         if rec.phone:
+    #             cleaned_phone = rec.phone.replace(" ", "")
+    #             if not phone_pattern.fullmatch(cleaned_phone):
+    #                 raise ValidationError(_(
+    #                     "Phone number must be exactly 10 digits.\nInvalid Value: %s"
+    #                 ) % rec.phone)
     #
-    #         if rec.mobile and not mobile_pattern.fullmatch(rec.mobile):
-    #             raise ValidationError(_(
-    #                 "Invalid mobile number format. Please use a format like '+91 6789 432 345' or '1234567890'.\nInvalid Value: %s"
-    #             ) % rec.mobile)
+    #         if rec.mobile:
+    #             cleaned_mobile = rec.mobile.replace(" ", "")
+    #             if not mobile_pattern.fullmatch(cleaned_mobile):
+    #                 raise ValidationError(_(
+    #                     "Mobile number must be valid 10-digit format. Use '+919876543210' or '9876543210'.\nInvalid Value: %s"
+    #                 ) % rec.mobile)
 
     @api.model
     def _get_view(self, view_id=None, view_type='form', **options):
