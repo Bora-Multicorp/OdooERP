@@ -35,7 +35,7 @@
                     <field name="imei2"/>
                     <field name="activation_status"/>
                     <field name="activation_date"/>
-                    <field name="remaining_months" readonly="1"/>
+                    <field name="active_months" readonly="1"/>
                 </xpath>
             </field>
         </record>

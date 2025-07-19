@@ -74,7 +74,7 @@
                     <field name="loose_or_master_carton" required="1"/>
                     <field name="brand_id" required="1"/>
                     <field name="model" required="1"/>
-                    <field name="hsn_code" required="1"/>
+                    <field name="hsn_code" required="1" placeholder="Enter 4, 6, or 8 digit code"/>
                 </xpath>
                 <xpath expr="//page[@name='general_information']/group[1]" position="after">
                     <group >
@@ -118,7 +118,7 @@
                         </xpath>
                         <group string="Reference &amp; Identification">
                             <field name="default_code" readonly="1" invisible="not default_code"/>
-                            <field name="company_ids" widget="many2many_tags" options="{'no_create': True}" groups="base.group_multi_company"/>
+                            <field name="company_ids" widget="many2many_tags" options="{'no_create': True}"/>
                         </group>
                     </group>
                 </xpath>

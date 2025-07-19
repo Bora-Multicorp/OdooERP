@@ -1,4 +1,5 @@
-from odoo import models, fields, api
+from odoo import models, fields, api, _
+from odoo.exceptions import ValidationError
 
 class ProductBrand(models.Model):
     _name = 'product.brand'
@@ -16,4 +17,3 @@ class ProductTemplate(models.Model):
     image_2 = fields.Image("Image 2")
     image_3 = fields.Image("Image 3")
     image_4 = fields.Image("Image 4")
-    image_5 = fields.Image("Image 5")

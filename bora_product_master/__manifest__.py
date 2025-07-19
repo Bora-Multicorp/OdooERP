@@ -31,6 +31,7 @@
         'views/imei_search.xml',
         'views/product_product_inherit_view.xml',
         'views/sku_internal_ref_search.xml',
+        'views/product_creation_from_po_block.xml',
         'wizards/activation_status_wizard_view.xml',
         'security/ir.model.access.csv',
         # 'static/src/xml/assets.xml',

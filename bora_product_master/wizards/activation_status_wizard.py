@@ -116,7 +116,6 @@ class ActivationStatusWizard(models.TransientModel):
         except Exception as e:
             raise ValidationError(f"Error grabbing purchase date from: {date_containing_string}")
 
-    # Custom override to test
 
 
     def _update_status_in_inventory(self, file_arraay_data):
