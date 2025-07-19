@@ -14,6 +14,7 @@
                 <field name="image_2" widget="image" alt="Product" class="ms-auto m-2" options="{'size': [100, 100]}"/>
                 <field name="image_3" widget="image" alt="Product" class="ms-auto m-2" options="{'size': [100, 100]}"/>
                 <field name="image_4" widget="image" alt="Product" class="ms-auto m-2" options="{'size': [100, 100]}"/>
+                <field name="image_5" widget="image" alt="Product" class="ms-auto m-2" options="{'size': [100, 100]}"/>
             </xpath>
 
             <!-- <xpath expr="//group[@name='internal_notes']" position="before">
