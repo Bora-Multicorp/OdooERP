@@ -181,10 +181,10 @@ class ProductTemplateInherit(models.Model):
 
         return res
 
-    @api.constrains('image_1920', 'image_1', 'image_2', 'image_3', 'image_4')
+    @api.constrains('image_1920', 'image_1', 'image_2', 'image_3', 'image_4', 'image_5')
     def _check_image_required(self):
         for record in self:
-            if not record.image_1920 or not record.image_1 or not record.image_2 or not record.image_3 or not record.image_4:
+            if not record.image_1920 or not record.image_1 or not record.image_2 or not record.image_3 or not record.image_4 or not record.image_5:
                 raise ValidationError(_("All images is required for the product."))
 
 
