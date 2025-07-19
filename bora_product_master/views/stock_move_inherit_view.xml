@@ -18,9 +18,9 @@
       <field name="arch" type="xml">
         <xpath expr="//field[@name='lot_name']" position="after">
           <field name="imei" placeholder="IMEI No."
-       column_invisible="(parent.show_quant or parent.has_tracking == 'none' or not parent.show_lots_m2o) and not parent.show_IMEI_field"/>
+       column_invisible="(parent.show_quant or parent.has_tracking == 'none' or not parent.show_lots_m2o) and not parent.show_IMEI_field" required="1"/>
           <field name="imei2" placeholder="IMEI No."
-       column_invisible="(parent.show_quant or parent.has_tracking == 'none' or not parent.show_lots_m2o) and not parent.show_IMEI_field2"/>
+       column_invisible="(parent.show_quant or parent.has_tracking == 'none' or not parent.show_lots_m2o) and not parent.show_IMEI_field2" required="1"/>
         </xpath>
       </field>
     </record>

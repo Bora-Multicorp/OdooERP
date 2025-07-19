@@ -1,5 +1,6 @@
 import re
 from odoo import models, fields, api, _
+from odoo.exceptions import ValidationError
 
 class ProductTemplateInherit(models.Model):
     _inherit = 'product.template'
@@ -145,12 +146,7 @@ class ProductTemplateInherit(models.Model):
     @api.onchange('hsn_code')
     def _onchange_hsn_code(self):
         if self.hsn_code and not re.fullmatch(r"\d{4}|\d{6}|\d{8}", self.hsn_code):
-            return {
-                'warning': {
-                    'title': "Invalid HSN Code",
-                    'message': "HSN code must be numeric and 4, 6, or 8 digits long."
-                }
-            }
+            raise ValidationError(f"HSN code must be numeric and 4, 6, or 8 digits long.")
 
 
     @api.model_create_multi
@@ -172,7 +168,6 @@ class ProductTemplateInherit(models.Model):
 
 
     def write(self, vals):
-        self._validate_fields(self)
         # 1. capitalize product name
         if vals.get('name'):
             vals['name'] = vals['name'].upper()
@@ -185,6 +180,12 @@ class ProductTemplateInherit(models.Model):
                 rec._generate_and_assign_sku()
 
         return res
+
+    @api.constrains('image_1920', 'image_1', 'image_2', 'image_3', 'image_4')
+    def _check_image_required(self):
+        for record in self:
+            if not record.image_1920 or not record.image_1 or not record.image_2 or not record.image_3 or not record.image_4:
+                raise ValidationError(_("All images is required for the product."))
 
 
 
