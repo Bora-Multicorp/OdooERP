@@ -7,8 +7,7 @@
     'version': '0.1',
     'license': 'LGPL-3',
     # any module necessary for this one to work correctly
-    'depends': ['base', 'contacts', 'account', 'accountant', 'purchase', 'sale', 'survey', 'survey_upload_file',
-                'case_sensitive_widget', 'sh_survey_matrix_adv'],
+    'depends': ['base', 'contacts', 'account', 'accountant', 'purchase', 'sale', 'survey', 'case_sensitive_widget', 'sh_survey_matrix_adv'],
     # always loaded
     'data': [
         'security/ir.model.access.csv',

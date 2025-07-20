@@ -42,14 +42,24 @@
             <field name="question_placeholder">Your Answer</field>
         </record>
         <!-- Point of Contact / Purchase Manager (Bora Multicorp) -->
-        <record model="survey.question" id="point_of_contact_kyc_survey">
+        <record model="survey.question" id="company_point_of_contact_kyc_survey">
             <field name="title">Point of Contact / Purchase Manager (Bora Multicorp)</field>
+            <field name="survey_id" ref="vendor_kyc_form_survey"/>
+            <field name="sequence">3</field>
+            <field name="question_type">que_sh_many2one</field>
+            <field name="que_sh_many2one_model_id" ref="base.model_res_users"/>
+            <field name="constr_mandatory">True</field>
+        </record>
+        <!-- Point of Contact (Vendor) -->
+        <record model="survey.question" id="point_of_contact_kyc_survey">
+            <field name="title">Point of Contact (Vendor)</field>
             <field name="survey_id" ref="vendor_kyc_form_survey"/>
             <field name="sequence">3</field>
             <field name="question_type">char_box</field>
             <field name="constr_mandatory">True</field>
             <field name="question_placeholder">Your Answer</field>
         </record>
+
 
         <!-- Page2: KYC Form (Company Details)-->
         <record model="survey.question" id="vendor_kyc_form_survey_p2">
@@ -500,7 +510,7 @@
             <field name="title">Aadhaar Card</field>
             <field name="survey_id" ref="vendor_kyc_form_survey"/>
             <field name="sequence">25</field>
-            <field name="question_type">upload_file</field>
+            <field name="question_type">que_sh_file</field>
             <field name="upload_multiple_file">False</field>
             <field name="constr_mandatory">True</field>
         </record>
@@ -510,7 +520,7 @@
             <field name="title">PAN Card</field>
             <field name="survey_id" ref="vendor_kyc_form_survey"/>
             <field name="sequence">26</field>
-            <field name="question_type">upload_file</field>
+            <field name="question_type">que_sh_file</field>
             <field name="upload_multiple_file">False</field>
             <field name="constr_mandatory">True</field>
         </record>-->
@@ -532,7 +542,7 @@
             <field name="title">PAN Card Document(Company)</field>
             <field name="survey_id" ref="vendor_kyc_form_survey"/>
             <field name="sequence">26</field>
-            <field name="question_type">upload_file</field>
+            <field name="question_type">que_sh_file</field>
             <field name="upload_multiple_file">True</field>
             <field name="constr_mandatory">False</field>
             <field name="triggering_answer_ids"
@@ -592,7 +602,7 @@
             <field name="title">Company GST Certificate</field>
             <field name="survey_id" ref="vendor_kyc_form_survey"/>
             <field name="sequence">29</field>
-            <field name="question_type">upload_file</field>
+            <field name="question_type">que_sh_file</field>
             <field name="upload_multiple_file">True</field>
             <field name="constr_mandatory">True</field>
         </record>
@@ -609,7 +619,7 @@
             <field name="title">Shop Act documents</field>
             <field name="survey_id" ref="vendor_kyc_form_survey"/>
             <field name="sequence">30</field>
-            <field name="question_type">upload_file</field>
+            <field name="question_type">que_sh_file</field>
             <field name="upload_multiple_file">True</field>
             <field name="constr_mandatory">True</field>
         </record>
@@ -618,7 +628,7 @@
             <field name="title">Udyam Documents</field>
             <field name="survey_id" ref="vendor_kyc_form_survey"/>
             <field name="sequence">30</field>
-            <field name="question_type">upload_file</field>
+            <field name="question_type">que_sh_file</field>
             <field name="upload_multiple_file">True</field>
             <field name="constr_mandatory">True</field>
         </record>
@@ -645,7 +655,7 @@
             <field name="title">Shop Photos</field>
             <field name="survey_id" ref="vendor_kyc_form_survey"/>
             <field name="sequence">32</field>
-            <field name="question_type">upload_file</field>
+            <field name="question_type">que_sh_file</field>
             <field name="upload_multiple_file">True</field>
             <field name="constr_mandatory">True</field>
         </record>
@@ -654,7 +664,7 @@
             <field name="title">Shop Videos</field>
             <field name="survey_id" ref="vendor_kyc_form_survey"/>
             <field name="sequence">33</field>
-            <field name="question_type">upload_file</field>
+            <field name="question_type">que_sh_file</field>
             <field name="upload_multiple_file">True</field>
             <field name="constr_mandatory">True</field>
         </record>
@@ -676,7 +686,7 @@
             <field name="title">Incorporation Certificate</field>
             <field name="survey_id" ref="vendor_kyc_form_survey"/>
             <field name="sequence">34</field>
-            <field name="question_type">upload_file</field>
+            <field name="question_type">que_sh_file</field>
             <field name="upload_multiple_file">True</field>
             <field name="constr_mandatory">False</field>
             <field name="triggering_answer_ids"
@@ -688,7 +698,7 @@
             <field name="title">Partnership Deed or LLP Deed</field>
             <field name="survey_id" ref="vendor_kyc_form_survey"/>
             <field name="sequence">35</field>
-            <field name="question_type">upload_file</field>
+            <field name="question_type">que_sh_file</field>
             <field name="upload_multiple_file">False</field>
             <field name="constr_mandatory">False</field>
             <field name="triggering_answer_ids"
@@ -701,7 +711,7 @@
             <field name="title">MOA or AOA</field>
             <field name="survey_id" ref="vendor_kyc_form_survey"/>
             <field name="sequence">36</field>
-            <field name="question_type">upload_file</field>
+            <field name="question_type">que_sh_file</field>
             <field name="upload_multiple_file">True</field>
             <field name="constr_mandatory">False</field>
             <field name="triggering_answer_ids"
@@ -725,7 +735,7 @@
             <field name="title">Electricity bill</field>
             <field name="survey_id" ref="vendor_kyc_form_survey"/>
             <field name="sequence">38</field>
-            <field name="question_type">upload_file</field>
+            <field name="question_type">que_sh_file</field>
             <field name="upload_multiple_file">True</field>
             <field name="constr_mandatory">True</field>
             <field name="triggering_answer_ids"
@@ -789,7 +799,7 @@
             <field name="title">Cancelled Cheque</field>
             <field name="survey_id" ref="vendor_kyc_form_survey"/>
             <field name="sequence">47</field>
-            <field name="question_type">upload_file</field>
+            <field name="question_type">que_sh_file</field>
             <field name="upload_multiple_file">True</field>
             <field name="constr_mandatory">False</field>
         </record>-->
