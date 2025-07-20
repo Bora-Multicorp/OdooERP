@@ -135,6 +135,10 @@ class SurveyQuestion(models.Model):
         ('que_sh_many2many', 'Many2many'),
         ('que_sh_address', 'Address'),
     ])
+    upload_multiple_file = fields.Boolean(string='Upload Multiple File',
+                                          help='Check this box if you want to '
+                                               'allow users to upload '
+                                               'multiple files')
     # ------------------------------------------------------------
     # VALIDATION
     # ------------------------------------------------------------

@@ -38,36 +38,75 @@ SurveyFormWidget.include({
      * @param {FileInputEvent} ev
      */
     _onChangeFileInput: async function (ev) {
-        var self = this;
-        
-        var $fileUpload = $(ev.currentTarget);
-        if ($fileUpload.length) {
-            let FILE_LIST = new Array();
-            const toBase64 = file => new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = () => resolve(reader.result);
-                reader.onerror = error => reject(error);
-                reader.readAsDataURL(file);
-            });
-            async function ConvertBase64($fileUpload) {
-                for (let index = 0; index < $fileUpload[0].files.length; index++) {
-                    const file = $fileUpload[0].files[index];
-                    var file_data = await toBase64(file).then(function (result) {
-                        var result_list = result.split(',');
-                        if (result_list.length == 2) {
-                            return result_list[1];
-                        }
-                    });
-                    if (file_data) {
-                        FILE_LIST.push({ 'fname': file.name, 'type': file.type, 'datas': file_data })
-                    }
-                }
-            }
-            await ConvertBase64($fileUpload);
-            self.SH_FILE_DATA_DICTIONARY[$fileUpload[0].name] = FILE_LIST;
+    var self = this;
+    var $fileUpload = $(ev.currentTarget);
+
+    if (!$fileUpload.length) return;
+
+    // Allowed types
+    const allowedImagePdfTypes = [
+        'image/jpeg', 'image/png', 'image/jpg', 'image/gif',
+        'image/bmp', 'image/webp', 'image/svg+xml', 'application/pdf'
+    ];
+
+    const allowedVideoTypes = [
+        'video/mp4', 'video/mpeg', 'video/ogg',
+        'video/webm', 'video/avi', 'video/quicktime'
+    ];
+
+    const FILE_LIST = [];
+
+    const toBase64 = (file) => new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = error => reject(error);
+        reader.readAsDataURL(file);
+    });
+
+    // 🔍 Get the question label
+    const labelText = $fileUpload
+        .closest('.js_question-wrapper')
+        .find('.o_survey_question_title, h3 span')
+        .first()
+        .text()
+        .trim()
+        .toLowerCase();
+
+    const isShopVideos = labelText.includes("shop videos");
+
+    for (let i = 0; i < $fileUpload[0].files.length; i++) {
+        const file = $fileUpload[0].files[i];
+
+        // 🚫 "Shop Videos" must only contain video files
+        if (isShopVideos && !allowedVideoTypes.includes(file.type)) {
+            alert(`Invalid file type for "${labelText}". Only video files are allowed.`);
+            $fileUpload.val('');  // Clear input
+            return;
         }
-    },
-    
+
+        // 🚫 All other questions: only allow images + PDF (no video)
+        if (!isShopVideos && !allowedImagePdfTypes.includes(file.type)) {
+            alert(`Invalid file type for "${labelText}". Only image and PDF files are allowed.`);
+            $fileUpload.val('');
+            return;
+        }
+
+        // ✅ Convert to base64 and add to file list
+        const result = await toBase64(file);
+        const base64data = result.split(',')[1];
+        if (base64data) {
+            FILE_LIST.push({
+                'fname': file.name,
+                'type': file.type,
+                'datas': base64data
+            });
+        }
+    }
+
+    // ✅ Save to shared dictionary
+    self.SH_FILE_DATA_DICTIONARY[$fileUpload[0].name] = FILE_LIST;
+},
+
     /**
      * Check if the URL is a valid or not.
      * @private
