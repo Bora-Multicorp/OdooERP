@@ -567,84 +567,100 @@ SurveyFormWidget.include({
     },
 
     _prepareSubmitValues: function (formData, params) {
-        var self = this;
-        formData.forEach(function (value, key) {
-            switch (key) {
-                case "csrf_token":
-                case "token":
-                case "page_id":
-                case "question_id":
-                    params[key] = value;
-                    break;
-            }
-        });
+    var self = this;
+    formData.forEach(function (value, key) {
+        switch (key) {
+            case "csrf_token":
+            case "token":
+            case "page_id":
+            case "question_id":
+                params[key] = value;
+                break;
+        }
+    });
 
-        // Get all question answers by question type
-        this.$("[data-question-type]").each(function () {
-            switch ($(this).data("questionType")) {
-                case 'text_box':
-                case 'char_box':
-                case 'numerical_box':
-                    params[this.name] = this.value;
-                    break;
-                case 'date':
-                case 'datetime':{
-                    const [parse, serialize] =
-                        $(this).data("questionType") === "date"
-                            ? [parseDate, serializeDate]
-                            : [parseDateTime, serializeDateTime];
-                    const date = parse(this.value);
-                    params[this.name] = date ? serialize(date) : "";
-                    break;
-                }
-                case 'simple_choice_radio':
-                case 'multiple_choice':
-                    params = self._prepareSubmitChoices(params, $(this), $(this).data('name'));
-                    break;
-                case 'matrix':
-                    params = self._prepareSubmitAnswersMatrix(params, $(this));
-                    break;
-                case "que_sh_color":
-                    params[this.name] = this.value;
-                    break;
-                case "que_sh_email":
-                    params[this.name] = this.value;
-                    break;
-                case "que_sh_url":
-                    params[this.name] = this.value;
-                    break;
-                case "que_sh_time":
-                    params[this.name] = this.value;
-                    break;
-                case "que_sh_range":
-                    params[this.name] = this.value;
-                    break;
-                case "que_sh_week":
-                    params[this.name] = this.value;
-                    break;
-                case "que_sh_month":
-                    params[this.name] = this.value;
-                    break;
-                case "que_sh_password":
-                    params[this.name] = this.value;
-                    break;
-                case "que_sh_file":
-                    params[this.name] = self.SH_FILE_DATA_DICTIONARY[this.name] || []
-                    break;
-                case "que_sh_address":
-                    params = self._prepareSubmitAnswersAddress(params, this.name, $(this));
-                    break;
-                case "que_sh_many2one":
-                    params[this.name] = $(this).parent().find("input").val();
-                    break;
-                case "que_sh_many2many":
-                    params = self._prepareSubmitAnswersMany2many(params, $(this), $(this).attr("name"));
-                    break;
-                case "que_sh_signature":
-                    params = self._prepareSubmitAnswersSignature(params, this.name, $(this));
-                    break;
+    // Get all question answers by question type
+    let submissionPrevented = false;  // ✅ Declare at the top
+    this.$("[data-question-type]").each(function () {
+        if (submissionPrevented) return false;  // ✅ Stop if invalid selection was found
+
+        switch ($(this).data("questionType")) {
+            case 'text_box':
+            case 'char_box':
+            case 'numerical_box':
+                params[this.name] = this.value;
+                break;
+            case 'date':
+            case 'datetime': {
+                const [parse, serialize] =
+                    $(this).data("questionType") === "date"
+                        ? [parseDate, serializeDate]
+                        : [parseDateTime, serializeDateTime];
+                const date = parse(this.value);
+                params[this.name] = date ? serialize(date) : "";
+                break;
             }
-        });
-    },
+            case 'simple_choice_radio':
+            case 'multiple_choice':
+                params = self._prepareSubmitChoices(params, $(this), $(this).data('name'));
+                break;
+            case 'matrix':
+                params = self._prepareSubmitAnswersMatrix(params, $(this));
+                break;
+            case "que_sh_color":
+            case "que_sh_email":
+            case "que_sh_url":
+            case "que_sh_time":
+            case "que_sh_range":
+            case "que_sh_week":
+            case "que_sh_month":
+            case "que_sh_password":
+                params[this.name] = this.value;
+                break;
+            case "que_sh_file":
+                params[this.name] = self.SH_FILE_DATA_DICTIONARY[this.name] || []
+                break;
+            case "que_sh_address":
+                params = self._prepareSubmitAnswersAddress(params, this.name, $(this));
+                break;
+
+            // ✅ Fixed many2one logic
+            case "que_sh_many2one": {
+                const $input = $(this).parent().find("input");
+                const userInput = $input.val()?.trim();
+                const datalistId = $input.attr("list");
+                const $datalist = $("#" + datalistId);
+
+                const validOptions = $datalist.find("option").map(function () {
+                    return $(this).val();
+                }).get();
+
+                const selectedVal = validOptions.includes(userInput) ? userInput : "";
+
+                if (selectedVal) {
+                    params[this.name] = selectedVal;
+                } else {
+                    const label = $(this)
+                        .closest(".js_question-wrapper")
+                        .find(".o_survey_question_title, h3 span")
+                        .text()
+                        .trim();
+
+                    alert(`Please select a valid option for "${label}" from the dropdown list.`);
+                    submissionPrevented = true;
+                    return false; // 🚫 Stop further processing
+                }
+                break;
+            }
+
+            case "que_sh_many2many":
+                params = self._prepareSubmitAnswersMany2many(params, $(this), $(this).attr("name"));
+                break;
+            case "que_sh_signature":
+                params = self._prepareSubmitAnswersSignature(params, this.name, $(this));
+                break;
+        }
+    });
+},
 });
 
