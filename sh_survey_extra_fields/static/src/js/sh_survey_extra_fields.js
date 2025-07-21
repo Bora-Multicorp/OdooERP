@@ -43,15 +43,26 @@ SurveyFormWidget.include({
 
     if (!$fileUpload.length) return;
 
-    // Allowed types
-    const allowedImagePdfTypes = [
+    // 🔒 File type groups
+    const imageTypes = [
         'image/jpeg', 'image/png', 'image/jpg', 'image/gif',
-        'image/bmp', 'image/webp', 'image/svg+xml', 'application/pdf'
+        'image/bmp', 'image/webp', 'image/svg+xml'
     ];
 
-    const allowedVideoTypes = [
+    const videoTypes = [
         'video/mp4', 'video/mpeg', 'video/ogg',
         'video/webm', 'video/avi', 'video/quicktime'
+    ];
+
+    const pdfTypes = ['application/pdf'];
+
+    const officeTypes = [
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',  // docx
+        'application/vnd.ms-excel',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',        // xlsx
+        'application/vnd.ms-powerpoint',
+        'application/vnd.openxmlformats-officedocument.presentationml.presentation' // pptx
     ];
 
     const FILE_LIST = [];
@@ -63,7 +74,7 @@ SurveyFormWidget.include({
         reader.readAsDataURL(file);
     });
 
-    // 🔍 Get the question label
+    // 🔍 Get the question label (e.g., "Shop Photos", "Shop Videos")
     const labelText = $fileUpload
         .closest('.js_question-wrapper')
         .find('.o_survey_question_title, h3 span')
@@ -73,25 +84,37 @@ SurveyFormWidget.include({
         .toLowerCase();
 
     const isShopVideos = labelText.includes("shop videos");
+    const isShopPhotos = labelText.includes("shop photos");
 
     for (let i = 0; i < $fileUpload[0].files.length; i++) {
         const file = $fileUpload[0].files[i];
 
-        // 🚫 "Shop Videos" must only contain video files
-        if (isShopVideos && !allowedVideoTypes.includes(file.type)) {
+        // 🔒 "Shop Videos" → only videos
+        if (isShopVideos && !videoTypes.includes(file.type)) {
             alert(`Invalid file type for "${labelText}". Only video files are allowed.`);
-            $fileUpload.val('');  // Clear input
-            return;
-        }
-
-        // 🚫 All other questions: only allow images + PDF (no video)
-        if (!isShopVideos && !allowedImagePdfTypes.includes(file.type)) {
-            alert(`Invalid file type for "${labelText}". Only image and PDF files are allowed.`);
             $fileUpload.val('');
             return;
         }
 
-        // ✅ Convert to base64 and add to file list
+        // 🔒 "Shop Photos" → only images
+        if (isShopPhotos && !imageTypes.includes(file.type)) {
+            alert(`Invalid file type for "${labelText}". Only image files are allowed.`);
+            $fileUpload.val('');
+            return;
+        }
+
+        // 🔒 Others → allow image + PDF + Office
+        if (
+            !isShopVideos &&
+            !isShopPhotos &&
+            ![...imageTypes, ...pdfTypes, ...officeTypes].includes(file.type)
+        ) {
+            alert(`Invalid file type: ${file.name}\n\nOnly image, PDF, or Office documents are allowed.`);
+            $fileUpload.val('');
+            return;
+        }
+
+        // ✅ Convert to base64 and store
         const result = await toBase64(file);
         const base64data = result.split(',')[1];
         if (base64data) {
@@ -103,7 +126,7 @@ SurveyFormWidget.include({
         }
     }
 
-    // ✅ Save to shared dictionary
+    // ✅ Assign to dictionary
     self.SH_FILE_DATA_DICTIONARY[$fileUpload[0].name] = FILE_LIST;
 },
 
