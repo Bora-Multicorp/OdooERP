@@ -54,27 +54,6 @@ class ProductApprovalConfig(models.Model):
             res._update_draft_product_approvals()
         return res_list
 
-
-    # @api.model
-    # def create(self, vals):
-    #     if not vals.get('sequence'):
-    #         seq_str = self.env['ir.sequence'].next_by_code('product.approval.config')
-    #         try:
-    #             vals['sequence'] = int(seq_str)
-    #         except (ValueError, TypeError):
-    #             raise ValidationError(_("Failed to generate a valid sequence number."))
-
-    #     # Validate sequence and user_id
-    #     if vals['sequence'] <= 0:
-    #         raise ValidationError(_("Sequence must be a positive number."))
-
-    #     self._validate_unique_user(vals.get('user_id'))
-    #     self._validate_unique_sequence(vals.get('sequence'))
-
-    #     res = super().create(vals)
-    #     res._update_draft_product_approvals()
-    #     return res
-
     def write(self, vals):
         for rec in self:
             if 'sequence' in vals:
@@ -96,7 +75,7 @@ class ProductApprovalConfig(models.Model):
 
     def _update_draft_product_approvals(self):
         """Update approval_users_ids on draft product records."""
-        product_approvals = self.env['product.template'].search([('state', '=', 'draft')])
+        product_approvals = self.env['product.template'].search([('state', '=', 'draft'),('active', '=', False)])
         config_users = self.search([]).sorted(key=lambda r: r.sequence)
 
         for product in product_approvals:

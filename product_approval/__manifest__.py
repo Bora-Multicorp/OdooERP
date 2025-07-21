@@ -19,7 +19,6 @@
     'assets': {
         'web.assets_backend': [
             'product_approval/static/src/xml/ribbon.xml',
-            # 'product_approval/static/src/js/backend_notification.js',
         ],
     },
     'installable': True,

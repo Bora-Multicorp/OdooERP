@@ -11,7 +11,7 @@
                     <attribute name="invisible">state != 'confirmed' or not is_storable</attribute>
                 </xpath>
                 <xpath expr="//div[@name='options']" position="after">
-                    <field name="is_hidden" invisible="True"/>
+                    <field name="is_hidden_for_approval" invisible="True"/>
                 </xpath>
                 <xpath expr="//form/header" position="inside">
                     <button name="confirm_submit_form" string="Submit for Approval" type="object"
@@ -33,7 +33,7 @@
                     </field> -->
                 </xpath>
                 <xpath expr="//sheet/notebook" position="inside">
-                    <page string="Approval Authorities" name="approval_users" invisible="not is_hidden">
+                    <page string="Approval Authorities" name="approval_users" invisible="not is_hidden_for_approval">
                         <field name="product_id" readonly="1"/>
                         <!-- <field name="name1" invisible="0"/> -->
                         <field name="is_approved" invisible="1"/>

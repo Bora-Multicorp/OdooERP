@@ -3,7 +3,7 @@
 
   <t t-name="web.Ribbon" t-inherit="web.Ribbon" t-inherit-mode="extension">
     <xpath expr="//div[contains(@class, 'ribbon')]" position="replace">
-      <t t-if="!(props.text === 'Archived' and props.record?.data?.is_hidden)">
+      <t t-if="!(props.text === 'Archived' and props.record?.data?.is_hidden_for_approval)">
         <div class="ribbon ribbon-top-right">
           <span t-att-class="classes" t-att-title="props.title">
             <t t-esc="props.text"/>

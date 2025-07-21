@@ -74,8 +74,10 @@ class ProductTemplateInherit(models.Model):
     def _generate_and_assign_sku(self):
         self.ensure_one()
 
-        if self.product_variant_ids:
-            for variant in self.product_variant_ids:
+
+        variants = self.env['product.product'].with_context(active_test=False).search([('product_tmpl_id', '=', self.id)])
+        if variants:
+            for variant in variants:
                 variant.default_code = self._generate_sku(variant.id)
         else:
             self.default_code = self._generate_sku(self.id)
@@ -97,7 +99,8 @@ class ProductTemplateInherit(models.Model):
 
         # Attributes
         attr_part = ""
-        for variant in self.product_variant_ids:
+        variants = self.env['product.product'].with_context(active_test=False).search([('product_tmpl_id', '=', self.id)])
+        for variant in variants:
             if variant.id == varient_id:
                 values = variant.product_template_attribute_value_ids.mapped('name')
                 if values:
@@ -108,6 +111,7 @@ class ProductTemplateInherit(models.Model):
             sku += f"-{attr_part}-{varient_id}"
         else:
             sku += f"-{self.id}"
+
         return sku
 
 
@@ -143,7 +147,8 @@ class ProductTemplateInherit(models.Model):
 
     
     # HSN code validation
-    @api.onchange('hsn_code')
+    
+    @api.constrains('hsn_code')
     def _onchange_hsn_code(self):
         if self.hsn_code and not re.fullmatch(r"\d{4}|\d{6}|\d{8}", self.hsn_code):
             raise ValidationError(f"HSN code must be numeric and 4, 6, or 8 digits long.")
@@ -151,6 +156,7 @@ class ProductTemplateInherit(models.Model):
 
     @api.model_create_multi
     def create(self, vals_list):
+
         # 1. Capitalize product name in each dict
         for vals in vals_list:
             if vals.get('name'):
@@ -185,10 +191,7 @@ class ProductTemplateInherit(models.Model):
     def _check_image_required(self):
         for record in self:
             if not record.image_1920 or not record.image_1 or not record.image_2 or not record.image_3 or not record.image_4 or not record.image_5:
-                raise ValidationError(_("All images is required for the product."))
-
-
-
+                raise ValidationError(_("All images are required for the product."))
 
 
 class ProductBrand(models.Model):

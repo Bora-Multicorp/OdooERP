@@ -12,7 +12,7 @@ class ProductApproval(models.Model):
     _inherit = 'product.template'
     _description = 'Product approvals'
 
-    is_hidden = fields.Boolean(default=False) 
+    is_hidden_for_approval = fields.Boolean(default=False) 
 
     is_approved = fields.Boolean(string='Is Approved', default=False, help="Indicates if the product has been approved.")
 
@@ -33,15 +33,12 @@ class ProductApproval(models.Model):
 
     product_id = fields.Many2one('product.template', string="Product")
 
-
     state = fields.Selection([
         ('draft', 'Draft'),
         ('pending', 'Pending Approval'),
         ('confirmed', 'Confirmed'),
         ('rejected', 'Rejected')
     ], default='draft', string='Status', tracking=True)
-
-        
 
     approval_users_ids = fields.One2many('product.approval.users', 'product_approval_id', 'Approval Authorities',
                                          help='Approval Authority Details')
@@ -69,7 +66,7 @@ class ProductApproval(models.Model):
 
     def action_unarchive(self):
         for record in self:
-            if record.is_hidden:
+            if record.is_hidden_for_approval:
                 raise UserError("This product cannot be unarchived because it is under approval process.")
         return super(ProductApproval, self).action_unarchive()
 
@@ -101,32 +98,35 @@ class ProductApproval(models.Model):
             elif states and all(s == 'approve' for s in states):
                 rec.state = 'confirmed'
 
+    domain_field = fields.Char(compute='_compute_domain')
+    
+    @api.depends('state')
+    def _compute_domain(self):
+        for rec in self:
+            if rec.state == 'draft':
+                rec.domain_field = "[('active', '=', False), ('is_hidden_for_approval', '=', True), '|', ('create_uid', '=', uid)]"
+            else:
+                rec.domain_field = "[('active', '=', False), ('is_hidden_for_approval', '=', True)]"
+
 
 
 
     @api.model_create_multi
     def create(self, vals_list):
         for vals in vals_list:
-            vals['is_hidden'] = True
+            vals['is_hidden_for_approval'] = True
             vals['active'] = False  # Archive product by default
 
         templates = super(ProductApproval, self).create(vals_list)
         for template in templates:
             template.product_variant_ids.write({
                 'active': False,
-                # 'is_hidden': True,
+                # 'is_hidden_for_approval': True,
             })
 
         return templates
 
     def write(self, vals):
-
-        # print('------------------------- vals.get(assigned_to) => ', vals.get('assigned_to'))
-        # print('--------------------- self.state => ', self.state)
-
-        # if vals.get('assigned_to') or self.state == 'pending' or self.state == 'rejected':
-        #     print("***************.  Return.   *******")
-        #     return
 
         res = super().write(vals)
 
@@ -134,7 +134,7 @@ class ProductApproval(models.Model):
             for variant_id in self.product_variant_ids:
                 variant_id.write({
                     'active': False,
-                    # 'is_hidden': True,
+                    # 'is_hidden_for_approval': True,
                 })
 
         if vals.get('state') == 'confirmed':
@@ -143,7 +143,7 @@ class ProductApproval(models.Model):
                 for variant in record.product_variant_ids:
                     variant.write({
                         'active': True,
-                        # 'is_hidden': True,
+                        # 'is_hidden_for_approval': True,
                     })
 
                 # Send email to all approval users
@@ -155,73 +155,7 @@ class ProductApproval(models.Model):
                         email_values={'email_from': self.env.user.email_formatted,
                                                 'email_to': ','.join(email_list), })
         return res
-
-    # @api.model
-    # def _get_view(self, view_id=None, view_type='form', **options):
-    #     # Clear caches to ensure the latest data is used, though often not needed here.
-    #     # self.clear_caches() # Generally not recommended within _get_view as it can impact performance
-
-    #     # Call the original _get_view method to get the base architecture and view object
-    #     print("----------   in _get_view")
-
-    #     arch, view = super()._get_view(view_id, view_type, **options)
-
-
-    #     if view_type == 'form':
-    #         # Get the ID of the current record being displayed, if available
-    #         # This is crucial for fetching the 'is_hidden' field value.
-    #         # 'res_id' is passed in options for form views.
-    #         record_id = options.get('res_id')
-    #         is_hidden = False # Default to not hidden
-
-    #         if record_id:
-    #             # Fetch the 'is_hidden' field value for the current record
-    #             record = self.browse(record_id)
-    #             if record.exists(): # Ensure the record actually exists
-    #                 is_hidden = record.is_hidden # Assuming 'is_hidden' is a field on product.template
-
-    #         _logger.info(f"Form for record ID {record_id}, is_hidden: {is_hidden}")
-
-    #         # Iterate through all field elements in the architecture
-    #         for field in arch.xpath("//field"):
-    #             field_name = field.get('name')
-    #             # If the 'is_hidden' field is True for the current record, make all fields read-only
-    #             if is_hidden:
-    #                 _logger.info(f"Setting field '{field_name}' to readonly (is_hidden is True).")
-    #                 field.set('readonly', '1')
-    #             else:
-    #                 # If 'is_hidden' is False, ensure fields are NOT forced to readonly by this method.
-    #                 # This is important if they might have 'readonly' set from other sources.
-    #                 # You might want to explicitly remove 'readonly' if it's there from a previous pass.
-    #                 if field.get('readonly') == '1': # Only remove if we explicitly set it previously
-    #                     field.set('readonly', '0') # Or field.attrib.pop('readonly', None)
-
-    #         # Also consider making buttons invisible or disabled if the form is read-only
-    #         # This requires knowing the XPath for your specific buttons.
-    #         # Example for header buttons (like 'Edit', 'Save'):
-    #         # for button in arch.xpath("//header/button"):
-    #         #     button_name = button.get('name')
-    #         #     if is_hidden:
-    #         #         button.set('invisible', '1') # Makes button invisible
-    #         #         # Or set 'attrs' if you want more nuanced control (e.g., based on state)
-    #         #         # button.set('attrs', "{'invisible': [('is_hidden', '=', True)]}")
-    #         #     else:
-    #         #         # Ensure buttons are visible if not hidden
-    #         #         button.set('invisible', '0') # Or button.attrib.pop('invisible', None)
-
-    #     return arch, view
-
-
-    # @api.model
-    # def _get_view(self, view_id=None, view_type='form', **options):
-    #     self.clear_caches()
-    #     arch, view = super()._get_view(view_id, view_type, **options)
-    #     if view_type == 'form':
-    #         for field in arch.xpath("//field"):
-
-    #             print('1111111111111', field, field.get('name'))
-    #             field.set('readonly', '1')
-    #     return arch, view
+    
 
 
 class ProductApprovalUsers(models.Model):
@@ -252,12 +186,3 @@ class ProductApprovalUsers(models.Model):
             if res.product_approval_id:
                 res.product_approval_id._update_state_based_on_approvals()
         return res_list
-
-
-
-    # @api.model
-    # def create(self, vals):
-    #     res = super().create(vals)
-    #     if res.product_approval_id:
-    #         res.product_approval_id._update_state_based_on_approvals()
-    #     return res 
