@@ -17,7 +17,8 @@ SurveyFormWidget.include({
         "change .js_cls_country_id": "_onChangeCountry",
         'change .sh_file_input': '_onChangeFileInput',
         "click .js_cls_sh_signature_clear_btn": "_onClickSignatureClearButton",
-        "input input[type='range'].o_survey_question_email_box": "_onInputRangeValueChange",            
+        "input input[type='range'].o_survey_question_email_box": "_onInputRangeValueChange",
+        //"change input[type='radio']": "_onRadioSelectionChange",  // 👈 Add this line
     }),
 
     /**
@@ -40,33 +41,21 @@ SurveyFormWidget.include({
     _onChangeFileInput: async function (ev) {
     var self = this;
     var $fileUpload = $(ev.currentTarget);
-
     if (!$fileUpload.length) return;
 
-    // 🔒 File type groups
-    const imageTypes = [
-        'image/jpeg', 'image/png', 'image/jpg', 'image/gif',
-        'image/bmp', 'image/webp', 'image/svg+xml'
-    ];
-
-    const videoTypes = [
-        'video/mp4', 'video/mpeg', 'video/ogg',
-        'video/webm', 'video/avi', 'video/quicktime'
-    ];
-
+    const imageTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif', 'image/bmp', 'image/webp', 'image/svg+xml'];
+    const videoTypes = ['video/mp4', 'video/mpeg', 'video/ogg', 'video/webm', 'video/avi', 'video/quicktime'];
     const pdfTypes = ['application/pdf'];
-
     const officeTypes = [
         'application/msword',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',  // docx
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
         'application/vnd.ms-excel',
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',        // xlsx
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         'application/vnd.ms-powerpoint',
-        'application/vnd.openxmlformats-officedocument.presentationml.presentation' // pptx
+        'application/vnd.openxmlformats-officedocument.presentationml.presentation'
     ];
 
     const FILE_LIST = [];
-
     const toBase64 = (file) => new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = () => resolve(reader.result);
@@ -74,60 +63,128 @@ SurveyFormWidget.include({
         reader.readAsDataURL(file);
     });
 
-    // 🔍 Get the question label (e.g., "Shop Photos", "Shop Videos")
-    const labelText = $fileUpload
-        .closest('.js_question-wrapper')
+    const labelText = $fileUpload.closest('.js_question-wrapper')
         .find('.o_survey_question_title, h3 span')
-        .first()
-        .text()
-        .trim()
-        .toLowerCase();
+        .first().text()
+        .trim().toLowerCase();
 
-    const isShopVideos = labelText.includes("shop videos");
-    const isShopPhotos = labelText.includes("shop photos");
+    let matrixColumnLabel = '';
+    try {
+        const colIndex = $fileUpload.closest('td').index();
+        matrixColumnLabel = $fileUpload.closest('table')
+            .find('thead th').eq(colIndex).text()
+            .trim().toLowerCase();
+    } catch (e) {
+        matrixColumnLabel = '';
+    }
 
-    for (let i = 0; i < $fileUpload[0].files.length; i++) {
-        const file = $fileUpload[0].files[i];
+    // Normalize the key
+    const rawKey = matrixColumnLabel || labelText;
+    const sizeKey = rawKey.replace(/\s+/g, ' ').trim();
+    console.log('Derived sizeKey:', sizeKey);
 
-        // 🔒 "Shop Videos" → only videos
-        if (isShopVideos && !videoTypes.includes(file.type)) {
-            alert(`Invalid file type for "${labelText}". Only video files are allowed.`);
-            $fileUpload.val('');
-            return;
-        }
+    const sizeLimits = {
+        'aadhaar card': 10 * 1024 * 1024,
+        'pan card': 1 * 1024 * 1024,
+        'pan card document(company)': 1 * 1024 * 1024,
+        'partnership deed or llp deed': 10 * 1024 * 1024,
+        'gst certificate': 10 * 1024 * 1024,
+        'udyam documents': 10 * 1024 * 1024,
+        'shop act documents': 10 * 1024 * 1024,
+        'shop photos': 100 * 1024 * 1024,
+        'shop videos': 100 * 1024 * 1024,
+        'incorporation certificate': 100 * 1024 * 1024,
+        'moa or aoa': 100 * 1024 * 1024,
+        'electricity bill': 100 * 1024 * 1024,
+        'cancelled cheque': 10 * 1024 * 1024,
+    };
 
-        // 🔒 "Shop Photos" → only images
-        if (isShopPhotos && !imageTypes.includes(file.type)) {
-            alert(`Invalid file type for "${labelText}". Only image files are allowed.`);
-            $fileUpload.val('');
-            return;
-        }
+    const maxSizePerField = sizeLimits[sizeKey] ?? 10 * 1024 * 1024;  // default 10MB if unmatched
+    console.log('maxSizePerField (bytes):', maxSizePerField);
 
-        // 🔒 Others → allow image + PDF + Office
-        if (
-            !isShopVideos &&
-            !isShopPhotos &&
-            ![...imageTypes, ...pdfTypes, ...officeTypes].includes(file.type)
-        ) {
-            alert(`Invalid file type: ${file.name}\n\nOnly image, PDF, or Office documents are allowed.`);
-            $fileUpload.val('');
-            return;
-        }
+    const isShopVideos = sizeKey.includes("shop videos");
+    const isShopPhotos = sizeKey.includes("shop photos");
+    const isAadhaar = sizeKey.includes("aadhaar card");
+    const isPan = sizeKey.includes("pan card");
 
-        // ✅ Convert to base64 and store
-        const result = await toBase64(file);
-        const base64data = result.split(',')[1];
-        if (base64data) {
-            FILE_LIST.push({
-                'fname': file.name,
-                'type': file.type,
-                'datas': base64data
-            });
+    let totalSize = 0;
+    const dictKey = $fileUpload[0].name;
+    if (self.SH_FILE_DATA_DICTIONARY[dictKey]) {
+        for (const uploaded of self.SH_FILE_DATA_DICTIONARY[dictKey]) {
+            totalSize += atob(uploaded.datas).length;
         }
     }
 
-    // ✅ Assign to dictionary
-    self.SH_FILE_DATA_DICTIONARY[$fileUpload[0].name] = FILE_LIST;
+    for (const file of $fileUpload[0].files) {
+        if (isShopVideos && !videoTypes.includes(file.type)) {
+            alert(`"${sizeKey}" only accepts video files.`);
+            $fileUpload.val('');
+            return;
+        }
+        if (isShopPhotos && !imageTypes.includes(file.type)) {
+            alert(`"${sizeKey}" only accepts image files.`);
+            $fileUpload.val('');
+            return;
+        }
+        if ((isAadhaar || isPan) && ![...imageTypes, ...pdfTypes].includes(file.type)) {
+            alert(`"${sizeKey}" only accepts image or PDF files.`);
+            $fileUpload.val('');
+            return;
+        }
+        if (!isShopVideos && !isShopPhotos && !(isAadhaar || isPan)
+            && ![...imageTypes, ...pdfTypes, ...officeTypes].includes(file.type)) {
+            alert(`Only image, PDF, or Office docs allowed for "${sizeKey}".`);
+            $fileUpload.val('');
+            return;
+        }
+
+        totalSize += file.size;
+        console.log('Total size now (bytes):', totalSize);
+        if (totalSize > maxSizePerField) {
+            alert(
+                `Total upload for "${sizeKey}" exceeds ${ (maxSizePerField / 1024 / 1024).toFixed(1) } MB. `
+                + `You selected ${ (totalSize / 1024 / 1024).toFixed(1) } MB.`
+            );
+            $fileUpload.val('');
+            delete self.SH_FILE_DATA_DICTIONARY[dictKey];
+            return;
+        }
+
+
+        const result = await toBase64(file);
+        const base64data = result.split(',')[1];
+        FILE_LIST.push({ fname: file.name, type: file.type, datas: base64data });
+    }
+
+    if (!self.SH_FILE_DATA_DICTIONARY[dictKey]) {
+        self.SH_FILE_DATA_DICTIONARY[dictKey] = [];
+    }
+    self.SH_FILE_DATA_DICTIONARY[dictKey].push(...FILE_LIST);
+},
+
+    _onRadioSelectionChange: function (ev) {
+    const $radio = $(ev.currentTarget);
+    const radioValue = $radio.val();
+    const isSameTradeName = $radio.closest('.js_question-wrapper')
+        .find('.o_survey_question_title, h3 span')
+        .text()
+        .trim()
+        .toLowerCase()
+        .includes("if trade name is same");
+
+    if (!isSameTradeName) return;
+
+    const isSelected = $radio.is(":checked");
+    const tradeNameInput = $("input[data-question-type='char_box'][name='business_trade_name_kyc_survey']"); // update name if needed
+    const legalNameInput = $("input[data-question-type='char_box'][name='business_name_kyc_survey']"); // update name if needed
+
+    if (isSelected && radioValue.includes("Yes")) {
+        tradeNameInput.val(legalNameInput.val());
+        tradeNameInput.prop("readonly", true);
+    } else {
+        tradeNameInput.val("");
+        tradeNameInput.prop("readonly", false);
+    }
 },
 
     /**
@@ -567,84 +624,100 @@ SurveyFormWidget.include({
     },
 
     _prepareSubmitValues: function (formData, params) {
-        var self = this;
-        formData.forEach(function (value, key) {
-            switch (key) {
-                case "csrf_token":
-                case "token":
-                case "page_id":
-                case "question_id":
-                    params[key] = value;
-                    break;
-            }
-        });
+    var self = this;
+    formData.forEach(function (value, key) {
+        switch (key) {
+            case "csrf_token":
+            case "token":
+            case "page_id":
+            case "question_id":
+                params[key] = value;
+                break;
+        }
+    });
 
-        // Get all question answers by question type
-        this.$("[data-question-type]").each(function () {
-            switch ($(this).data("questionType")) {
-                case 'text_box':
-                case 'char_box':
-                case 'numerical_box':
-                    params[this.name] = this.value;
-                    break;
-                case 'date':
-                case 'datetime':{
-                    const [parse, serialize] =
-                        $(this).data("questionType") === "date"
-                            ? [parseDate, serializeDate]
-                            : [parseDateTime, serializeDateTime];
-                    const date = parse(this.value);
-                    params[this.name] = date ? serialize(date) : "";
-                    break;
-                }
-                case 'simple_choice_radio':
-                case 'multiple_choice':
-                    params = self._prepareSubmitChoices(params, $(this), $(this).data('name'));
-                    break;
-                case 'matrix':
-                    params = self._prepareSubmitAnswersMatrix(params, $(this));
-                    break;
-                case "que_sh_color":
-                    params[this.name] = this.value;
-                    break;
-                case "que_sh_email":
-                    params[this.name] = this.value;
-                    break;
-                case "que_sh_url":
-                    params[this.name] = this.value;
-                    break;
-                case "que_sh_time":
-                    params[this.name] = this.value;
-                    break;
-                case "que_sh_range":
-                    params[this.name] = this.value;
-                    break;
-                case "que_sh_week":
-                    params[this.name] = this.value;
-                    break;
-                case "que_sh_month":
-                    params[this.name] = this.value;
-                    break;
-                case "que_sh_password":
-                    params[this.name] = this.value;
-                    break;
-                case "que_sh_file":
-                    params[this.name] = self.SH_FILE_DATA_DICTIONARY[this.name] || []
-                    break;
-                case "que_sh_address":
-                    params = self._prepareSubmitAnswersAddress(params, this.name, $(this));
-                    break;
-                case "que_sh_many2one":
-                    params[this.name] = $(this).parent().find("input").val();
-                    break;
-                case "que_sh_many2many":
-                    params = self._prepareSubmitAnswersMany2many(params, $(this), $(this).attr("name"));
-                    break;
-                case "que_sh_signature":
-                    params = self._prepareSubmitAnswersSignature(params, this.name, $(this));
-                    break;
+    // Get all question answers by question type
+    let submissionPrevented = false;  // ✅ Declare at the top
+    this.$("[data-question-type]").each(function () {
+        if (submissionPrevented) return false;  // ✅ Stop if invalid selection was found
+
+        switch ($(this).data("questionType")) {
+            case 'text_box':
+            case 'char_box':
+            case 'numerical_box':
+                params[this.name] = this.value;
+                break;
+            case 'date':
+            case 'datetime': {
+                const [parse, serialize] =
+                    $(this).data("questionType") === "date"
+                        ? [parseDate, serializeDate]
+                        : [parseDateTime, serializeDateTime];
+                const date = parse(this.value);
+                params[this.name] = date ? serialize(date) : "";
+                break;
             }
-        });
-    },
+            case 'simple_choice_radio':
+            case 'multiple_choice':
+                params = self._prepareSubmitChoices(params, $(this), $(this).data('name'));
+                break;
+            case 'matrix':
+                params = self._prepareSubmitAnswersMatrix(params, $(this));
+                break;
+            case "que_sh_color":
+            case "que_sh_email":
+            case "que_sh_url":
+            case "que_sh_time":
+            case "que_sh_range":
+            case "que_sh_week":
+            case "que_sh_month":
+            case "que_sh_password":
+                params[this.name] = this.value;
+                break;
+            case "que_sh_file":
+                params[this.name] = self.SH_FILE_DATA_DICTIONARY[this.name] || []
+                break;
+            case "que_sh_address":
+                params = self._prepareSubmitAnswersAddress(params, this.name, $(this));
+                break;
+
+            // ✅ Fixed many2one logic
+            case "que_sh_many2one": {
+                const $input = $(this).parent().find("input");
+                const userInput = $input.val()?.trim();
+                const datalistId = $input.attr("list");
+                const $datalist = $("#" + datalistId);
+
+                const validOptions = $datalist.find("option").map(function () {
+                    return $(this).val();
+                }).get();
+
+                const selectedVal = validOptions.includes(userInput) ? userInput : "";
+
+                if (selectedVal) {
+                    params[this.name] = selectedVal;
+                } else {
+                    const label = $(this)
+                        .closest(".js_question-wrapper")
+                        .find(".o_survey_question_title, h3 span")
+                        .text()
+                        .trim();
+
+                    alert(`Please select a valid option for "${label}" from the dropdown list.`);
+                    submissionPrevented = true;
+                    return false; // 🚫 Stop further processing
+                }
+                break;
+            }
+
+            case "que_sh_many2many":
+                params = self._prepareSubmitAnswersMany2many(params, $(this), $(this).attr("name"));
+                break;
+            case "que_sh_signature":
+                params = self._prepareSubmitAnswersSignature(params, this.name, $(this));
+                break;
+        }
+    });
+},
 });
 
