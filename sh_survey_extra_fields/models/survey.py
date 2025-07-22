@@ -233,11 +233,11 @@ class SurveyQuestion(models.Model):
     # for time field.
     # ====================================================================
     def _validate_matrix(self, answers):
-        """"
-            Custom matrix validation by softhealer technologies.
-            We just need to check wheter any answer is empty or not.
         """
-
+        Custom matrix validation by Softhealer Technologies.
+        Includes format checks and duplicate detection for emails and mobile numbers across rows.
+        """
+        import re
         from odoo.tools.translate import _
 
         def is_valid_email(val):
@@ -255,42 +255,72 @@ class SurveyQuestion(models.Model):
         def is_valid_ifsc(val):
             return bool(re.fullmatch(r"^[A-Z]{4}0[A-Z0-9]{6}$", val))
 
-        # Step 1: Always validate formats for filled-in fields
+        # --------------------------
+        # Track duplicates per row
+        # --------------------------
+        seen_emails = {}
+        seen_contacts = {}
+
         for key, value_list in answers.items():
             row_id, answer_id = key.split('_')
             answer = self.env['survey.question.answer'].browse(int(answer_id))
 
             for val in value_list:
                 if not val:
-                    continue  # Skip empty cells
+                    continue
 
                 if answer.sh_value_type == 'textbox':
-                    if answer.is_email and not is_valid_email(val):
-                        return {
-                            self.id: _("Invalid Email in '%s' → '%s'. Example: user@example.com") % (answer.value, val)
-                        }
-                    if answer.is_mobile and not is_valid_mobile(val):
-                        return {
-                            self.id: _("Invalid Mobile Number in '%s' → '%s'. Must be 10 digits, start with 6-9") %
-                                     (answer.value, val)
-                        }
+                    if answer.is_email:
+                        lower_email = val.strip().lower()
+                        if lower_email in seen_emails and seen_emails[lower_email] != row_id:
+                            return {
+                                self.id: _(
+                                    "Duplicate Email found in multiple rows: '%s'. Must be unique across rows.") % val
+                            }
+                        seen_emails[lower_email] = row_id
+                        if not is_valid_email(val):
+                            return {
+                                self.id: _("Invalid Email in '%s' → '%s'. Example: user@example.com") % (answer.value,
+                                                                                                         val)
+                            }
+
+                    if answer.is_mobile:
+                        clean_mobile = val.strip()
+                        if clean_mobile in seen_contacts and seen_contacts[clean_mobile] != row_id:
+                            return {
+                                self.id: _(
+                                    "Duplicate Contact Number in multiple rows: '%s'. Must be unique across rows.") % val
+                            }
+                        seen_contacts[clean_mobile] = row_id
+                        if not is_valid_mobile(val):
+                            return {
+                                self.id: _(
+                                    "Invalid Mobile Number in '%s' → '%s'. Must be 10 digits, start with 6-9") % (
+                                             answer.value, val)
+                            }
+
                     if answer.is_pincode and not is_valid_pincode(val):
                         return {
-                            self.id: _("Invalid Pincode in '%s' → '%s'. Must be exactly 6 digits") %
-                                     (answer.value, val)
+                            self.id: _("Invalid Pincode in '%s' → '%s'. Must be exactly 6 digits") % (answer.value, val)
                         }
+
                     if answer.is_acc_no and not is_valid_account_number(val):
                         return {
-                            self.id: _("Invalid Account Number in '%s' → '%s'. Must be 9-18 digits") %
-                                     (answer.value, val)
+                            self.id: _("Invalid Account Number in '%s' → '%s'. Must be 9-18 digits") % (answer.value,
+                                                                                                        val)
                         }
+
                     if answer.is_ifsc and not is_valid_ifsc(val.upper()):
                         return {
                             self.id: _(
-                                "Invalid IFSC Code in '%s' → '%s'. Format: 4 letters + 0 + 6 alphanumeric (e.g., SBIN0001234)") %
-                                     (answer.value, val)
+                                "Invalid IFSC Code in '%s' → '%s'. Format: 4 letters + 0 + 6 alphanumeric (e.g., SBIN0001234)") % (
+                                         answer.value, val)
                         }
-        if self.add_an_item and self.matrix_subtype=='sh_custom_matrix' and self.constr_mandatory:
+
+        # --------------------------
+        # Check mandatory constraints
+        # --------------------------
+        if self.add_an_item and self.matrix_subtype == 'sh_custom_matrix' and self.constr_mandatory:
             row_answers = {str(row_id): [] for row_id in self.matrix_row_ids.ids}
             for key, value in answers.items():
                 row_id, _ = key.split('_')
@@ -304,13 +334,14 @@ class SurveyQuestion(models.Model):
                     filled_ans.append(True)
             if True not in filled_ans:
                 return {self.id: self.constr_error_msg or 'This question requires an answer.'}
+
         if not self.add_an_item and self.constr_mandatory:
             for row in answers:
                 if answers[row] == ['']:
                     return {self.id: self.constr_error_msg or 'This question requires an answer.'}
-                    #return {self.id: self.constr_error_msg or _('This question requires an answer.')}
+
         return {}
-    
+
     # def _validate_matrix(self, answers):
     #     print("\n _validate_matrix 1 >", answers)
     #     print("\n _self.matrix_row_ids >", self.matrix_row_ids )
