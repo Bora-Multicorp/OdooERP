@@ -4,83 +4,41 @@ from odoo import api, fields, models, _
 from odoo.exceptions import ValidationError
 import re
 
-
 class VendorKycWizard(models.TransientModel):
     _name = 'vendor.kyc.wizard'
     _description = 'Vendor KYC Wizard'
 
-    @api.constrains(
-        'aadhaar_card', 'pan_card', 'partner_llp',
-        'gst_certificate', 'udyam_document', 'shop_act_document',
-        'shop_photos', 'shop_videos', 'incorporation_certificate',
-        'moa_aoa', 'electricity_bill',
-        'directors_detail', 'bank_detail'  # include O2M
-    )
-    def _check_attachments(self):
-        max_binary_sizes = {
-            # 'aadhaar_card': 10 * 1024 * 1024,  # 10 MB
-            # 'pan_card': 1 * 1024 * 1024,  # 1 MB
-            'partner_llp': 10 * 1024 * 1024,  # 10 MB
+    @api.constrains('gst_certificate', 'udyam_document', 'shop_act_document', 'shop_photos', 'shop_videos',
+                    'pan_card_document', 'incorporation_certificate', 'moa_aoa', 'electricity_bill')
+    def _check_attachment_limits(self):
+        limits = {
+            'gst_certificate': (1, 10 * 1024 * 1024),
+            'udyam_document': (1, 10 * 1024 * 1024),
+            'shop_act_document': (1, 10 * 1024 * 1024),
+            'shop_photos': (10, 100 * 1024 * 1024),
+            'shop_videos': (10, 100 * 1024 * 1024),
+            'pan_card_document': (1, 10 * 1024 * 1024),
+            'incorporation_certificate': (5, 10 * 1024 * 1024),
+            'moa_aoa': (5, 10 * 1024 * 1024),
+            'electricity_bill': (5, 10 * 1024 * 1024),
         }
+        for field_name, (max_count, max_size) in limits.items():
+            attachments = getattr(self, field_name)
+            if len(attachments) > max_count:
+                raise ValidationError(f"Only {max_count} file(s) allowed for '{self._fields[field_name].string}'.")
+            for attachment in attachments:
+                if attachment.file_size and attachment.file_size > max_size:
+                    raise ValidationError(
+                        f"Each file in '{self._fields[field_name].string}' must be ≤ {max_size // (1024 * 1024)} MB."
+                    )
 
-        max_attachment_sizes = {
-            'gst_certificate': 10 * 1024 * 1024,
-            'udyam_document': 10 * 1024 * 1024,
-            'shop_act_document': 10 * 1024 * 1024,
-            'shop_photos': 100 * 1024 * 1024,
-            'shop_videos': 100 * 1024 * 1024,
-            'incorporation_certificate': 100 * 1024 * 1024,
-            'moa_aoa': 100 * 1024 * 1024,
-            'electricity_bill': 100 * 1024 * 1024,
-        }
 
+    @api.constrains('partner_llp')
+    def _check_partner_llp_size(self):
+        max_size = 10 * 1024 * 1024
         for rec in self:
-            # ✅ Validate Binary fields on wizard
-            for field_name, max_size in max_binary_sizes.items():
-                data = rec[field_name]
-                if data and isinstance(data, bytes):
-                    actual_size = len(data)
-                    if actual_size > max_size:
-                        raise ValidationError(_(
-                            "%s exceeds the allowed limit. Uploaded: %.2f MB, Max allowed: %d MB"
-                        ) % (field_name.replace('_', ' ').title(),
-                             actual_size / (1024 * 1024),
-                             max_size // (1024 * 1024)))
-
-            # ✅ Validate ir.attachment M2M fields on wizard
-            for field_name, max_size in max_attachment_sizes.items():
-                attachments = rec[field_name]
-                if attachments:
-                    for attachment in attachments:
-                        if attachment.file_size and attachment.file_size > max_size:
-                            raise ValidationError(_(
-                                "%s file '%s' exceeds the allowed size. Uploaded: %.2f MB, Max allowed: %d MB"
-                            ) % (field_name.replace('_', ' ').title(),
-                                 attachment.name,
-                                 attachment.file_size / (1024 * 1024),
-                                 max_size // (1024 * 1024)))
-
-            # ✅ Validate binary fields in directors_detail
-            for line in rec.directors_detail:
-                if line.aadhaar_card and isinstance(line.aadhaar_card, bytes):
-                    if len(line.aadhaar_card) > 10 * 1024 * 1024:
-                        raise ValidationError(_(
-                            "Director Aadhaar Card for '%s' exceeds 10 MB (Uploaded: %.2f MB)"
-                        ) % (line.name, len(line.aadhaar_card) / (1024 * 1024)))
-                if line.pan_card and isinstance(line.pan_card, bytes):
-                    if len(line.pan_card) > 1 * 1024 * 1024:
-                        raise ValidationError(_(
-                            "Director PAN Card for '%s' exceeds 1 MB (Uploaded: %.2f MB)"
-                        ) % (line.name, len(line.pan_card) / (1024 * 1024)))
-
-            # ✅ Validate attachments in bank_detail
-            for line in rec.bank_detail:
-                for attachment in line.bank_cheque_attachments:
-                    if attachment.file_size and attachment.file_size > 10 * 1024 * 1024:
-                        raise ValidationError(_(
-                            "Bank cheque file '%s' for Bank '%s' exceeds 10 MB (Uploaded: %.2f MB)"
-                        ) % (attachment.name, line.bank_name, attachment.file_size / (1024 * 1024)))
-
+            if rec.partner_llp and len(rec.partner_llp) > max_size:
+                raise ValidationError(_("Partner LLP document exceeds the maximum size of 10 MB."))
 
     @api.constrains('directors_detail')
     def _check_duplicate_directors_detail_emails(self):
@@ -530,6 +488,15 @@ class DirectorDetail(models.TransientModel):
     pan_card = fields.Binary(string="PAN Card", required=True)
     pan_card_filename = fields.Char()
 
+    @api.constrains('aadhaar_card', 'pan_card')
+    def _check_director_file_size(self):
+        max_size = 10 * 1024 * 1024
+        for rec in self:
+            if rec.aadhaar_card and len(rec.aadhaar_card) > max_size:
+                raise ValidationError("Aadhaar Card must be ≤ 10 MB.")
+            if rec.pan_card and len(rec.pan_card) > max_size:
+                raise ValidationError("PAN Card must be ≤ 10 MB.")
+
 
 ##### Bank Details
 class BankDetail(models.TransientModel):
@@ -544,6 +511,7 @@ class BankDetail(models.TransientModel):
     bank_address = fields.Char(string="Bank Address", required=True)
     bank_cheque_attachments = fields.Many2many('ir.attachment', 'wizard_bank_detail_cheque_rel', 'kyc_wizard_id',
                                                'attachment_id', string="Cancelled Cheques", required=True)
+
 
     @api.constrains('account_no', 'ifsc_code')
     def _check_account_and_ifsc(self):
@@ -564,6 +532,17 @@ class BankDetail(models.TransientModel):
                     "→ Must follow format: 4 letters, 0, then 6 digits (e.g., SBIN0001234)\n"
                     "→ You entered: %s"
                 ) % (rec.ifsc_code or ''))
+
+    @api.constrains('bank_cheque_attachments')
+    def _check_cheque_files(self):
+        max_count = 1
+        max_size = 10 * 1024 * 1024
+        for rec in self:
+            if len(rec.bank_cheque_attachments) > max_count:
+                raise ValidationError("Only 1 Cancelled Cheque file is allowed.")
+            for att in rec.bank_cheque_attachments:
+                if att.file_size and att.file_size > max_size:
+                    raise ValidationError("Cancelled Cheque must be ≤ 10 MB.")
 
 
 ##### Principal Place of Business
