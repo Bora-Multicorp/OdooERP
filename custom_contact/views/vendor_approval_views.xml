@@ -6,7 +6,7 @@
             <field name="name">KYC Approval</field>
             <field name="model">res.partner.kyc.approval</field>
             <field name="arch" type="xml">
-                <form string="KYC Approval" create="false" delete="false">
+                <form string="KYC Approval" create="false">
                     <header>
                         <button name="confirm_submit_form" string="Submit for Approval" type="object"
                                 class="oe_highlight"
@@ -251,7 +251,7 @@
             <field name="name">KYC Approval</field>
             <field name="model">res.partner.kyc.approval</field>
             <field name="arch" type="xml">
-                <list string="KYC Approval" create="false" delete="false">
+                <list string="KYC Approval" create="false">
                     <field name="partner_id" string="Vendor/Customer"/>
                     <field name="email"/>
                     <field name="assigned_to"/>
