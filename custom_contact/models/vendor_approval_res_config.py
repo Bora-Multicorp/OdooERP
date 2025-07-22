@@ -16,6 +16,14 @@ class VendorApprovalConfig(models.Model):
         ('unique_sequence', 'unique(sequence)', 'Each sequence must be unique.'),
     ]
 
+    # generate sequence
+    @api.model
+    def default_get(self, fields_list):
+        defaults = super().default_get(fields_list)
+        max_sequence = self.search([], order="sequence desc", limit=1).sequence
+        defaults['sequence'] = max_sequence + 1 if max_sequence else 1
+        return defaults
+
     def _validate_unique_user(self, user_id, exclude_ids=None):
         domain = [('user_id', '=', user_id)]
         if exclude_ids:

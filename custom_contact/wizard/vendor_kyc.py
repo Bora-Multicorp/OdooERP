@@ -18,8 +18,8 @@ class VendorKycWizard(models.TransientModel):
     )
     def _check_attachments(self):
         max_binary_sizes = {
-            'aadhaar_card': 10 * 1024 * 1024,  # 10 MB
-            'pan_card': 1 * 1024 * 1024,  # 1 MB
+            # 'aadhaar_card': 10 * 1024 * 1024,  # 10 MB
+            # 'pan_card': 1 * 1024 * 1024,  # 1 MB
             'partner_llp': 10 * 1024 * 1024,  # 10 MB
         }
 
@@ -101,12 +101,12 @@ class VendorKycWizard(models.TransientModel):
 
         for rec in self:
             # Direct field: Director Phone
-            if rec.director_phone and not phone_pattern.fullmatch(rec.director_phone):
-                raise ValidationError(_(
-                    "Invalid Director Contact Number:\n"
-                    "→ Must be exactly 10 digits (e.g., 9876543210)\n"
-                    "→ You entered: %s"
-                ) % rec.director_phone)
+            # if rec.director_phone and not phone_pattern.fullmatch(rec.director_phone):
+            #     raise ValidationError(_(
+            #         "Invalid Director Contact Number:\n"
+            #         "→ Must be exactly 10 digits (e.g., 9876543210)\n"
+            #         "→ You entered: %s"
+            #     ) % rec.director_phone)
 
             # One2many: Directors Detail
             for idx, line in enumerate(rec.directors_detail, start=1):
@@ -139,10 +139,10 @@ class VendorKycWizard(models.TransientModel):
                 ) % rec.email)
 
             # Director Email
-            if rec.director_email and not email_pattern.match(rec.director_email):
-                raise ValidationError(_(
-                    "The email in field [Director Email] is invalid:\n→ %s\nPlease enter a valid email like user@example.com."
-                ) % rec.director_email)
+            # if rec.director_email and not email_pattern.match(rec.director_email):
+            #     raise ValidationError(_(
+            #         "The email in field [Director Email] is invalid:\n→ %s\nPlease enter a valid email like user@example.com."
+            #     ) % rec.director_email)
 
             # One2many: Director Detail Emails
             for idx, line in enumerate(rec.directors_detail, 1):
@@ -255,14 +255,23 @@ class VendorKycWizard(models.TransientModel):
                                        ], string="Constitution of Business", required=True)
     # const_business = fields.Many2one('constitution.business', string="Constitution of Business", required=True)
     other_business = fields.Char("If Other, Specify?")
+    ##### Partnership/PrivateCo./LLP
+    no_partner_director = fields.Selection([('1', '1'),
+                                            ('2', '2'),
+                                            ('3', '3'),
+                                            ('4', '4'),
+                                            ('5', '5'),
+                                            ('6', '6'),
+                                            ('7', '7')], string="Number of Managing Partner / Directors", default='1')
+    directors_detail = fields.One2many('director.detail', 'kyc_wizard_id', string="Directors Detail")
     # no_partner_director = fields.Many2one('number.partner.director', string="Number of Managing Partner / Directors")
-    director_name = fields.Char(string="Name of the Owner / Director")
-    director_phone = fields.Char(string="Contact Number")
-    director_email = fields.Char(string="Email Address")
-    aadhaar_card = fields.Binary(string="Aadhaar Card")
-    aadhaar_card_filename = fields.Char(readonly=True)
-    pan_card = fields.Binary(string="PAN Card")
-    pan_card_filename = fields.Char(readonly=True)
+    # director_name = fields.Char(string="Name of the Owner / Director")
+    # director_phone = fields.Char(string="Contact Number")
+    # director_email = fields.Char(string="Email Address")
+    # aadhaar_card = fields.Binary(string="Aadhaar Card")
+    # aadhaar_card_filename = fields.Char(readonly=True)
+    # pan_card = fields.Binary(string="PAN Card")
+    # pan_card_filename = fields.Char(readonly=True)
     aadhaar_pan_link = fields.Selection([('yes', 'Yes'), ('no', 'No')], string='Aadhar and PAN card linking?',
                                         required=True)
     gst_no = fields.Char(string="GST Number", required=True)
@@ -287,15 +296,6 @@ class VendorKycWizard(models.TransientModel):
     shop_videos = fields.Many2many('ir.attachment', 'vendor_kyc_shop_videos_rel', 'wizard_id', 'attachment_id',
                                    string="Shop Videos", required=True,
                                    help="Short Video / Walkway from outdoor / indoor. Must include - signage Board with GST Number.")
-    ##### Partnership/PrivateCo./LLP
-    no_partner_director = fields.Selection([('1', '1'),
-                                            ('2', '2'),
-                                            ('3', '3'),
-                                            ('4', '4'),
-                                            ('5', '5'),
-                                            ('6', '6'),
-                                            ('7', '7')], string="Number of Managing Partner / Directors")
-    directors_detail = fields.One2many('director.detail', 'kyc_wizard_id', string="Directors Detail")
     bank_detail = fields.One2many('bank.detail', 'kyc_wizard_id', string="Bank Detail")
     address_detail = fields.One2many('address.detail', 'kyc_wizard_id', string="Address Detail")
     pan_no = fields.Char(string="PAN Number(Company)")
@@ -354,18 +354,18 @@ class VendorKycWizard(models.TransientModel):
             )
         return values
 
-    @api.onchange('const_business')
-    def _onchange_const_business_clear_fields(self):
-        # Clear simple fields
-        for field in [
-            'other_business',
-            'director_name',
-            'director_phone',
-            'director_email',
-            'aadhaar_card',
-            'pan_card'
-        ]:
-            setattr(self, field, False)
+    # @api.onchange('const_business')
+    # def _onchange_const_business_clear_fields(self):
+    #     # Clear simple fields
+    #     for field in [
+    #         'other_business',
+    #         'director_name',
+    #         'director_phone',
+    #         'director_email',
+    #         'aadhaar_card',
+    #         'pan_card'
+    #     ]:
+    #         setattr(self, field, False)
 
     def action_vendor_kyc_done(self):
         self.ensure_one()
@@ -440,13 +440,13 @@ class VendorKycWizard(models.TransientModel):
             'address_detail': address_data,
             'const_business': self.const_business,
             'other_business': self.other_business,
-            'director_name': self.director_name,
-            'director_phone': self.director_phone,
-            'director_email': self.director_email,
-            'aadhaar_card': self.aadhaar_card,
-            'aadhaar_card_filename': self.aadhaar_card_filename,
-            'pan_card': self.pan_card,
-            'pan_card_filename': self.pan_card_filename,
+            # 'director_name': self.director_name,
+            # 'director_phone': self.director_phone,
+            # 'director_email': self.director_email,
+            # 'aadhaar_card': self.aadhaar_card,
+            # 'aadhaar_card_filename': self.aadhaar_card_filename,
+            # 'pan_card': self.pan_card,
+            # 'pan_card_filename': self.pan_card_filename,
             'gst_no': self.gst_no,
             'license_registered': self.license_registered,
             'aadhaar_pan_link': self.aadhaar_pan_link,
