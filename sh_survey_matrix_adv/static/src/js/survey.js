@@ -1,6 +1,72 @@
 /** @odoo-module **/
 
 import SurveyFormWidget from '@survey/js/survey_form';
+import { rpc } from "@web/core/network/rpc";
+
+function reloadMany2oneOptions({ model_id, domain, $el, selectedId = null }) {
+    rpc("/survey/get_many2one_field_data", {
+        model_id: model_id,
+        domain: domain,
+    }).then(function (data) {
+        $el.empty();
+        $el.append($('<option>').text('Select...').val(''));
+        $.each(data.records, function (index, record) {
+            const opt = $("<option>").text(record.name).attr("value", record.id);
+            if (selectedId && selectedId === record.id) {
+                opt.attr("selected", "selected");
+            }
+            $el.append(opt);
+        });
+    });
+}
+
+
+$(document).on("change", ".js_cls_sh_many2one_select", function (ev) {
+    const $el = $(this);
+    const rowId = $el.data('row-id');
+    const modelName = $el.data('model-name');
+    const selectedValue = $el.val();
+    console.log("Changed model:", modelName, "Value:", selectedValue);
+    if (modelName === 'res.country') {
+        const $stateField = $(`select[data-model-name='res.country.state'][data-row-id='${rowId}']`);
+        if ($stateField.length && selectedValue) {
+            reloadMany2oneOptions({
+                model_id: $stateField.data('model_id'),
+                domain: [['country_id', '=', parseInt(selectedValue)]],
+                $el: $stateField,
+            });
+        }
+    }
+ if (modelName === 'res.country.state') {
+    if (selectedValue) {
+        const stateId = parseInt(selectedValue);  // save current state
+
+        rpc("/web/dataset/call_kw", {
+            model: 'res.country.state',
+            method: 'read',
+            args: [[stateId], ['country_id']],
+            kwargs: {},
+        }).then(function (result) {
+            if (result.length && result[0].country_id) {
+                const countryId = result[0].country_id[0];
+                const $countryField = $(`select[data-model-name='res.country'][data-row-id='${rowId}']`);
+                const $stateField = $(`select[data-model-name='res.country.state'][data-row-id='${rowId}']`);
+
+                if ($countryField.length && $stateField.length) {
+                    $countryField.val(countryId); // set country
+                    reloadMany2oneOptions({
+                        model_id: $stateField.data('model_id'),
+                        domain: [['country_id', '=', countryId]],
+                        $el: $stateField,
+                        selectedId: stateId, // reset selected state after reload
+                    });
+                }
+            }
+        });
+    }
+}
+
+});
 
 $(document).on("change", ".sh_file_input", function (ev) {
     var $i = $(ev.currentTarget);
@@ -116,7 +182,6 @@ function showDirectorDetailsMatrix(maxCount) {
     //console.log(`✅ Showing ${maxCount} matrix rows`);
 }
 
-
 // Triggered on survey page navigation
 $(document).on("click", "button[type='submit'][value='next'], #next_page", function () {
     // Start loop after page changes
@@ -127,9 +192,6 @@ $(document).on("click", "button[type='submit'][value='next'], #next_page", funct
         showDirectorDetailsMatrix(directorCount);
     }, 500); // Adjust delay if needed
 });
-
-
-
 
 
 SurveyFormWidget.include({

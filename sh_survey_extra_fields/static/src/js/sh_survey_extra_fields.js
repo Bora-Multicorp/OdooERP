@@ -338,8 +338,10 @@ SurveyFormWidget.include({
                         'model_id': parseInt(model_id),
                     }).then(function (data) {
                         jQuery.each(data.records, function (key, value) {
-                            var opt = $("<option>").text(value.name).attr("value", value.name);
-                            if (value.name === ansValue) {
+                            //var opt = $("<option>").text(value.name).attr("value", value.name);
+                            var opt = $("<option>").text(value.name).attr("value", value.id);
+                            //if (value.name === ansValue) {
+                            if (String(value.id) === String(ansValue)) {
                                 opt.attr("selected", "selected");
                             }
                             $(element).append(opt);
