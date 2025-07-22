@@ -11,6 +11,38 @@ _logger = logging.getLogger(__name__)
 
 class SurveyController(http.Controller):
 
+    @http.route(['/survey/get_matrix_many2one_field_data'], type='json', auth="public", methods=['POST'])
+    def get_matrix_many2one_field_data(self, **kw):
+        records = []
+        rec_name = False
+        domain = []
+        if 'domain' in kw and isinstance(kw['domain'], list):
+            domain = kw['domain']
+        if kw.get("model_id", False):
+            modelRecord = request.env["ir.model"].sudo().search([
+                ('id', '=', kw.get("model_id"))
+            ], limit=1)
+            if modelRecord:
+                modelRecord = modelRecord.sudo()
+                rec_name = modelRecord._rec_name
+                model_name = modelRecord.model
+                if model_name == "res.country.state":
+                    records = request.env[model_name].sudo().search_read(
+                        domain,
+                        fields=[rec_name, 'id', 'country_id'],
+                        order='country_id, name'
+                    )
+                else:
+                    records = request.env[modelRecord.model].sudo(
+                    ).search_read([], fields=[rec_name, 'id'])
+                if records:
+                    records = [dict(item, name=item.get(rec_name))
+                               for item in records]
+        return dict(
+            records=records,
+            rec_name=rec_name,
+        )
+
     @http.route('/survey/matrix/download/<string:question_id>/<string:row_label>/<string:col_label>/<string:answer_token>', type='http', auth='public', website=True)
     def survey_matrix_download_file(self, **post):
         """

@@ -25,7 +25,7 @@
                         </textarea>
                     </t>
                     <t t-if="col_label.sh_value_type == 'que_sh_many2one'">
-                        <select class='form-control sh_m2o js_cls_sh_many2one_select' style="width:100%;"
+                        <select class='form-control sh_m2o js_cls_sh_matrix_many2one_select' style="width:100%;"
                                  t-att-data-question-type="col_label.sh_value_type"
                                  t-att-data-row-id="row_label.id"
                                  t-att-data-col-id="col_label.id"
