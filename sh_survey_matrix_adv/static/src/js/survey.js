@@ -1,6 +1,71 @@
 /** @odoo-module **/
 
 import SurveyFormWidget from '@survey/js/survey_form';
+import { rpc } from "@web/core/network/rpc";
+
+function reloadMany2oneOptions({ model_id, domain, $el, selectedId = null }) {
+    rpc("/survey/get_matrix_many2one_field_data", {
+        model_id: model_id,
+        domain: domain,
+    }).then(function (data) {
+        $el.empty();
+        $el.append($('<option>').text('Select...').val(''));
+        $.each(data.records, function (index, record) {
+            const opt = $("<option>").text(record.name).attr("value", record.id);
+            if (selectedId && selectedId === record.id) {
+                opt.attr("selected", "selected");
+            }
+            $el.append(opt);
+        });
+    });
+}
+
+
+$(document).on("change", ".js_cls_sh_matrix_many2one_select", function (ev) {
+    const $el = $(this);
+    const rowId = $el.data('row-id');
+    const modelName = $el.data('model-name');
+    const selectedValue = $el.val();
+    if (modelName === 'res.country') {
+        const $stateField = $(`select[data-model-name='res.country.state'][data-row-id='${rowId}']`);
+        if ($stateField.length && selectedValue) {
+            reloadMany2oneOptions({
+                model_id: $stateField.data('model_id'),
+                domain: [['country_id', '=', parseInt(selectedValue)]],
+                $el: $stateField,
+            });
+        }
+    }
+ if (modelName === 'res.country.state') {
+    if (selectedValue) {
+        const stateId = parseInt(selectedValue);  // save current state
+
+        rpc("/web/dataset/call_kw", {
+            model: 'res.country.state',
+            method: 'read',
+            args: [[stateId], ['country_id']],
+            kwargs: {},
+        }).then(function (result) {
+            if (result.length && result[0].country_id) {
+                const countryId = result[0].country_id[0];
+                const $countryField = $(`select[data-model-name='res.country'][data-row-id='${rowId}']`);
+                const $stateField = $(`select[data-model-name='res.country.state'][data-row-id='${rowId}']`);
+
+                if ($countryField.length && $stateField.length) {
+                    $countryField.val(countryId); // set country
+                    reloadMany2oneOptions({
+                        model_id: $stateField.data('model_id'),
+                        domain: [['country_id', '=', countryId]],
+                        $el: $stateField,
+                        selectedId: stateId, // reset selected state after reload
+                    });
+                }
+            }
+        });
+    }
+}
+
+});
 
 $(document).on("change", ".sh_file_input", function (ev) {
     var $i = $(ev.currentTarget);
@@ -116,7 +181,6 @@ function showDirectorDetailsMatrix(maxCount) {
     //console.log(`✅ Showing ${maxCount} matrix rows`);
 }
 
-
 // Triggered on survey page navigation
 $(document).on("click", "button[type='submit'][value='next'], #next_page", function () {
     // Start loop after page changes
@@ -129,10 +193,37 @@ $(document).on("click", "button[type='submit'][value='next'], #next_page", funct
 });
 
 
-
-
-
 SurveyFormWidget.include({
+
+    init: function () {
+        this._super.apply(this, arguments);
+    },
+
+    getMatrixMany2oneFieldData: async function () {
+        var self = this;
+        var $m2oSelects = self.$target.find(".js_cls_sh_matrix_many2one_select");
+        if ($m2oSelects.length) {
+            await $m2oSelects.each(function (index, element) {
+            var ansValue = $(this).attr("value") || false;
+            var model_id = $(this).attr("data-model_id") || false;
+            if (model_id) {
+                rpc("/survey/get_matrix_many2one_field_data", {
+                    'model_id': parseInt(model_id),
+                }).then(function (data) {
+                    jQuery.each(data.records, function (key, value) {
+                        //var opt = $("<option>").text(value.name).attr("value", value.name);
+                        var opt = $("<option>").text(value.name).attr("value", value.id);
+                        //if (value.name === ansValue) {
+                        if (String(value.id) === String(ansValue)) {
+                            opt.attr("selected", "selected");
+                        }
+                        $(element).append(opt);
+                    });
+                });
+            }
+         });
+        }
+    },
 
     _prepareSubmitAnswersMatrix: function (params, $matrixTable) {
         var self = this;
@@ -191,18 +282,6 @@ SurveyFormWidget.include({
         return params;
     },
 
-     /**
-     * Will automatically focus on the first input to allow the user to complete directly the survey,
-     * without having to manually get the focus (only if the input has the right type - can write something inside -)
-     */
-    _focusOnFirstInput: function () {
-        this._super.apply(this, arguments);
-
-        if (this.$("input[type='range']").length) {
-            this.$("input[type='range']").trigger('input')
-        }
-    },
-
     _prepareSubmitAnswerMatrix: function (params, questionId, rowId, colId, isComment) {
         var value = questionId in params ? params[questionId] : {};
         if (isComment) {
@@ -248,6 +327,10 @@ SurveyFormWidget.include({
 
         if (this.$("input[type='range']").length) {
             this.$("input[type='range']").trigger('input')
+        }
+
+        if (this.$(".js_cls_sh_matrix_many2one_select").length) {
+            this.getMatrixMany2oneFieldData();
         }
     },
 

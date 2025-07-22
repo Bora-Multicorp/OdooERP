@@ -25,12 +25,13 @@
                         </textarea>
                     </t>
                     <t t-if="col_label.sh_value_type == 'que_sh_many2one'">
-                        <select class='form-control sh_m2o js_cls_sh_many2one_select' style="width:100%;"
+                        <select class='form-control sh_m2o js_cls_sh_matrix_many2one_select' style="width:100%;"
                                  t-att-data-question-type="col_label.sh_value_type"
                                  t-att-data-row-id="row_label.id"
                                  t-att-data-col-id="col_label.id"
                                  t-att-value="answer.value_ans_sh_many2one if answer else None"
                                  t-att-data-model_id="col_label.que_sh_many2one_model_id.id if col_label.que_sh_many2one_model_id else False"
+                                 t-att-data-model-name="col_label.que_sh_many2one_model_id.model if col_label.que_sh_many2one_model_id else False"
                                  t-att-name="'%s_%s' % (question.id, row_label.id)">
                             <option value="">Select...</option>
                             <option t-if="answer and answer.value_ans_sh_many2one"

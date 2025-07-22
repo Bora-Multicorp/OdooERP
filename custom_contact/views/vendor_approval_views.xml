@@ -179,7 +179,7 @@
                                    invisible="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
                             <field name="moa_aoa" widget="many2many_binary"
                                    readonly="state not in ['draft']"
-                                   options="{'accepted_file_extensions': 'video/*', 'number_of_files': 10}"
+                                   options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 10}"
                                    required="const_business in ['Pvt Ltd Co.']"
                                    invisible="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
                             <field name="cin_no" placeholder="Your Answer" widget="upper_case"
