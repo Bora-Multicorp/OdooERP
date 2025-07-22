@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
-
 from odoo import models, _
 from odoo.exceptions import UserError
-import base64
+
 
 class SurveyUserInput(models.Model):
     _inherit = "survey.user_input"
@@ -12,16 +11,15 @@ class SurveyUserInput(models.Model):
 
     def _mark_done(self):
         super()._mark_done()  # Ensure the base behavior is triggered
-        vendor_survey = self.env.ref(
-            "custom_contact.vendor_kyc_form_survey", raise_if_not_found=False
-        )
+        vendor_survey = self.env.ref("custom_contact.vendor_kyc_form_survey", raise_if_not_found=False)
         if not vendor_survey or self.survey_id != vendor_survey:
-            return  # We only process the vendor KYC form
+            return
 
-        Q = self.env.ref  # shortcut
+        Q = self.env.ref
         question_map = {
             Q("custom_contact.email_kyc_survey").id: "email",
             Q("custom_contact.point_of_contact_kyc_survey").id: "point_of_contact",
+            Q("custom_contact.company_point_of_contact_kyc_survey").id: "poc_user",
             Q("custom_contact.business_name_kyc_survey").id: "business_legal_name",
             Q("custom_contact.business_trade_name_kyc_survey").id: "business_trade_name",
             Q("custom_contact.business_constitution_kyc_survey").id: "const_business",
@@ -30,6 +28,7 @@ class SurveyUserInput(models.Model):
             Q("custom_contact.pan_card_no_kyc_survey").id: "pan_no",
             Q("custom_contact.pan_card_document_kyc_survey").id: "pan_card_document",
             Q("custom_contact.aadhaar_pan_link_kyc_survey").id: "aadhaar_pan_link",
+            Q("custom_contact.registration_kyc_survey").id: "license_registered",
             Q("custom_contact.udyam_certificate_kyc_survey").id: "udyam_number",
             Q("custom_contact.gst_duration_kyc_survey").id: "gst_return_duration",
             Q("custom_contact.gst_certificate_kyc_survey").id: "gst_certificate",
@@ -49,93 +48,128 @@ class SurveyUserInput(models.Model):
         }
 
         values = {}
+        attachments_by_field = {}
+
         for line in self.user_input_line_ids:
             field_name = question_map.get(line.question_id.id)
             if not field_name:
                 continue
 
             qtype = line.question_id.question_type
+            field = self.env['res.partner.kyc.approval']._fields.get(field_name)
 
             if qtype in ("char_box", "text_box"):
                 values[field_name] = line.value_char_box
 
             elif qtype == "simple_choice":
-                if line.suggested_answer_id:
-                    values[field_name] = line.suggested_answer_id.value
-                elif line.value_char_box:
-                    values[field_name] = line.value_char_box
+                values[field_name] = line.suggested_answer_id.value or line.value_char_box
 
             elif qtype == "multiple_choice":
-                keys = line.suggested_answer_ids.mapped("value")
-                if keys:
-                    values[field_name] = ",".join(keys)
-                elif line.value_char_box:
-                    values[field_name] = line.value_char_box
+                values[field_name] = ",".join(line.suggested_answer_ids.mapped("value")) or line.value_char_box
 
-            elif qtype == "upload_file":
-                files = line.value_file_data_ids
-                if not files:
+            elif qtype == "que_sh_many2one":
+                record = self.env['res.users'].search([
+                    ('name', '=', line.suggested_answer_id.value)
+                ], limit=1)
+                values[field_name] = record.id if record else False
+
+            elif qtype == "que_sh_file" and field:
+                file_data = line.value_ans_sh_file
+                file_name = line.value_ans_sh_file_fname or f"unnamed_file_{line.id}"
+                if not file_data:
                     continue
-                if not line.question_id.upload_multiple_file:
-                    values[field_name] = files[0].datas
-                else:
-                    values[field_name] = [(6, 0, files.ids)]
+
+                if isinstance(file_data, list):
+                    attachments = []
+                    for entry in file_data:
+                        datas = entry.get("value")
+                        fname = entry.get("filename") or file_name
+                        if not datas:
+                            continue
+                        if field.type == 'binary':
+                            values[field_name] = datas
+                        elif field.type == 'many2many':
+                            attachment = self.env['ir.attachment'].create({
+                                'name': fname,
+                                'datas': datas,
+                                'type': 'binary',
+                                'res_model': 'res.partner.kyc.approval',
+                                'res_id': 0,
+                            })
+                            attachments.append(attachment.id)
+                    if attachments:
+                        attachments_by_field.setdefault(field_name, []).extend(attachments)
+
+                elif isinstance(file_data, (bytes, str)):
+                    if field.type == 'binary':
+                        values[field_name] = file_data
+                    elif field.type == 'many2many':
+                        attachment = self.env['ir.attachment'].create({
+                            'name': file_name,
+                            'datas': file_data,
+                            'type': 'binary',
+                            'res_model': 'res.partner.kyc.approval',
+                            'res_id': 0,
+                        })
+                        attachments_by_field.setdefault(field_name, []).append(attachment.id)
 
             elif qtype == "matrix":
                 matrix_lines = self.user_input_line_ids.filtered(
                     lambda l: l.question_id.id == line.question_id.id and l.matrix_row_id and l.answer_type
                 )
-
                 row_data_map = {}
+                line_map = {}
                 for ml in matrix_lines:
                     row_key = ml.matrix_row_id.id
-                    col_key = ml.suggested_answer_id.value if ml.suggested_answer_id else ml.answer_id.value
+                    col_key = ml.suggested_answer_id.value or ml.answer_id.value
                     if not col_key:
                         continue
-
-                    if row_key not in row_data_map:
-                        row_data_map[row_key] = {}
-
-                    value_field = f"value_{ml.answer_type}"
-                    value = getattr(ml, value_field, None)
+                    value = getattr(ml, f"value_{ml.answer_type}", None)
                     if isinstance(value, models.BaseModel):
                         value = value.id
-                    row_data_map[row_key][col_key] = value
+                    row_data_map.setdefault(row_key, {})[col_key] = value
+                    line_map.setdefault(row_key, {})[col_key] = ml
 
                 if line.question_id.id == Q("custom_contact.matrix_bank_address_kyc_survey").id:
-                    bank_details = []
-
-                    for row in row_data_map.values():
-                        attachments = []
-                        cheque_data = row.get('Cancelled Cheque')
-                        if cheque_data:
-                            attachment = self.env['ir.attachment'].create({
-                                'name': 'Cancelled Cheque',
+                    values['bank_detail'] = []
+                    for row_id, row in row_data_map.items():
+                        cheque_file = row.get('Cancelled Cheque')
+                        cheque_name = 'Cancelled Cheque'
+                        cheque_line = line_map[row_id].get('Cancelled Cheque')
+                        if cheque_line and cheque_line.value_ans_sh_file_fname:
+                            cheque_name = cheque_line.value_ans_sh_file_fname
+                        attachment_id = (
+                            self.env['ir.attachment'].create({
+                                'name': cheque_name,
                                 'type': 'binary',
-                                'datas': cheque_data,
+                                'datas': cheque_file,
                                 'res_model': 'bank.details',
-                                'res_id': 0,  # temp dummy ID
-                            })
-                            attachments.append(attachment.id)
-
-                        bank_details.append((0, 0, {
+                                'res_id': 0,
+                            }).id if cheque_file else False
+                        )
+                        values['bank_detail'].append((0, 0, {
                             'bank_name': row.get('Bank Name'),
                             'account_no': row.get('Account Number'),
                             'ifsc_code': row.get('IFSC Code'),
                             'bank_address': row.get('Bank Address'),
-                            'bank_cheque_attachments': [(6, 0, attachments)] if attachments else False,
+                            'bank_cheque_attachments': [(6, 0, [attachment_id])] if attachment_id else False,
                         }))
 
-                    values['bank_detail'] = bank_details
-
                 elif line.question_id.id == Q("custom_contact.matrix_director_detail_kyc_survey").id:
-                    values['directors_detail'] = [(0, 0, {
-                        'designation': row.get('Designation'),
-                        'contact_no': row.get('Contact Number'),
-                        'email': row.get('Email Address'),
-                        'aadhaar_card': row.get('Aadhaar Card'),
-                        'pan_card': row.get('PAN Card'),
-                    }) for row in row_data_map.values()]
+                    values['directors_detail'] = []
+                    for row_id, row in row_data_map.items():
+                        aadhaar_line = line_map[row_id].get('Aadhaar Card')
+                        pan_line = line_map[row_id].get('PAN Card')
+                        values['directors_detail'].append((0, 0, {
+                            'designation': row.get('Designation'),
+                            'name': row.get('Name'),
+                            'contact_no': row.get('Contact Number'),
+                            'email': row.get('Email Address'),
+                            'aadhaar_card': row.get('Aadhaar Card'),
+                            'aadhaar_card_filename': aadhaar_line.value_ans_sh_file_fname if aadhaar_line else False,
+                            'pan_card': row.get('PAN Card'),
+                            'pan_card_filename': pan_line.value_ans_sh_file_fname if pan_line else False,
+                        }))
 
                 elif line.question_id.id == Q("custom_contact.matrix_address_detail_kyc_survey").id:
                     values['address_detail'] = [(0, 0, {
@@ -144,38 +178,33 @@ class SurveyUserInput(models.Model):
                         'business_pincode': row.get('Pincode'),
                         'business_phone': row.get('Contact Number'),
                         'business_email': row.get('Email'),
-                        'business_state_id': self.env['res.country.state'].search(
-                            [('name', '=', row.get('State'))], limit=1
-                        ).id or False,
-                        'business_country_id': self.env['res.country'].search(
-                            [('name', '=', row.get('Country'))], limit=1
-                        ).id or False,
+                        'business_state_id': self.env['res.country.state'].search([('name', '=', row.get('State'))],
+                                                                                  limit=1).id or False,
+                        'business_country_id': self.env['res.country'].search([('name', '=', row.get('Country'))],
+                                                                              limit=1).id or False,
                     }) for row in row_data_map.values()]
 
+        for field_name, attachment_ids in attachments_by_field.items():
+            field = self.env['res.partner.kyc.approval']._fields.get(field_name)
+            if not field:
+                continue
+            if field.type == 'many2many':
+                values[field_name] = [(6, 0, attachment_ids)]
+            elif field.type != 'binary':
+                raise UserError(_("Unsupported field type '%s' for file field '%s'.") % (field.type, field_name))
+
         if values:
-            if self.partner_id:
-                values['partner_id'] = self.partner_id.id
-                res = self.env['res.partner.kyc.approval'].create(values)
-                if res:
-                    # Update attachments with correct res_id
-                    for bank in res.bank_detail:
-                        for attachment in bank.bank_cheque_attachments:
-                            attachment.write({'res_id': bank.id})
-
-                    self.partner_id.write({'is_kyc': True, 'rejection_date': False,
-                                           'rejection_reason': False, 'is_rejected': False})
-            elif self.email:
-                partner = self.env['res.partner'].search([('email', '=', self.email)], limit=1)
+            partner = self.partner_id or self.env['res.partner'].search([('email', '=', self.email)], limit=1)
+            if partner:
                 values['partner_id'] = partner.id
-                res = self.env['res.partner.kyc.approval'].create(values)
-                if res:
-                    for bank in res.bank_detail:
-                        for attachment in bank.bank_cheque_attachments:
-                            attachment.write({'res_id': bank.id})
-
-                    partner.write({'is_kyc': True, 'rejection_date': False,
-                                   'rejection_reason': False, 'is_rejected': False})
-
-
-
-
+                kyc_record = self.env['res.partner.kyc.approval'].create(values)
+                if kyc_record:
+                    for bank in kyc_record.bank_detail:
+                        for att in bank.bank_cheque_attachments:
+                            att.write({'res_id': bank.id})
+                    partner.write({
+                        'is_kyc': True,
+                        'rejection_date': False,
+                        'rejection_reason': False,
+                        'is_rejected': False,
+                    })

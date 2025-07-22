@@ -9,16 +9,89 @@ class VendorKycWizard(models.TransientModel):
     _name = 'vendor.kyc.wizard'
     _description = 'Vendor KYC Wizard'
 
-    @api.constrains('address_detail')
-    def _check_duplicate_address_emails(self):
+    @api.constrains(
+        'aadhaar_card', 'pan_card', 'partner_llp',
+        'gst_certificate', 'udyam_document', 'shop_act_document',
+        'shop_photos', 'shop_videos', 'incorporation_certificate',
+        'moa_aoa', 'electricity_bill',
+        'directors_detail', 'bank_detail'  # include O2M
+    )
+    def _check_attachments(self):
+        max_binary_sizes = {
+            # 'aadhaar_card': 10 * 1024 * 1024,  # 10 MB
+            # 'pan_card': 1 * 1024 * 1024,  # 1 MB
+            'partner_llp': 10 * 1024 * 1024,  # 10 MB
+        }
+
+        max_attachment_sizes = {
+            'gst_certificate': 10 * 1024 * 1024,
+            'udyam_document': 10 * 1024 * 1024,
+            'shop_act_document': 10 * 1024 * 1024,
+            'shop_photos': 100 * 1024 * 1024,
+            'shop_videos': 100 * 1024 * 1024,
+            'incorporation_certificate': 100 * 1024 * 1024,
+            'moa_aoa': 100 * 1024 * 1024,
+            'electricity_bill': 100 * 1024 * 1024,
+        }
+
+        for rec in self:
+            # ✅ Validate Binary fields on wizard
+            for field_name, max_size in max_binary_sizes.items():
+                data = rec[field_name]
+                if data and isinstance(data, bytes):
+                    actual_size = len(data)
+                    if actual_size > max_size:
+                        raise ValidationError(_(
+                            "%s exceeds the allowed limit. Uploaded: %.2f MB, Max allowed: %d MB"
+                        ) % (field_name.replace('_', ' ').title(),
+                             actual_size / (1024 * 1024),
+                             max_size // (1024 * 1024)))
+
+            # ✅ Validate ir.attachment M2M fields on wizard
+            for field_name, max_size in max_attachment_sizes.items():
+                attachments = rec[field_name]
+                if attachments:
+                    for attachment in attachments:
+                        if attachment.file_size and attachment.file_size > max_size:
+                            raise ValidationError(_(
+                                "%s file '%s' exceeds the allowed size. Uploaded: %.2f MB, Max allowed: %d MB"
+                            ) % (field_name.replace('_', ' ').title(),
+                                 attachment.name,
+                                 attachment.file_size / (1024 * 1024),
+                                 max_size // (1024 * 1024)))
+
+            # ✅ Validate binary fields in directors_detail
+            for line in rec.directors_detail:
+                if line.aadhaar_card and isinstance(line.aadhaar_card, bytes):
+                    if len(line.aadhaar_card) > 10 * 1024 * 1024:
+                        raise ValidationError(_(
+                            "Director Aadhaar Card for '%s' exceeds 10 MB (Uploaded: %.2f MB)"
+                        ) % (line.name, len(line.aadhaar_card) / (1024 * 1024)))
+                if line.pan_card and isinstance(line.pan_card, bytes):
+                    if len(line.pan_card) > 1 * 1024 * 1024:
+                        raise ValidationError(_(
+                            "Director PAN Card for '%s' exceeds 1 MB (Uploaded: %.2f MB)"
+                        ) % (line.name, len(line.pan_card) / (1024 * 1024)))
+
+            # ✅ Validate attachments in bank_detail
+            for line in rec.bank_detail:
+                for attachment in line.bank_cheque_attachments:
+                    if attachment.file_size and attachment.file_size > 10 * 1024 * 1024:
+                        raise ValidationError(_(
+                            "Bank cheque file '%s' for Bank '%s' exceeds 10 MB (Uploaded: %.2f MB)"
+                        ) % (attachment.name, line.bank_name, attachment.file_size / (1024 * 1024)))
+
+
+    @api.constrains('directors_detail')
+    def _check_duplicate_directors_detail_emails(self):
         for wizard in self:
             emails = []
-            for line in wizard.address_detail:
-                if line.business_email:
-                    lower_email = line.business_email.lower()
+            for line in wizard.directors_detail:
+                if line.email:
+                    lower_email = line.email.lower()
                     if lower_email in emails:
                         raise ValidationError(
-                            _("Duplicate email address found in Address Details: %s") % line.business_email
+                            _("Duplicate email address found in Directors Details: %s") % line.email
                         )
                     emails.append(lower_email)
 
@@ -28,12 +101,12 @@ class VendorKycWizard(models.TransientModel):
 
         for rec in self:
             # Direct field: Director Phone
-            if rec.director_phone and not phone_pattern.fullmatch(rec.director_phone):
-                raise ValidationError(_(
-                    "Invalid Director Contact Number:\n"
-                    "→ Must be exactly 10 digits (e.g., 9876543210)\n"
-                    "→ You entered: %s"
-                ) % rec.director_phone)
+            # if rec.director_phone and not phone_pattern.fullmatch(rec.director_phone):
+            #     raise ValidationError(_(
+            #         "Invalid Director Contact Number:\n"
+            #         "→ Must be exactly 10 digits (e.g., 9876543210)\n"
+            #         "→ You entered: %s"
+            #     ) % rec.director_phone)
 
             # One2many: Directors Detail
             for idx, line in enumerate(rec.directors_detail, start=1):
@@ -66,10 +139,10 @@ class VendorKycWizard(models.TransientModel):
                 ) % rec.email)
 
             # Director Email
-            if rec.director_email and not email_pattern.match(rec.director_email):
-                raise ValidationError(_(
-                    "The email in field [Director Email] is invalid:\n→ %s\nPlease enter a valid email like user@example.com."
-                ) % rec.director_email)
+            # if rec.director_email and not email_pattern.match(rec.director_email):
+            #     raise ValidationError(_(
+            #         "The email in field [Director Email] is invalid:\n→ %s\nPlease enter a valid email like user@example.com."
+            #     ) % rec.director_email)
 
             # One2many: Director Detail Emails
             for idx, line in enumerate(rec.directors_detail, 1):
@@ -129,24 +202,24 @@ class VendorKycWizard(models.TransientModel):
                     "Invalid GST Number: '%s'. It must follow the 15-character format (e.g., 27ABCDE1234F1Z5)."
                 ) % rec.gst_no)
 
-    @api.constrains('comp_google_loc')
-    def _check_lat_long_format(self):
-        pattern = re.compile(r'Lat\s*:\s*(-?\d+(\.\d+)?)[,\s]+Long\s*:\s*(-?\d+(\.\d+)?)', re.IGNORECASE)
-        for rec in self:
-            if rec.comp_google_loc:
-                match = pattern.search(rec.comp_google_loc.strip())
-                if not match:
-                    raise ValidationError(_(
-                        "Invalid format for Google Location.\nPlease use the format:\nLat : <value> Long: <value>\n"
-                        "Example: Lat : 22.3511148 Long: 78.6677428"
-                    ))
-                lat = float(match.group(1))
-                lon = float(match.group(3))
-                if not (-90 <= lat <= 90 and -180 <= lon <= 180):
-                    raise ValidationError(_(
-                        "Latitude must be between -90 and 90.\nLongitude must be between -180 and 180.\n"
-                        "Your input: Lat = %s, Long = %s"
-                    ) % (lat, lon))
+    # @api.constrains('comp_google_loc')
+    # def _check_lat_long_format(self):
+    #     pattern = re.compile(r'Lat\s*:\s*(-?\d+(\.\d+)?)[,\s]+Long\s*:\s*(-?\d+(\.\d+)?)', re.IGNORECASE)
+    #     for rec in self:
+    #         if rec.comp_google_loc:
+    #             match = pattern.search(rec.comp_google_loc.strip())
+    #             if not match:
+    #                 raise ValidationError(_(
+    #                     "Invalid format for Google Location.\nPlease use the format:\nLat : <value> Long: <value>\n"
+    #                     "Example: Lat : 22.3511148 Long: 78.6677428"
+    #                 ))
+    #             lat = float(match.group(1))
+    #             lon = float(match.group(3))
+    #             if not (-90 <= lat <= 90 and -180 <= lon <= 180):
+    #                 raise ValidationError(_(
+    #                     "Latitude must be between -90 and 90.\nLongitude must be between -180 and 180.\n"
+    #                     "Your input: Lat = %s, Long = %s"
+    #                 ) % (lat, lon))
 
     @api.constrains('cin_no')
     def _check_cin_format(self):
@@ -157,12 +230,21 @@ class VendorKycWizard(models.TransientModel):
                     "Invalid CIN Number: '%s'. Expected format is like 'L12345MH2020PLC123456'."
                 ) % rec.cin_no)
 
+    @api.onchange('is_same_trade_name', 'business_legal_name')
+    def _onchange_trade_name_sync(self):
+        for rec in self:
+            if rec.is_same_trade_name:
+                rec.business_trade_name = rec.business_legal_name
+            else:
+                rec.business_trade_name = False
+
     partner_id = fields.Many2one('res.partner', string='Contact', domain="[('id', '=', active_id)]")
     email = fields.Char("Email", required=True)
     point_of_contact = fields.Char("Point of Contact", required=True)
     poc_user = fields.Many2one('res.users', string="Point of Contact to Vendor", default=lambda self: self.env.user,
-                              readonly=1)
+                               readonly=1)
     business_legal_name = fields.Char("Business Legal Name", required=True)
+    is_same_trade_name = fields.Boolean(string="If Trade Name is same as Legal Name", help="Tick if trade name is same as legal name")
     business_trade_name = fields.Char("Business Trade Name", required=True)
     const_business = fields.Selection([('Sole Proprietor', 'Sole Proprietor'),
                                        ('Partnership', 'Partnership'),
@@ -173,15 +255,25 @@ class VendorKycWizard(models.TransientModel):
                                        ], string="Constitution of Business", required=True)
     # const_business = fields.Many2one('constitution.business', string="Constitution of Business", required=True)
     other_business = fields.Char("If Other, Specify?")
+    ##### Partnership/PrivateCo./LLP
+    no_partner_director = fields.Selection([('1', '1'),
+                                            ('2', '2'),
+                                            ('3', '3'),
+                                            ('4', '4'),
+                                            ('5', '5'),
+                                            ('6', '6'),
+                                            ('7', '7')], string="Number of Managing Partner / Directors", default='1')
+    directors_detail = fields.One2many('director.detail', 'kyc_wizard_id', string="Directors Detail")
     # no_partner_director = fields.Many2one('number.partner.director', string="Number of Managing Partner / Directors")
-    director_name = fields.Char(string="Name of the Owner / Director")
-    director_phone = fields.Char(string="Contact Number")
-    director_email = fields.Char(string="Email Address")
-    aadhaar_card = fields.Binary(string="Aadhaar Card")
-    aadhaar_card_filename = fields.Char(readonly=True)
-    pan_card = fields.Binary(string="PAN Card")
-    pan_card_filename = fields.Char(readonly=True)
-    aadhaar_pan_link = fields.Selection([('yes','Yes'),('no','No')],string='Aadhar and PAN card linking?', required=True)
+    # director_name = fields.Char(string="Name of the Owner / Director")
+    # director_phone = fields.Char(string="Contact Number")
+    # director_email = fields.Char(string="Email Address")
+    # aadhaar_card = fields.Binary(string="Aadhaar Card")
+    # aadhaar_card_filename = fields.Char(readonly=True)
+    # pan_card = fields.Binary(string="PAN Card")
+    # pan_card_filename = fields.Char(readonly=True)
+    aadhaar_pan_link = fields.Selection([('yes', 'Yes'), ('no', 'No')], string='Aadhar and PAN card linking?',
+                                        required=True)
     gst_no = fields.Char(string="GST Number", required=True)
     udyam_number = fields.Char(string="Udyam Certificate Number", required=True)
     license_registered = fields.Char(string="Any licenses registered (As per Local/State Government requirements)")
@@ -204,15 +296,6 @@ class VendorKycWizard(models.TransientModel):
     shop_videos = fields.Many2many('ir.attachment', 'vendor_kyc_shop_videos_rel', 'wizard_id', 'attachment_id',
                                    string="Shop Videos", required=True,
                                    help="Short Video / Walkway from outdoor / indoor. Must include - signage Board with GST Number.")
-    ##### Partnership/PrivateCo./LLP
-    no_partner_director = fields.Selection([('1', '1'),
-                                            ('2', '2'),
-                                            ('3', '3'),
-                                            ('4', '4'),
-                                            ('5', '5'),
-                                            ('6', '6'),
-                                            ('7', '7')], string="Number of Managing Partner / Directors")
-    directors_detail = fields.One2many('director.detail', 'kyc_wizard_id', string="Directors Detail")
     bank_detail = fields.One2many('bank.detail', 'kyc_wizard_id', string="Bank Detail")
     address_detail = fields.One2many('address.detail', 'kyc_wizard_id', string="Address Detail")
     pan_no = fields.Char(string="PAN Number(Company)")
@@ -223,6 +306,7 @@ class VendorKycWizard(models.TransientModel):
                                                  'attachment_id',
                                                  string="Incorporation Certificate")
     comp_google_loc = fields.Char(string="Google Location of Shop", required=True)
+
     partner_llp_filename = fields.Char()
     partner_llp = fields.Binary(string="Partnership Deed or LLP Deed")
     moa_aoa = fields.Many2many('ir.attachment', 'vendor_kyc_moa_aoa_rel', 'wizard_id', 'attachment_id',
@@ -272,38 +356,16 @@ class VendorKycWizard(models.TransientModel):
 
     # @api.onchange('const_business')
     # def _onchange_const_business_clear_fields(self):
-    #     self.other_business = False
-    #     self.director_name = False
-    #     self.director_phone = False
-    #     self.director_email = False
-    #     self.aadhaar_card = False
-    #     self.pan_card = False
-    #     self.aadhaar_pan_link = False
-    #     self.gst_no = False
-    #     self.license_registered = False
-    #     self.udyam_number = False
-    #     self.no_partner_director = False
-    #     self.pan_no = False
-    #     self.comp_google_loc = False
-    #     self.partner_llp = False
-    #     self.cin_no = False
-    #     self.gst_return_duration = False
-    #
-    #     # Clear binary/many2many fields
-    #     self.moa_aoa = [(5, 0, 0)]
-    #     self.electricity_bill = [(5, 0, 0)]
-    #     self.pan_card_document = [(5, 0, 0)]
-    #     self.incorporation_certificate = [(5, 0, 0)]
-    #     self.gst_certificate = [(5, 0, 0)]
-    #     self.udyam_document = [(5, 0, 0)]
-    #     self.shop_act_document = [(5, 0, 0)]
-    #     self.shop_photos = [(5, 0, 0)]
-    #     self.shop_videos = [(5, 0, 0)]
-    #
-    #     # Clear One2many lines
-    #     self.directors_detail = [(5, 0, 0)]
-    #     self.bank_detail = [(5, 0, 0)]
-    #     self.address_detail = [(5, 0, 0)]
+    #     # Clear simple fields
+    #     for field in [
+    #         'other_business',
+    #         'director_name',
+    #         'director_phone',
+    #         'director_email',
+    #         'aadhaar_card',
+    #         'pan_card'
+    #     ]:
+    #         setattr(self, field, False)
 
     def action_vendor_kyc_done(self):
         self.ensure_one()
@@ -373,15 +435,18 @@ class VendorKycWizard(models.TransientModel):
             'point_of_contact': self.point_of_contact,
             'poc_user': self.poc_user.id,
             'business_legal_name': self.business_legal_name,
+            'is_same_trade_name': self.is_same_trade_name,
             'business_trade_name': self.business_trade_name,
             'address_detail': address_data,
             'const_business': self.const_business,
             'other_business': self.other_business,
-            'director_name': self.director_name,
-            'director_phone': self.director_phone,
-            'director_email': self.director_email,
-            'aadhaar_card': self.aadhaar_card,
-            'pan_card': self.pan_card,
+            # 'director_name': self.director_name,
+            # 'director_phone': self.director_phone,
+            # 'director_email': self.director_email,
+            # 'aadhaar_card': self.aadhaar_card,
+            # 'aadhaar_card_filename': self.aadhaar_card_filename,
+            # 'pan_card': self.pan_card,
+            # 'pan_card_filename': self.pan_card_filename,
             'gst_no': self.gst_no,
             'license_registered': self.license_registered,
             'aadhaar_pan_link': self.aadhaar_pan_link,
@@ -518,10 +583,14 @@ class AddressDetail(models.TransientModel):
 
     @api.onchange('business_country_id')
     def _onchange_country_id(self):
-        if self.business_country_id and self.business_country_id != self.business_state_id.country_id:
-            self.business_state_id = False
+        for rec in self:
+            # Clear the state if it doesn't belong to the selected country
+            if rec.business_state_id and rec.business_state_id.country_id != rec.business_country_id:
+                rec.business_state_id = False
 
     @api.onchange('business_state_id')
-    def _onchange_state(self):
-        if self.business_state_id.country_id and self.business_country_id != self.business_state_id.country_id:
-            self.business_country_id = self.business_state_id.country_id
+    def _onchange_state_id(self):
+        for rec in self:
+            # Automatically set country based on state
+            if rec.business_state_id:
+                rec.business_country_id = rec.business_state_id.country_id

@@ -211,7 +211,7 @@
 	<template id="tmpl_sh_file" name="SH File">
 	    <input type="file"
 			class="form-control o_survey_question_email_box bg-transparent text-dark rounded-0 p-0 sh_file_input"
-			multiple="true" t-att-id="question.id"
+			t-att-multiple="question.upload_multiple_file" t-att-id="question.id"
 			t-att-name="question.id"
 			t-att-data-question-type="question.question_type"/>
 	</template>

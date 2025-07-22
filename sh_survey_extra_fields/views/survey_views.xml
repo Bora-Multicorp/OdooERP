@@ -19,6 +19,9 @@
                     <field name="validation_sh_textbox_placeholder" placeholder="Ex. Custom Placeholder" invisible="question_type != 'char_box' or validation_is_sh_textbox_pattern == False" />
                 </group>
             </xpath>
+            <xpath expr="//field[@name='constr_mandatory']" position="after">
+                <field name="upload_multiple_file" invisible="question_type != 'que_sh_file'"/>
+            </xpath>
 
             <!-- BELOW XPATH IS FOR TO DISPLAY (validation_required) Validate entry? BOOLEAN IN OUR CUSTOM FIELD ALOS. -->
             <field name="validation_required" position="attributes">

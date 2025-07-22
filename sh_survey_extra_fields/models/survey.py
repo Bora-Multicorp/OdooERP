@@ -9,7 +9,7 @@ from odoo import api, fields, models, _
 from odoo.exceptions import UserError
 email_validator = re.compile(r"[^@]+@[^@]+\.[^@]+")
 _logger = logging.getLogger(__name__)
-
+from odoo.tools.translate import _  # Add this inside the method to
 
 class SurveyQuestion(models.Model):
     _inherit = 'survey.question'
@@ -135,6 +135,10 @@ class SurveyQuestion(models.Model):
         ('que_sh_many2many', 'Many2many'),
         ('que_sh_address', 'Address'),
     ])
+    upload_multiple_file = fields.Boolean(string='Upload Multiple File',
+                                          help='Check this box if you want to '
+                                               'allow users to upload '
+                                               'multiple files')
     # ------------------------------------------------------------
     # VALIDATION
     # ------------------------------------------------------------
@@ -233,6 +237,59 @@ class SurveyQuestion(models.Model):
             Custom matrix validation by softhealer technologies.
             We just need to check wheter any answer is empty or not.
         """
+
+        from odoo.tools.translate import _
+
+        def is_valid_email(val):
+            return bool(re.fullmatch(r"[^@]+@[^@]+\.[^@]+", val))
+
+        def is_valid_mobile(val):
+            return bool(re.fullmatch(r"^[6-9]\d{9}$", val))
+
+        def is_valid_pincode(val):
+            return bool(re.fullmatch(r"^\d{6}$", val))
+
+        def is_valid_account_number(val):
+            return bool(re.fullmatch(r"\d{9,18}", val))
+
+        def is_valid_ifsc(val):
+            return bool(re.fullmatch(r"^[A-Z]{4}0[A-Z0-9]{6}$", val))
+
+        # Step 1: Always validate formats for filled-in fields
+        for key, value_list in answers.items():
+            row_id, answer_id = key.split('_')
+            answer = self.env['survey.question.answer'].browse(int(answer_id))
+
+            for val in value_list:
+                if not val:
+                    continue  # Skip empty cells
+
+                if answer.sh_value_type == 'textbox':
+                    if answer.is_email and not is_valid_email(val):
+                        return {
+                            self.id: _("Invalid Email in '%s' → '%s'. Example: user@example.com") % (answer.value, val)
+                        }
+                    if answer.is_mobile and not is_valid_mobile(val):
+                        return {
+                            self.id: _("Invalid Mobile Number in '%s' → '%s'. Must be 10 digits, start with 6-9") %
+                                     (answer.value, val)
+                        }
+                    if answer.is_pincode and not is_valid_pincode(val):
+                        return {
+                            self.id: _("Invalid Pincode in '%s' → '%s'. Must be exactly 6 digits") %
+                                     (answer.value, val)
+                        }
+                    if answer.is_acc_no and not is_valid_account_number(val):
+                        return {
+                            self.id: _("Invalid Account Number in '%s' → '%s'. Must be 9-18 digits") %
+                                     (answer.value, val)
+                        }
+                    if answer.is_ifsc and not is_valid_ifsc(val.upper()):
+                        return {
+                            self.id: _(
+                                "Invalid IFSC Code in '%s' → '%s'. Format: 4 letters + 0 + 6 alphanumeric (e.g., SBIN0001234)") %
+                                     (answer.value, val)
+                        }
         if self.add_an_item and self.matrix_subtype=='sh_custom_matrix' and self.constr_mandatory:
             row_answers = {str(row_id): [] for row_id in self.matrix_row_ids.ids}
             for key, value in answers.items():
