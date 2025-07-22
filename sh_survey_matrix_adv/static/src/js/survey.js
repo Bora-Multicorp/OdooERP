@@ -4,7 +4,7 @@ import SurveyFormWidget from '@survey/js/survey_form';
 import { rpc } from "@web/core/network/rpc";
 
 function reloadMany2oneOptions({ model_id, domain, $el, selectedId = null }) {
-    rpc("/survey/get_many2one_field_data", {
+    rpc("/survey/get_matrix_many2one_field_data", {
         model_id: model_id,
         domain: domain,
     }).then(function (data) {
@@ -21,12 +21,11 @@ function reloadMany2oneOptions({ model_id, domain, $el, selectedId = null }) {
 }
 
 
-$(document).on("change", ".js_cls_sh_many2one_select", function (ev) {
+$(document).on("change", ".js_cls_sh_matrix_many2one_select", function (ev) {
     const $el = $(this);
     const rowId = $el.data('row-id');
     const modelName = $el.data('model-name');
     const selectedValue = $el.val();
-    console.log("Changed model:", modelName, "Value:", selectedValue);
     if (modelName === 'res.country') {
         const $stateField = $(`select[data-model-name='res.country.state'][data-row-id='${rowId}']`);
         if ($stateField.length && selectedValue) {
@@ -196,6 +195,36 @@ $(document).on("click", "button[type='submit'][value='next'], #next_page", funct
 
 SurveyFormWidget.include({
 
+    init: function () {
+        this._super.apply(this, arguments);
+    },
+
+    getMatrixMany2oneFieldData: async function () {
+        var self = this;
+        var $m2oSelects = self.$target.find(".js_cls_sh_matrix_many2one_select");
+        if ($m2oSelects.length) {
+            await $m2oSelects.each(function (index, element) {
+            var ansValue = $(this).attr("value") || false;
+            var model_id = $(this).attr("data-model_id") || false;
+            if (model_id) {
+                rpc("/survey/get_matrix_many2one_field_data", {
+                    'model_id': parseInt(model_id),
+                }).then(function (data) {
+                    jQuery.each(data.records, function (key, value) {
+                        //var opt = $("<option>").text(value.name).attr("value", value.name);
+                        var opt = $("<option>").text(value.name).attr("value", value.id);
+                        //if (value.name === ansValue) {
+                        if (String(value.id) === String(ansValue)) {
+                            opt.attr("selected", "selected");
+                        }
+                        $(element).append(opt);
+                    });
+                });
+            }
+         });
+        }
+    },
+
     _prepareSubmitAnswersMatrix: function (params, $matrixTable) {
         var self = this;
         const questionId = $matrixTable.data('name');
@@ -253,18 +282,6 @@ SurveyFormWidget.include({
         return params;
     },
 
-     /**
-     * Will automatically focus on the first input to allow the user to complete directly the survey,
-     * without having to manually get the focus (only if the input has the right type - can write something inside -)
-     */
-    _focusOnFirstInput: function () {
-        this._super.apply(this, arguments);
-
-        if (this.$("input[type='range']").length) {
-            this.$("input[type='range']").trigger('input')
-        }
-    },
-
     _prepareSubmitAnswerMatrix: function (params, questionId, rowId, colId, isComment) {
         var value = questionId in params ? params[questionId] : {};
         if (isComment) {
@@ -310,6 +327,10 @@ SurveyFormWidget.include({
 
         if (this.$("input[type='range']").length) {
             this.$("input[type='range']").trigger('input')
+        }
+
+        if (this.$(".js_cls_sh_matrix_many2one_select").length) {
+            this.getMatrixMany2oneFieldData();
         }
     },
 

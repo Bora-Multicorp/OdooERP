@@ -108,7 +108,7 @@ class survey_user_input(models.Model):
                                 if answer_id.sh_value_type == 'que_sh_many2one':
                                     record_id = data_value
                                     model_name = answer_id.que_sh_many2one_model_id.model
-                                    print(" answer_id.que_sh_many2one_model_id.model", model_name, record_id, type(record_id), answer_id.que_sh_many2one_model_id,  answer_id.que_sh_many2one_model_id.model)
+                                    #print(" answer_id.que_sh_many2one_model_id.model", model_name, record_id, type(record_id), answer_id.que_sh_many2one_model_id,  answer_id.que_sh_many2one_model_id.model)
                                     record_name = ''
                                     if record_id:
                                         try:

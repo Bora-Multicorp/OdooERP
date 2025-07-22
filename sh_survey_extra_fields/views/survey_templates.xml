@@ -309,7 +309,7 @@ Many2one
     <template id="tmpl_sh_many2one" name="SH Many2one">
 		<div class="form-row js_cls_sh_many2one_wrapper">
 	      <div class="form-group col-lg-12">
-	         <!--   <select  
+	         <!--   <select
 	            t-att-data-question-type="question.question_type"
 	            t-att-data-model_id="question.que_sh_many2one_model_id.id if question.que_sh_many2one_model_id else False"
 	            t-att-name="question.id" class="js_cls_sh_many2one_select form-control">
