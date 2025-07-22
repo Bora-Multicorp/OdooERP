@@ -45,9 +45,11 @@ class SurveyLabel(models.Model):
     sh_matrix_range_step = fields.Integer(string='Step')
     row_hide = fields.Boolean(string='Is Hide')
     que_sh_many2one_model_id = fields.Many2one(comodel_name="ir.model", string="Model ")
-    # is_email = fields.Boolean("Is Email")
-    # is_mobile = fields.Boolean("Is Mobile")
-    # is_pincode = fields.Boolean("Is Pincode")
+    is_email = fields.Boolean("Is Email?")
+    is_mobile = fields.Boolean("Is Mobile?")
+    is_pincode = fields.Boolean("Is Pincode?")
+    is_acc_no = fields.Boolean("Is Account Number?")
+    is_ifsc = fields.Boolean("Is IFSC Code?")
 
     # def _validate_char_box(self, answer):
     #     errors = {}

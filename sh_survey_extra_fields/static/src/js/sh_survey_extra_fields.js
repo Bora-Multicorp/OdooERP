@@ -681,34 +681,38 @@ SurveyFormWidget.include({
                 params = self._prepareSubmitAnswersAddress(params, this.name, $(this));
                 break;
 
+            case "que_sh_many2one":
+                    params[this.name] = $(this).parent().find("input").val();
+                    break;
+
             // ✅ Fixed many2one logic
-            case "que_sh_many2one": {
-                const $input = $(this).parent().find("input");
-                const userInput = $input.val()?.trim();
-                const datalistId = $input.attr("list");
-                const $datalist = $("#" + datalistId);
-
-                const validOptions = $datalist.find("option").map(function () {
-                    return $(this).val();
-                }).get();
-
-                const selectedVal = validOptions.includes(userInput) ? userInput : "";
-
-                if (selectedVal) {
-                    params[this.name] = selectedVal;
-                } else {
-                    const label = $(this)
-                        .closest(".js_question-wrapper")
-                        .find(".o_survey_question_title, h3 span")
-                        .text()
-                        .trim();
-
-                    alert(`Please select a valid option for "${label}" from the dropdown list.`);
-                    submissionPrevented = true;
-                    return false; // 🚫 Stop further processing
-                }
-                break;
-            }
+//            case "que_sh_many2one": {
+//                const $input = $(this).parent().find("input");
+//                const userInput = $input.val()?.trim();
+//                const datalistId = $input.attr("list");
+//                const $datalist = $("#" + datalistId);
+//
+//                const validOptions = $datalist.find("option").map(function () {
+//                    return $(this).val();
+//                }).get();
+//
+//                const selectedVal = validOptions.includes(userInput) ? userInput : "";
+//
+//                if (selectedVal) {
+//                    params[this.name] = selectedVal;
+//                } else {
+//                    const label = $(this)
+//                        .closest(".js_question-wrapper")
+//                        .find(".o_survey_question_title, h3 span")
+//                        .text()
+//                        .trim();
+//
+//                    alert(`Please select a valid option for "${label}" from the dropdown list.`);
+//                    submissionPrevented = true;
+//                    return false; // 🚫 Stop further processing
+//                }
+//                break;
+//            }
 
             case "que_sh_many2many":
                 params = self._prepareSubmitAnswersMany2many(params, $(this), $(this).attr("name"));
