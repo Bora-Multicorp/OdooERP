@@ -42,12 +42,12 @@ class SurveyController(http.Controller):
                 rec_name = modelRecord._rec_name
                 records = request.env[modelRecord.model].sudo(
                 ).search_read([], fields=[rec_name, 'id'])
-
                 # give any rec_name value to name key in record in order to use in js.
                 if records:
                     records = [dict(item, name=item.get(rec_name))
                                for item in records]
 
+        #print("test", dict(records=records, rec_name=rec_name,))
         return dict(
             records=records,
             rec_name=rec_name,
