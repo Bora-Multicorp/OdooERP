@@ -84,7 +84,7 @@ class StockMoveLine(models.Model):
 
 
     
-    def validate_imei(self):
+    def validate_imei_and_serial_number(self):
 
         # some time it shows None
         # if self._context.get('active_model') != 'purchase.order':
@@ -169,19 +169,18 @@ class StockMoveLine(models.Model):
 
 
 
-            if self.picking_type_id.code != 'outgoing':
-                # 4.1 Uniqueness of Serial number check in same lines
-                exist = self.search([('lot_name', '=',  record.lot_name), ('id', '!=', record.id)], limit=1)
-                if exist:
-                    raise ValidationError(_('Serial number must be unique, the serial number(%s) is already used in another stock item.' % record.lot_name))
-            
-                #4.2 Uniqueness of Serial number check in all other saved items
-                results = self.env['stock.quant'].search([
-                    ('lot_id.name', '=', record.lot_name)
-                ])
+            # 4.1 Uniqueness of Serial number check in same lines
+            exist = self.search([('lot_name', '=',  record.lot_name), ('id', '!=', record.id)], limit=1)
+            if exist:
+                raise ValidationError(_('Serial number must be unique, the serial number(%s) is already used in another stock item.' % record.lot_name))
+        
+            #4.2 Uniqueness of Serial number check in all other saved items
+            results = self.env['stock.quant'].search([
+                ('lot_id.name', '=', record.lot_name)
+            ])
 
-                if len(results) > 0:
-                    raise ValidationError(_('Serial number must be unique, the Serial number(%s) is already used in another stock item.' % record.lot_name))
+            if len(results) > 0:
+                raise ValidationError(_('Serial number must be unique, the Serial number(%s) is already used in another stock item.' % record.lot_name))
 
 
 
@@ -199,6 +198,7 @@ class StockPickingInherit(models.Model):
     def button_validate(self):
         for picking in self:
             for line in picking.move_line_ids:
-                line.validate_imei()  # custom validator
+                if line.picking_type_id.code != 'outgoing':
+                    line.validate_imei_and_serial_number()  # dont validateif it's outgoing picking (sales order)
         return super().button_validate()
 
