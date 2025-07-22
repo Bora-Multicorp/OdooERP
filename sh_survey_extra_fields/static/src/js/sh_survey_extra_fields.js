@@ -85,8 +85,8 @@ SurveyFormWidget.include({
 
     const sizeLimits = {
         'aadhaar card': 10 * 1024 * 1024,
-        'pan card': 1 * 1024 * 1024,
-        'pan card document(company)': 1 * 1024 * 1024,
+        'pan card': 10 * 1024 * 1024,
+        'pan card document(company)': 10 * 1024 * 1024,
         'partnership deed or llp deed': 10 * 1024 * 1024,
         'gst certificate': 10 * 1024 * 1024,
         'udyam documents': 10 * 1024 * 1024,
@@ -161,6 +161,75 @@ SurveyFormWidget.include({
     }
     self.SH_FILE_DATA_DICTIONARY[dictKey].push(...FILE_LIST);
 },
+
+//    _onChangeFileInput: async function (ev) {
+//    var self = this;
+//    var $fileUpload = $(ev.currentTarget);
+//    if (!$fileUpload.length) return;
+//
+//    const imageTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif', 'image/bmp', 'application/pdf'];
+//
+//    const limits = {
+//        'gst certificate':               { maxFiles: 1,  maxSize: 10 * 1024 * 1024 },
+//        'udyam documents':              { maxFiles: 1,  maxSize: 10 * 1024 * 1024 },
+//        'shop act documents':           { maxFiles: 1,  maxSize: 10 * 1024 * 1024 },
+//        'shop photos':                  { maxFiles: 10, maxSize: 100 * 1024 * 1024 },
+//        'shop videos':                  { maxFiles: 10, maxSize: 100 * 1024 * 1024 },
+//        'pan card document(company)':   { maxFiles: 1,  maxSize: 10 * 1024 * 1024 },
+//        'incorporation certificate':    { maxFiles: 5,  maxSize: 10 * 1024 * 1024 },
+//        'moa or aoa':                   { maxFiles: 5,  maxSize: 10 * 1024 * 1024 },
+//        'electricity bill':             { maxFiles: 5,  maxSize: 10 * 1024 * 1024 },
+//        'aadhaar card':                 { maxFiles: 1,  maxSize: 10 * 1024 * 1024 },
+//        'pan card':                     { maxFiles: 1,  maxSize: 10 * 1024 * 1024 },
+//        'cancelled cheque':             { maxFiles: 1,  maxSize: 10 * 1024 * 1024 },
+//    };
+//
+//    const sizeKey = $fileUpload.attr("data-name").toLowerCase();
+//    const dictKey = sizeKey.replaceAll(" ", "_");
+//    const fieldLimit = limits[sizeKey] || { maxFiles: 1, maxSize: 10 * 1024 * 1024 };
+//
+//    const files = $fileUpload[0].files;
+//    const existingFiles = self.SH_FILE_DATA_DICTIONARY[dictKey]?.length || 0;
+//
+//    // Validate file count
+//    if ((existingFiles + files.length) > fieldLimit.maxFiles) {
+//        alert(`You can upload up to ${fieldLimit.maxFiles} file(s) for "${sizeKey}".`);
+//        $fileUpload.val('');
+//        return;
+//    }
+//
+//    // Validate individual file size and type
+//    for (const file of files) {
+//        if (file.size > fieldLimit.maxSize) {
+//            alert(`"${file.name}" exceeds max size of ${(fieldLimit.maxSize / 1024 / 1024).toFixed(1)} MB for "${sizeKey}".`);
+//            $fileUpload.val('');
+//            return;
+//        }
+//        if (!imageTypes.includes(file.type)) {
+//            alert(`"${file.name}" is not a supported file type. Only PDF and image files are allowed.`);
+//            $fileUpload.val('');
+//            return;
+//        }
+//    }
+//
+//    const FILE_LIST = self.SH_FILE_DATA_DICTIONARY[dictKey] || [];
+//
+//    for (const file of files) {
+//        const base64 = await self.toBase64(file);
+//        FILE_LIST.push({
+//            filename: file.name,
+//            filetype: file.type,
+//            filesize: file.size,
+//            base64: base64.split(",")[1], // Remove prefix like "data:application/pdf;base64,"
+//        });
+//    }
+//
+//    self.SH_FILE_DATA_DICTIONARY[dictKey] = FILE_LIST;
+//    $fileUpload.val(''); // reset input after processing
+//},
+
+
+
 
     _onRadioSelectionChange: function (ev) {
     const $radio = $(ev.currentTarget);
