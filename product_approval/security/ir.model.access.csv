@@ -1,0 +1,6 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_product_approval_users,product_approval_users,model_product_approval_users,,1,1,1,1
+access_approve_product_wizard,approve.product.wizard,model_approve_product_wizard,,1,1,1,1
+access_reject_product_wizard,reject.product.wizard,model_reject_product_wizard,,1,1,1,1
+access_product_approval_config,product.approval.config,model_product_approval_config,,1,1,1,1
+

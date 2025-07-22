@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<odoo>
+    <record id="reject_product_wizard_view_form" model="ir.ui.view">
+        <field name="name">reject.product.wizard.form</field>
+        <field name="model">reject.product.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Reject product Form">
+                <group>
+                    <field name="product_approval_id" readonly="1"/>
+                    <field name="remark"  placeholder="Enter remarks for rejection"/>
+                </group>
+                <footer>
+                    <button name="action_reject_product" string="Reject" type="object" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel" data-hotkey="x"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+    <record id="reject_product_wizard_action" model="ir.actions.act_window">
+        <field name="name">Reject product</field>
+        <field name="res_model">reject.product.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="reject_product_wizard_view_form"/>
+        <field name="target">new</field>
+        <field name="binding_model_id" ref="model_reject_product_wizard"/>
+        <field name="context">{
+            'default_product_approval_id': active_id,
+            }
+        </field>
+    </record>
+</odoo>
