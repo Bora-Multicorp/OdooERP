@@ -126,7 +126,7 @@
             <field name="value">Pincode</field>
             <field name="sh_value_type">textbox</field>
             <!--              <field name="constr_mandatory" eval="True"/>-->
-            <!--            <field name="is_pincode" eval="True"/>-->
+            <field name="is_pincode" eval="True"/>
 
         </record>
         <record model="survey.question.answer" id="matrix_address_detail_kyc_survey_col4">
@@ -135,7 +135,7 @@
             <field name="value">Contact Number</field>
             <field name="sh_value_type">textbox</field>
             <!--            <field name="constr_mandatory" eval="True"/>-->
-            <!--            <field name="is_mobile" eval="True"/>-->
+            <field name="is_mobile" eval="True"/>
 
         </record>
         <record model="survey.question.answer" id="matrix_address_detail_kyc_survey_col5">
@@ -143,7 +143,7 @@
             <field name="sequence">5</field>
             <field name="value">Email</field>
             <field name="sh_value_type">textbox</field>
-            <!--<field name="is_email" eval="True"/>-->
+            <field name="is_email" eval="True"/>
         </record>
         <record model="survey.question.answer" id="matrix_address_detail_kyc_survey_col6">
             <field name="question_id" ref="matrix_address_detail_kyc_survey"/>
@@ -416,12 +416,14 @@
             <field name="sequence">2</field>
             <field name="value">Contact Number</field>
             <field name="sh_value_type">textbox</field>
+            <field name="is_mobile" eval="True"/>
         </record>
         <record model="survey.question.answer" id="matrix_director_detail_kyc_survey_col3">
             <field name="question_id" ref="matrix_director_detail_kyc_survey"/>
             <field name="sequence">3</field>
             <field name="value">Email Address</field>
             <field name="sh_value_type">textbox</field>
+            <field name="is_email" eval="True"/>
         </record>
         <record model="survey.question.answer" id="matrix_director_detail_kyc_survey_col4">
             <field name="question_id" ref="matrix_director_detail_kyc_survey"/>
@@ -825,12 +827,14 @@
             <field name="sequence">2</field>
             <field name="value">Account Number</field>
             <field name="sh_value_type">textbox</field>
+            <field name="is_acc_no" eval="True"/>
         </record>
         <record model="survey.question.answer" id="matrix_bank_address_kyc_survey_col3">
             <field name="question_id" ref="matrix_bank_address_kyc_survey"/>
             <field name="sequence">3</field>
             <field name="value">IFSC Code</field>
             <field name="sh_value_type">textbox</field>
+            <field name="is_ifsc" eval="True"/>
         </record>
         <record model="survey.question.answer" id="matrix_bank_address_kyc_survey_col4">
             <field name="question_id" ref="matrix_bank_address_kyc_survey"/>
