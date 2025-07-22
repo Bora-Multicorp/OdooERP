@@ -1,0 +1,39 @@
+<odoo>
+  <data>
+    <record id="pending_approval_products_list_action" model="ir.actions.act_window">
+      <field name="name">Product Approval Queue</field>
+      <field name="res_model">product.template</field>
+      <field name="view_mode">kanban,list,form</field>
+      <field name="search_view_id" ref="stock.product_template_search_form_view_stock"/>
+      <field name="context">{"search_default_goods": 1, 'default_is_storable': True}</field>
+      <field name="domain">[('active','=', False), ('is_hidden_for_approval', '=', True),('state', '!=', 'draft')]</field>
+      <field name="help" type="html">
+        <p class="o_view_nocontent_smiling_face">
+          No pending approval product found!
+        </p>
+      </field>
+    </record>
+
+
+    <record id="draft_products_list_action" model="ir.actions.act_window">
+      <field name="name">Product In Draft</field>
+      <field name="res_model">product.template</field>
+      <field name="view_mode">kanban,list,form</field>
+      <field name="search_view_id" ref="stock.product_template_search_form_view_stock"/>
+      <field name="context">{"search_default_goods": 1, 'default_is_storable': True}</field>
+      <field name="domain">[('active', '=', False),('is_hidden_for_approval', '=', True),('state', '=', 'draft'),('create_uid', '=', uid)
+]</field>
+      <field name="help" type="html">
+        <p class="o_view_nocontent_smiling_face">
+          No product in draft found. Let's create one!
+        </p>
+      </field>
+    </record>
+
+
+    <menuitem id="pending_approval_product_menu" name="Product Approval Queue" action="pending_approval_products_list_action"
+            parent="stock.menu_stock_inventory_control" sequence="200"/>
+    <menuitem id="pending_in_draft_product_menu" name="Product In Draft" action="draft_products_list_action"
+            parent="stock.menu_stock_inventory_control" sequence="199"/>
+  </data>
+</odoo>

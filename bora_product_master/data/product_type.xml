@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<odoo>
+  <data noupdate="0">
+    <record id="product_category_type_mobile" model="product.category">
+      <field name="name">Mobile Phone</field>
+    </record>
+    <record id="product_category_type_harddisk" model="product.category">
+      <field name="name">Harddisk</field>
+    </record>
+    <record id="product_category_type_laptop" model="product.category">
+      <field name="name">Other Laptop</field>
+    </record>
+    <record id="product_category_type_apple_imac" model="product.category">
+      <field name="name">Apple iMac</field>
+    </record>
+    <record id="product_category_type_apple_laptops" model="product.category">
+      <field name="name">Apple Laptops</field>
+    </record>
+    <record id="product_category_type_mobile_toner_imac" model="product.category">
+      <field name="name">Toner &amp; Inks</field>
+    </record>
+    <record id="product_category_type_mobile_printers" model="product.category">
+      <field name="name">Printers</field>
+    </record>
+  </data>
+</odoo>
+
+
+<!-- ALERT - on adding / removing any category from here, a change in 'product_template_inherit_view.xml' is required for field 'categ_id' -->

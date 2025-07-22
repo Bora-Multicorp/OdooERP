@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Product Approval -->
+        <record id="product_approval_view_form" model="ir.ui.view">
+            <field name="name">Product Approval</field>
+            <field name="model">product.template</field>
+            <field name="inherit_id" ref="product.product_template_only_form_view"/>
+            <field name="arch" type="xml">
+                <xpath expr="//button[@name='action_update_quantity_on_hand']" position="attributes">
+                    <attribute name="invisible">state != 'confirmed' or not is_storable</attribute>
+                </xpath>
+                <xpath expr="//div[@name='options']" position="after">
+                    <field name="is_hidden_for_approval" invisible="True"/>
+                </xpath>
+                <xpath expr="//form/header" position="inside">
+                    <button name="confirm_submit_form" string="Submit for Approval" type="object"
+                                class="oe_highlight"
+                                confirm="Do you want to submit the request?"
+                                invisible="state != 'draft' or is_approved"/>
+                    <button name="%(approve_product_wizard_action)d" string="Approve" type="action"
+                                invisible="state in ('draft', 'confirmed', 'rejected', 'expired') or assigned_to != uid or is_approved"/>
+                    <button name="%(reject_product_wizard_action)d" string="Reject" type="action"
+                                invisible="state in ('draft', 'confirmed', 'rejected', 'expired') or assigned_to != uid or is_approved"/>
+                    <button name="approve_by_manager" string="Approval By Manager" type="object"
+                                class="oe_highlight"
+                                confirm="Do you want to Approve the request?" invisible="1"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,pending" invisible="state in ('confirmed', 'rejected')"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,pending,confirmed" invisible="state in ('draft', 'pending', 'rejected')"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,pending,rejected" invisible="state in ('draft', 'pending', 'confirmed')"/>
+                    <!-- <field name="state" widget="statusbar" statusbar_visible="draft,pending,rejected">
+                        <attribute name="invisible">state == 'draft' or 'pending' or 'confirmed'</attribute>
+                    </field> -->
+                </xpath>
+                <xpath expr="//sheet/notebook" position="inside">
+                    <page string="Approval Authorities" name="approval_users" invisible="not is_hidden_for_approval">
+                        <field name="product_id" readonly="1"/>
+                        <!-- <field name="name1" invisible="0"/> -->
+                        <field name="is_approved" invisible="1"/>
+                        <group>
+                            <field name="assigned_to"
+                                           options="{'no_edit': True, 'no_create': True, 'no_open': True}"
+                                           invisible="not assigned_to" readonly="1"/>
+                            <field name="existing_user_ids" invisible="1" widget="many2many_tags"/>
+                        </group>
+                        <field name="approval_users_ids" nolabel="1" help="Define the approval roles."
+                                       readonly="1">
+                            <list editable="bottom">
+                                <field name="sequence"/>
+                                <field name="user_id" widget="many2one_avatar_user"
+                                               options="{'no_edit': True, 'no_create': True, 'no_open': True}"/>
+                                <field name="remark"/>
+                                <field name="state" readonly="1"/>
+                                <field name="action_date" readonly="1"/>
+                            </list>
+                            <form>
+                                <group>
+                                    <field name="user_id"
+                                                   options="{'no_edit': True, 'no_create': True, 'no_open': True}"/>
+                                    <field name="state"/>
+                                    <field name="remark"/>
+                                </group>
+                            </form>
+                        </field>
+                    </page>
+                </xpath>
+            </field>
+        </record>
+        <record id="product_approval_view_list" model="ir.ui.view">
+            <field name="name">product Approval</field>
+            <field name="model">product.template</field>
+            <field name="arch" type="xml">
+                <list string="Product Approval" create="false" delete="false">
+                    <!-- <field name="product_id" string="Product"/> -->
+                    <!-- <field name="email"/> -->
+                    <field name="assigned_to"/>
+                    <field name="create_date"/>
+                    <field name="state"/>
+                </list>
+            </field>
+        </record>
+        <!-- <record id="product_approval_view_search" model="ir.ui.view">
+            <field name="name">product.approval.view.search</field>
+            <field name="model">product.approval</field>
+            <field name="arch" type="xml">
+                <search string="Search product Approval">
+                    <field name="email"/>
+                </search>
+            </field>
+        </record> -->
+        <record id="product_approval_action" model="ir.actions.act_window">
+            <field name="name">product Approval</field>
+            <field name="res_model">product.template</field>
+            <field name="view_mode">list,form</field>
+            <!-- <field name="search_view_id" ref="product_approval_view_search"/> -->
+            <!--<field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Create an Type
+                </p>
+            </field>-->
+        </record>
+        <!-- <menuitem id="product_approval_menu" name="Product Approval Users"
+                  action="product_approval_action"
+                  parent="stock.menu_stock_config_settings" sequence="100"/> -->
+    </data>
+</odoo>

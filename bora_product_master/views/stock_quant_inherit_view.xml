@@ -1,0 +1,53 @@
+<odoo>
+    <data>
+        <record id="view_stock_quant_tree_inherit" model="ir.ui.view">
+            <field name="name">stock.quant.tree.inherit</field>
+            <field name="model">stock.quant</field>
+            <field name="inherit_id" ref="stock.view_stock_quant_tree_editable"/>
+            <field name="arch" type="xml">
+                <xpath expr="//list/field[@name='lot_id']" position="after">
+                    <field name="imei" column_invisible="not context.get('show_IMEI')"/>
+                    <field name="imei2" column_invisible="not context.get('show_IMEI2')"/>
+                    <field name="activation_status" column_invisible="not context.get('show_IMEI')"/>
+                    <field name="activation_date"/>
+                </xpath>
+            </field>
+        </record>
+        <record id="view_stock_quant_form_editable_inherit" model="ir.ui.view">
+            <field name="name">stock.quant.form.editable.inherit</field>
+            <field name="model">stock.quant</field>
+            <field name="inherit_id" ref="stock.view_stock_quant_form_editable"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='lot_id']" position="after">
+                    <field name="imei" invisible="not context.get('show_IMEI')"/>
+                    <field name="imei2" invisible="not context.get('show_IMEI2')"/>
+                    <field name="activation_status" invisible="not context.get('show_IMEI')"/>
+                </xpath>
+            </field>
+        </record>
+        <record id="view_stock_quant_tree_inventory_editable_inherit" model="ir.ui.view">
+            <field name="name">stock.quant.tree.inventory_editable</field>
+            <field name="model">stock.quant</field>
+            <field name="inherit_id" ref="stock.view_stock_quant_tree_inventory_editable"/>
+            <field name="arch" type="xml">
+                <xpath expr="//list/field[@name='lot_id']" position="after">
+                    <field name="imei" optional="hidden"/>
+                    <field name="imei2" optional="hidden"/>
+                    <field name="activation_status" optional="hidden"/>
+                    <field name="activation_date" optional="hidden"/>
+                    <field name="active_months" readonly="1" optional="hidden"/>
+                </xpath>
+            </field>
+        </record>
+        <record id="view_stock_quant_search_inherit_activation_status_group" model="ir.ui.view">
+            <field name="name">stock.quant.search.inherit.activation.status.group</field>
+            <field name="model">stock.quant</field>
+            <field name="inherit_id" ref="stock.quant_search_view"/>
+            <field name="arch" type="xml">
+                <xpath expr="//search" position="inside">
+                    <filter string="Activation Status" name="group_by_activation_status" context="{'group_by':'activation_status'}"/>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>

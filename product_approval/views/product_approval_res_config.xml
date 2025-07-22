@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <!-- Form View -->
+    <record id="product_approval_config_view_form" model="ir.ui.view">
+        <field name="name">product.approval.config.view.form</field>
+        <field name="model">product.approval.config</field>
+        <field name="arch" type="xml">
+            <form string="Product Approval Settings" class="oe_form_configuration o_base_settings" create="false">
+                <sheet>
+                    <group>
+                        <field name="sequence"/>
+                        <field name="user_id" options="{'no_create': True, 'no_create_edit': True}"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="product_approval_config_view_list" model="ir.ui.view">
+        <field name="name">product.approval.config.view.list</field>
+        <field name="model">product.approval.config</field>
+        <field name="arch" type="xml">
+            <list editable="bottom" string="Product Approval Settings">
+                <field name="sequence"/>
+                <field name="user_id"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_product_approval_config" model="ir.actions.act_window">
+        <field name="name">Product Approval Settings</field>
+        <field name="res_model">product.approval.config</field>
+        <field name="view_mode">list,form</field>
+        <field name="target">inline</field>
+    </record>
+
+    <!-- Menu item under Inventory > Configuration -->
+    <menuitem id="menu_product_approval_config"
+              name="Product Approval Users"
+              parent="stock.menu_stock_config_settings"
+              action="action_product_approval_config"
+              sequence="100"/>
+</odoo>

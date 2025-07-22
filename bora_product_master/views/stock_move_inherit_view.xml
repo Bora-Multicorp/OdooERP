@@ -1,0 +1,27 @@
+<odoo>
+  <data>
+    <record id="view_stock_move_form_inherit" model="ir.ui.view">
+      <field name="name">stock.move.form.inherit</field>
+      <field name="model">stock.move</field>
+      <field name="inherit_id" ref="stock.view_stock_move_operations"/>
+      <field name="arch" type="xml">
+        <xpath expr="//field[@name='product_id']" position="after">
+          <field name="show_IMEI_field" invisible="1"/>
+          <field name="show_IMEI_field2" invisible="1"/>
+          <field name="hide_imei_fields" invisible="1"/>
+        </xpath>
+      </field>
+    </record>
+    <record id="view_stock_move_line_operation_tree_inherit" model="ir.ui.view">
+      <field name="name">stock.move.line.tree.inherit</field>
+      <field name="model">stock.move.line</field>
+      <field name="inherit_id" ref="stock.view_stock_move_line_operation_tree"/>
+      <field name="arch" type="xml">
+        <xpath expr="//field[@name='lot_name']" position="after">
+          <field name="imei" placeholder="IMEI No." column_invisible="not parent.hide_imei_fields or not parent.show_IMEI_field" required="1"/>
+          <field name="imei2" placeholder="IMEI No." column_invisible="not parent.hide_imei_fields or not parent.show_IMEI_field2" required="1"/>
+        </xpath>
+      </field>
+    </record>
+  </data>
+</odoo>
