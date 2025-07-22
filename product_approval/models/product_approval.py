@@ -13,6 +13,7 @@ class ProductApproval(models.Model):
     _description = 'Product approvals'
 
     is_hidden_for_approval = fields.Boolean(default=False) 
+    is_hidden = fields.Boolean()
 
     is_approved = fields.Boolean(string='Is Approved', default=False, help="Indicates if the product has been approved.")
 
