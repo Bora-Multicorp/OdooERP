@@ -50,6 +50,7 @@ class ContactKYCApproval(models.Model):
     point_of_contact = fields.Char("Point of Contact / Purchase Manager (Bora Multicorp)")
     poc_user = fields.Many2one('res.users', string="Point of Contact to Vendor")
     business_legal_name = fields.Char("Business Legal Name")
+    is_same_trade_name = fields.Boolean(string="If Trade Name is same as Legal Name", help="Tick if trade name is same as legal name")
     business_trade_name = fields.Char("Business Trade Name")
     business_street = fields.Char("Address")
     business_city = fields.Char("City")
@@ -69,13 +70,13 @@ class ContactKYCApproval(models.Model):
     # const_business = fields.Many2one('constitution.business', string="Constitution of Business", required=True)
     other_business = fields.Char("If Other, Specify?")
     # no_partner_director = fields.Many2one('number.partner.director', string="Number of Managing Partner / Directors")
-    director_name = fields.Char(string="Name of the Owner / Director")
-    director_phone = fields.Char(string="Contact Number")
-    director_email = fields.Char(string="Email Address")
-    aadhaar_card = fields.Binary(string="Aadhaar Card")
-    aadhaar_card_filename = fields.Char()
-    pan_card = fields.Binary(string="PAN Card (Proprietor)")
-    pan_card_filename = fields.Char()
+    # director_name = fields.Char(string="Name of the Owner / Director")
+    # director_phone = fields.Char(string="Contact Number")
+    # director_email = fields.Char(string="Email Address")
+    # aadhaar_card = fields.Binary(string="Aadhaar Card")
+    # aadhaar_card_filename = fields.Char()
+    # pan_card = fields.Binary(string="PAN Card (Proprietor)")
+    # pan_card_filename = fields.Char()
     aadhaar_pan_link = fields.Selection([('yes','Yes'),('no','No')],string='Aadhar and PAN card linking?',required=True)
     gst_no = fields.Char(string="GST Number")
     license_registered = fields.Char(string="Any licenses registered (As per Local/State Government requirements)")
@@ -310,6 +311,7 @@ class BankDetail(models.Model):
 class AddressDetail(models.Model):
     _name = "address.details"
     _description = "Address Details"
+    _rec_name = 'kyc_approval_id'
 
     kyc_approval_id = fields.Many2one('res.partner.kyc.approval', string="KYC Approval")
     business_street = fields.Char("Address", required=False)

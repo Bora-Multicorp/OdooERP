@@ -158,7 +158,7 @@ SurveyFormWidget.include({
         });
 
         $matrixTable.find(".sh_file_input_data").each(function () {
-            const rowId = $(this).data("rowId");
+            const rowId = $(this).data("row-id");
             const colId = $(this).data("col-id");
             const base64Content = this.value;
             const fileName = $(this).data("filename");
@@ -221,21 +221,18 @@ SurveyFormWidget.include({
     _prepareSubmitAnswerMatrixCustom: function (params, questionId, rowId, colId, data, isComment) {
         var value = questionId in params ? params[questionId] : {};
         if (isComment) {
-            value['comment'] = colId;
-        }
-        else if (colId != data) {
-            const key = rowId + "_" + colId;
-             if (value[key]) {
-                value[key].push(data);
+            value["comment"] = colId;
+        } else if (colId != data) {
+            if (rowId in value) {
+                value[rowId + "_" + colId].push(data);
             } else {
-                value[key] = [data];
+                value[rowId + "_" + colId] = [data];
             }
-        }
-        else {
-           if (value[rowId]) {
-                value[rowId].push(colId);
+        } else {
+            if (rowId in value) {
+                value[rowId].push(data);
             } else {
-                value[rowId] = [colId];
+                value[rowId] = [data];
             }
         }
         params[questionId] = value;

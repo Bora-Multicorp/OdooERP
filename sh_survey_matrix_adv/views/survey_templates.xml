@@ -2,24 +2,8 @@
 <odoo>
 
 	<!-- QUESTION MATRIX TEMPLATES INHERITE -->
-	
-    <template id="matrix" inherit_id="survey.question_matrix" name="SH Custom Matrix">
-          <xpath expr="//table" position="after">
-               <t t-if="question.matrix_subtype == 'sh_custom_matrix' and question.add_an_item">
-                    <div class="col-md-3 mt-2">
-                        <button type="button" t-att-data-name="question.id" class="btn btn-secondary add-item-btn">+Add</button>
-                    </div>
-               </t>
-            </xpath>
-        <xpath expr="//tr[contains(@class, 'bg-white text-white')][1]" position="replace">
-        <!--<xpath expr="//td" position="replace">-->
-            <!-- CUSTOM MATRIX SURVEY MAIN  -->
-             <tr t-att-class="'bg-white text-white hide-row' if row_label.row_hide else 'bg-white text-white'" t-foreach="question.matrix_row_ids" t-as="row_label" t-att-id="row_label.id">
-                    <th class="fw-normal text-start"><span t-field="row_label.value" /></th>
-                    <t t-foreach="question.suggested_answer_ids" t-as="col_label">
-                        <t t-set="answer" t-value="answer_lines.filtered(lambda line: line.suggested_answer_id == col_label and line.matrix_row_id == row_label)"/>
 
-            <t t-if="question.matrix_subtype == 'sh_custom_matrix'">
+    <template id="sh_custom_matrix_template" name="Question:Matrix One2many">
                 <td
                     t-att-class="'o_survey_matrix_btn text-primary border-0 position-relative %s'
                         % ('o_survey_selected' if answer else '')"
@@ -55,24 +39,6 @@
                                 <t t-esc="answer.value_ans_sh_many2one"/>
                             </option>
                        </select>
-<!--                        <div class="form-row js_cls_sh_many2one_wrapper">-->
-<!--                              <div class="form-group col-lg-12">-->
-<!--                                 <input t-attf-list="m2o_selection_#{col_label.id}" class='form-control' style="width:100%;"-->
-<!--                                    type="text"  t-att-data-question-type="col_label.sh_value_type"-->
-<!--                                    t-att-data-row-id="row_label.id"-->
-<!--                                    t-att-data-col-id="col_label.id"-->
-<!--                                    t-att-data-model_id="col_label.que_sh_many2one_model_id.id if col_label.que_sh_many2one_model_id else False"-->
-<!--                                    t-att-name="'%s_%s' % (question.id, col_label.id)">-->
-<!--                                 <datalist t-attf-id="m2o_selection_#{col_label.id}"-->
-<!--                                    t-att-data-model_id="col_label.que_sh_many2one_model_id.id if col_label.que_sh_many2one_model_id else False"-->
-<!--                                    t-att-data-row-id="row_label.id"-->
-<!--                                    t-att-data-col-id="col_label.id"-->
-<!--                                    t-att-name="'%s_%s' % (question.id, col_label.id)" class="d-none js_cls_sh_many2one_select form-control">-->
-<!--                                    <option value="">Select...</option>-->
-<!--                                 </datalist>-->
-<!--                                 </input>-->
-<!--                              </div>-->
-<!--	                    </div>-->
                     </t>
                     <t t-if="col_label.sh_value_type == 'numerical_box'">
                         <input
@@ -218,7 +184,7 @@
                     </t>
 
                     <t t-if="col_label.sh_value_type == 'que_sh_file'">
-                       <t t-foreach="answer" t-as="ans">
+                      <t t-foreach="answer" t-as="ans">
                         <t t-if="review and ans.value_ans_sh_file">
                             <a t-att-href="'/survey/matrix/download/'+str(question.id)+'/'+str(row_label.id)+'/'+str(col_label.id)+'/'+str(ans.user_input_id.access_token)">
                                 <!--Click here to download file-->
@@ -250,12 +216,47 @@
                         </t>
                     </t>
                     <t t-set="item_idx" t-value="item_idx + 1" />
-                    <t t-if="question.matrix_subtype == 'sh_custom_matrix' and question.add_an_item and item_idx != len(question.suggested_answer_ids) and item_idx % len(question.suggested_answer_ids) == 0">
+                    <t t-if="not review and question.matrix_subtype == 'sh_custom_matrix' and question.add_an_item and item_idx != len(question.suggested_answer_ids) and item_idx % len(question.suggested_answer_ids) == 0">
                          <button type="button" class="btn btn-danger delete-item-btn mt-2">Remove</button>
                     </t>
                 </td>
-            </t>
-            <t t-else="">
+    </template>
+
+    <template id="matrix" inherit_id="survey.question_matrix" name="SH Custom Matrix">
+          <xpath expr="//table" position="after">
+               <t t-if="not review and question.matrix_subtype == 'sh_custom_matrix' and question.add_an_item">
+                    <div class="col-md-3 mt-2">
+                        <button type="button" t-att-data-name="question.id" class="btn btn-secondary add-item-btn">+Add</button>
+                    </div>
+               </t>
+            </xpath>
+        <xpath expr="//tr[contains(@class, 'bg-white text-white')][1]" position="replace">
+        <!--<xpath expr="//td" position="replace">-->
+            <!-- CUSTOM MATRIX SURVEY MAIN  -->
+            <tr t-att-class="'bg-white text-white hide-row' if row_label.row_hide else 'bg-white text-white'" t-foreach="question.matrix_row_ids" t-as="row_label" t-att-id="row_label.id">
+                <t t-set="has_answers" t-value="review and answer_lines.filtered(lambda l:  l.matrix_row_id == row_label)" />
+                 <t t-if="question.matrix_subtype == 'sh_custom_matrix'">
+                     <t t-if="not review">
+                <th class="fw-normal text-start"><span t-field="row_label.value" /></th>
+                 </t>
+                 <t t-if="review and has_answers">
+                    <th class="fw-normal text-start"><span t-field="row_label.value" /></th>
+                 </t>
+                 </t>
+                <t t-if="question.matrix_subtype != 'sh_custom_matrix'">
+                    <th class="fw-normal text-start"><span t-field="row_label.value" /></th>
+                </t>
+                    <t t-foreach="question.suggested_answer_ids" t-as="col_label">
+                        <t t-set="answer" t-value="answer_lines.filtered(lambda line: line.suggested_answer_id == col_label and line.matrix_row_id == row_label)"/>
+           <t t-if="question.matrix_subtype == 'sh_custom_matrix'">
+                <t t-if="not review">
+                    <t t-call="sh_survey_matrix_adv.sh_custom_matrix_template"/>
+                </t>
+                <t t-if="review and row_label == answer.matrix_row_id">
+                    <t t-call="sh_survey_matrix_adv.sh_custom_matrix_template"/>
+                </t>
+           </t>
+                    <t t-else="">
                 <td
                     t-att-class="'o_survey_matrix_btn text-primary border-0 position-relative %s'
                         % ('o_survey_selected' if answer else '')"
@@ -285,7 +286,7 @@
                     <t t-set="item_idx" t-value="item_idx + 1" />
                 </td>
             </t>
-            </t>
+                    </t>
                 </tr>
         </xpath>
     </template>
