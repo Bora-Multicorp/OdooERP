@@ -215,5 +215,3 @@ class CustomContact(models.Model):
                         force_send=True,
                         email_values={'email_to': email_to}
                     )
-
-
