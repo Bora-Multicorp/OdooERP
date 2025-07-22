@@ -414,26 +414,32 @@
         <record model="survey.question.answer" id="matrix_director_detail_kyc_survey_col2">
             <field name="question_id" ref="matrix_director_detail_kyc_survey"/>
             <field name="sequence">2</field>
-            <field name="value">Contact Number</field>
+            <field name="value">Name</field>
             <field name="sh_value_type">textbox</field>
-            <field name="is_mobile" eval="True"/>
         </record>
         <record model="survey.question.answer" id="matrix_director_detail_kyc_survey_col3">
             <field name="question_id" ref="matrix_director_detail_kyc_survey"/>
             <field name="sequence">3</field>
-            <field name="value">Email Address</field>
+            <field name="value">Contact Number</field>
             <field name="sh_value_type">textbox</field>
-            <field name="is_email" eval="True"/>
+            <field name="is_mobile" eval="True"/>
         </record>
         <record model="survey.question.answer" id="matrix_director_detail_kyc_survey_col4">
             <field name="question_id" ref="matrix_director_detail_kyc_survey"/>
             <field name="sequence">4</field>
-            <field name="value">Aadhaar Card</field>
-            <field name="sh_value_type">que_sh_file</field>
+            <field name="value">Email Address</field>
+            <field name="sh_value_type">textbox</field>
+            <field name="is_email" eval="True"/>
         </record>
         <record model="survey.question.answer" id="matrix_director_detail_kyc_survey_col5">
             <field name="question_id" ref="matrix_director_detail_kyc_survey"/>
             <field name="sequence">5</field>
+            <field name="value">Aadhaar Card</field>
+            <field name="sh_value_type">que_sh_file</field>
+        </record>
+        <record model="survey.question.answer" id="matrix_director_detail_kyc_survey_col6">
+            <field name="question_id" ref="matrix_director_detail_kyc_survey"/>
+            <field name="sequence">6</field>
             <field name="value">PAN Card</field>
             <field name="sh_value_type">que_sh_file</field>
         </record>
