@@ -551,7 +551,7 @@
             <field name="survey_id" ref="vendor_kyc_form_survey"/>
             <field name="sequence">26</field>
             <field name="question_type">que_sh_file</field>
-            <field name="upload_multiple_file">True</field>
+            <field name="upload_multiple_file">False</field>
             <field name="constr_mandatory">False</field>
             <field name="triggering_answer_ids"
                    eval="[Command.link(ref('business_constitution_kyc_survey_sug2')),
@@ -611,7 +611,7 @@
             <field name="survey_id" ref="vendor_kyc_form_survey"/>
             <field name="sequence">29</field>
             <field name="question_type">que_sh_file</field>
-            <field name="upload_multiple_file">True</field>
+            <field name="upload_multiple_file">False</field>
             <field name="constr_mandatory">True</field>
         </record>
         <!-- GST Number -->
@@ -628,7 +628,7 @@
             <field name="survey_id" ref="vendor_kyc_form_survey"/>
             <field name="sequence">30</field>
             <field name="question_type">que_sh_file</field>
-            <field name="upload_multiple_file">True</field>
+            <field name="upload_multiple_file">False</field>
             <field name="constr_mandatory">True</field>
         </record>
         <!-- Udyam Documents -->
@@ -637,7 +637,7 @@
             <field name="survey_id" ref="vendor_kyc_form_survey"/>
             <field name="sequence">30</field>
             <field name="question_type">que_sh_file</field>
-            <field name="upload_multiple_file">True</field>
+            <field name="upload_multiple_file">False</field>
             <field name="constr_mandatory">True</field>
         </record>
         <!-- GST Return duration -->
