@@ -66,25 +66,28 @@ class CustomContact(models.Model):
                     "Invalid GST Number: '%s'. It must follow the 15-character format (e.g., 27ABCDE1234F1Z5)."
                 ) % rec.vat)
 
-    # @api.constrains('phone', 'mobile')
-    # def _check_phone_mobile_number(self):
-    #     phone_pattern = re.compile(r'^\d{10}$')
-    #     mobile_pattern = re.compile(r'^(\+?\d{1,3})?\d{10}$')  # Only up to country code + 10 digits
-    #
-    #     for rec in self:
-    #         if rec.phone:
-    #             cleaned_phone = rec.phone.replace(" ", "")
-    #             if not phone_pattern.fullmatch(cleaned_phone):
-    #                 raise ValidationError(_(
-    #                     "Phone number must be exactly 10 digits.\nInvalid Value: %s"
-    #                 ) % rec.phone)
-    #
-    #         if rec.mobile:
-    #             cleaned_mobile = rec.mobile.replace(" ", "")
-    #             if not mobile_pattern.fullmatch(cleaned_mobile):
-    #                 raise ValidationError(_(
-    #                     "Mobile number must be valid 10-digit format. Use '+919876543210' or '9876543210'.\nInvalid Value: %s"
-    #                 ) % rec.mobile)
+    @api.constrains('phone', 'mobile')
+    def _check_phone_mobile_number(self):
+        import re
+
+        # Accept only digits, optional '+' at start
+        phone_pattern = re.compile(r'^\+?\d{6,15}$')  # Country codes + phone numbers: 6 to 15 digits
+        mobile_pattern = re.compile(r'^\+?\d{6,15}$')
+
+        for rec in self:
+            if rec.phone:
+                cleaned_phone = rec.phone.replace(" ", "")
+                if not phone_pattern.fullmatch(cleaned_phone):
+                    raise ValidationError(_(
+                        "Phone number must be valid digits only (optionally starting with '+').\nInvalid Value: %s"
+                    ) % rec.phone)
+
+            if rec.mobile:
+                cleaned_mobile = rec.mobile.replace(" ", "")
+                if not mobile_pattern.fullmatch(cleaned_mobile):
+                    raise ValidationError(_(
+                        "Mobile number must be valid digits only (optionally starting with '+').\nInvalid Value: %s"
+                    ) % rec.mobile)
 
     @api.model
     def _get_view(self, view_id=None, view_type='form', **options):
