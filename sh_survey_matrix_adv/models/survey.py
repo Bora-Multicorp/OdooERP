@@ -108,7 +108,18 @@ class survey_user_input(models.Model):
                                 answer_id = self.env['survey.question.answer'].sudo().browse(
                                     int(answer))
                                 if answer_id.sh_value_type == 'que_sh_many2one':
-                                    vals = self.sh_get_line_answer_values(question, answer, data_value, 'ans_sh_many2one')
+                                    record_id = data_value
+                                    model_name = answer_id.que_sh_many2one_model_id.model
+                                    print(" answer_id.que_sh_many2one_model_id.model", model_name, record_id, type(record_id), answer_id.que_sh_many2one_model_id,  answer_id.que_sh_many2one_model_id.model)
+                                    record_name = ''
+                                    if record_id:
+                                        try:
+                                            record_id = int(record_id)
+                                            record = self.env[model_name].sudo().browse(record_id)
+                                            record_name = record.display_name if record.exists() else str(record_id)
+                                        except Exception as e:
+                                            record_name = str(record_id)
+                                    vals = self.sh_get_line_answer_values(question, answer,  record_name, 'ans_sh_many2one')
                                 if answer_id.sh_value_type == 'textbox':
                                     vals = self.sh_get_line_answer_values(
                                         question, answer, data_value, 'text_box')
