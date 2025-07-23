@@ -5,13 +5,17 @@
         <field name="model">product.template</field>
         <field name="inherit_id" ref="product.product_template_only_form_view"/>
         <field name="arch" type="xml">
+            <xpath expr="//group[@name='group_general']" position="inside">
+                <field name="is_packaging" readonly="1" invisible="1"/>
+            </xpath>
             <xpath expr="//sheet/notebook" position="inside">
-                <page string="Packing Materials">
-                    <field name="packing_material_line_ids" context="{'default_product_tmpl_id': id}">
+                <page string="Packing Materials" invisible="is_packaging != False">
+                    <field name="packing_material_line_ids" context="{'default_product_tmpl_id': id}"
+                           invisible="is_packaging != False">
                         <list editable="bottom">
                             <field name="packing_material_id"/>
                             <field name="box_type"/>
-<!--                            <field name="carton_type"/>-->
+                            <!--                            <field name="carton_type"/>-->
                             <field name="apply_by"/>
                             <field name="qty_per_unit"/>
                         </list>

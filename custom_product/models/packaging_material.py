@@ -8,7 +8,7 @@ class PackingMaterialLine(models.Model):
         'product.template', required=True, ondelete='cascade', string="Product Template"
     )
     packing_material_id = fields.Many2one(
-        'product.product', required=True, string="Packing Material"
+        'product.product', required=True, string="Packing Material", domain="[('categ_id.name', '=', 'Packaging Material')]"
     )
     # carton_type = fields.Selection([
     #     ('loose', 'Loose Carton'),
