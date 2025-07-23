@@ -22,7 +22,7 @@
 
     # always loaded
     'data': [
-        'data/product_type.xml',
+        'data/product_categories.xml',
         'data/product_sku_sequance.xml',
         'data/inventory_traceability_config.xml',
         'views/stock_move_inherit_view.xml',

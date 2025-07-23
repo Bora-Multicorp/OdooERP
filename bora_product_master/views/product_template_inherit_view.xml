@@ -47,14 +47,15 @@
                 </xpath>
                 <xpath expr="//group[@name='group_general']" position="inside">
                     <field name="is_mobile_category_selected" invisible="1"/>
+                    <field name="is_packaging_material" invisible="1"/>
                     <!-- Inventory Type field -->
-                    <field name="type" widget="radio" options="{'horizontal': True}"/>
+                    <field name="type" widget="radio" options="{'horizontal': True}" readonly="1"/>
                     <field name="combo_ids" widget="many2many_tags" placeholder="e.g. Starter - Meal - Desert" invisible="type != 'combo'" options="{'no_quick_create': True,'edit_tags': True,}"/>
                     <!-- Track inventory -->
-                    <label for="is_storable" class="oe_inline" invisible="type != 'consu'"/>
-                    <div class="o_row w-100" invisible="type != 'consu'">
-                        <field name="is_storable"/>
-                        <field name="tracking" invisible="not is_storable" groups="stock.group_production_lot" required="1"/>
+                    <label for="is_storable" class="oe_inline" invisible="type != 'consu' or is_packaging_material"/>
+                    <div class="o_row w-100" invisible="type != 'consu' or is_packaging_material">
+                        <field name="is_storable" readonly="1"/>
+                        <field name="tracking" invisible="not is_storable" groups="stock.group_production_lot" readonly="1"/>
                     </div>
                     <field name="product_tooltip" class="fst-italic text-muted" string="" invisible="not product_tooltip"/>
                     <field name="lot_valuated" invisible="tracking == 'none'" widget="confirm_boolean"/>

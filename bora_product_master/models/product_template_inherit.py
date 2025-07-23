@@ -7,7 +7,8 @@ class ProductTemplateInherit(models.Model):
 
     is_dual_sim = fields.Boolean(string="Is dual SIM phone", help="Check if the product is a dual SIM phone")
     
-    is_mobile_category_selected = fields.Boolean(compute="_compute_is_mobile_category")
+    is_mobile_category_selected = fields.Boolean(compute="_compute_category_change")
+    is_packaging_material = fields.Boolean(compute="_compute_category_change")
 
     specs_dubai = fields.Char(string="Specs [Dubai]", help="Specifications for the Dubai market")
     
@@ -57,17 +58,29 @@ class ProductTemplateInherit(models.Model):
 
     # To check if mobile category is selected from the Category field
     @api.depends('categ_id')
-    def _compute_is_mobile_category(self):
+    def _compute_category_change(self):
         mobile_categ = self.env.ref('bora_product_master.product_category_type_mobile', raise_if_not_found=False)
+        packaging_categ = self.env.ref('bora_product_master.product_category_type_packaging_material', raise_if_not_found=False)
+
         for rec in self:
             categ = rec.categ_id
             is_mobile = False
-            while categ and mobile_categ:
+            is_packing_categ = False
+
+            while categ and (not is_mobile or not is_packing_categ):
                 if categ == mobile_categ:
                     is_mobile = True
-                    break
+                if categ == packaging_categ:
+                    is_packing_categ = True
                 categ = categ.parent_id
+
             rec.is_mobile_category_selected = is_mobile
+            rec.is_packaging_material = is_packing_categ
+
+        
+
+
+
 
 
     # To generate SKU
@@ -157,6 +170,15 @@ class ProductTemplateInherit(models.Model):
     @api.model_create_multi
     def create(self, vals_list):
 
+        # if packaging item then set is_storable and tracking to False, as if this enables then it requires serial number
+        for vals in vals_list:
+            categ_id = vals.get('categ_id')
+            packaging_categ = self.env.ref('bora_product_master.product_category_type_packaging_material', raise_if_not_found=False)
+            if categ_id == packaging_categ.id:
+                vals['is_storable'] = False
+                vals['tracking'] = 'none'
+
+
         # 1. Capitalize product name in each dict
         for vals in vals_list:
             if vals.get('name'):
@@ -174,6 +196,14 @@ class ProductTemplateInherit(models.Model):
 
 
     def write(self, vals):
+
+        # if packaging item then set is_storable and tracking to False, as if this enables then it requires serial number
+        categ_id = vals.get('categ_id')
+        packaging_categ = self.env.ref('bora_product_master.product_category_type_packaging_material', raise_if_not_found=False)
+        if categ_id == packaging_categ.id:
+            vals['is_storable'] = False
+            vals['tracking'] = 'none'
+
         # 1. capitalize product name
         if vals.get('name'):
             vals['name'] = vals['name'].upper()
