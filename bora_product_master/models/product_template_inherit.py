@@ -175,7 +175,7 @@ class ProductTemplateInherit(models.Model):
             categ_id = vals.get('categ_id')
             packaging_categ = self.env.ref('bora_product_master.product_category_type_packaging_material', raise_if_not_found=False)
             if categ_id == packaging_categ.id:
-                vals['is_storable'] = False
+                # vals['is_storable'] = False
                 vals['tracking'] = 'none'
 
 
@@ -201,7 +201,7 @@ class ProductTemplateInherit(models.Model):
         categ_id = vals.get('categ_id')
         packaging_categ = self.env.ref('bora_product_master.product_category_type_packaging_material', raise_if_not_found=False)
         if categ_id == packaging_categ.id:
-            vals['is_storable'] = False
+            # vals['is_storable'] = False
             vals['tracking'] = 'none'
 
         # 1. capitalize product name
