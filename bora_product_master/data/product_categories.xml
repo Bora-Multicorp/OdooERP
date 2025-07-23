@@ -23,6 +23,9 @@
     <record id="product_category_type_mobile_printers" model="product.category">
       <field name="name">Printers</field>
     </record>
+    <record id="product_category_type_packaging_material" model="product.category">
+      <field name="name">Packaging Material</field>
+    </record>
   </data>
 </odoo>
 

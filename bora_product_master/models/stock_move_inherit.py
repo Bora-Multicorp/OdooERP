@@ -196,9 +196,14 @@ class StockPickingInherit(models.Model):
     _inherit = 'stock.picking'
 
     def button_validate(self):
+        packaging_category = self.env.ref('bora_product_master.product_category_type_packaging_material', raise_if_not_found=False)
+
         for picking in self:
             for line in picking.move_line_ids:
-                if line.picking_type_id.code != 'outgoing':
-                    line.validate_imei_and_serial_number()  # dont validateif it's outgoing picking (sales order)
+                product = line.product_id
+                category = product.categ_id
+                if line.picking_type_id.code != 'outgoing' and category != packaging_category:  # dont validate if it's outgoing picking (sales order)
+                    line.validate_imei_and_serial_number() 
         return super().button_validate()
+    
 
