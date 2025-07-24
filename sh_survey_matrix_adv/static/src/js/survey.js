@@ -231,7 +231,6 @@ SurveyFormWidget.include({
         const def = this._super.apply(this, arguments);
         this.restoreVisibleRows();
         const storedDirectorCount = sessionStorage.getItem("director_details_count");
-        console.log("Sssssssssssssssssssss", storedDirectorCount);
         if (storedDirectorCount) {
             $("input[name$='_rowcount']").val(storedDirectorCount).trigger("change");
             sessionStorage.removeItem("director_details_count");
