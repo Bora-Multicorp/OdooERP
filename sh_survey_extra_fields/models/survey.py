@@ -236,6 +236,8 @@ class SurveyQuestion(models.Model):
         if self.add_an_item and self.matrix_subtype=='sh_custom_matrix' and self.constr_mandatory:
             row_answers = {str(row_id): [] for row_id in self.matrix_row_ids.ids}
             for key, value in answers.items():
+                if "_" not in key or key.startswith("rowcount"):
+                    continue  # skip invalid or extra keys
                 row_id, _ = key.split('_')
                 valid_answers = [ans for ans in value]
                 row_answers[row_id].extend(valid_answers)

@@ -217,7 +217,8 @@
                         </t>
                     </t>
                     <t t-set="item_idx" t-value="item_idx + 1" />
-                    <t t-if="not review and question.matrix_subtype == 'sh_custom_matrix' and question.add_an_item and item_idx != len(question.suggested_answer_ids) and item_idx % len(question.suggested_answer_ids) == 0">
+                    <t t-if="not review and question.matrix_subtype == 'sh_custom_matrix' and question.add_an_item
+                    and item_idx != len(question.suggested_answer_ids) and item_idx % len(question.suggested_answer_ids) == 0">
                          <button type="button" class="btn btn-danger delete-item-btn mt-2">Remove</button>
                     </t>
                 </td>
@@ -234,6 +235,13 @@
         <xpath expr="//tr[contains(@class, 'bg-white text-white')][1]" position="replace">
         <!--<xpath expr="//td" position="replace">-->
             <!-- CUSTOM MATRIX SURVEY MAIN  -->
+            <t t-set="row_count_answer1" t-value="[line for line in question.user_input_line_ids if not line.matrix_row_id and line.question_id.id == question.id]"/>
+            <t t-set="row_count_answer" t-value="answer_lines.filtered(lambda line: line.question_id == question and line.value_char_box and line.value_char_box.isdigit())"/>
+            <input type="text"
+            class="sh_row_count_answer d-none"
+            t-att-name="'%s_rowcount' % question.id"
+            t-att-data-question-id="question.id"
+            t-att-value="row_count_answer[0].value_char_box if row_count_answer else str(len([row for row in question.matrix_row_ids if not row.row_hide]))"/>
             <tr t-att-class="'bg-white text-white hide-row' if row_label.row_hide else 'bg-white text-white'" t-foreach="question.matrix_row_ids" t-as="row_label" t-att-id="row_label.id">
                 <t t-set="has_answers" t-value="review and answer_lines.filtered(lambda l:  l.matrix_row_id == row_label)" />
                  <t t-if="question.matrix_subtype == 'sh_custom_matrix'">
