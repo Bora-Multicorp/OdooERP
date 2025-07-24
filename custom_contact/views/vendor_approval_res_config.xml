@@ -33,7 +33,7 @@
         <field name="res_model">vendor.approval.config</field>
         <!--<field name="view_id" ref="vendor_approval_config_view_form"/>-->
         <field name="view_mode">list,form</field>
-        <field name="target">inline</field>
+        <field name="target">current</field>
         <!--<field name="context">{'module' : 'contact', 'bin_size': False}</field>-->
     </record>
 
