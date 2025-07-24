@@ -37,7 +37,7 @@ class InkAndTonnersModelNumber(models.Model):
     name = fields.Char(required=True, string='Model Number', index=True)
 
 
-class SpecMadeFor(models.Model):
+class SpecMadeFor(models.Model): 
     _name = 'spec.made.for'
     _description = 'Spec Made For'
 
