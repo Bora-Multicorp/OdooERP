@@ -12,7 +12,7 @@ class ProductTemplateInherit(models.Model):
 
     specs_dubai = fields.Char(string="Specs [Dubai]", help="Specifications for the Dubai market")
     
-    loose_or_master_carton = fields.Selection(
+    loose_or_master_carton = fields.Selection( 
         [('master_carton', 'Master Carton'), ('loose', 'Loose')],
         string="Master Carton / Loose",
         help="Specify if the product is a master carton or loose"
@@ -56,16 +56,21 @@ class ProductTemplateInherit(models.Model):
         self.filtered(lambda t: not t.is_storable and t.tracking != 'none').tracking = 'none'
 
 
+    attribute_ids = fields.Many2many('product.attribute')
+
     # To check if mobile category is selected from the Category field
     @api.depends('categ_id')
     def _compute_category_change(self):
         mobile_categ = self.env.ref('bora_product_master.product_category_type_mobile', raise_if_not_found=False)
         packaging_categ = self.env.ref('bora_product_master.product_category_type_packaging_material', raise_if_not_found=False)
 
+
+
         for rec in self:
             categ = rec.categ_id
             is_mobile = False
             is_packing_categ = False
+            self.attribute_ids = self.categ_id.product_attributes.ids
 
             while categ and (not is_mobile or not is_packing_categ):
                 if categ == mobile_categ:
@@ -170,12 +175,12 @@ class ProductTemplateInherit(models.Model):
     @api.model_create_multi
     def create(self, vals_list):
 
+
         # if packaging item then set is_storable and tracking to False, as if this enables then it requires serial number
         for vals in vals_list:
             categ_id = vals.get('categ_id')
             packaging_categ = self.env.ref('bora_product_master.product_category_type_packaging_material', raise_if_not_found=False)
             if categ_id == packaging_categ.id:
-                vals['is_storable'] = False
                 vals['tracking'] = 'none'
 
 
@@ -201,7 +206,6 @@ class ProductTemplateInherit(models.Model):
         categ_id = vals.get('categ_id')
         packaging_categ = self.env.ref('bora_product_master.product_category_type_packaging_material', raise_if_not_found=False)
         if categ_id == packaging_categ.id:
-            vals['is_storable'] = False
             vals['tracking'] = 'none'
 
         # 1. capitalize product name
