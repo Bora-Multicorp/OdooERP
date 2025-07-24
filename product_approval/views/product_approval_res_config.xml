@@ -40,5 +40,6 @@
               name="Product Approval Users"
               parent="stock.menu_stock_config_settings"
               action="action_product_approval_config"
+              groups="base.user_admin"
               sequence="100"/>
 </odoo>
