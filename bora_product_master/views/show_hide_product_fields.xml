@@ -1,0 +1,29 @@
+<odoo>
+    <data>
+        <record id="view_show_hide_category_fields" model="ir.ui.view">
+            <field name="name">product.show.hide.category.fields</field>
+            <field name="model">product.template</field>
+            <field name="inherit_id" ref="product.product_template_only_form_view"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='categ_id']" position="after">
+                    <field name="part_number" placeholder="Part number" 
+                    required="categ_id == %(bora_product_master.product_category_type_printers)d" 
+                    invisible="categ_id != %(bora_product_master.product_category_type_printers)d"/>
+                </xpath>
+                <xpath expr="//field[@name='model']" position="after">
+                    <field name="model_number_id" placeholder="Model number" context="{'no_create_edit': True}"
+                    required="categ_id in (%(bora_product_master.product_category_type_toner_inks)d, %(bora_product_master.product_category_type_laptop)d)" 
+                    invisible="categ_id not in (%(bora_product_master.product_category_type_toner_inks)d, %(bora_product_master.product_category_type_laptop)d)"/>
+                </xpath>
+                <xpath expr="//field[@name='categ_id']" position="after">
+                    <field name="part_code" placeholder="Part code" 
+    required="categ_id in (%(bora_product_master.product_category_type_apple_laptops)d, %(bora_product_master.product_category_type_apple_imac)d, %(bora_product_master.product_category_type_harddisk)d, %(bora_product_master.product_category_type_mobile)d, %(bora_product_master.product_category_type_accessory)d)" 
+    invisible="categ_id not in (%(bora_product_master.product_category_type_apple_laptops)d, %(bora_product_master.product_category_type_apple_imac)d, %(bora_product_master.product_category_type_harddisk)d, %(bora_product_master.product_category_type_mobile)d, %(bora_product_master.product_category_type_accessory)d)"/>
+                        <field name="accessory_group" placeholder="Accessory Group" context="{'no_create_edit': True}"
+                    required="categ_id == %(bora_product_master.product_category_type_accessory)d" 
+                    invisible="categ_id != %(bora_product_master.product_category_type_accessory)d"/>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>

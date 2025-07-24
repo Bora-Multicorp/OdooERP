@@ -1,0 +1,33 @@
+
+from odoo import models, fields, api, _
+from odoo.exceptions import ValidationError
+
+class ShowHideProductFields(models.Model):
+    _inherit = 'product.template'
+
+
+    part_number = fields.Char(string='Part Number', help='Unique part number for the printer')
+
+    model_number_id = fields.Many2one('ink.tonner.model.number', string='Model Number', help='Model number of the printer')
+
+    accessory_group = fields.Many2one('product.accessories.group', string='Accessory group')
+
+    part_code = fields.Char(string='Part Code', help='Unique part code for the apple laptops')
+
+
+
+
+
+class AccessoriesGroup(models.Model):
+    _name = 'product.accessories.group'
+    _description = 'Product Accessories Group'
+
+    name = fields.Char(required=True, string='Group Name', index=True)
+
+
+
+class InkAndTonnersModelNumber(models.Model):
+    _name = 'ink.tonner.model.number'
+    _description = 'Ink and Tonner Model Number'
+
+    name = fields.Char(required=True, string='Model Number', index=True)
