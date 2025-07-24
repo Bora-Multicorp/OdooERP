@@ -26,7 +26,7 @@ class ProductTemplateInherit(models.Model):
     
     model = fields.Many2one('product.model', string='Product Model', help="Select a model")
     
-    hsn_code = fields.Char(string="HSN Code", help="Enter a valid 4, 6, or 8 digit numeric code (e.g., 1001, 100112, 10011234).")
+    # hsn_code = fields.Char(string="HSN Code", help="Enter a valid 4, 6, or 8 digit numeric code (e.g., 1001, 100112, 10011234).")
 
     categ_id = fields.Many2one(
         'product.category', 'Product Category',
@@ -163,14 +163,6 @@ class ProductTemplateInherit(models.Model):
 
         return action
 
-    
-    # HSN code validation
-    
-    @api.constrains('hsn_code')
-    def _onchange_hsn_code(self):
-        if self.hsn_code and not re.fullmatch(r"\d{4}|\d{6}|\d{8}", self.hsn_code):
-            raise ValidationError(f"HSN code must be numeric and 4, 6, or 8 digits long.")
-
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -220,13 +212,6 @@ class ProductTemplateInherit(models.Model):
                 rec._generate_and_assign_sku()
 
         return res
-
-    @api.constrains('image_1920', 'image_1', 'image_2', 'image_3', 'image_4')
-    def _check_image_required(self):
-        for record in self:
-            if not record.image_1920 or not record.image_1 or not record.image_2 or not record.image_3 or not record.image_4:
-                raise ValidationError(_("All images are required for the product."))
-
 
 class ProductBrand(models.Model):
     _name = 'product.brand'

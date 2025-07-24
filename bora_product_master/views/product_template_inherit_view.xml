@@ -78,7 +78,6 @@
                     <field name="loose_or_master_carton" required="1"/>
                     <field name="brand_id" required="1"/>
                     <field name="model" required="1"/>
-                    <field name="hsn_code" required="1" placeholder="Enter 4, 6, or 8 digit code"/>
                 </xpath>
                 <xpath expr="//page[@name='general_information']/group[1]" position="after">
                     <group >
