@@ -26,7 +26,8 @@ class ProductTemplateInherit(models.Model):
     
     model = fields.Many2one('product.model', string='Product Model', help="Select a model")
     
-    # hsn_code = fields.Char(string="HSN Code", help="Enter a valid 4, 6, or 8 digit numeric code (e.g., 1001, 100112, 10011234).")
+    # delete this line in next release
+    hsn_code = fields.Char(string="HSN Code", help="Enter a valid 4, 6, or 8 digit numeric code (e.g., 1001, 100112, 10011234).")
 
     categ_id = fields.Many2one(
         'product.category', 'Product Category',
