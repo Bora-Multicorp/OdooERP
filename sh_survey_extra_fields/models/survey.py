@@ -262,6 +262,8 @@ class SurveyQuestion(models.Model):
         seen_contacts = {}
 
         for key, value_list in answers.items():
+            if "_" not in key or key.startswith("rowcount"):
+                continue  # skip invalid or extra keys
             row_id, answer_id = key.split('_')
             answer = self.env['survey.question.answer'].browse(int(answer_id))
 
