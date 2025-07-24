@@ -99,6 +99,18 @@ class survey_user_input(models.Model):
         if answers:
             for row_key, row_answer in answers.items():
                 if question.matrix_subtype == 'sh_custom_matrix':
+                    if row_key == 'rowcount_rowcount':
+                        row_count_value = row_answer[0] if row_answer else False
+                        if row_count_value:
+                            vals = {
+                                'user_input_id': self.id,
+                                'question_id': question.id,
+                                'answer_type': 'char_box',  # Store as value_char_box
+                                'value_char_box': row_count_value,
+                                'skipped': False,
+                            }
+                            vals_list.append(vals)
+                        continue
                     answer = row_key.split('_')[1]
                     if answer:
                         for data_value in row_answer:
@@ -116,7 +128,7 @@ class survey_user_input(models.Model):
                                         try:
                                             record_id = int(record_id)
                                             record = self.env[model_name].sudo().browse(record_id)
-                                            record_name = record.display_name if record.exists() else str(record_id)
+                                            record_name = getattr(record, 'name', False) or record.display_name or str(record_id)
                                         except Exception as e:
                                             record_name = str(record_id)
                                     vals = self.sh_get_line_answer_values(question, answer,  record_name, 'ans_sh_many2one')
@@ -171,8 +183,7 @@ class survey_user_input(models.Model):
                                     data_value, file_name = self.parse_uploaded_file_data(data_value)
                                     vals = self.sh_get_line_answer_values(question, answer, data_value, 'ans_sh_file')
                                     vals['value_ans_sh_file_fname'] = file_name
-                                vals['matrix_row_id'] = int(
-                                    row_key.split('_')[0])
+                                vals['matrix_row_id'] = int(row_key.split('_')[0])
                             else:
                                 vals = self.sh_get_line_answer_values(
                                     question, answer, answer, 'suggestion')
@@ -181,6 +192,10 @@ class survey_user_input(models.Model):
                             # Custom code skipped answer not create
                             values_by_row_id = {}
                             for item in vals_list:
+                                matrix_row_id = item.get('matrix_row_id')
+                                answer_type = item.get('answer_type')
+                                if not matrix_row_id or not answer_type:
+                                    continue
                                 matrix_row_id = item['matrix_row_id']
                                 answer_type = item['answer_type']
                                 value = item.get(f'value_{answer_type}', None)  # Extract value based on answer_type
@@ -194,7 +209,7 @@ class survey_user_input(models.Model):
                                 if all(all(value is False or value == '' for value in value_dict.values()) for
                                        value_dict in values_list):
                                     # Remove the entry from vals_list
-                                    vals_list = [item for item in vals_list if item['matrix_row_id'] != matrix_row_id]
+                                    vals_list = [item for item in vals_list if item.get('matrix_row_id') != matrix_row_id]
 
                 else:
                     for answer in row_answer:

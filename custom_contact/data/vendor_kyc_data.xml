@@ -166,47 +166,56 @@
         </record>
         <record model="survey.question.answer" id="matrix_address_detail_kyc_survey_row2">
             <field name="matrix_question_id" ref="matrix_address_detail_kyc_survey"/>
+            <field name="row_hide">True</field>
             <field name="sequence">2</field>
             <field name="value">2</field>
         </record>
         <record model="survey.question.answer" id="matrix_address_detail_kyc_survey_row3">
             <field name="matrix_question_id" ref="matrix_address_detail_kyc_survey"/>
+            <field name="row_hide">True</field>
             <field name="sequence">3</field>
             <field name="value">3</field>
         </record>
         <record model="survey.question.answer" id="matrix_address_detail_kyc_survey_row4">
             <field name="matrix_question_id" ref="matrix_address_detail_kyc_survey"/>
+            <field name="row_hide">True</field>
             <field name="sequence">4</field>
             <field name="value">4</field>
         </record>
         <record model="survey.question.answer" id="matrix_address_detail_kyc_survey_row5">
             <field name="matrix_question_id" ref="matrix_address_detail_kyc_survey"/>
+            <field name="row_hide">True</field>
             <field name="sequence">5</field>
             <field name="value">5</field>
         </record>
         <record model="survey.question.answer" id="matrix_address_detail_kyc_survey_row6">
             <field name="matrix_question_id" ref="matrix_address_detail_kyc_survey"/>
+            <field name="row_hide">True</field>
             <field name="sequence">6</field>
             <field name="value">6</field>
         </record>
         <record model="survey.question.answer" id="matrix_address_detail_kyc_survey_row7">
             <field name="matrix_question_id" ref="matrix_address_detail_kyc_survey"/>
+            <field name="row_hide">True</field>
             <field name="sequence">7</field>
             <field name="value">7</field>
         </record>
         <record model="survey.question.answer" id="matrix_address_detail_kyc_survey_row8">
             <field name="matrix_question_id" ref="matrix_address_detail_kyc_survey"/>
+            <field name="row_hide">True</field>
             <field name="sequence">8</field>
             <field name="value">8</field>
         </record>
         <record model="survey.question.answer" id="matrix_address_detail_kyc_survey_row9">
             <field name="matrix_question_id" ref="matrix_address_detail_kyc_survey"/>
             <field name="sequence">9</field>
+            <field name="row_hide">True</field>
             <field name="value">9</field>
         </record>
         <record model="survey.question.answer" id="matrix_address_detail_kyc_survey_row10">
             <field name="matrix_question_id" ref="matrix_address_detail_kyc_survey"/>
             <field name="sequence">10</field>
+            <field name="row_hide">True</field>
             <field name="value">10</field>
         </record>
 
