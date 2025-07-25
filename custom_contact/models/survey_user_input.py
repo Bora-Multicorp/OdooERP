@@ -93,8 +93,6 @@ class SurveyUserInput(models.Model):
                                 'name': fname,
                                 'datas': datas,
                                 'type': 'binary',
-                                'res_model': 'res.partner.kyc.approval',
-                                'res_id': 0,
                             })
                             attachments.append(attachment.id)
                     if attachments:
@@ -108,8 +106,6 @@ class SurveyUserInput(models.Model):
                             'name': file_name,
                             'datas': file_data,
                             'type': 'binary',
-                            'res_model': 'res.partner.kyc.approval',
-                            'res_id': 0,
                         })
                         attachments_by_field.setdefault(field_name, []).append(attachment.id)
 
@@ -143,8 +139,6 @@ class SurveyUserInput(models.Model):
                                 'name': cheque_name,
                                 'type': 'binary',
                                 'datas': cheque_file,
-                                'res_model': 'bank.details',
-                                'res_id': 0,
                             }).id if cheque_file else False
                         )
                         values['bank_detail'].append((0, 0, {
@@ -199,9 +193,9 @@ class SurveyUserInput(models.Model):
                 values['partner_id'] = partner.id
                 kyc_record = self.env['res.partner.kyc.approval'].create(values)
                 if kyc_record:
-                    for bank in kyc_record.bank_detail:
-                        for att in bank.bank_cheque_attachments:
-                            att.write({'res_id': bank.id})
+                    # for bank in kyc_record.bank_detail:
+                    #     for att in bank.bank_cheque_attachments:
+                    #         att.write({'res_id': bank.id})
                     partner.write({
                         'is_kyc': True,
                         'rejection_date': False,
