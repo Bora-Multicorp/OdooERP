@@ -34,7 +34,7 @@ class StockPicking(models.Model):
 
             for move in picking.move_ids_without_package:
                 product = move.product_id
-                qty = move.product_uom_qty or 0.0
+                qty = move.quantity or move.product_uom_qty or 0.0
                 tmpl = product.product_tmpl_id
                 weight = tmpl.weight or 0.0
                 packing_lines = tmpl.packing_material_line_ids
