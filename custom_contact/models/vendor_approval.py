@@ -4,11 +4,29 @@ from odoo import api, fields, models, _
 from dateutil.relativedelta import relativedelta
 from odoo.exceptions import ValidationError
 
+
 class ContactKYCApproval(models.Model):
     _name = 'res.partner.kyc.approval'
     _description = 'Contact KYC approvals'
     _rec_name = 'partner_id'
     _inherit = ['mail.thread', 'mail.activity.mixin']
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        res_list = super().create(vals_list)
+        attachment_fields = [
+            'gst_certificate', 'udyam_document', 'shop_act_document',
+            'shop_photos', 'shop_videos', 'pan_card_document',
+            'incorporation_certificate', 'moa_aoa', 'electricity_bill'
+        ]
+        for record in res_list:
+            for field in attachment_fields:
+                attachments = record[field]
+                attachments.write({
+                    'res_model': self._name,
+                    'res_id': record.id,
+                })
+        return res_list
 
     @api.constrains('gst_certificate', 'udyam_document', 'shop_act_document', 'shop_photos', 'shop_videos',
                     'pan_card_document', 'incorporation_certificate', 'moa_aoa', 'electricity_bill')
@@ -31,7 +49,7 @@ class ContactKYCApproval(models.Model):
             for attachment in attachments:
                 if attachment.file_size and attachment.file_size > max_size:
                     raise ValidationError(
-                        f"Each file in '{self._fields[field_name].string}' must be ≤ {max_size // (1024*1024)} MB."
+                        f"Each file in '{self._fields[field_name].string}' must be ≤ {max_size // (1024 * 1024)} MB."
                     )
 
     # @api.model
@@ -74,7 +92,8 @@ class ContactKYCApproval(models.Model):
     point_of_contact = fields.Char("Point of Contact / Purchase Manager (Bora Multicorp)")
     poc_user = fields.Many2one('res.users', string="Point of Contact to Vendor")
     business_legal_name = fields.Char("Business Legal Name")
-    is_same_trade_name = fields.Boolean(string="If Trade Name is same as Legal Name", help="Tick if trade name is same as legal name")
+    is_same_trade_name = fields.Boolean(string="If Trade Name is same as Legal Name",
+                                        help="Tick if trade name is same as legal name")
     business_trade_name = fields.Char("Business Trade Name")
     business_street = fields.Char("Address")
     business_city = fields.Char("City")
@@ -101,7 +120,8 @@ class ContactKYCApproval(models.Model):
     # aadhaar_card_filename = fields.Char()
     # pan_card = fields.Binary(string="PAN Card (Proprietor)")
     # pan_card_filename = fields.Char()
-    aadhaar_pan_link = fields.Selection([('yes','Yes'),('no','No')],string='Aadhar and PAN card linking?',required=True)
+    aadhaar_pan_link = fields.Selection([('yes', 'Yes'), ('no', 'No')], string='Aadhar and PAN card linking?',
+                                        required=True)
     gst_no = fields.Char(string="GST Number")
     license_registered = fields.Char(string="Any licenses registered (As per Local/State Government requirements)")
     udyam_number = fields.Char(string="Udyam Certificate Number")
@@ -147,8 +167,9 @@ class ContactKYCApproval(models.Model):
     electricity_bill = fields.Many2many('ir.attachment', 'vendor_kyc_electricity_bill_rels', 'partner_id',
                                         'attachment_id',
                                         string="Electricity bill", required=False)
-    incorporation_certificate = fields.Many2many('ir.attachment', 'incorportaion_certificate_rels', 'partner_id', 'attachment_id',
-                                      string="Incorporation Certificate")
+    incorporation_certificate = fields.Many2many('ir.attachment', 'incorportaion_certificate_rels', 'partner_id',
+                                                 'attachment_id',
+                                                 string="Incorporation Certificate")
     #####
     ##### Bank Details
     bank_detail = fields.One2many('bank.details', 'kyc_approval_id', string="Banks Detail")
@@ -213,15 +234,15 @@ class ContactKYCApproval(models.Model):
             rec.assigned_to = next_user
             # Send email to assign to user
             assign_to_template = self.env.ref('custom_contact.assign_to_email_template',
-                                             raise_if_not_found=False)
+                                              raise_if_not_found=False)
             if rec.assigned_to and assign_to_template and rec.existing_user_ids:
                 email_list = [user.email_formatted for user in rec.existing_user_ids if user.email]
                 if email_list:
                     assign_to_template.send_mail(rec.id, force_send=True,
-                                                email_values={'email_from': self.env.user.email_formatted,
-                                                              'email_to': rec.assigned_to.email_formatted,
-                                                              'email_cc': ','.join(email_list),
-                                                              })
+                                                 email_values={'email_from': self.env.user.email_formatted,
+                                                               'email_to': rec.assigned_to.email_formatted,
+                                                               'email_cc': ','.join(email_list),
+                                                               })
 
     def _update_state_based_on_approvals(self):
         for rec in self:
@@ -260,13 +281,13 @@ class ContactKYCApproval(models.Model):
             for record in self:
                 # Send reject email to all users
                 rejection_template = self.env.ref('custom_contact.kyc_rejection_email_template',
-                                                 raise_if_not_found=False)
+                                                  raise_if_not_found=False)
                 if record.partner_id and record.existing_user_ids and rejection_template:
                     email_list = [user.email_formatted for user in record.existing_user_ids if user.email]
                     if email_list:
                         rejection_template.send_mail(record.id, force_send=True,
-                                                    email_values={'email_from': self.env.user.email_formatted,
-                                                                  'email_to': ','.join(email_list)})
+                                                     email_values={'email_from': self.env.user.email_formatted,
+                                                                   'email_to': ','.join(email_list)})
         return res
 
 
@@ -330,6 +351,16 @@ class BankDetail(models.Model):
     bank_cheque_attachments = fields.Many2many('ir.attachment', 'vendor_bank_detail_cheque_rel', 'kyc_approval_id',
                                                'attachment_id', string="Cancelled Cheques", required=False)
 
+    @api.model_create_multi
+    def create(self, vals_list):
+        res_list = super().create(vals_list)
+        for record in res_list:
+            for attachment in record.bank_cheque_attachments:
+                attachment.write({
+                    'res_model': self._name,
+                    'res_id': record.id,
+                })
+        return res_list
 
 ##### Principal Place of Business
 class AddressDetail(models.Model):

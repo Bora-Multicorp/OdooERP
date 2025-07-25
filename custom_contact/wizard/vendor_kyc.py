@@ -249,11 +249,11 @@ class VendorKycWizard(models.TransientModel):
 
     shop_photos = fields.Many2many('ir.attachment', 'vendor_kyc_shop_photos_rel', 'wizard_id', 'attachment_id',
                                    string="Shop Photos", required=True,
-                                   help="Short Video / Walkway from outdoor / indoor. Must include - signage Board with GST Number.")
+                                   help="Short Photos")
 
     shop_videos = fields.Many2many('ir.attachment', 'vendor_kyc_shop_videos_rel', 'wizard_id', 'attachment_id',
-                                   string="Shop Videos", required=True,
-                                   help="Short Video / Walkway from outdoor / indoor. Must include - signage Board with GST Number.")
+                                   string="Shop Videos", required=False,
+                                   help="Short Video")
     bank_detail = fields.One2many('bank.detail', 'kyc_wizard_id', string="Bank Detail")
     address_detail = fields.One2many('address.detail', 'kyc_wizard_id', string="Address Detail")
     pan_no = fields.Char(string="PAN Number(Company)")
@@ -431,32 +431,32 @@ class VendorKycWizard(models.TransientModel):
         kyc_record = self.env['res.partner.kyc.approval'].create(kyc_vals)
 
         # Link attachments to the new KYC record
-        attachment_fields = [
-            self.gst_certificate,
-            self.udyam_document,
-            self.shop_act_document,
-            self.shop_photos,
-            self.electricity_bill,
-            self.moa_aoa,
-            self.pan_card_document,
-            self.incorporation_certificate,
-            self.shop_videos,
-        ]
-        all_attachments = sum((attachments for attachments in attachment_fields if attachments),
-                              self.env['ir.attachment'])
-        if all_attachments:
-            all_attachments.write({
-                'res_model': 'res.partner.kyc.approval',
-                'res_id': kyc_record.id,
-            })
-
-        # Link bank cheque attachments separately
-        for bank in kyc_record.bank_detail:
-            if bank.bank_cheque_attachments:
-                bank.bank_cheque_attachments.write({
-                    'res_model': 'res.partner.kyc.approval',
-                    'res_id': kyc_record.id,
-                })
+        # attachment_fields = [
+        #     self.gst_certificate,
+        #     self.udyam_document,
+        #     self.shop_act_document,
+        #     self.shop_photos,
+        #     self.electricity_bill,
+        #     self.moa_aoa,
+        #     self.pan_card_document,
+        #     self.incorporation_certificate,
+        #     self.shop_videos,
+        # ]
+        # all_attachments = sum((attachments for attachments in attachment_fields if attachments),
+        #                       self.env['ir.attachment'])
+        # if all_attachments:
+        #     all_attachments.write({
+        #         'res_model': 'res.partner.kyc.approval',
+        #         'res_id': kyc_record.id,
+        #     })
+        #
+        # # Link bank cheque attachments separately
+        # for bank in kyc_record.bank_detail:
+        #     if bank.bank_cheque_attachments:
+        #         bank.bank_cheque_attachments.write({
+        #             'res_model': 'res.partner.kyc.approval',
+        #             'res_id': kyc_record.id,
+        #         })
 
         # Update Partner
         self.partner_id.write({
