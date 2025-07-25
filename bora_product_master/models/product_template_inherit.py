@@ -23,10 +23,9 @@ class ProductTemplateInherit(models.Model):
     model = fields.Many2one('product.model', string='Product Model', help="Select a model")
     
     # delete this line in next release
-    # hsn_code = fields.Char(string="HSN Code", help="Enter a valid 4, 6, or 8 digit numeric code (e.g., 1001, 100112, 10011234).")
-    specs_dubai = fields.Char(string="Specs [Dubai]", help="Specifications for the Dubai market")
-    made_for_dubai = fields.Boolean(string="Made for Dubai", help="Check if the product is made for the Dubai market")    
-    made_in_india = fields.Boolean(string="Made in India", help="Check if the product is made in India")
+    # specs_dubai = fields.Char(string="Specs [Dubai]", help="Specifications for the Dubai market")
+    # made_for_dubai = fields.Boolean(string="Made for Dubai", help="Check if the product is made for the Dubai market")    
+    # made_in_india = fields.Boolean(string="Made in India", help="Check if the product is made in India")
 
 
 
@@ -72,7 +71,7 @@ class ProductTemplateInherit(models.Model):
             categ = rec.categ_id
             is_mobile = False
             is_packing_categ = False
-            self.attribute_ids = self.categ_id.product_attributes.ids
+            rec.attribute_ids = rec.categ_id.product_attributes.ids
 
             while categ and (not is_mobile or not is_packing_categ):
                 if categ == mobile_categ:
