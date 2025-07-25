@@ -15,6 +15,7 @@ class StockMove(models.Model):
 
     @api.depends('product_id.categ_id')
     def _compute_show_imei_column(self):
+        print('------------------------ ================ create stock.move.line ================ ------------------------')
         for move in self:
             external_id = ""
             category = move.product_id.categ_id
@@ -43,26 +44,19 @@ class StockMove(models.Model):
 class StockMoveLine(models.Model):
     _inherit = 'stock.move.line'
 
-    imei = fields.Char(string='IMEI') 
-    imei2 = fields.Char(string='IMEI 2')
-    # activation_date = fields.Date(string="Activation Date", help="Mobile phone activation date.")
-    # activation_status = fields.Boolean(string='Is Active', help="Indicates if the mobile phone is activated or not.")
-    # hide_imei_field = fields.Boolean()
+    imei = fields.Char(string="IMEI", compute="_compute_imei", store=False)
+    imei2 = fields.Char(string='IMEI 2', compute="_compute_imei", store=False)
 
+    def _compute_imei(self):
+        for line in self:
+            quant = self.env['stock.quant'].search([
+                ('product_id', '=', line.product_id.id),
+                ('location_id', '=', line.location_id.id),
+                ('lot_id', '=', line.lot_id.id),
+            ], limit=1)
+            line.imei = quant.imei if quant else False
+            line.imei2 = quant.imei2 if quant else False
 
-    # @api.depends('product_id.categ_id')
-    # def _compute_hide_imei_field(self):
-    #     for line in self:
-    #         category = line.product_id.categ_id
-    #         external_id = ""
-    #         if category:
-    #             # get_external_id returns a dict {id: xml_id}
-    #             external_ids = category.get_external_id()
-    #             external_id = external_ids.get(category.id, "")
-
-    #         # Comparison
-    #         self.hide_imei_field = external_id != 'bora_product_master.product_category_type_mobile'
-    #         break
 
     @api.model_create_multi
     def create(self, vals_list):
