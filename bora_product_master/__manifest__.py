@@ -22,7 +22,7 @@
 
     # always loaded
     'data': [
-        'data/product_type.xml',
+        'data/product_categories.xml',
         'data/product_sku_sequance.xml',
         'data/inventory_traceability_config.xml',
         'views/stock_move_inherit_view.xml',
@@ -32,6 +32,9 @@
         'views/product_product_inherit_view.xml',
         'views/sku_internal_ref_search.xml',
         'views/product_creation_from_po_block.xml',
+        'views/product_category_inherit.xml',
+        'views/show_hide_product_fields.xml',
+        'views/product_context_change.xml',
         'wizards/activation_status_wizard_view.xml',
         'security/ir.model.access.csv',
         # 'static/src/xml/assets.xml',
@@ -44,7 +47,7 @@
         'web.assets_backend': [
             '/bora_product_master/static/sample/IMEI_ACTIVATION_SAMPLE_REPORT.xlsx',
             '/bora_product_master/static/src/js/barcode_focus_change.js',
-            # '/bora_product_master/static/sec/js/inventory_dashboard_button.js'
+            # '/bora_product_master/static/src/js/make_form_read_only.js'
         ],
     },
 

@@ -10,10 +10,9 @@ _logger = logging.getLogger(__name__)
 
 class ProductApproval(models.Model): 
     _inherit = 'product.template'
-    _description = 'Product approvals'
+    _description ='Product Approval'
 
     is_hidden_for_approval = fields.Boolean(default=False) 
-    is_hidden = fields.Boolean()
 
     is_approved = fields.Boolean(string='Is Approved', default=False, help="Indicates if the product has been approved.")
 
@@ -91,6 +90,10 @@ class ProductApproval(models.Model):
                     break
             rec.assigned_to = next_user
 
+            # if rec.assigned_to:
+            #     rec._create_activity_and_send_notification()
+            
+
     def _update_state_based_on_approvals(self):
         for rec in self:
             states = rec.approval_users_ids.mapped('state')
@@ -126,6 +129,29 @@ class ProductApproval(models.Model):
             })
 
         return templates
+    
+    def _create_activity_and_send_notification(self):
+        # Schedule activity to assign to user
+        for rec in self:
+            rec.activity_schedule(
+                act_type_xmlid='mail.mail_activity_data_todo',
+                summary=f'Product approval for: {rec.name}',
+                note=_("You have been assigned to review this product approval."),
+                user_id=rec.assigned_to.id,
+                date_deadline=fields.Date.context_today(self),
+            )
+
+            rec.env['bus.bus']._sendone(
+                rec.assigned_to.partner_id,
+                'simple_notification',
+                {
+                    'type': 'success',
+                    'title': _("Product Approval for %s") % rec.name,
+                    'message':  _("Activity assigned to you."),
+                    'sticky': True,
+                },
+            )
+
 
     def write(self, vals):
 

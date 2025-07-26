@@ -6,7 +6,7 @@ from odoo.exceptions import UserError, ValidationError
 class AllowProductVarientInArchive(models.Model):
 
     _inherit="product.template"
-    _description='Allow users to create product varient when product is in archive (when product is in under review process)'
+    _description='Product KYC Approval'
 
 
 

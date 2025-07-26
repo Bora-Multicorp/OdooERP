@@ -32,7 +32,7 @@
         <field name="name">Product Approval Settings</field>
         <field name="res_model">product.approval.config</field>
         <field name="view_mode">list,form</field>
-        <field name="target">inline</field>
+        <field name="target">current</field>
     </record>
 
     <!-- Menu item under Inventory > Configuration -->
@@ -40,5 +40,6 @@
               name="Product Approval Users"
               parent="stock.menu_stock_config_settings"
               action="action_product_approval_config"
+              groups="base.user_admin"
               sequence="100"/>
 </odoo>

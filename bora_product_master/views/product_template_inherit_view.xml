@@ -8,7 +8,6 @@
                 <xpath expr="//field[@name='company_ids']" position="replace"/>
                 <xpath expr="//field[@name='default_code']" position="replace"/>
                 <xpath expr="//field[@name='barcode']" position="replace"/>
-                <!-- <xpath expr="//field[@name='avatax_category_id']" position="replace"/> -->
                 <xpath expr="//field[@name='supplier_taxes_id']" position="replace"/>
                 <xpath expr="//field[@name='categ_id']" position="replace"/>
                 <xpath expr="//field[@name='invoice_policy']" position="replace"/>
@@ -26,6 +25,9 @@
                 <xpath expr="//div[hasclass('o_row') and hasclass('w-100')]" position="inside"/>
                 <xpath expr="//button[@name='%(stock.action_product_replenish)d']" position="replace"/>
                 <xpath expr="//div[contains(@class, 'o_row') and .//field[@name='is_storable']]" position="replace"/>
+                <xpath expr="//field[@name='attribute_id']" position="attributes">
+                    <attribute name="options">{'no_open': True, 'no_create': True, 'no_create_edit': True}</attribute>
+                </xpath>
             </field>
         </record>
         <record id="view_product_template_form_inherit2" model="ir.ui.view">
@@ -33,6 +35,9 @@
             <field name="model">product.template</field>
             <field name="inherit_id" ref="product.product_template_only_form_view"/>
             <field name="arch" type="xml">
+                <xpath expr="//field[@name='attribute_id']" position="attributes">
+                    <attribute name="domain">[('id', 'in', parent.attribute_ids)]</attribute>
+                </xpath>
                 <xpath expr="//field[@name='image_1920']" position="attributes">
                     <attribute name="options">{'preview_image': 'image_128'}</attribute>
                     <attribute name="style">float: left;</attribute>
@@ -47,39 +52,32 @@
                 </xpath>
                 <xpath expr="//group[@name='group_general']" position="inside">
                     <field name="is_mobile_category_selected" invisible="1"/>
+                    <field name="is_packaging_material" invisible="1"/>
                     <!-- Inventory Type field -->
-                    <field name="type" widget="radio" options="{'horizontal': True}"/>
+                    <field name="type" widget="radio" options="{'horizontal': True}" readonly="1"/>
                     <field name="combo_ids" widget="many2many_tags" placeholder="e.g. Starter - Meal - Desert" invisible="type != 'combo'" options="{'no_quick_create': True,'edit_tags': True,}"/>
                     <!-- Track inventory -->
                     <label for="is_storable" class="oe_inline" invisible="type != 'consu'"/>
                     <div class="o_row w-100" invisible="type != 'consu'">
-                        <field name="is_storable"/>
-                        <field name="tracking" invisible="not is_storable" groups="stock.group_production_lot" required="1"/>
+                        <field name="is_storable" readonly="1"/>
+                        <field name="tracking" invisible="not is_storable" groups="stock.group_production_lot" readonly="1"/>
                     </div>
                     <field name="product_tooltip" class="fst-italic text-muted" string="" invisible="not product_tooltip"/>
                     <field name="lot_valuated" invisible="tracking == 'none'" widget="confirm_boolean"/>
                     <field name="invoice_policy" required="1" invisible="not sale_ok or type == 'combo'"/>
                     <field name="categ_id" string="Category" required="1"/>
-                    <!-- <field name="categ_id" domain="[('id', 'in', [ref('module_name.product_category_type_mobile'),
-                                              ref('module_name.product_category_type_harddisk'),
-                                              ref('module_name.product_category_type_laptop'),
-                                              ref('module_name.product_category_type_apple_imac'),
-                                              ref('module_name.product_category_type_apple_laptops'),
-                                              ref('module_name.product_category_type_mobile_toner_imac'),
-                                              ref('module_name.product_category_type_mobile_printers')])]" /> -->
                     <field name="is_dual_sim" invisible="not is_mobile_category_selected"/>
                 </xpath>
                 <xpath expr="//group[@name='group_standard_price']" position="attributes">
                     <attribute name="string">Product Specification</attribute>
                 </xpath>
                 <xpath expr="//group[@name='group_standard_price']" position="inside">
-                    <field name="specs_dubai"/>
-                    <field name="made_for_dubai"/>
-                    <field name="made_in_india"/>
+                    <!-- <field name="specs_dubai"/> -->
+                    <!-- <field name="made_for_dubai"/> -->
+                    <!-- <field name="made_in_india"/> -->
                     <field name="loose_or_master_carton" required="1"/>
                     <field name="brand_id" required="1"/>
                     <field name="model" required="1"/>
-                    <field name="hsn_code" required="1" placeholder="Enter 4, 6, or 8 digit code"/>
                 </xpath>
                 <xpath expr="//page[@name='general_information']/group[1]" position="after">
                     <group >

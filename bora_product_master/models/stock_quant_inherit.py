@@ -42,6 +42,7 @@ class StockQuantInherit(models.Model):
 
     @api.model_create_multi
     def create(self, vals_list):
+        print('------------------------ ================ create stock.quant ================ ------------------------',vals_list)
         # dont remamber what this code for 
         for vals in vals_list:
             lot_id = vals.get('lot_id')
@@ -50,6 +51,7 @@ class StockQuantInherit(models.Model):
                     ('lot_id', '=', lot_id)
                 ], limit=1)
                 if move_line:
+                    print('------------------------- ================ move lines ids found and assigned ================ ------------------------')
                     vals['imei'] = move_line.imei or ''
                     vals['imei2'] = move_line.imei2 or ''
 

@@ -7,11 +7,11 @@ class ProductTemplateInherit(models.Model):
 
     is_dual_sim = fields.Boolean(string="Is dual SIM phone", help="Check if the product is a dual SIM phone")
     
-    is_mobile_category_selected = fields.Boolean(compute="_compute_is_mobile_category")
+    is_mobile_category_selected = fields.Boolean(compute="_compute_category_change")
+    is_packaging_material = fields.Boolean(compute="_compute_category_change")
 
-    specs_dubai = fields.Char(string="Specs [Dubai]", help="Specifications for the Dubai market")
     
-    loose_or_master_carton = fields.Selection(
+    loose_or_master_carton = fields.Selection( 
         [('master_carton', 'Master Carton'), ('loose', 'Loose')],
         string="Master Carton / Loose",
         help="Specify if the product is a master carton or loose"
@@ -19,13 +19,15 @@ class ProductTemplateInherit(models.Model):
     
     brand_id = fields.Many2one('product.brand', string="Brand", help="Brand of the product")
     
-    made_for_dubai = fields.Boolean(string="Made for Dubai", help="Check if the product is made for the Dubai market")
-    
-    made_in_india = fields.Boolean(string="Made in India", help="Check if the product is made in India")
     
     model = fields.Many2one('product.model', string='Product Model', help="Select a model")
     
-    hsn_code = fields.Char(string="HSN Code", help="Enter a valid 4, 6, or 8 digit numeric code (e.g., 1001, 100112, 10011234).")
+    # delete this line in next release
+    # specs_dubai = fields.Char(string="Specs [Dubai]", help="Specifications for the Dubai market")
+    # made_for_dubai = fields.Boolean(string="Made for Dubai", help="Check if the product is made for the Dubai market")    
+    # made_in_india = fields.Boolean(string="Made in India", help="Check if the product is made in India")
+
+
 
     categ_id = fields.Many2one(
         'product.category', 'Product Category',
@@ -55,19 +57,36 @@ class ProductTemplateInherit(models.Model):
         self.filtered(lambda t: not t.is_storable and t.tracking != 'none').tracking = 'none'
 
 
+    attribute_ids = fields.Many2many('product.attribute')
+
     # To check if mobile category is selected from the Category field
     @api.depends('categ_id')
-    def _compute_is_mobile_category(self):
+    def _compute_category_change(self):
         mobile_categ = self.env.ref('bora_product_master.product_category_type_mobile', raise_if_not_found=False)
+        packaging_categ = self.env.ref('bora_product_master.product_category_type_packaging_material', raise_if_not_found=False)
+
+
+
         for rec in self:
             categ = rec.categ_id
             is_mobile = False
-            while categ and mobile_categ:
+            is_packing_categ = False
+            rec.attribute_ids = rec.categ_id.product_attributes.ids
+
+            while categ and (not is_mobile or not is_packing_categ):
                 if categ == mobile_categ:
                     is_mobile = True
-                    break
+                if categ == packaging_categ:
+                    is_packing_categ = True
                 categ = categ.parent_id
+
             rec.is_mobile_category_selected = is_mobile
+            rec.is_packaging_material = is_packing_categ
+
+        
+
+
+
 
 
     # To generate SKU
@@ -145,17 +164,18 @@ class ProductTemplateInherit(models.Model):
 
         return action
 
-    
-    # HSN code validation
-    
-    @api.constrains('hsn_code')
-    def _onchange_hsn_code(self):
-        if self.hsn_code and not re.fullmatch(r"\d{4}|\d{6}|\d{8}", self.hsn_code):
-            raise ValidationError(f"HSN code must be numeric and 4, 6, or 8 digits long.")
-
 
     @api.model_create_multi
     def create(self, vals_list):
+
+
+        # if packaging item then set is_storable and tracking to False, as if this enables then it requires serial number
+        for vals in vals_list:
+            categ_id = vals.get('categ_id')
+            packaging_categ = self.env.ref('bora_product_master.product_category_type_packaging_material', raise_if_not_found=False)
+            if categ_id == packaging_categ.id:
+                vals['tracking'] = 'none'
+
 
         # 1. Capitalize product name in each dict
         for vals in vals_list:
@@ -174,6 +194,13 @@ class ProductTemplateInherit(models.Model):
 
 
     def write(self, vals):
+
+        # if packaging item then set is_storable and tracking to False, as if this enables then it requires serial number
+        categ_id = vals.get('categ_id')
+        packaging_categ = self.env.ref('bora_product_master.product_category_type_packaging_material', raise_if_not_found=False)
+        if categ_id == packaging_categ.id:
+            vals['tracking'] = 'none'
+
         # 1. capitalize product name
         if vals.get('name'):
             vals['name'] = vals['name'].upper()
@@ -186,13 +213,6 @@ class ProductTemplateInherit(models.Model):
                 rec._generate_and_assign_sku()
 
         return res
-
-    @api.constrains('image_1920', 'image_1', 'image_2', 'image_3', 'image_4')
-    def _check_image_required(self):
-        for record in self:
-            if not record.image_1920 or not record.image_1 or not record.image_2 or not record.image_3 or not record.image_4:
-                raise ValidationError(_("All images are required for the product."))
-
 
 class ProductBrand(models.Model):
     _name = 'product.brand'
