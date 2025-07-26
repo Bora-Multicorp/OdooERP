@@ -90,8 +90,8 @@ class ProductApproval(models.Model):
                     break
             rec.assigned_to = next_user
 
-            if rec.assigned_to:
-                rec._create_activity_and_send_notification()
+            # if rec.assigned_to:
+            #     rec._create_activity_and_send_notification()
             
 
     def _update_state_based_on_approvals(self):
