@@ -26,7 +26,7 @@ class ProductTemplateInherit(models.Model):
     specs_dubai = fields.Char(string="Specs [Dubai]", help="Specifications for the Dubai market")
     made_for_dubai = fields.Boolean(string="Made for Dubai", help="Check if the product is made for the Dubai market")    
     made_in_india = fields.Boolean(string="Made in India", help="Check if the product is made in India")
-
+    hsn_code = fields.Char()
 
 
     categ_id = fields.Many2one(
