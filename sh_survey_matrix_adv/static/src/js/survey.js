@@ -219,15 +219,17 @@ SurveyFormWidget.include({
         this._super.apply(this, arguments);
     },
 
-    // _onNextScreenDone: function (options) {
-    //     const def = this._super.apply(this, arguments);
-    //     const storedDirectorCount = sessionStorage.getItem("director_details_count");
-    //      if (storedDirectorCount) {
-    //          updateDirectorMatrixRowVisibility(storedDirectorCount);
-    //     }
-    //     this.restoreVisibleRows();
-    //     return def;
-    // },
+
+//     _onNextScreenDone: function (options) {
+//         const def = this._super.apply(this, arguments);
+//         const storedDirectorCount = sessionStorage.getItem("director_details_count");
+//          if (storedDirectorCount) {
+//              updateDirectorMatrixRowVisibility(storedDirectorCount);
+//              sessionStorage.removeItem("director_details_count");
+//         }
+//         this.restoreVisibleRows();
+//         return def;
+//     },
 
     restoreVisibleRows: async function () {
         $("table.o_survey_question_matrix").each(function () {
