@@ -224,6 +224,7 @@ SurveyFormWidget.include({
         const storedDirectorCount = sessionStorage.getItem("director_details_count");
          if (storedDirectorCount) {
              updateDirectorMatrixRowVisibility(storedDirectorCount);
+             sessionStorage.removeItem("director_details_count");
         }
         this.restoreVisibleRows();
         return def;
