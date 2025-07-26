@@ -116,31 +116,31 @@ function updateDirectorMatrixRowVisibility(count) {
     });
 }
 
-$(document).on("change", "input.o_survey_form_choice_item", function (event) {
-    const $input = $(event.target);
-    const selectedLabel = $input.closest("label").find("span").text().trim();
-    const normalizedLabel = normalize(selectedLabel);
-    const multiDirectorLabels = ["Partnership", "Pvt Ltd Co.", "LLP", "HUF(Karta)", "If other, please specify:"].map(normalize);
-    const maxCount = parseInt(selectedLabel);
-    let directorCount = 0;
-    if (normalizedLabel === "Sole Proprietor") {
-        directorCount = 1;
-    } else if (multiDirectorLabels.includes(normalizedLabel)) {
-        directorCount = 7;
-    }
-    if (directorCount > 0 && (isNaN(maxCount) || maxCount <= 0 || maxCount > 7)) {
-        sessionStorage.setItem("director_details_count", directorCount);
-        updateDirectorMatrixRowVisibility(directorCount);
-        }
-    else if (!isNaN(maxCount) && maxCount > 0 && maxCount <= 7) {
-        sessionStorage.setItem("director_details_count", maxCount);
-        updateDirectorMatrixRowVisibility(maxCount);
-    }
-    else if (directorCount > 0) {
-        sessionStorage.setItem("director_details_count", directorCount);
-        updateDirectorMatrixRowVisibility(directorCount);
-    }
-});
+// $(document).on("change", "input.o_survey_form_choice_item", function (event) {
+//     const $input = $(event.target);
+//     const selectedLabel = $input.closest("label").find("span").text().trim();
+//     const normalizedLabel = normalize(selectedLabel);
+//     const multiDirectorLabels = ["Partnership", "Pvt Ltd Co.", "LLP", "HUF(Karta)", "If other, please specify:"].map(normalize);
+//     const maxCount = parseInt(selectedLabel);
+//     let directorCount = 0;
+//     if (normalizedLabel === "Sole Proprietor") {
+//         directorCount = 1;
+//     } else if (multiDirectorLabels.includes(normalizedLabel)) {
+//         directorCount = 7;
+//     }
+//     if (directorCount > 0 && (isNaN(maxCount) || maxCount <= 0 || maxCount > 7)) {
+//         sessionStorage.setItem("director_details_count", directorCount);
+//         updateDirectorMatrixRowVisibility(directorCount);
+//         }
+//     else if (!isNaN(maxCount) && maxCount > 0 && maxCount <= 7) {
+//         sessionStorage.setItem("director_details_count", maxCount);
+//         updateDirectorMatrixRowVisibility(maxCount);
+//     }
+//     else if (directorCount > 0) {
+//         sessionStorage.setItem("director_details_count", directorCount);
+//         updateDirectorMatrixRowVisibility(directorCount);
+//     }
+// });
 
 function updateRowCount(data_name) {
     const visibleRows = $('table.table-borderless[data-name="' + data_name + '"] tr[id]').not('.hide-row');
@@ -219,15 +219,15 @@ SurveyFormWidget.include({
         this._super.apply(this, arguments);
     },
 
-    _onNextScreenDone: function (options) {
-        const def = this._super.apply(this, arguments);
-        const storedDirectorCount = sessionStorage.getItem("director_details_count");
-         if (storedDirectorCount) {
-             updateDirectorMatrixRowVisibility(storedDirectorCount);
-        }
-        this.restoreVisibleRows();
-        return def;
-    },
+    // _onNextScreenDone: function (options) {
+    //     const def = this._super.apply(this, arguments);
+    //     const storedDirectorCount = sessionStorage.getItem("director_details_count");
+    //      if (storedDirectorCount) {
+    //          updateDirectorMatrixRowVisibility(storedDirectorCount);
+    //     }
+    //     this.restoreVisibleRows();
+    //     return def;
+    // },
 
     restoreVisibleRows: async function () {
         $("table.o_survey_question_matrix").each(function () {
