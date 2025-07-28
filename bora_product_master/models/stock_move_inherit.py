@@ -43,10 +43,15 @@ class StockMove(models.Model):
 class StockMoveLine(models.Model):
     _inherit = 'stock.move.line'
 
-    imei = fields.Char(string="IMEI", compute="_compute_imei", store=False, readonly=False)
-    imei2 = fields.Char(string='IMEI 2', compute="_compute_imei", store=False, readonly=False)
+    imei = fields.Char(string="IMEI", compute="_compute_imei", store=True, readonly=False)
+    imei2 = fields.Char(string='IMEI 2', compute="_compute_imei", store=True, readonly=False)
 
     def _compute_imei(self):
+
+        for line in self:
+            if line.move_id.picking_id.picking_type_id.code == 'incoming':
+                return
+
         for line in self:
             quant = self.env['stock.quant'].search([
                 ('product_id', '=', line.product_id.id),
@@ -56,13 +61,12 @@ class StockMoveLine(models.Model):
             line.imei = quant.imei if quant else False
             line.imei2 = quant.imei2 if quant else False
 
-
     @api.model_create_multi
     def create(self, vals_list):
         move_lines = super().create(vals_list)
         for line in move_lines:
             if line.move_id and not line.imei:
-                # Try to find related incoming move lines
+                # 1️⃣ First try: get IMEI from related incoming PO move lines
                 related_moves = self.env['stock.move.line'].search([
                     ('product_id', '=', line.product_id.id),
                     ('lot_id', '=', line.lot_id.id),
@@ -73,7 +77,38 @@ class StockMoveLine(models.Model):
                 if related_moves:
                     line.imei = related_moves.imei
                     line.imei2 = related_moves.imei2
+                else:
+                    # 2️⃣ Fallback: try to get from stock.quant (Inventory Adjustments)
+                    quant = self.env['stock.quant'].search([
+                        ('product_id', '=', line.product_id.id),
+                        ('lot_id', '=', line.lot_id.id),
+                        ('location_id', '=', line.location_id.id),
+                    ], limit=1)
+
+                    if quant:
+                        line.imei = quant.imei
+                        line.imei2 = quant.imei2
+
         return move_lines
+
+
+    # @api.model_create_multi
+    # def create(self, vals_list):
+    #     move_lines = super().create(vals_list)
+    #     for line in move_lines:
+    #         if line.move_id and not line.imei:
+    #             # Try to find related incoming move lines
+    #             related_moves = self.env['stock.move.line'].search([
+    #                 ('product_id', '=', line.product_id.id),
+    #                 ('lot_id', '=', line.lot_id.id),
+    #                 ('location_dest_id.usage', '=', 'internal'),
+    #                 ('location_id.usage', '=', 'supplier'),
+    #             ], limit=1)
+
+    #             if related_moves:
+    #                 line.imei = related_moves.imei
+    #                 line.imei2 = related_moves.imei2
+    #     return move_lines
 
 
     
