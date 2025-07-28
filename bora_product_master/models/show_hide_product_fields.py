@@ -12,6 +12,9 @@ class ShowHideProductFields(models.Model):
 
     accessory_group = fields.Many2one('product.accessories.group', string='Accessory group')
 
+    specs_made_for = fields.Char()
+    made_in = fields.Char()
+
     specs_made = fields.Many2one(
         'res.country',
         string='Spec Made For',
@@ -45,15 +48,17 @@ class InkAndTonnersModelNumber(models.Model):
     name = fields.Char(required=True, string='Model Number', index=True)
 
 
-class SpecMadeFor(models.Model): 
-    _name = 'spec.made.for'
-    _description = 'Spec Made For'
-
-    name = fields.Char(required=True, string='Spec (Made For)', index=True)
 
 
-class MadeIn(models.Model):
-    _name = 'made.in'
-    _description = 'Made In'
+# class SpecMadeFor(models.Model): 
+#     _name = 'spec.made.for'
+#     _description = 'Spec Made For'
 
-    name = fields.Char(required=True, string='Made In', index=True)
+#     name = fields.Char(required=True, string='Spec (Made For)', index=True)
+
+
+# class MadeIn(models.Model):
+#     _name = 'made.in'
+#     _description = 'Made In'
+
+#     name = fields.Char(required=True, string='Made In', index=True)
