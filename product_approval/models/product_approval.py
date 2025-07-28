@@ -10,7 +10,7 @@ _logger = logging.getLogger(__name__)
 
 class ProductApproval(models.Model): 
     _inherit = 'product.template'
-    _description ='Product Approval'
+    _description ='Product Approval Queue'
 
     is_hidden_for_approval = fields.Boolean(default=False) 
 

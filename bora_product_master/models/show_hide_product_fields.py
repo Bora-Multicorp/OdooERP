@@ -12,9 +12,17 @@ class ShowHideProductFields(models.Model):
 
     accessory_group = fields.Many2one('product.accessories.group', string='Accessory group')
 
-    specs_made_for = fields.Many2one('spec.made.for', string='Spec Made For', help='Specification made for a specific product')
+    specs_made_for = fields.Many2one(
+        'res.country',
+        string='Spec Made For',
+        help='Specification made for a specific country'
+    )
 
-    made_in = fields.Many2one('made.in', string='Made In')
+    made_in = fields.Many2one(
+        'res.country',
+        string='Made In',
+        help='Country where the product is manufactured'
+    )
 
     part_code = fields.Char(string='Part Code', help='Unique part code for the apple laptops')
 
