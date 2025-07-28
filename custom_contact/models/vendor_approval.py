@@ -29,29 +29,30 @@ class ContactKYCApproval(models.Model):
                 })
         return res_list
 
-    @api.constrains('gst_certificate', 'udyam_document', 'shop_act_document', 'shop_photos', 'shop_videos',
-                    'pan_card_document', 'incorporation_certificate', 'moa_aoa', 'electricity_bill')
-    def _check_attachment_limits(self):
-        limits = {
-            'gst_certificate': (1, 10 * 1024 * 1024),
-            'udyam_document': (1, 10 * 1024 * 1024),
-            'shop_act_document': (1, 10 * 1024 * 1024),
-            'shop_photos': (10, 100 * 1024 * 1024),
-            'shop_videos': (10, 100 * 1024 * 1024),
-            'pan_card_document': (1, 10 * 1024 * 1024),
-            'incorporation_certificate': (5, 10 * 1024 * 1024),
-            'moa_aoa': (5, 10 * 1024 * 1024),
-            'electricity_bill': (5, 10 * 1024 * 1024),
-        }
-        for field_name, (max_count, max_size) in limits.items():
-            attachments = getattr(self, field_name)
-            if len(attachments) > max_count:
-                raise ValidationError(f"Only {max_count} file(s) allowed for '{self._fields[field_name].string}'.")
-            for attachment in attachments:
-                if attachment.file_size and attachment.file_size > max_size:
-                    raise ValidationError(
-                        f"Each file in '{self._fields[field_name].string}' must be ≤ {max_size // (1024 * 1024)} MB."
-                    )
+    # @api.constrains('gst_certificate', 'udyam_document', 'shop_act_document', 'shop_photos', 'shop_videos',
+    #                 'pan_card_document', 'incorporation_certificate', 'moa_aoa', 'electricity_bill')
+    # def _check_attachment_limits(self):
+    #     limits = {
+    #         'gst_certificate': (1, 10 * 1024 * 1024),
+    #         'udyam_document': (1, 10 * 1024 * 1024),
+    #         'shop_act_document': (1, 10 * 1024 * 1024),
+    #         'shop_photos': (10, 100 * 1024 * 1024),
+    #         'shop_videos': (10, 100 * 1024 * 1024),
+    #         'pan_card_document': (1, 10 * 1024 * 1024),
+    #         'incorporation_certificate': (5, 10 * 1024 * 1024),
+    #         'moa_aoa': (5, 10 * 1024 * 1024),
+    #         'electricity_bill': (5, 10 * 1024 * 1024),
+    #     }
+    #     for field_name, (max_count, max_size) in limits.items():
+    #         attachments = getattr(self, field_name)
+    #         print('111111111', self._fields[field_name].string, len(attachments), max_count)
+    #         if len(attachments) > max_count:
+    #             raise ValidationError(f"Only {max_count} file(s) allowed for '{self._fields[field_name].string}'.")
+    #         for attachment in attachments:
+    #             if attachment.file_size and attachment.file_size > max_size:
+    #                 raise ValidationError(
+    #                     f"Each file in '{self._fields[field_name].string}' must be ≤ {max_size // (1024 * 1024)} MB."
+    #                 )
 
     # @api.model
     # def _get_view(self, view_id=None, view_type='form', **options):
