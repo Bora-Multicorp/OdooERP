@@ -3,11 +3,12 @@
 from odoo import api, fields, models, _
 from dateutil.relativedelta import relativedelta
 from odoo.exceptions import ValidationError
+from datetime import timedelta, date
 
 
 class ContactKYCApproval(models.Model):
     _name = 'res.partner.kyc.approval'
-    _description = 'Contact KYC approvals'
+    _description = 'Vendor KYC approval'
     _rec_name = 'partner_id'
     _inherit = ['mail.thread', 'mail.activity.mixin']
 
@@ -28,29 +29,30 @@ class ContactKYCApproval(models.Model):
                 })
         return res_list
 
-    @api.constrains('gst_certificate', 'udyam_document', 'shop_act_document', 'shop_photos', 'shop_videos',
-                    'pan_card_document', 'incorporation_certificate', 'moa_aoa', 'electricity_bill')
-    def _check_attachment_limits(self):
-        limits = {
-            'gst_certificate': (1, 10 * 1024 * 1024),
-            'udyam_document': (1, 10 * 1024 * 1024),
-            'shop_act_document': (1, 10 * 1024 * 1024),
-            'shop_photos': (10, 100 * 1024 * 1024),
-            'shop_videos': (10, 100 * 1024 * 1024),
-            'pan_card_document': (1, 10 * 1024 * 1024),
-            'incorporation_certificate': (5, 10 * 1024 * 1024),
-            'moa_aoa': (5, 10 * 1024 * 1024),
-            'electricity_bill': (5, 10 * 1024 * 1024),
-        }
-        for field_name, (max_count, max_size) in limits.items():
-            attachments = getattr(self, field_name)
-            if len(attachments) > max_count:
-                raise ValidationError(f"Only {max_count} file(s) allowed for '{self._fields[field_name].string}'.")
-            for attachment in attachments:
-                if attachment.file_size and attachment.file_size > max_size:
-                    raise ValidationError(
-                        f"Each file in '{self._fields[field_name].string}' must be ≤ {max_size // (1024 * 1024)} MB."
-                    )
+    # @api.constrains('gst_certificate', 'udyam_document', 'shop_act_document', 'shop_photos', 'shop_videos',
+    #                 'pan_card_document', 'incorporation_certificate', 'moa_aoa', 'electricity_bill')
+    # def _check_attachment_limits(self):
+    #     limits = {
+    #         'gst_certificate': (1, 10 * 1024 * 1024),
+    #         'udyam_document': (1, 10 * 1024 * 1024),
+    #         'shop_act_document': (1, 10 * 1024 * 1024),
+    #         'shop_photos': (10, 100 * 1024 * 1024),
+    #         'shop_videos': (10, 100 * 1024 * 1024),
+    #         'pan_card_document': (1, 10 * 1024 * 1024),
+    #         'incorporation_certificate': (5, 10 * 1024 * 1024),
+    #         'moa_aoa': (5, 10 * 1024 * 1024),
+    #         'electricity_bill': (5, 10 * 1024 * 1024),
+    #     }
+    #     for field_name, (max_count, max_size) in limits.items():
+    #         attachments = getattr(self, field_name)
+    #         print('111111111', self._fields[field_name].string, len(attachments), max_count)
+    #         if len(attachments) > max_count:
+    #             raise ValidationError(f"Only {max_count} file(s) allowed for '{self._fields[field_name].string}'.")
+    #         for attachment in attachments:
+    #             if attachment.file_size and attachment.file_size > max_size:
+    #                 raise ValidationError(
+    #                     f"Each file in '{self._fields[field_name].string}' must be ≤ {max_size // (1024 * 1024)} MB."
+    #                 )
 
     # @api.model
     # def _get_view(self, view_id=None, view_type='form', **options):
@@ -233,16 +235,40 @@ class ContactKYCApproval(models.Model):
                     break
             rec.assigned_to = next_user
             # Send email to assign to user
-            assign_to_template = self.env.ref('custom_contact.assign_to_email_template',
-                                              raise_if_not_found=False)
-            if rec.assigned_to and assign_to_template and rec.existing_user_ids:
-                email_list = [user.email_formatted for user in rec.existing_user_ids if user.email]
-                if email_list:
-                    assign_to_template.send_mail(rec.id, force_send=True,
-                                                 email_values={'email_from': self.env.user.email_formatted,
-                                                               'email_to': rec.assigned_to.email_formatted,
-                                                               'email_cc': ','.join(email_list),
-                                                               })
+            # assign_to_template = self.env.ref('custom_contact.assign_to_email_template',
+            #                                   raise_if_not_found=False)
+            # if rec.assigned_to and assign_to_template and rec.existing_user_ids:
+            #     email_list = [user.email_formatted for user in rec.existing_user_ids if user.email]
+            #     if email_list:
+            #         assign_to_template.send_mail(rec.id, force_send=True,
+            #                                      email_values={'email_from': self.env.user.email_formatted,
+            #                                                    'email_to': rec.assigned_to.email_formatted,
+            #                                                    'email_cc': ','.join(email_list),
+            #                                                    })
+            # Schedule activity to assign to user
+            if rec.assigned_to:
+                rec._schedule_kyc_assignment_activity()
+
+    def _schedule_kyc_assignment_activity(self):
+        for rec in self:
+            rec.activity_schedule(
+                act_type_xmlid='mail.mail_activity_data_todo',
+                summary=f'KYC Approval for: {rec.partner_id.name}',
+                note=_("You have been assigned to review this KYC approval."),
+                user_id=rec.assigned_to.id,
+                date_deadline=fields.Date.context_today(rec),
+            )
+
+            rec.env['bus.bus']._sendone(rec.assigned_to.partner_id,
+                'simple_notification',
+                {
+                    'type': 'success',
+                    'title': _("KYC Approval for: %s") % rec.partner_id.name,
+                    #'message': _("Activity assigned to you: %s") % rec.assigned_to.name,
+                    'message': _("Activity assigned to you."),
+                    'sticky': True,
+                },
+            )
 
     def _update_state_based_on_approvals(self):
         for rec in self:
@@ -361,6 +387,7 @@ class BankDetail(models.Model):
                     'res_id': record.id,
                 })
         return res_list
+
 
 ##### Principal Place of Business
 class AddressDetail(models.Model):
