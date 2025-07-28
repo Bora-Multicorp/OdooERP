@@ -174,13 +174,13 @@ class ProductApproval(models.Model):
                     })
 
                 # Send email to all approval users
-                approval_template = self.env.ref('product_approval_email_template', raise_if_not_found=False)
-                if approval_template and record.existing_user_ids:
-                    email_list = [user.email_formatted for user in record.existing_user_ids if user.email]
-                    if email_list:
-                        approval_template.send_mail(record.id, force_send=True,
-                        email_values={'email_from': self.env.user.email_formatted,
-                                                'email_to': ','.join(email_list), })
+                # approval_template = self.env.ref('product_approval_email_template', raise_if_not_found=False)
+                # if approval_template and record.existing_user_ids:
+                #     email_list = [user.email_formatted for user in record.existing_user_ids if user.email]
+                #     if email_list:
+                #         approval_template.send_mail(record.id, force_send=True,
+                #         email_values={'email_from': self.env.user.email_formatted,
+                #                                 'email_to': ','.join(email_list), })
         return res
     
 

@@ -11,32 +11,48 @@ patch(FormController.prototype, {
         super.setup();
         console.log("🧠 FormController patched");
 
+        const getCurrentState = () => {
+            const activeStatusButton = document.querySelector('.o_statusbar_status .o_arrow_button[aria-current="step"]');
+            if (activeStatusButton) {
+                const value = activeStatusButton.dataset.value;
+                console.log("🎯 Found statusbar state:", value);
+                return value;
+            } else {
+                console.warn("⚠️ State button not found in statusbar yet");
+            }
+
+            return undefined;
+        };
+
         const shouldDisableForm = () => {
-            const stateField = document.querySelector('[name="state"]');
-            const value = stateField?.value;
-            console.log("🔍 Current state:", value);
-            return value === "pending" || value === "rejected";
+            const value = getCurrentState();
+            console.log("🔍 Current state value detected:", value);
+
+            if (value === "pending" || value === "rejected") {
+                console.log(`⛔ Disabling form because state is "${value}"`);
+                return true;
+            } else {
+                console.log(`✅ State is "${value}", form remains editable`);
+                return false;
+            }
         };
 
         const disableInputs = () => {
-            console.log("✅ Disabling inputs for product.template");
+            console.log("🛑 Disabling all inputs");
 
-            // Disable input, select, textarea, button
             const inputs = document.querySelectorAll(
                 "td.o_field_x2many_list_row_add a, .o_form_sheet .form-check-input, .o_form_sheet input, .o_form_sheet select, .o_form_sheet textarea, .o_form_sheet button"
             );
             inputs.forEach(input => {
                 input.setAttribute("disabled", "true");
-                input.classList.add("o_disabled"); // Add only if in right state
+                input.classList.add("o_disabled");
             });
 
-            // Disable pointer events
             document.querySelectorAll('.o_field_widget').forEach(cb => {
                 cb.style.pointerEvents = "none";
-                cb.classList.add("o_disabled"); // Optional: add class for styling
+                cb.classList.add("o_disabled");
             });
 
-            // Optional: Add a parent-level CSS hook
             const formSheet = document.querySelector('.o_form_sheet');
             if (formSheet) {
                 formSheet.classList.add("o_form_state_disabled");
@@ -48,6 +64,7 @@ patch(FormController.prototype, {
             if (!tabContainer) return;
 
             tabContainer.addEventListener('click', () => {
+                console.log("🌀 Tab switched, checking state again...");
                 setTimeout(() => {
                     if (shouldDisableForm()) {
                         disableInputs();
@@ -56,14 +73,30 @@ patch(FormController.prototype, {
             });
         };
 
+        const waitForStateAndRun = () => {
+            let attempts = 0;
+            const interval = setInterval(() => {
+                const value = getCurrentState();
+                if (value || attempts > 20) {
+                    clearInterval(interval);
+
+                    if (value) {
+                        console.log("✅ Final state loaded:", value);
+                        if (shouldDisableForm()) {
+                            disableInputs();
+                        }
+                        observeTabs();
+                    } else {
+                        console.warn("⚠️ Could not find state after 2s");
+                    }
+                }
+                attempts++;
+            }, 100);
+        };
+
         onMounted(() => {
             console.log("🚀 onMounted triggered");
-            setTimeout(() => {
-                if (shouldDisableForm()) {
-                    disableInputs();
-                }
-                observeTabs();
-            }, 100);
+            waitForStateAndRun();
         });
     },
 });
