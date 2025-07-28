@@ -87,68 +87,60 @@ $(document).on("change", ".sh_file_input", function (ev) {
     }
 });
 
-
-$(document).on("change", "input.o_survey_form_choice_item", function (event) {
-    var self = this;
-    const $input = $(event.target);
-    const selectedOptionId = $input.val();
-    const selectedLabel = $input.closest("label").find("span").text().trim();
-    const maxCount = parseInt(selectedLabel || 0);
-    const normalize = str => str.replace(/\s+/g, ' ').trim();
-    const normalizedLabel = normalize(selectedLabel);
-    const multiDirectorLabels = ["Partnership", "Pvt Ltd Co.", "LLP", "HUF(Karta)", "If other, please specify:"].map(normalize);
-    let directorCount = 0;
-    if (normalizedLabel === "Sole Proprietor") {
-        directorCount = 1;
-        sessionStorage.setItem("director_details_count", directorCount);
-    }
-    else if (multiDirectorLabels.includes(normalizedLabel)) {
-        directorCount = 7;
-        sessionStorage.setItem("director_details_count", directorCount);
-    }
-   if (directorCount > 0 || (maxCount > 0 && maxCount <= 7)) {
-    const $headingDiv = $("div.mb-4").filter(function () {
-        return $(this).text().trim().startsWith("Director Details");
-    });
-    const $matrixTable = $headingDiv.nextAll("table[data-question-type='matrix']").first();
-    if (!$matrixTable.length) return;
-    const dataName = $matrixTable.attr("data-name");
-    const inputSelector = `input[name="${dataName}_rowcount"]`;
-    const $rowCountInput = $(inputSelector);
-    if ($rowCountInput.length) {
-        const updatedValue = directorCount > 0 ? directorCount : maxCount;
-        $rowCountInput.val(updatedValue).trigger("change"); // Ensure event is triggered
-        //this.restoreVisibleRows();
-         $("table.o_survey_question_matrix").each(function () {
-            const $table = $(this);
-            const dataName = $table.attr("data-name");
-            const rowCountInput = $('input[name="' + dataName + '_rowcount"]');
-            const rowCount = parseInt(rowCountInput.val()) || 1;
-            const $rows = $table.find("tbody > tr");
-            $rows.each(function (index) {
-                if (index < rowCount) {
-                    $(this).removeClass("hide-row");
-                } else {
-                    $(this).addClass("hide-row");
-                }
-            });
-          });
-    }
+function normalize(str) {
+    return str.replace(/\s+/g, ' ').trim();
 }
 
-   /*if (Number.isInteger(maxCount) && maxCount > 0) {
-    const $headingDiv = $("div.mb-4:contains('Director Details')").filter(function () {
-        return $(this).text().trim().startsWith("Director Details");
+function updateDirectorMatrixRowVisibility(count) {
+    $("div.mb-4").each(function () {
+        const headingText = $(this).text().trim();
+        if (headingText.startsWith("Director Details")) {
+            const $matrixTable = $(this).nextAll("table[data-question-type='matrix']").first();
+            if (!$matrixTable.length) return;
+            const dataName = $matrixTable.attr("data-name");
+            const inputSelector = `input[name="${dataName}_rowcount"]`;
+            const $rowCountInput = $(inputSelector);
+            if ($rowCountInput.length) {
+                console.log("$rowCountInput.length", $rowCountInput.length);
+                $rowCountInput.val(count).trigger("change");
+                const $rows = $matrixTable.find("tbody > tr");
+                $rows.each(function (index) {
+                    if (index < count) {
+                        $(this).removeClass("hide-row");
+                    } else {
+                        $(this).addClass("hide-row");
+                    }
+                });
+            }
+        }
     });
-    const $matrixTable = $headingDiv.nextAll("table[data-question-type='matrix']").first();
-    if (!$matrixTable.length) {
-        //console.warn('Matrix table not found!');
-        return;
-    }
-    const $rows = $matrixTable.find("tr");
-    $rows.addClass("hide-row");
-    $rows.slice(0, maxCount + 1).removeClass("hide-row");*/
-});
+}
+
+ $(document).on("change", "input.o_survey_form_choice_item", function (event) {
+     const $input = $(event.target);
+     const selectedLabel = $input.closest("label").find("span").text().trim();
+     const normalizedLabel = normalize(selectedLabel);
+     const multiDirectorLabels = ["Partnership", "Pvt Ltd Co.", "LLP", "HUF(Karta)", "If other, please specify:"].map(normalize);
+     const maxCount = parseInt(selectedLabel);
+     let directorCount = 0;
+     if (normalizedLabel === "Sole Proprietor") {
+         directorCount = 1;
+     } else if (multiDirectorLabels.includes(normalizedLabel)) {
+         directorCount = 7;
+     }
+     if (directorCount > 0 && (isNaN(maxCount) || maxCount <= 0 || maxCount > 7)) {
+         sessionStorage.setItem("director_details_count", directorCount);
+         updateDirectorMatrixRowVisibility(directorCount);
+         }
+     else if (!isNaN(maxCount) && maxCount > 0 && maxCount <= 7) {
+         sessionStorage.setItem("director_details_count", maxCount);
+         updateDirectorMatrixRowVisibility(maxCount);
+     }
+     else if (directorCount > 0) {
+         sessionStorage.setItem("director_details_count", directorCount);
+         updateDirectorMatrixRowVisibility(directorCount);
+     }
+ });
 
 function updateRowCount(data_name) {
     const visibleRows = $('table.table-borderless[data-name="' + data_name + '"] tr[id]').not('.hide-row');
@@ -227,17 +219,17 @@ SurveyFormWidget.include({
         this._super.apply(this, arguments);
     },
 
-    _onNextScreenDone: function (options) {
-        const def = this._super.apply(this, arguments);
-        this.restoreVisibleRows();
-        const storedDirectorCount = sessionStorage.getItem("director_details_count");
-        if (storedDirectorCount) {
-            $("input[name$='_rowcount']").val(storedDirectorCount).trigger("change");
-            sessionStorage.removeItem("director_details_count");
-        }
-        this.restoreVisibleRows();
-        return def;
-    },
+
+     _onNextScreenDone: function (options) {
+         const def = this._super.apply(this, arguments);
+         const storedDirectorCount = sessionStorage.getItem("director_details_count");
+          if (storedDirectorCount) {
+              updateDirectorMatrixRowVisibility(storedDirectorCount);
+              sessionStorage.removeItem("director_details_count");
+         }
+         this.restoreVisibleRows();
+         return def;
+     },
 
     restoreVisibleRows: async function () {
         $("table.o_survey_question_matrix").each(function () {
