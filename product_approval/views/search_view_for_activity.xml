@@ -1,0 +1,38 @@
+<odoo>
+    <data>
+        <record id="product_template_search_view_inherit" model="ir.ui.view">
+            <field name="name">product.template.search.inherit.activities_today</field>
+            <field name="model">product.template</field>
+            <field name="inherit_id" ref="product.product_template_search_view"/>
+            <field name="arch" type="xml">
+                <xpath expr="//filter[@name='activities_today']" position="attributes">
+                    <attribute name="domain">
+                        [('my_activity_date_deadline', '=', context_today().strftime('%Y-%m-%d')),
+                         ('active','=', False),
+                         ('is_hidden_for_approval', '=', True),
+                         ('state', '!=', 'draft')
+                         ]
+                    </attribute>
+                </xpath>
+                <xpath expr="//filter[@name='activities_overdue']" position="attributes">
+                    <attribute name="domain">
+                        [('my_activity_date_deadline', '&lt;', context_today().strftime('%Y-%m-%d')),
+                         ('active','=', False),
+                         ('is_hidden_for_approval', '=', True),
+                         ('state', '!=', 'draft')
+                         ]
+                    </attribute>
+                </xpath>
+                <xpath expr="//filter[@name='activities_upcoming_all']" position="attributes">
+                    <attribute name="domain">
+                        [('my_activity_date_deadline', '&gt;', context_today().strftime('%Y-%m-%d')),
+                         ('active','=', False),
+                         ('is_hidden_for_approval', '=', True),
+                         ('state', '!=', 'draft')
+                         ]
+                    </attribute>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>

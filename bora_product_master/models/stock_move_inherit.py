@@ -15,7 +15,6 @@ class StockMove(models.Model):
 
     @api.depends('product_id.categ_id')
     def _compute_show_imei_column(self):
-        print('------------------------ ================ create stock.move.line ================ ------------------------')
         for move in self:
             external_id = ""
             category = move.product_id.categ_id
@@ -44,8 +43,8 @@ class StockMove(models.Model):
 class StockMoveLine(models.Model):
     _inherit = 'stock.move.line'
 
-    imei = fields.Char(string="IMEI", compute="_compute_imei", store=False)
-    imei2 = fields.Char(string='IMEI 2', compute="_compute_imei", store=False)
+    imei = fields.Char(string="IMEI", compute="_compute_imei", store=False, readonly=False)
+    imei2 = fields.Char(string='IMEI 2', compute="_compute_imei", store=False, readonly=False)
 
     def _compute_imei(self):
         for line in self:
