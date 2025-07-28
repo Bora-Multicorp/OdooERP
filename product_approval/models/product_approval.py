@@ -10,7 +10,7 @@ _logger = logging.getLogger(__name__)
 
 class ProductApproval(models.Model): 
     _inherit = 'product.template'
-    _description ='Product Approval'
+    _description ='Product Approval Queue'
 
     is_hidden_for_approval = fields.Boolean(default=False) 
 
@@ -90,8 +90,8 @@ class ProductApproval(models.Model):
                     break
             rec.assigned_to = next_user
 
-            # if rec.assigned_to:
-            #     rec._create_activity_and_send_notification()
+            if rec.assigned_to:
+                rec._create_activity_and_send_notification()
             
 
     def _update_state_based_on_approvals(self):

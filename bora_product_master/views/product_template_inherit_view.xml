@@ -81,6 +81,7 @@
                 </xpath>
                 <xpath expr="//page[@name='general_information']/group[1]" position="after">
                     <group >
+
                         <xpath expr="//group[@name='group_standard_price']" position="after">
                             <group string="Pricing &amp; Taxation">
                                 <!-- Sales Price field -->

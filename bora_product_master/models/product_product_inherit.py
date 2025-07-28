@@ -1,5 +1,5 @@
-from odoo import models
+# from odoo import models
 
-class ProductProductInherit(models.Model):
-    _inherit = 'product.product'
+# class ProductProductInherit(models.Model):
+#     _inherit = 'product.product'
 
