@@ -22,10 +22,10 @@
                     <field name="accessory_group" placeholder="Accessory Group" context="{'no_create_edit': True}"
                     required="categ_id == %(bora_product_master.product_category_type_accessory)d" 
                     invisible="categ_id != %(bora_product_master.product_category_type_accessory)d"/>
-                    <field name="specs_made_for" placeholder="Spec (Made For)" context="{'no_create_edit': True}"
+                    <field name="specs_made" placeholder="Spec (Made For)" context="{'no_create_edit': True}"
                     required="categ_id == %(bora_product_master.product_category_type_mobile)d" 
                     invisible="categ_id != %(bora_product_master.product_category_type_mobile)d"/>
-                    <field name="made_in" placeholder="Made In" context="{'no_create_edit': True}"
+                    <field name="made_country" placeholder="Made In" context="{'no_create_edit': True}"
                     required="categ_id == %(bora_product_master.product_category_type_mobile)d" 
                     invisible="categ_id != %(bora_product_master.product_category_type_mobile)d"/>
                 </xpath>
