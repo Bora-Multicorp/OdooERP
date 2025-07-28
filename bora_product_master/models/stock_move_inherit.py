@@ -43,10 +43,15 @@ class StockMove(models.Model):
 class StockMoveLine(models.Model):
     _inherit = 'stock.move.line'
 
-    imei = fields.Char(string="IMEI", compute="_compute_imei", store=False, readonly=False)
+    imei = fields.Char(string="IMEI", compute="_compute_imei", store=True, readonly=False)
     imei2 = fields.Char(string='IMEI 2', compute="_compute_imei", store=False, readonly=False)
 
     def _compute_imei(self):
+
+        for line in self:
+            if line.move_id.picking_id.picking_type_id.code == 'incoming':
+                return
+            
         for line in self:
             quant = self.env['stock.quant'].search([
                 ('product_id', '=', line.product_id.id),
@@ -86,6 +91,8 @@ class StockMoveLine(models.Model):
          
         #1. Validate IMEI number and Serial number
         for record in self:
+
+            print('--------------------- recd imei', record.imei)
 
             #1. Ensure IMEIs are not empty
             if record.move_id.show_IMEI_field2:
