@@ -51,7 +51,6 @@ class StockMoveLine(models.Model):
         for line in self:
             if line.move_id.picking_id.picking_type_id.code == 'incoming':
                 return
-
         for line in self:
             quant = self.env['stock.quant'].search([
                 ('product_id', '=', line.product_id.id),
@@ -121,6 +120,8 @@ class StockMoveLine(models.Model):
          
         #1. Validate IMEI number and Serial number
         for record in self:
+
+            print('--------------------- recd imei', record.imei)
 
             #1. Ensure IMEIs are not empty
             if record.move_id.show_IMEI_field2:
