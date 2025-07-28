@@ -23,10 +23,10 @@ class ProductTemplateInherit(models.Model):
     model = fields.Many2one('product.model', string='Product Model', help="Select a model")
     
     # delete this line in next release
-    specs_dubai = fields.Char(string="Specs [Dubai]", help="Specifications for the Dubai market")
-    made_for_dubai = fields.Boolean(string="Made for Dubai", help="Check if the product is made for the Dubai market")    
-    made_in_india = fields.Boolean(string="Made in India", help="Check if the product is made in India")
-    hsn_code = fields.Char()
+    # specs_dubai = fields.Char(string="Specs [Dubai]", help="Specifications for the Dubai market")
+    # made_for_dubai = fields.Boolean(string="Made for Dubai", help="Check if the product is made for the Dubai market")    
+    # made_in_india = fields.Boolean(string="Made in India", help="Check if the product is made in India")
+
 
 
     categ_id = fields.Many2one(

@@ -6,7 +6,7 @@ from odoo.exceptions import UserError, ValidationError
 class AllowProductVarientInArchive(models.Model):
 
     _inherit="product.template"
-    _description='Product KYC Approval'
+    _description='Product Approval'
 
 
 
