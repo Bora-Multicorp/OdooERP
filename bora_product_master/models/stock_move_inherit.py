@@ -15,7 +15,6 @@ class StockMove(models.Model):
 
     @api.depends('product_id.categ_id')
     def _compute_show_imei_column(self):
-        print('------------------------ ================ create stock.move.line ================ ------------------------')
         for move in self:
             external_id = ""
             category = move.product_id.categ_id

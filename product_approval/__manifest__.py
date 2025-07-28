@@ -14,11 +14,13 @@
         'views/product_approval_res_config.xml',
         'views/product_approval_views.xml',
         'views/action_product_approval_view.xml',
+        'views/search_view_for_activity.xml',
         'data/product_mail_templates.xml',
     ],
     'assets': {
         'web.assets_backend': [
             'product_approval/static/src/xml/ribbon.xml',
+            '/product_approval/static/src/js/make_form_readonly.js'
         ],
     },
     'installable': True,
