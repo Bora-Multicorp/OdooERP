@@ -7,29 +7,17 @@
             <field name="arch" type="xml">
                 <xpath expr="//filter[@name='activities_today']" position="attributes">
                     <attribute name="domain">
-                        [('my_activity_date_deadline', '=', context_today().strftime('%Y-%m-%d')),
-                         ('active','=', False),
-                         ('is_hidden_for_approval', '=', True),
-                         ('state', '!=', 'draft')
-                         ]
+                        [('my_activity_date_deadline', '=', context_today().strftime('%Y-%m-%d')), '|', ('active', '=', True), ('is_hidden_for_approval', '=', True)]
                     </attribute>
                 </xpath>
                 <xpath expr="//filter[@name='activities_overdue']" position="attributes">
                     <attribute name="domain">
-                        [('my_activity_date_deadline', '&lt;', context_today().strftime('%Y-%m-%d')),
-                         ('active','=', False),
-                         ('is_hidden_for_approval', '=', True),
-                         ('state', '!=', 'draft')
-                         ]
+                        [('my_activity_date_deadline', '&lt;', context_today().strftime('%Y-%m-%d')), '|', ('active', '=', True), ('is_hidden_for_approval', '=', True)]
                     </attribute>
                 </xpath>
                 <xpath expr="//filter[@name='activities_upcoming_all']" position="attributes">
                     <attribute name="domain">
-                        [('my_activity_date_deadline', '&gt;', context_today().strftime('%Y-%m-%d')),
-                         ('active','=', False),
-                         ('is_hidden_for_approval', '=', True),
-                         ('state', '!=', 'draft')
-                         ]
+                        [('my_activity_date_deadline', '&gt;', context_today().strftime('%Y-%m-%d')), '|', ('active', '=', True), ('is_hidden_for_approval', '=', True)]
                     </attribute>
                 </xpath>
             </field>
