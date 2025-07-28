@@ -163,55 +163,115 @@ class CustomContact(models.Model):
         action['domain'] = ['|', ('partner_id', '=', self.id), ('email', '=', self.email)]
         return action
 
-    def trigger_email_kyc_expiry_follow_up(self):
+    # def trigger_email_kyc_expiry_follow_up(self):
+    #     # According to email
+    #     today = fields.Date.today()
+    #     template = self.env.ref('custom_contact.kyc_expiry_reminder_template', raise_if_not_found=False)
+    #
+    #     # Get email_formatted list from approval config
+    #     approval_users = self.env['vendor.approval.config'].search([])
+    #     email_list = [user.user_id.email_formatted for user in approval_users if user.user_id and user.user_id.email]
+    #     email_to = ','.join(email_list) if email_list else False
+    #
+    #     # Day 0: KYC Expired
+    #     expired_partners = self.search([('deadline', '=', today)])
+    #     for partner in expired_partners:
+    #         if template and email_to:
+    #             template.with_context(mail_body_type='expired').send_mail(
+    #                 partner.id,
+    #                 force_send=True,
+    #                 email_values={'email_to': email_to}
+    #             )
+    #
+    #         update_vals = {
+    #             'deadline': False,
+    #             'is_kyc': False,
+    #             'is_approved': False,
+    #         }
+    #         if partner.is_vendor:
+    #             update_vals['supplier_rank'] = 0
+    #         if partner.is_customer:
+    #             update_vals['customer_rank'] = 0
+    #
+    #         partner.write(update_vals)
+    #
+    #         # Log note in chatter
+    #         partner.message_post(
+    #             body="KYC Expired: Deadline reached. Status reset.",
+    #             message_type="comment",
+    #             subtype_xmlid="mail.mt_note",
+    #         )
+    #
+    #     # Day 1–3: KYC Reminders
+    #     for days_left in [1, 2, 3]:
+    #         target_date = today + timedelta(days=days_left)
+    #         partners = self.search([('deadline', '=', target_date)])
+    #         for partner in partners:
+    #             if template and email_to:
+    #                 template.with_context(
+    #                     mail_body_type='reminder',
+    #                     days_left=days_left
+    #                 ).send_mail(
+    #                     partner.id,
+    #                     force_send=True,
+    #                     email_values={'email_to': email_to}
+    #                 )
+
+    def trigger_schedule_activity_kyc_expiry_follow_up(self):
         today = fields.Date.today()
-        template = self.env.ref('custom_contact.kyc_expiry_reminder_template', raise_if_not_found=False)
 
-        # Get email_formatted list from approval config
-        approval_users = self.env['vendor.approval.config'].search([])
-        email_list = [user.user_id.email_formatted for user in approval_users if user.user_id and user.user_id.email]
-        email_to = ','.join(email_list) if email_list else False
+        approval_users = self.env['vendor.approval.config'].search([]).mapped('user_id')
 
-        # Day 0: KYC Expired
-        expired_partners = self.search([('deadline', '=', today)])
-        for partner in expired_partners:
-            if template and email_to:
-                template.with_context(mail_body_type='expired').send_mail(
-                    partner.id,
-                    force_send=True,
-                    email_values={'email_to': email_to}
+        def schedule_kyc_activity(partner):
+            for user in approval_users:
+                # Schedule activity
+                partner.activity_schedule(
+                    act_type_xmlid='mail.mail_activity_data_todo',
+                    summary=_('KYC Expiry Reminder for %s - Deadline: %s') % (partner.name, partner.deadline),
+                    note=_('You have been assigned to review this KYC approval.'),
+                    user_id=user.id,
+                    date_deadline=fields.Date.context_today(partner),
+                )
+                # Push browser notification
+                self.env['bus.bus']._sendone(
+                    user.partner_id,
+                    'simple_notification',
+                    {
+                        'type': 'warning',
+                        'title': _('KYC Expiry Reminder for %s - Deadline: %s') % (partner.name, partner.deadline),
+                        'message': _('KYC Expiry Reminder for %s - Deadline: %s') % (partner.name, partner.deadline),
+                        'sticky': True,
+                    },
                 )
 
-            update_vals = {
+        # Day 0: Expired Partners — Reset KYC + Notify
+        expired_partners = self.search([('deadline', '=', today)])
+        print('2222222222', expired_partners)
+        for partner in expired_partners:
+            schedule_kyc_activity(partner)
+
+            vals = {
                 'deadline': False,
                 'is_kyc': False,
                 'is_approved': False,
             }
             if partner.is_vendor:
-                update_vals['supplier_rank'] = 0
+                vals['supplier_rank'] = 0
             if partner.is_customer:
-                update_vals['customer_rank'] = 0
+                vals['customer_rank'] = 0
 
-            partner.write(update_vals)
+            partner.write(vals)
 
-            # Log note in chatter
             partner.message_post(
-                body="KYC Expired: Deadline reached. Status reset.",
+                body=_("KYC Expired: Deadline reached. Status reset."),
                 message_type="comment",
                 subtype_xmlid="mail.mt_note",
             )
 
-        # Day 1–3: KYC Reminders
-        for days_left in [1, 2, 3]:
-            target_date = today + timedelta(days=days_left)
-            partners = self.search([('deadline', '=', target_date)])
-            for partner in partners:
-                if template and email_to:
-                    template.with_context(
-                        mail_body_type='reminder',
-                        days_left=days_left
-                    ).send_mail(
-                        partner.id,
-                        force_send=True,
-                        email_values={'email_to': email_to}
-                    )
+        # Day 1-3: Reminder Partners — Only Notify
+        for days_ahead in [1, 2, 3]:
+            future_date = today + timedelta(days=days_ahead)
+            future_partners = self.search([('deadline', '=', future_date)])
+            for partner in future_partners:
+                schedule_kyc_activity(partner)
+
