@@ -9,12 +9,12 @@
                         % ('o_survey_selected' if answer else '')"
                 >
                     <t t-if="col_label.sh_value_type == 'textbox'">
-                        <input type="text" class="form-control" t-att-name="'%s_%s' % (question.id, row_label.id)" t-att-data-row-id="row_label.id" t-att-data-col-id="col_label.id" t-att-value="answer.value_text_box if answer else None" />
+                        <input type="text" class="form-control text-uppercase" t-att-name="'%s_%s' % (question.id, row_label.id)" t-att-data-row-id="row_label.id" t-att-data-col-id="col_label.id" t-att-value="answer.value_text_box if answer else None" />
                     </t>
 
                     <t t-if="col_label.sh_value_type == 'free_text'">
                         <textarea
-                            class="form-control sh_textarea"
+                            class="form-control sh_textarea text-uppercase"
                             rows="3"
                             t-att-name="'%s_%s' % (question.id, row_label.id)"
                             t-att-data-row-id="row_label.id"
@@ -25,7 +25,7 @@
                         </textarea>
                     </t>
                     <t t-if="col_label.sh_value_type == 'que_sh_many2one'">
-                        <select class='form-control sh_m2o js_cls_sh_matrix_many2one_select' style="width:100%;"
+                        <select class='form-control sh_m2o js_cls_sh_matrix_many2one_select text-uppercase' style="width:100%;"
                                  t-att-data-question-type="col_label.sh_value_type"
                                  t-att-data-row-id="row_label.id"
                                  t-att-data-col-id="col_label.id"
@@ -100,7 +100,7 @@
                         <input
                             type="email"
                             placeholder="example@domain.com"
-                            class="form-control"
+                            class="form-control text-uppercase"
                             t-att-name="'%s_%s' % (question.id, row_label.id)"
                             t-att-data-row-id="row_label.id"
                             t-att-data-col-id="col_label.id"
