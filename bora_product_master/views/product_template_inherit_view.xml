@@ -65,7 +65,7 @@
                     <field name="product_tooltip" class="fst-italic text-muted" string="" invisible="not product_tooltip"/>
                     <field name="lot_valuated" invisible="tracking == 'none'" widget="confirm_boolean"/>
                     <field name="invoice_policy" required="1" invisible="not sale_ok or type == 'combo'"/>
-                    <field name="categ_id" string="Category" required="1"/>
+                    <field name="categ_id" string="Category" required="1" options="{'no_create': True, 'no_create_edit': True}"/>
                     <field name="is_dual_sim" invisible="not is_mobile_category_selected"/>
                 </xpath>
                 <xpath expr="//group[@name='group_standard_price']" position="attributes">
@@ -77,7 +77,7 @@
                     <!-- <field name="made_in_india"/> -->
                     <field name="loose_or_master_carton" required="1"/>
                     <field name="brand_id" required="1"/>
-                    <field name="model" required="1"/>
+                    <field name="model" required="1" options="{'no_create': True, 'no_create_edit': True}"/>
                 </xpath>
                 <xpath expr="//page[@name='general_information']/group[1]" position="after">
                     <group >
