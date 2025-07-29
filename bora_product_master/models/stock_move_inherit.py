@@ -65,7 +65,7 @@ class StockMoveLine(models.Model):
         move_lines = super().create(vals_list)
         for line in move_lines:
             if line.move_id and not line.imei:
-                # 1️⃣ First try: get IMEI from related incoming PO move lines
+                # 1️. First try: get IMEI from related incoming PO move lines
                 related_moves = self.env['stock.move.line'].search([
                     ('product_id', '=', line.product_id.id),
                     ('lot_id', '=', line.lot_id.id),
@@ -77,7 +77,7 @@ class StockMoveLine(models.Model):
                     line.imei = related_moves.imei
                     line.imei2 = related_moves.imei2
                 else:
-                    # 2️⃣ Fallback: try to get from stock.quant (Inventory Adjustments)
+                    # 2️. Fallback: try to get from stock.quant (Inventory Adjustments)
                     quant = self.env['stock.quant'].search([
                         ('product_id', '=', line.product_id.id),
                         ('lot_id', '=', line.lot_id.id),
