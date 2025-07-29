@@ -28,7 +28,7 @@ patch(FormController.prototype, {
             const value = getCurrentState();
             console.log("🔍 Current state value detected:", value);
 
-            if (value === "pending" || value === "rejected") {
+            if (value === "pending" || value === "rejected" || value === "confirmed") {
                 console.log(`⛔ Disabling form because state is "${value}"`);
                 return true;
             } else {
