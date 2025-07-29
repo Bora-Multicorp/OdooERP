@@ -75,8 +75,8 @@ class StockQuantInherit(models.Model):
         for record in self:
             is_dual_sim = record.product_id.product_tmpl_id.is_dual_sim
 
-            # print('is_dual_sim', is_dual_sim, record.imei, record.imei2)
-
+            if not record.lot_id.id:
+                raise ValidationError(_('Please enter serial number.'))
 
             #Ensure IMEIs are not empty
             if is_dual_sim:
