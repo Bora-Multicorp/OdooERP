@@ -191,7 +191,10 @@ class StockMoveLine(models.Model):
     @api.onchange('quant_id')
     def _onchange_quant_id_get_imei(self):
         for line in self:
-            line.imei = line.quant_id.imei
+            if line.quant_id.imei:
+                line.imei = line.quant_id.imei
+            if line.quant_id.imei2:
+                line.imei2 = line.quant_id.imei2
 
 
 
