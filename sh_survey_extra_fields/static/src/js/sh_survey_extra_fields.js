@@ -17,8 +17,8 @@ SurveyFormWidget.include({
         "change .js_cls_country_id": "_onChangeCountry",
         'change .sh_file_input': '_onChangeFileInput',
         "click .js_cls_sh_signature_clear_btn": "_onClickSignatureClearButton",
-        "input input[type='range'].o_survey_question_email_box": "_onInputRangeValueChange",
-        //"change input[type='radio']": "_onRadioSelectionChange",  // 👈 Add this line
+        'change input[type="radio"]': '_onRadioSelectionChange',
+        'input input.o_survey_question_text_box': '_onLegalNameChange',
     }),
 
     /**
@@ -81,7 +81,6 @@ SurveyFormWidget.include({
     // Normalize the key
     const rawKey = matrixColumnLabel || labelText;
     const sizeKey = rawKey.replace(/\s+/g, ' ').trim();
-    console.log('Derived sizeKey:', sizeKey);
 
     const sizeLimits = {
         'aadhaar card': 10 * 1024 * 1024,
@@ -100,7 +99,6 @@ SurveyFormWidget.include({
     };
 
     const maxSizePerField = sizeLimits[sizeKey] ?? 10 * 1024 * 1024;  // default 10MB if unmatched
-    console.log('maxSizePerField (bytes):', maxSizePerField);
 
     const isShopVideos = sizeKey.includes("shop videos");
     const isShopPhotos = sizeKey.includes("shop photos");
@@ -139,7 +137,6 @@ SurveyFormWidget.include({
         }
 
         totalSize += file.size;
-        console.log('Total size now (bytes):', totalSize);
         if (totalSize > maxSizePerField) {
             alert(
                 `Total upload for "${sizeKey}" exceeds ${ (maxSizePerField / 1024 / 1024).toFixed(1) } MB. `
@@ -228,33 +225,88 @@ SurveyFormWidget.include({
 //    $fileUpload.val(''); // reset input after processing
 //},
 
+/**
+         * Handle radio button selection
+         */
+        _onRadioSelectionChange: function (ev) {
+            const $radio = $(ev.currentTarget);
 
+            const isChecked = $radio.prop('checked');
+            const $radioWrapper = $radio.closest('.js_question-wrapper');
+            const rawLabel = $radioWrapper.text();
+            const normalizedLabel = rawLabel.replace(/\s+/g, ' ').trim();
 
+            if (!normalizedLabel.includes("If Trade Name is same as Legal Name")) {
+                return;
+            }
 
-    _onRadioSelectionChange: function (ev) {
-    const $radio = $(ev.currentTarget);
-    const radioValue = $radio.val();
-    const isSameTradeName = $radio.closest('.js_question-wrapper')
-        .find('.o_survey_question_title, h3 span')
-        .text()
-        .trim()
-        .toLowerCase()
-        .includes("if trade name is same");
+            const selectedAnswerLabel = $radio.closest('label').text().replace(/\s+/g, ' ').trim();
+            const matchPhrases = [
+                "Yes",
+                "Yes (If Trade Name is same as Legal Name)",
+            ];
 
-    if (!isSameTradeName) return;
+            const matchedYes = matchPhrases.some((phrase) =>
+                selectedAnswerLabel.toLowerCase().includes(phrase.toLowerCase())
+            );
 
-    const isSelected = $radio.is(":checked");
-    const tradeNameInput = $("input[data-question-type='char_box'][name='business_trade_name_kyc_survey']"); // update name if needed
-    const legalNameInput = $("input[data-question-type='char_box'][name='business_name_kyc_survey']"); // update name if needed
+            const $legalNameInput = $('.js_question-wrapper')
+                .filter((_, el) => $(el).text().replace(/\s+/g, ' ').trim().includes("Business Legal Name"))
+                .find('input.o_survey_question_text_box');
 
-    if (isSelected && radioValue.includes("Yes")) {
-        tradeNameInput.val(legalNameInput.val());
-        tradeNameInput.prop("readonly", true);
-    } else {
-        tradeNameInput.val("");
-        tradeNameInput.prop("readonly", false);
-    }
-},
+            const $tradeNameInput = $('.js_question-wrapper')
+                .filter((_, el) => $(el).text().replace(/\s+/g, ' ').trim().includes("Business Trade Name"))
+                .find('input.o_survey_question_text_box');
+
+            if (!$legalNameInput.length || !$tradeNameInput.length) {
+                console.warn('⚠️ Could not find Legal Name or Trade Name input.');
+                return;
+            }
+
+            if (isChecked && matchedYes) {
+                const legalName = $legalNameInput.val();
+                $tradeNameInput.val(legalName).prop('readonly', true);
+            } else {
+                $tradeNameInput.val('').prop('readonly', false);
+            }
+        },
+
+        /**
+         * If user types in Legal Name and radio "Yes" is selected, update Trade Name
+         */
+        _onLegalNameChange: function () {
+            const $radioWrapper = $('.js_question-wrapper').filter((_, el) =>
+                $(el).text().replace(/\s+/g, ' ').trim().includes("If Trade Name is same as Legal Name")
+            );
+
+            const $selectedYesRadio = $radioWrapper.find('input[type="radio"]:checked');
+            const selectedAnswerLabel = $selectedYesRadio.closest('label').text().replace(/\s+/g, ' ').trim();
+
+            const matchPhrases = [
+                "Yes",
+                "Yes (If Trade Name is same as Legal Name)",
+            ];
+
+            const matchedYes = matchPhrases.some((phrase) =>
+                selectedAnswerLabel.toLowerCase().includes(phrase.toLowerCase())
+            );
+
+            if (!matchedYes) return;
+
+            const $legalNameInput = $('.js_question-wrapper')
+                .filter((_, el) => $(el).text().replace(/\s+/g, ' ').trim().includes("Business Legal Name"))
+                .find('input.o_survey_question_text_box');
+
+            const $tradeNameInput = $('.js_question-wrapper')
+                .filter((_, el) => $(el).text().replace(/\s+/g, ' ').trim().includes("Business Trade Name"))
+                .find('input.o_survey_question_text_box');
+
+            if ($legalNameInput.length && $tradeNameInput.length) {
+                const legalName = $legalNameInput.val();
+                $tradeNameInput.val(legalName);
+            }
+        },
+
 
     /**
      * Check if the URL is a valid or not.
