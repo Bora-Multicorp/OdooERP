@@ -188,6 +188,11 @@ class StockMoveLine(models.Model):
             if len(results) > 0:
                 raise ValidationError(_('Serial number must be unique, the Serial number(%s) is already used in another stock item.' % record.lot_name))
 
+    @api.onchange('quant_id')
+    def _onchange_quant_id_get_imei(self):
+        for line in self:
+            line.imei = line.quant_id.imei
+
 
 
 
