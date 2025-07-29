@@ -90,29 +90,8 @@ class StockMoveLine(models.Model):
 
         return move_lines
 
-
-    # @api.model_create_multi
-    # def create(self, vals_list):
-    #     move_lines = super().create(vals_list)
-    #     for line in move_lines:
-    #         if line.move_id and not line.imei:
-    #             # Try to find related incoming move lines
-    #             related_moves = self.env['stock.move.line'].search([
-    #                 ('product_id', '=', line.product_id.id),
-    #                 ('lot_id', '=', line.lot_id.id),
-    #                 ('location_dest_id.usage', '=', 'internal'),
-    #                 ('location_id.usage', '=', 'supplier'),
-    #             ], limit=1)
-
-    #             if related_moves:
-    #                 line.imei = related_moves.imei
-    #                 line.imei2 = related_moves.imei2
-    #     return move_lines
-
-
     
     def validate_imei_and_serial_number(self):
-
         # some time it shows None
         # if self._context.get('active_model') != 'purchase.order':
         #     return 
@@ -120,8 +99,6 @@ class StockMoveLine(models.Model):
          
         #1. Validate IMEI number and Serial number
         for record in self:
-
-            print('--------------------- recd imei', record.imei)
 
             #1. Ensure IMEIs are not empty
             if record.move_id.show_IMEI_field2:
@@ -226,6 +203,7 @@ class StockPickingInherit(models.Model):
 
     def button_validate(self):
         packaging_category = self.env.ref('bora_product_master.product_category_type_packaging_material', raise_if_not_found=False)
+
 
         for picking in self:
             for line in picking.move_line_ids:

@@ -4,6 +4,8 @@ from datetime import date
 from dateutil.relativedelta import relativedelta
 
 
+# For
+# 1. Inventory aadjustment
 
 class StockQuantInherit(models.Model):
     _inherit = 'stock.quant'
@@ -13,7 +15,7 @@ class StockQuantInherit(models.Model):
     active_months = fields.Char(string="Activated Months", compute="_compute_active_months", store=True)
     activation_date = fields.Date(string="Activation Date", help="Mobile phone activation date.")
     activation_status = fields.Boolean(string='Active', help="Indicates if the mobile phone is activated or not.")
-
+    origin_source = ''
         
 
         
@@ -42,6 +44,8 @@ class StockQuantInherit(models.Model):
 
     @api.model_create_multi
     def create(self, vals_list):
+
+
         # dont remamber what this code for 
         for vals in vals_list:
             lot_id = vals.get('lot_id')
@@ -53,26 +57,25 @@ class StockQuantInherit(models.Model):
                     vals['imei'] = move_line.imei or ''
                     vals['imei2'] = move_line.imei2 or ''
 
-        self._check_all_validations()
+        if self.env.context.get('inventory_mode'):
+            self._check_all_validations()
         return super(StockQuantInherit, self).create(vals_list)
 
 
 
     def write(self, vals):
-        self._check_all_validations()
+        if self.env.context.get('inventory_mode'):
+            self._check_all_validations()  
         return super(StockQuantInherit, self).write(vals)
+
 
 
     def _check_all_validations(self):
 
-
-        if self._context.get('active_model') != 'product.template':
-            return 
-        
-
-
         for record in self:
             is_dual_sim = record.product_id.product_tmpl_id.is_dual_sim
+
+            # print('is_dual_sim', is_dual_sim, record.imei, record.imei2)
 
 
             #Ensure IMEIs are not empty
@@ -99,11 +102,13 @@ class StockQuantInherit(models.Model):
                     raise ValidationError(_('Both IMEI numbers must be different'))
                 
                 imei_results = self.env['stock.quant'].search([
+                    ('id', '!=', record.id),
                     '|',
                     ('imei', '=', record.imei),
                     ('imei2', '=', record.imei)
                 ])
                 imei2_results = self.env['stock.quant'].search([
+                    ('id', '!=', record.id),
                     '|',
                     ('imei', '=', record.imei2),
                     ('imei2', '=', record.imei2)
@@ -116,11 +121,12 @@ class StockQuantInherit(models.Model):
 
             else:
                 result_items = self.env['stock.quant'].search([
+                    ('id', '!=', record.id),
                     '|',
                     ('imei', '=', record.imei),
                     ('imei2', '=', record.imei)
                 ])
 
-                if len(result_items) > 1:
+                if len(result_items) > 0:
                     raise ValidationError(_('IMEI number must be unique, the IMEI number(%s) is already used in another stock item.' % record.imei))
 
