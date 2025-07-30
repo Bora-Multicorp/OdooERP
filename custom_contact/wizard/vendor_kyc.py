@@ -252,7 +252,7 @@ class VendorKycWizard(models.TransientModel):
                                    help="Short Photos")
 
     shop_videos = fields.Many2many('ir.attachment', 'vendor_kyc_shop_videos_rel', 'wizard_id', 'attachment_id',
-                                   string="Shop Videos", required=False,
+                                   string="Shop Videos", required=True,
                                    help="Short Video")
     bank_detail = fields.One2many('bank.detail', 'kyc_wizard_id', string="Bank Detail")
     address_detail = fields.One2many('address.detail', 'kyc_wizard_id', string="Address Detail")
@@ -459,10 +459,16 @@ class VendorKycWizard(models.TransientModel):
         #         })
 
         # Update Partner
+        if not self.partner_id.email and self.email:
+            self.partner_id.email = self.email
+
+        if not self.partner_id.vat and self.gst_no:
+            self.partner_id.vat = self.gst_no
+
+        if not self.partner_id.l10n_in_pan and self.pan_no:
+            self.partner_id.l10n_in_pan = self.pan_no
+
         self.partner_id.write({
-            'email': self.email,
-            'vat': self.gst_no,
-            'l10n_in_pan': self.pan_no,
             'is_kyc': True,
             'rejection_date': False,
             'rejection_reason': False,
