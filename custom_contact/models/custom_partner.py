@@ -246,7 +246,6 @@ class CustomContact(models.Model):
 
         # Day 0: Expired Partners — Reset KYC + Notify
         expired_partners = self.search([('deadline', '=', today)])
-        print('2222222222', expired_partners)
         for partner in expired_partners:
             schedule_kyc_activity(partner)
 

@@ -263,6 +263,7 @@
                     <!--<field name="director_name"/>
                     <field name="director_phone"/>
                     <field name="director_email"/>-->
+                    <field name="activity_ids" optional="show" widget="list_activity"/>
                     <field name="create_date"/>
                     <field name="deadline"/>
                     <field name="state"/>
