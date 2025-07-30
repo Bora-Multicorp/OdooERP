@@ -26,20 +26,44 @@ export class CharField extends Component {
     };
     static defaultProps = { dynamicPlaceholder: false };
 
-    setup() {
-        this.input = useRef("input");
-        if (this.props.dynamicPlaceholder) {
-            const dynamicPlaceholder = useDynamicPlaceholder(this.input);
-            useExternalListener(document, "keydown", dynamicPlaceholder.onKeydown);
-            useEffect(() =>
-                dynamicPlaceholder.updateModel(this.props.dynamicPlaceholderModelReferenceField)
-            );
-        }
-        useInputField({
-            getValue: () => this.props.record.data[this.props.name] || "",
-            parse: (v) => this.parse(v),
-        });
+//    setup() {
+//        this.input = useRef("input");
+//        if (this.props.dynamicPlaceholder) {
+//            const dynamicPlaceholder = useDynamicPlaceholder(this.input);
+//            useExternalListener(document, "keydown", dynamicPlaceholder.onKeydown);
+//            useEffect(() =>
+//                dynamicPlaceholder.updateModel(this.props.dynamicPlaceholderModelReferenceField)
+//            );
+//        }
+//        useInputField({
+//            getValue: () => this.props.record.data[this.props.name] || "",
+//            parse: (v) => this.parse(v),
+//        });
+//    }
+
+setup() {
+    this.input = useRef("input");
+
+    if (this.props.dynamicPlaceholder) {
+        const dynamicPlaceholder = useDynamicPlaceholder(this.input);
+        useExternalListener(document, "keydown", dynamicPlaceholder.onKeydown);
+        useEffect(() =>
+            dynamicPlaceholder.updateModel(this.props.dynamicPlaceholderModelReferenceField)
+        );
     }
+
+    useInputField({
+        getValue: () => {
+            const value = this.props.record.data[this.props.name] || "";
+            return value.toUpperCase();
+        },
+        parse: (v) => {
+            const val = this.shouldTrim ? v.trim() : v;
+            return val.toUpperCase();
+        },
+    });
+}
+
 
     get shouldTrim() {
         return this.props.record.fields[this.props.name].trim && !this.props.isPassword;
