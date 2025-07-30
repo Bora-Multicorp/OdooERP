@@ -3,6 +3,7 @@
 from odoo import api, fields, models, _
 from odoo.exceptions import ValidationError
 import re
+import base64
 
 class VendorKycWizard(models.TransientModel):
     _name = 'vendor.kyc.wizard'
@@ -32,13 +33,19 @@ class VendorKycWizard(models.TransientModel):
                         f"Each file in '{self._fields[field_name].string}' must be ≤ {max_size // (1024 * 1024)} MB."
                     )
 
-
     @api.constrains('partner_llp')
     def _check_partner_llp_size(self):
-        max_size = 10 * 1024 * 1024
+        max_size = 10 * 1024 * 1024  # 10 MB
+
         for rec in self:
-            if rec.partner_llp and len(rec.partner_llp) > max_size:
-                raise ValidationError(_("Partner LLP document exceeds the maximum size of 10 MB."))
+            if rec.partner_llp:
+                try:
+                    decoded_size = len(base64.b64decode(rec.partner_llp))
+                    if decoded_size > max_size:
+                        raise ValidationError(_("Partner LLP document exceeds the maximum size of 10 MB."))
+                except Exception:
+                    raise ValidationError(_("Invalid Partner LLP file format."))
+
 
     @api.constrains('directors_detail')
     def _check_duplicate_directors_detail_emails(self):
@@ -53,7 +60,7 @@ class VendorKycWizard(models.TransientModel):
                         )
                     emails.append(lower_email)
 
-    @api.constrains('director_phone', 'directors_detail', 'address_detail')
+    @api.constrains('directors_detail', 'address_detail')
     def _check_phone_numbers(self):
         phone_pattern = re.compile(r'^[0-9]{10}$')  # Validates 10-digit numbers
 
@@ -86,7 +93,7 @@ class VendorKycWizard(models.TransientModel):
                         "→ You entered: %s"
                     ) % (idx, addr.business_city or "N/A", addr.business_phone))
 
-    @api.constrains('email', 'director_email', 'directors_detail', 'address_detail')
+    @api.constrains('email', 'directors_detail', 'address_detail')
     def _check_email_format(self):
         email_pattern = re.compile(r'^[\w\.-]+@[\w\.-]+\.\w{2,}$')
         for rec in self:
@@ -496,13 +503,17 @@ class DirectorDetail(models.TransientModel):
 
     @api.constrains('aadhaar_card', 'pan_card')
     def _check_director_file_size(self):
-        max_size = 10 * 1024 * 1024
+        max_size = 10 * 1024 * 1024  # 10 MB in bytes
         for rec in self:
-            if rec.aadhaar_card and len(rec.aadhaar_card) > max_size:
-                raise ValidationError("Aadhaar Card must be ≤ 10 MB.")
-            if rec.pan_card and len(rec.pan_card) > max_size:
-                raise ValidationError("PAN Card must be ≤ 10 MB.")
+            if rec.aadhaar_card:
+                aadhaar_binary = base64.b64decode(rec.aadhaar_card)
+                if len(aadhaar_binary) > max_size:
+                    raise ValidationError("Aadhaar Card must be ≤ 10 MB.")
 
+            if rec.pan_card:
+                pan_binary = base64.b64decode(rec.pan_card)
+                if len(pan_binary) > max_size:
+                    raise ValidationError("PAN Card must be ≤ 10 MB.")
 
 ##### Bank Details
 class BankDetail(models.TransientModel):
