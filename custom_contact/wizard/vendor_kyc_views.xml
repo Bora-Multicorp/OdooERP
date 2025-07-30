@@ -8,7 +8,7 @@
                 <sheet>
                     <group>
                         <field name="partner_id" readonly="1" invisible="1"/>
-                        <field name="email" placeholder="Your Answer"/>
+                        <field name="email" placeholder="Your Answer" widget="upper_case"/>
                         <field name="point_of_contact" placeholder="Your Answer" widget="upper_case"/>
                         <field name="poc_user" options="{'no_open': True, 'no_create': True, 'no_create_edit': True}"/>
                     </group>
@@ -22,7 +22,7 @@
                                 <field name="business_city" placeholder="Your Answer" widget="upper_case"/>
                                 <field name="business_pincode" placeholder="Your Answer"/>
                                 <field name="business_phone" placeholder="Your Answer"/>
-                                <field name="business_email" placeholder="Your Answer"/>
+                                <field name="business_email" placeholder="Your Answer" widget="upper_case"/>
                                 <field name="business_state_id" options="{'no_create': True, 'no_create_edit': True}"/>
                                 <field name="business_country_id"
                                        options="{'no_create': True, 'no_create_edit': True}"/>
@@ -32,7 +32,7 @@
                                 <field name="business_city" placeholder="Your Answer" widget="upper_case"/>
                                 <field name="business_pincode" placeholder="Your Answer"/>
                                 <field name="business_phone" placeholder="Your Answer"/>
-                                <field name="business_email" placeholder="Your Answer"/>
+                                <field name="business_email" placeholder="Your Answer" widget="upper_case"/>
                                 <field name="business_state_id" options="{'no_create': True, 'no_create_edit': True}"/>
                                 <field name="business_country_id"
                                        options="{'no_create': True, 'no_create_edit': True}"/>
@@ -55,7 +55,7 @@
                                 <field name="designation" widget="upper_case"/>
                                 <field name="name" widget="upper_case"/>
                                 <field name="contact_no"/>
-                                <field name="email"/>
+                                <field name="email" widget="upper_case"/>
                                 <field name="aadhaar_card_filename" column_invisible="1"/>
                                 <field name="aadhaar_card" options="{'accepted_file_extensions': 'image/*, .pdf'}"
                                        filename="aadhaar_card_filename"/>
@@ -67,7 +67,7 @@
                                 <field name="designation" widget="upper_case"/>
                                 <field name="name" widget="upper_case"/>
                                 <field name="contact_no"/>
-                                <field name="email"/>
+                                <field name="email" widget="upper_case"/>
                                 <field name="aadhaar_card_filename" invisible="1"/>
                                 <field name="aadhaar_card" options="{'accepted_file_extensions': 'image/*, .pdf'}"
                                        filename="aadhaar_card_filename"/>
@@ -121,7 +121,7 @@
                                options="{'accepted_file_extensions': 'image/*', 'number_of_files': 10}"/>
                         <field name="shop_videos" widget="many2many_binary"
                                options="{'accepted_file_extensions': 'video/*', 'number_of_files': 10}"/>
-                        <field name="comp_google_loc" placeholder="eg. Lat : 22.3511148 Long: 78.6677428"/>
+                        <field name="comp_google_loc" placeholder="eg. Lat : 22.3511148 Long: 78.6677428" widget="upper_case"/>
                         <field name="partner_llp_filename" invisible="1"/>
                         <field name="partner_llp" filename="partner_llp_filename"
                                required="const_business in ['Partnership', 'LLP']"
