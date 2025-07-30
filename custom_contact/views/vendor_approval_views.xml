@@ -33,7 +33,7 @@
                     <sheet>
                         <group>
                             <field name="partner_id" readonly="1"/>
-                            <field name="email" placeholder="Your Answer" readonly="state not in ('draft')"/>
+                            <field name="email" widget="upper_case" readonly="state not in ('draft')"/>
                             <field name="point_of_contact" placeholder="Your Answer" widget="upper_case"
                                    readonly="state not in ('draft')"/>
                             <field name="poc_user"
@@ -52,7 +52,7 @@
                                     <field name="business_city" placeholder="Your Answer" widget="upper_case"/>
                                     <field name="business_pincode" placeholder="Your Answer"/>
                                     <field name="business_phone" placeholder="Your Answer"/>
-                                    <field name="business_email" placeholder="Your Answer"/>
+                                    <field name="business_email" placeholder="Your Answer" widget="upper_case"/>
                                     <field name="business_state_id"
                                            options="{'no_create': True, 'no_create_edit': True}"/>
                                     <field name="business_country_id"
@@ -63,7 +63,7 @@
                                     <field name="business_city" placeholder="Your Answer" widget="upper_case"/>
                                     <field name="business_pincode" placeholder="Your Answer"/>
                                     <field name="business_phone" placeholder="Your Answer"/>
-                                    <field name="business_email" placeholder="Your Answer"/>
+                                    <field name="business_email" placeholder="Your Answer" widget="upper_case"/>
                                     <field name="business_state_id"
                                            options="{'no_create': True, 'no_create_edit': True}"/>
                                     <field name="business_country_id"
@@ -91,7 +91,7 @@
                                     <field name="designation" widget="upper_case"/>
                                     <field name="name" widget="upper_case"/>
                                     <field name="contact_no"/>
-                                    <field name="email"/>
+                                    <field name="email" widget="upper_case"/>
                                     <field name="aadhaar_card_filename" column_invisible="1"/>
                                     <field name="aadhaar_card" filename="aadhaar_card_filename" options="{'accepted_file_extensions': 'image/*, .pdf'}"/>
                                     <field name="pan_card_filename" readonly="1" column_invisible="1"/>
@@ -101,7 +101,7 @@
                                     <field name="designation" widget="upper_case"/>
                                     <field name="name" widget="upper_case"/>
                                     <field name="contact_no"/>
-                                    <field name="email"/>
+                                    <field name="email" widget="upper_case"/>
                                     <field name="aadhaar_card_filename" invisible="1"/>
                                     <field name="aadhaar_card" filename="aadhaar_card_filename" options="{'accepted_file_extensions': 'image/*, .pdf'}"/>
                                     <field name="pan_card_filename" readonly="1" invisible="1"/>
@@ -164,7 +164,7 @@
                             <field name="shop_videos" widget="many2many_binary"
                                    readonly="state not in ['draft']"
                                    options="{'accepted_file_extensions': 'video/*', 'number_of_files': 10}"/>
-                            <field name="comp_google_loc" placeholder="eg. Lat : 22.3511148 Long: 78.6677428"
+                            <field name="comp_google_loc" placeholder="eg. Lat : 22.3511148 Long: 78.6677428" widget="upper_case"
                                    readonly="state not in ['draft']"/>
                             <field name="incorporation_certificate" widget="many2many_binary"
                                options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 5}"
