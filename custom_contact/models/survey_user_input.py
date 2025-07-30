@@ -21,6 +21,7 @@ class SurveyUserInput(models.Model):
             Q("custom_contact.point_of_contact_kyc_survey").id: "point_of_contact",
             Q("custom_contact.company_point_of_contact_kyc_survey").id: "poc_user",
             Q("custom_contact.business_name_kyc_survey").id: "business_legal_name",
+            Q("custom_contact.is_same_trade_name_kyc_survey").id: "is_same_trade_name",
             Q("custom_contact.business_trade_name_kyc_survey").id: "business_trade_name",
             Q("custom_contact.business_constitution_kyc_survey").id: "const_business",
             Q("custom_contact.no_of_director_kyc_survey").id: "no_partner_director",

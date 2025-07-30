@@ -78,6 +78,22 @@
             <field name="constr_mandatory">True</field>
             <field name="question_placeholder">Your Answer</field>
         </record>
+        <!-- If Trade Name is same as Legal Name -->
+        <record model="survey.question" id="is_same_trade_name_kyc_survey">
+            <field name="title"></field>
+            <field name="survey_id" ref="vendor_kyc_form_survey"/>
+            <field name="sequence">5</field>
+            <field name="question_type">simple_choice</field>
+            <field name="constr_mandatory">False</field>
+            <field name="description" type="html">
+                <p>If Trade Name is same as Legal Name</p>
+            </field>
+        </record>
+        <record model="survey.question.answer" id="is_same_trade_name_kyc_survey_sug1">
+            <field name="question_id" ref="is_same_trade_name_kyc_survey"/>
+            <field name="sequence">1</field>
+            <field name="value">Yes</field>
+        </record>
         <!-- Business Trade Name -->
         <record model="survey.question" id="business_trade_name_kyc_survey">
             <field name="title">Business Trade Name</field>
@@ -87,8 +103,11 @@
             <field name="constr_mandatory">True</field>
             <field name="question_placeholder">Your Answer</field>
             <field name="description" type="html">
-                <p>If same name as above, Please fill the name again</p>
+                <p></p>
             </field>
+            <!--<field name="description" type="html">
+                <p>If same name as above, Please fill the name again</p>
+            </field>-->
         </record>
         <!-- Principal Place of Business -->
         <!--<record model="survey.question" id="principal_places_kyc_survey">
