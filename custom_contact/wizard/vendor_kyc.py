@@ -3,6 +3,8 @@
 from odoo import api, fields, models, _
 from odoo.exceptions import ValidationError
 import re
+import base64
+
 
 class VendorKycWizard(models.TransientModel):
     _name = 'vendor.kyc.wizard'
@@ -22,23 +24,43 @@ class VendorKycWizard(models.TransientModel):
             'moa_aoa': (5, 10 * 1024 * 1024),
             'electricity_bill': (5, 10 * 1024 * 1024),
         }
-        for field_name, (max_count, max_size) in limits.items():
-            attachments = getattr(self, field_name)
-            if len(attachments) > max_count:
-                raise ValidationError(f"Only {max_count} file(s) allowed for '{self._fields[field_name].string}'.")
-            for attachment in attachments:
-                if attachment.file_size and attachment.file_size > max_size:
-                    raise ValidationError(
-                        f"Each file in '{self._fields[field_name].string}' must be ≤ {max_size // (1024 * 1024)} MB."
-                    )
 
+        for rec in self:
+            for field_name, (max_count, max_size) in limits.items():
+                attachments = getattr(rec, field_name)
+                label = rec._fields[field_name].string
+
+                if len(attachments) > max_count:
+                    raise ValidationError(f"Only {max_count} file(s) allowed for '{label}'.")
+
+                for attachment in attachments:
+                    try:
+                        if attachment.file_size and attachment.file_size > max_size:
+                            raise ValidationError(
+                                f"Each file in '{label}' must be ≤ {max_size // (1024 * 1024)} MB."
+                            )
+                        elif attachment.datas:
+                            decoded_size = len(base64.b64decode(attachment.datas))
+                            if decoded_size > max_size:
+                                raise ValidationError(
+                                    f"Each file in '{label}' must be ≤ {max_size // (1024 * 1024)} MB."
+                                )
+                    except Exception:
+                        raise ValidationError(f"Invalid file format in '{label}'.")
 
     @api.constrains('partner_llp')
     def _check_partner_llp_size(self):
-        max_size = 10 * 1024 * 1024
+        max_size = 10 * 1024 * 1024  # 10 MB
+
         for rec in self:
-            if rec.partner_llp and len(rec.partner_llp) > max_size:
-                raise ValidationError(_("Partner LLP document exceeds the maximum size of 10 MB."))
+            if rec.partner_llp:
+                try:
+                    decoded_size = len(base64.b64decode(rec.partner_llp))
+                    if decoded_size > max_size:
+                        raise ValidationError(_("Partner LLP document exceeds the maximum size of 10 MB."))
+                except Exception:
+                    raise ValidationError(_("Invalid Partner LLP file format."))
+
 
     @api.constrains('directors_detail')
     def _check_duplicate_directors_detail_emails(self):
@@ -202,7 +224,8 @@ class VendorKycWizard(models.TransientModel):
     poc_user = fields.Many2one('res.users', string="Point of Contact to Vendor", default=lambda self: self.env.user,
                                readonly=1)
     business_legal_name = fields.Char("Business Legal Name", required=True)
-    is_same_trade_name = fields.Boolean(string="If Trade Name is same as Legal Name", help="Tick if trade name is same as legal name")
+    is_same_trade_name = fields.Boolean(string="If Trade Name is same as Legal Name",
+                                        help="Tick if trade name is same as legal name")
     business_trade_name = fields.Char("Business Trade Name", required=True)
     const_business = fields.Selection([('Sole Proprietor', 'Sole Proprietor'),
                                        ('Partnership', 'Partnership'),
@@ -496,12 +519,17 @@ class DirectorDetail(models.TransientModel):
 
     @api.constrains('aadhaar_card', 'pan_card')
     def _check_director_file_size(self):
-        max_size = 10 * 1024 * 1024
+        max_size = 10 * 1024 * 1024  # 10 MB in bytes
         for rec in self:
-            if rec.aadhaar_card and len(rec.aadhaar_card) > max_size:
-                raise ValidationError("Aadhaar Card must be ≤ 10 MB.")
-            if rec.pan_card and len(rec.pan_card) > max_size:
-                raise ValidationError("PAN Card must be ≤ 10 MB.")
+            if rec.aadhaar_card:
+                aadhaar_binary = base64.b64decode(rec.aadhaar_card)
+                if len(aadhaar_binary) > max_size:
+                    raise ValidationError("Aadhaar Card must be ≤ 10 MB.")
+
+            if rec.pan_card:
+                pan_binary = base64.b64decode(rec.pan_card)
+                if len(pan_binary) > max_size:
+                    raise ValidationError("PAN Card must be ≤ 10 MB.")
 
 
 ##### Bank Details
@@ -517,7 +545,6 @@ class BankDetail(models.TransientModel):
     bank_address = fields.Char(string="Bank Address", required=True)
     bank_cheque_attachments = fields.Many2many('ir.attachment', 'wizard_bank_detail_cheque_rel', 'kyc_wizard_id',
                                                'attachment_id', string="Cancelled Cheques", required=True)
-
 
     @api.constrains('account_no', 'ifsc_code')
     def _check_account_and_ifsc(self):
@@ -539,16 +566,38 @@ class BankDetail(models.TransientModel):
                     "→ You entered: %s"
                 ) % (rec.ifsc_code or ''))
 
+    # @api.constrains('bank_cheque_attachments')
+    # def _check_cheque_files(self):
+    #     max_count = 1
+    #     max_size = 10 * 1024 * 1024
+    #     for rec in self:
+    #         if len(rec.bank_cheque_attachments) > max_count:
+    #             raise ValidationError("Only 1 Cancelled Cheque file is allowed.")
+    #         for att in rec.bank_cheque_attachments:
+    #             if att.file_size and att.file_size > max_size:
+    #                 raise ValidationError("Cancelled Cheque must be ≤ 10 MB.")
+
     @api.constrains('bank_cheque_attachments')
     def _check_cheque_files(self):
         max_count = 1
-        max_size = 10 * 1024 * 1024
+        max_size = 10 * 1024 * 1024  # 10 MB in bytes
+
         for rec in self:
-            if len(rec.bank_cheque_attachments) > max_count:
+            attachments = rec.bank_cheque_attachments
+            if len(attachments) > max_count:
                 raise ValidationError("Only 1 Cancelled Cheque file is allowed.")
-            for att in rec.bank_cheque_attachments:
-                if att.file_size and att.file_size > max_size:
-                    raise ValidationError("Cancelled Cheque must be ≤ 10 MB.")
+
+            for att in attachments:
+                if att.file_size:
+                    if att.file_size > max_size:
+                        raise ValidationError("Cancelled Cheque must be ≤ 10 MB.")
+                elif att.datas:
+                    try:
+                        actual_size = len(base64.b64decode(att.datas))
+                        if actual_size > max_size:
+                            raise ValidationError("Cancelled Cheque must be ≤ 10 MB.")
+                    except Exception:
+                        raise ValidationError("Invalid file format for cheque attachment.")
 
 
 ##### Principal Place of Business
