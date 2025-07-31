@@ -75,10 +75,12 @@ setup() {
         return this.props.record.fields[this.props.name].translate;
     }
     get formattedValue() {
-        return formatChar(this.props.record.data[this.props.name], {
-            isPassword: this.props.isPassword,
-        });
-    }
+    const val = this.props.record.data[this.props.name] || "";
+    return formatChar(val.toUpperCase(), {
+        isPassword: this.props.isPassword,
+    });
+}
+
 
     parse(value) {
         if (this.shouldTrim) {
