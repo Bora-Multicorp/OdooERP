@@ -73,10 +73,14 @@ class StockQuantInherit(models.Model):
     def _check_all_validations(self):
 
         for record in self:
+            is_mobile = record.product_id.product_tmpl_id.is_mobile_category_selected
             is_dual_sim = record.product_id.product_tmpl_id.is_dual_sim
 
             if not record.lot_id.id:
                 raise ValidationError(_('Please enter serial number.'))
+            
+            if not is_mobile:
+                continue
 
             #Ensure IMEIs are not empty
             if is_dual_sim:
