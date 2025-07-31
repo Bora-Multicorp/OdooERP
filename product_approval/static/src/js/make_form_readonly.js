@@ -20,7 +20,8 @@ patch(FormController.prototype, {
 
         // ONLY PROCEED IF WE ARE ON THE TARGET MODEL
         if (currentModel !== targetModel) {
-            console.log(⏩ Skipping form disablement for model: ${currentModel});
+            // FIX: Use backticks for template literal
+            console.log(`⏩ Skipping form disablement for model: ${currentModel}`);
             return; // Exit setup if not on the target model
         }
 
@@ -57,10 +58,12 @@ patch(FormController.prototype, {
 
             // 👇 Existing logic: Disable if state is pending, rejected, or confirmed
             if (["pending", "rejected", "confirmed"].includes(value)) {
-                console.log(⛔ Disabling form because state is "${value}");
+                // FIX: Use backticks for template literal
+                console.log(`⛔ Disabling form because state is "${value}"`);
                 return true;
             } else {
-                console.log(✅ State is "${value}", form remains editable);
+                // FIX: Use backticks for template literal
+                console.log(`✅ State is "${value}", form remains editable`);
                 return false;
             }
         };
