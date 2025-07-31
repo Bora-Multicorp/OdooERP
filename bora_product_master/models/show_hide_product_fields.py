@@ -15,7 +15,7 @@ class ShowHideProductFields(models.Model):
     specs_made = fields.Many2one(
         'res.country',
         string='Spec Made For',
-        help='Specification made for a specific country'
+        help='Specification made for a specific country.'
     )
 
     made_country = fields.Many2one(
