@@ -9,7 +9,8 @@
             <field name="nextcall"
                    eval="(DateTime.now().replace(hour=10, minute=0) + timedelta(days=1)).strftime('%Y-%m-%d %H:%M:%S')"/>
             <field name="model_id" ref="base.model_res_partner"/>
-            <field name="code">model.trigger_email_kyc_expiry_follow_up()</field>
+            <!--<field name="code">model.trigger_email_kyc_expiry_follow_up()</field>-->
+            <field name="code">model.trigger_schedule_activity_kyc_expiry_follow_up()</field>
             <field name="state">code</field>
         </record>
 

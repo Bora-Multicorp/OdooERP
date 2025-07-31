@@ -280,11 +280,34 @@ class ContactKYCApproval(models.Model):
 
     def write(self, vals):
         res = super().write(vals)
-        if vals.get('state') == 'confirmed':
-            for record in self:
+
+        def _schedule_activity(record, user, title, note):
+            record.activity_schedule(
+                act_type_xmlid='mail.mail_activity_data_todo',
+                summary=title,
+                note=note,
+                user_id=user.id,
+                date_deadline=fields.Date.context_today(record),
+            )
+
+        def _send_notification(record, user, title, message):
+            record.env['bus.bus']._sendone(
+                user.partner_id,
+                'simple_notification',
+                {
+                    'type': 'warning',
+                    'title': title,
+                    'message': message,
+                    'sticky': True,
+                },
+            )
+
+        for record in self:
+            if vals.get('state') == 'confirmed':
                 if record.partner_id and not record.partner_id.is_approved:
                     now = fields.Datetime.now()
                     one_year = now + relativedelta(years=1)
+
                     # Update partner and record
                     record.partner_id.write({
                         'is_approved': True,
@@ -294,26 +317,56 @@ class ContactKYCApproval(models.Model):
                         'approval_date': now,
                         'deadline': one_year,
                     })
-                    # Send email to all approval users
-                    approval_template = self.env.ref('custom_contact.kyc_approval_email_template',
-                                                     raise_if_not_found=False)
-                    if approval_template and record.existing_user_ids:
-                        email_list = [user.email_formatted for user in record.existing_user_ids if user.email]
-                        if email_list:
-                            approval_template.send_mail(record.id, force_send=True,
-                                                        email_values={'email_from': self.env.user.email_formatted,
-                                                                      'email_to': ','.join(email_list), })
-        if vals.get('state') == 'rejected':
-            for record in self:
-                # Send reject email to all users
-                rejection_template = self.env.ref('custom_contact.kyc_rejection_email_template',
-                                                  raise_if_not_found=False)
-                if record.partner_id and record.existing_user_ids and rejection_template:
-                    email_list = [user.email_formatted for user in record.existing_user_ids if user.email]
-                    if email_list:
-                        rejection_template.send_mail(record.id, force_send=True,
-                                                     email_values={'email_from': self.env.user.email_formatted,
-                                                                   'email_to': ','.join(email_list)})
+
+                    # Send approval email to all users
+                    # approval_template = self.env.ref('custom_contact.kyc_approval_email_template', raise_if_not_found=False)
+                    # if approval_template and record.existing_user_ids:
+                    #     email_list = [user.email_formatted for user in record.existing_user_ids if user.email]
+                    #     if email_list:
+                    #         approval_template.send_mail(record.id, force_send=True, email_values={
+                    #             'email_from': self.env.user.email_formatted,
+                    #             'email_to': ','.join(email_list),
+                    #         })
+
+                    # Send approval activity and notification
+                    for user in record.existing_user_ids:
+                        _schedule_activity(
+                            record, user,
+                            title=f"KYC Approved for: {record.partner_id.name}",
+                            note=_(
+                                "KYC for %s has been approved. Please take necessary follow-up action.") % record.partner_id.name
+                        )
+                        _send_notification(
+                            record, user,
+                            title=_("KYC Approved for: %s") % record.partner_id.name,
+                            message=_(
+                                "KYC for %s has been approved. Please check the system for further details.") % record.partner_id.name
+                        )
+
+            elif vals.get('state') == 'rejected':
+                # Send rejection email and activity
+                # rejection_template = self.env.ref('custom_contact.kyc_rejection_email_template', raise_if_not_found=False)
+                # if record.partner_id and record.existing_user_ids and rejection_template:
+                #     email_list = [user.email_formatted for user in record.existing_user_ids if user.email]
+                #     if email_list:
+                #         rejection_template.send_mail(record.id, force_send=True, email_values={
+                #             'email_from': self.env.user.email_formatted,
+                #             'email_to': ','.join(email_list),
+                #         })
+
+                for user in record.existing_user_ids:
+                    _schedule_activity(
+                        record, user,
+                        title=f"KYC Rejected for: {record.partner_id.name}",
+                        note=_("KYC for %s has been rejected. Please take necessary action.") % record.partner_id.name
+                    )
+                    _send_notification(
+                        record, user,
+                        title=_("KYC Rejected for: %s") % record.partner_id.name,
+                        message=_(
+                            "KYC for %s has been rejected. Please check the system for more details.") % record.partner_id.name
+                    )
+
         return res
 
 

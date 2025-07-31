@@ -20,7 +20,7 @@ patch(FormController.prototype, {
 
         // ONLY PROCEED IF WE ARE ON THE TARGET MODEL
         if (currentModel !== targetModel) {
-            console.log(`⏩ Skipping form disablement for model: ${currentModel}`);
+            console.log(⏩ Skipping form disablement for model: ${currentModel});
             return; // Exit setup if not on the target model
         }
 
@@ -57,10 +57,10 @@ patch(FormController.prototype, {
 
             // 👇 Existing logic: Disable if state is pending, rejected, or confirmed
             if (["pending", "rejected", "confirmed"].includes(value)) {
-                console.log(`⛔ Disabling form because state is "${value}"`);
+                console.log(⛔ Disabling form because state is "${value}");
                 return true;
             } else {
-                console.log(`✅ State is "${value}", form remains editable`);
+                console.log(✅ State is "${value}", form remains editable);
                 return false;
             }
         };
@@ -128,7 +128,7 @@ patch(FormController.prototype, {
                     disableInputs();
                 } else {
                     // If it should no longer be disabled, re-enable it
-                    // This is important if a state changes *from* disabled-state to editable-state
+                    // This is important if a state changes from disabled-state to editable-state
                     const formSheets = document.querySelectorAll('.o_form_sheet');
                     formSheets.forEach(formSheet => {
                         if (!formSheet.closest('.modal')) {
@@ -169,7 +169,7 @@ patch(FormController.prototype, {
                         console.log("✅ New record form fully loaded. It is editable.");
                         // No need to call disableInputs or observeTabs/watchStateChanges immediately
                         // as a new form starts editable.
-                        // However, we still want watchStateChanges to be active if the state *later* changes.
+                        // However, we still want watchStateChanges to be active if the state later changes.
                         setTimeout(() => {
                             watchStateChanges();
                         }, 500);
