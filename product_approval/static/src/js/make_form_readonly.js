@@ -39,10 +39,23 @@ patch(FormController.prototype, {
 
         // Check if form should be readonly
         const shouldDisableForm = () => {
+            // Check if it's a new record (no resId means it's unsaved)
+            if (!this.props.resId) {
+                console.log("📝 New record detected. Form remains editable.");
+                return false; // A new record should always be editable
+            }
+
             const value = getCurrentState();
             console.log("🔍 Current state value detected:", value);
 
-            // 👇 ADD confirmed to the list here
+            // If state is not found for an existing record, we should not disable it.
+            // This can happen during initial load before the statusbar is fully rendered.
+            if (!value) {
+                console.log("❓ State not yet determined for existing record. Form remains editable.");
+                return false;
+            }
+
+            // 👇 Existing logic: Disable if state is pending, rejected, or confirmed
             if (["pending", "rejected", "confirmed"].includes(value)) {
                 console.log(`⛔ Disabling form because state is "${value}"`);
                 return true;
@@ -110,9 +123,26 @@ patch(FormController.prototype, {
                 const value = getCurrentState();
                 console.log("🔄 Statusbar updated. New state:", value);
 
-                // 👇 Re-check with confirmed included
-                if (["pending", "rejected", "confirmed"].includes(value)) {
+                // Re-evaluate the condition, including the new record check
+                if (shouldDisableForm()) {
                     disableInputs();
+                } else {
+                    // If it should no longer be disabled, re-enable it
+                    // This is important if a state changes *from* disabled-state to editable-state
+                    const formSheets = document.querySelectorAll('.o_form_sheet');
+                    formSheets.forEach(formSheet => {
+                        if (!formSheet.closest('.modal')) {
+                            formSheet.querySelectorAll("[disabled]").forEach(input => {
+                                input.removeAttribute("disabled");
+                                input.classList.remove("o_disabled");
+                            });
+                            formSheet.querySelectorAll('.o_field_widget').forEach(cb => {
+                                cb.style.pointerEvents = ""; // Reset pointer events
+                                cb.classList.remove("o_disabled");
+                            });
+                            formSheet.classList.remove("o_form_state_disabled");
+                        }
+                    });
                 }
             });
 
@@ -129,9 +159,23 @@ patch(FormController.prototype, {
         const waitForStateAndRun = () => {
             let attempts = 0;
             const interval = setInterval(() => {
-                const value = getCurrentState();
-                if (value || attempts > 20) {
+                const value = getCurrentState(); // will be undefined for new records
+                // Or if it's a new record
+                if (!this.props.resId || value || attempts > 20) { // Check resId first
                     clearInterval(interval);
+
+                    // If it's a new record, directly enable and stop here
+                    if (!this.props.resId) {
+                        console.log("✅ New record form fully loaded. It is editable.");
+                        // No need to call disableInputs or observeTabs/watchStateChanges immediately
+                        // as a new form starts editable.
+                        // However, we still want watchStateChanges to be active if the state *later* changes.
+                        setTimeout(() => {
+                            watchStateChanges();
+                        }, 500);
+                        return;
+                    }
+
 
                     if (value) {
                         console.log("✅ Final state loaded:", value);
@@ -151,9 +195,16 @@ patch(FormController.prototype, {
         onMounted(() => {
             console.log("🚀 onMounted triggered");
             waitForStateAndRun();
-            setTimeout(() => {
-                watchStateChanges(); // ✅ live check after save
-            }, 500);
+            // The watchStateChanges should be started after the initial check for existing records.
+            // For new records, it will be started in waitForStateAndRun's new block.
+            // So we need to ensure it's not double-triggered.
+            // The setTimeout in waitForStateAndRun for new records covers this.
+            // For existing records, the existing setTimeout here is fine.
+            if (this.props.resId) { // Only for existing records
+                 setTimeout(() => {
+                    watchStateChanges(); // ✅ live check after save
+                }, 500);
+            }
         });
     },
 });
