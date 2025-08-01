@@ -27,6 +27,6 @@ class RejectProductWizard(models.TransientModel):
                 'action_date': fields.Datetime.now(),
             })
             # Recompute the next approver
-            approval._update_assigned_to()
+            # approval._update_assigned_to()
 
         return {'type': 'ir.actions.act_window_close'}
