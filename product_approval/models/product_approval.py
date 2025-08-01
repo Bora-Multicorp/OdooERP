@@ -146,16 +146,82 @@ class ProductApproval(models.Model):
                 'simple_notification',
                 {
                     'type': 'success',
-                    'title': _("Product Approval for %s") % rec.name,
+                    'title': _("Product approval for %s") % rec.name,
                     'message':  _("Activity assigned to you."),
                     'sticky': True,
                 },
             )
 
-
+    
     def write(self, vals):
-
         res = super().write(vals)
+
+        def _schedule_activity(record, user1, title, note):
+            record.activity_schedule(
+                act_type_xmlid='mail.mail_activity_data_todo',
+                summary=title,
+                note=note,
+                user_id=user1.id,
+                date_deadline=fields.Date.context_today(record),
+            )
+
+        def _send_notification(record, user1, title, message, type='success'):
+            record.env['bus.bus']._sendone(
+                user1.partner_id,
+                'simple_notification',
+                {
+                    'type': type,
+                    'title': title,
+                    'message': message,
+                    'sticky': True,
+                },
+            )
+
+        for record in self:
+            if vals.get('state') == 'confirmed':
+
+                for record in self:
+                    record.write({'active': True})
+                    for variant in record.product_variant_ids:
+                        variant.write({
+                            'active': True,
+                            # 'is_hidden_for_approval': True,
+                        })
+
+
+
+                    # Send approval activity and notification
+                    for user in record.approval_users_ids:
+                        user1 = user.user_id
+                        _schedule_activity(
+                            record, user1,
+                            title=f"Product '{record.name}' is approved.",
+                            note=_(
+                                "Product '%s' has been approved. Please take necessary follow-up action.") % record.name
+                        )
+                        _send_notification(
+                            record, user1,
+                            title=f"Product '{record.name}' is approved.",
+                            message=_(
+                                "Product '%s' has been approved. Please check the system for further details.") % record.name
+                        )
+
+            elif vals.get('state') == 'rejected':
+
+                for user in record.approval_users_ids:
+                    user1 = user.user_id
+                    _schedule_activity(
+                        record, user1,
+                        title=f"Product '{record.name}' is rejected.",
+                        note=_("Product '%s' has been rejected. Please take necessary action.") % record.name
+                    )
+                    _send_notification(
+                        record, user1,
+                        title=f"Product '{record.name}' is rejected.",
+                        message=_(
+                            "Product '%s' has been rejected. Please check the system for more details.") % record.name,
+                        type='danger'
+                    )
 
         if not self.active:
             for variant_id in self.product_variant_ids:
@@ -164,25 +230,8 @@ class ProductApproval(models.Model):
                     # 'is_hidden_for_approval': True,
                 })
 
-        if vals.get('state') == 'confirmed':
-            for record in self:
-                record.write({'active': True})
-                for variant in record.product_variant_ids:
-                    variant.write({
-                        'active': True,
-                        # 'is_hidden_for_approval': True,
-                    })
-
-                # Send email to all approval users
-                # approval_template = self.env.ref('product_approval_email_template', raise_if_not_found=False)
-                # if approval_template and record.existing_user_ids:
-                #     email_list = [user.email_formatted for user in record.existing_user_ids if user.email]
-                #     if email_list:
-                #         approval_template.send_mail(record.id, force_send=True,
-                #         email_values={'email_from': self.env.user.email_formatted,
-                #                                 'email_to': ','.join(email_list), })
         return res
-    
+
 
 
 class ProductApprovalUsers(models.Model):

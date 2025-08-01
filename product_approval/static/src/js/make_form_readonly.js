@@ -16,10 +16,11 @@ patch(FormController.prototype, {
         console.log("Current Model:", currentModel);
 
         // Define the target model you want to affect
-        const targetModel = 'product.template';
+        const targetModel1 = 'product.template';
+        const targetModel2 = 'product.product';
 
         // ONLY PROCEED IF WE ARE ON THE TARGET MODEL
-        if (currentModel !== targetModel) {
+        if (currentModel !== targetModel1 && currentModel !== targetModel2) {
             // FIX: Use backticks for template literal
             console.log(`⏩ Skipping form disablement for model: ${currentModel}`);
             return; // Exit setup if not on the target model
