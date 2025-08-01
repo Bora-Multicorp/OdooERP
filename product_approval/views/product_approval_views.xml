@@ -34,8 +34,6 @@
                 </xpath>
                 <xpath expr="//sheet/notebook" position="inside">
                     <page string="Approval Authorities" name="approval_users" invisible="not is_hidden_for_approval">
-                        <!-- <field name="product_id" readonly="1"/> -->
-                        <!-- <field name="name1" invisible="0"/> -->
                         <field name="is_approved" invisible="1"/>
                         <group>
                             <field name="assigned_to"
@@ -71,8 +69,6 @@
             <field name="model">product.template</field>
             <field name="arch" type="xml">
                 <list string="Product Approval" create="false" delete="false">
-                    <!-- <field name="product_id" string="Product"/> -->
-                    <!-- <field name="email"/> -->
                     <field name="assigned_to"/>
                     <field name="create_date"/>
                     <field name="state"/>
