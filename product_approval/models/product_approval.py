@@ -31,7 +31,7 @@ class ProductApproval(models.Model):
             defaults['approval_users_ids'] = approval_user_vals
         return defaults
 
-    # product_id = fields.Many2one('product.template', string="Product")
+    product_id = fields.Many2one('product.template', string="Product")
 
     state = fields.Selection([
         ('draft', 'Draft'),
