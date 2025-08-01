@@ -31,7 +31,7 @@ class ProductApproval(models.Model):
             defaults['approval_users_ids'] = approval_user_vals
         return defaults
 
-    product_id = fields.Many2one('product.template', string="Product")
+    # product_id = fields.Many2one('product.template', string="Product")
 
     state = fields.Selection([
         ('draft', 'Draft'),
@@ -46,13 +46,13 @@ class ProductApproval(models.Model):
     existing_user_ids = fields.Many2many('res.users', compute='_compute_existing_users', store=True)
 
 
-    @api.depends('existing_user_ids.user_id')
-    def _compute_approval_user_ids(self):
-        for record in self:
-            # Get the user_ids from related approval_detail_ids
-            user_ids = record.existing_user_ids.mapped('user_id')
-            # Assign the collected users to approval_user_ids
-            record.existing_user_ids = [(6, 0, user_ids.ids)]
+    # @api.depends('existing_user_ids.user_id')
+    # def _compute_approval_user_ids(self):
+    #     for record in self:
+    #         # Get the user_ids from related approval_detail_ids
+    #         user_ids = record.existing_user_ids.mapped('user_id')
+    #         # Assign the collected users to approval_user_ids
+    #         record.existing_user_ids = [(6, 0, user_ids.ids)]
 
 
     @api.depends('approval_users_ids.user_id')

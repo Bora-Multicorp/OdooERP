@@ -34,7 +34,7 @@
                 </xpath>
                 <xpath expr="//sheet/notebook" position="inside">
                     <page string="Approval Authorities" name="approval_users" invisible="not is_hidden_for_approval">
-                        <field name="product_id" readonly="1"/>
+                        <!-- <field name="product_id" readonly="1"/> -->
                         <!-- <field name="name1" invisible="0"/> -->
                         <field name="is_approved" invisible="1"/>
                         <group>
