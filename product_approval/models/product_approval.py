@@ -16,8 +16,6 @@ class ProductApproval(models.Model):
 
     is_approved = fields.Boolean(string='Is Approved', default=False, help="Indicates if the product has been approved.")
 
-    product_id = fields.Char(store=False)
-
     @api.model
     def default_get(self, fields_list):
         defaults = super().default_get(fields_list)
