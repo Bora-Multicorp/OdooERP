@@ -18,7 +18,7 @@
     'version': '0.1',
 
     # any module necessary for this one to work correctly
-    'depends': ['base', 'product', 'stock', 'purchase', 'sale_management', 'product_multi_company', 'product_multi_images', 'product_dimension', 'product_approval', 'case_sensitive_widget', 'stock_barcode'],
+    'depends': ['base', 'product', 'stock', 'purchase', 'sale_management', 'product_multi_company', 'product_multi_images', 'product_dimension', 'case_sensitive_widget', 'stock_barcode'],
 
     # always loaded
     'data': [
@@ -35,6 +35,7 @@
         'views/product_category_inherit.xml',
         'views/show_hide_product_fields.xml',
         'views/product_context_change.xml',
+        'views/product_template_tree_view.xml',
         'wizards/activation_status_wizard_view.xml',
         'security/ir.model.access.csv',
         # 'static/src/xml/assets.xml',

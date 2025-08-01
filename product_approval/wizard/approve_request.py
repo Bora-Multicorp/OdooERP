@@ -8,11 +8,7 @@ class ApproveProductWizard(models.TransientModel):
 
     product_approval_id = fields.Many2one('product.template', string="Approval for Product", domain="[('id', '=', active_id)]")
 
-
     remark = fields.Char('Remark', required=True)
-
-
-
 
     def action_approve_product(self):
         self.ensure_one()
@@ -25,12 +21,7 @@ class ApproveProductWizard(models.TransientModel):
         )
 
 
-        print("---------   action_approve_product", approval_line)
-
-
         if approval_line:
-            print("--------- *******   action_approve_product", approval_line)
-
             approval_line.write({
                 'state': 'approve',
                 'remark': self.remark,
