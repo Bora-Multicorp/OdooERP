@@ -739,7 +739,6 @@
             <field name="constr_mandatory">False</field>
             <field name="triggering_answer_ids"
                    eval="[Command.link(ref('business_constitution_kyc_survey_sug2')),
-                   Command.link(ref('business_constitution_kyc_survey_sug3')),
                    Command.link(ref('business_constitution_kyc_survey_sug4'))]"/>
         </record>
         <!-- MOA or AOA  -->
@@ -751,9 +750,7 @@
             <field name="upload_multiple_file">True</field>
             <field name="constr_mandatory">False</field>
             <field name="triggering_answer_ids"
-                   eval="[Command.link(ref('business_constitution_kyc_survey_sug2')),
-                   Command.link(ref('business_constitution_kyc_survey_sug3')),
-                   Command.link(ref('business_constitution_kyc_survey_sug4'))]"/>
+                   eval="[Command.link(ref('business_constitution_kyc_survey_sug3'))]"/>
         </record>
         <!-- CIN number -->
         <record model="survey.question" id="cin_no_kyc_survey">
@@ -764,7 +761,7 @@
             <field name="constr_mandatory">False</field>
             <field name="is_cin">True</field>
             <field name="triggering_answer_ids"
-                   eval="[Command.link(ref('business_constitution_kyc_survey_sug2')), Command.link(ref('business_constitution_kyc_survey_sug3')),Command.link(ref('business_constitution_kyc_survey_sug4'))]"/>
+                   eval="[Command.link(ref('business_constitution_kyc_survey_sug3'))]"/>
         </record>
         <!-- Electricity bill -->
         <record model="survey.question" id="electricity_bill_kyc_survey">

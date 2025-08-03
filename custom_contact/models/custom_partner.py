@@ -66,28 +66,62 @@ class CustomContact(models.Model):
                     "Invalid GST Number: '%s'. It must follow the 15-character format (e.g., 27ABCDE1234F1Z5)."
                 ) % rec.vat)
 
-    @api.constrains('phone', 'mobile')
-    def _check_phone_mobile_number(self):
-        import re
-
-        # Accept only digits, optional '+' at start
-        phone_pattern = re.compile(r'^\+?\d{6,15}$')  # Country codes + phone numbers: 6 to 15 digits
-        mobile_pattern = re.compile(r'^\+?\d{6,15}$')
-
+    @api.constrains('mobile', 'country_id')
+    def _check_mobile_number_format(self):
         for rec in self:
-            if rec.phone:
-                cleaned_phone = rec.phone.replace(" ", "")
-                if not phone_pattern.fullmatch(cleaned_phone):
-                    raise ValidationError(_(
-                        "Phone number must be valid digits only (optionally starting with '+').\nInvalid Value: %s"
-                    ) % rec.phone)
+            if not rec.mobile:
+                continue
 
-            if rec.mobile:
-                cleaned_mobile = rec.mobile.replace(" ", "")
-                if not mobile_pattern.fullmatch(cleaned_mobile):
-                    raise ValidationError(_(
-                        "Mobile number must be valid digits only (optionally starting with '+').\nInvalid Value: %s"
-                    ) % rec.mobile)
+            # 1) Strip non-digits
+            cleaned_number = re.sub(r'\D', '', rec.mobile)
+
+            # 2) Remove leading country code (as string!)
+            if rec.country_id and rec.country_id.phone_code:
+                code = str(rec.country_id.phone_code)
+                if code and cleaned_number.startswith(code):
+                    cleaned_number = cleaned_number[len(code):]
+
+            # 3) Validate exactly 10 digits
+            if not re.fullmatch(r'\d{10}', cleaned_number):
+                raise ValidationError(
+                    "Mobile number must be exactly 10 digits after removing the country code."
+                )
+
+    @api.onchange('country_id')
+    def _onchange_country_mobile(self):
+        if self.country_id:
+            # Get the country calling code and ensure it starts with '+'
+            calling_code = str(self.country_id.phone_code) if self.country_id.phone_code else ''
+            if calling_code and not calling_code.startswith('+'):
+                calling_code = '+' + calling_code
+
+            if self.mobile:
+                # Remove any existing country code at the start (e.g., +91 or +1)
+                # Then remove all spaces
+                self.mobile = re.sub(r'^\+\d+', '', self.mobile).replace(' ', '').strip()
+
+    # @api.constrains('phone', 'mobile')
+    # def _check_phone_mobile_number(self):
+    #     import re
+    #
+    #     # Accept only digits, optional '+' at start
+    #     phone_pattern = re.compile(r'^\+?\d{6,15}$')  # Country codes + phone numbers: 6 to 15 digits
+    #     mobile_pattern = re.compile(r'^\+?\d{6,15}$')
+    #
+    #     for rec in self:
+    #         if rec.phone:
+    #             cleaned_phone = rec.phone.replace(" ", "")
+    #             if not phone_pattern.fullmatch(cleaned_phone):
+    #                 raise ValidationError(_(
+    #                     "Phone number must be valid digits only (optionally starting with '+').\nInvalid Value: %s"
+    #                 ) % rec.phone)
+    #
+    #         if rec.mobile:
+    #             cleaned_mobile = rec.mobile.replace(" ", "")
+    #             if not mobile_pattern.fullmatch(cleaned_mobile):
+    #                 raise ValidationError(_(
+    #                     "Mobile number must be valid digits only (optionally starting with '+').\nInvalid Value: %s"
+    #                 ) % rec.mobile)
 
     @api.model
     def _get_view(self, view_id=None, view_type='form', **options):

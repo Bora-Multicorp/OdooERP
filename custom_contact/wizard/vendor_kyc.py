@@ -195,6 +195,8 @@ class VendorKycWizard(models.TransientModel):
                     "Invalid CIN Number: '%s'. Expected format is like 'L12345MH2020PLC123456'."
                 ) % rec.cin_no)
 
+
+
     @api.onchange('is_same_trade_name', 'business_legal_name')
     def _onchange_trade_name_sync(self):
         for rec in self:
@@ -246,10 +248,10 @@ class VendorKycWizard(models.TransientModel):
                                        string="GST Certificate(Latest)", required=True)
 
     udyam_document = fields.Many2many('ir.attachment', 'vendor_kyc_shop_documents_rel', 'wizard_id', 'attachment_id',
-                                      string="Udyam Documents", required=True)
+                                      string="Udyam Documents", required=False)
     shop_act_document = fields.Many2many('ir.attachment', 'vendor_kyc_shop_act_documents_rel', 'wizard_id',
                                          'attachment_id',
-                                         string="Shop Act documents", required=True)
+                                         string="Shop Act documents", required=False)
 
     gst_return_duration = fields.Selection([('Monthly', 'Monthly'), ('Quarterly', 'Quarterly')],
                                            required=True, string="GST Return duration")
