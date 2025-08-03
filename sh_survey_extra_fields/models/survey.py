@@ -274,11 +274,11 @@ class SurveyQuestion(models.Model):
                 if answer.sh_value_type == 'textbox':
                     if answer.is_email:
                         lower_email = val.strip().lower()
-                        if lower_email in seen_emails and seen_emails[lower_email] != row_id:
-                            return {
-                                self.id: _(
-                                    "Duplicate Email found in multiple rows: '%s'. Must be unique across rows.") % val
-                            }
+                        # if lower_email in seen_emails and seen_emails[lower_email] != row_id:
+                        #     return {
+                        #         self.id: _(
+                        #             "Duplicate Email found in multiple rows: '%s'. Must be unique across rows.") % val
+                        #     }
                         seen_emails[lower_email] = row_id
                         if not is_valid_email(val):
                             return {
@@ -288,11 +288,11 @@ class SurveyQuestion(models.Model):
 
                     if answer.is_mobile:
                         clean_mobile = val.strip()
-                        if clean_mobile in seen_contacts and seen_contacts[clean_mobile] != row_id:
-                            return {
-                                self.id: _(
-                                    "Duplicate Contact Number in multiple rows: '%s'. Must be unique across rows.") % val
-                            }
+                        # if clean_mobile in seen_contacts and seen_contacts[clean_mobile] != row_id:
+                        #     return {
+                        #         self.id: _(
+                        #             "Duplicate Contact Number in multiple rows: '%s'. Must be unique across rows.") % val
+                        #     }
                         seen_contacts[clean_mobile] = row_id
                         if not is_valid_mobile(val):
                             return {
