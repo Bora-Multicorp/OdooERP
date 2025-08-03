@@ -47,18 +47,18 @@ class VendorKycWizard(models.TransientModel):
                     raise ValidationError(_("Invalid Partner LLP file format."))
 
 
-    @api.constrains('directors_detail')
-    def _check_duplicate_directors_detail_emails(self):
-        for wizard in self:
-            emails = []
-            for line in wizard.directors_detail:
-                if line.email:
-                    lower_email = line.email.lower()
-                    if lower_email in emails:
-                        raise ValidationError(
-                            _("Duplicate email address found in Directors Details: %s") % line.email
-                        )
-                    emails.append(lower_email)
+    # @api.constrains('directors_detail')
+    # def _check_duplicate_directors_detail_emails(self):
+    #     for wizard in self:
+    #         emails = []
+    #         for line in wizard.directors_detail:
+    #             if line.email:
+    #                 lower_email = line.email.lower()
+    #                 if lower_email in emails:
+    #                     raise ValidationError(
+    #                         _("Duplicate email address found in Directors Details: %s") % line.email
+    #                     )
+    #                 emails.append(lower_email)
 
     @api.constrains('directors_detail', 'address_detail')
     def _check_phone_numbers(self):
