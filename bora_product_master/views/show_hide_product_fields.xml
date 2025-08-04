@@ -24,8 +24,8 @@
                     required="categ_id == %(bora_product_master.product_category_type_mobile)d" 
                     invisible="categ_id != %(bora_product_master.product_category_type_mobile)d"/>
                     <field name="made_country" context="{'no_create_edit': True}"
-                    required="categ_id == %(bora_product_master.product_category_type_mobile)d" 
-                    invisible="categ_id != %(bora_product_master.product_category_type_mobile)d"/>
+                    required="categ_id in (%(bora_product_master.product_category_type_mobile)d, %(bora_product_master.product_category_type_accessory)d)" 
+                    invisible="categ_id not in (%(bora_product_master.product_category_type_mobile)d, %(bora_product_master.product_category_type_accessory)d)"/>
                 </xpath>
             </field>
         </record>
