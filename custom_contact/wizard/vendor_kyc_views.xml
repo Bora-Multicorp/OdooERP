@@ -113,9 +113,9 @@
                                required="const_business in ['Pvt Ltd Co.', 'LLP']"
                                invisible="const_business not in ['Pvt Ltd Co.', 'LLP']"/>
                         <field name="udyam_document" widget="many2many_binary"
-                               options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 1}"/>
+                               options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 1}"  required="const_business in ['Sole Proprietor', 'HUF(Karta)']"/>
                         <field name="shop_act_document" widget="many2many_binary"
-                               options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 1}"/>
+                               options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 1}" required="const_business in ['Sole Proprietor', 'HUF(Karta)']"/>
                         <field name="gst_return_duration" placeholder="Your Answer"/>
                         <field name="shop_photos" widget="many2many_binary"
                                options="{'accepted_file_extensions': 'image/*', 'number_of_files': 10}"/>
@@ -125,13 +125,13 @@
                         <field name="partner_llp_filename" invisible="1"/>
                         <field name="partner_llp" filename="partner_llp_filename"
                                required="const_business in ['Partnership', 'LLP']"
-                               invisible="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
+                               invisible="const_business not in ['Partnership', 'LLP']"/>
                         <field name="moa_aoa" widget="many2many_binary"
                                options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 5}"
                                required="const_business in ['Pvt Ltd Co.']"
-                               invisible="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
+                               invisible="const_business not in ['Pvt Ltd Co.']"/>
                         <field name="cin_no" placeholder="Your Answer" widget="upper_case"
-                               invisible="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
+                               invisible="const_business not in ['Pvt Ltd Co.']"/>
                         <field name="electricity_bill" widget="many2many_binary"
                                options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 5}"
                                invisible="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
