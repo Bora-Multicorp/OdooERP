@@ -241,7 +241,7 @@ class VendorKycWizard(models.TransientModel):
     # pan_card_filename = fields.Char(readonly=True)
     aadhaar_pan_link = fields.Selection([('yes', 'Yes'), ('no', 'No')], string='Aadhar and PAN card linking?',
                                         required=True)
-    gst_no = fields.Char(string="GST Number", required=True)
+    gst_no = fields.Char(string="GST Number", required=False)
     udyam_number = fields.Char(string="Udyam Certificate Number", required=False)
     license_registered = fields.Char(string="Any licenses registered (As per Local/State Government requirements)")
     gst_certificate = fields.Many2many('ir.attachment', 'vendor_kyc_gst_cert_rel', 'wizard_id', 'attachment_id',
