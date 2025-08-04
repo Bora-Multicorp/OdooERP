@@ -242,7 +242,7 @@ class VendorKycWizard(models.TransientModel):
     aadhaar_pan_link = fields.Selection([('yes', 'Yes'), ('no', 'No')], string='Aadhar and PAN card linking?',
                                         required=True)
     gst_no = fields.Char(string="GST Number", required=True)
-    udyam_number = fields.Char(string="Udyam Certificate Number", required=True)
+    udyam_number = fields.Char(string="Udyam Certificate Number", required=False)
     license_registered = fields.Char(string="Any licenses registered (As per Local/State Government requirements)")
     gst_certificate = fields.Many2many('ir.attachment', 'vendor_kyc_gst_cert_rel', 'wizard_id', 'attachment_id',
                                        string="GST Certificate(Latest)", required=True)
@@ -254,7 +254,7 @@ class VendorKycWizard(models.TransientModel):
                                          string="Shop Act documents", required=False)
 
     gst_return_duration = fields.Selection([('Monthly', 'Monthly'), ('Quarterly', 'Quarterly')],
-                                           required=True, string="GST Return duration")
+                                           required=False, string="GST Return duration")
 
     shop_photos = fields.Many2many('ir.attachment', 'vendor_kyc_shop_photos_rel', 'wizard_id', 'attachment_id',
                                    string="Shop Photos", required=True,
