@@ -281,7 +281,7 @@ class VendorKycWizard(models.TransientModel):
     cin_no = fields.Char(string="CIN number")
     electricity_bill = fields.Many2many('ir.attachment', 'vendor_kyc_electricity_bill_rel', 'wizard_id',
                                         'attachment_id',
-                                        string="Electricity bill", required=True)
+                                        string="Electricity bill", required=False)
 
     #####
     @api.constrains('address_detail')
