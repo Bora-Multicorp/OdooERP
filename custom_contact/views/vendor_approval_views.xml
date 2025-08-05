@@ -136,8 +136,7 @@
                             <field name="pan_card_document" widget="many2many_binary"
                                    options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 1}"
                                    readonly="state not in ['draft']"
-                                   required="const_business in ['Partnership', 'Pvt Ltd Co.', 'LLP']"
-                                   invisible="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
+                                   required="const_business in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
                             <field name="aadhaar_pan_link" widget="radio" options="{'horizontal': true}" readonly="state not in ['draft']"/>
                             <field name="gst_no" placeholder="Your Answer" widget="upper_case"
                                    readonly="state not in ['draft']"/>
@@ -170,7 +169,6 @@
                                       readonly="state not in ['draft']"
                                       required="const_business in ['Pvt Ltd Co.', 'LLP']"
                                       invisible="const_business not in ['Pvt Ltd Co.', 'LLP']"/>
-
                             <field name="partner_llp_filename" invisible="1"/>
                             <field name="partner_llp" filename="partner_llp_filename"
                                    readonly="state not in ['draft']"
@@ -186,8 +184,7 @@
                                    invisible="const_business not in ['Pvt Ltd Co.']"/>
                             <field name="electricity_bill" widget="many2many_binary"
                                    readonly="state not in ['draft']"
-                                   options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 5}"
-                                   invisible="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
+                                   options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 5}"/>
                         </group>
                         <group string="Bank Details(Please provide all required bank Details Carefully)"
                                name="bank_details">

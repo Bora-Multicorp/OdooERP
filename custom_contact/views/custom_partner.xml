@@ -168,7 +168,8 @@
                                             <field name="business_phone" placeholder="Your Answer"/>
                                             <field name="business_email" placeholder="Your Answer"/>
                                             <field name="business_state_id"
-                                                   options="{'no_create': True, 'no_create_edit': True}" domain="[('country_id', '=', 'India')]"/>
+                                                   options="{'no_create': True, 'no_create_edit': True}"
+                                                   domain="[('country_id', '=', 'India')]"/>
                                             <field name="business_country_id"
                                                    options="{'no_create': True, 'no_create_edit': True}"
                                                    domain="[('code', '=', 'IN')]"/>
@@ -181,7 +182,8 @@
                                             <field name="business_phone" placeholder="Your Answer"/>
                                             <field name="business_email" placeholder="Your Answer"/>
                                             <field name="business_state_id"
-                                                   options="{'no_create': True, 'no_create_edit': True}" domain="[('country_id', '=', 'India')]"/>
+                                                   options="{'no_create': True, 'no_create_edit': True}"
+                                                   domain="[('country_id', '=', 'India')]"/>
                                             <field name="business_country_id"
                                                    options="{'no_create': True, 'no_create_edit': True}"
                                                    domain="[('code', '=', 'IN')]"/>
@@ -245,8 +247,7 @@
                                     <field name="pan_no" placeholder="Your Answer" widget="upper_case"/>
                                     <field name="pan_card_document" widget="many2many_binary"
                                            options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 5}"
-                                           required="const_business in ['Partnership', 'Pvt Ltd Co.', 'LLP']"
-                                           invisible="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
+                                           required="const_business in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
                                     <field name="aadhaar_pan_link" widget="radio" options="{'horizontal': true}"/>
                                     <field name="gst_no" placeholder="Your Answer" widget="upper_case"/>
                                     <field name="udyam_number" placeholder="Your Answer" widget="upper_case"/>
@@ -274,8 +275,7 @@
                                     <field name="cin_no" placeholder="Your Answer" widget="upper_case"
                                            invisible="const_business not in ['Pvt Ltd Co.']"/>
                                     <field name="electricity_bill" widget="many2many_binary"
-                                           options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 10}"
-                                           invisible="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
+                                           options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 10}"/>
                                 </group>
                                 <group string="Bank Details(Please provide all required bank Details Carefully)"
                                        name="bank_details">
