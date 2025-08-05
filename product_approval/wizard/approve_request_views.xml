@@ -6,7 +6,6 @@
         <field name="arch" type="xml">
             <form string="Approve Request Form">
                 <group>
-                    <field name="product_approval_id" readonly="1"/>
                     <field name="remark" placeholder="Enter remarks for approval"/>
                 </group>
                 <footer>

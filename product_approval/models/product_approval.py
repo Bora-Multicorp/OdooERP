@@ -55,6 +55,66 @@ class ProductApproval(models.Model):
     #         # Assign the collected users to approval_user_ids
     #         record.existing_user_ids = [(6, 0, user_ids.ids)]
 
+    def bulk_submit_for_approval(self):
+
+        if not self.approval_users_ids:
+            raise ValidationError("Please Add Approval Authority before Submit Request.")
+
+        number_of_product_for_approvals = 0
+        for product in self:
+            if product.id:
+                if product.state == 'draft':
+                    product.write({'state': 'pending'})
+                    product._update_assigned_to(False)
+                    number_of_product_for_approvals += 1
+
+        if self: # Always check if the recordset is not empty before accessing by index
+            first_product = self[0]
+            title = f"Total {number_of_product_for_approvals} new products are assigned to you for the approval."
+            message = "Activities are assigned to you."
+            partner_id = first_product.assigned_to.partner_id
+            type="success"
+            if number_of_product_for_approvals == 1:
+                title = f"Product approval for {first_product.name}"
+                message = "Activity assigned to you."
+            elif number_of_product_for_approvals == 0:
+                title = f"No products in 'Draft' state were found among your selection. Please select products that are in the 'Draft' state to proceed."
+                message = ""
+                type = "danger"
+                partner_id = self.env.user.partner_id
+
+
+            first_product.env['bus.bus']._sendone(
+                partner_id,
+                'simple_notification',
+                {
+                    'type': type,
+                    'title': title,
+                    'message':  message,
+                    'sticky': True,
+                },
+            )
+
+            if partner_id != self.env.user.partner_id:
+                title = "Product successfully submitted for approval."
+                if number_of_product_for_approvals > 1:
+                    title = f"Total {number_of_product_for_approvals} products are successfully submitted for approval."
+                if number_of_product_for_approvals > 0:
+                    title = f"Product successfully submitted for approval."
+
+                first_product.env['bus.bus']._sendone(
+                self.env.user.partner_id,
+                'simple_notification',
+                {
+                    'type': "info",
+                    'title': title,
+                    'message':  "",
+                    'sticky': True,
+                },
+            )
+
+
+
 
     @api.depends('approval_users_ids.user_id')
     def _compute_existing_users(self):
@@ -82,7 +142,7 @@ class ProductApproval(models.Model):
     def approve_by_manager(self):
         self.write({'state': 'confirmed'})
 
-    def _update_assigned_to(self):
+    def _update_assigned_to(self, send_notification = True):
         for rec in self:
             next_user = None
             for line in sorted(rec.approval_users_ids, key=lambda x: x.sequence):
@@ -92,7 +152,7 @@ class ProductApproval(models.Model):
             rec.assigned_to = next_user
 
             if rec.assigned_to:
-                rec._create_activity_and_send_notification()
+                rec._create_activity_and_send_notification(send_notification)
             
 
     def _update_state_based_on_approvals(self):
@@ -131,7 +191,7 @@ class ProductApproval(models.Model):
 
         return templates
     
-    def _create_activity_and_send_notification(self):
+    def _create_activity_and_send_notification(self, send_notification = True):
         # Schedule activity to assign to user
         for rec in self:
             rec.activity_schedule(
@@ -142,87 +202,101 @@ class ProductApproval(models.Model):
                 date_deadline=fields.Date.context_today(self),
             )
 
-            rec.env['bus.bus']._sendone(
-                rec.assigned_to.partner_id,
-                'simple_notification',
-                {
-                    'type': 'success',
-                    'title': _("Product approval for %s") % rec.name,
-                    'message':  _("Activity assigned to you."),
-                    'sticky': True,
-                },
-            )
+            if send_notification == True:
+                rec.env['bus.bus']._sendone(
+                    rec.assigned_to.partner_id,
+                    'simple_notification',
+                    {
+                        'type': 'success',
+                        'title': _("Product approval for %s") % rec.name,
+                        'message':  _("Activity assigned to you."),
+                        'sticky': True,
+                    },
+                )
+
+                if self.env.user.partner_id != rec.assigned_to.partner_id:
+                    rec.env['bus.bus']._sendone(
+                        self.env.user.partner_id,
+                        'simple_notification',
+                        {
+                            'type': 'info',
+                            'title': f"Product '{rec.name}' successfully submitted for approval",
+                            'message':  "",
+                            'sticky': True,
+                        },
+                    )
+
 
     
     def write(self, vals):
         res = super().write(vals)
 
-        def _schedule_activity(record, user1, title, note):
-            record.activity_schedule(
-                act_type_xmlid='mail.mail_activity_data_todo',
-                summary=title,
-                note=note,
-                user_id=user1.id,
-                date_deadline=fields.Date.context_today(record),
-            )
+        # def _schedule_activity(record, user1, title, note):
+        #     record.activity_schedule(
+        #         act_type_xmlid='mail.mail_activity_data_todo',
+        #         summary=title,
+        #         note=note,
+        #         user_id=user1.id,
+        #         date_deadline=fields.Date.context_today(record),
+        #     )
 
-        def _send_notification(record, user1, title, message, type='success'):
-            record.env['bus.bus']._sendone(
-                user1.partner_id,
-                'simple_notification',
-                {
-                    'type': type,
-                    'title': title,
-                    'message': message,
-                    'sticky': True,
-                },
-            )
+        # def _send_notification(record, user1, title, message, type='success'):
+        #     record.env['bus.bus']._sendone(
+        #         user1.partner_id,
+        #         'simple_notification',
+        #         {
+        #             'type': type,
+        #             'title': title,
+        #             'message': message,
+        #             'sticky': True,
+        #         },
+        #     )
 
-        for record in self:
-            if vals.get('state') == 'confirmed':
+        # for record in self:
+        #     if vals.get('state') == 'confirmed':
 
-                for record in self:
-                    record.write({'active': True})
-                    for variant in record.product_variant_ids:
-                        variant.write({
-                            'active': True,
-                            # 'is_hidden_for_approval': True,
-                        })
+        #         for record in self:
+        #             record.write({'active': True})
+        #             for variant in record.product_variant_ids:
+        #                 variant.write({
+        #                     'active': True,
+        #                     # 'is_hidden_for_approval': True,
+        #                 })
 
 
 
-                    # Send approval activity and notification
-                    for user in record.approval_users_ids:
-                        user1 = user.user_id
-                        _schedule_activity(
-                            record, user1,
-                            title=f"Product '{record.name}' is approved.",
-                            note=_(
-                                "Product '%s' has been approved. Please take necessary follow-up action.") % record.name
-                        )
-                        _send_notification(
-                            record, user1,
-                            title=f"Product '{record.name}' is approved.",
-                            message=_(
-                                "Product '%s' has been approved. Please check the system for further details.") % record.name
-                        )
+        #             # Send approval activity and notification
+        #             for user in record.approval_users_ids:
+        #                 user1 = user.user_id
+        #                 _schedule_activity(
+        #                     record, user1,
+        #                     title=f"Product '{record.name}' is approved.",
+        #                     note=_(
+        #                         "Product '%s' has been approved. Please take necessary follow-up action.") % record.name
+        #                 )
+        #                 _send_notification(
+        #                     record, user1,
+        #                     title=f"Product '{record.name}' is approved.",
+        #                     message=_(
+        #                         "Product '%s' has been approved. Please check the system for further details.") % record.name
+        #                 )
 
-            elif vals.get('state') == 'rejected':
+        #     elif vals.get('state') == 'rejected':
 
-                for user in record.approval_users_ids:
-                    user1 = user.user_id
-                    _schedule_activity(
-                        record, user1,
-                        title=f"Product '{record.name}' is rejected.",
-                        note=_("Product '%s' has been rejected. Please take necessary action.") % record.name
-                    )
-                    _send_notification(
-                        record, user1,
-                        title=f"Product '{record.name}' is rejected.",
-                        message=_(
-                            "Product '%s' has been rejected. Please check the system for more details.") % record.name,
-                        type='danger'
-                    )
+        #         for user in record.approval_users_ids:
+        #             user1 = user.user_id
+        #             _schedule_activity(
+        #                 record, user1,
+        #                 title=f"Product '{record.name}' is rejected.",
+        #                 note=_("Product '%s' has been rejected. Please take necessary action.") % record.name
+        #             )
+        #             _send_notification(
+        #                 record, user1,
+        #                 title=f"Product '{record.name}' is rejected.",
+        #                 message=_(
+        #                     "Product '%s' has been rejected. Please check the system for more details.") % record.name,
+        #                 type='danger'
+        #             )
 
         if not self.active:
             for variant_id in self.product_variant_ids:
