@@ -242,8 +242,7 @@
                                     <!--                                    <field name="pan_card" filename="pan_card_filename" options="{'accepted_file_extensions': 'image/*, .pdf'}"-->
                                     <!--                                           required="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"-->
                                     <!--                                           invisible="const_business in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>-->
-                                    <field name="pan_no" placeholder="Your Answer" widget="upper_case"
-                                           invisible="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
+                                    <field name="pan_no" placeholder="Your Answer" widget="upper_case"/>
                                     <field name="pan_card_document" widget="many2many_binary"
                                            options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 5}"
                                            required="const_business in ['Partnership', 'Pvt Ltd Co.', 'LLP']"

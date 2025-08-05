@@ -122,7 +122,7 @@
                                options="{'accepted_file_extensions': 'image/*', 'number_of_files': 10}"/>
                         <field name="shop_videos" widget="many2many_binary"
                                options="{'accepted_file_extensions': 'video/*', 'number_of_files': 10}"/>
-                        <p style="margin-left: 110px; font-weight: bold;">You can upload upto 64mb videos</p>
+                        <p style="margin-left: 110px; font-weight: bold;">You can upload each video upto 64MB</p>
                         <field name="comp_google_loc" placeholder="eg. Lat : 22.3511148 Long: 78.6677428"
                                widget="upper_case"/>
                         <field name="partner_llp_filename" invisible="1"/>
