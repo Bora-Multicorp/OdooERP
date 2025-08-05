@@ -109,13 +109,6 @@
             <field name="city" position="attributes">
                 <attribute name="widget">upper_case</attribute>
             </field>
-            <xpath expr="//field[@name='state_id']" position="attributes">
-                <attribute name="domain">[('country_id.code', '=', 'IN')]</attribute>
-            </xpath>
-            <field name="country_id" position="attributes">
-                <attribute name="domain">[('code', '=', 'IN')]</attribute>
-            </field>
-
             <field name="l10n_in_pan" position="attributes">
                 <attribute name="widget">upper_case</attribute>
             </field>
