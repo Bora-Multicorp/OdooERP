@@ -6,26 +6,16 @@
             <field name="inherit_id" ref="product.product_template_only_form_view"/>
             <field name="arch" type="xml">
                 <xpath expr="//group[@name='group_standard_price']" position="inside">
-                    <field name="part_number" required="categ_id == %(bora_product_master.product_category_type_printers)d" 
-                    invisible="categ_id != %(bora_product_master.product_category_type_printers)d"/>
+                    <field name="part_number" invisible="categ_id != %(bora_product_master.product_category_type_printers)d"/>
                 </xpath>
                 <xpath expr="//group[@name='group_standard_price']" position="inside">
-                    <field name="model_number_id" context="{'no_create_edit': True}"
-                    required="categ_id in (%(bora_product_master.product_category_type_toner_inks)d, %(bora_product_master.product_category_type_laptop)d)" 
-                    invisible="categ_id not in (%(bora_product_master.product_category_type_toner_inks)d, %(bora_product_master.product_category_type_laptop)d)"/>
+                    <field name="model_number_id" context="{'no_create_edit': True}" invisible="categ_id not in (%(bora_product_master.product_category_type_toner_inks)d, %(bora_product_master.product_category_type_laptop)d)"/>
                 </xpath>
                 <xpath expr="//group[@name='group_standard_price']" position="inside">
-                    <field name="part_code" required="categ_id in (%(bora_product_master.product_category_type_apple_laptops)d, %(bora_product_master.product_category_type_apple_imac)d, %(bora_product_master.product_category_type_harddisk)d, %(bora_product_master.product_category_type_mobile)d, %(bora_product_master.product_category_type_accessory)d)" 
-    invisible="categ_id not in (%(bora_product_master.product_category_type_apple_laptops)d, %(bora_product_master.product_category_type_apple_imac)d, %(bora_product_master.product_category_type_harddisk)d, %(bora_product_master.product_category_type_mobile)d, %(bora_product_master.product_category_type_accessory)d)"/>
-                    <field name="accessory_group" context="{'no_create_edit': True}"
-                    required="categ_id == %(bora_product_master.product_category_type_accessory)d" 
-                    invisible="categ_id != %(bora_product_master.product_category_type_accessory)d"/>
-                    <field name="specs_made" context="{'no_create_edit': True}"
-                    required="categ_id == %(bora_product_master.product_category_type_mobile)d" 
-                    invisible="categ_id != %(bora_product_master.product_category_type_mobile)d"/>
-                    <field name="made_country" context="{'no_create_edit': True}"
-                    required="categ_id == %(bora_product_master.product_category_type_mobile)d" 
-                    invisible="categ_id != %(bora_product_master.product_category_type_mobile)d"/>
+                    <field name="part_code" invisible="categ_id not in (%(bora_product_master.product_category_type_apple_laptops)d, %(bora_product_master.product_category_type_apple_imac)d, %(bora_product_master.product_category_type_harddisk)d, %(bora_product_master.product_category_type_mobile)d, %(bora_product_master.product_category_type_accessory)d)"/>
+                    <field name="accessory_group" context="{'no_create_edit': True}" invisible="categ_id != %(bora_product_master.product_category_type_accessory)d"/>
+                    <field name="specs_made" context="{'no_create_edit': True}" invisible="categ_id != %(bora_product_master.product_category_type_mobile)d"/>
+                    <field name="made_country" context="{'no_create_edit': True}" invisible="categ_id not in (%(bora_product_master.product_category_type_mobile)d, %(bora_product_master.product_category_type_accessory)d)"/>
                 </xpath>
             </field>
         </record>
