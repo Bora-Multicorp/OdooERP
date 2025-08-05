@@ -54,9 +54,9 @@
                                     <field name="business_phone" placeholder="Your Answer"/>
                                     <field name="business_email" placeholder="Your Answer" widget="upper_case"/>
                                     <field name="business_state_id"
-                                           options="{'no_create': True, 'no_create_edit': True}"/>
+                                           options="{'no_create': True, 'no_create_edit': True}" domain="[('country_id', '=', 'India')]"/>
                                     <field name="business_country_id"
-                                           options="{'no_create': True, 'no_create_edit': True}"/>
+                                           options="{'no_create': True, 'no_create_edit': True}" domain="[('code', '=', 'IN')]"/>
                                 </list>
                                 <form>
                                     <field name="business_street" placeholder="Your Answer" widget="upper_case"/>
@@ -65,9 +65,9 @@
                                     <field name="business_phone" placeholder="Your Answer"/>
                                     <field name="business_email" placeholder="Your Answer" widget="upper_case"/>
                                     <field name="business_state_id"
-                                           options="{'no_create': True, 'no_create_edit': True}"/>
+                                           options="{'no_create': True, 'no_create_edit': True}" domain="[('country_id', '=', 'India')]"/>
                                     <field name="business_country_id"
-                                           options="{'no_create': True, 'no_create_edit': True}"/>
+                                           options="{'no_create': True, 'no_create_edit': True}" domain="[('code', '=', 'IN')]"/>
                                 </form>
                             </field>
                             <field name="const_business" widget="radio" readonly="state not in ['draft']"/>
