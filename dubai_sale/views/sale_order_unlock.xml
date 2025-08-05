@@ -1,0 +1,23 @@
+<!-- your_module/views/sale_order_inherit.xml -->
+<odoo>
+    <!--
+    This record inherits the existing 'sale.view_order_form' view to add a new page.
+    The 'inherit_id' field references the external ID of the base view we want to modify.
+    -->
+    <record id="view_sale_order_form_inherit_unlock_page" model="ir.ui.view">
+        <field name="name">sale.order.form.inherit.unlock.page</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+            <!--
+            The <xpath> tag is used to find a specific location in the parent view.
+            We are looking for the <notebook> element and using 'position="inside"'
+            to add our new content as a new page within that notebook.
+            -->
+            <xpath expr="//notebook" position="inside">
+                <page name="unlock_approval_authorities_page" string="Unlock Approval Authorities">
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>

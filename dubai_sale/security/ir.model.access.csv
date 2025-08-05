@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_procurement_team,dubai_sale.procurement_team,model_purchase_procurement_team,base.group_user,1,1,0,0
+access_procurement_team,dubai_sale.procurement_team,model_purchase_procurement_team,base.group_system,1,1,1,1
+access_pi_unlock_approvers,dubai_sale.pi_approvers,model_pi_unlock_approvers,base.group_system,1,1,1,1
+

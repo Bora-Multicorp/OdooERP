@@ -5,6 +5,9 @@
     <record id="product_category_type_mobile" model="product.category">
       <field name="name">Mobile Phone</field>
     </record>
+    <record id="product_category_type_tablet" model="product.category">
+      <field name="name">Tablet</field>
+    </record>
     <record id="product_category_type_accessory" model="product.category">
       <field name="name">Accessory</field>
     </record>

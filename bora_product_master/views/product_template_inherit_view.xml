@@ -76,8 +76,8 @@
                     <!-- <field name="made_for_dubai"/> -->
                     <!-- <field name="made_in_india"/> -->
                     <field name="loose_or_master_carton" required="1"/>
-                    <field name="brand_id" required="1"/>
-                    <field name="model" required="1"/>
+                    <field name="brand_id"/>
+                    <field name="model"/>
                 </xpath>
                 <xpath expr="//page[@name='general_information']/group[1]" position="after">
                     <group >
