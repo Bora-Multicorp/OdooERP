@@ -6,7 +6,7 @@ class PIUnlockTeam(models.Model):
     _description = 'PI Unlock Approvers'
 
     sequence = fields.Integer(string='Sequence', readonly=True)
-    res_user = fields.Many2one('res.users', string='User', required=True)
+    user_id = fields.Many2one('res.users', string='User', required=True)
 
     _sql_constraints = [
         ('unique_user_id', 'unique(user_id)', 'Each approver member must be unique.')
@@ -20,8 +20,3 @@ class PIUnlockTeam(models.Model):
         max_sequence = self.search([], order="sequence desc", limit=1).sequence
         defaults['sequence'] = max_sequence + 1 if max_sequence else 1
         return defaults
-
-
-
-
-

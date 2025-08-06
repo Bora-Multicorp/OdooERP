@@ -23,6 +23,8 @@ Long description of module's purpose
     # always loaded
     'data': [
         'security/ir.model.access.csv',
+        'wizard/pi_unlock_approve_request_views.xml',
+        'wizard/pi_unlock_reject_request_views.xml',
         'views/procurement_team_views.xml',
         'views/pi_unlock_approvers.xml',
         'views/sale_order_unlock.xml',

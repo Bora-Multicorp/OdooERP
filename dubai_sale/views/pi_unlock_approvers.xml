@@ -7,7 +7,7 @@
                 <sheet>
                     <group>
                         <field name="sequence"/>
-                        <field name="res_user" options="{'no_create': True, 'no_create_edit': True}"/>
+                        <field name="user_id" options="{'no_create': True, 'no_create_edit': True}"/>
                     </group>
                 </sheet>
             </form>
@@ -19,7 +19,7 @@
         <field name="arch" type="xml">
             <list editable="bottom" string="PI Unlock Approvers">
                 <field name="sequence"/>
-                <field name="res_user"/>
+                <field name="user_id"/>
             </list>
         </field>
     </record>

@@ -1,22 +1,42 @@
 <!-- your_module/views/sale_order_inherit.xml -->
 <odoo>
-    <!--
-    This record inherits the existing 'sale.view_order_form' view to add a new page.
-    The 'inherit_id' field references the external ID of the base view we want to modify.
-    -->
     <record id="view_sale_order_form_inherit_unlock_page" model="ir.ui.view">
         <field name="name">sale.order.form.inherit.unlock.page</field>
         <field name="model">sale.order</field>
         <field name="inherit_id" ref="sale.view_order_form"/>
         <field name="arch" type="xml">
-            <!--
-            The <xpath> tag is used to find a specific location in the parent view.
-            We are looking for the <notebook> element and using 'position="inside"'
-            to add our new content as a new page within that notebook.
-            -->
             <xpath expr="//notebook" position="inside">
-                <page name="unlock_approval_authorities_page" string="Unlock Approval Authorities">
+                <page name="unlock_approval_authorities_page" string="Unlock Approval Authorities" invisible="0">
+                    <group>
+                        <field name="assigned_to"
+                                           options="{'no_edit': True, 'no_create': True, 'no_open': True}"
+                                           invisible="not assigned_to" readonly="1"/>
+                        <field name="existing_user_ids" invisible="1" widget="many2many_tags"/>
+                    </group>
+                    <field name="approval_users_ids" nolabel="1" help="Define the PI Unlock approval roles."
+                                       readonly="1">
+                        <list editable="bottom">
+                            <field name="sequence"/>
+                            <field name="user_id" widget="many2one_avatar_user"
+                                               options="{'no_edit': True, 'no_create': True, 'no_open': True}"/>
+                            <field name="remark"/>
+                            <field name="state" readonly="1"/>
+                            <field name="action_date" readonly="1"/>
+                        </list>
+                        <form>
+                            <group>
+                                <field name="user_id"
+                                                   options="{'no_edit': True, 'no_create': True, 'no_open': True}"/>
+                                <field name="state"/>
+                                <field name="remark"/>
+                            </group>
+                        </form>
+                    </field>
                 </page>
+            </xpath>
+            <xpath expr="//header" position="inside">
+                <button name="%(approve_pi_unlock_wizard_action)d" string="PI Unlock Approve" type="action" class="oe_highlight" invisible="assigned_to != uid"/>
+                <button name="%(reject_pi_wizard_action)d" string="PI Unlock Reject" type="action" class="oe_highlight" invisible="assigned_to != uid"/>
             </xpath>
         </field>
     </record>

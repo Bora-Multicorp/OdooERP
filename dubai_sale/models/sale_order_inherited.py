@@ -4,6 +4,9 @@ from odoo.exceptions import UserError
 class SalesOrderInherited(models.Model):
     _inherit = 'sale.order'
 
+
+
+    # check "Re-ordering" rule exist or not
     def action_confirm(self):
         for order in self:
             # Check for re-order rules on each line item.
