@@ -18,7 +18,7 @@ class RejectProductWizard(models.TransientModel):
 
 
         number_of_product_for_rejction = 0
-        for product in products: # LOOP THROUGH EACH SELECTED PRODUCT
+        for product in products:
 
             if product.state != 'pending':
                 continue
@@ -41,49 +41,43 @@ class RejectProductWizard(models.TransientModel):
         first_product = products[0]
         title = f"Total {number_of_product_for_rejction} products are rejected."
         message = "Activities are assigned to you."
-        type = "success"
+        type = "info"
         partner_id = products[0].assigned_to.partner_id
 
         if number_of_product_for_rejction == 1:
             title = f"Product {first_product.name} rejected."
-            message = "Activity assigned to you."
-            type = "success"
+            message = ""
+            type = "info"
         elif number_of_product_for_rejction == 0:
-            title = f"No products in 'Pending for Approval' state were found among your selection. Please select products that are in the 'Pending' state to proceed."
+            title = f"No products in 'Pending' state were found among your selection. Please select products that are in the 'Pending' state to proceed."
             message = ""
             type = "danger"
             partner_id = self.env.user.partner_id
 
         first_product.env['bus.bus']._sendone(
-                partner_id,
-                'simple_notification',
-                {
-                    'type': type,
-                    'title': title,
-                    'message':  message,
-                    'sticky': True,
-                },
-            )
-
-
-        return {'type': 'ir.actions.act_window_close'}
-
-
-        approval = self.product_approval_id
-        current_user = self.env.user
-
-        # Find the matching approval line for the currently assigned user
-        approval_line = approval.approval_users_ids.filtered(
-            lambda l: l.user_id == current_user and not l.state
+            partner_id,
+            'simple_notification',
+            {
+                'type': type,
+                'title': title,
+                'message':  message,
+                'sticky': True,
+            },
         )
 
-        if approval_line:
-            approval_line.write({
-                'state': 'reject',
-                'remark': self.remark,
-                'action_date': fields.Datetime.now(),
-            })
-            # Recompute the next approver
-            # approval._update_assigned_to()
+        if number_of_product_for_rejction > 0:
+            product_approval_users = self.env['product.approval.config'].sudo().search([])
+            for user in product_approval_users:
+                if user.user_id != self.env.user:
+                    first_product.env['bus.bus']._sendone(
+                        user.user_id.partner_id,
+                        'simple_notification',
+                        {
+                            'type': type,
+                            'title': title,
+                            'message':  message,
+                            'sticky': True,
+                        },
+                    )
 
         return {'type': 'ir.actions.act_window_close'}

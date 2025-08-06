@@ -17,7 +17,7 @@ class ApproveProductWizard(models.TransientModel):
 
 
         number_of_product_for_approvals = 0
-        for product in products: # LOOP THROUGH EACH SELECTED PRODUCT
+        for product in products:
 
             if product.state != 'pending':
                 continue
@@ -65,7 +65,7 @@ class ApproveProductWizard(models.TransientModel):
 
         if partner_id != self.env.user.partner_id:
             title = "Product approved successfully."
-            if number_of_product_for_approvals > 0:
+            if number_of_product_for_approvals > 1:
                 title = f"Total {number_of_product_for_approvals} products are approved successfully."
 
 

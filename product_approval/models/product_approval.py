@@ -75,7 +75,7 @@ class ProductApproval(models.Model):
             partner_id = first_product.assigned_to.partner_id
             type="success"
             if number_of_product_for_approvals == 1:
-                title = f"Product approval for {first_product.name}"
+                title = f"Product approval request for {first_product.name} assigned."
                 message = "Activity assigned to you."
             elif number_of_product_for_approvals == 0:
                 title = f"No products in 'Draft' state were found among your selection. Please select products that are in the 'Draft' state to proceed."
@@ -252,16 +252,16 @@ class ProductApproval(models.Model):
         #         },
         #     )
 
-        # for record in self:
-        #     if vals.get('state') == 'confirmed':
+        for record in self:
+            if vals.get('state') == 'confirmed':
 
-        #         for record in self:
-        #             record.write({'active': True})
-        #             for variant in record.product_variant_ids:
-        #                 variant.write({
-        #                     'active': True,
-        #                     # 'is_hidden_for_approval': True,
-        #                 })
+                for record in self:
+                    record.write({'active': True})
+                    for variant in record.product_variant_ids:
+                        variant.write({
+                            'active': True,
+                            # 'is_hidden_for_approval': True,
+                        })
 
 
 
