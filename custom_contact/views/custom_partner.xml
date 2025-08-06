@@ -100,6 +100,12 @@
                     <!--invisible="not is_approved or (deadline and deadline &lt;= context_today())"/>-->
                 </header>
             </xpath>
+                 <xpath expr="//div[@name='partner_address_country']/field[@name='country_id']" position="attributes">
+                <attribute name="domain">[('code', '=', 'IN')]</attribute>
+            </xpath>
+            <xpath expr="//field[@name='state_id']" position="attributes">
+                <attribute name="domain">[('country_id.code', '=', 'IN')]</attribute>
+            </xpath>
             <field name="street" position="attributes">
                 <attribute name="widget">upper_case</attribute>
             </field>
