@@ -5,3 +5,4 @@ from . import purchase_order_rfq
 from . import sale_order_inherited
 from . import pi_unlock_approvers
 from . import sale_order_unlock
+from . import show_payment_to_accounts_group

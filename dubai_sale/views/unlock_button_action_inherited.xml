@@ -17,7 +17,7 @@
                 If the button already has one, this will override it.
                 If it doesn't, this will add it.
                 -->
-                <attribute name="confirm">Are you sure you want to unlock this order? Unlocking will require PI approval.</attribute>
+                <attribute name="confirm">Are you sure you want to unlock this order? Unlocking will require PI unlock approval.</attribute>
             </xpath>
         </field>
     </record>

@@ -29,7 +29,8 @@ Long description of module's purpose
         'views/pi_unlock_approvers.xml',
         'views/sale_order_unlock.xml',
         'views/unlock_button_action_inherited.xml',
-        # 'data/translation.xml'
+        'views/show_payment_to_accounts_group.xml',
+        'data/account_group_in_sales.xml'
     ],
     # only loaded in demonstration mode
     # 'demo': [
