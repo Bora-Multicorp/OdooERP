@@ -12,7 +12,7 @@
                         <field name="user_id" options="{'no_create': True, 'no_create_edit': True}"/>
                     </group>
                 </sheet>
-            </form>
+            </form> 
         </field>
     </record>
 
@@ -33,6 +33,9 @@
         <field name="res_model">product.approval.config</field>
         <field name="view_mode">list,form</field>
         <field name="target">current</field>
+            <p class="o_view_nocontent_smiling_face">
+                Define your product approval users here.
+            </p>
     </record>
 
     <!-- Menu item under Inventory > Configuration -->

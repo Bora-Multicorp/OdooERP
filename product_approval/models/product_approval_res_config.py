@@ -3,7 +3,7 @@ from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError
 
 
-class ProductApprovalConfig(models.Model):
+class ProductApprovalConfig(models.Model): 
     _name = "product.approval.config"
     _description = "Product Approval Settings"
     _rec_name = 'user_id'
