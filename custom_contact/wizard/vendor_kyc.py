@@ -47,18 +47,18 @@ class VendorKycWizard(models.TransientModel):
                     raise ValidationError(_("Invalid Partner LLP file format."))
 
 
-    @api.constrains('directors_detail')
-    def _check_duplicate_directors_detail_emails(self):
-        for wizard in self:
-            emails = []
-            for line in wizard.directors_detail:
-                if line.email:
-                    lower_email = line.email.lower()
-                    if lower_email in emails:
-                        raise ValidationError(
-                            _("Duplicate email address found in Directors Details: %s") % line.email
-                        )
-                    emails.append(lower_email)
+    # @api.constrains('directors_detail')
+    # def _check_duplicate_directors_detail_emails(self):
+    #     for wizard in self:
+    #         emails = []
+    #         for line in wizard.directors_detail:
+    #             if line.email:
+    #                 lower_email = line.email.lower()
+    #                 if lower_email in emails:
+    #                     raise ValidationError(
+    #                         _("Duplicate email address found in Directors Details: %s") % line.email
+    #                     )
+    #                 emails.append(lower_email)
 
     @api.constrains('directors_detail', 'address_detail')
     def _check_phone_numbers(self):
@@ -195,6 +195,8 @@ class VendorKycWizard(models.TransientModel):
                     "Invalid CIN Number: '%s'. Expected format is like 'L12345MH2020PLC123456'."
                 ) % rec.cin_no)
 
+
+
     @api.onchange('is_same_trade_name', 'business_legal_name')
     def _onchange_trade_name_sync(self):
         for rec in self:
@@ -240,19 +242,19 @@ class VendorKycWizard(models.TransientModel):
     aadhaar_pan_link = fields.Selection([('yes', 'Yes'), ('no', 'No')], string='Aadhar and PAN card linking?',
                                         required=True)
     gst_no = fields.Char(string="GST Number", required=True)
-    udyam_number = fields.Char(string="Udyam Certificate Number", required=True)
+    udyam_number = fields.Char(string="Udyam Certificate Number", required=False)
     license_registered = fields.Char(string="Any licenses registered (As per Local/State Government requirements)")
     gst_certificate = fields.Many2many('ir.attachment', 'vendor_kyc_gst_cert_rel', 'wizard_id', 'attachment_id',
                                        string="GST Certificate(Latest)", required=True)
 
     udyam_document = fields.Many2many('ir.attachment', 'vendor_kyc_shop_documents_rel', 'wizard_id', 'attachment_id',
-                                      string="Udyam Documents", required=True)
+                                      string="Udyam Documents", required=False)
     shop_act_document = fields.Many2many('ir.attachment', 'vendor_kyc_shop_act_documents_rel', 'wizard_id',
                                          'attachment_id',
-                                         string="Shop Act documents", required=True)
+                                         string="Shop Act documents", required=False)
 
     gst_return_duration = fields.Selection([('Monthly', 'Monthly'), ('Quarterly', 'Quarterly')],
-                                           required=True, string="GST Return duration")
+                                           required=False, string="GST Return duration")
 
     shop_photos = fields.Many2many('ir.attachment', 'vendor_kyc_shop_photos_rel', 'wizard_id', 'attachment_id',
                                    string="Shop Photos", required=True,
@@ -263,14 +265,14 @@ class VendorKycWizard(models.TransientModel):
                                    help="Short Video")
     bank_detail = fields.One2many('bank.detail', 'kyc_wizard_id', string="Bank Detail")
     address_detail = fields.One2many('address.detail', 'kyc_wizard_id', string="Address Detail")
-    pan_no = fields.Char(string="PAN Number(Company)")
+    pan_no = fields.Char(string="PAN Number(Company)", required=True)
     pan_card_document = fields.Many2many('ir.attachment', 'pan_card_company_documents_rel', 'wizard_id',
                                          'attachment_id',
                                          string="PAN Card Document(Company)")
     incorporation_certificate = fields.Many2many('ir.attachment', 'incorportaion_certificate_rel', 'wizard_id',
                                                  'attachment_id',
                                                  string="Incorporation Certificate")
-    comp_google_loc = fields.Char(string="Google Location of Shop", required=True)
+    comp_google_loc = fields.Char(string="Google Location of Shop", required=False)
 
     partner_llp_filename = fields.Char()
     partner_llp = fields.Binary(string="Partnership Deed or LLP Deed")
@@ -279,7 +281,7 @@ class VendorKycWizard(models.TransientModel):
     cin_no = fields.Char(string="CIN number")
     electricity_bill = fields.Many2many('ir.attachment', 'vendor_kyc_electricity_bill_rel', 'wizard_id',
                                         'attachment_id',
-                                        string="Electricity bill", required=True)
+                                        string="Electricity bill", required=False)
 
     #####
     @api.constrains('address_detail')
