@@ -1,6 +1,6 @@
 <odoo>
     <data>
-        <record id="action_bulk_submit_for_approval" model="ir.actions.server">
+        <record id="action_bulk_submit_for_approval2" model="ir.actions.server">
             <field name="name">Submit for Approvals</field>
             <field name="model_id" ref="product.model_product_template"/>
             <field name="state">code</field>
