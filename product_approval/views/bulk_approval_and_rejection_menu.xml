@@ -6,7 +6,7 @@
             <field name="state">code</field>
             <field name="code">
 # Instead of directly calling bulk_approval, open the confirmation wizard
-action = env.ref('product_approval.action_open_product_bulk_submit_for_approval_wizard').read()[0]
+action = env.ref('product_approval.action_open_product_bulk_submit_for_approval_wizard').sudo().copy_data()[0]
 # Pass active_ids from the server action context to the window action context
 action['context'] = {'active_ids': records.ids}
             </field>
@@ -20,7 +20,7 @@ action['context'] = {'active_ids': records.ids}
             <field name="state">code</field>
             <field name="code">
 # Instead of directly calling bulk_approval, open the confirmation wizard
-action = env.ref('product_approval.approve_product_wizard_action').read()[0]
+action = env.ref('product_approval.approve_product_wizard_action').sudo().copy_data()[0]
 # Pass active_ids from the server action context to the window action context
 action['context'] = {'active_ids': records.ids}
             </field>
@@ -34,7 +34,7 @@ action['context'] = {'active_ids': records.ids}
             <field name="state">code</field>
             <field name="code">
 # Instead of directly calling bulk_approval, open the confirmation wizard
-action = env.ref('product_approval.reject_product_wizard_action').read()[0]
+action = env.ref('product_approval.reject_product_wizard_action').sudo().copy_data()[0]
 # Pass active_ids from the server action context to the window action context
 action['context'] = {'active_ids': records.ids}
             </field>
