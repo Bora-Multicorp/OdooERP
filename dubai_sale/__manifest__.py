@@ -18,7 +18,7 @@ Long description of module's purpose
     'version': '0.1',
 
     # any module necessary for this one to work correctly
-    'depends': ['base', 'crm', 'purchase', 'sale', 'sale_stock'],
+    'depends': ['base', 'crm', 'purchase', 'sale', 'sale_stock', 'account'],
 
     # always loaded
     'data': [
@@ -29,7 +29,7 @@ Long description of module's purpose
         'views/pi_unlock_approvers.xml',
         'views/sale_order_unlock.xml',
         'views/unlock_button_action_inherited.xml',
-        'views/show_payment_to_accounts_group.xml',
+        'views/account_move_inherited.xml',
         'data/account_group_in_sales.xml'
     ],
     # only loaded in demonstration mode
