@@ -46,13 +46,11 @@ class PurchaseOrder(models.Model):
         procurement_team = self.env['purchase.procurement.team'].search([])
         for user in procurement_team:
             self._schedule_activity(
-                self,
                 user.res_user,
                 title="New RFQ from Reordering Rule",
                 note=f"Please review the RFQ: <a href='/web#id={self.id}&model=purchase.order&view_type=form'>{self.name}</a>",
             )
             self._send_notification(
-                self,
                 user.res_user,
                 title=f"New RFQ from Reordering Rule",
                 message=f"A new RFQ has been created from a reordering rule: {self.name}",
