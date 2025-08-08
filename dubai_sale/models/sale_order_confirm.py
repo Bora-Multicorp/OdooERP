@@ -30,7 +30,27 @@ class SalesOrderInherited(models.Model):
                         f"No re-order rule is configured for product '{product_template.name}'. Please configure one before confirming this order."
                     )
 
-            # If all checks pass, call the original action_confirm method
-            # to proceed with the sales order confirmation.
-            return super(SalesOrderInherited, self).action_confirm()
+        return super(SalesOrderInherited, self).action_confirm()
+        # self.action_trigger_reordering_rules()
 
+
+
+    def action_trigger_reordering_rules(self):
+        orderpoints = self.env['stock.warehouse.orderpoint'].search([]) 
+
+        if orderpoints:
+            orderpoints.sudo()._procure_orderpoint_confirm()
+            self.env.user.notify_success(message="Reordering rules processed successfully!")
+        else:
+            self.env.user.notify_warning(message="No active reordering rules found.")
+
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': "Reordering",
+                'message': "Reordering rules processed.",
+                'type': 'success',
+                'sticky': False,
+            }
+        }
