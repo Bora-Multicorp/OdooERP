@@ -5,24 +5,21 @@ class PurchaseOrder(models.Model):
 
     @api.model
     def create(self, vals):
-        po = super().create(vals)
+
+        self_with_context = self.with_context(is_initial_po_creation_write=True)
+        po = super(PurchaseOrder, self_with_context).create(vals) 
         if self.env.context.get('from_orderpoint'):
             po._notify_procurement_team_on_RFQ_creation()
         return po
     
     def write(self, vals):
-        
-        """
-        Overrides the write method to notify the procurement team
-        when a purchase order is updated from a re-order rule.
-        """
+
+        is_initial_creation_write = self.env.context.get('is_initial_po_creation_write')
         res = super().write(vals)
-        # Check if the purchase order was updated via a re-order rule
-        # by checking for the 'from_orderpoint' key in the context.
-        if self.env.context.get('from_orderpoint'):
+
+        if (not is_initial_creation_write and self.env.context.get('from_orderpoint')):
             self._notify_procurement_team_on_RFQ_updation()
         return res
-
 
 
     def _notify_procurement_team_on_RFQ_updation(self):
