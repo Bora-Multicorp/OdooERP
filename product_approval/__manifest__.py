@@ -11,10 +11,12 @@
         'security/ir.model.access.csv',
         'wizard/approve_request_views.xml',
         'wizard/reject_request_views.xml',
+        'wizard/bulk_submit_for_approval.xml',
         'views/product_approval_res_config.xml',
         'views/product_approval_views.xml',
         'views/action_product_approval_view.xml',
         'views/search_view_for_activity.xml',
+        'views/bulk_approval_and_rejection_menu.xml',
         'data/product_mail_templates.xml',
     ],
     'assets': {
