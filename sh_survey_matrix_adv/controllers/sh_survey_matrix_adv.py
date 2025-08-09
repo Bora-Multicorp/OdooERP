@@ -26,15 +26,23 @@ class SurveyController(http.Controller):
                 modelRecord = modelRecord.sudo()
                 rec_name = modelRecord._rec_name
                 model_name = modelRecord.model
-                if model_name == "res.country.state":
+                if model_name == "res.country":
+                    india = request.env['res.country'].sudo().search([('code','=','IN')], limit=1)
+                    if india:
+                        domain += [('id','=',india.id)]
+                    records = request.env[model_name].sudo().search_read(
+                        domain,
+                        fields=[rec_name, 'id'],
+                    )
+                elif model_name == "res.country.state":
+                    domain += [('country_id.code', '=', 'IN')]
                     records = request.env[model_name].sudo().search_read(
                         domain,
                         fields=[rec_name, 'id', 'country_id'],
                         order='country_id, name'
                     )
                 else:
-                    records = request.env[modelRecord.model].sudo(
-                    ).search_read([], fields=[rec_name, 'id'])
+                    records = request.env[modelRecord.model].sudo().search_read([], fields=[rec_name, 'id'])
                 if records:
                     records = [dict(item, name=item.get(rec_name))
                                for item in records]

@@ -7,7 +7,8 @@
             <field name="survey_type">survey</field>
             <field name="user_id" ref="base.user_admin"/>
             <field name="access_mode">public</field>
-            <field name="questions_layout">page_per_section</field>
+            <!--<field name="questions_layout">page_per_section</field>-->
+            <field name="questions_layout">one_page</field>
             <field name="users_can_go_back" eval="True"/>
             <field name="users_login_required" eval="False"/>
             <!--<field name="survey_image" type="base64" file="survey_management/static/description/img/corbiz_logo.jpg"/>-->
@@ -329,6 +330,7 @@
             <field name="comments_allowed" eval="True"/>
             <field name="comment_count_as_answer" eval="True"/>
             <field name="constr_mandatory" eval="True"/>
+            <field name="question_code">CONST_OF_BUSINESS</field>
         </record>
         <record model="survey.question.answer" id="business_constitution_kyc_survey_sug1">
             <field name="question_id" ref="business_constitution_kyc_survey"/>
@@ -362,6 +364,7 @@
             <field name="sequence">20</field>
             <field name="question_type" eval="False"/>
             <field name="is_page" eval="True"/>
+            <field name="question_code">DIRECTOR_DETAIL</field>
             <!--<field name="description" type="html">
                 <h3>(Director / Owner Details)</h3>
                 <br/>
@@ -380,6 +383,7 @@
             <field name="survey_id" ref="vendor_kyc_form_survey"/>
             <field name="sequence">21</field>
             <field name="question_type">simple_choice</field>
+            <field name="question_code">NO_OF_MANAGEING_PARTNER</field>
             <field name="constr_mandatory" eval="True"/>
             <field name="triggering_answer_ids"
                    eval="[Command.link(ref('business_constitution_kyc_survey_sug2')),
@@ -657,7 +661,12 @@
             <field name="sequence">30</field>
             <field name="question_type">que_sh_file</field>
             <field name="upload_multiple_file">False</field>
-            <field name="constr_mandatory">True</field>
+            <field name="constr_mandatory">False</field>
+            <field name="is_cond_required">True</field>
+            <field name="question_code">SHOP_ACT_DOC</field>
+            <field name="cond_required_answer_ids"
+               eval="[Command.link(ref('business_constitution_kyc_survey_sug1')),
+               Command.link(ref('business_constitution_kyc_survey_sug5'))]"/>
         </record>
         <!-- Udyam Documents -->
         <record model="survey.question" id="udyam_document_kyc_survey">
@@ -666,8 +675,13 @@
             <field name="sequence">30</field>
             <field name="question_type">que_sh_file</field>
             <field name="upload_multiple_file">False</field>
-            <field name="constr_mandatory">True</field>
-        </record>
+            <field name="constr_mandatory">False</field>
+            <field name="is_cond_required">True</field>
+            <field name="question_code">UDYAM_DOC</field>
+            <field name="cond_required_answer_ids"
+               eval="[Command.link(ref('business_constitution_kyc_survey_sug1')),
+               Command.link(ref('business_constitution_kyc_survey_sug5'))]"/>
+            </record>
         <!-- GST Return duration -->
         <record model="survey.question" id="gst_duration_kyc_survey">
             <field name="title">GST Return duration</field>
@@ -737,6 +751,11 @@
             <field name="question_type">que_sh_file</field>
             <field name="upload_multiple_file">False</field>
             <field name="constr_mandatory">False</field>
+            <field name="is_cond_required">True</field>
+            <field name="question_code">PAR_LLP_DEED</field>
+            <field name="cond_required_answer_ids"
+               eval="[Command.link(ref('business_constitution_kyc_survey_sug2')),
+               Command.link(ref('business_constitution_kyc_survey_sug4'))]"/>
             <field name="triggering_answer_ids"
                    eval="[Command.link(ref('business_constitution_kyc_survey_sug2')),
                    Command.link(ref('business_constitution_kyc_survey_sug4'))]"/>
@@ -749,6 +768,10 @@
             <field name="question_type">que_sh_file</field>
             <field name="upload_multiple_file">True</field>
             <field name="constr_mandatory">False</field>
+            <field name="is_cond_required">True</field>
+            <field name="question_code">MOA_OR_AOA</field>
+            <field name="cond_required_answer_ids"
+               eval="[Command.link(ref('business_constitution_kyc_survey_sug3'))]"/>
             <field name="triggering_answer_ids"
                    eval="[Command.link(ref('business_constitution_kyc_survey_sug3'))]"/>
         </record>
