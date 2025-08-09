@@ -3,7 +3,8 @@
 import SurveyFormWidget from '@survey/js/survey_form';
 import { rpc } from "@web/core/network/rpc";
 
-function reloadMany2oneOptions({ model_id, domain, $el, selectedId = null }) {
+
+/*function reloadMany2oneOptions({ model_id, domain, $el, selectedId = null }) {
     rpc("/survey/get_matrix_many2one_field_data", {
         model_id: model_id,
         domain: domain,
@@ -62,8 +63,8 @@ $(document).on("change", ".js_cls_sh_matrix_many2one_select", function (ev) {
         });
     }
 }
+});*/
 
-});
 
 $(document).on("change", ".sh_file_input", function (ev) {
     var $i = $(ev.currentTarget);
@@ -90,57 +91,6 @@ $(document).on("change", ".sh_file_input", function (ev) {
 function normalize(str) {
     return str.replace(/\s+/g, ' ').trim();
 }
-
-function updateDirectorMatrixRowVisibility(count) {
-    $("div.mb-4").each(function () {
-        const headingText = $(this).text().trim();
-        if (headingText.startsWith("Director Details")) {
-            const $matrixTable = $(this).nextAll("table[data-question-type='matrix']").first();
-            if (!$matrixTable.length) return;
-            const dataName = $matrixTable.attr("data-name");
-            const inputSelector = `input[name="${dataName}_rowcount"]`;
-            const $rowCountInput = $(inputSelector);
-            if ($rowCountInput.length) {
-                console.log("$rowCountInput.length", $rowCountInput.length);
-                $rowCountInput.val(count).trigger("change");
-                const $rows = $matrixTable.find("tbody > tr");
-                $rows.each(function (index) {
-                    if (index < count) {
-                        $(this).removeClass("hide-row");
-                    } else {
-                        $(this).addClass("hide-row");
-                    }
-                });
-            }
-        }
-    });
-}
-
- $(document).on("change", "input.o_survey_form_choice_item", function (event) {
-     const $input = $(event.target);
-     const selectedLabel = $input.closest("label").find("span").text().trim();
-     const normalizedLabel = normalize(selectedLabel);
-     const multiDirectorLabels = ["Partnership", "Pvt Ltd Co.", "LLP", "HUF(Karta)", "If other, please specify:"].map(normalize);
-     const maxCount = parseInt(selectedLabel);
-     let directorCount = 0;
-     if (normalizedLabel === "Sole Proprietor") {
-         directorCount = 1;
-     } else if (multiDirectorLabels.includes(normalizedLabel)) {
-         directorCount = 7;
-     }
-     if (directorCount > 0 && (isNaN(maxCount) || maxCount <= 0 || maxCount > 7)) {
-         sessionStorage.setItem("director_details_count", directorCount);
-         updateDirectorMatrixRowVisibility(directorCount);
-         }
-     else if (!isNaN(maxCount) && maxCount > 0 && maxCount <= 7) {
-         sessionStorage.setItem("director_details_count", maxCount);
-         updateDirectorMatrixRowVisibility(maxCount);
-     }
-     else if (directorCount > 0) {
-         sessionStorage.setItem("director_details_count", directorCount);
-         updateDirectorMatrixRowVisibility(directorCount);
-     }
- });
 
 function updateRowCount(data_name) {
     const visibleRows = $('table.table-borderless[data-name="' + data_name + '"] tr[id]').not('.hide-row');
@@ -214,22 +164,147 @@ $(document).off('click', '.delete-item-btn').on('click', '.delete-item-btn', fun
 //});
 
 SurveyFormWidget.include({
+   events: Object.assign({}, SurveyFormWidget.prototype.events || {}, {
+        'change input[type="radio"]': '_onChangeSelection',
+        "change .js_cls_sh_matrix_many2one_select": "_onChangeState",
+    }),
 
     init: function () {
         this._super.apply(this, arguments);
+        this._selectedConstBusValue = null;
+    },
+
+    _onChangeState: function (ev) {
+        var $StateSelect = $(ev.currentTarget);
+        var self = this;
+        if (!$(ev.currentTarget).val()) {
+            return;
+        }
+        const rowId = $StateSelect.data('row-id');
+        const modelName = $StateSelect.data('model-name');
+        if (modelName === 'res.country.state') {
+            const $countryField = $(`select[data-model-name='res.country'][data-row-id='${rowId}']`);
+            var indiaId = $countryField.find("option:contains('India')").val();
+            if ($countryField.length) {
+                $countryField.val(indiaId).trigger('change');
+            }
+        }
+    },
+
+    applyConditionalRequirements: function ($input) {
+        if (!$input || !$input.length) {
+            return;
+        }
+        const selectedAnswerId = parseInt($input.val());
+        if (!selectedAnswerId) return;
+        // Reset all conditional fields
+        $('[data-cond-required="1"]').each(function () {
+            $(this).removeAttr('data-required data-cond-required').removeClass('is-invalid');
+            const fieldCode = $(this).data('question-code');
+            $('[data-cond-required-label="' + fieldCode + '"]').addClass("d-none");
+        });
+        // Re-apply conditions based on selected answer
+        $('input[data-cond-req-questions]').each(function () {
+            const $targetInput = $(this);
+            const condReqIds = $targetInput.data('cond-req-questions');
+            if (Array.isArray(condReqIds) && condReqIds.includes(selectedAnswerId)) {
+                $targetInput.attr({
+                    'data-required': 'true',
+                    'data-cond-required': '1'
+                });
+                const targetCode = $targetInput.data('question-code');
+                $('[data-cond-required-label="' + targetCode + '"]').removeClass("d-none");
+            }
+        });
+    },
+
+    updateDirectorMatrixRowVisibility: function (count) {
+        $("div.mb-4").each(function () {
+            const headingText = $(this).text().trim();
+            if (headingText.startsWith("Director Details")) {
+                const $matrixTable = $(this).nextAll("table[data-question-type='matrix']").first();
+                if (!$matrixTable.length) return;
+                const dataName = $matrixTable.attr("data-name");
+                const inputSelector = `input[name="${dataName}_rowcount"]`;
+                const $rowCountInput = $(inputSelector);
+                if ($rowCountInput.length) {
+                    $rowCountInput.val(count).trigger("change");
+                    const $rows = $matrixTable.find("tbody > tr");
+                    $rows.each(function (index) {
+                        if (index < count) {
+                            $(this).removeClass("hide-row");
+                        } else {
+                            $(this).addClass("hide-row");
+                        }
+                    });
+                }
+            }
+        });
     },
 
 
-     _onNextScreenDone: function (options) {
-         const def = this._super.apply(this, arguments);
-         const storedDirectorCount = sessionStorage.getItem("director_details_count");
-          if (storedDirectorCount) {
-              updateDirectorMatrixRowVisibility(storedDirectorCount);
-              sessionStorage.removeItem("director_details_count");
-         }
-         this.restoreVisibleRows();
-         return def;
-     },
+    _onChangeSelection: function (event) {
+        const $input = $(event.target);
+        if (!$input.val()) {
+            return;
+        }
+        const $questionDiv = $input.closest('.o_survey_answer_wrapper');
+        const questionCode = $questionDiv.data('question-code');
+        if (questionCode === 'CONST_OF_BUSINESS') {
+            this._selectedConstBusValue = $input.val();
+            this.applyConditionalRequirements($input);
+            const selectedLabel = $input.closest("label").find("span").text().trim();
+            const normalizedLabel = normalize(selectedLabel);
+            const multiDirectorLabels = [
+                "Partnership",
+                "Pvt Ltd Co.",
+                "LLP",
+                "HUF(Karta)",
+                "If other, please specify:"
+            ].map(normalize);
+            let directorCount = 0;
+            if (normalizedLabel === "Sole Proprietor") {
+                directorCount = 1;
+            } else if (multiDirectorLabels.includes(normalizedLabel)) {
+                directorCount = 7;
+            }
+            if (directorCount > 0) {
+                sessionStorage.setItem("director_details_count", directorCount);
+                this.updateDirectorMatrixRowVisibility(directorCount);
+            }
+        }
+        if (questionCode === 'NO_OF_MANAGEING_PARTNER') {
+            const selectedLabel2 = $input.closest("label").find("span").text().trim()
+            const maxCount = parseInt(selectedLabel2);
+            if ((isNaN(maxCount) || maxCount <= 0 || maxCount > 7)) {
+                sessionStorage.setItem("director_details_count", directorCount);
+                this.updateDirectorMatrixRowVisibility(directorCount);
+            }
+            else if (!isNaN(maxCount) && maxCount > 0 && maxCount <= 7) {
+                sessionStorage.setItem("director_details_count", maxCount);
+                this.updateDirectorMatrixRowVisibility(maxCount);
+            }
+        }
+    },
+
+    _onNextScreenDone: function (options) {
+        const def = this._super.apply(this, arguments);
+        if (this._selectedConstBusValue) {
+            const $mockInput = $('<input>')
+                .attr('type', 'radio')
+                .addClass('o_survey_form_choice_item')
+                .val(this._selectedConstBusValue);
+            this.applyConditionalRequirements($mockInput);
+        }
+        const storedDirectorCount = sessionStorage.getItem("director_details_count");
+        if (storedDirectorCount) {
+            this.updateDirectorMatrixRowVisibility(storedDirectorCount);
+            sessionStorage.removeItem("director_details_count");
+        }
+        this.restoreVisibleRows();
+        return def;
+    },
+
 
     restoreVisibleRows: async function () {
         $("table.o_survey_question_matrix").each(function () {
@@ -315,7 +390,6 @@ SurveyFormWidget.include({
                 value: base64Content,
                 filename: fileName,
             });
-            //console.log("jsonData", jsonData)
             params = self._prepareSubmitAnswerMatrixCustom(params, questionId, rowId, colId, jsonData);
         });
 
