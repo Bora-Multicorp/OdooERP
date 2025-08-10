@@ -139,6 +139,17 @@ class SurveyQuestion(models.Model):
                                           help='Check this box if you want to '
                                                'allow users to upload '
                                                'multiple files')
+
+    question_code = fields.Char(string='Question Code', help='Custom code to uniquely identify this question (used in JS or templates)')
+    is_cond_required = fields.Boolean(string='Is Conditionally Required?')
+    cond_required_answer_ids = fields.Many2many(
+        'survey.question.answer',
+        'survey_question_cond_req_answer_rel',
+        'question_id',
+        'answer_id',
+        string='Conditionally Required Answers',
+        help="If these answers are selected, this question will be required.",
+    )
     # ------------------------------------------------------------
     # VALIDATION
     # ------------------------------------------------------------
