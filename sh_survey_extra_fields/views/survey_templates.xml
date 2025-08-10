@@ -18,7 +18,7 @@
 
 	<template id="question_simple_choice_inherit_add_code" inherit_id="survey.question_simple_choice">
           <xpath expr="//div[contains(@class, 'o_survey_answer_wrapper')]" position="attributes">
-            <attribute name="t-att-data-question-code">question.question_code</attribute><attribute name="t-att-data-question-code">question.question_code</attribute>
+            <attribute name="t-att-data-question-code">question.question_code</attribute>
         </xpath>
     </template>
 

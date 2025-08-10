@@ -585,6 +585,12 @@
             <field name="question_type">que_sh_file</field>
             <field name="upload_multiple_file">False</field>
             <field name="constr_mandatory">False</field>
+            <field name="is_cond_required">True</field>
+            <field name="question_code">PAN_CARD_DOC</field>
+            <field name="cond_required_answer_ids"
+                   eval="[Command.link(ref('business_constitution_kyc_survey_sug2')),
+                   Command.link(ref('business_constitution_kyc_survey_sug3')),
+                   Command.link(ref('business_constitution_kyc_survey_sug4'))]"/>
 <!--            <field name="triggering_answer_ids"-->
 <!--                   eval="[Command.link(ref('business_constitution_kyc_survey_sug2')),-->
 <!--                   Command.link(ref('business_constitution_kyc_survey_sug3')),-->
