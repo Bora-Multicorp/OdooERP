@@ -366,7 +366,17 @@ Many2one
     <template id="tmpl_sh_many2one_review" name="SH Many2one Review">
 	    <div class="form-row js_cls_sh_many2one_wrapper">
 	        <div class="form-group col-lg-12">
-	            <select
+				<select t-att-name="question.id" class="form-control" disabled="disabled"
+					t-att-data-model_id="question.que_sh_many2one_model_id.id if question.que_sh_many2one_model_id else False">
+				<option value="">Select...</option>
+				<t t-foreach="question.suggested_answer_ids" t-as="option">
+					<option t-att-value="option.id"
+							t-att-selected="answer_lines and answer_lines[0].suggested_answer_id.id == option.id and 'selected' or None">
+						<t t-esc="option.value"/>
+					</option>
+				</t>
+				</select>
+	           <!-- <select
 	                t-att-data-question-type="question.question_type"
 	                t-att-data-model_id="question.que_sh_many2one_model_id.id if question.que_sh_many2one_model_id else False"
 	                t-att-name="question.id"
@@ -375,7 +385,7 @@ Many2one
 	                <option value="">
 	                    <t t-if="answer_lines" t-esc="answer_lines[0].value_ans_sh_many2one or None" />
 	                </option>
-	            </select>
+	            </select>-->
 	        </div>
 	    </div>
 	</template>
@@ -488,8 +498,8 @@ Many2one
 	        <t t-if="question.question_type == 'que_sh_signature'"><t t-call="sh_survey_extra_fields.tmpl_sh_signature_review" /></t>
 	
 	        <t t-if="question.question_type == 'que_sh_address'"><t t-call="sh_survey_extra_fields.tmpl_sh_address_review" /></t>
-	
-	        <t t-if="question.question_type == 'que_sh_many2one'"><t t-call="survey.question_simple_choice" /></t>
+
+			<t t-if="question.question_type == 'que_sh_many2one'"><t t-call="sh_survey_extra_fields.tmpl_sh_many2one_review"/></t><!--<t t-call="survey.question_simple_choice" /></t>-->
 	
 	        <t t-if="question.question_type == 'que_sh_many2many'"><t t-call="survey.question_multiple_choice" /></t>
 	    </xpath>
