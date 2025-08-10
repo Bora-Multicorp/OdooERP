@@ -33,7 +33,7 @@ SurveyFormWidget.include({
         var $input = $(ev.currentTarget);
         $input.next('label').html($input.val())
     },
-    
+
     /**
      * @private
      * @param {FileInputEvent} ev
@@ -324,8 +324,8 @@ SurveyFormWidget.include({
                 return false;
             }
 
-        },     
-    
+        },
+
     // VALIDATION TOOLS
     // -------------------------------------------------------------------------
     /**
@@ -352,6 +352,7 @@ SurveyFormWidget.include({
         formData.forEach(function (value, key) {
             data[key] = value;
         });
+
 
         var inactiveQuestionIds = this.options.sessionInProgress ? [] : this._getInactiveConditionalQuestionIds();
 
@@ -437,7 +438,15 @@ SurveyFormWidget.include({
                     }
                     break;
                 case 'matrix':
-                    if (questionRequired) {
+                    const MatrixTableFile = $questionWrapper.find('table.o_survey_question_matrix');
+                    const matrixSubtype = MatrixTableFile.data('matrix-subtype');
+                    if (matrixSubtype === "sh_custom_matrix" && questionRequired &&  MatrixTableFile.find('input[type="file"]').length) {
+                        const $fileInput = MatrixTableFile.find('tbody tr:visible').first().find('input[type="file"]');
+                        if (!$fileInput.val() || $fileInput.val().trim() === "") {
+                            errors[questionId] = constrErrorMsg;
+                        }
+                    }
+                    else if (matrixSubtype !== "sh_custom_matrix" && questionRequired) {
                         const subQuestionsIds = $questionWrapper.find('table').data('subQuestions');
                         // Highlight unanswered rows' header
                         const questionBodySelector = `div[id="${questionId}"] > .o_survey_question_matrix > tbody`;
@@ -517,7 +526,17 @@ SurveyFormWidget.include({
                     }
                     break;
                 case 'que_sh_many2one':
-                    if (questionRequired && !$input.val()) {
+                    const MatrixTableSelect = $questionWrapper.find('table.o_survey_question_matrix');
+                    if (questionRequired && MatrixTableSelect.length) {
+                        const $firstSelect = MatrixTableSelect.find('tbody tr:visible').first().find('select');
+                        if (!$firstSelect.val() || $firstSelect.val().trim() === "") {
+                            errors[questionId] = constrErrorMsg;
+                            //$firstSelect.addClass('is-invalid');
+                        } /*else {
+                            $firstSelect.removeClass('is-invalid');
+                        }*/
+                    }
+                    else if (!MatrixTableSelect.length && questionRequired && !$input.val()) {
                         errors[questionId] = constrErrorMsg;
                     }
                     break;
@@ -533,12 +552,46 @@ SurveyFormWidget.include({
                     break;
             }
         });
-        if (Object.keys(errors).length > 0) {
-            this._showErrors(errors);
-            return false;
+   // Validate fields with conditional required
+   let isValid = true;
+   let errorMap = {};
+   $form.find('[data-cond-required="1"]').each(function () {
+        const $input = $(this);
+        const questionId = $input.attr('name');
+        if (!$input.val() || $input.val().trim() === '') {
+            //$input.addClass('is-invalid');
+            //isValid = false;
+            errorMap[questionId] = "This question requires an answer.";
+        } else {
+            //$input.removeClass('is-invalid');
         }
-        return true;
+    });
+
+    let combinedErrors = { ...errors, ...errorMap };
+
+    // Sort by questionId ascending
+    combinedErrors = Object.keys(combinedErrors)
+        .sort((a, b) => parseInt(a) - parseInt(b))
+        .reduce((acc, key) => {
+            acc[key] = combinedErrors[key];
+            return acc;
+    }, {});
+
+    // Single check for any errors
+    if (Object.keys(combinedErrors).length > 0) {
+        //console.log("combinedErrors", combinedErrors)
+        this._showErrors(combinedErrors);
+        return false;
+    }
+    // End
+    /*if (Object.keys(errors).length > 0) {
+        console.log("errors>>>>>>>>>>>>>>>>>", errors);
+        this._showErrors(errors);
+        return false;
+    }*/
+    return true;
     },
+
     
     //--------------------------------------------------------------------------
     // Private

@@ -213,8 +213,9 @@ class survey_user_input(models.Model):
 
                 else:
                     for answer in row_answer:
-                        vals = self.sh_get_line_answer_values(
-                            question, answer, answer, 'suggestion')
+                        if not str(row_key).isdigit():
+                            continue
+                        vals = self.sh_get_line_answer_values(question, answer, answer, 'suggestion')
                         vals['matrix_row_id'] = int(row_key)
                         vals_list.append(vals.copy())
 

@@ -232,6 +232,9 @@
                     </div>
                </t>
             </xpath>
+        <xpath expr="//table" position="attributes">
+            <attribute name="t-att-data-matrix-subtype">question.matrix_subtype</attribute>
+        </xpath>
         <xpath expr="//tr[contains(@class, 'bg-white text-white')][1]" position="replace">
         <!--<xpath expr="//td" position="replace">-->
             <!-- CUSTOM MATRIX SURVEY MAIN  -->
