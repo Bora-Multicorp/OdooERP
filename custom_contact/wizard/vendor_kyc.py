@@ -241,7 +241,7 @@ class VendorKycWizard(models.TransientModel):
     # pan_card_filename = fields.Char(readonly=True)
     aadhaar_pan_link = fields.Selection([('yes', 'Yes'), ('no', 'No')], string='Aadhar and PAN card linking?',
                                         required=True)
-    gst_no = fields.Char(string="GST Number", required=False)
+    gst_no = fields.Char(string="GST Number", required=True)
     udyam_number = fields.Char(string="Udyam Certificate Number", required=False)
     license_registered = fields.Char(string="Any licenses registered (As per Local/State Government requirements)")
     gst_certificate = fields.Many2many('ir.attachment', 'vendor_kyc_gst_cert_rel', 'wizard_id', 'attachment_id',
@@ -265,14 +265,14 @@ class VendorKycWizard(models.TransientModel):
                                    help="Short Video")
     bank_detail = fields.One2many('bank.detail', 'kyc_wizard_id', string="Bank Detail")
     address_detail = fields.One2many('address.detail', 'kyc_wizard_id', string="Address Detail")
-    pan_no = fields.Char(string="PAN Number(Company)")
+    pan_no = fields.Char(string="PAN Number(Company)", required=True)
     pan_card_document = fields.Many2many('ir.attachment', 'pan_card_company_documents_rel', 'wizard_id',
                                          'attachment_id',
                                          string="PAN Card Document(Company)")
     incorporation_certificate = fields.Many2many('ir.attachment', 'incorportaion_certificate_rel', 'wizard_id',
                                                  'attachment_id',
                                                  string="Incorporation Certificate")
-    comp_google_loc = fields.Char(string="Google Location of Shop", required=True)
+    comp_google_loc = fields.Char(string="Google Location of Shop", required=False)
 
     partner_llp_filename = fields.Char()
     partner_llp = fields.Binary(string="Partnership Deed or LLP Deed")

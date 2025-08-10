@@ -23,9 +23,9 @@
                                 <field name="business_pincode" placeholder="Your Answer"/>
                                 <field name="business_phone" placeholder="Your Answer"/>
                                 <field name="business_email" placeholder="Your Answer" widget="upper_case"/>
-                                <field name="business_state_id" options="{'no_create': True, 'no_create_edit': True}"/>
+                                <field name="business_state_id" options="{'no_create': True, 'no_create_edit': True}"  domain="[('country_id', '=', 'India')]"/>
                                 <field name="business_country_id"
-                                       options="{'no_create': True, 'no_create_edit': True}"/>
+                                       options="{'no_create': True, 'no_create_edit': True}" domain="[('code', '=', 'IN')]"/>
                             </list>
                             <form>
                                 <field name="business_street" placeholder="Your Answer" widget="upper_case"/>
@@ -33,9 +33,9 @@
                                 <field name="business_pincode" placeholder="Your Answer"/>
                                 <field name="business_phone" placeholder="Your Answer"/>
                                 <field name="business_email" placeholder="Your Answer" widget="upper_case"/>
-                                <field name="business_state_id" options="{'no_create': True, 'no_create_edit': True}"/>
+                                <field name="business_state_id" options="{'no_create': True, 'no_create_edit': True}"  domain="[('country_id', '=', 'India')]"/>
                                 <field name="business_country_id"
-                                       options="{'no_create': True, 'no_create_edit': True}"/>
+                                       options="{'no_create': True, 'no_create_edit': True}" domain="[('code', '=', 'IN')]"/>
                             </form>
                         </field>
                         <field name="const_business" widget="radio"/>
@@ -95,33 +95,33 @@
                         <!--                               filename="pan_card_filename"-->
                         <!--                               required="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"-->
                         <!--                               invisible="const_business in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>-->
-                        <field name="pan_no" placeholder="Your Answer" widget="upper_case"
-                               invisible="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
+                        <field name="pan_no" placeholder="Your Answer" widget="upper_case"/>
                         <field name="pan_card_document" widget="many2many_binary"
                                options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 1}"
-                               required="const_business in ['Partnership', 'Pvt Ltd Co.', 'LLP']"
-                               invisible="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
+                               required="const_business in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
                         <field name="aadhaar_pan_link" widget="radio" options="{'horizontal': true}"/>
                         <field name="gst_no" placeholder="Your Answer" widget="upper_case"/>
-                        <field name="license_registered" placeholder="Your Answer" widget="upper_case"
-                               invisible="const_business in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
+                        <field name="license_registered" placeholder="Your Answer" widget="upper_case" invisible="const_business in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
                         <field name="udyam_number" placeholder="Your Answer" widget="upper_case"/>
                         <field name="gst_certificate" widget="many2many_binary"
                                options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 1}"/>
                         <field name="incorporation_certificate" widget="many2many_binary"
                                options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 5}"
-                               required="const_business in ['Pvt Ltd Co.', 'LLP']"
-                               invisible="const_business not in ['Pvt Ltd Co.', 'LLP']"/>
+                               required="const_business in ['Pvt Ltd Co.', 'LLP']"  invisible="const_business not in ['Pvt Ltd Co.', 'LLP']"/>
                         <field name="udyam_document" widget="many2many_binary"
-                               options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 1}"  required="const_business in ['Sole Proprietor', 'HUF(Karta)']"/>
+                               options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 1}"
+                               required="const_business in ['Sole Proprietor', 'HUF(Karta)']"/>
                         <field name="shop_act_document" widget="many2many_binary"
-                               options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 1}" required="const_business in ['Sole Proprietor', 'HUF(Karta)']"/>
+                               options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 1}"
+                               required="const_business in ['Sole Proprietor', 'HUF(Karta)']"/>
                         <field name="gst_return_duration" placeholder="Your Answer"/>
                         <field name="shop_photos" widget="many2many_binary"
                                options="{'accepted_file_extensions': 'image/*', 'number_of_files': 10}"/>
                         <field name="shop_videos" widget="many2many_binary"
                                options="{'accepted_file_extensions': 'video/*', 'number_of_files': 10}"/>
-                        <field name="comp_google_loc" placeholder="eg. Lat : 22.3511148 Long: 78.6677428" widget="upper_case"/>
+                        <p style="margin-left: 110px; font-weight: bold;">You can upload each video upto 64MB</p>
+                        <field name="comp_google_loc" placeholder="eg. Lat : 22.3511148 Long: 78.6677428"
+                               widget="upper_case"/>
                         <field name="partner_llp_filename" invisible="1"/>
                         <field name="partner_llp" filename="partner_llp_filename"
                                required="const_business in ['Partnership', 'LLP']"
@@ -133,8 +133,7 @@
                         <field name="cin_no" placeholder="Your Answer" widget="upper_case"
                                invisible="const_business not in ['Pvt Ltd Co.']"/>
                         <field name="electricity_bill" widget="many2many_binary"
-                               options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 5}"
-                               invisible="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
+                               options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 5}"/>
                     </group>
                     <group string="Bank Details(Please provide all required bank Details Carefully)"
                            name="bank_details">
