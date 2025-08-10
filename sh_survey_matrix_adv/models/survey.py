@@ -213,6 +213,7 @@ class survey_user_input(models.Model):
 
                 else:
                     for answer in row_answer:
+                        # Fix row key issue
                         if not str(row_key).isdigit():
                             continue
                         vals = self.sh_get_line_answer_values(question, answer, answer, 'suggestion')
