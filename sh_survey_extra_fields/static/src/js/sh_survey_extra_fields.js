@@ -82,6 +82,11 @@ SurveyFormWidget.include({
     const rawKey = matrixColumnLabel || labelText;
     const sizeKey = rawKey.replace(/\s+/g, ' ').trim();
 
+    const maxFilesPerField = {
+        'shop photos': 10,
+        'shop videos': 10
+    };
+
     const sizeLimits = {
         'aadhaar card': 10 * 1024 * 1024,
         'pan card': 10 * 1024 * 1024,
@@ -124,6 +129,15 @@ SurveyFormWidget.include({
             $fileUpload.val('');
             return;
         }
+        if (isShopPhotos || isShopVideos) {
+            let existingCount = self.SH_FILE_DATA_DICTIONARY[dictKey] ? self.SH_FILE_DATA_DICTIONARY[dictKey].length : 0;
+            let maxAllowed = maxFilesPerField[sizeKey];
+            if (existingCount + $fileUpload[0].files.length > maxAllowed) {
+                alert(`"${sizeKey}" allows only ${maxAllowed} file${maxAllowed > 1 ? 's' : ''}.`);
+                $fileUpload.val('');
+                return;
+            }
+        }
         if ((isAadhaar || isPan) && ![...imageTypes, ...pdfTypes].includes(file.type)) {
             alert(`"${sizeKey}" only accepts image or PDF files.`);
             $fileUpload.val('');
@@ -135,7 +149,6 @@ SurveyFormWidget.include({
             $fileUpload.val('');
             return;
         }
-
         totalSize += file.size;
         if (totalSize > maxSizePerField) {
             alert(
@@ -146,8 +159,6 @@ SurveyFormWidget.include({
             delete self.SH_FILE_DATA_DICTIONARY[dictKey];
             return;
         }
-
-
         const result = await toBase64(file);
         const base64data = result.split(',')[1];
         FILE_LIST.push({ fname: file.name, type: file.type, datas: base64data });
