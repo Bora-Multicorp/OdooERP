@@ -1,4 +1,5 @@
 from odoo import fields, models
+from odoo.exceptions import UserError
 
 
 class ShowPaymentButtonToAccountsGroup(models.Model):
@@ -36,6 +37,8 @@ class ShowPaymentButtonToAccountsGroup(models.Model):
                         'sticky': True,
                     },
                 )
+        else:
+            raise UserError("No account member added, please contact to Administrator.")
 
 
 

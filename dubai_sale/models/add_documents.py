@@ -44,6 +44,19 @@ class SaleOrder(models.Model):
             raise UserError("No document added, you can add documents from documents section.")
 
 
+        email_subject = 'Documents for Sales Order: ' + self.name
+        
+        # Construct a professional and welcoming email body using HTML.
+        # This will be pre-populated in the email wizard.
+        email_body = """
+            <p>Dear """ + self.partner_id.name + """,</p>
+            <p>Thank you for your recent purchase. We are pleased to confirm that all documents related to your Sales Order <b>""" + self.name + """</b> are attached to this email for your records.</p>
+            <p>These documents include all relevant details and specifications. Please review them at your convenience.</p>
+            <p>If you have any questions or need further assistance, please do not hesitate to contact our team.</p>
+            <p>Best regards,</p>
+            <p>The """ + self.env.user.company_id.name + """ Team</p>
+        """
+
         ctx = {
             'default_model': 'sale.order',
             'default_res_ids': [self.id],
@@ -52,10 +65,12 @@ class SaleOrder(models.Model):
             'default_partner_ids': [self.partner_id.id],
             'default_attachment_ids': [(6, 0, attachment_ids)],
             'default_composition_mode': 'comment',
+            'default_subject': email_subject,
+            'default_body': email_body
         }
 
         return {
-            'name': 'Send all document to customer',
+            'name': 'Send all sale order documents to customer',
             'type': 'ir.actions.act_window',
             'res_model': 'mail.compose.message',
             'view_mode': 'form',
@@ -92,6 +107,5 @@ class SaleOrder(models.Model):
                 </p>
             """),
         }
-    
 
 
