@@ -385,7 +385,10 @@ SurveyFormWidget.include({
             const rowId = $(this).data("row-id");
             const colId = $(this).data("col-id");
             const base64Content = this.value;
-            const fileName = $(this).data("filename");
+            const fileName = $(this).data("filename") || "";
+            if (!base64Content) {
+                return;
+            }
             const jsonData = JSON.stringify({
                 value: base64Content,
                 filename: fileName,
