@@ -47,7 +47,7 @@ class PurchaseOrder(models.Model):
             self._send_notification(
                 user.res_user,
                 title=f"Updated RFQ from Reordering Rule",
-                message=f"A updated RFQ has been created from a reordering rule: {self.name}",
+                message=f"An RFQ has been updated from a reordering rule: {self.name}",
                 type='info',
             )
 
