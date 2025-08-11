@@ -745,6 +745,11 @@
             <field name="question_type">que_sh_file</field>
             <field name="upload_multiple_file">True</field>
             <field name="constr_mandatory">False</field>
+            <field name="is_cond_required">True</field>
+            <field name="question_code">INCOR_CERT</field>
+            <field name="cond_required_answer_ids"
+               eval="[Command.link(ref('business_constitution_kyc_survey_sug3')),
+               Command.link(ref('business_constitution_kyc_survey_sug4'))]"/>
             <field name="triggering_answer_ids"
                    eval="[Command.link(ref('business_constitution_kyc_survey_sug3')),
                    Command.link(ref('business_constitution_kyc_survey_sug4'))]"/>
