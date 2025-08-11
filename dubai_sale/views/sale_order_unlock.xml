@@ -35,19 +35,8 @@
                     </field>
                 </page>
             </xpath>
-            <!-- <xpath expr="//button[@name='action_quotation_send']" position="attributes">
-                <attribute name="string">Order</attribute>
-                <attribute name="title">Send order details by email</attribute>
-                <attribute name="icon">fa-envelope</attribute>
-            </xpath> -->
-            <!-- <xpath expr="//header/button[@name='action_quotation_send']" position="attributes">
-                <attribute name="invisible">1</attribute>
-                <attribute name="string">Order</attribute>
-                <attribute name="title">Send order details by email</attribute>
-                <attribute name="icon">fa-envelope</attribute>
-            </xpath> -->
             <xpath expr="//header" position="inside">
-                <!-- <button name="%(approve_pi_unlock_wizard_action)d" string="Order" type="action" class="oe_highlight" icon="fa-envelope" title="Send order details by email"/> -->
+                <button name="send_documents_in_email" string="Send Documents" type="object" icon="fa-envelope" title="Send all documents to customer" invisible="state != 'sale'"/>
                 <button name="%(approve_pi_unlock_wizard_action)d" string="PI Unlock Approve" type="action" class="oe_highlight" invisible="not show_unlock_approve_reject_buttons"/>
                 <button name="%(reject_pi_wizard_action)d" string="PI Unlock Reject" type="action" class="oe_highlight" invisible="not show_unlock_approve_reject_buttons"/>
             </xpath>

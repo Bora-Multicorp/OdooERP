@@ -1,13 +1,12 @@
-
-
-from odoo import models, fields, _
+from odoo import models, fields
+from odoo.exceptions import UserError
 
 class SaleOrder(models.Model):
     _inherit = 'sale.order'
 
 
     attachment_count = fields.Integer(
-        string="Attachments",
+        string="Documents",
         compute="_compute_attachment_count"
     )
 
@@ -19,14 +18,57 @@ class SaleOrder(models.Model):
                 ('res_id', '=', order.id)
             ])
 
-# working on sending attachments in email to customer
+
+    def send_documents_in_email(self):
+
+        if self.state != 'sale':
+            raise UserError("You can only send documents for a confirmed Sales Order.")
+        
+        for picking in self.picking_ids:
+            if picking.state not in ['done', 'cancel']:
+                raise UserError("You cannot send documents while there are pending deliveries.")
+            
+        
 
 
+        self.ensure_one()
+        attachments = self.env['ir.attachment'].search([
+            ('res_model', '=', 'sale.order'),
+            ('res_id', '=', self.id)
+        ])
 
+        attachment_ids = attachments.ids
+
+
+        if not attachment_ids:
+            raise UserError("No document added, you can add documents from documents section.")
+
+
+        ctx = {
+            'default_model': 'sale.order',
+            'default_res_ids': [self.id],
+            # 'default_use_template': False, # You could use a template if you have one
+            # 'default_template_id': self.env.ref('your_module.email_template_sale_order_with_docs').id, # Example template
+            'default_partner_ids': [self.partner_id.id],
+            'default_attachment_ids': [(6, 0, attachment_ids)],
+            'default_composition_mode': 'comment',
+        }
+
+        return {
+            'name': 'Send all document to customer',
+            'type': 'ir.actions.act_window',
+            'res_model': 'mail.compose.message',
+            'view_mode': 'form',
+            'view_id': self.env.ref('mail.email_compose_message_wizard_form').id,
+            'target': 'new',
+            'context': ctx,
+        }
+
+        
     def action_view_attachments(self):
         self.ensure_one()
         return {
-            'name': _('Attachments'),
+            'name': ('Documents'),
             'type': 'ir.actions.act_window',
             'res_model': 'ir.attachment',
             'view_mode': 'kanban,list,form',
@@ -41,7 +83,7 @@ class SaleOrder(models.Model):
             ],
             'target': 'current',
 
-            'help': _("""
+            'help': ("""
                 <p class="o_view_nocontent_smiling_face">
                     Attach files to sale order
                 </p><p>
