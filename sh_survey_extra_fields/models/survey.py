@@ -325,9 +325,8 @@ class SurveyQuestion(models.Model):
 
                     if answer.is_ifsc and not is_valid_ifsc(val.upper()):
                         return {
-                            self.id: _(
-                                "Invalid IFSC Code in '%s' → '%s'. Format: 4 letters + 0 + 6 alphanumeric (e.g., SBIN0001234)") % (
-                                         answer.value, val)
+                            self.id: _("Invalid IFSC Code. Format: 4 letters + 0 + 6 alphanumeric (e.g., SBIN0001234)")
+                            #self.id: _("Invalid IFSC Code in '%s' → '%s'. Format: 4 letters + 0 + 6 alphanumeric (e.g., SBIN0001234)") % (answer.value, val)
                         }
 
         # --------------------------
