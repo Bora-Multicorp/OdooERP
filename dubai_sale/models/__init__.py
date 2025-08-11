@@ -6,3 +6,4 @@ from . import sale_order_confirm
 from . import pi_unlock_approvers
 from . import sale_order_unlock
 from . import invoice_confirm
+from . import add_documents

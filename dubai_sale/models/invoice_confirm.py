@@ -7,6 +7,9 @@ class ShowPaymentButtonToAccountsGroup(models.Model):
     def action_post(self):
         super(ShowPaymentButtonToAccountsGroup, self).action_post()
 
+        if self.env.context.get('active_model') != 'sale.advance.payment.inv':
+            # can show a notification here
+            return
 
         sales_account_group = self.env.ref('dubai_sale.account_group_for_sales')
 

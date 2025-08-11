@@ -26,6 +26,6 @@ class RejectProductWizard(models.TransientModel):
             })
             # Recompute the next approver
             approval._send_notification_on_rejection()
-
+            # approval._update_assigned_to()
 
         return {'type': 'ir.actions.act_window_close'}

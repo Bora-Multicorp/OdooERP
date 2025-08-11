@@ -6,8 +6,9 @@
         <field name="inherit_id" ref="sale.view_order_form"/>
         <field name="arch" type="xml">
             <xpath expr="//notebook" position="inside">
-                <page name="unlock_approval_authorities_page" string="Unlock Approval Authorities" invisible="0">
+                <page name="unlock_approval_authorities_page" string="Unlock Approval Authorities" invisible="not assigned_to">
                     <group>
+                        <field name="show_unlock_approve_reject_buttons" invisible="1"/>
                         <field name="assigned_to"
                                            options="{'no_edit': True, 'no_create': True, 'no_open': True}"
                                            invisible="not assigned_to" readonly="1"/>
@@ -34,9 +35,21 @@
                     </field>
                 </page>
             </xpath>
+            <!-- <xpath expr="//button[@name='action_quotation_send']" position="attributes">
+                <attribute name="string">Order</attribute>
+                <attribute name="title">Send order details by email</attribute>
+                <attribute name="icon">fa-envelope</attribute>
+            </xpath> -->
+            <!-- <xpath expr="//header/button[@name='action_quotation_send']" position="attributes">
+                <attribute name="invisible">1</attribute>
+                <attribute name="string">Order</attribute>
+                <attribute name="title">Send order details by email</attribute>
+                <attribute name="icon">fa-envelope</attribute>
+            </xpath> -->
             <xpath expr="//header" position="inside">
-                <button name="%(approve_pi_unlock_wizard_action)d" string="PI Unlock Approve" type="action" class="oe_highlight" invisible="assigned_to != uid"/>
-                <button name="%(reject_pi_wizard_action)d" string="PI Unlock Reject" type="action" class="oe_highlight" invisible="assigned_to != uid"/>
+                <!-- <button name="%(approve_pi_unlock_wizard_action)d" string="Order" type="action" class="oe_highlight" icon="fa-envelope" title="Send order details by email"/> -->
+                <button name="%(approve_pi_unlock_wizard_action)d" string="PI Unlock Approve" type="action" class="oe_highlight" invisible="not show_unlock_approve_reject_buttons"/>
+                <button name="%(reject_pi_wizard_action)d" string="PI Unlock Reject" type="action" class="oe_highlight" invisible="not show_unlock_approve_reject_buttons"/>
             </xpath>
         </field>
     </record>

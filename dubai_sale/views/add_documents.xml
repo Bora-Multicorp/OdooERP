@@ -1,0 +1,18 @@
+<odoo>
+    <record id="sale_order_view_form_inherit_smart_button_attachments" model="ir.ui.view">
+        <field name="name">sale.order.form.inherit.smart.button.attachments</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_view_attachments"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-files-o">
+                    <field name="attachment_count" widget="statinfo" string="Attachments"/>
+                </button>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

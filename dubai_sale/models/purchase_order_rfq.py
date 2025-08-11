@@ -25,6 +25,19 @@ class PurchaseOrder(models.Model):
     def _notify_procurement_team_on_RFQ_updation(self):
 
         procurement_team = self.env['purchase.procurement.team'].search([])
+        if not procurement_team:
+            self.env['bus.bus']._sendone(
+                self.env.user.partner_id,
+                'simple_notification',
+                {
+                    'type': 'danger',
+                    'title': f'The RFQ has been updated, but the Procurement Team currently has no members assigned.',
+                    'message':  f'',
+                    'sticky': True,
+                },
+            )
+
+
         for user in procurement_team:
             self._schedule_activity(
                 user.res_user,
@@ -41,6 +54,19 @@ class PurchaseOrder(models.Model):
     def _notify_procurement_team_on_RFQ_creation(self):
 
         procurement_team = self.env['purchase.procurement.team'].search([])
+        if not procurement_team:
+            self.env['bus.bus']._sendone(
+                self.env.user.partner_id,
+                'simple_notification',
+                {
+                    'type': 'danger',
+                    'title': f'The RFQ has been created, but the Procurement Team currently has no members assigned.',
+                    'message':  f'',
+                    'sticky': True,
+                },
+            )
+
+
         for user in procurement_team:
             self._schedule_activity(
                 user.res_user,

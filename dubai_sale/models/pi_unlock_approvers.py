@@ -4,6 +4,7 @@ from odoo import fields, models, api
 class PIUnlockTeam(models.Model):
     _name = 'pi.unlock.approvers'
     _description = 'PI Unlock Approvers'
+    _rec_name = 'user_id'
 
     sequence = fields.Integer(string='Sequence', readonly=True)
     user_id = fields.Many2one('res.users', string='User', required=True)

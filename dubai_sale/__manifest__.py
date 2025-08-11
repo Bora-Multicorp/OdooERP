@@ -30,6 +30,7 @@ Long description of module's purpose
         'views/sale_order_unlock.xml',
         'views/unlock_button_action_inherited.xml',
         'views/account_move_inherited.xml',
+        'views/add_documents.xml',
         'data/account_group_in_sales.xml'
     ],
     # only loaded in demonstration mode

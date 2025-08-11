@@ -7,6 +7,7 @@ class SaleOrderUnlock(models.Model):
     assigned_to = fields.Many2one('res.users', string='Assigned To')
     approval_users_ids = fields.One2many('pi.unlock.approval.users', 'pi_unlock_approval_id', 'Approval Authorities', help='PI unlock approval authority details')
     existing_user_ids = fields.Many2many('res.users', compute='_compute_existing_users', store=True)
+    
 
 
     @api.model
@@ -35,6 +36,33 @@ class SaleOrderUnlock(models.Model):
     def _update_state_based_on_approvals(self):
         print('_update_state_based_on_approvals', self.approval_users_ids)
 
+
+    show_unlock_approve_reject_buttons = fields.Boolean(string="Show", compute='_show_approve_reject_buttons', store=False)
+
+    @api.depends('assigned_to','approval_users_ids.state')
+    def _show_approve_reject_buttons(self):
+
+        # check if any user has rejected the request
+        is_rejected = False
+        for user_id in self.approval_users_ids:
+            if user_id.state == 'reject':
+                is_rejected = True
+                break
+
+        # check if all users have approved
+        do_all_approve = True
+        for user_id in self.approval_users_ids:
+            if not user_id.state:
+                do_all_approve = False
+
+        if do_all_approve == True or is_rejected == True:
+            self.show_unlock_approve_reject_buttons = False
+        elif self.assigned_to == self.env.user:
+            self.show_unlock_approve_reject_buttons = True
+        else:
+            self.show_unlock_approve_reject_buttons = False
+
+
     def action_unlock(self):
         if not self.approval_users_ids:
             raise ValidationError("Please Add PI Unlock Authority before Submit Request.")
@@ -52,7 +80,6 @@ class SaleOrderUnlock(models.Model):
         self._create_activity_and_send_notification_for_unlock_request()
 
     def _update_assigned_to(self):
-
         for rec in self:
             next_user = None
             for line in sorted(rec.approval_users_ids, key=lambda x: x.sequence):
@@ -64,11 +91,8 @@ class SaleOrderUnlock(models.Model):
             if not rec.assigned_to:
                 super(SaleOrderUnlock, self).action_unlock()
 
-            # if rec.assigned_to:
-            #     rec._create_activity_and_send_notification()
-            # else:
-                # super(SaleOrderUnlock, self).action_unlock()
-
+            if not rec.assigned_to:
+                super(SaleOrderUnlock, self).action_unlock()
 
     def _send_notification_on_rejection(self):
         
@@ -78,9 +102,9 @@ class SaleOrderUnlock(models.Model):
             if user.user_id == self.env.user:
                 self.env['bus.bus']._sendone(
                     user.user_id.partner_id,
-                    'simple_notification',
+                    'simple_notification', 
                     {
-                        'type': 'success',
+                        'type': 'info',
                         'title': f'PI unlock approval request for {self.name}, successfully rejected by you.',
                         'message':  f'',
                         'sticky': True,
@@ -91,47 +115,67 @@ class SaleOrderUnlock(models.Model):
                     user.user_id.partner_id,
                     'simple_notification',
                     {
-                        'type': 'danger',
+                        'type': 'info',
                         'title': f'PI unlock approval request for {self.name}, rejected by {self.env.user.name}.',
                         'message':  f'',
                         'sticky': True,
                     },
                 )
 
-
     def _create_activity_and_send_notification_on_approval(self):
+
         for rec in self:
-            rec.activity_schedule(
-                act_type_xmlid='mail.mail_activity_data_todo',
-                summary=f'PI unlock approval for sale order: {rec.name}',
-                note="You have been assigned to unlock this PI.",
-                user_id=rec.assigned_to.id,
-                date_deadline=fields.Date.context_today(self),
-            )
 
-            rec.env['bus.bus']._sendone(
-                rec.assigned_to.partner_id,
-                'simple_notification',
-                {
-                    'type': 'success',
-                    'title': f'PI unlock approval request for {rec.name}, assigned to you.',
-                    'message':  f'Activity assigned to you.',
-                    'sticky': True,
-                },
-            )
-
-            if rec.assigned_to.partner_id != self.env.user.partner_id:
+            if not rec.assigned_to:
+                # 1. send unlock notification to real creator
                 rec.env['bus.bus']._sendone(
-                    self.env.user.partner_id,
+                    rec.create_uid.partner_id,
                     'simple_notification',
                     {
-                        'type': 'info',
-                        'title': f'PI unlock request successfully approved by you.',
+                        'type': 'success',
+                        'title': f'PI {rec.name} successfully unlocked by approver, you can make changes now.',
                         'message':  '',
                         'sticky': True,
                     },
                 )
 
+            else:
+
+                # 1. schedule activity for next assignee 
+                rec.activity_schedule(
+                    act_type_xmlid='mail.mail_activity_data_todo',
+                    summary=f'PI {rec.name} unlock approval request assigned to you.',
+                    note="You have been assigned to unlock this PI.",
+                    user_id=rec.assigned_to.id,
+                    date_deadline=fields.Date.context_today(self),
+                )
+
+                # 2. send notification to next approver
+                rec.env['bus.bus']._sendone(
+                    rec.assigned_to.partner_id,
+                    'simple_notification',
+                    {
+                        'type': 'success',
+                        'title': f'PI unlock approval request for {rec.name}, assigned to you.',
+                        'message':  f'Activity assigned to you.',
+                        'sticky': True,
+                    },
+                )
+
+
+
+
+            #. in the last send info message to self
+            rec.env['bus.bus']._sendone(
+                self.env.user.partner_id,
+                'simple_notification',
+                {
+                    'type': 'info',
+                    'title': f'PI unlock request successfully submitted by you.',
+                    'message':  '',
+                    'sticky': True,
+                },
+            )
 
     def _create_activity_and_send_notification_for_unlock_request(self):
         for rec in self:
