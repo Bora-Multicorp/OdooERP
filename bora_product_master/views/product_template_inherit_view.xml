@@ -7,7 +7,6 @@
             <field name="arch" type="xml">
                 <xpath expr="//field[@name='company_ids']" position="replace"/>
                 <xpath expr="//field[@name='default_code']" position="replace"/>
-                <xpath expr="//field[@name='barcode']" position="replace"/>
                 <xpath expr="//field[@name='supplier_taxes_id']" position="replace"/>
                 <xpath expr="//field[@name='categ_id']" position="replace"/>
                 <xpath expr="//field[@name='invoice_policy']" position="replace"/>
