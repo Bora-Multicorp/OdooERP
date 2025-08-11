@@ -6,7 +6,7 @@
         <field name="inherit_id" ref="sale.view_order_form"/>
         <field name="arch" type="xml">
             <xpath expr="//notebook" position="inside">
-                <page name="unlock_approval_authorities_page" string="Unlock Approval Authorities" invisible="not assigned_to">
+                <page name="unlock_approval_authorities_page" string="Unlock Approval Authorities" invisible="not approval_users_ids">
                     <group>
                         <field name="show_unlock_approve_reject_buttons" invisible="1"/>
                         <field name="assigned_to"

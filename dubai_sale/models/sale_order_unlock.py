@@ -10,19 +10,19 @@ class SaleOrderUnlock(models.Model):
     
 
 
-    @api.model
-    def default_get(self, fields_list):
-        defaults = super().default_get(fields_list)
-        pi_unlock_approval_users = self.env['pi.unlock.approvers'].sudo().search([])
-        if pi_unlock_approval_users:
-            pi_unlock_approval_user_vals = []
-            for approval in pi_unlock_approval_users:
-                pi_unlock_approval_user_vals.append((0, 0, {
-                    'sequence': approval.sequence,
-                    'user_id': approval.user_id.id,
-                }))
-            defaults['approval_users_ids'] = pi_unlock_approval_user_vals
-        return defaults
+    # @api.model
+    # def default_get(self, fields_list):
+    #     defaults = super().default_get(fields_list)
+    #     pi_unlock_approval_users = self.env['pi.unlock.approvers'].sudo().search([])
+    #     if pi_unlock_approval_users:
+    #         pi_unlock_approval_user_vals = []
+    #         for approval in pi_unlock_approval_users:
+    #             pi_unlock_approval_user_vals.append((0, 0, {
+    #                 'sequence': approval.sequence,
+    #                 'user_id': approval.user_id.id,
+    #             }))
+    #         defaults['approval_users_ids'] = pi_unlock_approval_user_vals
+    #     return defaults
     
 
     @api.depends('approval_users_ids.user_id')
@@ -64,14 +64,30 @@ class SaleOrderUnlock(models.Model):
 
 
     def action_unlock(self):
-        if not self.approval_users_ids:
+
+
+        pi_unlock_approval_users = self.env['pi.unlock.approvers'].sudo().search([])
+        if not pi_unlock_approval_users:
             raise ValidationError("Please Add PI Unlock Authority before Submit Request.")
+
+
+        pi_unlock_approval_user_vals = []
+        for approval in pi_unlock_approval_users:
+            pi_unlock_approval_user_vals.append((0, 0, {
+                'sequence': approval.sequence,
+                'user_id': approval.user_id.id,
+            }))
+        self.write({
+            'approval_users_ids': pi_unlock_approval_user_vals
+        })
+
+
         
         if self.assigned_to:
             for user_id in self.approval_users_ids:
                 if user_id.state == 'reject':
                     raise ValidationError(f"Unlock request is rejected by '{user_id.user_id.name}', please review 'Unlock Approval Authorities' tab for more details.")                
-            raise ValidationError(f"Unlock request already generated, right now pending from '{self.assigned_to.name}'.")
+            raise ValidationError(f"Unlock request ight now pending from '{self.assigned_to.name}'.")
         
 
         if self.id:

@@ -2,7 +2,7 @@
 {
     'name': "dubai_sale",
 
-    'summary': "Short (1 phrase/line) summary of the module's purpose",
+    'summary': "Dubai sale",
 
     'description': """
 Long description of module's purpose

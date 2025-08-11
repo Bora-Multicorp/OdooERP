@@ -18,6 +18,11 @@ class SalesOrderInherited(models.Model):
                     raise UserError(
                         f"No re-order rule is configured for product '{product_template.name}'. Please configure one before confirming this order."
                     )
+                
+                if product_template.type == 'consu' and not product_template.seller_ids:
+                    raise UserError(
+                        f"No vendor is added for product '{product_template.name}'. Please add a vendor to the product form before confirming this order."
+                    )                
 
         return super(SalesOrderInherited, self).action_confirm()
 
