@@ -40,3 +40,17 @@
 }
 .js_cls_sh_signature_wrapper .js_cls_sh_signature_pad > div:first-child,
 .js_cls_sh_signature_wrapper .js_cls_sh_signature_pad > div:first-child + canvas.jSignature{display: none !important;}
+
+
+/*.o_survey_question_error {
+    white-space: normal !important;
+    //line-height: 1.4rem !important; normal text spacing
+    height: 0px;
+    overflow: hidden;
+    transition: height .5s ease;
+}
+
+.o_survey_question_error.slide_in {
+    height: auto !important;
+    padding: 0.8rem 0;
+}*/

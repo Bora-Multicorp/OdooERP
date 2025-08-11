@@ -139,6 +139,17 @@ class SurveyQuestion(models.Model):
                                           help='Check this box if you want to '
                                                'allow users to upload '
                                                'multiple files')
+
+    question_code = fields.Char(string='Question Code', help='Custom code to uniquely identify this question (used in JS or templates)')
+    is_cond_required = fields.Boolean(string='Is Conditionally Required?')
+    cond_required_answer_ids = fields.Many2many(
+        'survey.question.answer',
+        'survey_question_cond_req_answer_rel',
+        'question_id',
+        'answer_id',
+        string='Conditionally Required Answers',
+        help="If these answers are selected, this question will be required.",
+    )
     # ------------------------------------------------------------
     # VALIDATION
     # ------------------------------------------------------------
@@ -314,9 +325,8 @@ class SurveyQuestion(models.Model):
 
                     if answer.is_ifsc and not is_valid_ifsc(val.upper()):
                         return {
-                            self.id: _(
-                                "Invalid IFSC Code in '%s' → '%s'. Format: 4 letters + 0 + 6 alphanumeric (e.g., SBIN0001234)") % (
-                                         answer.value, val)
+                            self.id: _("Invalid IFSC Code. Format: 4 letters + 0 + 6 alphanumeric (e.g., SBIN0001234)")
+                            #self.id: _("Invalid IFSC Code in '%s' → '%s'. Format: 4 letters + 0 + 6 alphanumeric (e.g., SBIN0001234)") % (answer.value, val)
                         }
 
         # --------------------------
