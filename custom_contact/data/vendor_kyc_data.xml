@@ -580,6 +580,8 @@
         <!-- PAN Card Document(Company) -->
         <record model="survey.question" id="pan_card_document_kyc_survey">
             <field name="title">PAN Card Document(Company)</field>
+            <field name="description" type="html"><p>Please upload PAN Card Documents of Company</p>
+                <p>Upload 1 supported file. Max 10 MB.</p></field>
             <field name="survey_id" ref="vendor_kyc_form_survey"/>
             <field name="sequence">26</field>
             <field name="question_type">que_sh_file</field>
@@ -646,6 +648,7 @@
         <!-- Company GST Certificate -->
         <record model="survey.question" id="gst_certificate_kyc_survey">
             <field name="title">Company GST Certificate</field>
+            <field name="description" type="html"><p>Upload 1 supported file. Max 10 MB.</p></field>
             <field name="survey_id" ref="vendor_kyc_form_survey"/>
             <field name="sequence">29</field>
             <field name="question_type">que_sh_file</field>
@@ -663,6 +666,7 @@
         <!-- Shop Act documents -->
         <record model="survey.question" id="shop_act_document_kyc_survey">
             <field name="title">Shop Act documents</field>
+            <field name="description" type="html"><p>Upload 1 supported file. Max 10 MB.</p></field>
             <field name="survey_id" ref="vendor_kyc_form_survey"/>
             <field name="sequence">30</field>
             <field name="question_type">que_sh_file</field>
@@ -677,6 +681,7 @@
         <!-- Udyam Documents -->
         <record model="survey.question" id="udyam_document_kyc_survey">
             <field name="title">Udyam Documents</field>
+            <field name="description" type="html"><p>Upload 1 supported file. Max 10 MB.</p></field>
             <field name="survey_id" ref="vendor_kyc_form_survey"/>
             <field name="sequence">30</field>
             <field name="question_type">que_sh_file</field>
@@ -709,6 +714,7 @@
         <!-- Shop Photos -->
         <record model="survey.question" id="shop_photos_kyc_survey">
             <field name="title">Shop Photos</field>
+            <field name="description" type="html"><p>Upload up to 10 supported files: image. Max 100 MB per file.</p></field>
             <field name="survey_id" ref="vendor_kyc_form_survey"/>
             <field name="sequence">32</field>
             <field name="question_type">que_sh_file</field>
@@ -718,6 +724,7 @@
         <!-- Shop Videos -->
         <record model="survey.question" id="shop_videos_kyc_survey">
             <field name="title">Shop Videos</field>
+            <field name="description" type="html"><p>Upload up to 10 supported files: video. Max 100 MB per file.</p></field>
             <field name="survey_id" ref="vendor_kyc_form_survey"/>
             <field name="sequence">33</field>
             <field name="question_type">que_sh_file</field>
@@ -757,6 +764,7 @@
         <!-- Partnership Deed or LLP Deed  -->
         <record model="survey.question" id="partnership_llp_kyc_survey">
             <field name="title">Partnership Deed or LLP Deed</field>
+            <field name="description" type="html"><p>Upload 1 supported file. Max 10 MB.</p></field>
             <field name="survey_id" ref="vendor_kyc_form_survey"/>
             <field name="sequence">35</field>
             <field name="question_type">que_sh_file</field>
@@ -774,6 +782,7 @@
         <!-- MOA or AOA  -->
         <record model="survey.question" id="moa_aoa_kyc_survey">
             <field name="title">MOA or AOA</field>
+            <field name="description" type="html"><p>Upload up to 5 supported files. Max 10 MB per file.</p></field>
             <field name="survey_id" ref="vendor_kyc_form_survey"/>
             <field name="sequence">36</field>
             <field name="question_type">que_sh_file</field>
@@ -800,6 +809,7 @@
         <!-- Electricity bill -->
         <record model="survey.question" id="electricity_bill_kyc_survey">
             <field name="title">Electricity bill</field>
+            <field name="description" type="html"><p>Upload up to 5 supported files. Max 10 MB per file.</p></field>
             <field name="survey_id" ref="vendor_kyc_form_survey"/>
             <field name="sequence">38</field>
             <field name="question_type">que_sh_file</field>
@@ -921,11 +931,13 @@
         <record model="survey.question.answer" id="matrix_bank_address_kyc_survey_row2">
             <field name="matrix_question_id" ref="matrix_bank_address_kyc_survey"/>
             <field name="sequence">2</field>
+            <field name="row_hide">True</field>
             <field name="value"></field>
         </record>
         <record model="survey.question.answer" id="matrix_bank_address_kyc_survey_row3">
             <field name="matrix_question_id" ref="matrix_bank_address_kyc_survey"/>
             <field name="sequence">3</field>
+            <field name="row_hide">True</field>
             <field name="value"></field>
         </record>
         <!--<record model="survey.question.answer" id="matrix_bank_address_kyc_survey_row4">
