@@ -1,5 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+
+<!--	<template id="survey_question_container_inherit_cond_required"
+          inherit_id="survey.question_container"
+          name="Survey: Inherit Question Container - Add Cond. Required">
+		 <field name="priority">20</field>
+		<xpath expr="//h3/span[@t-field='question.title']" position="after">
+			<span t-if="question.is_cond_required" class="text-danger d-none" t-att-data-cond-required-label="question.question_code">*</span>
+		</xpath>
+	</template>-->
+
+	<template id="survey_page_print_add_cond_required" inherit_id="survey.survey_page_print">
+		<xpath expr="//h2[@class='fs-4']/span[@t-field='question.title']" position="after">
+			<span t-if="question.is_cond_required" class="text-danger">*</span>
+		</xpath>
+	</template>
+
+	<template id="question_simple_choice_inherit_add_code" inherit_id="survey.question_simple_choice">
+          <xpath expr="//div[contains(@class, 'o_survey_answer_wrapper')]" position="attributes">
+            <attribute name="t-att-data-question-code">question.question_code</attribute>
+        </xpath>
+    </template>
+
+	<template id="question_char_box_inherit_add_code" inherit_id="survey.question_char_box">
+    	<xpath expr="//input[contains(@class, 'o_survey_question_text_box')]" position="attributes">
+        	<attribute name="t-att-data-question-code">question.question_code</attribute>
+    	</xpath>
+	</template>
+
 	<template id="sh_survey_extra_fields_survey_page_statistics_question" inherit_id="survey.survey_page_statistics_question" name="Survey Extra Fields Question: result statistics">
         <xpath expr="//t[@t-elif=&quot;question.question_type in ['matrix']&quot;]" position="after">
             <t t-elif="question.question_type in ['que_sh_many2one','que_sh_many2many']">
@@ -32,6 +60,9 @@
 	                t-att-name="question.id"
 	                t-att-value="answer_lines[0].value_char_box if answer_lines else None"
 	                t-att-data-question-type="question.question_type"
+					t-att-data-question-code="question.question_code"
+					t-att-data-question_matrix_type="question.matrix_subtype"
+					t-att-data-cond-req-questions="question.cond_required_answer_ids.ids"
 	                t-att-data-validation-length-min="question.validation_length_min if question.validation_required else False"
 	                t-att-data-validation-length-max="question.validation_length_max if question.validation_required else False"
 	            />
@@ -213,6 +244,8 @@
 			class="form-control o_survey_question_email_box bg-transparent text-dark rounded-0 p-0 sh_file_input"
 			t-att-multiple="question.upload_multiple_file" t-att-id="question.id"
 			t-att-name="question.id"
+		    t-att-data-question-code="question.question_code"
+		    t-att-data-cond-req-questions="question.cond_required_answer_ids.ids"
 			t-att-data-question-type="question.question_type"/>
 	</template>
 	
@@ -333,7 +366,17 @@ Many2one
     <template id="tmpl_sh_many2one_review" name="SH Many2one Review">
 	    <div class="form-row js_cls_sh_many2one_wrapper">
 	        <div class="form-group col-lg-12">
-	            <select
+				<select t-att-name="question.id" class="form-control" disabled="disabled"
+					t-att-data-model_id="question.que_sh_many2one_model_id.id if question.que_sh_many2one_model_id else False">
+				<option value="">Select...</option>
+				<t t-foreach="question.suggested_answer_ids" t-as="option">
+					<option t-att-value="option.id"
+							t-att-selected="answer_lines and answer_lines[0].suggested_answer_id.id == option.id and 'selected' or None">
+						<t t-esc="option.value"/>
+					</option>
+				</t>
+				</select>
+	           <!-- <select
 	                t-att-data-question-type="question.question_type"
 	                t-att-data-model_id="question.que_sh_many2one_model_id.id if question.que_sh_many2one_model_id else False"
 	                t-att-name="question.id"
@@ -342,7 +385,7 @@ Many2one
 	                <option value="">
 	                    <t t-if="answer_lines" t-esc="answer_lines[0].value_ans_sh_many2one or None" />
 	                </option>
-	            </select>
+	            </select>-->
 	        </div>
 	    </div>
 	</template>
@@ -433,6 +476,9 @@ Many2one
 	        <t t-if="question.question_type == 'que_sh_many2one'"><t t-call="sh_survey_extra_fields.tmpl_sh_many2one" /></t>
 	        <t t-if="question.question_type == 'que_sh_many2many'"><t t-call="sh_survey_extra_fields.tmpl_sh_many2many" /></t>
 	    </xpath>
+		<xpath expr="//h3/span[@t-field='question.title']" position="after">
+			<span t-if="question.is_cond_required" class="text-danger d-none" t-att-data-cond-required-label="question.question_code">*</span>
+		</xpath>
 	</template>
 	
 	<!-- Printable view of a survey (all pages) -->
@@ -452,8 +498,8 @@ Many2one
 	        <t t-if="question.question_type == 'que_sh_signature'"><t t-call="sh_survey_extra_fields.tmpl_sh_signature_review" /></t>
 	
 	        <t t-if="question.question_type == 'que_sh_address'"><t t-call="sh_survey_extra_fields.tmpl_sh_address_review" /></t>
-	
-	        <t t-if="question.question_type == 'que_sh_many2one'"><t t-call="survey.question_simple_choice" /></t>
+
+			<t t-if="question.question_type == 'que_sh_many2one'"><t t-call="sh_survey_extra_fields.tmpl_sh_many2one_review"/></t><!--<t t-call="survey.question_simple_choice" /></t>-->
 	
 	        <t t-if="question.question_type == 'que_sh_many2many'"><t t-call="survey.question_multiple_choice" /></t>
 	    </xpath>

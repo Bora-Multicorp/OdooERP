@@ -6,6 +6,16 @@
         <field name="model">survey.question</field>
         <field name="inherit_id" ref="survey.survey_question_form" />
         <field name="arch" type="xml">
+            <xpath expr="//field[@name='question_type']" position="after">
+                 <field name="question_code"/>
+            </xpath>
+            <xpath expr="//field[@name='triggering_answer_ids']" position="after">
+                <field name="is_cond_required"/>
+                <field name="cond_required_answer_ids" widget="many2many_tags"
+                       domain="[('question_id', 'in', allowed_triggering_question_ids)]"
+                       options="{'no_open': True, 'no_create': True}"
+                       placeholder="Answers that make this question mandatory"/>
+            </xpath>
             <!-- for textbox pattern validation -->
             <xpath expr="//page[1]" position="inside">
                 <group>
