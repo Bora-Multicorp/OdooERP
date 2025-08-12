@@ -84,7 +84,8 @@ SurveyFormWidget.include({
     const maxFilesPerField = {
         'shop photos': 10,
         'shop videos': 10,
-        'electricity bill': 5
+        'electricity bill': 5,
+        'moa or aoa': 5,
     };
 
     const sizeLimits = {
@@ -110,6 +111,7 @@ SurveyFormWidget.include({
     const isAadhaar = sizeKey.includes("aadhaar card");
     const isPan = sizeKey.includes("pan card");
     const isElectricityBill = sizeKey.includes("electricity bill");
+    const isMoaAoa = sizeKey.includes("moa or aoa");
 
     let totalSize = 0;
     const dictKey = $fileUpload[0].name;
@@ -130,7 +132,7 @@ SurveyFormWidget.include({
             $fileUpload.val('');
             return;
         }
-        if (isShopPhotos || isShopVideos || isElectricityBill) {
+        if (isShopPhotos || isShopVideos || isElectricityBill || isMoaAoa) {
             let existingCount = self.SH_FILE_DATA_DICTIONARY[dictKey] ? self.SH_FILE_DATA_DICTIONARY[dictKey].length : 0;
             let maxAllowed = maxFilesPerField[sizeKey];
             if (existingCount + $fileUpload[0].files.length > maxAllowed) {
