@@ -5,13 +5,13 @@
         <field name="inherit_id" ref="sale.view_order_form"/>
         <field name="arch" type="xml">
             <xpath expr="//sheet/group" position="after">
-                <group string="Manual Exchange Rate" invisible="is_bora_company != True">
+                <group string="Manual Exchange Rate" invisible="is_company != True">
                     <field name="is_exchange"/>
                     <field name="rate" invisible="not is_exchange"/>
                 </group>
             </xpath>
             <xpath expr="//field[@name='payment_term_id']" position="after">
-                <field name="is_bora_company" invisible="True"/>
+                <field name="is_company" invisible="True"/>
             </xpath>
         </field>
     </record>

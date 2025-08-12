@@ -13,26 +13,25 @@ class SaleOrder(models.Model):
         help='Specify the manual currency rate for this order',
         default=1
     )
-
-    is_bora_company = fields.Boolean(
-        string="Is Bora Electronic Focz",
-        compute='_compute_is_bora_company',
+    is_company = fields.Boolean(
+        string="Is Company",
+        compute='_compute_is_company',
         store=False
     )
 
     @api.depends('company_id')
-    def _compute_is_bora_company(self):
-        for record in self:
+    def _compute_is_company(self):
+        for order in self:
             user_company = self.env.user.company_id
 
-            # Use 'ilike' to find a company name that contains "Bora Electronic Focz"
-            # This is a robust way to handle slight variations in the name.
-            if 'bora electronic focz' in user_company.name.lower():
-                record.is_bora_company = True
-            elif user_company.parent_id and 'bora electronic focz' in user_company.parent_id.name.lower():
-                record.is_bora_company = True
+            # Check if the user's company name is "Company 1"
+            if user_company.name == "Bora Electronics FZCO":
+                order.is_company = True
+            # Or if the user's company is a child of "Company 1"
+            elif user_company.parent_id and user_company.parent_id.name == "Company 1":
+                order.is_company = True
             else:
-                record.is_bora_company = False
+                order.is_company = False
 
     @api.onchange('rate', 'is_exchange')
     def _onchange_rate(self):
