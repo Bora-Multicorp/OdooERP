@@ -17,8 +17,7 @@ SurveyFormWidget.include({
         "change .js_cls_country_id": "_onChangeCountry",
         'change .sh_file_input': '_onChangeFileInput',
         "click .js_cls_sh_signature_clear_btn": "_onClickSignatureClearButton",
-        'change input[type="radio"]': '_onRadioSelectionChange',
-        'input input.o_survey_question_text_box': '_onLegalNameChange',
+        'input input.o_survey_question_text_box': '_onLegalNameChangeInit',
     }),
 
     /**
@@ -170,153 +169,62 @@ SurveyFormWidget.include({
     self.SH_FILE_DATA_DICTIONARY[dictKey].push(...FILE_LIST);
 },
 
-//    _onChangeFileInput: async function (ev) {
-//    var self = this;
-//    var $fileUpload = $(ev.currentTarget);
-//    if (!$fileUpload.length) return;
-//
-//    const imageTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif', 'image/bmp', 'application/pdf'];
-//
-//    const limits = {
-//        'gst certificate':               { maxFiles: 1,  maxSize: 10 * 1024 * 1024 },
-//        'udyam documents':              { maxFiles: 1,  maxSize: 10 * 1024 * 1024 },
-//        'shop act documents':           { maxFiles: 1,  maxSize: 10 * 1024 * 1024 },
-//        'shop photos':                  { maxFiles: 10, maxSize: 100 * 1024 * 1024 },
-//        'shop videos':                  { maxFiles: 10, maxSize: 100 * 1024 * 1024 },
-//        'pan card document(company)':   { maxFiles: 1,  maxSize: 10 * 1024 * 1024 },
-//        'incorporation certificate':    { maxFiles: 5,  maxSize: 10 * 1024 * 1024 },
-//        'moa or aoa':                   { maxFiles: 5,  maxSize: 10 * 1024 * 1024 },
-//        'electricity bill':             { maxFiles: 5,  maxSize: 10 * 1024 * 1024 },
-//        'aadhaar card':                 { maxFiles: 1,  maxSize: 10 * 1024 * 1024 },
-//        'pan card':                     { maxFiles: 1,  maxSize: 10 * 1024 * 1024 },
-//        'cancelled cheque':             { maxFiles: 1,  maxSize: 10 * 1024 * 1024 },
-//    };
-//
-//    const sizeKey = $fileUpload.attr("data-name").toLowerCase();
-//    const dictKey = sizeKey.replaceAll(" ", "_");
-//    const fieldLimit = limits[sizeKey] || { maxFiles: 1, maxSize: 10 * 1024 * 1024 };
-//
-//    const files = $fileUpload[0].files;
-//    const existingFiles = self.SH_FILE_DATA_DICTIONARY[dictKey]?.length || 0;
-//
-//    // Validate file count
-//    if ((existingFiles + files.length) > fieldLimit.maxFiles) {
-//        alert(`You can upload up to ${fieldLimit.maxFiles} file(s) for "${sizeKey}".`);
-//        $fileUpload.val('');
-//        return;
-//    }
-//
-//    // Validate individual file size and type
-//    for (const file of files) {
-//        if (file.size > fieldLimit.maxSize) {
-//            alert(`"${file.name}" exceeds max size of ${(fieldLimit.maxSize / 1024 / 1024).toFixed(1)} MB for "${sizeKey}".`);
-//            $fileUpload.val('');
-//            return;
-//        }
-//        if (!imageTypes.includes(file.type)) {
-//            alert(`"${file.name}" is not a supported file type. Only PDF and image files are allowed.`);
-//            $fileUpload.val('');
-//            return;
-//        }
-//    }
-//
-//    const FILE_LIST = self.SH_FILE_DATA_DICTIONARY[dictKey] || [];
-//
-//    for (const file of files) {
-//        const base64 = await self.toBase64(file);
-//        FILE_LIST.push({
-//            filename: file.name,
-//            filetype: file.type,
-//            filesize: file.size,
-//            base64: base64.split(",")[1], // Remove prefix like "data:application/pdf;base64,"
-//        });
-//    }
-//
-//    self.SH_FILE_DATA_DICTIONARY[dictKey] = FILE_LIST;
-//    $fileUpload.val(''); // reset input after processing
-//},
-
-/**
-         * Handle radio button selection
-         */
-        _onRadioSelectionChange: function (ev) {
-            const $radio = $(ev.currentTarget);
-
-            const isChecked = $radio.prop('checked');
-            const $radioWrapper = $radio.closest('.js_question-wrapper');
-            const rawLabel = $radioWrapper.text();
-            const normalizedLabel = rawLabel.replace(/\s+/g, ' ').trim();
-
-            if (!normalizedLabel.includes("If Trade Name is same as Legal Name")) {
-                return;
-            }
-
-            const selectedAnswerLabel = $radio.closest('label').text().replace(/\s+/g, ' ').trim();
-            const matchPhrases = [
-                "Yes",
-                "Yes (If Trade Name is same as Legal Name)",
-            ];
-
-            const matchedYes = matchPhrases.some((phrase) =>
-                selectedAnswerLabel.toLowerCase().includes(phrase.toLowerCase())
-            );
-
-            const $legalNameInput = $('.js_question-wrapper')
-                .filter((_, el) => $(el).text().replace(/\s+/g, ' ').trim().includes("Business Legal Name"))
-                .find('input.o_survey_question_text_box');
-
-            const $tradeNameInput = $('.js_question-wrapper')
-                .filter((_, el) => $(el).text().replace(/\s+/g, ' ').trim().includes("Business Trade Name"))
-                .find('input.o_survey_question_text_box');
-
-            if (!$legalNameInput.length || !$tradeNameInput.length) {
-                console.warn('⚠️ Could not find Legal Name or Trade Name input.');
-                return;
-            }
-
-            if (isChecked && matchedYes) {
-                const legalName = $legalNameInput.val();
-                $tradeNameInput.val(legalName).prop('readonly', true);
-            } else {
-                $tradeNameInput.val('').prop('readonly', false);
-            }
-        },
-
         /**
          * If user types in Legal Name and radio "Yes" is selected, update Trade Name
          */
-        _onLegalNameChange: function () {
-            const $radioWrapper = $('.js_question-wrapper').filter((_, el) =>
-                $(el).text().replace(/\s+/g, ' ').trim().includes("If Trade Name is same as Legal Name")
-            );
+    _onLegalNameChangeInit: function () {
+        const $legalNameInput = $('.js_question-wrapper')
+            .filter((_, el) => $(el).text().replace(/\s+/g, ' ').trim().includes("Business Legal Name"))
+            .find('input.o_survey_question_text_box');
 
+        const $tradeNameInput = $('.js_question-wrapper')
+            .filter((_, el) => $(el).text().replace(/\s+/g, ' ').trim().includes("Business Trade Name"))
+            .find('input.o_survey_question_text_box');
+
+        const $radioWrapper = $('.js_question-wrapper').filter((_, el) =>
+            $(el).text().replace(/\s+/g, ' ').trim().includes("If Trade Name is same as Legal Name")
+        );
+
+        const matchPhrases = [
+            "Yes",
+            "Yes (If Trade Name is same as Legal Name)",
+        ];
+
+        const isYesSelected = function () {
             const $selectedYesRadio = $radioWrapper.find('input[type="radio"]:checked');
             const selectedAnswerLabel = $selectedYesRadio.closest('label').text().replace(/\s+/g, ' ').trim();
-
-            const matchPhrases = [
-                "Yes",
-                "Yes (If Trade Name is same as Legal Name)",
-            ];
-
-            const matchedYes = matchPhrases.some((phrase) =>
+            return matchPhrases.some((phrase) =>
                 selectedAnswerLabel.toLowerCase().includes(phrase.toLowerCase())
             );
+        };
 
-            if (!matchedYes) return;
-
-            const $legalNameInput = $('.js_question-wrapper')
-                .filter((_, el) => $(el).text().replace(/\s+/g, ' ').trim().includes("Business Legal Name"))
-                .find('input.o_survey_question_text_box');
-
-            const $tradeNameInput = $('.js_question-wrapper')
-                .filter((_, el) => $(el).text().replace(/\s+/g, ' ').trim().includes("Business Trade Name"))
-                .find('input.o_survey_question_text_box');
-
-            if ($legalNameInput.length && $tradeNameInput.length) {
-                const legalName = $legalNameInput.val();
-                $tradeNameInput.val(legalName);
+        const updateTradeName = function () {
+            if (isYesSelected()) {
+                $tradeNameInput.val($legalNameInput.val()).prop('readonly', true);
+            } else {
+                $tradeNameInput.prop('readonly', false);
             }
-        },
+        };
+
+        // Sync only when "Yes" is selected
+        $legalNameInput.on('input', function () {
+            if (isYesSelected()) {
+                $tradeNameInput.val($legalNameInput.val());
+            }
+        });
+
+        // Radio button changes
+        $radioWrapper.find('input[type="radio"]').on('change', function () {
+            if (isYesSelected()) {
+                $tradeNameInput.val($legalNameInput.val()).prop('readonly', true);
+            } else {
+                $tradeNameInput.prop('readonly', false).val('');
+            }
+        });
+
+        // Init check
+        updateTradeName();
+    },
 
 
     /**
