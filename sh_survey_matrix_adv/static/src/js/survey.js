@@ -259,11 +259,10 @@ SurveyFormWidget.include({
                 "Partnership",
                 "Pvt Ltd Co.",
                 "LLP",
-                "HUF(Karta)",
                 "If other, please specify:"
             ].map(normalize);
             let directorCount = 0;
-            if (normalizedLabel === "Sole Proprietor") {
+            if (normalizedLabel === "Sole Proprietor" || normalizedLabel === "HUF(Karta)") {
                 directorCount = 1;
             } else if (multiDirectorLabels.includes(normalizedLabel)) {
                 directorCount = 7;
