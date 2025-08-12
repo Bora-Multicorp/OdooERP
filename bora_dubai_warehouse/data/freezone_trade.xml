@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="email_template_wh_notification" model="mail.template">
+        <field name="name">Warehouse Notification for Freezone/Bora Global Order</field>
+        <field name="model_id" ref="sale.model_sale_order"/>
+        <field name="subject">New Order  Notification for freezone /Bora global Order</field>
+        <field name="email_from">{{ user.email_formatted }}</field>
+        <field name="body_html" type="html">
+            <p>Hello Warehouse Team,</p>
+            <p>A new sales order has been confirmed. Please prepare the following items for shipment.
+            </p>
+
+            <p>
+                <b>Order Details:</b>
+            </p>
+            <ul>
+                <li>
+                    <b>Sales Order:</b>
+                    <t t-out="object.name"/>
+                </li>
+                <li>
+                    <b>Customer:</b>
+                    <t t-out="object.partner_id.name"/>
+                </li>
+                <li>
+                    <b>Warehouse:</b>
+                    <t t-out="object.warehouse_id.name"/>
+                </li>
+            </ul>
+
+            <p>
+                <b>Products to be Shipped:</b>
+            </p>
+            <table class="table table-bordered" style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="background-color: #f2f2f2;">
+                        <th style="padding: 8px; border: 1px solid #ddd; text-align: left;">Product</th>
+                        <th style="padding: 8px; border: 1px solid #ddd; text-align: right;">Quantity</th>
+                        <th style="padding: 8px; border: 1px solid #ddd; text-align: right;">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <t t-foreach="object.order_line" t-as="line">
+                        <tr>
+                            <td style="padding: 8px; border: 1px solid #ddd; text-align: left;">
+                                <t t-out="line.product_id.display_name"/>
+                            </td>
+                            <td style="padding: 8px; border: 1px solid #ddd; text-align: right;">
+                                <t t-out="line.product_uom_qty"/>
+                                <t t-out="line.product_uom.name"/>
+                            </td>
+                              <td style="padding: 8px; border: 1px solid #ddd; text-align: right;">
+                                <t t-out="line.price_subtotal"/>
+                            </td>
+                        </tr>
+                    </t>
+                </tbody>
+            </table>
+            <br/>
+            <p>Best regards,</p>
+        </field>
+    </record>
+</odoo>
