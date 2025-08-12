@@ -82,10 +82,10 @@ SurveyFormWidget.include({
     const sizeKey = rawKey.replace(/\s+/g, ' ').trim();
 
     const maxFilesPerField = {
-        'shop photos': 10,
-        'shop videos': 10,
-        'electricity bill': 5,
-        'moa or aoa': 5,
+        'shop photos': 10, //Upload up to 10 supported files: image. Max 100 MB per file
+        'shop videos': 10, // Upload up to 10 supported files: video. Max 100 MB per file.
+        'electricity bill': 5, // Upload up to 5 supported files. Max 10 MB per file.
+        'moa or aoa': 5, // Upload up to 5 supported files. Max 10 MB per file.
     };
 
     const sizeLimits = {
@@ -99,12 +99,20 @@ SurveyFormWidget.include({
         'shop photos': 100 * 1024 * 1024,
         'shop videos': 100 * 1024 * 1024,
         'incorporation certificate': 100 * 1024 * 1024,
-        'moa or aoa': 100 * 1024 * 1024,
-        'electricity bill': 100 * 1024 * 1024,
+        'moa or aoa': 10 * 1024 * 1024,
+        'electricity bill': 10 * 1024 * 1024,
         'cancelled cheque': 10 * 1024 * 1024,
     };
 
+    const perFileLimits = { // per file size
+        'shop photos': 100 * 1024 * 1024,
+        'shop videos': 100 * 1024 * 1024,
+        'electricity bill': 10 * 1024 * 1024,
+        'moa or aoa': 10 * 1024 * 1024,
+    };
+
     const maxSizePerField = sizeLimits[sizeKey] ?? 10 * 1024 * 1024;  // default 10MB if unmatched
+    const maxSizePerFile = perFileLimits[sizeKey] ?? 10 * 1024 * 1024;
 
     const isShopVideos = sizeKey.includes("shop videos");
     const isShopPhotos = sizeKey.includes("shop photos");
@@ -132,7 +140,24 @@ SurveyFormWidget.include({
             $fileUpload.val('');
             return;
         }
-        if (isShopPhotos || isShopVideos || isElectricityBill || isMoaAoa) {
+        if ((isAadhaar || isPan) && ![...imageTypes, ...pdfTypes].includes(file.type)) {
+            alert(`"${sizeKey}" only accepts image or PDF files.`);
+            $fileUpload.val('');
+            return;
+        }
+        if (!isShopVideos && !isShopPhotos && !(isAadhaar || isPan)
+            && ![...imageTypes, ...pdfTypes, ...officeTypes].includes(file.type)) {
+            alert(`Only image, PDF, or Office docs allowed for "${sizeKey}".`);
+            $fileUpload.val('');
+            return;
+        }
+        console.log("file.sixe and masxx", file.size, maxSizePerFile)
+         if (file.size > maxSizePerFile) {
+            alert(`Each file for "${sizeKey}" must be ≤ ${(maxSizePerFile / 1024 / 1024).toFixed(1)} MB.`);
+            $fileUpload.val('');
+            return;
+        }
+         if (isShopPhotos || isShopVideos || isElectricityBill || isMoaAoa) {
             let existingCount = self.SH_FILE_DATA_DICTIONARY[dictKey] ? self.SH_FILE_DATA_DICTIONARY[dictKey].length : 0;
             let maxAllowed = maxFilesPerField[sizeKey];
             if (existingCount + $fileUpload[0].files.length > maxAllowed) {
@@ -150,22 +175,6 @@ SurveyFormWidget.include({
                 delete self.SH_FILE_DATA_DICTIONARY[dictKey];
                 return;
             }
-        }
-        if ((isAadhaar || isPan) && ![...imageTypes, ...pdfTypes].includes(file.type)) {
-            alert(`"${sizeKey}" only accepts image or PDF files.`);
-            $fileUpload.val('');
-            return;
-        }
-        if (!isShopVideos && !isShopPhotos && !(isAadhaar || isPan)
-            && ![...imageTypes, ...pdfTypes, ...officeTypes].includes(file.type)) {
-            alert(`Only image, PDF, or Office docs allowed for "${sizeKey}".`);
-            $fileUpload.val('');
-            return;
-        }
-         if (file.size > maxSizePerField) {
-            alert(`Each file for "${sizeKey}" must be ≤ ${(maxSizePerField / 1024 / 1024).toFixed(1)} MB.`);
-            $fileUpload.val('');
-            return;
         }
         const result = await toBase64(file);
         const base64data = result.split(',')[1];
