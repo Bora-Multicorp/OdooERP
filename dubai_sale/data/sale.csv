@@ -1,0 +1,1593 @@
+module,type,name,res_id,src,value,comments
+sale,model,"ir.actions.act_window,name",sale.act_res_partner_2_sale_order,Quotations and Sales,Proforma Invoices and Sales,
+sale,model_terms,"ir.actions.act_window,help",sale.act_res_partner_2_sale_order,"Create a new quotation, the first step of a new sale!","Create a new proforma invoice, the first step of a new sale!",
+sale,model_terms,"ir.actions.act_window,help",sale.act_res_partner_2_sale_order,"Once the quotation is confirmed by the customer, it becomes a sales order.<br> You will be able to create an invoice and collect the payment.","Once the proforma invoice is confirmed by the customer, it becomes a sales order.<br> You will be able to create an invoice and collect the payment.",
+sale,model,"ir.actions.act_window,name",sale.action_account_invoice_report_salesteam,Invoices Analysis,,
+sale,model_terms,"ir.actions.act_window,help",sale.action_account_invoice_report_salesteam,"From this report, you can have an overview of the amount invoiced to your customer. The search tool can also be used to personalise your Invoices reports and so, match this analysis to your needs.",,
+sale,model,"ir.actions.act_window,name",sale.action_accrued_revenue_entry,Accrued Revenue Entry,,
+sale,model,"ir.actions.act_window,name",sale.action_invoice_salesteams,Invoices,,
+sale,model_terms,"ir.actions.act_window,help",sale.action_invoice_salesteams,Create a customer invoice,,
+sale,model_terms,"ir.actions.act_window,help",sale.action_invoice_salesteams,"Create invoices, register payments and keep track of the discussions with your customers.",,
+sale,model,"ir.actions.act_window,name",sale.action_mass_cancel_orders,Cancel,,
+sale,model,"ir.actions.act_window,name",sale.action_order_report_all,Sales Analysis,,
+sale,model_terms,"ir.actions.act_window,help",sale.action_order_report_all,"This report performs analysis on your quotations and sales orders. Analysis check your sales revenues and sort it by different group criteria (salesman, partner, product, etc.) Use this report to perform analysis on sales not having invoiced yet. If you want to analyse your turnover, you should use the Invoice Analysis report in the Accounting application.","This report performs analysis on your proforma invoices and sales orders. Analysis check your sales revenues and sort it by different group criteria (salesman, partner, product, etc.) Use this report to perform analysis on sales not having invoiced yet. If you want to analyse your turnover, you should use the Invoice Analysis report in the Accounting application.",
+sale,model,"ir.actions.act_window,name",sale.action_order_report_customers,Sales Analysis By Customers,,
+sale,model_terms,"ir.actions.act_window,help",sale.action_order_report_customers,"This report performs analysis on your quotations and sales orders. Analysis check your sales revenues and sort it by different group criteria (salesman, partner, product, etc.) Use this report to perform analysis on sales not having invoiced yet. If you want to analyse your turnover, you should use the Invoice Analysis report in the Accounting application.","This report performs analysis on your proforma invoices and sales orders. Analysis check your sales revenues and sort it by different group criteria (salesman, partner, product, etc.) Use this report to perform analysis on sales not having invoiced yet. If you want to analyse your turnover, you should use the Invoice Analysis report in the Accounting application.",
+sale,model,"ir.actions.act_window,name",sale.action_order_report_products,Sales Analysis By Products,,
+sale,model_terms,"ir.actions.act_window,help",sale.action_order_report_products,"This report performs analysis on your quotations and sales orders. Analysis check your sales revenues and sort it by different group criteria (salesman, partner, product, etc.) Use this report to perform analysis on sales not having invoiced yet. If you want to analyse your turnover, you should use the Invoice Analysis report in the Accounting application.","This report performs analysis on your proforma invoices and sales orders. Analysis check your sales revenues and sort it by different group criteria (salesman, partner, product, etc.) Use this report to perform analysis on sales not having invoiced yet. If you want to analyse your turnover, you should use the Invoice Analysis report in the Accounting application.",
+sale,model,"ir.actions.act_window,name",sale.action_order_report_quotation_salesteam,Quotations Analysis,Proforma Invoices Analysis,
+sale,model_terms,"ir.actions.act_window,help",sale.action_order_report_quotation_salesteam,"This report performs analysis on your quotations. Analysis check your sales revenues and sort it by different group criteria (salesman, partner, product, etc.) Use this report to perform analysis on sales not having invoiced yet. If you want to analyse your turnover, you should use the Invoice Analysis report in the Accounting application.","This report performs analysis on your proforma invoices. Analysis check your sales revenues and sort it by different group criteria (salesman, partner, product, etc.) Use this report to perform analysis on sales not having invoiced yet. If you want to analyse your turnover, you should use the Invoice Analysis report in the Accounting application.",
+sale,model,"ir.actions.act_window,name",sale.action_order_report_salesperson,Sales Analysis By Salespersons,,
+sale,model_terms,"ir.actions.act_window,help",sale.action_order_report_salesperson,"This report performs analysis on your quotations and sales orders. Analysis check your sales revenues and sort it by different group criteria (salesman, partner, product, etc.) Use this report to perform analysis on sales not having invoiced yet. If you want to analyse your turnover, you should use the Invoice Analysis report in the Accounting application.","This report performs analysis on your proforma invoices and sales orders. Analysis check your sales revenues and sort it by different group criteria (salesman, partner, product, etc.) Use this report to perform analysis on sales not having invoiced yet. If you want to analyse your turnover, you should use the Invoice Analysis report in the Accounting application.",
+sale,model,"ir.actions.act_window,name",sale.action_order_report_so_salesteam,Sales Analysis,,
+sale,model_terms,"ir.actions.act_window,help",sale.action_order_report_so_salesteam,"This report performs analysis on your sales orders. Analysis check your sales revenues and sort it by different group criteria (salesman, partner, product, etc.) Use this report to perform analysis on sales not having invoiced yet. If you want to analyse your turnover, you should use the Invoice Analysis report in the Accounting application.",,
+sale,model,"ir.actions.act_window,name",sale.action_orders,Sales Orders,,
+sale,model_terms,"ir.actions.act_window,help",sale.action_orders,"Create a new quotation, the first step of a new sale!","Create a new proforma invoice, the first step of a new sale!",
+sale,model_terms,"ir.actions.act_window,help",sale.action_orders,"Once the quotation is confirmed, it becomes a sales order.<br> You will be able to create an invoice and collect the payment.","Once the proforma invoice is confirmed, it becomes a sales order.<br> You will be able to create an invoice and collect the payment.",
+sale,model,"ir.actions.act_window,name",sale.action_orders_salesteams,Sales Orders,,
+sale,model_terms,"ir.actions.act_window,help",sale.action_orders_salesteams,"Create a new quotation, the first step of a new sale!","Create a new proforma invoice, the first step of a new sale!",
+sale,model_terms,"ir.actions.act_window,help",sale.action_orders_salesteams,"Once the quotation is confirmed by the customer, it becomes a sales order.<br> You will be able to create an invoice and collect the payment.","Once the proforma invoice is confirmed by the customer, it becomes a sales order.<br> You will be able to create an invoice and collect the payment.",
+sale,model,"ir.actions.act_window,name",sale.action_orders_to_invoice,Orders to Invoice,,
+sale,model_terms,"ir.actions.act_window,help",sale.action_orders_to_invoice,No orders to invoice found,,
+sale,model_terms,"ir.actions.act_window,help",sale.action_orders_to_invoice,"You can select all orders and invoice them in batch,<br>
+            or check every order and invoice them one by one.",,
+sale,model,"ir.actions.act_window,name",sale.action_orders_to_invoice_salesteams,Sales Orders,,
+sale,model,"ir.actions.act_window,name",sale.action_orders_upselling,Orders to Upsell,,
+sale,model_terms,"ir.actions.act_window,help",sale.action_orders_upselling,No orders to upsell found.,,
+sale,model_terms,"ir.actions.act_window,help",sale.action_orders_upselling,"An order is to upsell when delivered quantities are above initially
+            ordered quantities, and the invoicing policy is based on ordered quantities.",,
+sale,model_terms,"ir.actions.act_window,help",sale.action_orders_upselling,"As an example, if you sell pre-paid hours of services, Odoo recommends you
+            to sell extra hours when all ordered hours have been consumed.",,
+sale,model,"ir.actions.act_window,name",sale.action_quotation_form,New Quotation,New Proforma Invoice,
+sale,model,"ir.actions.act_window,name",sale.action_quotations,Quotations,Proforma Invoices,
+sale,model_terms,"ir.actions.act_window,help",sale.action_quotations,Beat competitors with stunning quotations!,Beat competitors with stunning proforma invoices!,
+sale,model_terms,"ir.actions.act_window,help",sale.action_quotations,"Boost sales with online payments or signatures, upsells, and a great customer portal.",,
+sale,model_terms,"ir.actions.act_window,help",sale.action_quotations,Check a sample. It's clean!,,
+sale,model,"ir.actions.act_window,name",sale.action_quotations_salesteams,Quotations,Proforma Invoices,
+sale,model_terms,"ir.actions.act_window,help",sale.action_quotations_salesteams,"Create a new quotation, the first step of a new sale!","Create a new proforma invoice, the first step of a new sale!",
+sale,model_terms,"ir.actions.act_window,help",sale.action_quotations_salesteams,"Once the quotation is confirmed by the customer, it becomes a sales order.<br> You will be able to create an invoice and collect the payment.","Once the proforma invoice is confirmed by the customer, it becomes a sales order.<br> You will be able to create an invoice and collect the payment.",
+sale,model,"ir.actions.act_window,name",sale.action_quotations_with_onboarding,Proforma Invoice,,
+sale,model_terms,"ir.actions.act_window,help",sale.action_quotations_with_onboarding,Beat competitors with stunning quotations!,Beat competitors with stunning proforma invoices!,
+sale,model_terms,"ir.actions.act_window,help",sale.action_quotations_with_onboarding,"Boost sales with online payments or signatures, upsells, and a great customer portal.",,
+sale,model_terms,"ir.actions.act_window,help",sale.action_quotations_with_onboarding,Check a sample. It's clean!,,
+sale,model,"ir.actions.act_window,name",sale.action_sale_config_settings,Settings,,
+sale,model,"ir.actions.act_window,name",sale.action_sale_order_generate_link,Generate a Payment Link,,
+sale,model,"ir.actions.act_window,name",sale.action_view_sale_advance_payment_inv,Create invoice(s),,
+sale,model,"ir.actions.act_window,name",sale.mail_activity_plan_action_sale_order,Sale Order Plans,,
+sale,model_terms,"ir.actions.act_window,help",sale.mail_activity_plan_action_sale_order,Create a Sale Order Activity Plan,,
+sale,model_terms,"ir.actions.act_window,help",sale.mail_activity_plan_action_sale_order,"Activity plans are used to assign a list of activities in just a few clicks
+                (e.g. ""Delivery scheduling"", ""Order Payment Follow-up"", ...)",,
+sale,model,"ir.actions.act_window,name",sale.mail_activity_type_action_config_sale,Activity Types,,
+sale,model,"ir.actions.act_window,name",sale.product_template_action,Products,,
+sale,model_terms,"ir.actions.act_window,help",sale.product_template_action,Create a new product,,
+sale,model_terms,"ir.actions.act_window,help",sale.product_template_action,"You must define a product for everything you sell or purchase,
+                whether it's a storable product, a consumable or a service.",,
+sale,model,"ir.actions.act_window,name",sale.report_all_channels_sales_action,Sales Analysis,,
+sale,model,"ir.actions.report,name",sale.action_report_pro_forma_invoice,PRO-FORMA Invoice,,
+sale,model,"ir.actions.report,print_report_name",sale.action_report_pro_forma_invoice,'PRO-FORMA - %s' % (object.name),,
+sale,model,"ir.actions.report,name",sale.action_report_saleorder,PDF Quote,,
+sale,model,"ir.actions.report,print_report_name",sale.action_report_saleorder,"(object.state in ('draft', 'sent') and 'Quotation - %s' % (object.name)) or 'Order - %s' % (object.name)","(object.state in ('draft', 'sent') and 'Proforma Invoice - %s' % (object.name)) or 'Order - %s' % (object.name)",
+sale,model,"ir.actions.server,name",sale.model_sale_order_action_quotation_sent,Mark Quotation as Sent,Mark proforma invoice as Sent,
+sale,model,"ir.actions.server,name",sale.model_sale_order_action_share,Share,,
+sale,model,"ir.actions.server,name",sale.model_sale_order_send_mail,Send an email,,
+sale,model,"ir.actions.server,name",sale.send_invoice_cron_ir_actions_server,automatic invoicing: send ready invoice,,
+sale,model,"ir.model,name",sale.model_account_analytic_applicability,Analytic Plan's Applicabilities,,
+sale,model,"ir.model,name",sale.model_account_analytic_line,Analytic Line,,
+sale,model,"ir.model,name",sale.model_account_chart_template,Account Chart Template,,
+sale,model,"ir.model,name",sale.model_account_invoice_report,Invoices Statistics,,
+sale,model,"ir.model,name",sale.model_account_move,Journal Entry,,
+sale,model,"ir.model,name",sale.model_account_move_line,Journal Item,,
+sale,model,"ir.model,name",sale.model_base_document_layout,Company Document Layout,,
+sale,model,"ir.model,name",sale.model_crm_team,Sales Team,,
+sale,model,"ir.model,name",sale.model_ir_config_parameter,System Parameter,,
+sale,model,"ir.model,name",sale.model_mail_compose_message,Email composition wizard,,
+sale,model,"ir.model,name",sale.model_mail_scheduled_message,Scheduled Message,,
+sale,model,"ir.model,name",sale.model_payment_link_wizard,Generate Sales Payment Link,,
+sale,model,"ir.model,name",sale.model_payment_provider,Payment Provider,,
+sale,model,"ir.model,name",sale.model_payment_transaction,Payment Transaction,,
+sale,model,"ir.model,name",sale.model_product_attribute_custom_value,Product Attribute Custom Value,,
+sale,model,"ir.model,name",sale.model_product_category,Product Category,,
+sale,model,"ir.model,name",sale.model_product_document,Product Document,,
+sale,model,"ir.model,name",sale.model_product_packaging,Product Packaging,,
+sale,model,"ir.model,name",sale.model_product_product,Product Variant,,
+sale,model,"ir.model,name",sale.model_product_template,Product Approval,,
+sale,model,"ir.model,name",sale.model_res_company,Companies,,
+sale,model,"ir.model,name",sale.model_res_config_settings,Config Settings,,
+sale,model,"ir.model,name",sale.model_res_partner,Contact,,
+sale,model,"ir.model,name",sale.model_sale_advance_payment_inv,Sales Advance Payment Invoice,,
+sale,model,"ir.model,name",sale.model_sale_mass_cancel_orders,Cancel multiple quotations,Cancel multiple proforma invoices,
+sale,model,"ir.model,name",sale.model_sale_order,Sales Order,,
+sale,model,"ir.model,name",sale.model_sale_order_cancel,Sales Order Cancel,,
+sale,model,"ir.model,name",sale.model_sale_order_discount,Discount Wizard,,
+sale,model,"ir.model,name",sale.model_sale_order_line,Sales Order Line,,
+sale,model,"ir.model,name",sale.model_sale_payment_provider_onboarding_wizard,Sale Payment provider onboarding wizard,,
+sale,model,"ir.model,name",sale.model_sale_report,Sales Analysis Report,,
+sale,model,"ir.model,name",sale.model_utm_campaign,UTM Campaign,,
+sale,model,"ir.model.constraint,message",sale.constraint_product_attribute_custom_value_sol_custom_value_unique,Only one Custom Value is allowed per Attribute Value per Sales Order Line.,,
+sale,model,"ir.model.constraint,message",sale.constraint_res_company_check_quotation_validity_days,You cannot set a negative number for the default quotation validity. Leave empty (or 0) to disable the automatic expiration of quotations.,You cannot set a negative number for the default proforma invoice validity. Leave empty (or 0) to disable the automatic expiration of proforma invoices.,
+sale,model,"ir.model.constraint,message",sale.constraint_sale_order_date_order_conditional_required,A confirmed sales order requires a confirmation date.,,
+sale,model,"ir.model.constraint,message",sale.constraint_sale_order_line_accountable_required_fields,Missing required fields on accountable sale order line.,,
+sale,model,"ir.model.constraint,message",sale.constraint_sale_order_line_non_accountable_null_fields,Forbidden values on non-accountable sale order line,,
+sale,model,"ir.model.fields,field_description",sale.field_account_analytic_applicability__business_domain,Domain,,
+sale,model,"ir.model.fields,field_description",sale.field_account_analytic_line__so_line,Sales Order Item,,
+sale,model,"ir.model.fields,field_description",sale.field_account_bank_statement_line__campaign_id,Campaign,,
+sale,model,"ir.model.fields,help",sale.field_account_bank_statement_line__campaign_id,"This is a name that helps you keep track of your different campaign efforts, e.g. Fall_Drive, Christmas_Special",,
+sale,model,"ir.model.fields,field_description",sale.field_account_bank_statement_line__medium_id,Medium,,
+sale,model,"ir.model.fields,help",sale.field_account_bank_statement_line__medium_id,"This is the method of delivery, e.g. Postcard, Email, or Banner Ad",,
+sale,model,"ir.model.fields,field_description",sale.field_account_bank_statement_line__sale_order_count,Sale Order Count,,
+sale,model,"ir.model.fields,field_description",sale.field_account_bank_statement_line__source_id,Source,,
+sale,model,"ir.model.fields,help",sale.field_account_bank_statement_line__source_id,"This is the source of the link, e.g. Search Engine, another domain, or name of email list",,
+sale,model,"ir.model.fields,field_description",sale.field_account_bank_statement_line__team_id,Sales Team,,
+sale,model,"ir.model.fields,field_description",sale.field_account_invoice_report__team_id,Sales Team,,
+sale,model,"ir.model.fields,field_description",sale.field_account_move__campaign_id,Campaign,,
+sale,model,"ir.model.fields,help",sale.field_account_move__campaign_id,"This is a name that helps you keep track of your different campaign efforts, e.g. Fall_Drive, Christmas_Special",,
+sale,model,"ir.model.fields,field_description",sale.field_account_move__medium_id,Medium,,
+sale,model,"ir.model.fields,help",sale.field_account_move__medium_id,"This is the method of delivery, e.g. Postcard, Email, or Banner Ad",,
+sale,model,"ir.model.fields,field_description",sale.field_account_move__sale_order_count,Sale Order Count,,
+sale,model,"ir.model.fields,field_description",sale.field_account_move__source_id,Source,,
+sale,model,"ir.model.fields,help",sale.field_account_move__source_id,"This is the source of the link, e.g. Search Engine, another domain, or name of email list",,
+sale,model,"ir.model.fields,field_description",sale.field_account_move__team_id,Sales Team,,
+sale,model,"ir.model.fields,field_description",sale.field_account_move_line__is_downpayment,Is Downpayment,,
+sale,model,"ir.model.fields,field_description",sale.field_account_move_line__sale_line_ids,Sales Order Lines,,
+sale,model,"ir.model.fields,field_description",sale.field_crm_team__invoiced,Invoiced This Month,,
+sale,model,"ir.model.fields,help",sale.field_crm_team__invoiced,Invoice revenue for the current month. This is the amount the sales channel has invoiced this month. It is used to compute the progression ratio of the current and target revenue on the kanban view.,,
+sale,model,"ir.model.fields,field_description",sale.field_crm_team__invoiced_target,Invoicing Target,,
+sale,model,"ir.model.fields,help",sale.field_crm_team__invoiced_target,Revenue Target for the current month (untaxed total of paid invoices).,,
+sale,model,"ir.model.fields,field_description",sale.field_crm_team__quotations_amount,Amount of quotations to invoice,Amount of proforma invoices to invoice,
+sale,model,"ir.model.fields,field_description",sale.field_crm_team__quotations_count,Number of quotations to invoice,Number of proforma invoices to invoice,
+sale,model,"ir.model.fields,field_description",sale.field_crm_team__sale_order_count,# Sale Orders,,
+sale,model,"ir.model.fields,field_description",sale.field_crm_team__sales_to_invoice_count,Number of sales to invoice,,
+sale,model,"ir.model.fields,field_description",sale.field_payment_link_wizard__amount_paid,Already Paid,,
+sale,model,"ir.model.fields,field_description",sale.field_payment_link_wizard__confirmation_message,Confirmation Message,,
+sale,model,"ir.model.fields,field_description",sale.field_payment_provider__so_reference_type,Communication,,
+sale,model,"ir.model.fields,help",sale.field_payment_provider__so_reference_type,You can set here the communication type that will appear on sales orders.The communication will be given to the customer when they choose the payment method.,,
+sale,model,"ir.model.fields,field_description",sale.field_payment_transaction__sale_order_ids,Sales Orders,,
+sale,model,"ir.model.fields,field_description",sale.field_payment_transaction__sale_order_ids_nbr,# of Sales Orders,,
+sale,model,"ir.model.fields,field_description",sale.field_product_attribute_custom_value__sale_order_line_id,Sales Order Line,,
+sale,model,"ir.model.fields,field_description",sale.field_product_category__property_account_downpayment_categ_id,Downpayment Account,,
+sale,model,"ir.model.fields,help",sale.field_product_category__property_account_downpayment_categ_id,This account will be used on Downpayment invoices.,,
+sale,model,"ir.model.fields,field_description",sale.field_product_document__attached_on_sale,Sale : Visible at,,
+sale,model,"ir.model.fields,help",sale.field_product_document__attached_on_sale,"Allows you to share the document with your customers within a sale.
+Leave it empty if you don't want to share this document with sales customer.
+On quote: the document will be sent to and accessible by customers at any time.
+e.g. this option can be useful to share Product description files.
+On order confirmation: the document will be sent to and accessible by customers.
+e.g. this option can be useful to share User Manual or digital content bought on ecommerce. 
+Inside quote: The document will be included in the pdf of the quotation and sale order between the header pages and the quote table. ",,
+sale,model,"ir.model.fields,field_description",sale.field_product_packaging__sales,Sales,,
+sale,model,"ir.model.fields,help",sale.field_product_packaging__sales,"If true, the packaging can be used for sales orders",,
+sale,model,"ir.model.fields,field_description",sale.field_product_product__expense_policy,Re-Invoice Costs,,
+sale,model,"ir.model.fields,help",sale.field_product_product__expense_policy,"Validated expenses, vendor bills, or stock pickings (set up to track costs) can be invoiced to the customer at either cost or sales price.",,
+sale,model,"ir.model.fields,field_description",sale.field_product_product__invoice_policy,Invoicing Policy,,
+sale,model,"ir.model.fields,help",sale.field_product_product__invoice_policy,"Ordered Quantity: Invoice quantities ordered by the customer.
+Delivered Quantity: Invoice quantities delivered to the customer.",,
+sale,model,"ir.model.fields,field_description",sale.field_product_product__optional_product_ids,Optional Products,,
+sale,model,"ir.model.fields,help",sale.field_product_product__optional_product_ids,"Optional Products are suggested whenever the customer hits *Add to Cart* (cross-sell strategy, e.g. for computers: warranty, software, etc.).",,
+sale,model,"ir.model.fields,field_description",sale.field_product_product__product_catalog_product_is_in_sale_order,Product Catalog Product Is In Sale Order,,
+sale,model,"ir.model.fields,field_description",sale.field_product_product__sale_line_warn,Sales Order Line,,
+sale,model,"ir.model.fields,help",sale.field_product_product__sale_line_warn,"Selecting the ""Warning"" option will notify user with the message, Selecting ""Blocking Message"" will throw an exception with the message and block the flow. The Message has to be written in the next field.",,
+sale,model,"ir.model.fields,field_description",sale.field_product_product__sale_line_warn_msg,Message for Sales Order Line,,
+sale,model,"ir.model.fields,field_description",sale.field_product_product__sales_count,Sold,,
+sale,model,"ir.model.fields,field_description",sale.field_product_product__service_type,Track Service,,
+sale,model,"ir.model.fields,help",sale.field_product_product__service_type,"Manually set quantities on order: Invoice based on the manually entered quantity, without creating an analytic account.
+Timesheets on contract: Invoice based on the tracked hours on the related timesheet.
+Create a task and track hours: Create a task on the sales order validation and track the work hours.",,
+sale,model,"ir.model.fields,field_description",sale.field_product_product__visible_expense_policy,Re-Invoice Policy visible,,
+sale,model,"ir.model.fields,field_description",sale.field_product_template__expense_policy,Re-Invoice Costs,,
+sale,model,"ir.model.fields,help",sale.field_product_template__expense_policy,"Validated expenses, vendor bills, or stock pickings (set up to track costs) can be invoiced to the customer at either cost or sales price.",,
+sale,model,"ir.model.fields,field_description",sale.field_product_template__invoice_policy,Invoicing Policy,,
+sale,model,"ir.model.fields,help",sale.field_product_template__invoice_policy,"Ordered Quantity: Invoice quantities ordered by the customer.
+Delivered Quantity: Invoice quantities delivered to the customer.",,
+sale,model,"ir.model.fields,field_description",sale.field_product_template__optional_product_ids,Optional Products,,
+sale,model,"ir.model.fields,help",sale.field_product_template__optional_product_ids,"Optional Products are suggested whenever the customer hits *Add to Cart* (cross-sell strategy, e.g. for computers: warranty, software, etc.).",,
+sale,model,"ir.model.fields,field_description",sale.field_product_template__sale_line_warn,Sales Order Line,,
+sale,model,"ir.model.fields,help",sale.field_product_template__sale_line_warn,"Selecting the ""Warning"" option will notify user with the message, Selecting ""Blocking Message"" will throw an exception with the message and block the flow. The Message has to be written in the next field.",,
+sale,model,"ir.model.fields,field_description",sale.field_product_template__sale_line_warn_msg,Message for Sales Order Line,,
+sale,model,"ir.model.fields,field_description",sale.field_product_template__sales_count,Sold,,
+sale,model,"ir.model.fields,field_description",sale.field_product_template__service_type,Track Service,,
+sale,model,"ir.model.fields,help",sale.field_product_template__service_type,"Manually set quantities on order: Invoice based on the manually entered quantity, without creating an analytic account.
+Timesheets on contract: Invoice based on the tracked hours on the related timesheet.
+Create a task and track hours: Create a task on the sales order validation and track the work hours.",,
+sale,model,"ir.model.fields,field_description",sale.field_product_template__visible_expense_policy,Re-Invoice Policy visible,,
+sale,model,"ir.model.fields,field_description",sale.field_res_company__portal_confirmation_pay,Online Payment,,
+sale,model,"ir.model.fields,field_description",sale.field_res_company__portal_confirmation_sign,Online Signature,,
+sale,model,"ir.model.fields,field_description",sale.field_res_company__prepayment_percent,Prepayment percentage,,
+sale,model,"ir.model.fields,help",sale.field_res_company__prepayment_percent,The percentage of the amount needed to be paid to confirm quotations.,The percentage of the amount needed to be paid to confirm proforma invoices.,
+sale,model,"ir.model.fields,field_description",sale.field_res_company__quotation_validity_days,Default Quotation Validity,Default Proforma Invoice Validity,
+sale,model,"ir.model.fields,help",sale.field_res_company__quotation_validity_days,Days between quotation proposal and expiration. 0 days means automatic expiration is disabled,Days between proforma invoice proposal and expiration. 0 days means automatic expiration is disabled,
+sale,model,"ir.model.fields,field_description",sale.field_res_company__sale_discount_product_id,Discount Product,,
+sale,model,"ir.model.fields,help",sale.field_res_company__sale_discount_product_id,Default product used for discounts,,
+sale,model,"ir.model.fields,field_description",sale.field_res_company__sale_onboarding_payment_method,Sale onboarding selected payment method,,
+sale,model,"ir.model.fields,field_description",sale.field_res_config_settings__automatic_invoice,Automatic Invoice,,
+sale,model,"ir.model.fields,help",sale.field_res_config_settings__automatic_invoice,"The invoice is generated automatically and available in the customer portal when the transaction is confirmed by the payment provider.
+The invoice is marked as paid and the payment is registered in the payment journal defined in the configuration of the payment provider.
+This mode is advised if you issue the final invoice at the order and not after the delivery.",,
+sale,model,"ir.model.fields,field_description",sale.field_res_config_settings__default_invoice_policy,Invoicing Policy,,
+sale,model,"ir.model.fields,field_description",sale.field_res_config_settings__group_auto_done_setting,Lock Confirmed Sales,,
+sale,model,"ir.model.fields,field_description",sale.field_res_config_settings__group_discount_per_so_line,Discounts,,
+sale,model,"ir.model.fields,field_description",sale.field_res_config_settings__group_proforma_sales,Pro-Forma Invoice,,
+sale,model,"ir.model.fields,help",sale.field_res_config_settings__group_proforma_sales,Allows you to send pro-forma invoice.,,
+sale,model,"ir.model.fields,field_description",sale.field_res_config_settings__group_warning_sale,Sale Order Warnings,,
+sale,model,"ir.model.fields,field_description",sale.field_res_config_settings__invoice_mail_template_id,Invoice Email Template,,
+sale,model,"ir.model.fields,help",sale.field_res_config_settings__invoice_mail_template_id,Email sent to the customer once the invoice is available.,,
+sale,model,"ir.model.fields,field_description",sale.field_res_config_settings__module_delivery,Delivery Methods,,
+sale,model,"ir.model.fields,field_description",sale.field_res_config_settings__module_delivery_bpost,bpost Connector,,
+sale,model,"ir.model.fields,field_description",sale.field_res_config_settings__module_delivery_dhl,DHL Express Connector,,
+sale,model,"ir.model.fields,field_description",sale.field_res_config_settings__module_delivery_easypost,Easypost Connector,,
+sale,model,"ir.model.fields,field_description",sale.field_res_config_settings__module_delivery_fedex,FedEx Connector,,
+sale,model,"ir.model.fields,field_description",sale.field_res_config_settings__module_delivery_sendcloud,Sendcloud Connector,,
+sale,model,"ir.model.fields,field_description",sale.field_res_config_settings__module_delivery_shiprocket,Shiprocket Connector,,
+sale,model,"ir.model.fields,field_description",sale.field_res_config_settings__module_delivery_starshipit,Starshipit Connector,,
+sale,model,"ir.model.fields,field_description",sale.field_res_config_settings__module_delivery_ups,UPS Connector,,
+sale,model,"ir.model.fields,field_description",sale.field_res_config_settings__module_delivery_usps,USPS Connector,,
+sale,model,"ir.model.fields,field_description",sale.field_res_config_settings__module_product_email_template,Specific Email,,
+sale,model,"ir.model.fields,field_description",sale.field_res_config_settings__module_sale_amazon,Amazon Sync,,
+sale,model,"ir.model.fields,field_description",sale.field_res_config_settings__module_sale_commission,Commissions,,
+sale,model,"ir.model.fields,field_description",sale.field_res_config_settings__module_sale_loyalty,Coupons & Loyalty,,
+sale,model,"ir.model.fields,field_description",sale.field_res_config_settings__module_sale_margin,Margins,,
+sale,model,"ir.model.fields,field_description",sale.field_res_config_settings__module_sale_pdf_quote_builder,PDF Quote builder,,
+sale,model,"ir.model.fields,field_description",sale.field_res_config_settings__module_sale_product_matrix,Sales Grid Entry,,
+sale,model,"ir.model.fields,field_description",sale.field_res_config_settings__portal_confirmation_pay,Online Payment,,
+sale,model,"ir.model.fields,field_description",sale.field_res_config_settings__portal_confirmation_sign,Online Signature,,
+sale,model,"ir.model.fields,field_description",sale.field_res_config_settings__prepayment_percent,Prepayment percentage,,
+sale,model,"ir.model.fields,help",sale.field_res_config_settings__prepayment_percent,The percentage of the amount needed to be paid to confirm quotations.,The percentage of the amount needed to be paid to confirm proforma invoices.,
+sale,model,"ir.model.fields,field_description",sale.field_res_config_settings__quotation_validity_days,Default Quotation Validity,Default Proforma Invoice Validity,
+sale,model,"ir.model.fields,help",sale.field_res_config_settings__quotation_validity_days,Days between quotation proposal and expiration. 0 days means automatic expiration is disabled,Days between proforma invoice proposal and expiration. 0 days means automatic expiration is disabled,
+sale,model,"ir.model.fields,field_description",sale.field_res_partner__sale_order_count,Sale Order Count,,
+sale,model,"ir.model.fields,field_description",sale.field_res_partner__sale_order_ids,Sales Order,,
+sale,model,"ir.model.fields,field_description",sale.field_res_partner__sale_warn,Sales Warnings,,
+sale,model,"ir.model.fields,help",sale.field_res_partner__sale_warn,"Selecting the ""Warning"" option will notify user with the message, Selecting ""Blocking Message"" will throw an exception with the message and block the flow. The Message has to be written in the next field.",,
+sale,model,"ir.model.fields,field_description",sale.field_res_partner__sale_warn_msg,Message for Sales Order,,
+sale,model,"ir.model.fields,field_description",sale.field_res_users__sale_order_count,Sale Order Count,,
+sale,model,"ir.model.fields,field_description",sale.field_res_users__sale_order_ids,Sales Order,,
+sale,model,"ir.model.fields,field_description",sale.field_res_users__sale_warn,Sales Warnings,,
+sale,model,"ir.model.fields,help",sale.field_res_users__sale_warn,"Selecting the ""Warning"" option will notify user with the message, Selecting ""Blocking Message"" will throw an exception with the message and block the flow. The Message has to be written in the next field.",,
+sale,model,"ir.model.fields,field_description",sale.field_res_users__sale_warn_msg,Message for Sales Order,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_advance_payment_inv__advance_payment_method,Create Invoice,,
+sale,model,"ir.model.fields,help",sale.field_sale_advance_payment_inv__advance_payment_method,"A standard invoice is issued with all the order lines ready for invoicing,according to their invoicing policy (based on ordered or delivered quantity).",,
+sale,model,"ir.model.fields,field_description",sale.field_sale_advance_payment_inv__amount,Down Payment,,
+sale,model,"ir.model.fields,help",sale.field_sale_advance_payment_inv__amount,The percentage of amount to be invoiced in advance.,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_advance_payment_inv__amount_invoiced,Already invoiced,,
+sale,model,"ir.model.fields,help",sale.field_sale_advance_payment_inv__amount_invoiced,Only confirmed down payments are considered.,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_advance_payment_inv__amount_to_invoice,Amount to invoice,,
+sale,model,"ir.model.fields,help",sale.field_sale_advance_payment_inv__amount_to_invoice,The amount to invoice = Sale Order Total - Confirmed Down Payments.,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_advance_payment_inv__company_id,Company,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_advance_payment_inv__consolidated_billing,Consolidated Billing,,
+sale,model,"ir.model.fields,help",sale.field_sale_advance_payment_inv__consolidated_billing,Create one invoice for all orders related to same customer and same invoicing address,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_advance_payment_inv__count,Order Count,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_advance_payment_inv__create_date,Created on,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_advance_payment_inv__create_uid,Created by,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_advance_payment_inv__currency_id,Currency,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_advance_payment_inv__deduct_down_payments,Deduct down payments,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_advance_payment_inv__display_draft_invoice_warning,Display Draft Invoice Warning,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_advance_payment_inv__display_invoice_amount_warning,Display Invoice Amount Warning,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_advance_payment_inv__display_name,Display Name,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_advance_payment_inv__fixed_amount,Down Payment Amount (Fixed),,
+sale,model,"ir.model.fields,help",sale.field_sale_advance_payment_inv__fixed_amount,The fixed amount to be invoiced in advance.,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_advance_payment_inv__has_down_payments,Has down payments,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_advance_payment_inv__id,ID,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_advance_payment_inv__sale_order_ids,Sale Order,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_advance_payment_inv__write_date,Last Updated on,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_advance_payment_inv__write_uid,Last Updated by,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_mass_cancel_orders__create_date,Created on,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_mass_cancel_orders__create_uid,Created by,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_mass_cancel_orders__display_name,Display Name,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_mass_cancel_orders__has_confirmed_order,Has Confirmed Order,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_mass_cancel_orders__id,ID,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_mass_cancel_orders__sale_order_ids,Sale orders to cancel,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_mass_cancel_orders__sale_orders_count,Sale Orders Count,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_mass_cancel_orders__write_date,Last Updated on,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_mass_cancel_orders__write_uid,Last Updated by,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__access_token,Security Token,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__access_url,Portal Access URL,,
+sale,model,"ir.model.fields,help",sale.field_sale_order__access_url,Customer Portal URL,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__access_warning,Access warning,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__activity_calendar_event_id,Next Activity Calendar Event,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__activity_date_deadline,Next Activity Deadline,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__activity_exception_decoration,Activity Exception Decoration,,
+sale,model,"ir.model.fields,help",sale.field_sale_order__activity_exception_decoration,Type of the exception activity on record.,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__activity_exception_icon,Icon,,
+sale,model,"ir.model.fields,help",sale.field_sale_order__activity_exception_icon,Icon to indicate an exception activity.,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__activity_ids,Activities,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__activity_state,Activity State,,
+sale,model,"ir.model.fields,help",sale.field_sale_order__activity_state,"Status based on activities
+Overdue: Due date is already passed
+Today: Activity date is today
+Planned: Future activities.",,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__activity_summary,Next Activity Summary,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__activity_type_icon,Activity Type Icon,,
+sale,model,"ir.model.fields,help",sale.field_sale_order__activity_type_icon,Font awesome icon e.g. fa-tasks,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__activity_type_id,Next Activity Type,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__activity_user_id,Responsible User,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__amount_invoiced,Already invoiced,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__amount_paid,Payment Transactions Amount,,
+sale,model,"ir.model.fields,help",sale.field_sale_order__amount_paid,Sum of transactions made in through the online payment form that are in the state 'done' or 'authorized' and linked to this order.,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__amount_tax,Taxes,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__amount_to_invoice,Un-invoiced Balance,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__amount_total,Total,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__amount_undiscounted,Amount Before Discount,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__amount_untaxed,Untaxed Amount,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__authorized_transaction_ids,Authorized Transactions,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__campaign_id,Campaign,,
+sale,model,"ir.model.fields,help",sale.field_sale_order__campaign_id,"This is a name that helps you keep track of your different campaign efforts, e.g. Fall_Drive, Christmas_Special",,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__client_order_ref,Customer Reference,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__commitment_date,Delivery Date,,
+sale,model,"ir.model.fields,help",sale.field_sale_order__commitment_date,"This is the delivery date promised to the customer. If set, the delivery order will be scheduled based on this date rather than product lead times.",,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__company_id,Company,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__company_price_include,Default Sales Price Include,,
+sale,model,"ir.model.fields,help",sale.field_sale_order__company_price_include,Default on whether the sales price used on the product and invoices with this Company includes its taxes.,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__country_code,Country code,,
+sale,model,"ir.model.fields,help",sale.field_sale_order__country_code,"The ISO country code in two chars. 
+You can use this field for quick search.",,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__create_date,Creation Date,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__create_uid,Created by,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__currency_id,Currency,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__currency_rate,Currency Rate,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__date_order,Order Date,,
+sale,model,"ir.model.fields,help",sale.field_sale_order__date_order,"Creation date of draft/sent orders,
+Confirmation date of confirmed orders.",,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__display_name,Display Name,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__duplicated_order_ids,Duplicated Order,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__expected_date,Expected Date,,
+sale,model,"ir.model.fields,help",sale.field_sale_order__expected_date,"Delivery date you can promise to the customer, computed from the minimum lead time of the order lines in case of Service products. In case of shipping, the shipping policy of the order will be taken into account to either use the minimum or maximum lead time of the order lines.",,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__fiscal_position_id,Fiscal Position,,
+sale,model,"ir.model.fields,help",sale.field_sale_order__fiscal_position_id,Fiscal positions are used to adapt taxes and accounts for particular customers or sales orders/invoices.The default value comes from the customer.,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__has_active_pricelist,Has Active Pricelist,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__has_archived_products,Has Archived Products,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__has_message,Has Message,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__id,ID,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__invoice_count,Invoice Count,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__invoice_ids,Invoices,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__invoice_status,Invoice Status,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__is_expired,Is Expired,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__journal_id,Invoicing Journal,,
+sale,model,"ir.model.fields,help",sale.field_sale_order__journal_id,"If set, the SO will invoice in this journal; otherwise the sales journal with the lowest sequence is used.",,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__locked,Locked,,
+sale,model,"ir.model.fields,help",sale.field_sale_order__locked,Locked orders cannot be modified.,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__medium_id,Medium,,
+sale,model,"ir.model.fields,help",sale.field_sale_order__medium_id,"This is the method of delivery, e.g. Postcard, Email, or Banner Ad",,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__message_attachment_count,Attachment Count,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__message_follower_ids,Followers,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__message_has_error,Message Delivery error,,
+sale,model,"ir.model.fields,help",sale.field_sale_order__message_has_error,"If checked, some messages have a delivery error.",,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__message_has_error_counter,Number of errors,,
+sale,model,"ir.model.fields,help",sale.field_sale_order__message_has_error_counter,Number of messages with delivery error,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__message_has_sms_error,SMS Delivery error,,
+sale,model,"ir.model.fields,help",sale.field_sale_order__message_has_sms_error,"If checked, some messages have a delivery error.",,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__message_ids,Messages,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__message_is_follower,Is Follower,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__message_needaction,Action Needed,,
+sale,model,"ir.model.fields,help",sale.field_sale_order__message_needaction,"If checked, new messages require your attention.",,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__message_needaction_counter,Number of Actions,,
+sale,model,"ir.model.fields,help",sale.field_sale_order__message_needaction_counter,Number of messages requiring action,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__message_partner_ids,Followers (Partners),,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__my_activity_date_deadline,My Activity Deadline,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__name,Order Reference,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__note,Terms and conditions,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__order_line,Order Lines,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__origin,Source Document,,
+sale,model,"ir.model.fields,help",sale.field_sale_order__origin,Reference of the document that generated this sales order request,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__partner_credit_warning,Partner Credit Warning,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__partner_id,Customer,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__partner_invoice_id,Invoice Address,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__partner_shipping_id,Delivery Address,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__payment_term_id,Payment Terms,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__prepayment_percent,Prepayment percentage,,
+sale,model,"ir.model.fields,help",sale.field_sale_order__prepayment_percent,The percentage of the amount needed that must be paid by the customer to confirm the order.,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__pricelist_id,Pricelist,,
+sale,model,"ir.model.fields,help",sale.field_sale_order__pricelist_id,"If you change the pricelist, only newly added lines will be affected.",,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__reference,Payment Ref.,,
+sale,model,"ir.model.fields,help",sale.field_sale_order__reference,The payment communication of this sale order.,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__require_payment,Online payment,,
+sale,model,"ir.model.fields,help",sale.field_sale_order__require_payment,Request a online payment from the customer to confirm the order.,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__require_signature,Online signature,,
+sale,model,"ir.model.fields,help",sale.field_sale_order__require_signature,Request a online signature from the customer to confirm the order.,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__show_update_fpos,Has Fiscal Position Changed,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__show_update_pricelist,Has Pricelist Changed,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__signature,Signature,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__signed_by,Signed By,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__signed_on,Signed On,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__source_id,Source,,
+sale,model,"ir.model.fields,help",sale.field_sale_order__source_id,"This is the source of the link, e.g. Search Engine, another domain, or name of email list",,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__state,Status,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__tag_ids,Tags,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__tax_calculation_rounding_method,Tax Calculation Rounding Method,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__tax_country_id,Tax Country,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__tax_totals,Tax Totals,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__team_id,Sales Team,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__terms_type,Terms & Conditions format,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__transaction_ids,Transactions,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__type_name,Type Name,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__user_id,Salesperson,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__validity_date,Expiration,,
+sale,model,"ir.model.fields,help",sale.field_sale_order__validity_date,"Validity of the order, after that you will not able to sign & pay the quotation.","Validity of the order, after that you will not able to sign & pay the proforma invoice.",
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__website_message_ids,Website Messages,,
+sale,model,"ir.model.fields,help",sale.field_sale_order__website_message_ids,Website communication history,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__write_date,Last Updated on,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order__write_uid,Last Updated by,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_cancel__author_id,Author,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_cancel__body,Contents,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_cancel__body_has_template_value,Body content is the same as the template,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_cancel__can_edit_body,Can Edit Body,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_cancel__create_date,Created on,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_cancel__create_uid,Created by,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_cancel__display_invoice_alert,Invoice Alert,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_cancel__display_name,Display Name,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_cancel__id,ID,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_cancel__is_mail_template_editor,Is Editor,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_cancel__lang,Language,,
+sale,model,"ir.model.fields,help",sale.field_sale_order_cancel__lang,"Optional translation language (ISO code) to select when sending out an email. If not set, the english version will be used. This should usually be a placeholder expression that provides the appropriate language, e.g. {{ object.partner_id.lang }}.",,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_cancel__order_id,Sale Order,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_cancel__recipient_ids,Recipients,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_cancel__render_model,Rendering Model,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_cancel__subject,Subject,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_cancel__template_id,Mail Template,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_cancel__write_date,Last Updated on,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_cancel__write_uid,Last Updated by,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_discount__company_id,Company,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_discount__create_date,Created on,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_discount__create_uid,Created by,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_discount__currency_id,Currency,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_discount__discount_amount,Amount,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_discount__discount_percentage,Percentage,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_discount__discount_type,Discount Type,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_discount__display_name,Display Name,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_discount__id,ID,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_discount__sale_order_id,Sale Order,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_discount__tax_ids,Taxes,,
+sale,model,"ir.model.fields,help",sale.field_sale_order_discount__tax_ids,Taxes to add on the discount line.,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_discount__write_date,Last Updated on,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_discount__write_uid,Last Updated by,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_line__amount_invoiced,Invoiced Amount,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_line__amount_to_invoice,Un-invoiced Balance,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_line__analytic_distribution,Analytic Distribution,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_line__analytic_line_ids,Analytic lines,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_line__analytic_precision,Analytic Precision,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_line__combo_item_id,Combo Item,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_line__company_id,Company,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_line__company_price_include,Default Sales Price Include,,
+sale,model,"ir.model.fields,help",sale.field_sale_order_line__company_price_include,Default on whether the sales price used on the product and invoices with this Company includes its taxes.,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_line__create_date,Created on,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_line__create_uid,Created by,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_line__currency_id,Currency,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_line__customer_lead,Lead Time,,
+sale,model,"ir.model.fields,help",sale.field_sale_order_line__customer_lead,Number of days between the order confirmation and the shipping of the products to the customer,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_line__discount,Discount (%),,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_line__display_name,Display Name,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_line__display_type,Display Type,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_line__distribution_analytic_account_ids,Distribution Analytic Account,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_line__id,ID,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_line__invoice_lines,Invoice Lines,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_line__invoice_status,Invoice Status,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_line__is_configurable_product,Is the product configurable?,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_line__is_downpayment,Is a down payment,,
+sale,model,"ir.model.fields,help",sale.field_sale_order_line__is_downpayment,Down payments are made when creating invoices from a sales order. They are not copied when duplicating a sales order.,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_line__is_expense,Is expense,,
+sale,model,"ir.model.fields,help",sale.field_sale_order_line__is_expense,Is true if the sales order line comes from an expense or a vendor bills,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_line__is_product_archived,Is Product Archived,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_line__linked_line_id,Linked Order Line,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_line__linked_line_ids,Linked Order Lines,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_line__linked_virtual_id,Linked Virtual,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_line__name,Description,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_line__order_id,Order Reference,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_line__order_partner_id,Customer,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_line__price_reduce_taxexcl,Price Reduce Tax excl,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_line__price_reduce_taxinc,Price Reduce Tax incl,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_line__price_subtotal,Subtotal,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_line__price_tax,Total Tax,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_line__price_total,Total,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_line__price_unit,Unit Price,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_line__pricelist_item_id,Pricelist Item,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_line__product_custom_attribute_value_ids,Custom Values,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_line__product_id,Product,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_line__product_no_variant_attribute_value_ids,Extra Values,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_line__product_packaging_id,Packaging,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_line__product_packaging_qty,Packaging Quantity,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_line__product_template_attribute_value_ids,Attribute Values,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_line__product_template_id,Product Template,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_line__product_type,Product Type,,
+sale,model,"ir.model.fields,help",sale.field_sale_order_line__product_type,"Goods are tangible materials and merchandise you provide.
+A service is a non-material product you provide.",,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_line__product_uom,Unit of Measure,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_line__product_uom_category_id,Category,,
+sale,model,"ir.model.fields,help",sale.field_sale_order_line__product_uom_category_id,Conversion between Units of Measure can only occur if they belong to the same category. The conversion will be made based on the ratios.,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_line__product_uom_qty,Quantity,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_line__product_uom_readonly,Product Uom Readonly,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_line__product_updatable,Can Edit Product,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_line__qty_delivered,Delivery Quantity,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_line__qty_delivered_method,Method to update delivered qty,,
+sale,model,"ir.model.fields,help",sale.field_sale_order_line__qty_delivered_method,"According to product configuration, the delivered quantity can be automatically computed by mechanism:
+  - Manual: the quantity is set manually on the line
+  - Analytic From expenses: the quantity is the quantity sum from posted expenses
+  - Timesheet: the quantity is the sum of hours recorded on tasks linked to this sale line
+  - Stock Moves: the quantity comes from confirmed pickings
+",,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_line__qty_invoiced,Invoiced Quantity,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_line__qty_invoiced_posted,Invoiced Quantity (posted),,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_line__qty_to_invoice,Quantity To Invoice,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_line__salesman_id,Salesperson,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_line__selected_combo_items,Selected Combo Items,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_line__sequence,Sequence,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_line__service_tracking,Create on Order,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_line__state,Order Status,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_line__tax_calculation_rounding_method,Tax calculation rounding method,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_line__tax_country_id,Tax Country,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_line__tax_id,Taxes,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_line__technical_price_unit,Technical Price Unit,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_line__translated_product_name,Translated Product Name,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_line__untaxed_amount_invoiced,Untaxed Invoiced Amount,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_line__untaxed_amount_to_invoice,Untaxed Amount To Invoice,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_line__virtual_id,Virtual,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_line__write_date,Last Updated on,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_order_line__write_uid,Last Updated by,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_payment_provider_onboarding_wizard___data_fetched, Data Fetched,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_payment_provider_onboarding_wizard__acc_number,Account Number,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_payment_provider_onboarding_wizard__create_date,Created on,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_payment_provider_onboarding_wizard__create_uid,Created by,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_payment_provider_onboarding_wizard__display_name,Display Name,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_payment_provider_onboarding_wizard__id,ID,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_payment_provider_onboarding_wizard__journal_name,Bank Name,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_payment_provider_onboarding_wizard__manual_name,Method,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_payment_provider_onboarding_wizard__manual_post_msg,Payment Instructions,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_payment_provider_onboarding_wizard__payment_method,Payment Method,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_payment_provider_onboarding_wizard__paypal_email_account,Email,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_payment_provider_onboarding_wizard__write_date,Last Updated on,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_payment_provider_onboarding_wizard__write_uid,Last Updated by,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_report__campaign_id,Campaign,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_report__categ_id,Product Category,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_report__commercial_partner_id,Customer Entity,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_report__company_id,Company,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_report__country_id,Customer Country,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_report__currency_id,Currency,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_report__date,Order Date,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_report__discount,Discount %,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_report__discount_amount,Discount Amount,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_report__display_name,Display Name,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_report__id,ID,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_report__industry_id,Customer Industry,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_report__invoice_status,Order Invoice Status,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_report__line_invoice_status,Invoice Status,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_report__medium_id,Medium,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_report__name,Order Reference,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_report__nbr,# of Lines,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_report__order_reference,Order,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_report__partner_id,Customer,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_report__partner_zip,Customer ZIP,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_report__price_subtotal,Untaxed Total,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_report__price_total,Total,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_report__price_unit,Unit Price,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_report__pricelist_id,Pricelist,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_report__product_id,Product Variant,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_report__product_tmpl_id,Product,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_report__product_uom,Unit of Measure,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_report__product_uom_qty,Qty Ordered,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_report__qty_delivered,Qty Delivered,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_report__qty_invoiced,Qty Invoiced,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_report__qty_to_deliver,Qty To Deliver,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_report__qty_to_invoice,Qty To Invoice,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_report__source_id,Source,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_report__state,Status,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_report__state_id,Customer State,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_report__team_id,Sales Team,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_report__untaxed_amount_invoiced,Untaxed Amount Invoiced,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_report__untaxed_amount_to_invoice,Untaxed Amount To Invoice,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_report__user_id,Salesperson,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_report__volume,Volume,,
+sale,model,"ir.model.fields,field_description",sale.field_sale_report__weight,Gross Weight,,
+sale,model,"ir.model.fields,field_description",sale.field_utm_campaign__company_id,Company,,
+sale,model,"ir.model.fields,field_description",sale.field_utm_campaign__currency_id,Currency,,
+sale,model,"ir.model.fields,field_description",sale.field_utm_campaign__invoiced_amount,Revenues generated by the campaign,,
+sale,model,"ir.model.fields,field_description",sale.field_utm_campaign__quotation_count,Quotation Count,Proforma Invoice Count,
+sale,model,"ir.model.fields.selection,name",sale.selection__account_analytic_applicability__business_domain__sale_order,Sale Order,,
+sale,model,"ir.model.fields.selection,name",sale.selection__payment_provider__so_reference_type__partner,Based on Customer ID,,
+sale,model,"ir.model.fields.selection,name",sale.selection__payment_provider__so_reference_type__so_name,Based on Document Reference,,
+sale,model,"ir.model.fields.selection,name",sale.selection__product_document__attached_on_sale__hidden,Hidden,,
+sale,model,"ir.model.fields.selection,name",sale.selection__product_document__attached_on_sale__quotation,On quote,On PI,
+sale,model,"ir.model.fields.selection,name",sale.selection__product_document__attached_on_sale__sale_order,On confirmed order,,
+sale,model,"ir.model.fields.selection,name",sale.selection__product_template__expense_policy__cost,At cost,,
+sale,model,"ir.model.fields.selection,name",sale.selection__product_template__expense_policy__no,No,,
+sale,model,"ir.model.fields.selection,name",sale.selection__product_template__expense_policy__sales_price,Sales price,,
+sale,model,"ir.model.fields.selection,name",sale.selection__product_template__invoice_policy__delivery,Delivered quantities,,
+sale,model,"ir.model.fields.selection,name",sale.selection__product_template__invoice_policy__order,Ordered quantities,,
+sale,model,"ir.model.fields.selection,name",sale.selection__product_template__sale_line_warn__block,Blocking Message,,
+sale,model,"ir.model.fields.selection,name",sale.selection__product_template__sale_line_warn__no-message,No Message,,
+sale,model,"ir.model.fields.selection,name",sale.selection__product_template__sale_line_warn__warning,Warning,,
+sale,model,"ir.model.fields.selection,name",sale.selection__product_template__service_type__manual,Manually set quantities on order,,
+sale,model,"ir.model.fields.selection,name",sale.selection__res_company__sale_onboarding_payment_method__digital_signature,Sign online,,
+sale,model,"ir.model.fields.selection,name",sale.selection__res_company__sale_onboarding_payment_method__manual,Manual Payment,,
+sale,model,"ir.model.fields.selection,name",sale.selection__res_company__sale_onboarding_payment_method__other,Pay with another payment provider,,
+sale,model,"ir.model.fields.selection,name",sale.selection__res_company__sale_onboarding_payment_method__paypal,PayPal,,
+sale,model,"ir.model.fields.selection,name",sale.selection__res_company__sale_onboarding_payment_method__stripe,Stripe,,
+sale,model,"ir.model.fields.selection,name",sale.selection__res_config_settings__default_invoice_policy__delivery,Invoice what is delivered,,
+sale,model,"ir.model.fields.selection,name",sale.selection__res_config_settings__default_invoice_policy__order,Invoice what is ordered,,
+sale,model,"ir.model.fields.selection,name",sale.selection__res_partner__sale_warn__block,Blocking Message,,
+sale,model,"ir.model.fields.selection,name",sale.selection__res_partner__sale_warn__no-message,No Message,,
+sale,model,"ir.model.fields.selection,name",sale.selection__res_partner__sale_warn__warning,Warning,,
+sale,model,"ir.model.fields.selection,name",sale.selection__sale_advance_payment_inv__advance_payment_method__delivered,Regular invoice,,
+sale,model,"ir.model.fields.selection,name",sale.selection__sale_advance_payment_inv__advance_payment_method__fixed,Down payment (fixed amount),,
+sale,model,"ir.model.fields.selection,name",sale.selection__sale_advance_payment_inv__advance_payment_method__percentage,Down payment (percentage),,
+sale,model,"ir.model.fields.selection,name",sale.selection__sale_order__invoice_status__invoiced,Fully Invoiced,,
+sale,model,"ir.model.fields.selection,name",sale.selection__sale_order__invoice_status__no,Nothing to Invoice,,
+sale,model,"ir.model.fields.selection,name",sale.selection__sale_order__invoice_status__to_invoice,To Invoice,,
+sale,model,"ir.model.fields.selection,name",sale.selection__sale_order__invoice_status__upselling,Upselling Opportunity,,
+sale,model,"ir.model.fields.selection,name",sale.selection__sale_order__state__cancel,Cancelled,,
+sale,model,"ir.model.fields.selection,name",sale.selection__sale_order__state__draft,Quotation,Proforma Invoice,
+sale,model,"ir.model.fields.selection,name",sale.selection__sale_order__state__sale,Sales Order,,
+sale,model,"ir.model.fields.selection,name",sale.selection__sale_order__state__sent,Quotation Sent,Proforma Invoice Sent,
+sale,model,"ir.model.fields.selection,name",sale.selection__sale_order_discount__discount_type__amount,Fixed Amount,,
+sale,model,"ir.model.fields.selection,name",sale.selection__sale_order_discount__discount_type__so_discount,Global Discount,,
+sale,model,"ir.model.fields.selection,name",sale.selection__sale_order_discount__discount_type__sol_discount,On All Order Lines,,
+sale,model,"ir.model.fields.selection,name",sale.selection__sale_order_line__display_type__line_note,Note,,
+sale,model,"ir.model.fields.selection,name",sale.selection__sale_order_line__display_type__line_section,Section,,
+sale,model,"ir.model.fields.selection,name",sale.selection__sale_order_line__invoice_status__invoiced,Fully Invoiced,,
+sale,model,"ir.model.fields.selection,name",sale.selection__sale_order_line__invoice_status__no,Nothing to Invoice,,
+sale,model,"ir.model.fields.selection,name",sale.selection__sale_order_line__invoice_status__to_invoice,To Invoice,,
+sale,model,"ir.model.fields.selection,name",sale.selection__sale_order_line__invoice_status__upselling,Upselling Opportunity,,
+sale,model,"ir.model.fields.selection,name",sale.selection__sale_order_line__qty_delivered_method__analytic,Analytic From Expenses,,
+sale,model,"ir.model.fields.selection,name",sale.selection__sale_order_line__qty_delivered_method__manual,Manual,,
+sale,model,"ir.model.fields.selection,name",sale.selection__sale_payment_provider_onboarding_wizard__payment_method__digital_signature,Electronic signature,,
+sale,model,"ir.model.fields.selection,name",sale.selection__sale_payment_provider_onboarding_wizard__payment_method__manual,Custom payment instructions,,
+sale,model,"ir.model.fields.selection,name",sale.selection__sale_payment_provider_onboarding_wizard__payment_method__paypal,PayPal,,
+sale,model,"ir.model.fields.selection,name",sale.selection__sale_payment_provider_onboarding_wizard__payment_method__stripe,Credit & Debit card (via Stripe),,
+sale,model,"ir.model.fields.selection,name",sale.selection__sale_report__invoice_status__invoiced,Fully Invoiced,,
+sale,model,"ir.model.fields.selection,name",sale.selection__sale_report__invoice_status__no,Nothing to Invoice,,
+sale,model,"ir.model.fields.selection,name",sale.selection__sale_report__invoice_status__to_invoice,To Invoice,,
+sale,model,"ir.model.fields.selection,name",sale.selection__sale_report__invoice_status__upselling,Upselling Opportunity,,
+sale,model,"ir.model.fields.selection,name",sale.selection__sale_report__line_invoice_status__invoiced,Fully Invoiced,,
+sale,model,"ir.model.fields.selection,name",sale.selection__sale_report__line_invoice_status__no,Nothing to Invoice,,
+sale,model,"ir.model.fields.selection,name",sale.selection__sale_report__line_invoice_status__to_invoice,To Invoice,,
+sale,model,"ir.model.fields.selection,name",sale.selection__sale_report__line_invoice_status__upselling,Upselling Opportunity,,
+sale,model,"ir.model.fields.selection,name",sale.selection__sale_report__order_reference__sale_order,Sales Order,,
+sale,model,"ir.model.fields.selection,name",sale.selection__sale_report__state__cancel,Cancelled,,
+sale,model,"ir.model.fields.selection,name",sale.selection__sale_report__state__draft,Quotation,Proforma Invoice,
+sale,model,"ir.model.fields.selection,name",sale.selection__sale_report__state__sale,Sales Order,,
+sale,model,"ir.model.fields.selection,name",sale.selection__sale_report__state__sent,Quotation Sent,Proforma Invoice Sent,
+sale,model,"ir.ui.menu,name",sale.menu_product_attribute_action,Attributes,,
+sale,model,"ir.ui.menu,name",sale.menu_product_categories,Product Categories,,
+sale,model,"ir.ui.menu,name",sale.menu_product_combos,Combo Choices,,
+sale,model,"ir.ui.menu,name",sale.menu_product_pricelist_main,Pricelists,,
+sale,model,"ir.ui.menu,name",sale.menu_product_tags,Product Tags,,
+sale,model,"ir.ui.menu,name",sale.menu_product_template_action,Products,,
+sale,model,"ir.ui.menu,name",sale.menu_product_uom_categ_form_action,Units of Measure Categories,,
+sale,model,"ir.ui.menu,name",sale.menu_product_uom_form_action,Units of Measure,,
+sale,model,"ir.ui.menu,name",sale.menu_products,Product Variants,,
+sale,model,"ir.ui.menu,name",sale.menu_reporting_customer,Customers,,
+sale,model,"ir.ui.menu,name",sale.menu_reporting_product,Products,,
+sale,model,"ir.ui.menu,name",sale.menu_reporting_sales,Sales,,
+sale,model,"ir.ui.menu,name",sale.menu_reporting_salespeople,Salespersons,,
+sale,model,"ir.ui.menu,name",sale.menu_sale_config,Configuration,,
+sale,model,"ir.ui.menu,name",sale.menu_sale_general_settings,Settings,,
+sale,model,"ir.ui.menu,name",sale.menu_sale_invoicing,To Invoice,,
+sale,model,"ir.ui.menu,name",sale.menu_sale_order,Orders,,
+sale,model,"ir.ui.menu,name",sale.menu_sale_order_invoice,Orders to Invoice,,
+sale,model,"ir.ui.menu,name",sale.menu_sale_order_upselling,Orders to Upsell,,
+sale,model,"ir.ui.menu,name",sale.menu_sale_quotations,Quotations,Proforma Invoices,
+sale,model,"ir.ui.menu,name",sale.menu_sale_report,Reporting,,
+sale,model,"ir.ui.menu,name",sale.menu_sales_config,Sales Orders,,
+sale,model,"ir.ui.menu,name",sale.menu_tag_config,Tags,,
+sale,model,"ir.ui.menu,name",sale.next_id_16,Units of Measure,,
+sale,model,"ir.ui.menu,name",sale.payment_menu,Online Payments,,
+sale,model,"ir.ui.menu,name",sale.payment_method_menu,Payment Methods,,
+sale,model,"ir.ui.menu,name",sale.payment_provider_menu,Payment Providers,,
+sale,model,"ir.ui.menu,name",sale.payment_token_menu,Payment Tokens,,
+sale,model,"ir.ui.menu,name",sale.payment_transaction_menu,Payment Transactions,,
+sale,model,"ir.ui.menu,name",sale.prod_config_main,Products,,
+sale,model,"ir.ui.menu,name",sale.product_menu_catalog,Products,,
+sale,model,"ir.ui.menu,name",sale.report_sales_team,Sales Teams,,
+sale,model,"ir.ui.menu,name",sale.res_partner_menu,Customers,,
+sale,model,"ir.ui.menu,name",sale.sale_menu_config_activities,Activities,,
+sale,model,"ir.ui.menu,name",sale.sale_menu_config_activity_plan,Activity Plans,,
+sale,model,"ir.ui.menu,name",sale.sale_menu_config_activity_type,Activity Types,,
+sale,model,"ir.ui.menu,name",sale.sale_menu_root,Sales,,
+sale,model,"ir.ui.menu,name",sale.sale_order_menu,Orders,,
+sale,model,"ir.ui.menu,name",sale.sales_team_config,Sales Teams,,
+sale,model_terms,"ir.ui.view,arch_db",sale.account_invoice_form,Marketing,,
+sale,model_terms,"ir.ui.view,arch_db",sale.account_invoice_form,Sale Orders,,
+sale,model_terms,"ir.ui.view,arch_db",sale.account_invoice_groupby_inherit,Sales Team,,
+sale,model_terms,"ir.ui.view,arch_db",sale.crm_lead_partner_kanban_view,"<i class=""fa fa-usd me-1"" role=""img"" aria-label=""Sale orders"" title=""Sales orders""/>",,
+sale,model_terms,"ir.ui.view,arch_db",sale.crm_team_salesteams_view_form,"<span class=""flex-grow-1"">/ Month</span>",,
+sale,model_terms,"ir.ui.view,arch_db",sale.crm_team_view_kanban_dashboard,Quotation,Proforma Invoice,
+sale,model_terms,"ir.ui.view,arch_db",sale.crm_team_view_kanban_dashboard,Quotations,Proforma Invoices,
+sale,model_terms,"ir.ui.view,arch_db",sale.crm_team_view_kanban_dashboard,Order to Invoice,,
+sale,model_terms,"ir.ui.view,arch_db",sale.crm_team_view_kanban_dashboard,Orders to Invoice,,
+sale,model_terms,"ir.ui.view,arch_db",sale.crm_team_view_kanban_dashboard,Invoicing,,
+sale,model_terms,"ir.ui.view,arch_db",sale.crm_team_view_kanban_dashboard,Sales Orders,,
+sale,model_terms,"ir.ui.view,arch_db",sale.crm_team_view_kanban_dashboard,Invoices,,
+sale,model_terms,"ir.ui.view,arch_db",sale.crm_team_view_kanban_dashboard,Sales,,
+sale,model_terms,"ir.ui.view,arch_db",sale.mass_cancel_orders_view_form,"Some confirmed orders are selected. Their related documents might be
+                        affected by the cancellation.",,
+sale,model_terms,"ir.ui.view,arch_db",sale.mass_cancel_orders_view_form,Are you sure you want to cancel the selected item?,,
+sale,model_terms,"ir.ui.view,arch_db",sale.mass_cancel_orders_view_form,Are you sure you want to cancel the,,
+sale,model_terms,"ir.ui.view,arch_db",sale.mass_cancel_orders_view_form,"selected
+                    items?",,
+sale,model_terms,"ir.ui.view,arch_db",sale.mass_cancel_orders_view_form,Cancel,,
+sale,model_terms,"ir.ui.view,arch_db",sale.mass_cancel_orders_view_form,Discard,,
+sale,model_terms,"ir.ui.view,arch_db",sale.mass_cancel_orders_view_form,Cancel quotations,Cancel proforma invoices,
+sale,model_terms,"ir.ui.view,arch_db",sale.portal_my_home_menu_sale,Quotations,Proforma Invoices,
+sale,model_terms,"ir.ui.view,arch_db",sale.portal_my_home_menu_sale,Sales Orders,,
+sale,model_terms,"ir.ui.view,arch_db",sale.portal_my_home_sale,Quotations to review,Proforma Invoices to review,
+sale,model_terms,"ir.ui.view,arch_db",sale.portal_my_home_sale,Your Orders,,
+sale,model_terms,"ir.ui.view,arch_db",sale.portal_my_home_sale,"Follow, view or pay your orders",,
+sale,model_terms,"ir.ui.view,arch_db",sale.portal_my_orders,Your Orders,,
+sale,model_terms,"ir.ui.view,arch_db",sale.portal_my_orders,There are currently no sales orders for your account.,,
+sale,model_terms,"ir.ui.view,arch_db",sale.portal_my_orders,"<span class=""d-none d-md-inline"">Sales Order #</span>
+                            <span class=""d-block d-md-none"">Ref.</span>",,
+sale,model_terms,"ir.ui.view,arch_db",sale.portal_my_orders,Order Date,,
+sale,model_terms,"ir.ui.view,arch_db",sale.portal_my_orders,Total,,
+sale,model_terms,"ir.ui.view,arch_db",sale.portal_my_orders,&amp;nbsp;,,
+sale,model_terms,"ir.ui.view,arch_db",sale.portal_my_quotations,Quotations,Proforma Invoices,
+sale,model_terms,"ir.ui.view,arch_db",sale.portal_my_quotations,There are currently no quotations for your account.,There are currently no proforma invoices for your account.,
+sale,model_terms,"ir.ui.view,arch_db",sale.portal_my_quotations,Quotation #,Proforma Invoices #,
+sale,model_terms,"ir.ui.view,arch_db",sale.portal_my_quotations,Quotation Date,Proforma Invoices Date,
+sale,model_terms,"ir.ui.view,arch_db",sale.portal_my_quotations,Valid Until,,
+sale,model_terms,"ir.ui.view,arch_db",sale.portal_my_quotations,Total,,
+sale,model_terms,"ir.ui.view,arch_db",sale.portal_my_quotations,"<i class=""fa fa-fw fa-remove""/> Cancelled",,
+sale,model_terms,"ir.ui.view,arch_db",sale.portal_my_quotations,"<i class=""fa fa-fw fa-clock-o""/> Expired",,
+sale,model_terms,"ir.ui.view,arch_db",sale.product_document_form,Sales,,
+sale,model_terms,"ir.ui.view,arch_db",sale.product_document_kanban,<span>Sales visibility</span>,,
+sale,model_terms,"ir.ui.view,arch_db",sale.product_document_search,Quotation,Proforma Invoice,
+sale,model_terms,"ir.ui.view,arch_db",sale.product_document_search,Sales Order,,
+sale,model_terms,"ir.ui.view,arch_db",sale.product_form_view_sale_order_button,"<span class=""o_stat_text"">Sold</span>",,
+sale,model_terms,"ir.ui.view,arch_db",sale.product_form_view_sale_order_button,Sold in the last 365 days,,
+sale,model_terms,"ir.ui.view,arch_db",sale.product_template_form_view,Warning,,
+sale,model_terms,"ir.ui.view,arch_db",sale.product_template_form_view,Message,,
+sale,model_terms,"ir.ui.view,arch_db",sale.product_template_form_view,Type a message...,,
+sale,model_terms,"ir.ui.view,arch_db",sale.product_template_form_view,Warning when Selling this Product,,
+sale,model_terms,"ir.ui.view,arch_db",sale.product_template_form_view,Expense,,
+sale,model_terms,"ir.ui.view,arch_db",sale.product_template_form_view_sale_order_button,"<span class=""o_stat_text"">Sold</span>",,
+sale,model_terms,"ir.ui.view,arch_db",sale.product_template_form_view_sale_order_button,Sold in the last 365 days,,
+sale,model_terms,"ir.ui.view,arch_db",sale.product_template_view_form,Recommend when 'Adding to Cart' or quotation,Recommend when 'Adding to Cart' or proforma invoice,
+sale,model_terms,"ir.ui.view,arch_db",sale.product_view_search_catalog,In the Order,,
+sale,model_terms,"ir.ui.view,arch_db",sale.report_saleorder_document,Tax ID,,
+sale,model_terms,"ir.ui.view,arch_db",sale.report_saleorder_document,Invoicing and Shipping Address,,
+sale,model_terms,"ir.ui.view,arch_db",sale.report_saleorder_document,Invoicing Address,,
+sale,model_terms,"ir.ui.view,arch_db",sale.report_saleorder_document,"<strong class=""d-block mt-3"">Shipping Address</strong>",,
+sale,model_terms,"ir.ui.view,arch_db",sale.report_saleorder_document,Pro-Forma Invoice #,,
+sale,model_terms,"ir.ui.view,arch_db",sale.report_saleorder_document,Quotation #,Proforma Invoice #,
+sale,model_terms,"ir.ui.view,arch_db",sale.report_saleorder_document,Order #,,
+sale,model_terms,"ir.ui.view,arch_db",sale.report_saleorder_document,SO0000,,
+sale,model_terms,"ir.ui.view,arch_db",sale.report_saleorder_document,<strong>Your Reference</strong>,,
+sale,model_terms,"ir.ui.view,arch_db",sale.report_saleorder_document,Issued Date,,
+sale,model_terms,"ir.ui.view,arch_db",sale.report_saleorder_document,Quotation Date,Proforma Invoice Date,
+sale,model_terms,"ir.ui.view,arch_db",sale.report_saleorder_document,Order Date,,
+sale,model_terms,"ir.ui.view,arch_db",sale.report_saleorder_document,2023-12-31,,
+sale,model_terms,"ir.ui.view,arch_db",sale.report_saleorder_document,<strong>Expiration</strong>,,
+sale,model_terms,"ir.ui.view,arch_db",sale.report_saleorder_document,<strong>Salesperson</strong>,,
+sale,model_terms,"ir.ui.view,arch_db",sale.report_saleorder_document,Mitchell Admin,,
+sale,model_terms,"ir.ui.view,arch_db",sale.report_saleorder_document,Description,,
+sale,model_terms,"ir.ui.view,arch_db",sale.report_saleorder_document,Quantity,,
+sale,model_terms,"ir.ui.view,arch_db",sale.report_saleorder_document,Unit Price,,
+sale,model_terms,"ir.ui.view,arch_db",sale.report_saleorder_document,<span>Disc.%</span>,,
+sale,model_terms,"ir.ui.view,arch_db",sale.report_saleorder_document,Taxes,,
+sale,model_terms,"ir.ui.view,arch_db",sale.report_saleorder_document,<span>Amount</span>,,
+sale,model_terms,"ir.ui.view,arch_db",sale.report_saleorder_document,Bacon Burger,,
+sale,model_terms,"ir.ui.view,arch_db",sale.report_saleorder_document,units,,
+sale,model_terms,"ir.ui.view,arch_db",sale.report_saleorder_document,Tax 15%,,
+sale,model_terms,"ir.ui.view,arch_db",sale.report_saleorder_document,27.00,,
+sale,model_terms,"ir.ui.view,arch_db",sale.report_saleorder_document,A section title,,
+sale,model_terms,"ir.ui.view,arch_db",sale.report_saleorder_document,"A note, whose content usually applies to the section or product above.",,
+sale,model_terms,"ir.ui.view,arch_db",sale.report_saleorder_document,"<strong class=""mr16"">Subtotal</strong>",,
+sale,model_terms,"ir.ui.view,arch_db",sale.report_saleorder_document,31.05,,
+sale,model_terms,"ir.ui.view,arch_db",sale.report_saleorder_document,<strong>Signature</strong>,,
+sale,model_terms,"ir.ui.view,arch_db",sale.report_saleorder_document,Oscar Morgan,,
+sale,model_terms,"ir.ui.view,arch_db",sale.report_saleorder_document,The payment should also be transmitted with love,,
+sale,model_terms,"ir.ui.view,arch_db",sale.report_saleorder_document,<strong>Fiscal Position Remark:</strong>,,
+sale,model_terms,"ir.ui.view,arch_db",sale.report_saleorder_document,No further requirements for this payment,,
+sale,model_terms,"ir.ui.view,arch_db",sale.res_config_settings_view_form,Attributes,,
+sale,model_terms,"ir.ui.view,arch_db",sale.res_config_settings_view_form,"Sell variants of a product using attributes (size, color, etc.)",,
+sale,model_terms,"ir.ui.view,arch_db",sale.res_config_settings_view_form,Variant Grid Entry,,
+sale,model_terms,"ir.ui.view,arch_db",sale.res_config_settings_view_form,Add several variants to an order from a grid,,
+sale,model_terms,"ir.ui.view,arch_db",sale.res_config_settings_view_form,Units of Measure,,
+sale,model_terms,"ir.ui.view,arch_db",sale.res_config_settings_view_form,Sell and purchase products in different units of measure,,
+sale,model_terms,"ir.ui.view,arch_db",sale.res_config_settings_view_form,"Sending an email is useful if you need to share specific information or content about a product (instructions, rules, links, media, etc.). Create and set the email template from the product detail form (in Accounting tab).",,
+sale,model_terms,"ir.ui.view,arch_db",sale.res_config_settings_view_form,Deliver Content by Email,,
+sale,model_terms,"ir.ui.view,arch_db",sale.res_config_settings_view_form,Send a product-specific email once the invoice is validated,,
+sale,model_terms,"ir.ui.view,arch_db",sale.res_config_settings_view_form,Ability to select a package type in sales orders and to force a quantity that is a multiple of the number of units per package.,,
+sale,model_terms,"ir.ui.view,arch_db",sale.res_config_settings_view_form,Sell products by multiple of unit # per package,,
+sale,model_terms,"ir.ui.view,arch_db",sale.res_config_settings_view_form,Product Catalog,,
+sale,model_terms,"ir.ui.view,arch_db",sale.res_config_settings_view_form,Apply manual discounts on sales order lines or display discounts computed from pricelists (option to activate in the pricelist configuration).,,
+sale,model_terms,"ir.ui.view,arch_db",sale.res_config_settings_view_form,Grant discounts on sales order lines,,
+sale,model_terms,"ir.ui.view,arch_db",sale.res_config_settings_view_form,"Boost your sales with multiple kinds of programs: Coupons, Promotions, Gift Card, Loyalty. Specific conditions can be set (products, customers, minimum purchase amount, period). Rewards can be discounts (% or amount) or free products.",,
+sale,model_terms,"ir.ui.view,arch_db",sale.res_config_settings_view_form,"Promotions, Loyalty & Gift Card",,
+sale,model_terms,"ir.ui.view,arch_db",sale.res_config_settings_view_form,"Manage Promotions, Coupons, Loyalty cards, Gift cards & eWallet",,
+sale,model_terms,"ir.ui.view,arch_db",sale.res_config_settings_view_form,Pricelists,,
+sale,model_terms,"ir.ui.view,arch_db",sale.res_config_settings_view_form,"Set multiple prices per product, automated discounts, etc.",,
+sale,model_terms,"ir.ui.view,arch_db",sale.res_config_settings_view_form,"To send invitations in B2B mode, open a contact or select several ones in list view and click on 'Portal Access Management' option in the dropdown menu *Action*.",,
+sale,model_terms,"ir.ui.view,arch_db",sale.res_config_settings_view_form,Let your customers log in to see their documents,,
+sale,model_terms,"ir.ui.view,arch_db",sale.res_config_settings_view_form,Show margins on orders,,
+sale,model_terms,"ir.ui.view,arch_db",sale.res_config_settings_view_form,The margin is computed as the sum of product sales prices minus the cost set in their detail form.,,
+sale,model_terms,"ir.ui.view,arch_db",sale.res_config_settings_view_form,Pricing,,
+sale,model_terms,"ir.ui.view,arch_db",sale.res_config_settings_view_form,Request customers to sign quotations to validate orders. The default can be changed per order or template.,Request customers to sign proforma invoices to validate orders. The default can be changed per order or template.,
+sale,model_terms,"ir.ui.view,arch_db",sale.res_config_settings_view_form,Payment,,
+sale,model_terms,"ir.ui.view,arch_db",sale.res_config_settings_view_form,Payment Providers,,
+sale,model_terms,"ir.ui.view,arch_db",sale.res_config_settings_view_form,"Request a payment to confirm orders, in full (100%) or partial. The default can be changed per order or template.",,
+sale,model_terms,"ir.ui.view,arch_db",sale.res_config_settings_view_form,days,,
+sale,model_terms,"ir.ui.view,arch_db",sale.res_config_settings_view_form,"<span class=""fa fa-lg fa-building-o p-2"" title=""Values set here are company-specific."" groups=""base.group_multi_company""/>",,
+sale,model_terms,"ir.ui.view,arch_db",sale.res_config_settings_view_form,Days between quotation proposal and expiration. 0 days means automatic expiration is disabled,Days between proforma invoice proposal and expiration. 0 days means automatic expiration is disabled,
+sale,model_terms,"ir.ui.view,arch_db",sale.res_config_settings_view_form,Default period during which the quote is valid and can still be accepted by the customer. The default can be changed per order or template.,,
+sale,model_terms,"ir.ui.view,arch_db",sale.res_config_settings_view_form,Sale Warnings,,
+sale,model_terms,"ir.ui.view,arch_db",sale.res_config_settings_view_form,Get warnings in orders for products or customers,,
+sale,model_terms,"ir.ui.view,arch_db",sale.res_config_settings_view_form,PDF Quote builder,,
+sale,model_terms,"ir.ui.view,arch_db",sale.res_config_settings_view_form,"Make your quote attractive by adding header pages, product descriptions and footer pages to your quote.",,
+sale,model_terms,"ir.ui.view,arch_db",sale.res_config_settings_view_form,No longer edit orders once confirmed,,
+sale,model_terms,"ir.ui.view,arch_db",sale.res_config_settings_view_form,Allows you to send Pro-Forma Invoice to your customers,,
+sale,model_terms,"ir.ui.view,arch_db",sale.res_config_settings_view_form,Quotations & Orders,Proforma Invoices & Orders,
+sale,model_terms,"ir.ui.view,arch_db",sale.res_config_settings_view_form,Compute shipping costs on orders,,
+sale,model_terms,"ir.ui.view,arch_db",sale.res_config_settings_view_form,Compute shipping costs and ship with UPS,,
+sale,model_terms,"ir.ui.view,arch_db",sale.res_config_settings_view_form,Compute shipping costs and ship with DHL,,
+sale,model_terms,"ir.ui.view,arch_db",sale.res_config_settings_view_form,Compute shipping costs and ship with FedEx,,
+sale,model_terms,"ir.ui.view,arch_db",sale.res_config_settings_view_form,Compute shipping costs and ship with USPS,,
+sale,model_terms,"ir.ui.view,arch_db",sale.res_config_settings_view_form,Compute shipping costs and ship with bpost,,
+sale,model_terms,"ir.ui.view,arch_db",sale.res_config_settings_view_form,Compute shipping costs and ship with Easypost,,
+sale,model_terms,"ir.ui.view,arch_db",sale.res_config_settings_view_form,Compute shipping costs and ship with Sendcloud,,
+sale,model_terms,"ir.ui.view,arch_db",sale.res_config_settings_view_form,Compute shipping costs and ship with Shiprocket,,
+sale,model_terms,"ir.ui.view,arch_db",sale.res_config_settings_view_form,Compute shipping costs and ship with Starshipit,,
+sale,model_terms,"ir.ui.view,arch_db",sale.res_config_settings_view_form,Shipping,,
+sale,model_terms,"ir.ui.view,arch_db",sale.res_config_settings_view_form,This default value is applied to any new product created. This can be changed in the product detail form.,,
+sale,model_terms,"ir.ui.view,arch_db",sale.res_config_settings_view_form,Quantities to invoice from sales orders,,
+sale,model_terms,"ir.ui.view,arch_db",sale.res_config_settings_view_form,Generate the invoice automatically when the online payment is confirmed,,
+sale,model_terms,"ir.ui.view,arch_db",sale.res_config_settings_view_form,Manage Sales & teams targets and commissions,,
+sale,model_terms,"ir.ui.view,arch_db",sale.res_config_settings_view_form,Invoicing,,
+sale,model_terms,"ir.ui.view,arch_db",sale.res_config_settings_view_form,Import Amazon orders and sync deliveries,,
+sale,model_terms,"ir.ui.view,arch_db",sale.res_config_settings_view_form,Connectors,,
+sale,model_terms,"ir.ui.view,arch_db",sale.res_config_settings_view_form,Sales,,
+sale,model_terms,"ir.ui.view,arch_db",sale.res_partner_view_buttons,Sales,,
+sale,model_terms,"ir.ui.view,arch_db",sale.res_partner_view_buttons,Warning on the Sales Order,,
+sale,model_terms,"ir.ui.view,arch_db",sale.res_partner_view_buttons,Message,,
+sale,model_terms,"ir.ui.view,arch_db",sale.res_partner_view_buttons,Type a message...,,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_cancel_view_form,"<span>Are you sure you want to cancel this order? <br/></span>
+                        <span id=""display_invoice_alert"" invisible=""not display_invoice_alert"">
+                            Draft invoices for this order will be cancelled. <br/>
+                        </span>",,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_cancel_view_form,Subject,,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_cancel_view_form,Send and cancel,,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_cancel_view_form,Cancel,,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_cancel_view_form,Discard,,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_line_view_form_readonly,Amount,,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_line_view_form_readonly,Sales Order Item,,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_line_wizard_form,Discount,,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_line_wizard_form,Apply,,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_line_wizard_form,Discard,,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_portal_content,Sale Information,,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_portal_content,Order Date:,,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_portal_content,Date:,,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_portal_content,Expiration Date:,,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_portal_content,Your Reference:,,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_portal_content,Invoicing and Shipping Address,,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_portal_content,Invoicing Address,,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_portal_content,Shipping Address,,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_portal_content,Last Invoices,,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_portal_content,"<i class=""fa fa-fw fa-check""/> Paid",,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_portal_content,"<i class=""fa fa-fw fa-check""/> Reversed",,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_portal_content,"<i class=""fa fa-fw fa-check""/> Authorized",,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_portal_content,"<i class=""fa fa-fw fa-clock-o""/> Waiting Payment",,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_portal_content,Documents,,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_portal_content,Products,,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_portal_content,Quantity,,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_portal_content,Unit Price,,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_portal_content,<span>Disc.%</span>,,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_portal_content,<span>Taxes</span>,,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_portal_content,<span>Amount</span>,,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_portal_content,"<strong class=""mr16"">Subtotal</strong>",,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_portal_content,Signature,,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_portal_content,Terms &amp; Conditions,,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_portal_content,Payment terms,,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_portal_template,Sign &amp; Pay,,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_portal_template,Accept &amp; Sign,,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_portal_template,Accept &amp; Pay,,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_portal_template,Pay Now,,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_portal_template,"<i class=""fa fa-print me-1""/>View Details",,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_portal_template,View Details,,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_portal_template,"<small><b class=""text-muted"">Your advantage</b></small>",,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_portal_template,Incl. tax),,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_portal_template,"<small class=""text-muted"">Your contact</small>",,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_portal_template,Validate Order,,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_portal_template,Close,,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_portal_template,"By signing, you confirm acceptance on behalf of",,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_portal_template,for the,,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_portal_template,quote.,,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_portal_template,Down payment <br/>,,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_portal_template,Full amount <br/>,,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_portal_template,By paying a <u>down payment</u> of,,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_portal_template,"<span id=""o_sale_portal_use_amount_total"">
+                                                By paying,
+                                            </span>",,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_portal_template,"By paying,",,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_portal_template,you confirm acceptance on the behalf of,,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_portal_template,The order is not in a state requiring customer payment.,,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_portal_template,Reject This Quotation,Reject This Proforma Invoices,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_portal_template,"Tell us why you are refusing this quotation, this will help us improve our services.","Tell us why you are refusing this proforma invoice, this will help us improve our services.",
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_portal_template,Your feedback...,,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_portal_template,"<i class=""fa fa-times""/> Reject",,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_portal_template,Cancel,,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_portal_template,<strong>Thank You!</strong><br/>,,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_portal_template,Your order has been confirmed.,,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_portal_template,Your order has been signed but still needs to be paid to be confirmed.,,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_portal_template,Your order has been signed.,,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_portal_template,Your order is not in a state to be rejected.,,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_portal_template,close,,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_portal_template,<strong>This quotation has been cancelled.</strong>,<strong>This proforma invoice has been cancelled.</strong>,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_portal_template,"<i class=""fa fa-comment""/> Contact us to get a new quotation.","<i class=""fa fa-comment""/> Contact us to get a new proforma invoice.",
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_portal_template,<strong>This offer expired!</strong>,,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_portal_template,"<i class=""fa fa-comment""/> Feedback",,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_portal_template,Communication history,,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_tree,Create Invoices,,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_tree,Number,,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_tree,Total Tax Excluded,,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_tree,Tax Total,,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_tree,Total Tax Included,,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_tree,Sales Orders,,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_view_activity,Sales Order,,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_view_search_inherit_quotation,My Quotations,My Proforma Invoices,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_view_search_inherit_quotation,Quotations,Proforma Invoices,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_view_search_inherit_quotation,Sales Orders,,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_view_search_inherit_quotation,Create Date,,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_view_search_inherit_sale,To Invoice,,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_view_search_inherit_sale,To Upsell,,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_order_view_search_inherit_sale,Order Date,,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_report_view_tree,Product,,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_report_view_tree,Quantity,,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_report_view_tree,Sum of Quantity,,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_report_view_tree,Sum of Untaxed Total,,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_report_view_tree,Average,,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_report_view_tree,Sum of Total,,
+sale,model_terms,"ir.ui.view,arch_db",sale.sale_report_view_tree,Sales Analysis,,
+sale,model_terms,"ir.ui.view,arch_db",sale.transaction_form_inherit_sale,Sales Order(s),,
+sale,model_terms,"ir.ui.view,arch_db",sale.utm_campaign_view_form,Revenues,,
+sale,model_terms,"ir.ui.view,arch_db",sale.utm_campaign_view_form,Quotations,Proforma Invoices,
+sale,model_terms,"ir.ui.view,arch_db",sale.utm_campaign_view_kanban,Revenues,,
+sale,model_terms,"ir.ui.view,arch_db",sale.utm_campaign_view_kanban,"<i class=""fa fa-fw fa-money me-1"" aria-label=""Quotations"" role=""img""/>","<i class=""fa fa-fw fa-money me-1"" aria-label=""Proforma Invoices"" role=""img""/>",
+sale,model_terms,"ir.ui.view,arch_db",sale.utm_campaign_view_kanban,Quotations,Proforma Invoices,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_account_invoice_report_search_inherit,Sales Team,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_form,Capture Transaction,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_form,Void Transaction,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_form,Are you sure you want to void the authorized transaction? This action can't be undone.,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_form,Create Invoice,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_form,Send by Email,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_form,Send PRO-FORMA Invoice,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_form,Confirm,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_form,Unlock,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_form,Preview,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_form,Cancel,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_form,Set to Quotation,Set to Proforma Invoices,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_form,Lock,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_form,"If the sale is locked, you can not modify it anymore. However, you will still be able to invoice or deliver.",,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_form,<span>Warning: This quote contains archived product(s)</span>,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_form,<span>Warning: this order might be a duplicate of</span>,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_form,Duplicated Documents,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_form,Invoices,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_form,"<i class=""fa fa-lock""/>
+                    Locked",,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_form,Type to find a customer...,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_form,Quotation Date,Proforma Invoice Date,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_form,Order Date,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_form,Update Prices,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_form,Recompute all prices based on this pricelist,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_form,This will update the unit price of all products based on the new pricelist.,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_form,Immediate,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_form,"<span class=""fa fa-exclamation-triangle text-warning me-1"" title=""This product is archived"" invisible=""state not in ['draft', 'sent'] or not is_product_archived""/>",,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_form,Delivered,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_form,Invoiced,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_form,days,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_form,Description,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_form,"Section Name (eg. Products, Services)",,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_form,Note,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_form,Add a product,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_form,Add a section,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_form,Add a note,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_form,Catalog,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_form,Product Variant,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_form,Product,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_form,Type to find a product...,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_form,UoM,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_form,Disc.%,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_form,Amount,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_form,Tax Incl.,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_form,Tax Excl.,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_form,Sales Order Lines,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_form,Add product,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_form,Add section,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_form,Add note,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_form,Quantity:,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_form,Unit Price:,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_form,Discount:,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_form,Discount,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_form,Terms and conditions...,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_form,Order Lines,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_form,"<span class=""mx-3"" invisible=""not require_payment"">of</span>",,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_form,Sales,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_form,Update Taxes,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_form,Recompute all taxes based on this fiscal position,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_form,This will update all taxes based on the currently selected fiscal position.,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_form,Invoicing,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_form,Delivery Date,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_form,Expected:,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_form,Shipping,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_form,Tracking,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_form,Other Info,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_form,Customer Signature,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_form,Sales Order,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_line_tree,Qty,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_line_tree,Unit of Measure,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_line_tree,Total,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_line_tree,Sales Order Lines,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_product_graph,Sales Analysis,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_product_pivot,Sales Analysis,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_product_search,Date,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_product_search,Quotations,Proforma Invoices,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_product_search,Sales Orders,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_product_search,Order Date: Last 365 Days,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_product_search,To Invoice,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_product_search,Fully Invoiced,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_product_search,Extended Filters,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_product_search,Salesperson,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_product_search,Sales Team,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_product_search,Customer,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_product_search,Customer Country,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_product_search,Customer Industry,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_product_search,Product,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_product_search,Product Variant,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_product_search,Product Category,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_product_search,Status,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_product_search,Company,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_product_search,Order Date,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_product_search,Group By,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_product_search,Sales Analysis,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_order_tree,Sales Orders,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_quotation_tree,Quotations,Proforma Invoices,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_quotation_tree,Creation Date,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_sale_advance_payment_inv,There are existing,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_sale_advance_payment_inv,Draft Invoices,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_sale_advance_payment_inv,for this Sale Order.,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_sale_advance_payment_inv,The new invoice will deduct draft invoices linked to this sale order.,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_sale_advance_payment_inv,"<span invisible=""advance_payment_method != 'percentage'"" class=""oe_inline"">% </span>",,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_sale_advance_payment_inv,"<span invisible=""1"" class=""oe_inline text-danger"" title=""The Down Payment is greater than the amount remaining to be invoiced."">
+                            <i class=""fa fa-warning""/>
+                        </span>",,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_sale_advance_payment_inv,Create Draft,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_sale_advance_payment_inv,Cancel,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_sale_advance_payment_inv,Invoice Sales Order,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_sale_order_calendar,Sales Orders,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_sale_order_graph,Sales Orders,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_sale_order_pivot,Sales Orders,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_sales_order_filter,Order,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_sales_order_filter,Sales Team,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_sales_order_filter,Product,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_sales_order_filter,My Orders,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_sales_order_filter,Late Activities,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_sales_order_filter,Show all records which has next action date is before today,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_sales_order_filter,Today Activities,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_sales_order_filter,Future Activities,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_sales_order_filter,Salesperson,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_sales_order_filter,Customer,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_sales_order_filter,Order Date,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_sales_order_filter,Group By,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_sales_order_filter,Search Sales Order,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_sales_order_line_filter,To Invoice,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_sales_order_line_filter,Sales Order Lines ready to be invoiced,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_sales_order_line_filter,My Sales Order Lines,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_sales_order_line_filter,Sales Order Lines related to a Sales Order of mine,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_sales_order_line_filter,Product,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_sales_order_line_filter,Order,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_sales_order_line_filter,Salesperson,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_sales_order_line_filter,Group By,,
+sale,model_terms,"ir.ui.view,arch_db",sale.view_sales_order_line_filter,Search Sales Order,,
+sale,model,"mail.activity.type,name",sale.mail_act_sale_upsell,Order Upsell,,
+sale,model,"mail.message.subtype,name",sale.mt_order_confirmed,Sales Order Confirmed,,
+sale,model,"mail.message.subtype,description",sale.mt_order_confirmed,Quotation confirmed,Proforma invoice confirmed,
+sale,model,"mail.message.subtype,name",sale.mt_order_sent,Quotation sent,Proforma invoice sent,
+sale,model,"mail.message.subtype,description",sale.mt_order_sent,Quotation sent,Proforma invoice sent,
+sale,model,"mail.message.subtype,name",sale.mt_order_viewed,Quotation Viewed,Proforma invoice Viewed,
+sale,model,"mail.message.subtype,name",sale.mt_salesteam_invoice_confirmed,Invoice Confirmed,,
+sale,model,"mail.message.subtype,name",sale.mt_salesteam_invoice_created,Invoice Created,,
+sale,model,"mail.message.subtype,name",sale.mt_salesteam_order_confirmed,Sales Order Confirmed,,
+sale,model,"mail.message.subtype,name",sale.mt_salesteam_order_sent,Quotation sent,Proforma invoice sent,
+sale,model,"mail.message.subtype,name",sale.mt_salesteam_order_viewed,Quotation Viewed,Proforma Invoice Viewed,
+sale,model,"mail.template,name",sale.email_template_edi_sale,Sales: Send Quotation,Sales: Send Proforma invoice,
+sale,model,"mail.template,description",sale.email_template_edi_sale,Used by salespeople when they send quotations or proforma to prospects,Used by salespeople when they send Proforma invoices or proforma to prospects,
+sale,model,"mail.template,subject",sale.email_template_edi_sale,"{{ object.company_id.name }} {{ object.state in ('draft', 'sent') and (ctx.get('proforma') and 'Proforma' or 'Quotation') or 'Order' }} (Ref {{ object.name or 'n/a' }})","{{ object.company_id.name }} {{ object.state in ('draft', 'sent') and (ctx.get('proforma') and 'Proforma' or 'Proforma Invoice') or 'Order' }} (Ref {{ object.name or 'n/a' }})",
+sale,model,"mail.template,body_html",sale.email_template_edi_sale,"<div style=""margin: 0px; padding: 0px;"">
+    <p style=""margin: 0px; padding: 0px; font-size: 13px;"">
+        <t t-set=""doc_name"" t-value=""'quotation' if object.state in ('draft', 'sent') else 'order'""/>
+        Hello,
+        <br/><br/>
+        Your
+        <t t-if=""ctx.get('proforma')"">
+            Pro forma invoice for <t t-out=""doc_name or ''"">quotation</t> <span style=""font-weight: bold;"" t-out=""object.name or ''"">S00052</span>
+            <t t-if=""object.origin"">
+                (with reference: <t t-out=""object.origin or ''""/> )
+            </t>
+            amounting in <span style=""font-weight: bold;"" t-out=""format_amount(object.amount_total, object.currency_id) or ''"">$ 10.00</span> is available.
+        </t>
+        <t t-else="""">
+            <t t-out=""doc_name or ''"">quotation</t> <span style=""font-weight: bold;"" t-out=""object.name or ''"">S00052</span>
+            <t t-if=""object.origin"">
+                (with reference: <t t-out=""object.origin or ''"">S00052</t> )
+            </t>
+            amounting in <span style=""font-weight: bold;"" t-out=""format_amount(object.amount_total, object.currency_id) or ''"">$ 10.00</span> is ready for review.
+        </t>
+        <br/>
+        <t t-set=""documents"" t-value=""object._get_product_documents()""/>
+        <t t-if=""documents"">
+            <br/> 
+            <t t-if=""len(documents)&gt;1"">
+                Here are some additional documents that may interest you:
+            </t>
+            <t t-else="""">
+                Here is an additional document that may interest you:
+            </t>
+            <ul style=""margin-bottom: 0;"">
+                <t t-foreach=""documents"" t-as=""document"">
+                    <li style=""font-size: 13px;"">
+                        <a t-out=""document.ir_attachment_id.name"" t-att-href=""object.get_portal_url('/document/' + str(document.id))"" t-att-target=""target""/>
+                    </li>
+                </t>
+            </ul>
+        </t>
+        <br/>
+        Do not hesitate to contact us if you have any questions.
+        <t t-if=""not is_html_empty(object.user_id.signature)"" data-o-mail-quote-container=""1"">
+            <br/><br/>
+            <t t-out=""object.user_id.signature or ''"" data-o-mail-quote=""1"">--<br data-o-mail-quote=""1""/>Mitchell Admin</t>
+        </t>
+        <br/><br/>
+    </p>
+</div>
+            ",,
+sale,model,"mail.template,name",sale.mail_template_sale_cancellation,Sales: Order Cancellation,,
+sale,model,"mail.template,description",sale.mail_template_sale_cancellation,Sent automatically to customers when you cancel an order,,
+sale,model,"mail.template,subject",sale.mail_template_sale_cancellation,{{ object.company_id.name }} {{ object.type_name }} Cancelled (Ref {{ object.name or 'n/a' }}),,
+sale,model,"mail.template,body_html",sale.mail_template_sale_cancellation,"<div style=""margin: 0px; padding: 0px;"">
+    <p style=""margin: 0px; padding: 0px; font-size: 13px;"">
+        <t t-set=""doc_name"" t-value=""object.type_name""/>
+        Dear <t t-out=""object.partner_id.name or ''"">user</t>,
+        <br/><br/>
+        Please be advised that your
+        <t t-out=""doc_name or ''"">quotation</t> <strong t-out=""object.name or ''"">S00052</strong>
+        <t t-if=""object.origin"">
+            (with reference: <t t-out=""object.origin or ''"">S00052</t> )
+        </t>
+        has been cancelled. Therefore, you should not be charged further for this order.
+        If any refund is necessary, this will be executed at best convenience.
+        <br/><br/>
+        Do not hesitate to contact us if you have any questions.
+        <br/>
+    </p>
+</div>
+            ",,
+sale,model,"mail.template,name",sale.mail_template_sale_confirmation,Sales: Order Confirmation,,
+sale,model,"mail.template,description",sale.mail_template_sale_confirmation,Sent to customers on order confirmation,,
+sale,model,"mail.template,subject",sale.mail_template_sale_confirmation,{{ object.company_id.name }} {{ (object.get_portal_last_transaction().state == 'pending') and 'Pending Order' or 'Order' }} (Ref {{ object.name or 'n/a' }}),,
+sale,model,"mail.template,body_html",sale.mail_template_sale_confirmation,"<div style=""margin: 0px; padding: 0px;"">
+    <p style=""margin: 0px; padding: 0px; font-size: 12px;"">
+        Hello,
+        <br/><br/>
+        <t t-set=""tx_sudo"" t-value=""object.get_portal_last_transaction()""/>
+        Your order <span style=""font-weight:bold;"" t-out=""object.name or ''"">S00049</span> amounting in <span style=""font-weight:bold;"" t-out=""format_amount(object.amount_total, object.currency_id) or ''"">$ 10.00</span>
+        <t t-if=""object.state == 'sale' or (tx_sudo and tx_sudo.state in ('done', 'authorized'))"">
+            has been confirmed.<br/>
+            Thank you for your trust!
+        </t>
+        <t t-elif=""tx_sudo and tx_sudo.state == 'pending'"">
+            is pending. It will be confirmed when the payment is received.
+            <t t-if=""object.reference"">
+                Your payment reference is <span style=""font-weight:bold;"" t-out=""object.reference or ''""/>.
+            </t>
+        </t>
+        <br/>
+        <t t-set=""documents"" t-value=""object._get_product_documents()""/>
+        <t t-if=""documents"">
+            <br/> 
+            <t t-if=""len(documents)&gt;1"">
+                Here are some additional documents that may interest you:
+            </t>
+            <t t-else="""">
+                Here is an additional document that may interest you:
+            </t>
+            <ul style=""margin-bottom: 0;"">
+                <t t-foreach=""documents"" t-as=""document"">
+                    <li style=""font-size: 13px;"">
+                        <a t-out=""document.ir_attachment_id.name"" t-att-href=""object.get_portal_url('/document/' + str(document.id))"" t-att-target=""target""/>
+                    </li>
+                </t>
+            </ul>
+        </t>
+        <br/>
+        Do not hesitate to contact us if you have any questions.
+        <t t-if=""not is_html_empty(object.user_id.signature)"" data-o-mail-quote-container=""1"">
+            <br/><br/>
+            <t t-out=""object.user_id.signature or ''"" data-o-mail-quote=""1"">--<br data-o-mail-quote=""1""/>Mitchell Admin</t>
+        </t>
+        <br/><br/>
+    </p>
+<t t-if=""hasattr(object, 'website_id') and object.website_id"">
+    <div style=""margin: 0px; padding: 0px;"">
+        <table width=""100%"" style=""color: #454748; font-size: 12px; border-collapse: collapse; white-space: nowrap;"">
+            <tr style=""border-bottom: 2px solid #dee2e6;"">
+                <td style=""width: 150px;""><span style=""font-weight:bold;"">Products</span></td>
+                <td/>
+                <td width=""15%"" align=""center""><span style=""font-weight:bold;"">Quantity</span></td>
+                <td width=""20%"" align=""right"">
+                    <span style=""font-weight:bold;"">
+                        <t t-if=""object.website_id.show_line_subtotals_tax_selection == 'tax_excluded'"">
+                            Tax Excl.
+                        </t>
+                        <t t-else="""">
+                            Tax Incl.
+                        </t>
+                    </span>
+                </td>
+            </tr>
+        </table>
+        <t t-set=""current_subtotal"" t-value=""0""/>
+        <t t-foreach=""object.order_line"" t-as=""line"">
+            <t t-set=""line_subtotal"" t-value=""                     line.price_subtotal                     if object.website_id.show_line_subtotals_tax_selection == 'tax_excluded'                     else line.price_total                 ""/>
+            <t t-set=""current_subtotal"" t-value=""current_subtotal + line_subtotal""/>
+            <t t-if=""(not hasattr(line, 'is_delivery') or not line.is_delivery) and (                     line.display_type in ['line_section', 'line_note']                     or line.product_type == 'combo'                 )"">
+                <table width=""100%"" style=""color: #454748; font-size: 12px; border-collapse: collapse;"">
+                    <t t-set=""loop_cycle_number"" t-value=""loop_cycle_number or 0""/>
+                    <tr t-att-style=""'background-color: #f2f2f2' if loop_cycle_number % 2 == 0 else 'background-color: #ffffff'"">
+                        <t t-set=""loop_cycle_number"" t-value=""loop_cycle_number + 1""/>
+                        <td colspan=""4"">
+                            <t t-if=""line.display_type == 'line_section' or line.product_type == 'combo'"">
+                                <span style=""font-weight:bold;"" t-out=""line.name or ''"">Taking care of Trees Course</span>
+                                <t t-set=""current_section"" t-value=""line""/>
+                                <t t-set=""current_subtotal"" t-value=""0""/>
+                            </t>
+                            <t t-elif=""line.display_type == 'line_note'"">
+                                <i t-out=""line.name or ''"">Taking care of Trees Course</i>
+                            </t>
+                        </td>
+                    </tr>
+                </table>
+            </t>
+            <t t-elif=""(not hasattr(line, 'is_delivery') or not line.is_delivery)"">
+                <table width=""100%"" style=""color: #454748; font-size: 12px; border-collapse: collapse;"">
+                    <t t-set=""loop_cycle_number"" t-value=""loop_cycle_number or 0""/>
+                    <tr t-att-style=""'background-color: #f2f2f2' if loop_cycle_number % 2 == 0 else 'background-color: #ffffff'"">
+                        <t t-set=""loop_cycle_number"" t-value=""loop_cycle_number + 1""/>
+                        <td style=""width: 150px;"">
+                            <img t-attf-src=""/web/image/product.product/{{ line.product_id.id }}/image_128"" style=""width: 64px; height: 64px; object-fit: contain;"" alt=""Product image""/>
+                        </td>
+                        <td align=""left"" t-out=""line.product_id.name or ''"">	Taking care of Trees Course</td>
+                        <td width=""15%"" align=""center"" t-out=""line.product_uom_qty or ''"">1</td>
+                        <td width=""20%"" align=""right""><span style=""font-weight:bold; white-space: nowrap;"">
+                        <t t-if=""object.website_id.show_line_subtotals_tax_selection == 'tax_excluded'"">
+                            <t t-out=""format_amount(line.price_reduce_taxexcl, object.currency_id) or ''"">$ 10.00</t>
+                        </t>
+                        <t t-else="""">
+                            <t t-out=""format_amount(line.price_reduce_taxinc, object.currency_id) or ''"">$ 10.00</t>
+                        </t>
+                        </span></td>
+                    </tr>
+                </table>
+            </t>
+            <t t-if=""current_section and (                     line_last                     or object.order_line[line_index+1].display_type == 'line_section'                     or object.order_line[line_index+1].product_type == 'combo'                     or (                         line.combo_item_id                         and not object.order_line[line_index+1].combo_item_id                     )                 ) and not line.is_downpayment"">
+                <t t-set=""current_section"" t-value=""None""/>
+                <table width=""100%"" style=""color: #454748; font-size: 12px; border-collapse: collapse;"">
+                    <t t-set=""loop_cycle_number"" t-value=""loop_cycle_number or 0""/>
+                    <tr t-att-style=""'background-color: #f2f2f2' if loop_cycle_number % 2 == 0 else 'background-color: #ffffff'"">
+                        <t t-set=""loop_cycle_number"" t-value=""loop_cycle_number + 1""/>
+                        <td style=""width: 100%"" align=""right"">
+                            <span style=""font-weight: bold;"">Subtotal:</span>
+                            <span t-out=""format_amount(current_subtotal, object.currency_id) or ''"">$ 10.00</span>
+                        </td>
+                    </tr>
+                </table>
+            </t>
+        </t>
+    </div>
+    <div style=""margin: 0px; padding: 0px;"" t-if=""hasattr(object, 'carrier_id') and object.carrier_id"">
+        <table width=""100%"" style=""color: #454748; font-size: 12px; border-spacing: 0px 4px; white-space: nowrap;"" align=""right"">
+            <tr>
+                <td style=""width: 60%""/>
+                <td style=""width: 30%; border-top: 1px solid #dee2e6;"" align=""right""><span style=""font-weight:bold;"">Delivery:</span></td>
+                <td style=""width: 10%; border-top: 1px solid #dee2e6;"" align=""right"" t-out=""format_amount(object.amount_delivery, object.currency_id) or ''"">$ 0.00</td>
+            </tr>
+            <tr>
+                <td style=""width: 60%""/>
+                <td style=""width: 30%;"" align=""right""><span style=""font-weight:bold;"">Untaxed Amount:</span></td>
+                <td style=""width: 10%;"" align=""right"" t-out=""format_amount(object.amount_untaxed, object.currency_id) or ''"">$ 10.00</td>
+            </tr>
+        </table>
+    </div>
+    <div style=""margin: 0px; padding: 0px;"" t-else="""">
+        <table width=""100%"" style=""color: #454748; font-size: 12px; border-spacing: 0px 4px; white-space: nowrap;"" align=""right"">
+            <tr>
+                <td style=""width: 60%""/>
+                <td style=""width: 30%; border-top: 1px solid #dee2e6;"" align=""right""><span style=""font-weight:bold;"">Untaxed Amount:</span></td>
+                <td style=""width: 10%; border-top: 1px solid #dee2e6;"" align=""right"" t-out=""format_amount(object.amount_untaxed, object.currency_id) or ''"">$ 10.00</td>
+            </tr>
+        </table>
+    </div>
+    <div style=""margin: 0px; padding: 0px;"">
+        <table width=""100%"" style=""color: #454748; font-size: 12px; border-spacing: 0px 4px; white-space: nowrap;"" align=""right"">
+            <tr>
+                <td style=""width: 60%""/>
+                <td style=""width: 30%;"" align=""right""><span style=""font-weight:bold;"">Taxes:</span></td>
+                <td style=""width: 10%;"" align=""right"" t-out=""format_amount(object.amount_tax, object.currency_id) or ''"">$ 0.00</td>
+            </tr>
+            <tr>
+                <td style=""width: 60%""/>
+                <td style=""width: 30%; border-top: 1px solid #dee2e6;"" align=""right""><span style=""font-weight:bold;"">Total:</span></td>
+                <td style=""width: 10%; border-top: 1px solid #dee2e6;"" align=""right"" t-out=""format_amount(object.amount_total, object.currency_id) or ''"">$ 10.00</td>
+            </tr>
+        </table>
+    </div>
+    <div t-if=""object.partner_invoice_id"" style=""margin: 0px; padding: 0px;"">
+        <table width=""100%"" style=""color: #454748; font-size: 12px;"">
+            <tr>
+                <td style=""padding-top: 10px;"">
+                    <span style=""font-weight:bold;"">Bill to:</span>
+                    <t t-out=""object.partner_invoice_id.street or ''"">1201 S Figueroa St</t>
+                    <t t-out=""object.partner_invoice_id.city or ''"">Los Angeles</t>
+                    <t t-out=""object.partner_invoice_id.state_id.name or ''"">California</t>
+                    <t t-out=""object.partner_invoice_id.zip or ''"">90015</t>
+                    <t t-out=""object.partner_invoice_id.country_id.name or ''"">United States</t>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <span style=""font-weight:bold;"">Payment Method:</span>
+                    <t t-if=""tx_sudo.token_id"">
+                        <t t-out=""tx_sudo.token_id.display_name or ''""/>
+                    </t>
+                    <t t-else="""">
+                        <t t-out=""tx_sudo.provider_id.sudo().name or ''""/>
+                    </t>
+                    (<t t-out=""format_amount(tx_sudo.amount, object.currency_id) or ''"">$ 10.00</t>)
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div t-if=""object.partner_shipping_id and not object.only_services"" style=""margin: 0px; padding: 0px;"">
+        <table width=""100%"" style=""color: #454748; font-size: 12px;"">
+            <tr>
+                <td>
+                    <br/>
+                    <span style=""font-weight:bold;"">Ship to:</span>
+                    <t t-out=""object.partner_shipping_id.street or ''"">1201 S Figueroa St</t>
+                    <t t-out=""object.partner_shipping_id.city or ''"">Los Angeles</t>
+                    <t t-out=""object.partner_shipping_id.state_id.name or ''"">California</t>
+                    <t t-out=""object.partner_shipping_id.zip or ''"">90015</t>
+                    <t t-out=""object.partner_shipping_id.country_id.name or ''"">United States</t>
+                </td>
+            </tr>
+        </table>
+        <table t-if=""hasattr(object, 'carrier_id') and object.carrier_id"" width=""100%"" style=""color: #454748; font-size: 12px;"">
+            <tr>
+                <td>
+                    <span style=""font-weight:bold;"">Shipping Method:</span>
+                    <t t-out=""object.carrier_id.name or ''""/>
+                    <t t-if=""object.amount_delivery == 0.0"">
+                        (Free)
+                    </t>
+                    <t t-else="""">
+                        (<t t-out=""format_amount(object.amount_delivery, object.currency_id) or ''"">$ 10.00</t>)
+                    </t>
+                </td>
+            </tr>
+            <tr t-if=""object.carrier_id.carrier_description"">
+                <td>
+                    <strong>Shipping Description:</strong>
+                    <t t-out=""object.carrier_id.carrier_description""/>
+                </td>
+            </tr>
+        </table>
+    </div>
+</t>
+</div>",,
+sale,model,"mail.template,name",sale.mail_template_sale_payment_executed,Sales: Payment Done,,
+sale,model,"mail.template,description",sale.mail_template_sale_payment_executed,Sent to customers when a payment is received but doesn't immediately confirm their order,,
+sale,model,"mail.template,subject",sale.mail_template_sale_payment_executed,{{ object.company_id.name }} {{ (object.get_portal_last_transaction().state == 'pending') and 'Pending Order' or 'Order' }} (Ref {{ object.name or 'n/a' }}),,
+sale,model,"mail.template,body_html",sale.mail_template_sale_payment_executed,"<div style=""margin: 0px; padding: 0px;"">
+    <p style=""margin: 0px; padding: 0px; font-size: 12px;"">
+        <t t-set=""transaction_sudo"" t-value=""object.get_portal_last_transaction()""/>
+        Hello,
+        <br/><br/>
+        A payment with reference
+        <span style=""font-weight:bold;"" t-out=""transaction_sudo.reference or ''"">SOOO49</span>
+        amounting
+        <span style=""font-weight:bold;"" t-out=""format_amount(transaction_sudo.amount, object.currency_id) or ''"">$ 10.00</span>
+        for your order
+        <span style=""font-weight:bold;"" t-out=""object.name or ''"">S00049</span>
+        <t t-if=""transaction_sudo and transaction_sudo.state == 'pending'"">
+            is pending.
+            <br/>
+            <t t-if=""object.currency_id.compare_amounts(object.amount_paid + transaction_sudo.amount, object.amount_total) &gt;= 0 and object.state in ('draft', 'sent')"">
+                Your order will be confirmed once the payment is confirmed.
+            </t>
+            <t t-else="""">
+                Once confirmed,
+                <span style=""font-weight:bold;"" t-out=""format_amount(object.amount_total - object.amount_paid - transaction_sudo.amount, object.currency_id) or ''"">$ 10.00</span>
+                will remain to be paid.
+            </t>
+        </t>
+        <t t-else="""">
+            has been confirmed.
+            <t t-if=""object.currency_id.compare_amounts(object.amount_paid, object.amount_total) &lt; 0"">
+                <br/>
+                <span style=""font-weight:bold;"" t-out=""format_amount(object.amount_total - object.amount_paid, object.currency_id) or ''"">$ 10.00</span>
+                remains to be paid.
+            </t>
+        </t>
+        <br/><br/>
+        Thank you for your trust!
+        <br/>
+        Do not hesitate to contact us if you have any questions.
+        <t t-if=""not is_html_empty(object.user_id.signature)"" data-o-mail-quote-container=""1"">
+            <br/><br/>
+            <t t-out=""object.user_id.signature or ''"" data-o-mail-quote=""1"">--<br data-o-mail-quote=""1""/>Mitchell Admin</t>
+        </t>
+        <br/><br/>
+    </p>
+</div>
+            ",,
+sale,model,"res.groups,name",sale.group_auto_done_setting,Lock Confirmed Sales,,
+sale,model,"res.groups,name",sale.group_discount_per_so_line,Discount on lines,,
+sale,model,"res.groups,name",sale.group_proforma_sales,Pro-forma Invoices,,
+sale,model,"res.groups,name",sale.group_warning_sale,A warning can be set on a product or a customer (Sale),,
+sale,model_terms,"web_tour.tour,rainbow_man_message",sale.sale_tour,"<span><b>Congratulations</b>, your first quotation is sent!<br>Check your email to validate the quote.
+        </span>","<span><b>Congratulations</b>, your first proforma invoice is sent!<br>Check your email to validate the quote.
+        </span>",
+sale,code,addons/sale/wizard/sale_order_discount.py,44,Invalid discount amount,,odoo-python
+sale,code,addons/sale/wizard/sale_order_discount.py,49,Discount,,odoo-python
+sale,code,addons/sale/wizard/sale_order_discount.py,88,"There does not seem to be any discount product configured for this company yet. You can either use a per-line discount, or ask an administrator to grant the discount the first time.",,odoo-python
+sale,code,addons/sale/wizard/sale_order_discount.py,143,Discount %(percent)s%%,,odoo-python
+sale,code,addons/sale/wizard/sale_order_discount.py,158,Discount %(percent)s%%- On products with the following taxes %(taxes)s,,odoo-python
+sale,code,addons/sale/wizard/sale_order_discount.py,162,Discount- On products with the following taxes %(taxes)s,,odoo-python
+sale,code,addons/sale/wizard/sale_make_invoice_advance.py,128,The value of the down payment amount must be positive.,,odoo-python
+sale,code,addons/sale/wizard/sale_make_invoice_advance.py,130,The value of the down payment amount must be positive.,,odoo-python
+sale,code,addons/sale/wizard/sale_make_invoice_advance.py,141,Draft Invoices,,odoo-python
+sale,code,addons/sale/wizard/sale_make_invoice_advance.py,217,Down payment invoice,,odoo-python
+sale,code,addons/sale/wizard/sale_make_invoice_advance.py,219,%s has been created,,odoo-python
+sale,code,addons/sale/wizard/sale_make_invoice_advance.py,353,Down payment of %s%%,,odoo-python
+sale,code,addons/sale/wizard/sale_make_invoice_advance.py,355,Down Payment,,odoo-python
+sale,code,addons/sale/wizard/res_config_settings.py,112,Warning,,odoo-python
+sale,code,addons/sale/wizard/res_config_settings.py,113,Quotation Validity is required and must be greater or equal to 0.,Proforma Invoice Validity is required and must be greater or equal to 0.,odoo-python
+sale,code,addons/sale/wizard/payment_link_wizard.py,25,This payment will confirm the quotation.,This payment will confirm the proforma invoice.,odoo-python
+sale,code,addons/sale/wizard/payment_link_wizard.py,29,Customer needs to pay at least %(amount)s to confirm the order.,,odoo-python
+sale,code,addons/sale/models/crm_team.py,138,Sales: Untaxed Total,,odoo-python
+sale,code,addons/sale/models/crm_team.py,144,Sales Analysis,,odoo-python
+sale,code,addons/sale/models/crm_team.py,163,Team %(team_name)s has %(sale_order_count)s active sale orders. Consider cancelling them or archiving the team instead.,,odoo-python
+sale,code,addons/sale/models/account_move.py,116,Invoice %s paid,,odoo-python
+sale,code,addons/sale/models/payment_transaction.py,234,Sales Order(s),,odoo-python
+sale,code,addons/sale/models/sale_order.py,74,New,,odoo-python
+sale,code,addons/sale/models/sale_order.py,382,Terms & Conditions: %s,,odoo-python
+sale,code,addons/sale/models/sale_order.py,797,Quotation,Proforma Invoice,odoo-python
+sale,code,addons/sale/models/sale_order.py,799,Sales Order,,odoo-python
+sale,code,addons/sale/models/sale_order.py,823,"Your quotation contains products from company %(product_company)s whereas your quotation belongs to company %(quote_company)s. 
+ Please change the company of your quotation or remove the products from other companies (%(bad_products)s).","Your proforma invoice contains products from company %(product_company)s whereas your quotation belongs to company %(quote_company)s. 
+ Please change the company of your proforma invoice or remove the products from other companies (%(bad_products)s).",odoo-python
+sale,code,addons/sale/models/sale_order.py,830,Prepayment percentage must be a valid percentage.,,odoo-python
+sale,code,addons/sale/models/sale_order.py,846,Requested date is too soon.,,odoo-python
+sale,code,addons/sale/models/sale_order.py,847,The delivery date is sooner than the expected date. You may be unable to honor the delivery date.,,odoo-python
+sale,code,addons/sale/models/sale_order.py,860,Warning for the change of your quotation's company,Warning for the change of your proforma invoice's company,odoo-python
+sale,code,addons/sale/models/sale_order.py,861,Changing the company of an existing quotation might need some manual adjustments in the details of the lines. You might consider updating the prices.,Changing the company of an existing proforma invoice might need some manual adjustments in the details of the lines. You might consider updating the prices.,odoo-python
+sale,code,addons/sale/models/sale_order.py,873,"The company is required, please select one before making any other changes to the sale order.",,odoo-python
+sale,code,addons/sale/models/sale_order.py,904,Warning for %s,,odoo-python
+sale,code,addons/sale/models/sale_order.py,928,The number of selected combo items must match the number of available combo choices.,,odoo-python
+sale,code,addons/sale/models/sale_order.py,970,New,,odoo-python
+sale,code,addons/sale/models/sale_order.py,970,New,,odoo-python
+sale,code,addons/sale/models/sale_order.py,975,New,,odoo-python
+sale,code,addons/sale/models/sale_order.py,1000,You can not delete a sent quotation or a confirmed sales order. You must first cancel it.,You can not delete a sent proforma invoice or a confirmed sales order. You must first cancel it.,odoo-python
+sale,code,addons/sale/models/sale_order.py,1006,You cannot change the pricelist of a confirmed order !,,odoo-python
+sale,code,addons/sale/models/sale_order.py,1019,Discount,,odoo-python
+sale,code,addons/sale/models/sale_order.py,1130,Only draft orders can be marked as sent directly.,,odoo-python
+sale,code,addons/sale/models/sale_order.py,1186,Some orders are not in a state requiring confirmation.,,odoo-python
+sale,code,addons/sale/models/sale_order.py,1193,"A line on these orders missing a product, you cannot confirm it.",,odoo-python
+sale,code,addons/sale/models/sale_order.py,1274,You cannot cancel a locked order. Please unlock it first.,,odoo-python
+sale,code,addons/sale/models/sale_order.py,1293,Cancel %s,,odoo-python
+sale,code,addons/sale/models/sale_order.py,1334,Product taxes have been recomputed according to fiscal position %s.,,odoo-python
+sale,code,addons/sale/models/sale_order.py,1349,Product prices have been recomputed according to pricelist %s.,,odoo-python
+sale,code,addons/sale/models/sale_order.py,1351,Product prices have been recomputed.,,odoo-python
+sale,code,addons/sale/models/sale_order.py,1383,Order,,odoo-python
+sale,code,addons/sale/models/sale_order.py,1465,"Cannot create an invoice. No items are available to invoice.
+
+To resolve this issue, please ensure that:
+   • The products have been delivered before attempting to invoice them.
+   • The invoicing policy of the product is configured correctly.
+
+If you want to invoice based on ordered quantities instead:
+   • For consumable or storable products, open the product, go to the 'General Information' tab and change the 'Invoicing Policy' from 'Delivered Quantities' to 'Ordered Quantities'.
+   • For services (and other products), change the 'Invoicing Policy' to 'Prepaid/Fixed Price'.
+",,odoo-python
+sale,code,addons/sale/models/sale_order.py,1755,View Quotation,View Proforma Invoice,odoo-python
+sale,code,addons/sale/models/sale_order.py,1755,Sign & Pay Quotation,Sign & Pay Proforma Invoice,odoo-python
+sale,code,addons/sale/models/sale_order.py,1757,Accept & Sign Quotation,Accept & Sign Proforma Invoice,odoo-python
+sale,code,addons/sale/models/sale_order.py,1759,Accept & Pay Quotation,Accept & Pay Proforma Invoice,odoo-python
+sale,code,addons/sale/models/sale_order.py,1761,View Quotation,View Proforma Invoice,odoo-python
+sale,code,addons/sale/models/sale_order.py,1800,Customer,,odoo-python
+sale,code,addons/sale/models/sale_order.py,1892,Generated Orders,,odoo-python
+sale,code,addons/sale/models/sale_order.py,1904,No attachment was provided,,odoo-python
+sale,code,addons/sale/models/sale_order.py,1935,Error importing attachment '%(file_name)s' as order (decoder=%(decoder)s),,odoo-python
+sale,code,addons/sale/models/sale_order.py,2028,sale order,,odoo-python
+sale,code,addons/sale/models/sale_order.py,2058,Upsell %(order)s for customer %(customer)s,,odoo-python
+sale,code,addons/sale/models/sale_order.py,2090,Down Payments,,odoo-python
+sale,code,addons/sale/models/account_move_line.py,86,The Sales Order %(order)s to be reinvoiced must be validated before registering expenses.,,odoo-python
+sale,code,addons/sale/models/account_move_line.py,91,The Sales Order %(order)s to be reinvoiced is cancelled. You cannot register an expense on a cancelled Sales Order.,,odoo-python
+sale,code,addons/sale/models/account_move_line.py,97,The Sales Order %(order)s to be reinvoiced is currently locked. You cannot register an expense on a locked Sales Order.,,odoo-python
+sale,code,addons/sale/models/sale_order_line.py,410,Option for: %s,,odoo-python
+sale,code,addons/sale/models/sale_order_line.py,413,Option: %s,,odoo-python
+sale,code,addons/sale/models/sale_order_line.py,448,%(attribute)s: %(values)s,,odoo-python
+sale,code,addons/sale/models/sale_order_line.py,462,Down Payments,,odoo-python
+sale,code,addons/sale/models/sale_order_line.py,465,Down Payment,,odoo-python
+sale,code,addons/sale/models/sale_order_line.py,469,Down Payment: %(date)s (Draft),,odoo-python
+sale,code,addons/sale/models/sale_order_line.py,472,Down Payment (Cancelled),,odoo-python
+sale,code,addons/sale/models/sale_order_line.py,481,Down Payment (ref: %(reference)s on %(date)s),,odoo-python
+sale,code,addons/sale/models/sale_order_line.py,1168,A sale order line's combo item must be among its linked line's available combo items.,,odoo-python
+sale,code,addons/sale/models/sale_order_line.py,1173,A sale order line's product must match its combo item's product.,,odoo-python
+sale,code,addons/sale/models/sale_order_line.py,1191,Warning for %s,,odoo-python
+sale,code,addons/sale/models/sale_order_line.py,1203,Warning,,odoo-python
+sale,code,addons/sale/models/sale_order_line.py,1204,This product is packaged by %(pack_size).2f %(pack_name)s. You should sell %(quantity).2f %(unit)s.,,odoo-python
+sale,code,addons/sale/models/sale_order_line.py,1238,Extra line with %s,,odoo-python
+sale,code,addons/sale/models/sale_order_line.py,1251,You cannot change the type of a sale order line. Instead you should delete the current line and create a new line of the proper type.,,odoo-python
+sale,code,addons/sale/models/sale_order_line.py,1258,You cannot modify the product of this order line.,,odoo-python
+sale,code,addons/sale/models/sale_order_line.py,1289,"It is forbidden to modify the following fields in a locked order:
+%s",,odoo-python
+sale,code,addons/sale/models/sale_order_line.py,1315,The ordered quantity has been updated.,,odoo-python
+sale,code,addons/sale/models/sale_order_line.py,1321,Ordered Quantity: %(old_qty)s -> %(new_qty)s,,odoo-python
+sale,code,addons/sale/models/sale_order_line.py,1327,Delivered Quantity: %s,,odoo-python
+sale,code,addons/sale/models/sale_order_line.py,1328,Invoiced Quantity: %s,,odoo-python
+sale,code,addons/sale/models/sale_order_line.py,1352,"Once a sales order is confirmed, you can't remove one of its lines (we need to track if something gets invoiced or delivered).
+                Set the quantity to 0 instead.",,odoo-python
+sale,code,addons/sale/models/product_template.py,85,"Invoice after delivery, based on quantities delivered, not ordered.",,odoo-python
+sale,code,addons/sale/models/product_template.py,88,You can invoice goods before they are delivered.,,odoo-python
+sale,code,addons/sale/models/product_template.py,90,Invoice ordered quantities as soon as this service is sold.,,odoo-python
+sale,code,addons/sale/models/product_template.py,140,"The following products cannot be restricted to the company %(company)s because they have already been used in quotations or sales orders in another company:
+%(used_products)s
+You can archive these products and recreate them with your company restriction instead, or leave them as shared product.","The following products cannot be restricted to the company %(company)s because they have already been used in proforma invoice or sales orders in another company:
+%(used_products)s
+You can archive these products and recreate them with your company restriction instead, or leave them as shared product.",odoo-python
+sale,code,addons/sale/models/product_template.py,160,Warning,,odoo-python
+sale,code,addons/sale/models/product_template.py,161,You cannot change the product's type because it is already used in sales orders.,,odoo-python
+sale,code,addons/sale/models/product_template.py,182,Import Template for Products,,odoo-python
+sale,code,addons/sale/models/product_template.py,208,The product (%(product)s) has incompatible values: %(value_list)s,,odoo-python
+sale,code,addons/sale/models/product_template.py,233,Warning for %s,,odoo-python
+sale,code,addons/sale/models/product_product.py,49,Warning,,odoo-python
+sale,code,addons/sale/models/product_product.py,50,You cannot change the product's type because it is already used in sales orders.,,odoo-python
+sale,code,addons/sale/models/product_product.py,71,Operation not supported,,odoo-python
+sale,code,addons/sale/models/res_company.py,56,Prepayment percentage must be a valid percentage.,,odoo-python
+sale,code,addons/sale/static/src/js/sale_product_field.js,136,Edit Configuration,,odoo-javascript
+sale,code,addons/sale/static/src/js/product_card/product_card.xml,15,Product Image,,odoo-javascript
+sale,code,addons/sale/static/src/js/tours/sale.js,15,Let’s create a beautiful quotation in a few clicks .,Let’s create a beautiful proforma invoice in a few clicks .,odoo-javascript
+sale,code,addons/sale/static/src/js/tours/sale.js,22,Let’s create a beautiful quotation in a few clicks .,Let’s create a beautiful proforma invoice in a few clicks .,odoo-javascript
+sale,code,addons/sale/static/src/js/tours/sale.js,31,Build your first quotation right here!,,odoo-javascript
+sale,code,addons/sale/static/src/js/tours/sale.js,40,"Search a customer name, or create one on the fly.",,odoo-javascript
+sale,code,addons/sale/static/src/js/tours/sale.js,51,Click here to add some products or services to your quotation.,Click here to add some products or services to your proforma invoice.,odoo-javascript
+sale,code,addons/sale/static/src/js/tours/sale.js,63,"Select a product, or create a new one on the fly.",,odoo-javascript
+sale,code,addons/sale/static/src/js/tours/sale.js,77,add the price of your product.,,odoo-javascript
+sale,code,addons/sale/static/src/js/tours/sale.js,92,<b>Send the quote</b> to yourself and check what the customer will receive.,,odoo-javascript
+sale,code,addons/sale/static/src/js/tours/sale.js,97,let's continue,,odoo-javascript
+sale,code,addons/sale/static/src/js/tours/sale.js,103,Go ahead and send the quotation.,Go ahead and send the proforma invoice.,odoo-javascript
+sale,code,addons/sale/static/src/js/quantity_buttons/quantity_buttons.xml,10,Remove one,,odoo-javascript
+sale,code,addons/sale/static/src/js/quantity_buttons/quantity_buttons.xml,24,Add one,,odoo-javascript
+sale,code,addons/sale/static/src/js/product_template_attribute_line/product_template_attribute_line.js,140,Enter a customized value,,odoo-javascript
+sale,code,addons/sale/static/src/js/product/product.xml,9,Product Image,,odoo-javascript
+sale,code,addons/sale/static/src/js/product/product.xml,20,This option or combination of options is not available,,odoo-javascript
+sale,code,addons/sale/static/src/js/product/product.xml,46,Remove,,odoo-javascript
+sale,code,addons/sale/static/src/js/product/product.xml,65,Add,,odoo-javascript
+sale,code,addons/sale/static/src/js/combo_configurator_dialog/combo_configurator_dialog.js,139,Total: %s,,odoo-javascript
+sale,code,addons/sale/static/src/js/combo_configurator_dialog/combo_configurator_dialog.xml,31,Confirm,,odoo-javascript
+sale,code,addons/sale/static/src/js/combo_configurator_dialog/combo_configurator_dialog.xml,38,Cancel,,odoo-javascript
+sale,code,addons/sale/static/src/js/product_configurator_dialog/product_configurator_dialog.js,46,Configure your product,,odoo-javascript
+sale,code,addons/sale/static/src/js/product_configurator_dialog/product_configurator_dialog.xml,15,Confirm,,odoo-javascript
+sale,code,addons/sale/static/src/js/product_configurator_dialog/product_configurator_dialog.xml,22,Cancel,,odoo-javascript
+sale,code,addons/sale/static/src/js/product_list/product_list.js,20,Add optional products,,odoo-javascript
+sale,code,addons/sale/static/src/js/product_list/product_list.js,24,Total: %s,,odoo-javascript
+sale,code,addons/sale/static/src/js/product_list/product_list.xml,14,Product,,odoo-javascript
+sale,code,addons/sale/static/src/js/product_list/product_list.xml,15,Quantity,,odoo-javascript
+sale,code,addons/sale/static/src/js/product_list/product_list.xml,20,Price,,odoo-javascript
+sale,code,addons/sale/static/src/js/sale_action_helper/sale_action_helper_dialog.xml,23,Your browser does not support iframe.,,odoo-javascript
+sale,code,addons/sale/static/src/js/sale_action_helper/sale_action_helper_dialog.xml,23,Sale,,odoo-javascript
+sale,code,addons/sale/static/src/xml/sales_team_progress_bar_template.xml,11,Click to define an invoicing target,,odoo-javascript
+sale,code,addons/sale/controllers/portal.py,45,Order Date,,odoo-python
+sale,code,addons/sale/controllers/portal.py,152,Quotation viewed by customer %s,Proforma invoice viewed by customer %s,odoo-python
+sale,code,addons/sale/controllers/portal.py,272,Invalid order.,,odoo-python
+sale,code,addons/sale/controllers/portal.py,275,The order is not in a state requiring customer signature.,,odoo-python
+sale,code,addons/sale/controllers/portal.py,277,Signature is missing.,,odoo-python
+sale,code,addons/sale/controllers/portal.py,287,Invalid signature data.,,odoo-python
+sale,code,addons/sale/controllers/portal.py,301,Order signed by %s,,odoo-python
+sale,code,addons/sale/controllers/portal.py,384,The access token is invalid.,,odoo-python
+sale,code,addons/sale/controllers/portal.py,420,The provided parameters are invalid.,,odoo-python
+sale,code,addons/sale/controllers/portal.py,427,The provided parameters are invalid.,,odoo-python
