@@ -87,7 +87,7 @@ class SaleOrderUnlock(models.Model):
             for user_id in self.approval_users_ids:
                 if user_id.state == 'reject':
                     raise ValidationError(f"Unlock request is rejected by '{user_id.user_id.name}', please review 'Unlock Approval Authorities' tab for more details.")                
-            raise ValidationError(f"Unlock request ight now pending from '{self.assigned_to.name}'.")
+            raise ValidationError(f"Unlock request is now pending from '{self.assigned_to.name}'.")
         
 
         if self.id:
