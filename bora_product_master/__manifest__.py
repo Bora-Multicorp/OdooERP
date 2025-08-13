@@ -46,8 +46,8 @@
 
     'assets': {
         'web.assets_backend': [
-            '/bora_product_master/static/sample/IMEI_ACTIVATION_SAMPLE_REPORT.xlsx',
-            '/bora_product_master/static/src/js/barcode_focus_change.js',
+            '/bora_product_master/static/sample/IMEI_ACTIVATION_SAMPLE_REPORT.xlsx'
+            #'/bora_product_master/static/src/js/barcode_focus_change.js',
         ],
     },
 
