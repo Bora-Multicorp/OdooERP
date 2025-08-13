@@ -41,6 +41,6 @@ Long description of module's purpose
     # ],
     'application': True,
     'installable': True,
-    'license': 'Other proprietary',
+    'license': 'Other proprietary'
 }
 
