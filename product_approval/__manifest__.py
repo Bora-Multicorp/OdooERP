@@ -21,7 +21,7 @@
     ],
     'assets': {
         'web.assets_backend': [
-            'product_approval/static/src/js/make_form_readonly.js',
+            #'product_approval/static/src/js/make_form_readonly.js',
             'product_approval/static/src/xml/ribbon.xml',
             'product_approval/static/src/css/custom_style.css',
         ],
