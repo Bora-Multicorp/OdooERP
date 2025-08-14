@@ -25,7 +25,7 @@
                         </textarea>
                     </t>
                     <t t-if="col_label.sh_value_type == 'que_sh_many2one'">
-                        <select class='form-control sh_m2o js_cls_sh_matrix_many2one_select text-uppercase' style="width:100%;"
+                        <!--<select class='form-control sh_m2o js_cls_sh_matrix_many2one_select text-uppercase' style="width:100%;"
                                  t-att-data-question-type="col_label.sh_value_type"
                                  t-att-data-row-id="row_label.id"
                                  t-att-data-col-id="col_label.id"
@@ -39,7 +39,29 @@
                                     selected="selected">
                                 <t t-esc="answer.value_ans_sh_many2one"/>
                             </option>
-                       </select>
+                       </select>-->
+                        <div class="form-row js_cls_sh_many2one_wrapper">
+                              <div class="form-group col-lg-12">
+                                 <input t-attf-list="m2o_selection_#{col_label.id}"
+                                    class='form-control sh_m2o js_cls_sh_matrix_many2one_select text-uppercase' style="width:100%;"
+                                    type="text"
+                                    t-att-data-question-type="col_label.sh_value_type"
+                                    t-att-data-row-id="row_label.id"
+                                    t-att-data-col-id="col_label.id"
+                                    t-att-data-model_id="col_label.que_sh_many2one_model_id.id if col_label.que_sh_many2one_model_id else False"
+                                    t-att-data-model-name="col_label.que_sh_many2one_model_id.model if col_label.que_sh_many2one_model_id else False"
+                                    t-att-value="answer.value_ans_sh_many2one if answer else ''"
+                                    t-att-name="'%s_%s' % (question.id, row_label.id)">
+                                 <datalist t-attf-id="m2o_selection_#{col_label.id}"
+                                    t-att-data-model_id="col_label.que_sh_many2one_model_id.id if col_label.que_sh_many2one_model_id else False"
+                                    t-att-data-row-id="row_label.id"
+                                    t-att-data-col-id="col_label.id"
+                                    t-att-name="'%s_%s' % (question.id, col_label.id)" class="d-none js_cls_sh_many2one_select form-control">
+                                    <option value="">Select...</option>
+                                 </datalist>
+                                 </input>
+                              </div>
+	                    </div>
                     </t>
                     <t t-if="col_label.sh_value_type == 'numerical_box'">
                         <input
