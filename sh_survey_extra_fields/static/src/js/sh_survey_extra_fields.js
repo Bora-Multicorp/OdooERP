@@ -465,7 +465,8 @@ SurveyFormWidget.include({
                 case 'que_sh_many2one':
                     const MatrixTableSelect = $questionWrapper.find('table.o_survey_question_matrix');
                     if (questionRequired && MatrixTableSelect.length) {
-                        const $firstSelect = MatrixTableSelect.find('tbody tr:visible').first().find('select');
+                        //const $firstSelect = MatrixTableSelect.find('tbody tr:visible').first().find('select');
+                        const $firstSelect = MatrixTableSelect.find('tbody tr:visible').first().find('.js_cls_sh_matrix_many2one_select');
                         if (!$firstSelect.val() || $firstSelect.val().trim() === "") {
                             errors[questionId] = constrErrorMsg;
                             //$firstSelect.addClass('is-invalid');
