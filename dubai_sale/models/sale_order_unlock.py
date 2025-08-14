@@ -9,22 +9,6 @@ class SaleOrderUnlock(models.Model):
     existing_user_ids = fields.Many2many('res.users', compute='_compute_existing_users', store=True)
     
 
-
-    # @api.model
-    # def default_get(self, fields_list):
-    #     defaults = super().default_get(fields_list)
-    #     pi_unlock_approval_users = self.env['pi.unlock.approvers'].sudo().search([])
-    #     if pi_unlock_approval_users:
-    #         pi_unlock_approval_user_vals = []
-    #         for approval in pi_unlock_approval_users:
-    #             pi_unlock_approval_user_vals.append((0, 0, {
-    #                 'sequence': approval.sequence,
-    #                 'user_id': approval.user_id.id,
-    #             }))
-    #         defaults['approval_users_ids'] = pi_unlock_approval_user_vals
-    #     return defaults
-    
-
     @api.depends('approval_users_ids.user_id')
     def _compute_existing_users(self):
         for record in self:
@@ -64,7 +48,6 @@ class SaleOrderUnlock(models.Model):
 
 
     def action_unlock(self):
-
 
         pi_unlock_approval_users = self.env['pi.unlock.approvers'].sudo().search([])
         if not pi_unlock_approval_users:
@@ -106,9 +89,7 @@ class SaleOrderUnlock(models.Model):
 
             if not rec.assigned_to:
                 super(SaleOrderUnlock, self).action_unlock()
-
-            if not rec.assigned_to:
-                super(SaleOrderUnlock, self).action_unlock()
+                rec.state = 'draft'
 
     def _send_notification_on_rejection(self):
         

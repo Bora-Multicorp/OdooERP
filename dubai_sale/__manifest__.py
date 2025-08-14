@@ -32,7 +32,8 @@ Long description of module's purpose
         'views/account_move_inherited.xml',
         'views/add_documents.xml',
         'views/pod_in_stock_picking.xml',   
-        'views/quotation_to_pi.xml',     
+        'views/quotation_to_pi.xml',
+        'views/remove_tax_field_dubai.xml',
         'data/account_group_in_sales.xml'
     ],
     # only loaded in demonstration mode
