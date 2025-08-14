@@ -88,19 +88,6 @@ class CustomContact(models.Model):
     #                 raise ValidationError(_(
     #                     "Mobile number must be valid digits only (optionally starting with '+').\nInvalid Value: %s"
     #                 ) % rec.mobile)
-    @api.constrains('phone')
-    def _check_phone_number(self):
-        for rec in self:
-            if not rec.phone:
-                continue
-
-            # Check if the original input contains any non-digit characters.
-            if not rec.phone.isdigit():
-                raise ValidationError(_("Phone number must contain only digits."))
-
-            # Check if the length is exactly 10 digits.
-            if len(rec.phone) != 10:
-                raise ValidationError(_("Phone number must be exactly 10 digits."))
 
     @api.constrains('mobile', 'country_id')
     def _check_mobile_number_format(self):
@@ -121,6 +108,29 @@ class CustomContact(models.Model):
             if not re.fullmatch(r'\d{10}', cleaned_number):
                 raise ValidationError(
                     "Mobile number must be exactly 10 digits after removing the country code."
+                )
+
+
+
+    @api.constrains('phone', 'country_id')
+    def _check_phone_number_format(self):
+        for rec in self:
+            if not rec.phone:
+                continue
+
+            # 1) Remove all non-digits
+            cleaned_number = re.sub(r'\D', '', rec.phone)
+
+            # 2) Remove country code if present
+            if rec.country_id and rec.country_id.phone_code:
+                code = str(rec.country_id.phone_code)
+                if code and cleaned_number.startswith(code):
+                    cleaned_number = cleaned_number[len(code):]
+
+            # 3) Validate exactly 10 digits
+            if not re.fullmatch(r'\d{10}', cleaned_number):
+                raise ValidationError(
+                    _("Phone number must be exactly 10 digits after removing the country code.")
                 )
 
     @api.onchange('country_id')
