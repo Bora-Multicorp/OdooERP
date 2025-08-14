@@ -89,7 +89,6 @@ class CustomContact(models.Model):
     #                     "Mobile number must be valid digits only (optionally starting with '+').\nInvalid Value: %s"
     #                 ) % rec.mobile)
 
-
     @api.constrains('mobile', 'country_id')
     def _check_mobile_number_format(self):
         for rec in self:
@@ -109,6 +108,29 @@ class CustomContact(models.Model):
             if not re.fullmatch(r'\d{10}', cleaned_number):
                 raise ValidationError(
                     "Mobile number must be exactly 10 digits after removing the country code."
+                )
+
+
+
+    @api.constrains('phone', 'country_id')
+    def _check_phone_number_format(self):
+        for rec in self:
+            if not rec.phone:
+                continue
+
+            # 1) Remove all non-digits
+            cleaned_number = re.sub(r'\D', '', rec.phone)
+
+            # 2) Remove country code if present
+            if rec.country_id and rec.country_id.phone_code:
+                code = str(rec.country_id.phone_code)
+                if code and cleaned_number.startswith(code):
+                    cleaned_number = cleaned_number[len(code):]
+
+            # 3) Validate exactly 10 digits
+            if not re.fullmatch(r'\d{10}', cleaned_number):
+                raise ValidationError(
+                    _("Phone number must be exactly 10 digits after removing the country code.")
                 )
 
     @api.onchange('country_id')
@@ -333,4 +355,3 @@ class CustomContact(models.Model):
             future_partners = self.search([('deadline', '=', future_date)])
             for partner in future_partners:
                 schedule_kyc_activity(partner)
-

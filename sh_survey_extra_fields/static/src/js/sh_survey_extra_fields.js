@@ -37,7 +37,7 @@ SurveyFormWidget.include({
      * @private
      * @param {FileInputEvent} ev
      */
-    _onChangeFileInput: async function (ev) {
+     _onChangeFileInput: async function (ev) {
     var self = this;
     var $fileUpload = $(ev.currentTarget);
     if (!$fileUpload.length) return;
@@ -187,65 +187,63 @@ SurveyFormWidget.include({
     self.SH_FILE_DATA_DICTIONARY[dictKey].push(...FILE_LIST);
 },
 
-
-/**
-
         /**
          * If user types in Legal Name and radio "Yes" is selected, update Trade Name
          */
-        _onLegalNameChangeInit: function () {
-            const $legalNameInput = $('.js_question-wrapper')
-                .filter((_, el) => $(el).text().replace(/\s+/g, ' ').trim().includes("Business Legal Name"))
-                .find('input.o_survey_question_text_box');
+    _onLegalNameChangeInit: function () {
+        const $legalNameInput = $('.js_question-wrapper')
+            .filter((_, el) => $(el).text().replace(/\s+/g, ' ').trim().includes("Business Legal Name"))
+            .find('input.o_survey_question_text_box');
 
-            const $tradeNameInput = $('.js_question-wrapper')
-                .filter((_, el) => $(el).text().replace(/\s+/g, ' ').trim().includes("Business Trade Name"))
-                .find('input.o_survey_question_text_box');
+        const $tradeNameInput = $('.js_question-wrapper')
+            .filter((_, el) => $(el).text().replace(/\s+/g, ' ').trim().includes("Business Trade Name"))
+            .find('input.o_survey_question_text_box');
 
-            const $radioWrapper = $('.js_question-wrapper').filter((_, el) =>
-                $(el).text().replace(/\s+/g, ' ').trim().includes("If Trade Name is same as Legal Name")
+        const $radioWrapper = $('.js_question-wrapper').filter((_, el) =>
+            $(el).text().replace(/\s+/g, ' ').trim().includes("If Trade Name is same as Legal Name")
+        );
+
+        const matchPhrases = [
+            "Yes",
+            "Yes (If Trade Name is same as Legal Name)",
+        ];
+
+        const isYesSelected = function () {
+            const $selectedYesRadio = $radioWrapper.find('input[type="radio"]:checked');
+            const selectedAnswerLabel = $selectedYesRadio.closest('label').text().replace(/\s+/g, ' ').trim();
+            return matchPhrases.some((phrase) =>
+                selectedAnswerLabel.toLowerCase().includes(phrase.toLowerCase())
             );
+        };
 
-            const matchPhrases = [
-                "Yes",
-                "Yes (If Trade Name is same as Legal Name)",
-            ];
+        const updateTradeName = function () {
+            if (isYesSelected()) {
+                $tradeNameInput.val($legalNameInput.val()).prop('readonly', true);
+            } else {
+                $tradeNameInput.prop('readonly', false);
+            }
+        };
 
-            const isYesSelected = function () {
-                const $selectedYesRadio = $radioWrapper.find('input[type="radio"]:checked');
-                const selectedAnswerLabel = $selectedYesRadio.closest('label').text().replace(/\s+/g, ' ').trim();
-                return matchPhrases.some((phrase) =>
-                    selectedAnswerLabel.toLowerCase().includes(phrase.toLowerCase())
-                );
-            };
+        // Sync only when "Yes" is selected
+        $legalNameInput.on('input', function () {
+            if (isYesSelected()) {
+                $tradeNameInput.val($legalNameInput.val());
+            }
+        });
 
-            const updateTradeName = function () {
-                if (isYesSelected()) {
-                    $tradeNameInput.val($legalNameInput.val()).prop('readonly', true);
-                } else {
-                    $tradeNameInput.prop('readonly', false);
-                }
-            };
+        // Radio button changes
+        $radioWrapper.find('input[type="radio"]').on('change', function () {
+            if (isYesSelected()) {
+                $tradeNameInput.val($legalNameInput.val()).prop('readonly', true);
+            } else {
+                $tradeNameInput.prop('readonly', false).val('');
+            }
+        });
 
-            // Sync only when "Yes" is selected
-            $legalNameInput.on('input', function () {
-                if (isYesSelected()) {
-                    $tradeNameInput.val($legalNameInput.val());
-                }
-            });
+        // Init check
+        updateTradeName();
+    },
 
-            // Radio button changes
-            $radioWrapper.find('input[type="radio"]').on('change', function () {
-                if (isYesSelected()) {
-                    $tradeNameInput.val($legalNameInput.val()).prop('readonly', true);
-                } else {
-                    $tradeNameInput.prop('readonly', false).val('');
-                }
-            });
-
-            // Init check
-            updateTradeName();
-        },
 
     /**
      * Check if the URL is a valid or not.
@@ -467,7 +465,8 @@ SurveyFormWidget.include({
                 case 'que_sh_many2one':
                     const MatrixTableSelect = $questionWrapper.find('table.o_survey_question_matrix');
                     if (questionRequired && MatrixTableSelect.length) {
-                        const $firstSelect = MatrixTableSelect.find('tbody tr:visible').first().find('select');
+                        //const $firstSelect = MatrixTableSelect.find('tbody tr:visible').first().find('select');
+                        const $firstSelect = MatrixTableSelect.find('tbody tr:visible').first().find('.js_cls_sh_matrix_many2one_select');
                         if (!$firstSelect.val() || $firstSelect.val().trim() === "") {
                             errors[questionId] = constrErrorMsg;
                             //$firstSelect.addClass('is-invalid');
@@ -837,4 +836,3 @@ SurveyFormWidget.include({
     });
 },
 });
-

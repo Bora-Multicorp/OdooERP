@@ -166,7 +166,8 @@ $(document).off('click', '.delete-item-btn').on('click', '.delete-item-btn', fun
 SurveyFormWidget.include({
    events: Object.assign({}, SurveyFormWidget.prototype.events || {}, {
         'change input[type="radio"]': '_onChangeSelection',
-        "change .js_cls_sh_matrix_many2one_select": "_onChangeState",
+        //'change .js_cls_sh_matrix_many2one_select': '_onChangeState',
+        'input .js_cls_sh_matrix_many2one_select': '_onInputState',
     }),
 
     init: function () {
@@ -174,10 +175,33 @@ SurveyFormWidget.include({
         this._selectedConstBusValue = null;
     },
 
-    _onChangeState: function (ev) {
+    _onInputState: function (ev) {
+        var $input = $(ev.currentTarget);
+        var modelName = $input.data('model-name');
+        var rowId = $input.data('row-id');
+
+        if (modelName === 'res.country.state') {
+            // Find the country input for the same row
+            const $countryField = $(`input[data-model-name='res.country'][data-row-id='${rowId}']`);
+            console.log("$countryField", $countryField);
+
+            if ($countryField.length && !$countryField.val()) {
+                const $datalist = $("#" + $countryField.attr('list'));
+                const $indiaOption = $datalist.find("option[value='India']");
+                if ($indiaOption.length) {
+                    $countryField.val('India');
+                    console.log("India auto-selected");
+                }
+            }
+        }
+    },
+
+
+
+    /*_onChangeState: function (ev) {
         var $StateSelect = $(ev.currentTarget);
         var self = this;
-        if (!$(ev.currentTarget).val()) {
+        if (!$StateSelect.val() || !$StateSelect.find('option:selected').length) {
             return;
         }
         const rowId = $StateSelect.data('row-id');
@@ -189,7 +213,7 @@ SurveyFormWidget.include({
                 $countryField.val(indiaId).trigger('change');
             }
         }
-    },
+    },*/
 
     applyConditionalRequirements: function ($input) {
         if (!$input || !$input.length) {
@@ -322,7 +346,7 @@ SurveyFormWidget.include({
           });
     },
 
-    getMatrixMany2oneFieldData: async function () {
+  /*  getMatrixMany2oneFieldData: async function () {
         var self = this;
         var $m2oSelects = self.$target.find(".js_cls_sh_matrix_many2one_select");
         if ($m2oSelects.length) {
@@ -346,7 +370,46 @@ SurveyFormWidget.include({
             }
          });
         }
+    },*/
+
+    getMatrixMany2oneFieldData: function () {
+        var self = this;
+        var $m2oSelects = self.$target.find(".js_cls_sh_matrix_many2one_select");
+        if ($m2oSelects.length) {
+            $m2oSelects.each(function () {
+                var $input = $(this);
+                var ansValue = $input.val() || '';  // previous selected name
+                var model_id = $input.data("model_id");
+                var model_name = $input.data("model-name");
+                var domain = [];
+                // Only Indian states for res.country.state
+                if (model_name === "res.country.state") {
+                    domain = [['country_id.code', '=', 'IN']];
+                }
+                if (model_id) {
+                    rpc("/survey/get_matrix_many2one_field_data", {
+                        model_id: parseInt(model_id),
+                        domain: domain,
+                    }).then(function (data) {
+                        var $datalist = $("#" + $input.attr('list'));
+                        $datalist.empty();
+                        $datalist.append($('<option>', { value: '' })); // placeholder
+                        data.records.forEach(function (record) {
+                            var $opt = $("<option>")
+                                .attr("value", record.name)    // show name in input
+                                .attr("data-id", record.id);  // store id internally
+                            $datalist.append($opt);
+                            // Set input value only if previous answer exists
+                            if (record.name === ansValue) {
+                                $input.val(record.name);
+                            }
+                        });
+                    });
+                }
+            });
+        }
     },
+
 
     _prepareSubmitAnswersMatrix: function (params, $matrixTable) {
         var self = this;
