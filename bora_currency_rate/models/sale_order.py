@@ -1,4 +1,5 @@
 from odoo import api, fields, models
+from odoo.exceptions import UserError
 
 
 class SaleOrder(models.Model):
@@ -8,65 +9,62 @@ class SaleOrder(models.Model):
         string='Apply Manual Currency',
         help='Enable this to apply a manual currency rate to order lines.'
     )
-    rate = fields.Float(
+    manual_exchange_rate = fields.Float(
         string='Manual Exchange Rate',
-        help='Specify the manual currency rate for this order',
-        default=1
+        digits='Product Price',
+        help='Specify the manual currency rate for this order.',
+        default=0.0
     )
-    is_company = fields.Boolean(
-        string="Is Company",
-        compute='_compute_is_company',
+    is_bora_electronics = fields.Boolean(
+        string="Is Bora Electronics Company",
+        compute='_compute_is_bora_electronics',
         store=False
     )
 
     @api.depends('company_id')
-    def _compute_is_company(self):
+    def _compute_is_bora_electronics(self):
+        """
+        Check if the current company is 'Bora Electronics FZCO' or its child.
+        """
         for order in self:
-            user_company = self.env.user.company_id
-
-            # Check if the user's company name is "Company 1"
-            if user_company.name == "Bora Electronics FZCO":
-                order.is_company = True
-            # Or if the user's company is a child of "Company 1"
-            elif user_company.parent_id and user_company.parent_id.name == "Company 1":
-                order.is_company = True
+            user_company = order.company_id or self.env.user.company_id
+            if user_company.name == "Bora Electronics FZCO" or (user_company.parent_id and user_company.parent_id.name == "Bora Electronics FZCO"):
+                order.is_bora_electronics = True
             else:
-                order.is_company = False
+                order.is_bora_electronics = False
 
-    @api.onchange('rate', 'is_exchange')
-    def _onchange_rate(self):
-        """Recalculate unit price in UI when manual rate changes."""
-        self._apply_manual_rate()
-
-    @api.model
-    def create(self, vals):
-        order = super().create(vals)
-        order._apply_manual_rate()
-        return order
-
-    def write(self, vals):
-        res = super().write(vals)
-        self._apply_manual_rate()
-        return res
+    @api.onchange('is_exchange', 'manual_exchange_rate')
+    def _onchange_manual_rate_recalculate_prices(self):
+        """
+        Recalculate order line prices when the manual rate or flag changes.
+        This updates the price_unit field on the order lines for display.
+        """
 
 
-    def _apply_manual_rate(self):
-        """Apply manual exchange rate to order lines."""
-        for order in self:
-            if order.is_exchange and order.rate > 0:
-                for line in order.order_line:
-                    if line.product_id:
-                        base_price_aed = line.product_id.list_price
-                        line.price_unit = base_price_aed * order.rate
-            elif not order.is_exchange:
-                for line in order.order_line:
-                    if line.product_id:
-                        line.price_unit = line.product_id.list_price
+        for line in self.order_line:
+            product_price_in_currency = line.product_id.lst_price
 
+            if self.is_exchange and self.manual_exchange_rate > 0:
+                line.price_unit = product_price_in_currency / self.manual_exchange_rate
+            else:
+                line.price_unit = product_price_in_currency
 
-    def _get_currency_rate(self):
-        """Ensure manual rate is used in accounting/invoicing."""
+    def _get_manual_currency_rate(self):
         self.ensure_one()
-        if self.is_exchange and self.rate > 0:
-            return self.rate
-        return super()._get_currency_rate()
+        if self.is_exchange and self.manual_exchange_rate > 0:
+            return self.manual_exchange_rate
+        return super()._get_manual_currency_rate()
+
+
+class SaleOrderLine(models.Model):
+    _inherit = 'sale.order.line'
+
+    @api.depends('product_id', 'product_uom_qty', 'price_unit', 'order_id.pricelist_id', 'order_id.is_exchange', 'order_id.manual_exchange_rate')
+    def _compute_amount(self):
+        # First, let Odoo's standard method compute the amount
+        super()._compute_amount()
+
+        for line in self:
+            if line.order_id.is_exchange and line.order_id.manual_exchange_rate > 0:
+                product_price_aed = line.product_id.lst_price
+                line.price_unit = product_price_aed / line.order_id.manual_exchange_rate

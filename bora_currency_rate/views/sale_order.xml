@@ -1,17 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <record id="view_order_form_inherit_manual_rate" model="ir.ui.view">
-        <field name="name">sale.order.form.manual.rate</field>
+    <record id="sale_order_form_inherit_manual_rate" model="ir.ui.view">
+        <field name="name">sale.order.form.inherit.manual.rate</field>
         <field name="model">sale.order</field>
         <field name="inherit_id" ref="sale.view_order_form"/>
         <field name="arch" type="xml">
-            <xpath expr="//sheet/group" position="after">
-                <group string="Manual Exchange Rate">
-                    <field name="is_exchange"/>
-                    <field name="rate" invisible="not is_exchange"/>
-                </group>
-            </xpath>
             <xpath expr="//field[@name='payment_term_id']" position="after">
-                <field name="is_company" invisible="True"/>
+                <field name="is_bora_electronics" invisible="1"/>
+                <field name="is_exchange" invisible ="not is_bora_electronics"/>
+                <field name="manual_exchange_rate" invisible="not is_bora_electronics or not is_exchange "/>
             </xpath>
         </field>
     </record>
