@@ -7,8 +7,8 @@
         <field name="arch" type="xml">
             <xpath expr="//field[@name='payment_term_id']" position="after">
                 <field name="is_bora_electronics" invisible="1"/>
-                <field name="is_exchange" invisible ="not is_bora_electronics"/>
-                <field name="manual_exchange_rate" invisible="not is_bora_electronics or not is_exchange "/>
+                <field name="is_exchange" invisible ="not is_bora_electronics" readonly="locked"/>
+                <field name="manual_exchange_rate" invisible="not is_bora_electronics or not is_exchange" readonly="locked"/>
             </xpath>
         </field>
     </record>

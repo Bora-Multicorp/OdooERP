@@ -39,7 +39,8 @@ class SaleOrder(models.Model):
         Recalculate order line prices when the manual rate or flag changes.
         This updates the price_unit field on the order lines for display.
         """
-
+        if not self.is_exchange:
+            self.manual_exchange_rate = 0.0
 
         for line in self.order_line:
             product_price_in_currency = line.product_id.lst_price
