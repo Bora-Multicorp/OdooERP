@@ -88,7 +88,19 @@ class CustomContact(models.Model):
     #                 raise ValidationError(_(
     #                     "Mobile number must be valid digits only (optionally starting with '+').\nInvalid Value: %s"
     #                 ) % rec.mobile)
+    @api.constrains('phone')
+    def _check_phone_number(self):
+        for rec in self:
+            if not rec.phone:
+                continue
 
+            # Check if the original input contains any non-digit characters.
+            if not rec.phone.isdigit():
+                raise ValidationError(_("Phone number must contain only digits."))
+
+            # Check if the length is exactly 10 digits.
+            if len(rec.phone) != 10:
+                raise ValidationError(_("Phone number must be exactly 10 digits."))
 
     @api.constrains('mobile', 'country_id')
     def _check_mobile_number_format(self):
