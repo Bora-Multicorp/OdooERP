@@ -18,7 +18,7 @@ Bora Sale Operations
     'version': '0.1',
 
     # any module necessary for this one to work correctly
-    'depends': ['base', 'crm', 'purchase', 'sale', 'sale_stock', 'account'],
+    'depends': ['base', 'crm', 'sale_management', 'purchase', 'sale', 'sale_stock', 'account'],
 
     # always loaded
     'data': [
@@ -34,6 +34,9 @@ Bora Sale Operations
         'views/pod_in_stock_picking.xml',   
         'views/quotation_to_pi.xml',
         'views/remove_tax_field_dubai.xml',
+        'views/india_export_invoice.xml',
+        'views/IFSC_code.xml',
+        'views/customer_fields_for_india_sale_invoice.xml',
         'data/account_group_in_sales.xml'
     ],
     'application': True,

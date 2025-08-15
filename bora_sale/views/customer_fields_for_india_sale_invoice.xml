@@ -1,0 +1,16 @@
+<odoo>
+    <record id="custom_fields_for_india_sale_invoice" model="ir.ui.view">
+        <field name="name">custom.fields.for.india.sale.invoice</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_move_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='partner_shipping_id']" position="after">
+                <field name="is_indian_company" invisible="1"/>
+                <field name="vessel_or_flight_no" invisible="not is_indian_company"/>
+                <field name="place_of_recipt_by_shipper" invisible="not is_indian_company"/>
+                <field name="city_and_port_of_loading" invisible="not is_indian_company"/>
+                <field name="city_and_port_of_discharge" invisible="not is_indian_company"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>
