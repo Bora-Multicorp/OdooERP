@@ -4,8 +4,6 @@ from odoo import models, fields
 class AccountMove(models.Model):
     _inherit = "account.move"
 
-
-    dispatch_id = fields.Char(string="Despatch Through")
     delivery_note_date = fields.Date(string="Delivery Note Date")
     delivery_note = fields.Char(string="Delivery Note")
     despatch_doc_no = fields.Char(string="Dispatch Document no.")

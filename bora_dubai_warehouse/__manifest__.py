@@ -13,6 +13,7 @@
     'data': [
         'data/freezone_trade.xml',
         'data/purchase_order_confirm.xml',
+        'views/purchase_order.xml',
         'views/stock_warehouse.xml',
         'views/sale_order.xml'
     ],
