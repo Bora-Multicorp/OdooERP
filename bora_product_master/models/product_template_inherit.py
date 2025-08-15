@@ -29,10 +29,10 @@ class ProductTemplateInherit(models.Model):
 
 
 
-    categ_id = fields.Many2one(
-        'product.category', 'Product Category',
-        change_default=True, default=None, group_expand='_read_group_categ_id',
-        required=True, help="Select the most appropriate category for this electronic device.")
+    # categ_id = fields.Many2one(
+    #     'product.category', 'Product Category',
+    #     change_default=True, default=None, group_expand='_read_group_categ_id',
+    #     required=True, help="Select the most appropriate category for this electronic device.")
     
     company_ids = fields.Many2many('res.company', string='Companies', required=True, readonly=False,
         default=lambda self: self.env.company, help="This product will appear only for users belonging to the chosen companies.")
