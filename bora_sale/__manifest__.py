@@ -34,7 +34,7 @@ Bora Sale Operations
         'views/pod_in_stock_picking.xml',   
         'views/quotation_to_pi.xml',
         'views/remove_tax_field_dubai.xml',
-        # 'views/india_export_invoice.xml',
+        'views/india_export_invoice.xml',
         'views/IFSC_code.xml',
         'views/customer_fields_for_india_sale_invoice.xml',
         'data/account_group_in_sales.xml'
