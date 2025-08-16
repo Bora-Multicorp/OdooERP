@@ -2,213 +2,253 @@
 <odoo>
     <template id="report_saleorder_document_befpo_inherit" inherit_id="sale.report_saleorder_document">
         <xpath expr="//t[@t-call='web.external_layout']" position="replace">
-                <div class="page" style="font-size:11px; font-family:Arial, sans-serif;padding-top:0;">
-                    <h2 style="text-align:center; font-weight:bold; text-transform:uppercase; margin-bottom:12px; margin-top:0;">
-                        Proforma Invoice
-                    </h2>
+            <div class="page" style="font-size:11px; font-family:Arial, sans-serif;padding-top:0;">
+                <h2 style="text-align:center; font-weight:bold; text-transform:uppercase; margin-bottom:12px; margin-top:0;">
+                    Proforma Invoice
+                </h2>
 
-                    <table style="width:100%; border-collapse:collapse; margin-bottom:12px;">
-                        <tr>
-                            <td style="width:50%; vertical-align:top; padding:0; border:1px solid black;">
-                                <div style="padding:5px;border-bottom:1px solid black;">
-                                    <div t-field="doc.company_id.partner_id"
-                                         t-options='{"widget":"contact","fields":["name","address"],"no_marker":True}'/>
-                                    <t t-if="doc.company_id.vat">
-                                        TRN :
-                                        <span t-field="doc.company_id.vat"/>
-                                    </t>
-                                </div>
-                                <div style="padding:5px; border-bottom:1px solid black;">
-                                    <strong>Consignee</strong>
+                <table style="width:100%; border-collapse:collapse; margin-bottom:0;">
+                    <tr>
+                        <td style="width:50%; vertical-align:top; padding:0; border:1px solid black;">
+                            <div style="padding:5px;border-bottom:1px solid black;">
+                                <div t-field="doc.company_id.partner_id"
+                                     t-options='{"widget":"contact","fields":["name","address"],"no_marker":True}'/>
+                                <t t-if="doc.company_id.vat">
+                                    TRN :
+                                    <span t-field="doc.company_id.vat"/>
+                                </t>
+                            </div>
+                            <div style="padding:5px; border-bottom:1px solid black;">
+                                <strong>Consignee</strong>
+                                <br/>
+                                <p>
+                                    <strong>Captains Freight Services FZCO</strong>
                                     <br/>
-                                    <p>
-                                        <strong>Captains Freight Services FZCO</strong>
-                                        <br/>
-                                        D-15, Dubai Airport Freezone, Dubai, U.A.E.
-                                    </p>
+                                    D-15, Dubai Airport Freezone, Dubai, U.A.E.
+                                </p>
+                            </div>
+                            <div style="padding:5px;">
+                                <strong>Buyer</strong>
+                                <br/>
+                                <div t-field="doc.partner_invoice_id"
+                                     t-options='{"widget":"contact","fields":["name","address","phone","email"],"no_marker":True}'/>
+                                <t t-if="doc.partner_invoice_id.vat">
+                                    TRN :
+                                    <span t-field="doc.partner_invoice_id.vat"/>
+                                </t>
+                                <div t-if="doc.partner_invoice_id.email">E-Mail :
+                                    <span t-field="doc.partner_invoice_id.email"/>
                                 </div>
-                                <div style="padding:5px; border-bottom:1px solid black;">
-                                    <strong>Buyer</strong>
-                                    <br/>
-                                    <div t-field="doc.partner_invoice_id"
-                                         t-options='{"widget":"contact","fields":["name","address","phone","email"],"no_marker":True}'/>
-                                    <t t-if="doc.partner_invoice_id.vat">
-                                        TRN :
-                                        <span t-field="doc.partner_invoice_id.vat"/>
-                                    </t>
-                                    <div t-if="doc.partner_invoice_id.email">E-Mail :
-                                        <span t-field="doc.partner_invoice_id.email"/>
-                                    </div>
-                                </div>
-                            </td>
-
-                            <td style="width:50%; vertical-align:top; padding:0; border:1px solid black;">
-                                <table style="width:100%; border-collapse:collapse;">
-                                    <tr>
-                                        <td style="padding: 5px; border-bottom: 1px solid black;">
-                                            <table style="width:100%; border-collapse:collapse;">
-                                                <tr>
-                                                    <td style="width:50%; vertical-align:top; text-align:left; padding:0; border-right:1px solid black;">
-                                                        <strong>Voucher No.</strong>
-                                                    </td>
-                                                    <td style="width:50%; vertical-align:top; text-align:left; padding:0;">
-                                                        <strong>Dated</strong>
-                                                    </td>
-                                                </tr>
-                                                <tr>
-                                                    <td style="width:50%; vertical-align:top; text-align:left; padding:0; border-right:1px solid black;">
-                                                        <span t-field="doc.voucher_no"/>
-                                                    </td>
-                                                    <td style="width:50%; vertical-align:top; text-align:left; padding:0;">
-                                                        <span t-field="doc.date_order" t-options='{"widget":"date"}'/>
-                                                    </td>
-                                                </tr>
-                                            </table>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td colspan="4" style="padding:4px; border-bottom:1px solid black;">
-                                            <strong>Mode/Terms of Payment</strong>
-                                            <br/>
-                                            <span t-esc="doc.payment_term_id.name or ''"/>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td style="padding:4px; width:45%; border-right:1px solid black; border-bottom:1px solid black;">
-                                            <strong>Supplier's Ref./Order No.</strong>
-                                            <br/>
-                                            <span t-field="doc.buyer_ref_no"/>
-                                        </td>
-                                        <td style="padding:4px; width:45%; border-right:1px solid black; border-bottom:1px solid black;">
-                                            <strong>Other Reference(s)</strong>
-                                            <br/>
-                                            <span t-field="doc.client_order_ref"/>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td style="padding:4px; width:45%; border-right:1px solid black; border-bottom:1px solid black;">
-                                            <strong>Despatch through</strong>
-                                            <br/>
-                                            <span t-esc="doc.dispatch_id"/>
-                                        </td>
-                                        <td style="padding:4px; width:45%; border-right:1px solid black; border-bottom:1px solid black;">
-                                            <strong>Destination</strong>
-                                            <br/>
-                                            <span t-field="doc.partner_shipping_id"
-                                                  t-options='{"widget":"contact","fields":["name","address","phone","email"],"no_marker":True}'/>
-                                        </td>
-
-                                    </tr>
-                                    <tr>
-                                        <td colspan="4" style="padding:4px;">
-                                            <strong>Terms of Delivery</strong>
-                                            <br/>
-                                            <span t-esc="doc.note"/>
-                                        </td>
-                                    </tr>
-                                </table>
-                            </td>
-                        </tr>
-                    </table>
-
-                    <table style="width:100%; border:1px solid black; border-collapse:collapse; font-size:11px;">
-                        <thead>
-                            <tr style="background-color:#f0f0f0;">
-                                <th style="border-right:1px solid black; padding:4px; width:5%;">Sl No.</th>
-                                <th style="border-right:1px solid black; padding:4px;">Description of Goods</th>
-                                <th style="border-right:1px solid black; padding:4px; text-align:right;">Quantity</th>
-                                <th style="border-right:1px solid black; padding:4px; text-align:right;">Rate</th>
-                                <th style="border-right:1px solid black; padding:4px;">per</th>
-                                <th style="border-right:1px solid black; padding:4px; text-align:right;">Amount</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <t t-foreach="enumerate(doc.order_line, start=1)" t-as="row">
+                            </div>
+                        </td>
+                        <td style="width:50%; vertical-align:top; padding:0; border:1px solid black;">
+                            <table style="width:100%; vertical-align:top; border-collapse:collapse;">
                                 <tr>
-                                    <td style="border-right:1px solid black; padding:4px; text-align:center;">
-                                        <t t-esc="row[0]"/>
-                                    </td>
-                                    <td style="border-right:1px solid black; padding:4px;">
-                                        <span t-field="row[1].name"/>
+                                    <td style="padding: 5px; border-bottom: 1px solid black; border-right: 1px solid black; width:50%;">
+                                        <strong>Voucher No.</strong>
                                         <br/>
-                                        <span style="font-size:9px; font-style:italic;">Made in
-                                        </span>
+                                        <span t-field="doc.voucher_no"/>
                                     </td>
-                                    <td style="border-right:1px solid black; padding:4px; text-align:right;">
-                                        <t t-esc="'%0.0f pcs' % row[1].product_uom_qty"/>
-                                    </td>
-                                    <td style="border-right:1px solid black; padding:4px; text-align:right;">
-                                        <t t-esc="'%0.2f' % doc.company_id.currency_id.round(row[1].price_unit)"/>
-                                    </td>
-                                    <td style="border-right:1px solid black; padding:4px;">
-                                        <t t-esc="row[1].product_uom_qty > 1 and 'pcs' or 'pc'"/>
-                                    </td>
-                                    <td style="border-right:1px solid black; padding:4px; text-align:right;">
-                                        <t t-esc="'%0.2f' % doc.company_id.currency_id.round(row[1].price_subtotal)"/>
+                                    <td style="padding: 5px; border-bottom: 1px solid black; width:50%;">
+                                        <strong>Dated</strong>
+                                        <br/>
+                                        <span t-field="doc.date_order" t-options='{"widget":"date"}'/>
                                     </td>
                                 </tr>
-                            </t>
-                        </tbody>
-                    </table>
+                                <tr>
+                                    <td colspan="2" style="padding:4px; border-bottom:1px solid black;">
+                                        <strong>Mode/Terms of Payment</strong>
+                                        <br/>
+                                        <span t-esc="doc.payment_term_id.name or ''"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:4px; border-right:1px solid black; border-bottom:1px solid black;">
+                                        <strong>Supplier's Ref./Order No.</strong>
+                                        <br/>
+                                        <span t-field="doc.buyer_ref_no"/>
+                                    </td>
+                                    <td style="padding:4px; border-bottom:1px solid black;">
+                                        <strong>Other Reference(s)</strong>
+                                        <br/>
+                                        <span t-field="doc.client_order_ref"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:4px; border-right:1px solid black; border-bottom:1px solid black;">
+                                        <strong>Despatch through</strong>
+                                        <br/>
+                                        <span t-esc="doc.dispatch_id"/>
+                                    </td>
+                                    <td style="padding:4px; border-bottom:1px solid black;">
+                                        <strong>Destination</strong>
+                                        <br/>
+                                        <span t-esc="doc.warehouse_id.name"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2" style="padding:4px;">
+                                        <strong>Terms of Delivery</strong>
+                                        <br/>
+                                        <span t-esc="doc.note"/>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
 
-                    <br/>
-
-                    <table style="width:100%; border-collapse:collapse; margin-top:12px;">
-                        <tr>
-                            <td style="width:50%; vertical-align:top;">
-                                <div style="font-size:11px; text-align:left;">
-                                    <strong>Amount Chargeable (in words):</strong>
-                                    <span t-esc="doc.currency_id.amount_to_text(doc.amount_total)"/>
-                                </div>
+                <table style="width:100%; border:1px solid black; border-collapse:collapse; font-size:11px; margin-bottom:0;">
+                    <thead>
+                        <tr style="background-color:#f0f0f0;">
+                            <th style="border-right:1px solid black; padding:4px; width:5%;">Sl No.</th>
+                            <th style="border-right:1px solid black; padding:4px;">Description of Goods</th>
+                            <th style="border-right:1px solid black; padding:4px; text-align:right;">Quantity</th>
+                            <th style="border-right:1px solid black; padding:4px; text-align:right;">Rate</th>
+                            <th style="border-right:1px solid black; padding:4px;">per</th>
+                            <th style="border-right:1px solid black; padding:4px; text-align:right;">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <t t-foreach="enumerate(doc.order_line, start=1)" t-as="row">
+                            <tr>
+                                <td style="border-right:1px solid black; padding:4px; text-align:center;">
+                                    <t t-esc="row[0]"/>
+                                </td>
+                                <td style="border-right:1px solid black; padding:4px;">
+                                    <span t-field="row[1].name"/>
+                                    <br/>
+                                    <span style="font-size:9px; font-style:italic;">Made in
+                                        <span t-field="row[1].product_id.made_country"/>
+                                    </span>
+                                </td>
+                                <td style="border-right:1px solid black; padding:4px; text-align:right;">
+                                    <t t-esc="'%0.0f pcs' % row[1].product_uom_qty"/>
+                                </td>
+                                <td style="border-right:1px solid black; padding:4px; text-align:right;">
+                                    <span t-esc="doc.currency_id.symbol"/>
+                                    <span t-esc="'%0.2f' % doc.company_id.currency_id.round(row[1].price_unit)"/>
+                                </td>
+                                <td style="border-right:1px solid black; padding:4px;">
+                                    <t t-esc="row[1].product_uom_qty > 1 and 'pcs' or 'pc'"/>
+                                </td>
+                                <td style="border-right:1px solid black; padding:4px; text-align:right;">
+                                    <span t-esc="doc.currency_id.symbol"/>
+                                    <span t-esc="'%0.2f' % doc.company_id.currency_id.round(row[1].price_subtotal)"/>
+                                </td>
+                            </tr>
+                        </t>
+                        <tr style="border-top:1px solid black;">
+                            <td colspan="2"
+                                style="padding:4px; text-align:right; border-left:1px solid black;  border-right:1px solid black;  font-weight:bold;">
+                                Total
                             </td>
-                            <td style="width:50%; vertical-align:top; text-align:right;">
-                                <div style="font-size:11px;">
-                                    <strong>Total Invoice Amount:</strong>
-                                    <span t-field="doc.amount_total"/>
-                                </div>
+                            <td style="padding:4px; text-align:right; border-left:1px solid black; border-right:1px solid black; font-weight:bold;">
+                                <span t-esc="'%0.0f' % sum(line.product_uom_qty for line in doc.order_line)"/>
+                                pcs
+                            </td>
+                            <td style="padding:4px;border-left:1px solid black; border-right:1px solid black;"></td>
+                            <td style="padding:4px;border-left:1px solid black; border-right:1px solid black;"></td>
+                            <td style="padding:4px; text-align:right; font-weight:bold; border-right:1px solid black; border-left:1px solid black;">
+                                <span t-esc="doc.currency_id.symbol"/>
+                                <span t-esc="'%0.2f' % doc.amount_total"/>
                             </td>
                         </tr>
-                    </table>
-                    <div style="margin-top:20px;">
-                        <div style="font-size:11px; text-align:left;">
-                            <h4>
-                                <span>Company's Bank Details</span>
-                            </h4>
-                            <div t-if="doc.company_id.partner_id.bank_ids">
-                                <ul class="list-unstyled">
-                                    <li t-foreach="doc.company_id.partner_id.bank_ids" t-as="bank">
-                                        <p>
-                                            <strong>Bank Name:</strong>
-                                            <span t-field="bank.bank_id.name"/>
-                                            <br/>
-                                            <strong>A/c No.:</strong>
-                                            <span t-field="bank.acc_number"/>
-                                            <br/>
-                                            <t t-if="bank.acc_type == 'iban'">
-                                                <strong>IBAN:</strong>
-                                                <span t-field="bank.acc_number"/>
-                                                <br/>
-                                            </t>
-                                            <strong>SWIFT Code:</strong>
-                                            <span t-field="bank.bank_id.bic"/>
-                                        </p>
-                                    </li>
-                                </ul>
+                        <tr style="border-top:1px solid black;">
+                            <td colspan="6" style="padding:4px; text-align:right; font-weight:bold;">
+                                Total Invoice Amount in AED
+                                <span t-esc="doc.currency_id.symbol"/>
+                                <span t-esc="'%0.2f' % doc.amount_total"/>
+                                @ AED
+                                <span t-esc="'%0.3f' % (doc.company_id.currency_id._convert(1, doc.currency_id, doc.company_id, doc.date_order))"/>
+                                /$ = AED
+                                <span t-esc="'%0.2f' % doc.currency_id._convert(doc.amount_total, doc.company_id.currency_id, doc.company_id, doc.date_order)"/>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <table style="width:100%; border-collapse:collapse; margin-top:0;">
+                    <tr>
+                        <td style="width:60%; vertical-align:top; border:1px solid black; padding:5px; border-right:none;">
+                            <div style="font-size:11px; text-align:left;">
+                                <strong>Amount Chargeable (in words):</strong>
+                                <br/>
+                                <span t-esc="doc.company_id.currency_id.amount_to_text(doc.currency_id._convert(doc.amount_total, doc.company_id.currency_id, doc.company_id, doc.date_order))"/>
                             </div>
-                        </div>
-                        <div style="font-size:11px; text-align:right; margin-top:20px;">
-                            for
-                            <span t-field="doc.company_id.name"/>
+                        </td>
+                        <td style="width:40%; vertical-align:top; border:1px solid black; padding:5px; border-left:none;">
+                            <div style="text-align:right; font-size:9px; font-style:italic;">E. &amp; O.E</div>
                             <br/>
-                            <br/>
-                            <br/>
-                            Authorised Signatory
-                        </div>
-                    </div>
-                    <div style="font-size:9px; text-align:center; margin-top:20px;">
-                        This is a Computer Generated Document
-                    </div>
-                </div>
+                            <div style="font-size:10px; text-align:left;">
+                                <strong>Company's Bank Details</strong>
+                            </div>
+                            <div t-if="doc.company_id.partner_id.bank_ids">
+                                <t t-foreach="doc.company_id.partner_id.bank_ids" t-as="bank">
+                                    <table style="width:100%; font-size:10px;">
+                                        <tr>
+                                            <td style="width:30%;">
+                                                <strong>Bank Name</strong>
+                                            </td>
+                                            <td style="width:70%;">:
+                                                <span t-field="bank.bank_id.name"/>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td style="width:30%;">
+                                                <strong>A/c No.</strong>
+                                            </td>
+                                            <td style="width:70%;">:
+                                                <span t-field="bank.acc_number"/>
+                                            </td>
+                                        </tr>
+                                        <t t-if="bank.acc_type == 'iban'">
+                                            <tr>
+                                                <td style="width:30%;">
+                                                    <strong>IBAN</strong>
+                                                </td>
+                                                <td style="width:70%;">:
+                                                    <span t-field="bank.acc_number"/>
+                                                </td>
+                                            </tr>
+                                        </t>
+                                        <tr>
+                                            <td style="width:30%;">
+                                                <strong>SWIFT Code</strong>
+                                            </td>
+                                            <td style="width:70%;">:
+                                                <span t-field="bank.bank_id.bic"/>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </t>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+
+
+                <table style="width:100%; margin-top:0; border-collapse: collapse; border:1px solid black; font-size:10px;">
+                    <tr>
+                        <td style="height:60px; vertical-align:bottom; padding:5px;">
+                            <div style="float:right; width:50%; text-align:right; box-sizing:border-box; padding-left:5px;">
+                                for
+                                <strong>
+                                    <span t-field="doc.company_id.name"/>
+                                </strong>
+                                <br/>
+                                <br/>
+                                Authorised Signatory
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div style="font-size:11px; text-align:center; margin-top:20px;">
+                SUBJECT TO DUBAI, U.A.E. JURISDICTION
+                <br/>
+                This is a Computer Generated Document
+            </div>
         </xpath>
     </template>
 </odoo>

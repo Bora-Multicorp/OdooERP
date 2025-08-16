@@ -1,7 +1,9 @@
-from odoo import models, api
+from odoo import models, api, fields
 
 class PurchaseOrder(models.Model):
     _inherit = 'purchase.order'
+
+    backdate_po = fields.Datetime(string="Purchase Order Date")
 
     def _send_wh_notification(self):
         for order in self:

@@ -28,7 +28,6 @@ class ProductTemplateInherit(models.Model):
     # made_in_india = fields.Boolean(string="Made in India", help="Check if the product is made in India")
 
 
-
     
     company_ids = fields.Many2many('res.company', string='Companies', required=True, readonly=False,
         default=lambda self: self.env.company, help="This product will appear only for users belonging to the chosen companies.")
