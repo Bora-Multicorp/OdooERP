@@ -10,7 +10,7 @@
         "views/account_move.xml",
         "views/sale_order.xml",
         "report/sale_report.xml",
-        "report/sale_invoice.xml"
+        # "report/sale_invoice.xml"
     ],
 
     "installable": True,
