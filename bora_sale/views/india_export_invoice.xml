@@ -364,7 +364,7 @@
                             </td> -->
 
                             <!-- RIGHT: Invoice meta -->
-                            <td style="width:50%; vertical-align:top; border:1px solid black; padding:0;">
+                            <!-- <td style="width:50%; vertical-align:top; border:1px solid black; padding:0;">
                                 <table style="width:100%; border-collapse:collapse;">
                                     <tr>
                                         <td style="padding:5px; border-bottom:1px solid black; border-right:1px solid black;">
@@ -448,7 +448,7 @@
                                         </td>
                                     </tr>
                                 </table>
-                            </td>
+                            </td> -->
                         </tr>
                     </table>
 
@@ -491,7 +491,7 @@
                     </table> -->
 
                     <!-- FOOTER -->
-                    <table style="width:100%; margin-top:12px;">
+                    <!-- <table style="width:100%; margin-top:12px;">
                         <tr>
                             <td style="width:50%; vertical-align:top;">
                                 <strong>Amount Chargeable (in words):</strong>
@@ -502,7 +502,7 @@
                                 <span t-field="o.amount_total"/>
                             </td>
                         </tr>
-                    </table>
+                    </table> -->
 
                     <div style="margin-top:20px;">
                         <h4>Company's Bank Details</h4>
