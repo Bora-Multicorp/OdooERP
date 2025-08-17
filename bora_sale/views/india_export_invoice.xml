@@ -504,7 +504,7 @@
                         </tr>
                     </table> -->
 
-                    <div style="margin-top:20px;">
+                    <!-- <div style="margin-top:20px;">
                         <h4>Company's Bank Details</h4>
                         <div t-if="o.company_id.partner_id.bank_ids">
                             <t t-foreach="o.company_id.partner_id.bank_ids" t-as="bank">
@@ -533,11 +533,11 @@
                             <br/>
                             Authorised Signatory
                         </div>
-                    </div>
+                    </div> -->
 
-                    <div style="font-size:9px; text-align:center; margin-top:20px;">
+                    <!-- <div style="font-size:9px; text-align:center; margin-top:20px;">
                         This is a Computer Generated Document
-                    </div>
+                    </div> -->
                 </div>
             </t>
 
