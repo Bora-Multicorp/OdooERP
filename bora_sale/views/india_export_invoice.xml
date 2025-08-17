@@ -4,6 +4,7 @@
     <template id="report_saleorder_document_befpo_inherit2" inherit_id="account.report_invoice_document">
         <xpath expr="//t[@t-call='web.external_layout']" position="replace">
 
+            <t t-if="o.company_id.partner_id.country_id.code == 'IN'">
                 <div class="page" style="font-size:11px; font-family:Arial, sans-serif; max-width: 966px; margin: auto;">
                     <div style="text-align: center; font-weight: bold; font-size: 14px;">EXPORT INVOICE</div>
                     <p style="text-align:center; margin:0;">(SUPPLY MEANT FOR EXPORT/SUPPLY TO SEZ UNIT OR SEZ DEVELOPER FOR AUTHORISED OPERATIONS ON PAYMENT OF IGST)</p>
@@ -320,6 +321,225 @@
                         </table>
 
                 </div>
+            </t>
+
+            <t t-else="">
+                <div class="page" style="font-size:11px; font-family:Arial, sans-serif; padding-top:0;">
+                    <t t-set="sale_order"
+                    t-value="o.invoice_line_ids and o.invoice_line_ids[0].sale_line_ids and o.invoice_line_ids[0].sale_line_ids[0].order_id or False"/>
+                    <h2 style="text-align:center; font-weight:bold; text-transform:uppercase; margin-bottom:12px; margin-top:0;">
+                        Commercial Invoice
+                    </h2>
+
+                    <!-- HEADER TABLE -->
+                    <table style="width:100%; border-collapse:collapse; margin-bottom:12px;">
+                        <tr>
+                            <!-- LEFT: Company, Consignee, Buyer -->
+                            <td style="width:50%; vertical-align:top; border:1px solid black; padding:0;">
+                                <div style="padding:5px; border-bottom:1px solid black;">
+                                    <div t-field="o.company_id.partner_id"
+                                        t-options='{"widget":"contact","fields":["name","address"],"no_marker":True}'/>
+                                    <t t-if="o.company_id.vat">TRN:
+                                        <span t-field="o.company_id.vat"/>
+                                    </t>
+                                </div>
+                                <div style="padding:5px; border-bottom:1px solid black;">
+                                    <strong>Consignee</strong>
+                                    <br/>
+                                    <p><strong>Captains Freight Services FZCO</strong> <br/>
+                                        D-15, Dubai Airport Freezone, Dubai, U.A.E.</p>
+                                </div>
+                                <div style="padding:5px; border-bottom:1px solid black;">
+                                    <strong>Buyer</strong>
+                                    <br/>
+                                    <div t-field="o.partner_id"
+                                        t-options='{"widget":"contact","fields":["name","address","phone","email"],"no_marker":True}'/>
+                                    <t t-if="o.partner_id.vat">TRN:
+                                        <span t-field="o.partner_id.vat"/>
+                                    </t>
+                                    <div t-if="o.partner_id.email">E-Mail:
+                                        <span t-field="o.partner_id.email"/>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <!-- RIGHT: Invoice meta -->
+                            <td style="width:50%; vertical-align:top; border:1px solid black; padding:0;">
+                                <table style="width:100%; border-collapse:collapse;">
+                                    <tr>
+                                        <td style="padding:5px; border-bottom:1px solid black; border-right:1px solid black;">
+                                            <strong>Voucher No.</strong>
+                                            <br/>
+                                            <span t-esc="sale_order and sale_order.voucher_no or ''"/>
+                                        </td>
+                                        <td style="padding:5px; border-bottom:1px solid black;">
+                                            <strong>Dated</strong>
+                                            <br/>
+                                            <span t-field="o.invoice_date" t-options='{"widget":"date"}'/>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding:5px;  border-right:1px solid black;; border-bottom:1px solid black;">
+                                            <strong>Delivery Note</strong>
+                                            <br/>
+                                            <span t-field="o.delivery_note"/>
+                                        </td>
+                                        <td style="padding:5px; border-bottom:1px solid black;">
+                                            <strong>Mode/Terms of Payment</strong>
+                                            <br/>
+                                            <span t-esc="o.invoice_payment_term_id.name or ''"/>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding:5px; border-right:1px solid black; border-bottom:1px solid black;">
+                                            <strong>Supplier's Ref.</strong>
+                                            <br/>
+                                            <span t-field="o.invoice_origin"/>
+                                        </td>
+                                        <td style="padding:5px; border-bottom:1px solid black;">
+                                            <strong>Other Reference(s)</strong>
+                                            <br/>
+                                            <span t-field="o.ref"/>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding:5px; border-right:1px solid black; border-bottom:1px solid black;">
+                                            <strong>Buyer Order No.</strong>
+                                            <br/>
+                                            <span t-esc="sale_order and sale_order.buyer_ref_no or ''"/>
+                                        </td>
+                                        <td style="padding:5px; border-bottom:1px solid black;">
+                                            <strong>Dated</strong>
+                                            <br/>
+                                            <span t-field="o.buyer_date"/>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding:5px; border-right:1px solid black; border-bottom:1px solid black;">
+                                            <strong>Despatch Document No.</strong>
+                                            <br/>
+                                            <span t-field="o.despatch_doc_no"/>
+                                        </td>
+                                        <td style="padding:5px; border-bottom:1px solid black;">
+                                            <strong>Delivery Note Date</strong>
+                                            <br/>
+                                            <span t-field="o.delivery_note_date" t-options='{"widget":"date"}'/>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding:5px; border-right:1px solid black; border-bottom:1px solid black;">
+                                            <strong>Despatch Through</strong>
+                                            <br/>
+                                            <span t-field="o.dispatch_id"/>
+                                        </td>
+                                        <td style="padding:5px; border-bottom:1px solid black;">
+                                            <strong>Destination</strong>
+                                            <br/>
+                                            <div t-field="o.partner_shipping_id"
+                                        t-options='{"widget":"contact","fields":["name","address","phone","email"],"no_marker":True}'/>
+
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="2" style="padding:5px;">
+                                            <strong>Terms of Delivery</strong>
+                                            <br/>
+                                            <span t-field="o.narration"/>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <!-- PRODUCT TABLE -->
+                    <table style="width:100%; border:1px solid black; border-collapse:collapse; font-size:11px;">
+                        <thead>
+                            <tr style="background-color:#f0f0f0;">
+                                <th style="border-right:1px solid black; padding:4px; width:5%;">Sl No.</th>
+                                <th style="border-right:1px solid black; padding:4px;">Description of Goods</th>
+                                <th style="border-right:1px solid black; padding:4px; text-align:right;">Quantity</th>
+                                <th style="border-right:1px solid black; padding:4px; text-align:right;">Rate</th>
+                                <th style="border-right:1px solid black; padding:4px;">per</th>
+                                <th style="padding:4px; text-align:right;">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-foreach="enumerate(o.invoice_line_ids, start=1)" t-as="row">
+                                <tr>
+                                    <td style="border-right:1px solid black; text-align:center; padding:4px;">
+                                        <t t-esc="row[0]"/>
+                                    </td>
+                                    <td style="border-right:1px solid black; padding:4px;">
+                                        <span t-field="row[1].name"/>
+                                    </td>
+                                    <td style="border-right:1px solid black; padding:4px; text-align:right;">
+                                        <t t-esc="'%0.0f pcs' % row[1].quantity"/>
+                                    </td>
+                                    <td style="border-right:1px solid black; padding:4px; text-align:right;">
+                                        <t t-esc="'%0.2f' % row[1].price_unit"/>
+                                    </td>
+                                    <td style="border-right:1px solid black; padding:4px;">
+                                        <t t-esc="row[1].quantity > 1 and 'pcs' or 'pc'"/>
+                                    </td>
+                                    <td style="padding:4px; text-align:right;">
+                                        <t t-esc="'%0.2f' % row[1].price_subtotal"/>
+                                    </td>
+                                </tr>
+                            </t>
+                        </tbody>
+                    </table>
+
+                    <!-- FOOTER -->
+                    <table style="width:100%; margin-top:12px;">
+                        <tr>
+                            <td style="width:50%; vertical-align:top;">
+                                <strong>Amount Chargeable (in words):</strong>
+                                <span t-esc="o.currency_id.amount_to_text(o.amount_total)"/>
+                            </td>
+                            <td style="width:50%; vertical-align:top; text-align:right;">
+                                <strong>Total Invoice Amount:</strong>
+                                <span t-field="o.amount_total"/>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <div style="margin-top:20px;">
+                        <h4>Company's Bank Details</h4>
+                        <div t-if="o.company_id.partner_id.bank_ids">
+                            <t t-foreach="o.company_id.partner_id.bank_ids" t-as="bank">
+                                <p>
+                                    <strong>Bank Name:</strong>
+                                    <span t-field="bank.bank_id.name"/>
+                                    <br/>
+                                    <strong>A/c No.:</strong>
+                                    <span t-field="bank.acc_number"/>
+                                    <br/>
+                                    <t t-if="bank.acc_type == 'iban'">
+                                        <strong>IBAN:</strong>
+                                        <span t-field="bank.acc_number"/>
+                                        <br/>
+                                    </t>
+                                    <strong>SWIFT Code:</strong>
+                                    <span t-field="bank.bank_id.bic"/>
+                                </p>
+                            </t>
+                        </div>
+                        <div style="text-align:right; margin-top:20px;">
+                            for
+                            <span t-field="o.company_id.name"/>
+                            <br/>
+                            <br/>
+                            <br/>
+                            Authorised Signatory
+                        </div>
+                    </div>
+
+                    <div style="font-size:9px; text-align:center; margin-top:20px;">
+                        This is a Computer Generated Document
+                    </div>
+                </div>
+            </t>
 
         
         </xpath>
