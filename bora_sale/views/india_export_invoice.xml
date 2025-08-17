@@ -453,7 +453,7 @@
                     </table>
 
                     <!-- PRODUCT TABLE -->
-                    <table style="width:100%; border:1px solid black; border-collapse:collapse; font-size:11px;">
+                    <!-- <table style="width:100%; border:1px solid black; border-collapse:collapse; font-size:11px;">
                         <thead>
                             <tr style="background-color:#f0f0f0;">
                                 <th style="border-right:1px solid black; padding:4px; width:5%;">Sl No.</th>
@@ -488,7 +488,7 @@
                                 </tr>
                             </t>
                         </tbody>
-                    </table>
+                    </table> -->
 
                     <!-- FOOTER -->
                     <table style="width:100%; margin-top:12px;">
