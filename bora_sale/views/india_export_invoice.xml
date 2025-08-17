@@ -335,7 +335,7 @@
                     <table style="width:100%; border-collapse:collapse; margin-bottom:12px;">
                         <tr>
                             <!-- LEFT: Company, Consignee, Buyer -->
-                            <td style="width:50%; vertical-align:top; border:1px solid black; padding:0;">
+                            <!-- <td style="width:50%; vertical-align:top; border:1px solid black; padding:0;">
                                 <div style="padding:5px; border-bottom:1px solid black;">
                                     <div t-field="o.company_id.partner_id"
                                         t-options='{"widget":"contact","fields":["name","address"],"no_marker":True}'/>
@@ -361,7 +361,7 @@
                                         <span t-field="o.partner_id.email"/>
                                     </div>
                                 </div>
-                            </td>
+                            </td> -->
 
                             <!-- RIGHT: Invoice meta -->
                             <td style="width:50%; vertical-align:top; border:1px solid black; padding:0;">
