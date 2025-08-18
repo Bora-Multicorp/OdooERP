@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_report_print_invoice" model="ir.actions.report">
+        <field name="name">Custom Invoice</field>
+        <field name="model">account.move</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">bora_sale.invoice_report</field>
+        <field name="report_file">bora_sale.invoice_report</field>
+        <field name="print_report_name">'Invoice - %s' % (object.name)</field>
+        <field name="binding_model_id" ref="account.model_account_move"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <record id="inherit_report_buttons_for_invoice_custom" model="ir.ui.view">
+        <field name="name">account.move.view.inherit.report.buttons</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_move_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//button[@name='preview_invoice']" position="replace"/>
+            <xpath expr="//button[@name='action_print_pdf']" position="attributes">
+                <attribute name="name">%(action_report_print_invoice)d</attribute>
+                <attribute name="type">action</attribute>
+            </xpath>
+        </field>
+    </record>
+
+
+</odoo>
