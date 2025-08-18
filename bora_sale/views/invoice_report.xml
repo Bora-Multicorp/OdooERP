@@ -1,5 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+
+    <template id="external_layout_inherit_custom" inherit_id="web.external_layout_standard">
+        <xpath expr="//div[1]" position="replace"/>
+        <xpath expr="//div[contains(@class, 'footer')]" position="replace"/>
+    </template>
+
     <!--
         This is a complete, self-contained report template.
         It must be saved in an XML file in your custom module's 'views' directory.
