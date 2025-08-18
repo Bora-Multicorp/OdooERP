@@ -21,7 +21,10 @@ class StockPicking(models.Model):
             if not destination_location:
                 raise UserError("Virtual Location not found!")
 
-            internal_picking_type = self.env.ref('stock.picking_type_internal')
+            internal_picking_type = self.env['stock.picking.type'].search([
+                ('code', '=', 'internal'),
+                ('company_id', '=', picking.company_id.id)
+            ], limit=1)
 
             already_exists = self.env['stock.picking'].search([
                 ('origin', '=', picking.name),
@@ -125,6 +128,7 @@ class StockPicking(models.Model):
                     'location_dest_id': destination_location.id,
                     'origin': picking.name,
                     'move_type': 'direct',
+                    'company_id': picking.company_id.id,
                     'move_ids_without_package': move_lines,
                 })
 
