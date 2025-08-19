@@ -6,10 +6,10 @@
         <field name="inherit_id" ref="account.view_move_form"/>
         <field name="arch" type="xml">
             <xpath expr="//button[@id='account_invoice_payment_btn']" position="attributes">
-                <attribute name="groups">bora_sale.account_group_for_sales,account.group_account_invoice</attribute>
+                <attribute name="groups">bora_sale.account_group_for_sales</attribute>
             </xpath>
             <xpath expr="//button[@id='account_invoice_payment_secondary_btn']" position="attributes">
-                <attribute name="groups">bora_sale.account_group_for_sales,account.group_account_invoice</attribute>
+                <attribute name="groups">bora_sale.account_group_for_sales</attribute>
             </xpath>
         </field>
     </record>
