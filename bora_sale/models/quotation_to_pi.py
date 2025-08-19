@@ -1,10 +1,9 @@
 from odoo import models, fields
 
-
 SALE_ORDER_STATE = [
-    ('draft', "Proforma Invoice"),
-    ('sent', "Proforma Invoice Sent"),
-    ('sale', "Sales Order"),
+    ('draft', "Quotation"),
+    ('sent', "Quotation Sent"),
+    ('sale', "Proforma Invoice"),
     ('cancel', "Cancelled"),
 ]
 

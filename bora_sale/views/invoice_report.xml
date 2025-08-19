@@ -31,10 +31,8 @@
                         <div class="page" style="font-size:11px; font-family:Arial, sans-serif; max-width: 966px; margin: auto; ">
                             <div style="text-align: center; font-weight: bold; font-size: 14px;">EXPORT INVOICE</div>
                             <p style="text-align:center; margin:0;">(SUPPLY MEANT FOR EXPORT/SUPPLY TO SEZ UNIT OR SEZ DEVELOPER FOR AUTHORISED OPERATIONS ON PAYMENT OF IGST)</p>
-
                                 <table style="width:100%; border-collapse:collapse; margin-bottom:12px;">
-                                <tr>
-                                    <tr>
+                                    <tr style="page-break-inside: avoid;">
                                             <td style="width:50%; vertical-align:top; padding:0; border:1px solid black;">
 
                                                     <div style="font-size: 14px; padding: 5px;line-height: 1.1;">
@@ -164,7 +162,7 @@
                                                 </div>
                                             </td>
                                     </tr>
-                                    <tr>
+                                    <tr style="page-break-inside: avoid;">
                                         <td colspan="2" style="width:50%; vertical-align:top; padding:0; "> 
                                             <table style="border-collapse: collapse; width: 100%; font-size: 14px; padding: 5px;line-height: 1.1;" class="tablewithnobottom_border">
                                             <thead>
@@ -324,13 +322,23 @@
                                                         <div style="font-size: 13px; line-height: 1.5;">
                                                             <strong>Company's Bank Details</strong><br/>
                                                             Bank Name : 
-                                                            <t t-if="o.company_id.partner_id.bank_ids">
-                                                                <strong><span t-field="o.company_id.partner_id.bank_ids[0].bank_id.name"/></strong>
+                                                            <t t-if="o.partner_bank_id">
+                                                                <strong><span t-field="o.partner_bank_id.bank_id.name"/></strong>
                                                             </t><br/>
+                                                            <t t-else="">
+                                                                <t t-if="o.company_id.partner_id.bank_ids">
+                                                                    <strong><span t-field="o.company_id.partner_id.bank_ids[0].bank_id.name"/></strong>
+                                                                </t><br/>
+                                                            </t>
                                                             A/c No. : 
-                                                            <t t-if="o.company_id.partner_id.bank_ids">
-                                                                <strong><span t-field="o.company_id.partner_id.bank_ids[0].acc_number"/></strong>
+                                                            <t t-if="o.partner_bank_id">
+                                                                <strong><span t-field="o.company_id.partner_id.acc_number"/></strong>
                                                             </t><br/>
+                                                            <t t-else="">
+                                                                <t t-if="o.company_id.partner_id.bank_ids">
+                                                                    <strong><span t-field="o.company_id.partner_id.bank_ids[0].acc_number"/></strong>
+                                                                </t><br/>
+                                                            </t>
                                                         </div>
                                                         <div style="margin-top: 5px;"><strong>For <span t-field="o.company_id.name"/></strong></div>
                                                     </td>
@@ -346,9 +354,7 @@
                                             </table>
                                         </td>
                                     </tr>
-                                    </tr>
                                 </table>
-
                         </div>
                     </t>
 
