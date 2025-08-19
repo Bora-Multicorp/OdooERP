@@ -27,7 +27,7 @@
             <t t-foreach="docs" t-as="o">
                 <main class="o_report_content">
                 
-                    <t t-if="o.company_id.partner_id.country_id.code == 'IN'">
+                    <t t-if="o.company_id.partner_id.country_id.code != 'IN'">
                         <div class="page" style="font-size:11px; font-family:Arial, sans-serif; max-width: 966px; margin: auto; ">
                             <div style="text-align: center; font-weight: bold; font-size: 14px;">EXPORT INVOICE</div>
                             <p style="text-align:center; margin:0;">(SUPPLY MEANT FOR EXPORT/SUPPLY TO SEZ UNIT OR SEZ DEVELOPER FOR AUTHORISED OPERATIONS ON PAYMENT OF IGST)</p>
@@ -606,7 +606,57 @@
                                             <div style="font-size:10px; text-align:left;">
                                                 <strong>Company's Bank Details</strong>
                                             </div>
-                                            <t t-foreach="o.company_id.partner_id.bank_ids" t-as="bank">
+                                            <div style="font-size: 13px; line-height: 1.5;">
+                                                <strong>Company's Bank Details</strong><br/>
+                                                Bank Name : 
+                                                <t t-if="o.partner_bank_id">
+                                                    <strong><span t-field="o.partner_bank_id.bank_name"/></strong>
+                                                </t>
+                                                <t t-else="">
+                                                    <t t-if="o.company_id.partner_id.bank_ids">
+                                                        <t t-if="o.company_id.partner_id.bank_ids[0].bank_id">
+                                                            <strong><span t-field="o.company_id.partner_id.bank_ids[0].bank_id.name"/></strong>
+                                                        </t>
+                                                    </t>
+                                                </t><br/>
+                                                A/c No. : 
+                                                <t t-if="o.partner_bank_id">
+                                                    <strong><span t-field="o.partner_bank_id.acc_number"/></strong>
+                                                </t>
+                                                <t t-else="">
+                                                    <t t-if="o.company_id.partner_id.bank_ids">
+                                                        <t t-if="o.company_id.partner_id.bank_ids[0].acc_number">
+                                                            <strong><span t-field="o.company_id.partner_id.bank_ids[0].acc_number"/></strong>
+                                                        </t>
+                                                    </t>
+                                                </t><br/>
+                                                IBAN : 
+                                                <t t-if="o.partner_bank_id">
+                                                    <strong><span t-field="o.partner_bank_id.acc_number"/></strong>
+                                                </t>
+                                                <t t-else="">
+                                                    <t t-if="o.company_id.partner_id.bank_ids">
+                                                        <t t-if="o.company_id.partner_id.bank_ids[0].acc_number">
+                                                            <strong><span t-field="o.company_id.partner_id.bank_ids[0].acc_number"/></strong>
+                                                        </t>
+                                                    </t>
+                                                </t><br/>
+                                                SWIFT Code : 
+                                                <t t-if="o.partner_bank_id">
+                                                    <strong><span t-field="o.partner_bank_id.bank_bic"/></strong>
+                                                </t>
+                                                <t t-else="">
+                                                    <t t-if="o.company_id.partner_id.bank_ids">
+                                                        <t t-if="o.company_id.partner_id.bank_ids[0].bic">
+                                                            <strong><span t-field="o.company_id.partner_id.bank_ids[0].bic"/></strong>
+                                                        </t>
+                                                    </t>
+                                                </t>
+                                            </div>
+
+                                            
+
+                                            <!-- <t t-foreach="o.company_id.partner_id.bank_ids" t-as="bank">
                                                 <table style="width:100%; font-size:10px;">
                                                     <tr>
                                                         <td style="width:30%;">
@@ -643,7 +693,7 @@
                                                         </td>
                                                     </tr>
                                                 </table>
-                                            </t>
+                                            </t> -->
                                         </div>
                                     </td>
                                 </tr>
