@@ -642,58 +642,20 @@
                                                     </t>
                                                 </t><br/>
                                                 SWIFT Code : 
-                                                <t t-if="o.partner_bank_id">
-                                                    <strong><span t-field="o.partner_bank_id.bank_bic"/></strong>
+
+                                                <t t-if="o.partner_bank_id.bank_id.bic">
+                                                    <strong><span t-field="o.partner_bank_id.bank_id.bic"/></strong>
                                                 </t>
                                                 <t t-else="">
                                                     <t t-if="o.company_id.partner_id.bank_ids">
-                                                        <t t-if="o.company_id.partner_id.bank_ids[0].bic">
-                                                            <strong><span t-field="o.company_id.partner_id.bank_ids[0].bic"/></strong>
+                                                        <t t-if="o.company_id.partner_id.bank_ids[0].bank_id.bic">
+                                                            <strong><span t-field="o.company_id.partner_id.bank_ids[0].bank_id.bic"/></strong>
                                                         </t>
                                                     </t>
                                                 </t>
                                             </div>
 
                                             
-
-                                            <!-- <t t-foreach="o.company_id.partner_id.bank_ids" t-as="bank">
-                                                <table style="width:100%; font-size:10px;">
-                                                    <tr>
-                                                        <td style="width:30%;">
-                                                            <strong>Bank Name</strong>
-                                                        </td>
-                                                        <td style="width:70%;">:
-                                                            <span t-field="bank.bank_id.name"/>
-                                                        </td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td style="width:30%;">
-                                                            <strong>A/c No.</strong>
-                                                        </td>
-                                                        <td style="width:70%;">:
-                                                            <span t-field="bank.acc_number"/>
-                                                        </td>
-                                                    </tr>
-                                                    <t t-if="bank.acc_type == 'iban'">
-                                                        <tr>
-                                                            <td style="width:30%;">
-                                                                <strong>IBAN</strong>
-                                                            </td>
-                                                            <td style="width:70%;">:
-                                                                <span t-field="bank.acc_number"/>
-                                                            </td>
-                                                        </tr>
-                                                    </t>
-                                                    <tr>
-                                                        <td style="width:30%;">
-                                                            <strong>SWIFT Code</strong>
-                                                        </td>
-                                                        <td style="width:70%;">:
-                                                            <span t-field="bank.bank_id.bic"/>
-                                                        </td>
-                                                    </tr>
-                                                </table>
-                                            </t> -->
                                         </div>
                                     </td>
                                 </tr>
