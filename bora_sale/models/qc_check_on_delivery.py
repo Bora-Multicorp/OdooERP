@@ -1,6 +1,7 @@
 
 # -*- coding: utf-8 -*-
 from odoo import fields, models
+from odoo.exceptions import UserError
 
 class QACheckForDelivery(models.Model):
     _inherit = 'stock.picking'
@@ -21,9 +22,6 @@ class QACheckForDelivery(models.Model):
                 self._send_notification('QC revert done', 'warning')
 
 
-
-
-
     def _send_notification(self, message, type):
         self.env['bus.bus']._sendone(
             self.env.user.partner_id,
@@ -35,3 +33,10 @@ class QACheckForDelivery(models.Model):
                 'sticky': False,
             },
         )
+
+    def button_validate(self):
+        if not self.is_qc_done:
+            raise UserError("Please confirm QC status.")
+        return super().button_validate()
+
+
