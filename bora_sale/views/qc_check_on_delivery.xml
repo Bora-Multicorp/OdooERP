@@ -17,7 +17,6 @@
                         <span class="o_stat_text">QC</span>
                     </div>
                 </button>
-
                 <button class="oe_stat_button"
                         name="action_toggle_qc_button"
                         type="object"

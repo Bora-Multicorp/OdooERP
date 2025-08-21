@@ -39,7 +39,8 @@ Bora sale operations
         'views/IFSC_and_branch_code.xml',
         'views/customer_fields_for_india_sale_invoice.xml',
         'views/qc_check_on_delivery.xml',
-        'data/account_group_in_sales.xml'
+        'data/account_group_in_sales.xml',
+        'data/vendor_payment_email_template.xml'
     ],
     'application': True,
     'installable': True,
