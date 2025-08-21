@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+        <record id="email_template_vendor_payment_confirmation" model="mail.template">
+            <field name="name">Vendor Payment Confirmation</field>
+            <!-- Change the subject to use object.ref for the invoice's reference -->
+            <field name="subject">Payment Initiated for Invoice {{ object.ref or '' }}</field>
+            <!-- CRITICAL CHANGE: The model is now account.move -->
+            <field name="model_id" ref="account.model_account_move"/>
+            <field name="email_from">{{ user.company_id.email }}</field>
+            <field name="email_to">{{ object.partner_id.email or '' }}</field>
+            <field name="body_html" type="html">
+                <div>
+                    <p>Dear {{ object.partner_id.name or 'Vendor' }},</p>
+                    <p>
+                        We would like to inform you that a payment for invoice
+                        <strong>{{ object.ref or '' }}</strong> has been initiated.
+                    </p>
+                    <p>
+                        <strong>Payment Details:</strong>
+                        <ul>
+                            <!-- The payment details are on the invoice, so we can use them directly. -->
+                            <li><strong>Amount:</strong> {{ object.amount_total or 'N/A' }} {{ object.currency_id.symbol or '' }}</li>
+                            <!-- We can use the invoice's date. The payment date is not available here. -->
+                            <li><strong>Invoice Date:</strong> {{ object.invoice_date or '' }}</li>
+                            <li><strong>Reference:</strong> {{ object.ref or '' }}</li>
+                        </ul>
+                    </p>
+                    <p>Thank you for your business. We look forward to our continued partnership.</p>
+                    <br/>
+                    <p>Sincerely,</p>
+                    <p>{{ user.name }}</p>
+                    <p>{{ user.company_id.name }}</p>
+                </div>
+            </field>
+        </record>
+    </data>
+</odoo>
