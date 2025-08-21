@@ -27,7 +27,7 @@
             <t t-foreach="docs" t-as="o">
                 <main class="o_report_content">
                 
-                    <t t-if="o.company_id.partner_id.country_id.code == 'IN'">
+                    <t t-if="o.company_id.partner_id.country_id.code != 'IN'">
                         <div class="page" style="font-size:11px; font-family:Arial, sans-serif; max-width: 966px; margin: auto; ">
                             <div style="text-align: center; font-weight: bold; font-size: 14px;">EXPORT INVOICE</div>
                             <p style="text-align:center; margin:0;">(SUPPLY MEANT FOR EXPORT/SUPPLY TO SEZ UNIT OR SEZ DEVELOPER FOR AUTHORISED OPERATIONS ON PAYMENT OF IGST)</p>
