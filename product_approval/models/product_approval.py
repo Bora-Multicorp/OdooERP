@@ -298,12 +298,14 @@ class ProductApproval(models.Model):
         #                 type='danger'
         #             )
 
-        if not self.active:
-            for variant_id in self.product_variant_ids:
-                variant_id.write({
-                    'active': False,
-                    # 'is_hidden_for_approval': True,
-                })
+
+        for rec in self:
+            if not rec.active:
+                for variant_id in rec.product_variant_ids:
+                    variant_id.write({
+                        'active': False,
+                        # 'is_hidden_for_approval': True,
+                    })
 
         return res
 
