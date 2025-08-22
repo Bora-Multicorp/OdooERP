@@ -25,6 +25,7 @@ Bora purchase operations
         # 'security/ir.model.access.csv',
         'views/qc_check_on_delivery.xml',
         'views/vendor_payment_email_template.xml',
+        # 'views/add_lock_icon_for_po.xml'
     ],
     'application': True,
     'installable': True,
