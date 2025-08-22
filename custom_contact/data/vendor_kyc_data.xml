@@ -434,7 +434,7 @@
             <field name="question_type">matrix</field>
             <field name="matrix_subtype">sh_custom_matrix</field>
             <field name="add_an_item" eval="False"/>
-            <field name="constr_mandatory" eval="True"/>
+            <field name="constr_mandatory" eval="False"/>
         </record>
 
         <record model="survey.question.answer" id="matrix_director_detail_kyc_survey_col1">
