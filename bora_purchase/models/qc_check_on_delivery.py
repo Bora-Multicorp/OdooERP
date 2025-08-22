@@ -40,3 +40,23 @@ class QACheckForDelivery(models.Model):
         return super().button_validate()
 
 
+
+
+class ResetQCSatus(models.TransientModel):
+    _inherit = 'stock.backorder.confirmation'
+
+    def process(self):
+
+        original_picking_ids = self.pick_ids.ids
+
+        res = super().process()
+        
+        backorder_pickings = self.env['stock.picking'].search([
+            ('backorder_id', 'in', original_picking_ids)
+        ])
+
+        for picking in backorder_pickings:
+            picking.is_qc_done = False
+            
+        return res
+    
