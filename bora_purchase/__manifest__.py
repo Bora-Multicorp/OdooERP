@@ -18,14 +18,18 @@ Bora purchase operations
     'version': '0.1',
 
     # any module necessary for this one to work correctly
-    'depends': ['base', 'purchase', ],
+    'depends': ['base', 'purchase'],
 
     # always loaded
     'data': [
-        # 'security/ir.model.access.csv',
+        'security/ir.model.access.csv',
+        'wizard/po_unlock_approve_request_views.xml',
+        'wizard/po_unlock_reject_request_views.xml',
         'views/qc_check_on_delivery.xml',
         'views/vendor_payment_email_template.xml',
-        # 'views/add_lock_icon_for_po.xml'
+        'views/po_unlock_approvers.xml',
+        'views/po_unlock_button_inherited.xml',
+        'views/po_unlock.xml',
     ],
     'application': True,
     'installable': True,
