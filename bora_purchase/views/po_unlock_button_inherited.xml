@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- We will inherit the sale.view_order_form to modify the existing button -->
+    <record id="purchase_order_view_form_inherit_change_confirm" model="ir.ui.view">
+        <field name="name">purchase.order.view.form.inherit.change.confirm</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_form"/>
+        <field name="arch" type="xml">
+            <!-- 
+            Use XPath to locate the button you want to modify.
+            In this case, we're targeting the 'button_unlock' button.
+            `position="attributes"` is the key.
+            -->
+            <xpath expr="//button[@name='button_unlock']" position="attributes">
+                <!-- 
+                Change the 'confirm' attribute.
+                If the button already has one, this will override it.
+                If it doesn't, this will add it.
+                -->
+                <attribute name="confirm">Are you sure you want to unlock this order? Unlocking will require PO unlock approval.</attribute>
+            </xpath>
+        </field>
+    </record>
+</odoo>

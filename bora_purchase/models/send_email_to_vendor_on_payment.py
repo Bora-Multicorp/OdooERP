@@ -1,6 +1,7 @@
 
 
 from odoo import models, api, fields
+import pprint
 
 class SendEmailToVendorOnPayment(models.Model):
     _inherit = 'account.move'
@@ -9,6 +10,9 @@ class SendEmailToVendorOnPayment(models.Model):
 
     def _invoice_paid_hook(self):
         super(SendEmailToVendorOnPayment, self)._invoice_paid_hook()
+
+        if self.type_name == 'Invoice':
+            return  # Only proceed for vendor bills
 
         for record in self:
             payment = self.env['account.payment'].search([

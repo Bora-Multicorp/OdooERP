@@ -42,7 +42,7 @@
                                 <t t-foreach="bill.invoice_line_ids" t-as="line">
                                     <tr>
                                         <td style="padding: 12px; text-align: left; border: 1px solid #ddd;"><t t-out="line.name or ''"/></td>
-                                        <td style="padding: 12px; text-align: left; border: 1px solid #ddd;"><t t-out="format_amount(line.quantity, bill.currency_id) or ''"/></td>
+                                        <td style="padding: 12px; text-align: left; border: 1px solid #ddd;"><t t-out="line.quantity or ''"/></td>
                                         <td style="padding: 12px; text-align: left; border: 1px solid #ddd;"><t t-out="line.product_uom_id.name or ''"/></td>
                                         <td style="padding: 12px; text-align: right; border: 1px solid #ddd;"><t t-out="format_amount(line.price_unit, bill.currency_id) or ''"/></td>
                                         <td style="padding: 12px; text-align: right; border: 1px solid #ddd;"><t t-out="', '.join(tax.name for tax in line.tax_ids)"/></td>
