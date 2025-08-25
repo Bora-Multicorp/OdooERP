@@ -214,7 +214,7 @@ class POUnlockApprovalUsers(models.Model):
     _name = "po.unlock.approval.users"
     _rec_name = 'po_unlock_approval_id'
     _description = "PO Unlock Approval Users"
-    _order = "sequence"
+    _order = "create_date, sequence"
 
     sequence = fields.Integer(string='Sequence')
     po_unlock_approval_id = fields.Many2one('purchase.order', string="O Unlock Approval")
