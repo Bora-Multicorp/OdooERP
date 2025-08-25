@@ -30,6 +30,7 @@ Bora purchase operations
         'views/po_unlock_approvers.xml',
         'views/po_unlock_button_inherited.xml',
         'views/po_unlock.xml',
+        'views/po_fullfill_by.xml'
     ],
     'application': True,
     'installable': True,
