@@ -8,14 +8,17 @@
         'stock',  # Required because we are inheriting stock.warehouse
         'contacts',# Required because we use res.partner
         'sale',
-        'purchase'
+        'purchase',
+        'account',
+        'sale_management'
     ],
     'data': [
         'data/freezone_trade.xml',
         'data/purchase_order_confirm.xml',
-        'views/purchase_order.xml',
+        'data/full_payment_email.xml',
         'views/stock_warehouse.xml',
-        'views/sale_order.xml'
+        'views/sale_order.xml',
+        'views/purchase_order.xml'
     ],
     'installable': True,
     'application': False,

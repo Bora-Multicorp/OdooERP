@@ -13,7 +13,7 @@
                 <ul>
                     <li><b>Supplier:</b> <t t-out="object.partner_id.name"/></li>
                     <li><b>Delivery to:</b> <t t-out="object.picking_type_id.warehouse_id.name"/></li>
-                    <li><b>Order Deadline:</b> <t t-out="object.date_order"/></li>
+                    <li><b>Order Deadline:</b> <t t-out="format_date(object.date_order)"/></li>
                 </ul>
 
                 <p><b>Products to be Received:</b></p>

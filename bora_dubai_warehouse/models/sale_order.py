@@ -8,7 +8,8 @@ class SaleOrder(models.Model):
         ('local', 'Local Trade'),
         ('freezone', 'Freezone Trade'),
         ('bora_global', 'Bora Global'),
-    ],  default='freezone',string='Trade Type')
+    ], default='freezone', string='Trade Type')
+
 
     def action_confirm(self):
         res = super().action_confirm()
