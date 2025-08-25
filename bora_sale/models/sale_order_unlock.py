@@ -214,7 +214,7 @@ class PIUnlockApprovalUsers(models.Model):
     _name = "pi.unlock.approval.users"
     _rec_name = 'pi_unlock_approval_id'
     _description = "PI Unlock Approval Users"
-    _order = "sequence"
+    _order = "create_date, sequence"
 
     sequence = fields.Integer(string='Sequence')
     pi_unlock_approval_id = fields.Many2one('sale.order', string="PI Unlock Approval")
