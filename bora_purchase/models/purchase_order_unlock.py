@@ -178,7 +178,7 @@ class PurchaseOrderUnlock(models.Model):
         for rec in self:
             rec.activity_schedule(
                 act_type_xmlid='mail.mail_activity_data_todo',
-                summary=f'PO unlock approval for sale order: {rec.name}',
+                summary=f'PO unlock approval for order: {rec.name}',
                 note="You have been assigned to unlock this PO.",
                 user_id=rec.assigned_to.id,
                 date_deadline=fields.Date.context_today(self),
