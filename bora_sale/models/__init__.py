@@ -9,6 +9,6 @@ from . import invoice_confirm
 from . import add_documents
 from . import pod_in_stock_picking
 from . import quotation_to_pi
-from . import remove_tax_field_dubai
+from . import hide_tax_field_dubai
 from . import custom_fields_for_india_sale_invoice
 from . import IFSC_code
