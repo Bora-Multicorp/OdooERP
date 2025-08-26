@@ -10,8 +10,7 @@
                 <button class="oe_stat_button"
                         name="action_toggle_qc_button"
                         type="object"
-                        invisible="is_qc_done == False or state in ('draft', 'confirmed', 'done', 'cancel')"
-                        confirm="Are you sure you want to revert the 'QC Passed' status?">
+                        invisible="is_qc_done == False or state in ('draft', 'confirmed', 'done', 'cancel')">
                     <span class="fa fa-check-circle text-success" style="font-size: 24px; margin-right:8px;"/>
                     <div class="o_form_field o_stat_info">
                         <span class="o_stat_text">QC</span>
@@ -20,14 +19,28 @@
                 <button class="oe_stat_button"
                         name="action_toggle_qc_button"
                         type="object"
-                        invisible="is_qc_done == True or state in ('draft', 'confirmed', 'done', 'cancel')"
-                        confirm="Are you sure you want to mark this document as 'QC Passed'?">
+                        invisible="is_qc_done == True or state in ('draft', 'confirmed', 'done', 'cancel')">
                     <span class="fa fa-check-circle text-primary" style="font-size: 24px; margin-right:8px;"/>
                     <div class="o_form_field o_stat_info">
                         <span class="o_stat_text">QC</span>
                     </div>
                 </button>
 
+            </xpath>
+            <xpath expr="//notebook" position="inside">
+                <page string="Quality Check" name="quality_check" invisible="not is_qc_done or not a_purchase_order">
+                    <group>
+                        <field name="a_purchase_order" invisible="1"/>
+                        <field name="is_model_or_color_not_match" nolabel="1" readonly="state == 'done'"/>
+                        <span>Model/Color mismatch</span>
+                        <field name="qty_didnt_match" nolabel="1" readonly="state == 'done'"/>
+                        <span>Quantity mismatch</span>
+                        <field name="boxes_are_damaged" nolabel="1" readonly="state == 'done'"/>
+                        <span>Damaged packaging</span>
+                        <field name="activated_items_received" nolabel="1" readonly="state == 'done'"/>
+                        <span>Pre-activated items received</span>
+                    </group>
+                </page>
             </xpath>
         </field>
     </record>

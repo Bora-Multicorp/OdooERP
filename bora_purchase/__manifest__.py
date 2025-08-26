@@ -32,6 +32,12 @@ Bora purchase operations
         'views/po_unlock.xml',
         'views/po_fullfill_by.xml'
     ],
+    'assets': {
+        'web.assets_backend': [
+            # '/bora_purchase/static/src/js/switch_tab.js',
+        ],
+    },
+
     'application': True,
     'installable': True,
     'license': 'Other proprietary'

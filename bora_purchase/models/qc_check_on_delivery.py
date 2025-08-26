@@ -2,9 +2,24 @@
 # -*- coding: utf-8 -*-
 from odoo import fields, models
 from odoo.exceptions import UserError
+from .utility import to_unicode_bold
 
 class QACheckForDelivery(models.Model):
     _inherit = 'stock.picking'
+
+    is_model_or_color_not_match = fields.Boolean()
+    qty_didnt_match = fields.Boolean()
+    boxes_are_damaged = fields.Boolean()
+    activated_items_received = fields.Boolean()
+
+    a_purchase_order = fields.Boolean(
+        string='Is Purchase Order',
+        compute='_compute_is_purchase_order'
+    )
+
+    def _compute_is_purchase_order(self):
+        for record in self:
+            record.a_purchase_order = bool(record.purchase_id)
 
     is_qc_done = fields.Boolean(
         string='QC check status',
@@ -13,26 +28,29 @@ class QACheckForDelivery(models.Model):
     )
 
     def action_toggle_qc_button(self):
+        # return {
+        #     "type": "ir.actions.client",
+        #     "tag": "switch_to_qc_tab",  # Must match JS registry key
+        #     "params": {
+        #         "tab_name": "note",  # 👈 pass page name here
+        #     },
+        # }
+
         for picking in self:
-            picking.is_qc_done = not picking.is_qc_done
+            if not picking.is_qc_done:
+                picking.is_qc_done = not picking.is_qc_done
 
-            if picking.is_qc_done:
-                self._send_notification('QC check done', 'success')
-            else:
-                self._send_notification('QC revert done', 'warning')
+                if picking.is_qc_done and picking.a_purchase_order:
+                    self.env['bus.bus']._sendone(
+                    self.env.user.partner_id,
+                    'simple_notification',
+                    {
+                        'type': 'info',
+                        'title': '',
+                        'message': f"Please check {to_unicode_bold('Quality Check')} tab and confirm QC status before validating the delivery.",
+                        'sticky': True,
+                    })
 
-
-    def _send_notification(self, message, type):
-        self.env['bus.bus']._sendone(
-            self.env.user.partner_id,
-            'simple_notification',
-            {
-                'type': type,
-                'title': '',
-                'message': message,
-                'sticky': False,
-            },
-        )
 
     def button_validate(self):
         if not self.is_qc_done:
@@ -57,6 +75,9 @@ class ResetQCSatus(models.TransientModel):
 
         for picking in backorder_pickings:
             picking.is_qc_done = False
-            
+            picking.is_model_or_color_not_match = False
+            picking.qty_didnt_match = False
+            picking.boxes_are_damaged = False
+            picking.activated_items_received = False
+                        
         return res
-    
