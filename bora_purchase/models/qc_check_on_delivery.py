@@ -50,6 +50,16 @@ class QACheckForDelivery(models.Model):
                         'message': f"Please check {to_unicode_bold('Quality Check')} tab and confirm QC status before validating the delivery.",
                         'sticky': True,
                     })
+                else:
+                    self.env['bus.bus']._sendone(
+                    self.env.user.partner_id,
+                    'simple_notification',
+                    {
+                        'type': 'info',
+                        'title': '',
+                        'message': "QC passed — you may now validate the receipt.",
+                        'sticky': True,
+                    })
 
 
     def button_validate(self):
