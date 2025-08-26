@@ -18,7 +18,7 @@ Bora sale operations
     'version': '0.1',
 
     # any module necessary for this one to work correctly
-    'depends': ['base', 'crm', 'sale_management', 'purchase', 'sale', 'sale_stock', 'account', 'prt_report_attachment_preview'],
+    'depends': ['base', 'crm', 'sale_management', 'purchase', 'sale', 'sale_stock', 'account', 'prt_report_attachment_preview','product'],
 
     # always loaded
     'data': [
@@ -33,7 +33,7 @@ Bora sale operations
         'views/add_documents.xml',
         'views/pod_in_stock_picking.xml',   
         'views/quotation_to_pi.xml',
-        'views/remove_tax_field_dubai.xml',
+        'views/hide_tax_field_dubai.xml',
         'views/invoice_report_print_preview_action.xml',
         'views/custom_invoice_report.xml',
         'views/IFSC_and_branch_code.xml',
