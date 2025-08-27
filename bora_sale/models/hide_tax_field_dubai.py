@@ -81,12 +81,43 @@ class HideTacFieldFromProductTemplate(models.Model):
 
 
 
+# changes in sale order for tax total section
+class InheritSaleOrderForTotalSection(models.Model):
+    _inherit = "sale.order"
+
+    @api.depends('order_line.price_subtotal', 'currency_id', 'company_id', 'payment_term_id')
+    def _compute_amounts(self):
+        AccountTax = self.env['account.tax']
+        for order in self:
+            is_service_product_available_in_line = False
+            for line in order_lines:
+                if line.product_id.detailed_type == 'service':
+                    is_service_product_available_in_line = True
+                    break
+
+            order_lines = order.order_line.filtered(lambda x: not x.display_type)
+            base_lines = [line._prepare_base_line_for_taxes_computation() for line in order_lines]
+            base_lines += order._add_base_lines_for_early_payment_discount()
+            AccountTax._add_tax_details_in_base_lines(base_lines, order.company_id)
+            AccountTax._round_base_lines_tax_details(base_lines, order.company_id)
+            tax_totals = AccountTax._get_tax_totals_summary(
+                base_lines=base_lines,
+                currency=order.currency_id or order.company_id.currency_id,
+                company=order.company_id,
+                is_service_product_available_in_line=is_service_product_available_in_line,
+            )
+            order.amount_untaxed = tax_totals['base_amount_currency']
+            order.amount_tax = tax_totals['tax_amount_currency']
+            order.amount_total = tax_totals['total_amount_currency']
+
+
+
 # hide tax fields from sale order total section
 class HideTaxFieldFromSaleOrderTotalSection(models.Model):
     _inherit = "account.tax"
 
     @api.model
-    def _get_tax_totals_summary(self, base_lines, currency, company, cash_rounding=None):
+    def _get_tax_totals_summary(self, base_lines, currency, company, cash_rounding=None, is_service_product_available_in_line=False):
         """ Compute the tax totals details for the business documents.
 
         Don't forget to call '_add_tax_details_in_base_lines' and '_round_base_lines_tax_details' before calling this method.
@@ -325,7 +356,7 @@ class HideTaxFieldFromSaleOrderTotalSection(models.Model):
         is_bora_electronics_fzco = (company.company_registry == '3892') 
 
         # if any copmany is tax free then hide tax details
-        if is_ayaan_impex or is_bora_electronics_fzco:  
+        if (is_ayaan_impex or is_bora_electronics_fzco) and not is_service_product_available_in_line:  
             tax_totals_summary['subtotals'] = []
 
         return tax_totals_summary
