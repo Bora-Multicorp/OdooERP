@@ -1,0 +1,38 @@
+<odoo>
+    <record id="email_template_invoice_paid" model="mail.template">
+        <field name="name">Invoice Paid - Warehouse Notification</field>
+        <field name="model_id" ref="account.model_account_move"/>
+        <field name="email_from">{{ user.email_formatted }}</field>
+        <field name="subject">Invoice Paid: {{ object.name }}</field>
+        <field name="body_html" type="html">
+            <div>
+                <p>Dear Warehouse Team,</p>
+                <p>This is a notification that Invoice <strong><t t-out="object.name"/></strong> related to
+                   Sale Order <strong><t t-out="object.invoice_origin"/></strong>
+                   is now <strong>fully paid</strong>.</p>
+
+<!--                <p>Customer: <t t-out="object.partner_id.name"/></p>-->
+
+
+<!--                <p>Order Lines:</p>-->
+<!--                <table border="1" cellpadding="0" cellspacing="0" style="width:100%;">-->
+<!--                    <thead>-->
+<!--                        <tr>-->
+<!--                            <th>Product</th>-->
+<!--                            <th>Quantity</th>-->
+<!--                        </tr>-->
+<!--                    </thead>-->
+<!--                    <tbody>-->
+<!--                         <t t-foreach="object.invoice_line_ids" t-as="line">-->
+<!--                        <tr>-->
+<!--                            <td><t t-out="line.product_id.name"/></td>-->
+<!--                            <td><t t-out="line.quantity"/></td>-->
+<!--                        </tr>-->
+<!--                         </t>-->
+
+<!--                    </tbody>-->
+<!--                </table>-->
+            </div>
+        </field>
+    </record>
+</odoo>

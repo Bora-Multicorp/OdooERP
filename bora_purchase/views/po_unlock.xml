@@ -1,0 +1,38 @@
+<odoo>
+    <record id="view_purchase_order_form_inherit_unlock_page" model="ir.ui.view">
+        <field name="name">purchase.order.form.inherit.unlock.page</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page name="unlock_approval_authorities_page" string="Unlock Approval Authorities" invisible="not approval_users_ids">
+                    <group>
+                        <field name="show_unlock_approve_reject_buttons" invisible="1"/>
+                        <field name="assigned_to" options="{'no_edit': True, 'no_create': True, 'no_open': True}" invisible="not assigned_to" readonly="1"/>
+                        <field name="existing_user_ids" invisible="1" widget="many2many_tags"/>
+                    </group>
+                    <field name="approval_users_ids" nolabel="1" help="Define the PO Unlock approval roles." readonly="1">
+                        <list editable="bottom">
+                            <field name="sequence"/>
+                            <field name="user_id" widget="many2one_avatar_user" options="{'no_edit': True, 'no_create': True, 'no_open': True}"/>
+                            <field name="remark"/>
+                            <field name="state" readonly="1"/>
+                            <field name="action_date" readonly="1"/>
+                        </list>
+                        <form>
+                            <group>
+                                <field name="user_id" options="{'no_edit': True, 'no_create': True, 'no_open': True}"/>
+                                <field name="state"/>
+                                <field name="remark"/>
+                            </group>
+                        </form>
+                    </field>
+                </page>
+            </xpath>
+            <xpath expr="//header" position="inside">
+                <button name="%(approve_po_unlock_wizard_action)d" string="PO Unlock Approve" type="action" class="oe_highlight" invisible="not show_unlock_approve_reject_buttons"/>
+                <button name="%(reject_po_wizard_action)d" string="PO Unlock Reject" type="action" class="oe_highlight" invisible="not show_unlock_approve_reject_buttons"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>
