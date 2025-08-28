@@ -433,8 +433,9 @@
             <field name="sequence">22</field>
             <field name="question_type">matrix</field>
             <field name="matrix_subtype">sh_custom_matrix</field>
+            <field name="question_code">DIR_DETAILS</field>
             <field name="add_an_item" eval="False"/>
-            <field name="constr_mandatory" eval="False"/>
+            <field name="constr_mandatory" eval="True"/>
         </record>
 
         <record model="survey.question.answer" id="matrix_director_detail_kyc_survey_col1">

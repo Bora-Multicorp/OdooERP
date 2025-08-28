@@ -220,6 +220,7 @@
                         </t>
                         <t t-if="not review">
                             <input type="file" class="form-control o_survey_question_email_box sh_file_input"
+                            style="width:150px;"
                             t-att-name="'%s_%s' % (question.id, row_label.id)"
                             t-att-id="sh_survey_matrix_adv_file_id"
                             t-att-data-row-id="row_label.id"
@@ -257,6 +258,7 @@
         <!-- table subtype attribute added-->
         <xpath expr="//table" position="attributes">
             <attribute name="t-att-data-matrix-subtype">question.matrix_subtype</attribute>
+            <attribute name="t-att-data-question-code">question.question_code</attribute>
         </xpath>
         <xpath expr="//tr[contains(@class, 'bg-white text-white')][1]" position="replace">
         <!--<xpath expr="//td" position="replace">-->

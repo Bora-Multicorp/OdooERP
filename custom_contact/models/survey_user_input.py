@@ -189,7 +189,7 @@ class SurveyUserInput(models.Model):
                 raise UserError(_("Unsupported field type '%s' for file field '%s'.") % (field.type, field_name))
 
         if values:
-            partner = self.partner_id or self.env['res.partner'].search([('email', '=', self.email)], limit=1)
+            partner = self.partner_id or self.env['res.partner'].search([('email', '=ilike', self.email)], limit=1)
             if partner:
                 values['partner_id'] = partner.id
                 kyc_record = self.env['res.partner.kyc.approval'].create(values)
