@@ -377,7 +377,22 @@ SurveyFormWidget.include({
                 case 'matrix':
                     const MatrixTableFile = $questionWrapper.find('table.o_survey_question_matrix');
                     const matrixSubtype = MatrixTableFile.data('matrix-subtype');
-                    if (matrixSubtype === "sh_custom_matrix" && questionRequired &&  MatrixTableFile.find('input[type="file"]').length) {
+                    const questionCode = MatrixTableFile.data('question-code');
+                    if (matrixSubtype === "sh_custom_matrix" && questionCode === 'DIR_DETAILS' && questionRequired &&  MatrixTableFile.find('input[type="file"]').length) {
+                        let hasError = false;
+                        MatrixTableFile.find('tbody tr:visible').each(function () {
+                          const $fileInput = $(this).find('input[type="file"]');
+                            if (!$fileInput.val() || $fileInput.val().trim() === "") {
+                                console.log("haserror called");
+                                hasError = true;
+                                return false;
+                            }
+                        });
+                        if (hasError) {
+                            errors[questionId] = constrErrorMsg;
+                        }
+                    }
+                    else if (matrixSubtype === "sh_custom_matrix" && questionCode !== 'DIR_DETAILS' && questionRequired  &&  MatrixTableFile.find('input[type="file"]').length) {
                         const $fileInput = MatrixTableFile.find('tbody tr:visible').first().find('input[type="file"]');
                         if (!$fileInput.val() || $fileInput.val().trim() === "") {
                             errors[questionId] = constrErrorMsg;
@@ -836,3 +851,4 @@ SurveyFormWidget.include({
     });
 },
 });
+
