@@ -137,7 +137,7 @@
         <record model="survey.question.answer" id="matrix_address_detail_kyc_survey_col2">
             <field name="question_id" ref="matrix_address_detail_kyc_survey"/>
             <field name="sequence">2</field>
-            <field name="value">City</field>
+            <field name="value">City Name</field>
             <field name="sh_value_type">textbox</field>
         </record>
         <record model="survey.question.answer" id="matrix_address_detail_kyc_survey_col3">

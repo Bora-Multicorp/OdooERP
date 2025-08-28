@@ -169,7 +169,7 @@ class SurveyUserInput(models.Model):
                 elif line.question_id.id == Q("custom_contact.matrix_address_detail_kyc_survey").id:
                     values['address_detail'] = [(0, 0, {
                         'business_street': row.get('Address'),
-                        'business_city': row.get('City'),
+                        'business_city': row.get('City Name'),
                         'business_pincode': row.get('Pincode'),
                         'business_phone': row.get('Contact Number'),
                         'business_email': row.get('Email'),
