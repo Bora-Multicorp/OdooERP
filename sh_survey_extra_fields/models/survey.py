@@ -332,27 +332,39 @@ class SurveyQuestion(models.Model):
         # --------------------------
         # Check mandatory constraints
         # --------------------------
-        if self.add_an_item and self.matrix_subtype == 'sh_custom_matrix' and self.constr_mandatory:
-            row_answers = {str(row_id): [] for row_id in self.matrix_row_ids.ids}
-            for key, value in answers.items():
-                if "_" not in key or key.startswith("rowcount"):
-                    continue  # skip invalid or extra keys
-                row_id, _ = key.split('_')
-                valid_answers = [ans for ans in value]
-                row_answers[row_id].extend(valid_answers)
-            filled_ans = []
-            for row, ans in row_answers.items():
-                if not all(ans):
-                    filled_ans.append(False)
-                else:
-                    filled_ans.append(True)
-            if True not in filled_ans:
-                return {self.id: self.constr_error_msg or 'This question requires an answer.'}
+        if self.matrix_subtype == 'sh_custom_matrix' and self.constr_mandatory:
+            if self.question_code != 'DIR_DETAILS':
+                row_answers = {str(row_id): [] for row_id in self.matrix_row_ids.ids}
+                for key, value in answers.items():
+                    if "_" not in key or key.startswith("rowcount"):
+                        continue  # skip invalid or extra keys
+                    row_id, _ = key.split('_')
+                    valid_answers = [ans for ans in value]
+                    row_answers[row_id].extend(valid_answers)
+                filled_ans = []
+                for row, ans in row_answers.items():
+                    if not all(ans):
+                        filled_ans.append(False)
+                    else:
+                        filled_ans.append(True)
+                if True not in filled_ans:
+                    return {self.id: self.constr_error_msg or 'This question requires an answer.'}
+            else:
+                # New logic for DIR_DETAILS: if any column in a row is filled, all must be filled
+                row_answers = {str(row_id): [] for row_id in self.matrix_row_ids.ids}
+                for key, value in answers.items():
+                    if "_" not in key or key.startswith("rowcount"):
+                        continue
+                    row_id, _ = key.split('_')
+                    row_answers[row_id].extend(value)
+                for row_id, ans in row_answers.items():
+                    if any(ans) and not all(ans):
+                        return {self.id: self.constr_error_msg or 'This question requires an answer.'}
 
-        if not self.add_an_item and self.constr_mandatory:
+        """if not self.add_an_item and self.constr_mandatory:
             for row in answers:
                 if answers[row] == ['']:
-                    return {self.id: self.constr_error_msg or 'This question requires an answer.'}
+                    return {self.id: self.constr_error_msg or 'This question requires an answer.'}"""
 
         return {}
 
