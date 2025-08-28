@@ -1,4 +1,5 @@
 from odoo import models, api, fields
+from datetime import date, timedelta
 
 class PurchaseOrder(models.Model):
     _inherit = 'purchase.order'

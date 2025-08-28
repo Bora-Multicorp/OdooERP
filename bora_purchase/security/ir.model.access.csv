@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_bora_purchase_po_unlock_approvers,bora_purchase.po_unlock_approvers,model_po_unlock_approvers,base.group_user,1,1,1,1
+access_bora_po_unlock_approval_users,bora_purchase.po.unlock.approval.users,model_po_unlock_approval_users,base.group_user,1,1,1,1
+access_bora_reject_po_unlock_wizard,bora_purchase.reject.po.unlock.wizard,model_reject_po_unlock_wizard,base.group_user,1,1,1,1
+access_bora_approve_po_unlock_wizard,bora_purchase.approve.po.unlock.wizard,model_approve_po_unlock_wizard,base.group_user,1,1,1,1

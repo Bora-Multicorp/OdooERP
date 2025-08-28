@@ -242,7 +242,7 @@ class VendorKycWizard(models.TransientModel):
     aadhaar_pan_link = fields.Selection([('yes', 'Yes'), ('no', 'No')], string='Aadhar and PAN card linking?',
                                         required=True)
     gst_no = fields.Char(string="GST Number", required=True)
-    udyam_number = fields.Char(string="Udyam Certificate Number", required=False)
+    udyam_number = fields.Char(string="Udyam Certificate Number", required=True)
     license_registered = fields.Char(string="Any licenses registered (As per Local/State Government requirements)")
     gst_certificate = fields.Many2many('ir.attachment', 'vendor_kyc_gst_cert_rel', 'wizard_id', 'attachment_id',
                                        string="GST Certificate(Latest)", required=True)

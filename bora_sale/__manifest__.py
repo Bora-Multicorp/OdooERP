@@ -2,10 +2,10 @@
 {
     'name': "bora_sale",
 
-    'summary': "Bora Sale Operations",
+    'summary': "Bora sale operations",
 
     'description': """
-Bora Sale Operations
+Bora sale operations
     """,
 
     'author': "Bora",
@@ -18,7 +18,7 @@ Bora Sale Operations
     'version': '0.1',
 
     # any module necessary for this one to work correctly
-    'depends': ['base', 'crm', 'sale_management', 'purchase', 'sale', 'sale_stock', 'account'],
+    'depends': ['base', 'crm', 'sale_management', 'purchase', 'sale', 'sale_stock', 'account', 'prt_report_attachment_preview','product'],
 
     # always loaded
     'data': [
@@ -33,11 +33,12 @@ Bora Sale Operations
         'views/add_documents.xml',
         'views/pod_in_stock_picking.xml',   
         'views/quotation_to_pi.xml',
-        'views/remove_tax_field_dubai.xml',
-        'views/india_export_invoice.xml',
-        'views/IFSC_code.xml',
+        'views/hide_tax_field_dubai.xml',
+        'views/invoice_report_print_preview_action.xml',
+        'views/custom_invoice_report.xml',
+        'views/IFSC_and_branch_code.xml',
         'views/customer_fields_for_india_sale_invoice.xml',
-        'data/account_group_in_sales.xml'
+        'data/account_group_in_sales.xml',
     ],
     'application': True,
     'installable': True,
