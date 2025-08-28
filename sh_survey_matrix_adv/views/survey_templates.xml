@@ -9,7 +9,7 @@
                         % ('o_survey_selected' if answer else '')"
                 >
                     <t t-if="col_label.sh_value_type == 'textbox'">
-                        <input type="text" class="form-control text-uppercase" t-att-name="'%s_%s' % (question.id, row_label.id)" t-att-data-row-id="row_label.id" t-att-data-col-id="col_label.id" t-att-value="answer.value_text_box if answer else None" />
+                        <input type="text" class="form-control text-uppercase" style="width:100px;" t-att-name="'%s_%s' % (question.id, row_label.id)" t-att-data-row-id="row_label.id" t-att-data-col-id="col_label.id" t-att-value="answer.value_text_box if answer else None" />
                     </t>
 
                     <t t-if="col_label.sh_value_type == 'free_text'">
@@ -43,7 +43,7 @@
                         <div class="form-row js_cls_sh_many2one_wrapper">
                               <div class="form-group col-lg-12">
                                  <input t-attf-list="m2o_selection_#{col_label.id}"
-                                    class='form-control sh_m2o js_cls_sh_matrix_many2one_select text-uppercase' style="width:100%;"
+                                    class='form-control sh_m2o js_cls_sh_matrix_many2one_select text-uppercase' style="width:100px;"
                                     type="text"
                                     t-att-data-question-type="col_label.sh_value_type"
                                     t-att-data-row-id="row_label.id"
@@ -220,6 +220,7 @@
                         </t>
                         <t t-if="not review">
                             <input type="file" class="form-control o_survey_question_email_box sh_file_input"
+                            style="width:200px;"
                             t-att-name="'%s_%s' % (question.id, row_label.id)"
                             t-att-id="sh_survey_matrix_adv_file_id"
                             t-att-data-row-id="row_label.id"
@@ -257,6 +258,7 @@
         <!-- table subtype attribute added-->
         <xpath expr="//table" position="attributes">
             <attribute name="t-att-data-matrix-subtype">question.matrix_subtype</attribute>
+            <attribute name="t-att-data-question-code">question.question_code</attribute>
         </xpath>
         <xpath expr="//tr[contains(@class, 'bg-white text-white')][1]" position="replace">
         <!--<xpath expr="//td" position="replace">-->

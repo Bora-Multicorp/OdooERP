@@ -169,7 +169,7 @@ class SurveyUserInput(models.Model):
                 elif line.question_id.id == Q("custom_contact.matrix_address_detail_kyc_survey").id:
                     values['address_detail'] = [(0, 0, {
                         'business_street': row.get('Address'),
-                        'business_city': row.get('City'),
+                        'business_city': row.get('City Name'),
                         'business_pincode': row.get('Pincode'),
                         'business_phone': row.get('Contact Number'),
                         'business_email': row.get('Email'),
@@ -189,7 +189,7 @@ class SurveyUserInput(models.Model):
                 raise UserError(_("Unsupported field type '%s' for file field '%s'.") % (field.type, field_name))
 
         if values:
-            partner = self.partner_id or self.env['res.partner'].search([('email', '=', self.email)], limit=1)
+            partner = self.partner_id or self.env['res.partner'].search([('email', '=ilike', self.email)], limit=1)
             if partner:
                 values['partner_id'] = partner.id
                 kyc_record = self.env['res.partner.kyc.approval'].create(values)
