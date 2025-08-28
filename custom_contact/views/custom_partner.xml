@@ -210,8 +210,8 @@
                                             <field name="aadhaar_card_filename" column_invisible="1"/>
                                             <field name="aadhaar_card" filename="aadhaar_card_filename"
                                                    options="{'accepted_file_extensions': 'image/*, .pdf'}" widget="binary"/>
-                                            <field name="pan_card_filename" readonly="1" column_invisible="1" widget="binary"/>
-                                            <field name="pan_card" filename="pan_card_filename"/>
+                                            <field name="pan_card_filename" readonly="1" column_invisible="1"/>
+                                            <field name="pan_card" filename="pan_card_filename" widget="binary"/>
                                         </list>
                                         <form>
                                             <field name="designation" widget="upper_case"/>
