@@ -153,17 +153,45 @@ class SurveyUserInput(models.Model):
                 elif line.question_id.id == Q("custom_contact.matrix_director_detail_kyc_survey").id:
                     values['directors_detail'] = []
                     for row_id, row in row_data_map.items():
+                        aadhaar_file = row.get('Aadhaar Card')
+                        aadhaar_name = 'Aadhaar Card'
                         aadhaar_line = line_map[row_id].get('Aadhaar Card')
+                        if aadhaar_line and aadhaar_line.value_ans_sh_file_fname:
+                            aadhaar_name = aadhaar_line.value_ans_sh_file_fname
+                        aadhaar_attachment_id = (
+                            self.env['ir.attachment'].create({
+                                'name': aadhaar_name,
+                                'type': 'binary',
+                                'datas': aadhaar_file,
+                            }).id if aadhaar_file else False
+                        )
+
+                        # PAN file
+                        pan_file = row.get('PAN Card')
+                        pan_name = 'PAN Card'
                         pan_line = line_map[row_id].get('PAN Card')
+                        if pan_line and pan_line.value_ans_sh_file_fname:
+                            pan_name = pan_line.value_ans_sh_file_fname
+                        pan_attachment_id = (
+                            self.env['ir.attachment'].create({
+                                'name': pan_name,
+                                'type': 'binary',
+                                'datas': pan_file,
+                            }).id if pan_file else False
+                        )
+                        # aadhaar_line = line_map[row_id].get('Aadhaar Card')
+                        # pan_line = line_map[row_id].get('PAN Card')
                         values['directors_detail'].append((0, 0, {
                             'designation': row.get('Designation'),
                             'name': row.get('Name'),
                             'contact_no': row.get('Contact Number'),
                             'email': row.get('Email Address'),
-                            'aadhaar_card': row.get('Aadhaar Card'),
-                            'aadhaar_card_filename': aadhaar_line.value_ans_sh_file_fname if aadhaar_line else False,
-                            'pan_card': row.get('PAN Card'),
-                            'pan_card_filename': pan_line.value_ans_sh_file_fname if pan_line else False,
+                            'aadhaar_card_attachments': [(6, 0, [aadhaar_attachment_id])] if aadhaar_attachment_id else False,
+                            'pan_card_attachments': [(6, 0, [pan_attachment_id])] if pan_attachment_id else False,
+                            # 'aadhaar_card': row.get('Aadhaar Card'),
+                            # 'aadhaar_card_filename': aadhaar_line.value_ans_sh_file_fname if aadhaar_line else False,
+                            # 'pan_card': row.get('PAN Card'),
+                            # 'pan_card_filename': pan_line.value_ans_sh_file_fname if pan_line else False,
                         }))
 
                 elif line.question_id.id == Q("custom_contact.matrix_address_detail_kyc_survey").id:
