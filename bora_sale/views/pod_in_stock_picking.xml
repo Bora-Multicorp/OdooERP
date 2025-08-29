@@ -6,7 +6,7 @@
         <field name="inherit_id" ref="stock.view_picking_form"/>
         <field name="arch" type="xml">
             <xpath expr="//header" position="inside">
-                <button name="send_pod_to_accounts_group" string="Send POD" type="object" icon="fa-paper-plane" class="oe_highlight" title="Send 'proff of delivery' to accounts group" invisible="state != 'done'"/>
+                <button name="send_pod_to_accounts_group" string="Send POD" type="object" icon="fa-paper-plane" class="oe_highlight" title="Send 'proff of delivery' to accounts group" invisible="not is_pod_needed"/>
             </xpath>
         </field>
     </record>
@@ -20,12 +20,11 @@
                 <button name="action_view_attachments"
                         type="object"
                         class="oe_stat_button"
-                        icon="fa-file-text-o">
+                        icon="fa-file-text-o"
+                        invisible="not is_pod_needed">
                     <field name="attachment_count" widget="statinfo" string="Documents"/>
                 </button>
             </xpath>
         </field>
     </record>
-
-
 </odoo>
