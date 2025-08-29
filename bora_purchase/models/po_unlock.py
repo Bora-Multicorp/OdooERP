@@ -5,7 +5,7 @@ class PurchaseOrderUnlock(models.Model):
     _inherit = 'purchase.order'
 
     assigned_to = fields.Many2one('res.users', string='Assigned To')
-    approval_users_ids = fields.One2many('po.unlock.approval.users', 'po_unlock_approval_id', 'Unlocm Approval Authorities', help='PO unlock approval authority details')
+    approval_users_ids = fields.One2many('po.unlock.approval.users', 'po_unlock_approval_id', 'Unlock Approval Authorities', help='PO unlock approval authority details')
     existing_user_ids = fields.Many2many('res.users', compute='_compute_existing_users', store=True)
     
 
@@ -16,9 +16,6 @@ class PurchaseOrderUnlock(models.Model):
                 record.existing_user_ids = [(6, 0, record.approval_users_ids.mapped('user_id').ids)]
             else:
                 record.existing_user_ids = [(6, 0, [])]
-
-    def _update_state_based_on_approvals(self):
-        print('_update_state_based_on_approvals', self.approval_users_ids)
 
 
     show_unlock_approve_reject_buttons = fields.Boolean(string="Show", compute='_show_approve_reject_buttons', store=False)
@@ -49,9 +46,9 @@ class PurchaseOrderUnlock(models.Model):
 
     def button_unlock(self):
 
-        po_unlock_approval_users = self.env['po.unlock.approvers'].sudo().search([])
+        po_unlock_approval_users = self.env['purchase.order.approvers'].sudo().search([])
         if not po_unlock_approval_users:
-            raise ValidationError("Please Add PO Unlock Authority before Submit Request.")
+            raise ValidationError("Please add PO authority before submit request.")
 
 
         po_unlock_approval_user_vals = []
@@ -74,11 +71,11 @@ class PurchaseOrderUnlock(models.Model):
         
 
         if self.id:
-            self._update_assigned_to()
+            self._update_assigned_to_For_unlock()
 
         self._create_activity_and_send_notification_for_unlock_request()
 
-    def _update_assigned_to(self):
+    def _update_assigned_to_For_unlock(self):
         for rec in self:
             next_user = None
             for line in sorted(rec.approval_users_ids, key=lambda x: x.sequence):
@@ -93,7 +90,7 @@ class PurchaseOrderUnlock(models.Model):
 
     def _send_notification_on_rejection(self):
         
-        approval_users = self.env['po.unlock.approvers'].sudo().search([])
+        approval_users = self.env['purchase.order.approvers'].sudo().search([])
 
         for user in approval_users:
             if user.user_id == self.env.user:
@@ -207,7 +204,7 @@ class PurchaseOrderUnlock(models.Model):
                     },
                 )
 
-
+ 
 
 
 class POUnlockApprovalUsers(models.Model):
@@ -223,18 +220,3 @@ class POUnlockApprovalUsers(models.Model):
     state = fields.Selection([('approve', 'Approved'), ('reject', 'Rejected')], string="Action")
     remark = fields.Char('Remarks', tracking=True)
     action_date = fields.Datetime(string="Action Date")
-
-    def write(self, vals):
-        res = super().write(vals)
-        for rec in self:
-            if rec.po_unlock_approval_id:
-                rec.po_unlock_approval_id._update_state_based_on_approvals()
-        return res
-    
-    @api.model_create_multi
-    def create(self, vals_list):
-        res_list = super(POUnlockApprovalUsers, self).create(vals_list)
-        for res in res_list:
-            if res.po_unlock_approval_id:
-                res.po_unlock_approval_id._update_state_based_on_approvals()
-        return res_list
