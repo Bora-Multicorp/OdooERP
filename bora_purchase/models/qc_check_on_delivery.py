@@ -28,13 +28,6 @@ class QACheckForDelivery(models.Model):
     )
 
     def action_toggle_qc_button(self):
-        # return {
-        #     "type": "ir.actions.client",
-        #     "tag": "switch_to_qc_tab",  # Must match JS registry key
-        #     "params": {
-        #         "tab_name": "note",  # 👈 pass page name here
-        #     },
-        # }
 
         for picking in self:
             if not picking.is_qc_done:
@@ -60,6 +53,15 @@ class QACheckForDelivery(models.Model):
                         'message': "QC passed — you may now validate the receipt.",
                         'sticky': True,
                     })
+
+        return {
+            "type": "ir.actions.client",
+            "tag": "switch_to_qc_tab", 
+            "params": {
+                "tab_name": "Quality Check",
+            },
+        }
+
 
 
     def button_validate(self):

@@ -36,7 +36,7 @@ Bora purchase operations
     ],
     'assets': {
         'web.assets_backend': [
-            # '/bora_purchase/static/src/js/switch_tab.js',
+            '/bora_purchase/static/src/js/switch_tab.js',
         ],
     },
 
