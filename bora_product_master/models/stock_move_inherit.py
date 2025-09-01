@@ -153,7 +153,7 @@ class StockMoveLine(models.Model):
 
                 if not is_brand_samsung_or_oneplus:
                     if record.imei == record.imei2:
-                        raise ValidationError(_('Both IMEI numbers must be different'))
+                        raise ValidationError(f"Both IMEI numbers must be different for product '{record.product_id.product_tmpl_id.name}'")
                 
                 imei_results = self.env['stock.quant'].search([
                     '|',
