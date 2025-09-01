@@ -17,7 +17,10 @@ class POD_in_stock_picking(models.Model):
 
     def _compute_is_pod_needed(self):
         for rec in self:
-            rec.is_pod_needed = rec.picking_type_code == 'outgoing' and rec.state == 'done' and rec.sale_id.payment_term_id.name.lower() == 'cash'
+            if rec.sale_id.payment_term_id.name:
+                rec.is_pod_needed = rec.picking_type_code == 'outgoing' and rec.state == 'done' and rec.sale_id.payment_term_id.name.lower() == 'cash'
+            else:
+                rec.is_pod_needed = False
 
 
     def _compute_attachment_count(self):
