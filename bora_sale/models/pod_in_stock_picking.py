@@ -10,6 +10,19 @@ class POD_in_stock_picking(models.Model):
         compute="_compute_attachment_count"
     )
 
+    is_pod_needed = fields.Boolean(
+        compute="_compute_is_pod_needed",
+        store=False
+    )
+
+    def _compute_is_pod_needed(self):
+        for rec in self:
+            if rec.sale_id.payment_term_id.name:
+                rec.is_pod_needed = rec.picking_type_code == 'outgoing' and rec.state == 'done' and rec.sale_id.payment_term_id.name.lower() == 'cash'
+            else:
+                rec.is_pod_needed = False
+
+
     def _compute_attachment_count(self):
         Attachment = self.env['ir.attachment']
         for order in self:
@@ -59,8 +72,6 @@ class POD_in_stock_picking(models.Model):
             'target': 'new',
             'context': ctx,
         }
-
-
 
 
     def action_view_attachments(self):
