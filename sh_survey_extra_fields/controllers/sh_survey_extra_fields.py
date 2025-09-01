@@ -78,3 +78,10 @@ class SurveyController(http.Controller):
             download_url = f"{base_url}/web/content/{answer_line._name}/{answer_line.id}/value_ans_sh_file/{answer_line.value_ans_sh_file_fname}?download=true&access_token={answer_token}"
             return request.redirect(download_url)
         return request.redirect(base_url)
+
+    @http.route(['/survey/check_vendor_email'], type='json', auth="public", methods=['POST'], csrf=False)
+    def check_vendor_email(self, vendor_email, **kw):
+        partner = request.env["survey.user_input"].sudo()._find_partner_by_email(vendor_email)
+        return bool(partner)
+
+

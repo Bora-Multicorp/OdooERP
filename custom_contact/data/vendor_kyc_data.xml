@@ -41,6 +41,7 @@
             <field name="validation_email">True</field>
             <field name="save_as_email">True</field>
             <field name="question_placeholder">Your Answer</field>
+            <field name="question_code">vendor_email</field>
         </record>
         <!-- Point of Contact / Purchase Manager (Bora Multicorp) -->
         <record model="survey.question" id="company_point_of_contact_kyc_survey">
