@@ -1,13 +1,20 @@
 # -*- coding: utf-8 -*-
 from odoo import models, _
 from odoo.exceptions import UserError
+import logging
 
+_logger = logging.getLogger(__name__)
 
 class SurveyUserInput(models.Model):
     _inherit = "survey.user_input"
 
     def action_testing(self):
         pass
+
+    def _find_partner_by_email(self, email):
+        if not email:
+            return self.env['res.partner'].browse([])  # return empty recordset
+        return self.env['res.partner'].sudo().search([('email','=ilike',email),('is_vendor','=',True)], limit=1)
 
     def _mark_done(self):
         super()._mark_done()  # Ensure the base behavior is triggered
@@ -217,17 +224,31 @@ class SurveyUserInput(models.Model):
                 raise UserError(_("Unsupported field type '%s' for file field '%s'.") % (field.type, field_name))
 
         if values:
-            partner = self.partner_id or self.env['res.partner'].search([('email', '=ilike', self.email)], limit=1)
+            #partner = self.partner_id or self.env['res.partner'].search([('email', '=ilike', self.email)], limit=1)
+            vendor_email = self.email.strip() if self.email else ''
+            partner = self._find_partner_by_email(vendor_email)
             if partner:
                 values['partner_id'] = partner.id
-                kyc_record = self.env['res.partner.kyc.approval'].create(values)
-                if kyc_record:
-                    # for bank in kyc_record.bank_detail:
-                    #     for att in bank.bank_cheque_attachments:
-                    #         att.write({'res_id': bank.id})
-                    partner.write({
-                        'is_kyc': True,
-                        'rejection_date': False,
-                        'rejection_reason': False,
-                        'is_rejected': False,
-                    })
+                try:
+                    kyc_record = self.env['res.partner.kyc.approval'].create(values)
+                    if kyc_record:
+                        # for bank in kyc_record.bank_detail:
+                        #     for att in bank.bank_cheque_attachments:
+                        #         att.write({'res_id': bank.id})
+                        partner.write({
+                            'is_kyc': True,
+                            'rejection_date': False,
+                            'rejection_reason': False,
+                            'is_rejected': False,
+                        })
+                except Exception as e:
+                    _logger.exception("Error while creating KYC for email: %s", vendor_email)
+                    self.env['ir.logging'].sudo().create({'type': 'server',
+                                                          'name':'KYC Creation Error',
+                                                          'level': 'DEBUG',
+                                                          'path': 'res.partner.kyc.approval',
+                                                          'func': '_mark_done',
+                                                          'line': 1,
+                                                          'message': f"Error creating KYC for email: {vendor_email}. Exception: {str(e)}"})
+                    return False
+
