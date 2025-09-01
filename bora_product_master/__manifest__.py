@@ -18,7 +18,7 @@
     'version': '0.1',
 
     # any module necessary for this one to work correctly
-    'depends': ['base', 'product', 'stock', 'purchase', 'sale_management', 'product_multi_company', 'product_multi_images', 'product_dimension', 'case_sensitive_widget', 'stock_barcode'],
+    'depends': ['base', 'product', 'stock', 'sale_project', 'purchase', 'sale_management', 'product_multi_company', 'product_multi_images', 'product_dimension', 'case_sensitive_widget', 'stock_barcode'],
 
     # always loaded
     'data': [
