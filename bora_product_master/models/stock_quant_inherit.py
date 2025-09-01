@@ -102,8 +102,17 @@ class StockQuantInherit(models.Model):
 
             if is_dual_sim:
 
-                if record.imei == record.imei2:
-                    raise ValidationError(_('Both IMEI numbers must be different'))
+                # check if brand is samsung or oneplus, as these two brands have imei1 and imei2 field's same value 
+                brand_record = record.product_id.product_tmpl_id.brand_id
+                brand_name = brand_record.name
+                is_brand_samsung_or_oneplus = False
+                if brand_name and (brand_name.lower() == 'samsung' or brand_name.lower() == 'oneplus'):
+                    is_brand_samsung_or_oneplus = True
+
+                if not is_brand_samsung_or_oneplus:
+                    if record.imei == record.imei2:
+                        raise ValidationError(_('Both IMEI numbers must be different'))
+                    
                 
                 imei_results = self.env['stock.quant'].search([
                     ('id', '!=', record.id),
