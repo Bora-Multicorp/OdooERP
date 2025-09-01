@@ -250,10 +250,11 @@
                             <div style="font-size:14px; text-align:left;">
                                 <strong>Amount Chargeable (in words):</strong>
                                 <br/>
-                                 <t t-set="amount" t-value="doc.amount_total"/>
-                                <t t-set="currency" t-value="doc.currency_id"/>
-                                <t t-set="amount_words" t-value="doc.company_id.currency_id.amount_to_text(doc.currency_id._convert(amount, doc.company_id.currency_id, doc.company_id, doc.date_order) )"/>
-                                <span t-esc="amount_words + ' Only (' + currency.symbol + ' ' + ('%.2f' % amount) + ')'"/>
+                                <t t-set="converted_amount"
+                                   t-value="doc.currency_id._convert(doc.amount_total, doc.company_id.currency_id, doc.company_id, doc.date_order)"/>
+                                <t t-set="company_currency" t-value="doc.company_id.currency_id"/>
+                                <t t-set="amount_words" t-value="company_currency.amount_to_text(converted_amount)"/>
+                                <span t-esc="amount_words + ' Only (' + company_currency.symbol + ' ' + ('%.2f' % converted_amount) + ')'"/>
                             </div>
                         </td>
                         <td style="width:40%; vertical-align:top; border:1px solid black; padding:5px; border-bottom:0px; border-left:none;">
