@@ -36,18 +36,18 @@
 <!--                                </div>-->
 
                                 <!-- Emirate (you can store in state_id or custom field) -->
-                                <div t-if="doc.company_id.partner_id.state_id">
+                                <div t-if="doc.company_id.partner_id.state_id.name">
                                     Emirate :
-                                    <span t-esc="doc.company_id.partner_id.state_id or ''"/>
+                                    <span t-esc="doc.company_id.partner_id.state_id.name or ''"/>
                                 </div>
-                                <t t-if="doc.company_id.vat">
+                                <div t-if="doc.company_id.vat">
                                     TRN :
                                     <span t-field="doc.company_id.vat"/>
-                                </t>
-                                <t t-if="doc.partner_invoice_id.email">
+                                </div>
+                                <div t-if="doc.partner_invoice_id.email">
                                     E-Mail :
                                     <span t-field="doc.partner_invoice_id.email"/>
-                                </t>
+                                </div>
                             </div>
 
                             <div style="padding:5px; border-bottom:1px solid black;">
@@ -58,9 +58,6 @@
                                     <br/>
                                     D-15, Dubai Airport Freezone, Dubai, U.A.E.
                                 </p>
-                                <br/>
-                                <br/>
-                                <br/>
                             </div>
                             <div style="padding:5px;">
                                 Buyer
