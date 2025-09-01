@@ -135,6 +135,13 @@ class ProductTemplateInherit(models.Model):
 
 
 
+    @api.onchange('type')
+    def _onchange_type(self):
+        if self.type == 'consu':
+            self.is_storable = True
+            self.tracking = 'serial'
+
+
 
     # To set the product name in ALL CAPS based on model number
     @api.onchange('model')
