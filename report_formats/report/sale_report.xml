@@ -27,13 +27,13 @@
                                     </t>
                                 </div>
 
-<!--                                &lt;!&ndash; P.O Box (custom field or add manually if fixed) &ndash;&gt;-->
-<!--                                <div>-->
-<!--                                    <t t-if="doc.company_id.partner_id.zip">-->
-<!--                                        P.O.Box-->
-<!--                                        <span t-esc="doc.company_id.partner_id.zip"/>-->
-<!--                                    </t>-->
-<!--                                </div>-->
+                                <!--                                &lt;!&ndash; P.O Box (custom field or add manually if fixed) &ndash;&gt;-->
+                                <!--                                <div>-->
+                                <!--                                    <t t-if="doc.company_id.partner_id.zip">-->
+                                <!--                                        P.O.Box-->
+                                <!--                                        <span t-esc="doc.company_id.partner_id.zip"/>-->
+                                <!--                                    </t>-->
+                                <!--                                </div>-->
 
                                 <!-- Emirate (you can store in state_id or custom field) -->
                                 <div t-if="doc.company_id.partner_id.state_id.name">
@@ -44,9 +44,9 @@
                                     TRN :
                                     <span t-field="doc.company_id.vat"/>
                                 </div>
-                                <div t-if="doc.partner_invoice_id.email">
+                                <div t-if="doc.company_id.partner_id.email">
                                     E-Mail :
-                                    <span t-field="doc.partner_invoice_id.email"/>
+                                    <span t-field="doc.company_id.partner_id.email"/>
                                 </div>
                             </div>
 
@@ -73,20 +73,11 @@
                                     <t t-if="doc.partner_invoice_id.city">,
                                         <span t-field="doc.partner_invoice_id.city"/>
                                     </t>
-                                    <t t-if="doc.partner_invoice_id.state_id">,
-                                        <span t-field="doc.partner_invoice_id.state_id.name"/>
-                                    </t>
-                                    <t t-if="doc.partner_invoice_id.zip">,
-                                        <span t-field="doc.partner_invoice_id.zip"/>
-                                    </t>
-                                    <t t-if="doc.partner_invoice_id.country_id">,
-                                        <span t-field="doc.partner_invoice_id.country_id.name"/>
-                                    </t>
                                     <div>
                                         Emirate :
                                         <span t-esc="doc.partner_invoice_id.state_id.name"/>
                                     </div>
-                                          <div>
+                                    <div>
                                         Country :
                                         <span t-esc="doc.partner_invoice_id.country_id.name"/>
                                     </div>
@@ -259,7 +250,10 @@
                             <div style="font-size:14px; text-align:left;">
                                 <strong>Amount Chargeable (in words):</strong>
                                 <br/>
-                                <span t-esc="doc.company_id.currency_id.amount_to_text(doc.currency_id._convert(doc.amount_total, doc.company_id.currency_id, doc.company_id, doc.date_order)) + ' only'"/>
+                                 <t t-set="amount" t-value="doc.amount_total"/>
+                                <t t-set="currency" t-value="doc.currency_id"/>
+                                <t t-set="amount_words" t-value="doc.company_id.currency_id.amount_to_text(doc.currency_id._convert(amount, doc.company_id.currency_id, doc.company_id, doc.date_order) )"/>
+                                <span t-esc="amount_words + ' Only (' + currency.symbol + ' ' + ('%.2f' % amount) + ')'"/>
                             </div>
                         </td>
                         <td style="width:40%; vertical-align:top; border:1px solid black; padding:5px; border-bottom:0px; border-left:none;">
@@ -302,7 +296,7 @@
                                         </t>
                                         <tr>
                                             <td style="width:30%;">
-                                                <strong>SWIFT Code</strong>
+                                                <strong>Branch &amp; Swift Code</strong>
                                             </td>
                                             <td style="width:70%;">
                                                 :
