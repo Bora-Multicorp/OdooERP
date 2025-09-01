@@ -53,7 +53,7 @@
                     <field name="is_mobile_category_selected" invisible="1"/>
                     <field name="is_packaging_material" invisible="1"/>
                     <!-- Inventory Type field -->
-                    <field name="type" widget="radio" options="{'horizontal': True}" readonly="1"/>
+                    <field name="type" widget="radio" options="{'horizontal': True}"/>
                     <field name="combo_ids" widget="many2many_tags" placeholder="e.g. Starter - Meal - Desert" invisible="type != 'combo'" options="{'no_quick_create': True,'edit_tags': True,}"/>
                     <!-- Track inventory -->
                     <label for="is_storable" class="oe_inline" invisible="type != 'consu'"/>
