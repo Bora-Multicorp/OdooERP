@@ -38,7 +38,7 @@ Bora sale operations
         'views/custom_invoice_report.xml',
         'views/IFSC_and_branch_code.xml',
         'views/customer_fields_for_india_sale_invoice.xml',
-        # 'views/create_csv_and_download.xml',
+        'views/create_csv_and_download.xml',
         'data/account_group_in_sales.xml',
     ],
     'application': True,
