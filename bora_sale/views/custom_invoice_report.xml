@@ -1007,7 +1007,7 @@
                                                     </div>
                                                     <div>
                                                         <strong>
-                                                            <span t-field="o.invoice_date.strftime('%d-%b-%y')"/>
+                                                            <span t-esc="o.invoice_date.strftime('%d-%b-%y')"/>
                                                         </strong>
                                                     </div>
                                                 </td>
@@ -1093,7 +1093,7 @@
                                                     </div>
                                                     <div>
                                                         <strong>
-                                                            <span t-field="o.buyer_date.strftime('%d-%b-%y')"/>
+                                                            <span t-esc="o.buyer_date.strftime('%d-%b-%y')"/>
                                                         </strong>
                                                     </div>
                                                 </td>
@@ -1121,7 +1121,7 @@
                                                     </div>
                                                     <div>
                                                         <strong>
-                                                            <span t-field="o.delivery_note_date.strftime('%d-%b-%y')"/>
+                                                            <span t-esc="o.delivery_note_date.strftime('%d-%b-%y')"/>
                                                         </strong>
                                                     </div>
                                                 </td>
