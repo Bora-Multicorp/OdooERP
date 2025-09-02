@@ -12,13 +12,18 @@ import {
     serializeDate,
 } from "@web/core/l10n/dates";
 
+
 SurveyFormWidget.include({
     events: Object.assign({}, SurveyFormWidget.prototype.events || {}, {
         "change .js_cls_country_id": "_onChangeCountry",
         'change .sh_file_input': '_onChangeFileInput',
         "click .js_cls_sh_signature_clear_btn": "_onClickSignatureClearButton",
         'input input.o_survey_question_text_box': '_onLegalNameChangeInit',
+        'blur input.o_survey_question_text_box[type="email"]': '_onChangeVendorEmailInput',
     }),
+
+    VENDOR_EMAIL_NOT_FOUND: "This email is not registered in our system. Please enter a valid email or contact admin.",
+
 
     /**
      * @override
@@ -27,10 +32,72 @@ SurveyFormWidget.include({
         this.SH_FILE_DATA_DICTIONARY = {};
         this._super.apply(this, arguments);
     },
-    
+
+    start: function () {
+        var self = this;
+        this.validatedEmails = {};
+        return this._super.apply(this, arguments).then(function () {
+            var $form = self.$('form');
+            if (!$form.length) return;
+            $form.find('[data-question-code="vendor_email"]').each(function () {
+                var $input = $(this);
+                var v_email = $input.val().trim();
+                if (v_email) {
+                    self._validateVendorEmail($input);
+                }
+            });
+        });
+    },
+
     _onInputRangeValueChange: function (ev) {
         var $input = $(ev.currentTarget);
         $input.next('label').html($input.val())
+    },
+
+    _onChangeVendorEmailInput: function(ev) {
+        var $input = $(ev.currentTarget);
+        var question_code = $input.data('question-code');
+        console.log("Question code:", question_code);
+        if (question_code === 'vendor_email') {
+            this._validateVendorEmail($input);
+        }
+    },
+
+    _clearError: function($questionWrapper) {
+        $questionWrapper.find('.o_survey_question_error span').remove();
+        $questionWrapper.find('.o_survey_question_error').removeClass('slide_in');
+    },
+
+    _validateVendorEmail: function($input) {
+        var self = this;
+        var email = $input.val().trim();
+        var $questionWrapper = $input.closest(".js_question-wrapper");
+        var questionId = $questionWrapper.attr('id');
+        if (!self.validatedEmails) self.validatedEmails = {};
+        self._clearError($questionWrapper);
+        if (!email) {
+            $input.removeClass('is-valid').addClass('is-invalid');
+            self.validatedEmails[questionId] = true;
+            var errors = {};
+            errors[questionId] = "Email is required.";
+            self._showErrors(errors);
+            return false;
+        }
+        // RPC call to check email in res.partner
+        rpc("/survey/check_vendor_email", {'vendor_email': email}).then(function(count) {
+            var errors = {}; // reset errors here
+            if (count > 0) {
+                $input.removeClass('is-invalid').addClass('is-valid');
+                self.validatedEmails[questionId] = true;
+                self._clearError($questionWrapper);
+            } else {
+                $input.removeClass('is-valid').addClass('is-invalid');
+                self.validatedEmails[questionId] = false;
+                errors[questionId] = self.VENDOR_EMAIL_NOT_FOUND;
+                self._showErrors(errors);
+            }
+         });
+        return true;
     },
 
     /**
@@ -377,7 +444,22 @@ SurveyFormWidget.include({
                 case 'matrix':
                     const MatrixTableFile = $questionWrapper.find('table.o_survey_question_matrix');
                     const matrixSubtype = MatrixTableFile.data('matrix-subtype');
-                    if (matrixSubtype === "sh_custom_matrix" && questionRequired &&  MatrixTableFile.find('input[type="file"]').length) {
+                    const questionCode = MatrixTableFile.data('question-code');
+                    if (matrixSubtype === "sh_custom_matrix" && questionCode === 'DIR_DETAILS' && questionRequired &&  MatrixTableFile.find('input[type="file"]').length) {
+                        let hasError = false;
+                        MatrixTableFile.find('tbody tr:visible').each(function () {
+                          const $fileInput = $(this).find('input[type="file"]');
+                            if (!$fileInput.val() || $fileInput.val().trim() === "") {
+                                console.log("haserror called");
+                                hasError = true;
+                                return false;
+                            }
+                        });
+                        if (hasError) {
+                            errors[questionId] = constrErrorMsg;
+                        }
+                    }
+                    else if (matrixSubtype === "sh_custom_matrix" && questionCode !== 'DIR_DETAILS' && questionRequired  &&  MatrixTableFile.find('input[type="file"]').length) {
                         const $fileInput = MatrixTableFile.find('tbody tr:visible').first().find('input[type="file"]');
                         if (!$fileInput.val() || $fileInput.val().trim() === "") {
                             errors[questionId] = constrErrorMsg;
@@ -493,6 +575,15 @@ SurveyFormWidget.include({
    // Validate fields with conditional required
    let isValid = true;
    let errorMap = {};
+   if (self.validatedEmails) {
+        $form.find('input[data-question-code="vendor_email"]').each(function () {
+            const $input = $(this);
+            const qId = $input.closest(".js_question-wrapper").attr("id");
+            if (self.validatedEmails[qId] === false) {
+                errorMap[qId] = self.VENDOR_EMAIL_NOT_FOUND;
+            }
+        });
+    }
    $form.find('[data-cond-required="1"]').each(function () {
         const $input = $(this);
         const questionId = $input.attr('name');

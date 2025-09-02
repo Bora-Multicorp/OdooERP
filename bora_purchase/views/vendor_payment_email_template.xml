@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+        <record id="email_template_vendor_payment_confirmation" model="mail.template">
+            <field name="name">Vendor Bill: Payment Confirmation</field>
+            <field name="model_id" ref="account.model_account_payment"/>
+            <field name="email_from">{{ (object.company_id.email_formatted or user.email_formatted) }}</field>
+            <field name="partner_to">{{ object.partner_id.id }}</field>
+            <field name="subject">{{ object.company_id.name }} - Payment Confirmation for Bill (Ref {{ object.memo or 'n/a' }})</field>
+            <field name="body_html" type="html">
+                <div style="margin: 0px; padding: 0px;">
+                    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+                        Hello <t t-out="object.partner_id.name or 'Vendor'">Vendor</t>,
+                        <br/><br/>
+                        This is to confirm that we have processed the payment for your bill
+                        <span style="font-weight:bold;" t-out="object.memo or ''">BILL/25-26/08/0006</span>.
+                        <t t-if="object.amount">
+                            The amount paid is
+                            <span style="font-weight:bold;" t-out="format_amount(object.amount, object.currency_id) or ''">$ 1,000.00</span>.
+                        </t>
+                        <br/><br/>
+                        Here is a summary of the items on the bill:
+                    </p>
+
+                    <!-- Find the original vendor bill record using the payment's memo field. -->
+                    <t t-set="bill" t-value="env['account.move'].search([('name', '=', object.memo)], limit=1)"/>
+                    
+                    <t t-if="bill">
+                        <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+                            <thead style="background-color: #f2f2f2;">
+                                <tr>
+                                    <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Product</th>
+                                    <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Quantity</th>
+                                    <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Unit of Measure</th>
+                                    <th style="padding: 12px; text-align: right; border: 1px solid #ddd;">Unit Price</th>
+                                    <th style="padding: 12px; text-align: right; border: 1px solid #ddd;">Taxes</th>
+                                    <th style="padding: 12px; text-align: right; border: 1px solid #ddd;">Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Loop through each line item on the bill -->
+                                <t t-foreach="bill.invoice_line_ids" t-as="line">
+                                    <tr>
+                                        <td style="padding: 12px; text-align: left; border: 1px solid #ddd;"><t t-out="line.name or ''"/></td>
+                                        <td style="padding: 12px; text-align: left; border: 1px solid #ddd;"><t t-out="line.quantity or ''"/></td>
+                                        <td style="padding: 12px; text-align: left; border: 1px solid #ddd;"><t t-out="line.product_uom_id.name or ''"/></td>
+                                        <td style="padding: 12px; text-align: right; border: 1px solid #ddd;"><t t-out="format_amount(line.price_unit, bill.currency_id) or ''"/></td>
+                                        <td style="padding: 12px; text-align: right; border: 1px solid #ddd;"><t t-out="', '.join(tax.name for tax in line.tax_ids)"/></td>
+                                        <td style="padding: 12px; text-align: right; border: 1px solid #ddd;"><t t-out="format_amount(line.price_subtotal, bill.currency_id) or ''"/></td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                            <tfoot>
+                                <!-- Display a total row -->
+                                <tr>
+                                    <td colspan="5" style="padding: 12px; text-align: right; border: 1px solid #ddd; font-weight:bold;">Subtotal:</td>
+                                    <td style="padding: 12px; text-align: right; border: 1px solid #ddd;"><t t-out="format_amount(bill.amount_untaxed, bill.currency_id)"/></td>
+                                </tr>
+                                <tr>
+                                    <td colspan="5" style="padding: 12px; text-align: right; border: 1px solid #ddd; font-weight:bold;">Taxes:</td>
+                                    <td style="padding: 12px; text-align: right; border: 1px solid #ddd;"><t t-out="format_amount(bill.amount_tax, bill.currency_id)"/></td>
+                                </tr>
+                                <tr>
+                                    <td colspan="5" style="padding: 12px; text-align: right; border: 1px solid #ddd; font-weight:bold;">Total:</td>
+                                    <td style="padding: 12px; text-align: right; border: 1px solid #ddd;"><t t-out="format_amount(bill.amount_total, bill.currency_id)"/></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </t>
+
+                    <p style="margin: 0px; padding: 0px; font-size: 13px; margin-top: 20px;">
+                        <br/>
+                        Thank you for your business!
+                        <br/><br/>
+                        Best regards,
+                        <br/>
+                        <t t-out="object.company_id.name or 'YourCompany'"/>
+                    </p>
+                </div>
+            </field>
+            <field name="report_template_ids" eval="[]"/>
+            <field name="lang">{{ object.partner_id.lang }}</field>
+            <field name="auto_delete" eval="False"/>
+        </record>
+    </data>
+</odoo>

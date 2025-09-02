@@ -1,14 +1,32 @@
-from odoo import models, fields, api
+from odoo import models, fields, api, _
 
 
 class SaleOrder(models.Model):
     _inherit = 'sale.order'
 
+    warehouse_warning = fields.Html(
+        compute="_compute_warehouse_warning",
+        sanitize=False,
+    )
+
+    @api.depends("warehouse_id")
+    def _compute_warehouse_warning(self):
+        for order in self:
+            if not order.warehouse_id:
+                order.warehouse_warning = (
+                    '<div class="alert alert-warning" role="alert">'
+                    '⚠️ <strong>%s</strong>'
+                    "</div>" % _("There is no warehouse on this Sales Order. Please add a warehouse.")
+                )
+            else:
+                order.warehouse_warning = False
+
     trade_type = fields.Selection([
         ('local', 'Local Trade'),
         ('freezone', 'Freezone Trade'),
         ('bora_global', 'Bora Global'),
-    ],  default='freezone',string='Trade Type')
+    ], default='freezone', string='Trade Type')
+
 
     def action_confirm(self):
         res = super().action_confirm()

@@ -1,0 +1,83 @@
+<odoo>
+    <record id="email_template_invoice_paid" model="mail.template">
+        <field name="name">Invoice Paid - Warehouse Notification</field>
+        <field name="model_id" ref="account.model_account_move"/>
+        <field name="email_from">{{ user.email_formatted }}</field>
+        <field name="subject">Invoice Paid: {{ object.name }}</field>
+        <field name="body_html" type="html">
+            <div>
+                <p>Dear Warehouse Team,</p>
+                <p>This is a notification that Invoice <strong><t t-out="object.name"/></strong> related to
+                   Sale Order <strong><t t-out="object.invoice_origin"/></strong>
+                   is now <strong>fully paid</strong>.</p>
+
+                    <t t-if="object.invoice_line_ids">
+                    <table style="width:100%; border-collapse: collapse; margin-top: 20px;">
+                        <thead>
+                            <tr style="background-color: #f2f2f2;">
+                                <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Product</th>
+                                <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">Quantity</th>
+                                <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">Unit Price</th>
+                                <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-foreach="object.invoice_line_ids" t-as="line">
+                                <tr>
+                                    <td style="border: 1px solid #ddd; padding: 8px;">
+                                        <t t-out="line.name"/>
+                                    </td>
+                                    <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">
+                                        <t t-out="line.quantity"/>
+                                    </td>
+                                    <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">
+                                        <t t-out="line.price_unit"/>
+                                    </td>
+                                    <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">
+                                        <t t-out="line.price_subtotal"/>
+                                    </td>
+                                </tr>
+                            </t>
+                        </tbody>
+                    </table>
+                </t>
+
+                <!-- Totals Section like in Invoice Footer -->
+                <div style="margin-top: 20px; float: right; width: 50%;">
+                    <table style="width:100%; border-collapse: collapse;">
+                        <tr>
+                            <td style="padding: 4px; text-align: right;"><strong>Total:</strong></td>
+                            <td style="padding: 4px; text-align: right;">
+                                <t t-out="object.amount_total"/> <t t-out="object.currency_id.symbol"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 4px; text-align: right;"><strong>Paid on:</strong></td>
+                            <td style="padding: 4px; text-align: right;">
+                                <t t-out="object.invoice_date or ''"/> —
+                                <t t-out="object.amount_total"/> <t t-out="object.currency_id.symbol"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 4px; text-align: right;"><strong>Amount Due:</strong></td>
+                            <td style="padding: 4px; text-align: right;">
+                                <t t-out="object.amount_residual"/> <t t-out="object.currency_id.symbol"/>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div style="clear: both;"></div>
+
+                <p style="margin: 0px; padding: 0px; font-size: 13px; margin-top: 40px;">
+                    <br/>
+                    Thank you!
+                    <br/><br/>
+                    Best regards,
+                    <br/>
+                    <t t-out="object.company_id.name or 'YourCompany'"/>
+                </p>
+            </div>
+        </field>
+    </record>
+</odoo>

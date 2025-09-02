@@ -41,6 +41,7 @@
             <field name="validation_email">True</field>
             <field name="save_as_email">True</field>
             <field name="question_placeholder">Your Answer</field>
+            <field name="question_code">vendor_email</field>
         </record>
         <!-- Point of Contact / Purchase Manager (Bora Multicorp) -->
         <record model="survey.question" id="company_point_of_contact_kyc_survey">
@@ -137,7 +138,7 @@
         <record model="survey.question.answer" id="matrix_address_detail_kyc_survey_col2">
             <field name="question_id" ref="matrix_address_detail_kyc_survey"/>
             <field name="sequence">2</field>
-            <field name="value">City</field>
+            <field name="value">City Name</field>
             <field name="sh_value_type">textbox</field>
         </record>
         <record model="survey.question.answer" id="matrix_address_detail_kyc_survey_col3">
@@ -433,8 +434,9 @@
             <field name="sequence">22</field>
             <field name="question_type">matrix</field>
             <field name="matrix_subtype">sh_custom_matrix</field>
+            <field name="question_code">DIR_DETAILS</field>
             <field name="add_an_item" eval="False"/>
-            <field name="constr_mandatory" eval="False"/>
+            <field name="constr_mandatory" eval="True"/>
         </record>
 
         <record model="survey.question.answer" id="matrix_director_detail_kyc_survey_col1">
@@ -642,7 +644,7 @@
             <field name="survey_id" ref="vendor_kyc_form_survey"/>
             <field name="sequence">28</field>
             <field name="question_type">char_box</field>
-            <field name="constr_mandatory">False</field>
+            <field name="constr_mandatory">True</field>
             <field name="is_udyam">True</field>
         </record>
         <!-- Company GST Certificate -->

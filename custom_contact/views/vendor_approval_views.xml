@@ -93,9 +93,11 @@
                                     <field name="contact_no"/>
                                     <field name="email" widget="upper_case"/>
                                     <field name="aadhaar_card_filename" column_invisible="1"/>
-                                    <field name="aadhaar_card" filename="aadhaar_card_filename" options="{'accepted_file_extensions': 'image/*, .pdf'}"/>
+                                    <field name="aadhaar_card" filename="aadhaar_card_filename" options="{'accepted_file_extensions': 'image/*, .pdf'}" column_invisible="1"/>
                                     <field name="pan_card_filename" readonly="1" column_invisible="1"/>
-                                    <field name="pan_card" filename="pan_card_filename" options="{'accepted_file_extensions': 'image/*, .pdf'}"/>
+                                    <field name="pan_card" filename="pan_card_filename" options="{'accepted_file_extensions': 'image/*, .pdf'}" column_invisible="1"/>
+                                     <field name="aadhaar_card_attachments" widget="many2many_binary" options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 1}"/>
+                                    <field name="pan_card_attachments" widget="many2many_binary"  options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 1}"/>
                                 </list>
                                 <form>
                                     <field name="designation" widget="upper_case"/>
@@ -103,9 +105,11 @@
                                     <field name="contact_no"/>
                                     <field name="email" widget="upper_case"/>
                                     <field name="aadhaar_card_filename" invisible="1"/>
-                                    <field name="aadhaar_card" filename="aadhaar_card_filename" options="{'accepted_file_extensions': 'image/*, .pdf'}"/>
+                                    <field name="aadhaar_card" filename="aadhaar_card_filename" options="{'accepted_file_extensions': 'image/*, .pdf'}" column_invisible="1"/>
                                     <field name="pan_card_filename" readonly="1" invisible="1"/>
-                                    <field name="pan_card" filename="pan_card_filename" options="{'accepted_file_extensions': 'image/*, .pdf'}"/>
+                                    <field name="pan_card" filename="pan_card_filename" options="{'accepted_file_extensions': 'image/*, .pdf'}" column_invisible="1"/>
+                                     <field name="aadhaar_card_attachments" widget="many2many_binary" options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 1}"/>
+                                    <field name="pan_card_attachments" widget="many2many_binary"  options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 1}"/>
                                 </form>
                             </field>
 <!--                            <field name="director_name" placeholder="Your Answer"-->
