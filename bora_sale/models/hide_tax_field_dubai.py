@@ -11,10 +11,23 @@ class HideTaxFieldFromPurchaseOrderForm(models.Model):
         compute='_compute_hide_tax_column_if_both_dubai'
     )
 
-    @api.depends('partner_id.country_id.code')
+    @api.depends('partner_id.country_id.code','order_line.product_id.product_tmpl_id')
     def _compute_hide_tax_column_if_both_dubai(self):
         for order in self:
             order.hide_tax_column = False
+
+            # 1. check if there is any product in orderline with service exist
+            is_taxable_item_exist_in_orderline = False
+            for line in order.order_line:
+                if line.product_id:
+                    if line.product_id.product_tmpl_id.type == 'service' or line.product_id.product_tmpl_id.type == 'combo':
+                        is_taxable_item_exist_in_orderline = True
+                        break
+            if is_taxable_item_exist_in_orderline == True:
+                continue
+
+
+            # 2. if all product type are goods, then search for tax free companies
             is_ayaan_impex = False
             is_bora_electronics_fzco = False
 
@@ -38,10 +51,25 @@ class HideTaxFieldFormSaleOrder(models.Model):
         compute='_compute_hide_tax_column_if_both_dubai'
     )
 
-    @api.depends('partner_id.country_id.code')
+
+    @api.depends('partner_id.country_id.code','order_line.product_id.product_tmpl_id')
     def _compute_hide_tax_column_if_both_dubai(self):
+
+
         for order in self:
             order.hide_tax_column = False
+
+            # 1. check if there is any product in orderline with service exist
+            is_taxable_item_exist_in_orderline = False
+            for line in order.order_line:
+                if line.product_id:
+                    if line.product_id.product_tmpl_id.type == 'service' or line.product_id.product_tmpl_id.type == 'combo':
+                        is_taxable_item_exist_in_orderline = True
+                        break
+            if is_taxable_item_exist_in_orderline == True:
+                continue
+
+            # 2. if all product type are goods, then search for tax free companies
             is_ayaan_impex = False
             is_bora_electronics_fzco = False
 
@@ -56,7 +84,6 @@ class HideTaxFieldFormSaleOrder(models.Model):
                 continue
 
     
-
 # hide tax fields from product template form 
 class HideTacFieldFromProductTemplate(models.Model):
     _inherit = "product.template"
@@ -65,9 +92,8 @@ class HideTacFieldFromProductTemplate(models.Model):
         compute='_show_tax_field_if_any_company_is_not_dubai'
     )
 
-    @api.depends('company_ids')
+    @api.depends('company_ids', 'type')
     def _show_tax_field_if_any_company_is_not_dubai(self):
-        print('_show_tax_field_if_any_company_is_not_dubai')
         for product in self:
             product.hide_tax_fields = True
 
@@ -78,6 +104,10 @@ class HideTacFieldFromProductTemplate(models.Model):
                 if company_registry != "1804237.01" and company_registry != "3892":
                     product.hide_tax_fields = False
                     break
+
+            if product.type == 'service' or product.type == 'combo':
+                product.hide_tax_fields = False
+
 
 
 # hide tax fields from sale order total section
@@ -319,13 +349,30 @@ class HideTaxFieldFromSaleOrderTotalSection(models.Model):
             tax_totals_summary['base_amount'] + tax_totals_summary['tax_amount'] + cash_rounding_base_amount
         
 
-        # hide tax details if both companies are dubai based
-        is_ayaan_impex = (company.company_registry == '1804237.01')
-        is_bora_electronics_fzco = (company.company_registry == '3892') 
+        # ------------------------------------------------------------------------------------------
+        # -------------------------  CUSTOM WORK FOR SHOW/HIDE TAX FIELDS --------------------------
+        # ------------------------------------------------------------------------------------------
 
-        # if any copmany is tax free then hide tax details
-        if is_ayaan_impex or is_bora_electronics_fzco:  
-            tax_totals_summary['subtotals'] = []
+
+        # 1. check if there is any product in orderline with service exist
+        is_taxable_item_exist_in_orderline = False
+        for base_line in base_lines:
+            product = base_line.get('product_id')
+            if product:
+                if product.product_tmpl_id.type == 'service' or product.product_tmpl_id.type == 'combo':
+                    is_taxable_item_exist_in_orderline = True
+
+
+        # 2. if there is any product type service then no need to hide tax fields for any country
+        if is_taxable_item_exist_in_orderline == False:
+            # hide tax details if both companies are dubai based
+            is_ayaan_impex = (company.company_registry == '1804237.01')
+            is_bora_electronics_fzco = (company.company_registry == '3892') 
+
+            #if any copmany is tax free then hide tax details
+            if is_ayaan_impex or is_bora_electronics_fzco:  
+                tax_totals_summary['subtotals'] = []
+
 
         return tax_totals_summary
 
@@ -339,19 +386,33 @@ class HideTaxFieldFromVendorBill(models.Model):
         compute='_compute_hide_tax_column_if_both_dubai'
     )
 
-    @api.depends('partner_id.country_id.code')
+    @api.depends('partner_id.country_id.code','invoice_line_ids.product_id.product_tmpl_id')
     def _compute_hide_tax_column_if_both_dubai(self):
-        for order in self:
-            order.hide_tax_column = False
+        for move in self:
+            move.hide_tax_column = False
+
+
+            # 1. check if there is any product in orderline with service exist
+            is_taxable_item_exist_in_orderline = False
+            for line in move.invoice_line_ids:
+                if line.product_id:
+                    if line.product_id.product_tmpl_id.type == 'service' or line.product_id.product_tmpl_id.type == 'combo':
+                        is_taxable_item_exist_in_orderline = True
+                        break
+            if is_taxable_item_exist_in_orderline == True:
+                continue
+
+
+            # 2. if all product type are goods, then search for tax free companies
             is_ayaan_impex = False
             is_bora_electronics_fzco = False
 
-            company_registry = order.company_id.company_registry
+            company_registry = move.company_id.company_registry
 
             if company_registry:
                 is_ayaan_impex = (company_registry == '1804237.01')
                 is_bora_electronics_fzco = (company_registry == '3892')
 
             if is_ayaan_impex or is_bora_electronics_fzco:
-                order.hide_tax_column = True
+                move.hide_tax_column = True
                 continue
