@@ -32,7 +32,8 @@
 
                         <div class="page"
                              style="font-size:14px; font-family:sans-serif;margin: auto;">
-                                    <t t-set="sale_order" t-value="o.invoice_line_ids and o.invoice_line_ids[0].sale_line_ids and o.invoice_line_ids[0].sale_line_ids[0].order_id or False"/>
+                            <t t-set="sale_order"
+                               t-value="o.invoice_line_ids and o.invoice_line_ids[0].sale_line_ids and o.invoice_line_ids[0].sale_line_ids[0].order_id or False"/>
                             <div style="text-align: center; font-weight: bold; font-size:16px">EXPORT
                                 INVOICE
                             </div>
@@ -155,7 +156,8 @@
                                                         </span>
                                                         <br/>
                                                         <strong>
-                                                            <span t-field="o.invoice_date" t-options='{"format": "d MMM y"}'/>
+                                                            <span t-field="o.invoice_date"
+                                                                  t-options='{"format": "d MMM y"}'/>
                                                         </strong>
                                                     </td>
                                                 </tr>
@@ -178,7 +180,8 @@
                                                             style="padding:3px; border-bottom:1px solid black;">
 
                                                         <span
-                                                                style="font-size:13px; margin-bottom:5px;">Mode/Terms of Payment:
+                                                                style="font-size:13px; margin-bottom:5px;">Mode/Terms of
+                                                            Payment:
                                                         </span>
                                                         <br/>
                                                         <strong>
@@ -211,11 +214,12 @@
                                                         </span>
                                                         <br/>
                                                         <strong>
-                                                        <t t-set="sale_order"
-                                                           t-value="o.invoice_line_ids and o.invoice_line_ids[0].sale_line_ids and o.invoice_line_ids[0].sale_line_ids[0].order_id"/>
-                                                        <span style="font-size:14px;"
-                                                              t-if="sale_order"
-                                                              t-field="sale_order.client_order_ref"/></strong>
+                                                            <t t-set="sale_order"
+                                                               t-value="o.invoice_line_ids and o.invoice_line_ids[0].sale_line_ids and o.invoice_line_ids[0].sale_line_ids[0].order_id"/>
+                                                            <span style="font-size:14px;"
+                                                                  t-if="sale_order"
+                                                                  t-field="sale_order.client_order_ref"/>
+                                                        </strong>
                                                     </td>
                                                 </tr>
                                                 <tr>
@@ -235,19 +239,24 @@
                                                     </td>
                                                     <td
                                                             style="padding:3px; border-bottom:1px solid black;">
-                                                        
-                                                            <span style="font-size:11px;">Dated:</span>
-                                                        
+
+                                                        <span style="font-size:11px;">Dated:</span>
+
                                                         <br/>
-                                                        <strong><t t-set="sale_order" t-value="o.invoice_line_ids and o.invoice_line_ids[0].sale_line_ids and o.invoice_line_ids[0].sale_line_ids[0].order_id"/>
-                                                        <span t-if="sale_order" t-field="sale_order.date_order" t-options='{"format": "d MMM y"}'/></strong>
+                                                        <strong>
+                                                            <t t-set="sale_order"
+                                                               t-value="o.invoice_line_ids and o.invoice_line_ids[0].sale_line_ids and o.invoice_line_ids[0].sale_line_ids[0].order_id"/>
+                                                            <span t-if="sale_order" t-field="sale_order.date_order"
+                                                                  t-options='{"format": "d MMM y"}'/>
+                                                        </strong>
                                                     </td>
                                                 </tr>
                                                 <tr>
                                                     <td
                                                             style="padding:3px; border-bottom:1px solid black; border-right:1px solid black;">
                                                         <span
-                                                                style="font-size:13px; margin-bottom:5px;">Dispatch Doc No.
+                                                                style="font-size:13px; margin-bottom:5px;">Dispatch Doc
+                                                            No.
                                                         </span>
                                                         <br/>
                                                         <strong>
@@ -264,7 +273,7 @@
                                                         </span>
                                                         <br/>
                                                         <strong>
-                                                            <span t-field="o.delivery_note_date"/>
+                                                            <span t-field="o.delivery_note_date" t-options='{"format": "dd MMM yy"}'/>
                                                         </strong>
                                                     </td>
                                                 </tr>
@@ -308,10 +317,12 @@
                                                     </td>
                                                     <td
                                                             style="padding:3px; border-bottom:1px solid black;">
-                                                       <strong> <span
-                                                                style="font-size:13px; margin-bottom:5px;">Place
-                                                            of receipt by shipper:
-                                                        </span></strong>
+                                                        <strong>
+                                                            <span
+                                                                    style="font-size:13px; margin-bottom:5px;">Place
+                                                                of receipt by shipper:
+                                                            </span>
+                                                        </strong>
                                                         <strong>
                                                             <span
                                                                     t-field="o.place_of_recipt_by_shipper"/>
@@ -361,7 +372,8 @@
                                                     <td colspan="2"
                                                         style="padding:3px; border-bottom:1px solid black; border-bottom:0px;">
                                                         <span
-                                                                style="font-size:13px; margin-bottom:5px;">Terms of Delivery:
+                                                                style="font-size:13px; margin-bottom:5px;">Terms of
+                                                            Delivery:
                                                         </span>
                                                         <br/>
                                                         <strong>
@@ -607,7 +619,7 @@
                                                             <tr>
                                                                 <td
                                                                         style="border:1px solid black;text-align: center;border-bottom:0px; border-top: 0px;border-left: 0px; width:50%;">
-                                                                    Rate 
+                                                                    Rate
                                                                 </td>
                                                                 <td
                                                                         style="border:1px solid black;text-align: center;border-top: 0px;border-right: 0px;border-bottom:0px; width:50%;">
@@ -683,7 +695,8 @@
                                                             <span t-field="o.amount_untaxed"/>
                                                         </strong>
                                                     </td>
-                                                    <td style="padding:0;border:1px solid black; border-top:0px;" colspan="2">
+                                                    <td style="padding:0;border:1px solid black; border-top:0px;"
+                                                        colspan="2">
                                                         <table
                                                                 style="border-collapse: collapse; width: 100%; font-size: 11px;">
                                                             <tr>
@@ -716,8 +729,10 @@
                                             <tr>
                                                 <td colspan="2"
                                                     style="border-left: 1px solid black; border-right:1px solid black;">
-                                                    <div style="padding-left:3px;"><span style="font-size:11px;"> Tax Amount (in
-                                                        words) :</span>
+                                                    <div style="padding-left:3px;">
+                                                        <span style="font-size:11px;">Tax Amount (in
+                                                            words) :
+                                                        </span>
                                                         <strong>
                                                             <span
                                                                     style="font-weight:bold;">
@@ -803,7 +818,8 @@
                                                             <t t-if="o.company_id.partner_id.bank_ids">
                                                                 <t t-if="o.company_id.partner_id.bank_ids[0].acc_number">
                                                                     <strong>
-                                                                        <span t-field="o.company_id.partner_id.bank_ids[0].acc_number"/> &amp;
+                                                                        <span t-field="o.company_id.partner_id.bank_ids[0].acc_number"/>
+                                                                        &amp;
                                                                         <span t-field="o.company_id.partner_id.bank_ids[0].acc_number"/>
                                                                     </strong>
                                                                 </t>
@@ -819,7 +835,8 @@
                                                             <t t-if="o.company_id.partner_id.bank_ids">
                                                                 <t t-if="o.company_id.partner_id.bank_ids[0].acc_number">
                                                                     <strong>
-                                                                        <span t-field="o.company_id.partner_id.bank_ids[0].bank_id.bic"/>                                                                    </strong>
+                                                                        <span t-field="o.company_id.partner_id.bank_ids[0].bank_id.bic"/>
+                                                                    </strong>
                                                                 </t>
                                                             </t>
                                                         </t>
@@ -850,11 +867,14 @@
                                             </tr>
                                         </table>
                                     </td>
-                                </tr>                                
+                                </tr>
                             </table>
                             <div style="width:100%; text-align:center; margin-top:5px;">
-                                <p style="font-size:12px; font-weight:400;">SUBJECT TO PUNE JURISDICTION <br /> This is a computer
-                                    generated invoice</p>
+                                <p style="font-size:12px; font-weight:400;">SUBJECT TO PUNE JURISDICTION
+                                    <br/>
+                                    This is a computer
+                                    generated invoice
+                                </p>
                             </div>
                         </div>
                     </t>
@@ -874,11 +894,15 @@
                                     <td
                                             style="width:55%; vertical-align:top; border:1px solid black; padding:0;">
                                         <div style="padding:5px; border-bottom:1px solid black;">
-                                            <div style="font-weight: bold; line-height:1;">BORA
-                                                ELECTRONICS FZCO
+                                            <div style="font-weight: bold; line-height:1;">
+                                                <span t-field="o.company_id.partner_id.name"/>
                                             </div>
                                             <div t-field="o.company_id.partner_id"
                                                  t-options='{"widget":"contact","fields":["name","address"],"no_marker":True}'/>
+                                            <t t-if="o.partner_id.state_id.name">Emirate:
+                                                <span t-field="o.partner_id.state_id.name"/>
+                                            </t>
+
                                             <t t-if="o.company_id.vat">TRN:
                                                 <span
                                                         t-field="o.company_id.vat"/>
@@ -921,9 +945,6 @@
                                                 <t t-if="o.partner_id.state_id">,
                                                     <span t-field="o.partner_id.state_id.name"/>
                                                 </t>
-                                                <t t-if="o.partner_id.zip">,
-                                                    <span t-field="o.partner_id.zip"/>
-                                                </t>
                                                 <t t-if="o.partner_id.country_id">,
                                                     <span t-field="o.partner_id.country_id.name"/>
                                                 </t>
@@ -936,13 +957,13 @@
                                                     <td class="title"
                                                         style="padding:4px; width:30%;">Emirate
                                                     </td>
-                                                    <td class="tit_value" style="padding:4px;">:
+                                                    <td class="tit_value" style="padding:4px;">
                                                         <span t-field="o.partner_id.state_id.name"/>
                                                     </td>
                                                 </tr>
                                                 <tr>
                                                     <td class="title" style="padding:4px;">Country</td>
-                                                    <td class="tit_value" style="padding:4px;">:
+                                                    <td class="tit_value" style="padding:4px;">
                                                         <span t-field="o.partner_id.country_id.name"/>
                                                     </td>
                                                 </tr>
@@ -977,8 +998,7 @@
                                                     </div>
                                                     <div>
                                                         <strong>
-                                                            <span t-field="o.invoice_date"
-                                                                  t-options='{"widget":"date"}'/>
+                                                            <span t-field="o.invoice_date" t-options='{"format": "dd MMM yy"}'/>
                                                         </strong>
                                                     </div>
                                                 </td>
@@ -1064,7 +1084,7 @@
                                                     </div>
                                                     <div>
                                                         <strong>
-                                                            <span t-field="o.buyer_date"/>
+                                                            <span t-field="o.buyer_date" t-options='{"format": "dd MMM yy"}'/>
                                                         </strong>
                                                     </div>
                                                 </td>
@@ -1074,7 +1094,7 @@
                                                         style="padding:5px; border-right:1px solid black; border-bottom:1px solid black;">
                                                     <div>
                                                         <span style="font-size:13px !important;">
-                                                            Despatch Document No.
+                                                            Dispatch Document No.
                                                         </span>
                                                     </div>
                                                     <div>
@@ -1092,8 +1112,7 @@
                                                     </div>
                                                     <div>
                                                         <strong>
-                                                            <span t-field="o.delivery_note_date"
-                                                                  t-options='{"widget":"date"}'/>
+                                                            <span t-field="o.delivery_note_date" t-options='{"format": "dd MMM yy"}'/>
                                                         </strong>
                                                     </div>
                                                 </td>
@@ -1103,7 +1122,7 @@
                                                         style="padding:5px; border-right:1px solid black; border-bottom:1px solid black;">
                                                     <div>
                                                         <span style="font-size:13px !important;">
-                                                            Despatch Through
+                                                            Dispatch Through
                                                         </span>
                                                     </div>
                                                     <div>
@@ -1212,10 +1231,10 @@
                                                     style="border-right:1px solid black; padding:4px;text-align:right;">
                                                 <t t-esc="row[1].quantity > 1 and 'pcs' or 'pc'"/>
                                             </td>
-                                            <td style="padding:4px; text-align:right; font-weight:bold;">                                                
-                                                    <span t-esc="o.currency_id.symbol"/>
-                                                    <span
-                                                            t-esc="'%0.2f' % o.company_id.currency_id.round(row[1].price_subtotal)"/>                                               
+                                            <td style="padding:4px; text-align:right; font-weight:bold;">
+                                                <span t-esc="o.currency_id.symbol"/>
+                                                <span
+                                                        t-esc="'%0.2f' % o.company_id.currency_id.round(row[1].price_subtotal)"/>
                                             </td>
                                         </tr>
                                     </t>
@@ -1292,10 +1311,16 @@
                                     <td style="width:50%; padding:5px; vertical-align:top;">Amount Chargeable (in words):
                                         <br/>
                                         <strong>
-                                            <span
-                                                    t-esc="o.currency_id.amount_to_text(o.amount_total) + ' only'"/>
+                                            <t t-set="converted_amount"
+                                               t-value="o.currency_id._convert(o.amount_total, o.company_id.currency_id, o.company_id, o.invoice_date)"/>
+                                            <t t-set="company_currency" t-value="o.company_id.currency_id"/>
+                                            <t t-set="amount_words"
+                                               t-value="company_currency.amount_to_text(converted_amount)"/>
+                                            <span t-esc="amount_words + ' Only (' + company_currency.symbol + ' ' + ('%.2f' % converted_amount) + ')'"/>
+                                            <!--                                            <span t-esc="o.currency_id.amount_to_text(o.amount_total) + ' only'"/>-->
                                         </strong>
                                     </td>
+
                                     <td style="width:50%; padding:5px; vertical-align:top;">
                                         <div style="text-align:right; font-style:italic;">E. &amp;
                                             O.E
@@ -1395,7 +1420,7 @@
                                                     </td>
                                                 </tr>
                                                 <tr>
-                                                    <td>Branch &amp; SWIFT Code</td>
+                                                    <td>Branch &amp;amp; SWIFT Code</td>
                                                     <td>:
                                                         <t t-if="o.partner_bank_id.bank_id.bic">
                                                             <strong>
@@ -1442,7 +1467,7 @@
                                             <br/>
                                             <br/>
                                             <br/>
-                                           Authorised Signatory
+                                            Authorised Signatory
                                         </div>
                                     </td>
                                 </tr>
