@@ -273,7 +273,7 @@
                                                         </span>
                                                         <br/>
                                                         <strong>
-                                                            <span t-field="o.delivery_note_date"/>
+                                                            <span t-field="o.delivery_note_date" t-options='{"format": "dd MMM yy"}'/>
                                                         </strong>
                                                     </td>
                                                 </tr>
@@ -1007,7 +1007,7 @@
                                                     </div>
                                                     <div>
                                                         <strong>
-                                                            <span t-esc="o.invoice_date.strftime('%d-%b-%y')"/>
+                                                            <span t-field="o.invoice_date" t-options='{"format": "dd MMM yy"}'/>
                                                         </strong>
                                                     </div>
                                                 </td>
@@ -1093,7 +1093,7 @@
                                                     </div>
                                                     <div>
                                                         <strong>
-                                                            <span t-esc="o.buyer_date"/>
+                                                            <span t-field="o.buyer_date" t-options='{"format": "dd MMM yy"}'/>
                                                         </strong>
                                                     </div>
                                                 </td>
@@ -1121,7 +1121,7 @@
                                                     </div>
                                                     <div>
                                                         <strong>
-                                                            <span t-esc="o.delivery_note_date.strftime('%d-%b-%y')"/>
+                                                            <span t-field="o.delivery_note_date" t-options='{"format": "dd MMM yy"}'/>
                                                         </strong>
                                                     </div>
                                                 </td>
@@ -1323,7 +1323,7 @@
                                         <br/>
                                         <strong>
                                             <t t-set="converted_amount"
-                                               t-value="o.currency_id._convert(o.amount_total, o.company_id.currency_id, o.company_id, o.date_order)"/>
+                                               t-value="o.currency_id._convert(o.amount_total, o.company_id.currency_id, o.company_id, o.invoice_date)"/>
                                             <t t-set="company_currency" t-value="o.company_id.currency_id"/>
                                             <t t-set="amount_words"
                                                t-value="company_currency.amount_to_text(converted_amount)"/>
