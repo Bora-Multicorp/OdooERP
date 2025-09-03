@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="sale_order_approval_config_view_form" model="ir.ui.view">
+        <field name="name">sale.order.approval.config.view.form</field>
+        <field name="model">sale.order.approval.config</field>
+        <field name="arch" type="xml">
+            <form string="Sales Order Approval Settings" class="oe_form_configuration o_base_settings" create="false">
+                <sheet>
+                    <group>
+                        <field name="sequence"/>
+                        <field name="user_id" options="{'no_create': True, 'no_create_edit': True}"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="sale_order_approval_config_view_list" model="ir.ui.view">
+        <field name="name">sale.order.approval.config.view.list</field>
+        <field name="model">sale.order.approval.config</field>
+        <field name="arch" type="xml">
+            <list editable="bottom" string="Sales Order Approval Settings">
+                <field name="sequence"/>
+                <field name="user_id"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_sale_order_approval_config" model="ir.actions.act_window">
+        <field name="name">Sales Order Approval Settings</field>
+        <field name="res_model">sale.order.approval.config</field>
+        <field name="view_mode">list,form</field>
+        <field name="target">current</field>
+    </record>
+
+    <menuitem id="menu_sale_order_approval_config"
+              name="Sales Order Approvers"
+              parent="sale.menu_sale_config"
+              action="action_sale_order_approval_config"
+              groups="base.user_admin"
+              sequence="100"/>
+</odoo>
