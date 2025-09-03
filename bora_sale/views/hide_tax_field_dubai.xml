@@ -8,8 +8,12 @@
             <xpath expr="//field[@name='order_line']/list/field[@name='tax_id']" position="attributes">
                 <attribute name="column_invisible">parent.hide_tax_column</attribute>
             </xpath>
+            <xpath expr="//field[@name='order_line']/list//field[@name='tax_id']" position="attributes">
+                <attribute name="readonly">read_only_tax_field</attribute>
+            </xpath>
+
         </field>
-    </record>
+    </record> 
     <record id="view_purchase_order_form_inherit_tax_hide_dubai" model="ir.ui.view">
         <field name="name">purchase.order.form.inherit.tax.hide.dubai</field>
         <field name="model">purchase.order</field>
