@@ -10,6 +10,15 @@
 		</xpath>
 	</template>-->
 
+    <template id="survey_fill_form_in_progress_inherit" inherit_id="survey.survey_fill_form_in_progress" name="Survey Submit Loader">
+       <xpath expr="//div[@class='text-center mt16 mb256']" position="inside">
+           <div id="survey_submit_loader" class="d-flex justify-content-center d-none mt-2">
+           <div class="spinner-border text-primary" role="status"></div>
+           <span class="ms-2">Saving in progress...</span>
+          </div>
+       </xpath>
+    </template>
+
 	<template id="survey_page_print_add_cond_required" inherit_id="survey.survey_page_print">
 		<xpath expr="//h2[@class='fs-4']/span[@t-field='question.title']" position="after">
 			<span t-if="question.is_cond_required" class="text-danger">*</span>

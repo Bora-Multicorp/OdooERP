@@ -351,7 +351,7 @@ SurveyFormWidget.include({
         var validationDateMsg = _t("This is not a date");
 
         this._resetErrors();
-
+        const loader = document.getElementById('survey_submit_loader');
         var data = {};
         formData.forEach(function (value, key) {
             data[key] = value;
@@ -610,6 +610,7 @@ SurveyFormWidget.include({
     if (Object.keys(combinedErrors).length > 0) {
         //console.log("combinedErrors", combinedErrors)
         this._showErrors(combinedErrors);
+        if (loader) loader.classList.add('d-none'); // hide loader
         return false;
     }
     // End
@@ -618,6 +619,7 @@ SurveyFormWidget.include({
         this._showErrors(errors);
         return false;
     }*/
+    if (loader) loader.classList.remove('d-none'); // show loader
     return true;
     },
 
