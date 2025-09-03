@@ -506,12 +506,17 @@
                                                     <td
                                                             style="border:1px solid black; border-top: none;border-bottom: none; text-align: center;"
                                                             class="center sm"></td>
-                                                    <td
-                                                            style="border:1px solid black; border-top: none;border-bottom: none; padding: 5px;"
-                                                            class="sm">
-                                                        <p
-                                                                style="font-size: 14px; font-style: italic; font-weight: bold; text-align: right;">
-                                                            OUTPUT IGST @18%
+                                                    <td style="border:1px solid black; border-top: none;border-bottom: none; padding: 5px;" class="sm">
+                                                        <p style="font-size: 14px; font-style: italic; font-weight: bold; text-align: right;">
+                                                            OUTPUT 
+                                                            <t t-set="tax_groups" t-value="o.tax_totals.get('subtotals', [])[0]['tax_groups'] if o.tax_totals.get('subtotals') else []"/>
+                                                            <span t-esc="'+'.join([group.get('group_name') for group in tax_groups])"/>
+                                                             @
+                                                            <t t-if="o.invoice_line_ids and o.invoice_line_ids[0].tax_ids">
+                                                            <t t-set="tax_percent" t-value="o.invoice_line_ids[0].tax_ids[0].amount"/>
+                                                                <span><t t-esc="tax_percent"/>%</span>
+                                                        </t>
+
                                                         </p>
                                                     </td>
                                                     <td
@@ -523,12 +528,9 @@
                                                     <td
                                                             style="border:1px solid black; border-top: none;border-bottom: none; text-align: right;"
                                                             class="right sm">
-                                                        <t
-                                                                t-if="o.invoice_line_ids and o.invoice_line_ids[0].tax_ids">
-                                                            <t t-set="tax_percent"
-                                                               t-value="o.invoice_line_ids[0].tax_ids[0].amount"/>
-                                                            <span><t t-esc="tax_percent"/>%
-                                                            </span>
+                                                        <t t-if="o.invoice_line_ids and o.invoice_line_ids[0].tax_ids">
+                                                            <t t-set="tax_percent" t-value="o.invoice_line_ids[0].tax_ids[0].amount"/>
+                                                            <span><t t-esc="tax_percent"/>%</span>
                                                         </t>
                                                         <t t-else="">
                                                         </t>
@@ -594,9 +596,9 @@
                                                             style="border:1px solid black; text-align: center; border-bottom: 0px;"
                                                             class="right sm">Taxable
                                                     </td>
-                                                    <td
-                                                            style="border:1px solid black; text-align: center;"
-                                                            colspan="2" class="center sm">IGST
+                                                    <td style="border:1px solid black; text-align: center;" colspan="2" class="center sm">
+                                                        <t t-set="tax_groups" t-value="o.tax_totals.get('subtotals', [])[0]['tax_groups'] if o.tax_totals.get('subtotals') else []"/>
+                                                        <span t-esc="'+'.join([group.get('group_name') for group in tax_groups])"/>
                                                     </td>
                                                     <td
                                                             style="border:1px solid black; text-align: center; border-bottom: 0px;"

@@ -462,3 +462,7 @@ class HideTaxFieldFromVendorBill(models.Model):
             if is_ayaan_impex or is_bora_electronics_fzco:
                 move.hide_tax_column = True
                 continue
+
+
+    def action_invoice_sent(self):
+        print('--------------   ', self.read()[0])
