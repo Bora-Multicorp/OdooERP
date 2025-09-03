@@ -18,7 +18,8 @@ class POD_in_stock_picking(models.Model):
     def _compute_is_pod_needed(self):
         for rec in self:
             if rec.sale_id.payment_term_id.name:
-                rec.is_pod_needed = rec.picking_type_code == 'outgoing' and rec.state == 'done' and rec.sale_id.payment_term_id.name.lower() == 'cash' and (rec.company_id.company_registry == '1804237.01' or rec.company_id.company_registry == '3892')
+                # rec.is_pod_needed = rec.picking_type_code == 'outgoing' and rec.state == 'done' and rec.sale_id.payment_term_id.name.lower() == 'cash' and (rec.company_id.company_registry == '1804237.01' or rec.company_id.company_registry == '3892')
+                rec.is_pod_needed = rec.state == 'done' and rec.sale_id.payment_term_id.name.lower() == 'cash' and (rec.company_id.company_registry == '1804237.01' or rec.company_id.company_registry == '3892')
             else:
                 rec.is_pod_needed = False
 
