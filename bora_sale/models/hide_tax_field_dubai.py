@@ -42,6 +42,30 @@ class HideTaxFieldFromPurchaseOrderForm(models.Model):
                 continue
 
 
+# make tax field readonly for purchase order line
+class ReadonlyTaxFieldFromPurchaseOrderLine(models.Model):
+    _inherit = "purchase.order.line"
+
+    read_only_tax_field = fields.Boolean(
+        compute='_compute_readonly_tax_column_if_both_dubai'
+    )
+
+
+    @api.depends('product_id')
+    def _compute_readonly_tax_column_if_both_dubai(self):
+
+        # 1. check if product type is goods
+        self.read_only_tax_field = False
+        is_product_type_goods = False
+        for line in self:
+            if line.product_id:
+                if line.product_id.product_tmpl_id.type == 'consu':
+                    is_product_type_goods = True
+            company_registry = line.order_id.company_id.company_registry
+            if (company_registry == '1804237.01' or company_registry == '3892') and is_product_type_goods:
+                line.read_only_tax_field = True
+
+
 # make tax field readonly for sale order line
 class ReadonlyTaxFieldFromSaleOrderLine(models.Model):
     _inherit = "sale.order.line"
