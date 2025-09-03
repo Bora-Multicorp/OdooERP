@@ -6,7 +6,7 @@
         <field name="inherit_id" ref="stock.view_picking_form"/>
         <field name="arch" type="xml">
             <xpath expr="//header" position="inside">
-                <button name="send_pod_to_accounts_group" string="Send POD" type="object" icon="fa-paper-plane" class="oe_highlight" title="Send 'proff of delivery' to accounts group" invisible="1"/>
+                <button name="send_pod_to_accounts_group" string="Send POD" type="object" icon="fa-paper-plane" class="oe_highlight" title="Send 'proff of delivery' to accounts group" invisible="not is_pod_needed"/>
             </xpath>
         </field>
     </record>
