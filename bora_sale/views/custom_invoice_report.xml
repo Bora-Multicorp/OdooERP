@@ -28,7 +28,7 @@
             <t t-foreach="docs" t-as="o">
                 <main class="o_report_content" font-family="sans-serif">
 
-                    <t t-if="o.company_id.partner_id.country_id.code != 'IN'">
+                    <t t-if="o.company_id.partner_id.country_id.code == 'IN'">
 
                         <div class="page"
                              style="font-size:14px; font-family:sans-serif;margin: auto;">
