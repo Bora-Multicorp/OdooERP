@@ -644,7 +644,7 @@
             <field name="survey_id" ref="vendor_kyc_form_survey"/>
             <field name="sequence">28</field>
             <field name="question_type">char_box</field>
-            <field name="constr_mandatory">False</field>
+            <field name="constr_mandatory">True</field>
             <field name="is_udyam">True</field>
         </record>
         <!-- Company GST Certificate -->
