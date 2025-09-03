@@ -414,6 +414,25 @@ class DirectorDetails(models.Model):
     aadhaar_card_filename = fields.Char()
     pan_card = fields.Binary(string="PAN Card")
     pan_card_filename = fields.Char()
+    aadhaar_card_attachments = fields.Many2many('ir.attachment', 'vendor_bank_aadhaar_card_rel', 'kyc_approval_id',
+                                                'attachment_id', string="Aadhaar Card", required=False)
+    pan_card_attachments = fields.Many2many(
+        'ir.attachment',
+        'vendor_bank_pan_card_rel', 'kyc_approval_id',
+        'attachment_id',
+        string="PAN Card",
+        required=False
+    )
+    @api.model_create_multi
+    def create(self, vals_list):
+        res_list = super().create(vals_list)
+        for record in res_list:
+            for attachment in record.aadhaar_card_attachments | record.pan_card_attachments:
+                attachment.write({
+                    'res_model': self._name,
+                    'res_id': record.id,
+                })
+        return res_list
 
 
 ##### Bank Details

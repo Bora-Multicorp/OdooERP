@@ -242,7 +242,7 @@ class VendorKycWizard(models.TransientModel):
     aadhaar_pan_link = fields.Selection([('yes', 'Yes'), ('no', 'No')], string='Aadhar and PAN card linking?',
                                         required=True)
     gst_no = fields.Char(string="GST Number", required=True)
-    udyam_number = fields.Char(string="Udyam Certificate Number", required=False)
+    udyam_number = fields.Char(string="Udyam Certificate Number", required=True)
     license_registered = fields.Char(string="Any licenses registered (As per Local/State Government requirements)")
     gst_certificate = fields.Many2many('ir.attachment', 'vendor_kyc_gst_cert_rel', 'wizard_id', 'attachment_id',
                                        string="GST Certificate(Latest)", required=True)
@@ -365,9 +365,10 @@ class VendorKycWizard(models.TransientModel):
                 'designation': 'designation',
                 'contact_no': 'contact_no',
                 'email': 'email',
-                'aadhaar_card': 'aadhaar_card',
-                'pan_card': 'pan_card',
-            }
+                # 'aadhaar_card': 'aadhaar_card',
+                # 'pan_card': 'pan_card',
+            },
+            many2many_fields=['aadhaar_card_attachments', 'pan_card_attachments']
         )
 
         bank_data = prepare_one2many(
@@ -498,24 +499,53 @@ class DirectorDetail(models.TransientModel):
     name = fields.Char(string="Name", required=True)
     contact_no = fields.Char(string="Contact Number", required=True)
     email = fields.Char(string="E-mail", required=True)
-    aadhaar_card = fields.Binary(string="Aadhaar Card", required=True)
+    aadhaar_card = fields.Binary(string="Aadhaar Card", required=False)
     aadhaar_card_filename = fields.Char()
-    pan_card = fields.Binary(string="PAN Card", required=True)
+    pan_card = fields.Binary(string="PAN Card", required=False)
     pan_card_filename = fields.Char()
+    aadhaar_card_attachments = fields.Many2many('ir.attachment', 'wizard_aadhaar_card_rel', 'kyc_wizard_id',
+                                               'attachment_id', string="Aadhaar Card", required=True)
+    pan_card_attachments = fields.Many2many(
+        'ir.attachment',
+        'wizard_pan_card_rel', 'kyc_wizard_id',
+        'attachment_id',
+        string="PAN Card",
+        required=True
+    )
 
-    @api.constrains('aadhaar_card', 'pan_card')
-    def _check_director_file_size(self):
-        max_size = 10 * 1024 * 1024  # 10 MB in bytes
+    @api.constrains('aadhaar_card_attachments', 'pan_card_attachments')
+    def _check_director_files(self):
+        max_count = 1
+        max_size = 10 * 1024 * 1024  # 10 MB
         for rec in self:
-            if rec.aadhaar_card:
-                aadhaar_binary = base64.b64decode(rec.aadhaar_card)
-                if len(aadhaar_binary) > max_size:
+            # Aadhaar
+            if len(rec.aadhaar_card_attachments) > max_count:
+                raise ValidationError("Only 1 Aadhaar Card file is allowed.")
+            for att in rec.aadhaar_card_attachments:
+                if att.file_size and att.file_size > max_size:
                     raise ValidationError("Aadhaar Card must be ≤ 10 MB.")
 
-            if rec.pan_card:
-                pan_binary = base64.b64decode(rec.pan_card)
-                if len(pan_binary) > max_size:
+            # PAN
+            if len(rec.pan_card_attachments) > max_count:
+                raise ValidationError("Only 1 PAN Card file is allowed.")
+            for att in rec.pan_card_attachments:
+                if att.file_size and att.file_size > max_size:
                     raise ValidationError("PAN Card must be ≤ 10 MB.")
+
+
+    # @api.constrains('aadhaar_card', 'pan_card')
+    # def _check_director_file_size(self):
+    #     max_size = 10 * 1024 * 1024  # 10 MB in bytes
+    #     for rec in self:
+    #         if rec.aadhaar_card:
+    #             aadhaar_binary = base64.b64decode(rec.aadhaar_card)
+    #             if len(aadhaar_binary) > max_size:
+    #                 raise ValidationError("Aadhaar Card must be ≤ 10 MB.")
+    #
+    #         if rec.pan_card:
+    #             pan_binary = base64.b64decode(rec.pan_card)
+    #             if len(pan_binary) > max_size:
+    #                 raise ValidationError("PAN Card must be ≤ 10 MB.")
 
 ##### Bank Details
 class BankDetail(models.TransientModel):

@@ -355,3 +355,4 @@ class CustomContact(models.Model):
             future_partners = self.search([('deadline', '=', future_date)])
             for partner in future_partners:
                 schedule_kyc_activity(partner)
+
