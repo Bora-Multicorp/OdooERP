@@ -62,9 +62,9 @@
                                 <field name="pan_card_filename" column_invisible="1"/>
                                 <field name="pan_card" filename="pan_card_filename" options="{'accepted_file_extensions': 'image/*, .pdf'}"
                                         column_invisible="1"/>
-                                  <field name="aadhaar_card_attachments" widget="many2many_binary"
+                                  <field name="aadhaar_card_attachments" widget="many2many_attachment_preview"
                                        options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 1}"/>
-                                  <field name="pan_card_attachments" widget="many2many_binary"
+                                  <field name="pan_card_attachments" widget="many2many_attachment_preview"
                                        options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 1}"/>
                             </list>
                             <form>
@@ -78,9 +78,9 @@
                                 <field name="pan_card_filename" invisible="1"/>
                                 <field name="pan_card" options="{'accepted_file_extensions': 'image/*, .pdf'}"
                                        filename="pan_card_filename" column_invisible="1"/>
-                                 <field name="aadhaar_card_attachments" widget="many2many_binary"
+                                 <field name="aadhaar_card_attachments" widget="many2many_attachment_preview"
                                        options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 1}"/>
-                                  <field name="pan_card_attachments" widget="many2many_binary"
+                                  <field name="pan_card_attachments" widget="many2many_attachment_preview"
                                        options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 1}"/>
                             </form>
                         </field>
@@ -104,28 +104,28 @@
                         <!--                               required="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"-->
                         <!--                               invisible="const_business in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>-->
                         <field name="pan_no" placeholder="Your Answer" widget="upper_case"/>
-                        <field name="pan_card_document" widget="many2many_binary"
+                        <field name="pan_card_document" widget="many2many_attachment_preview"
                                options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 1}"
                                required="const_business in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
                         <field name="aadhaar_pan_link" widget="radio" options="{'horizontal': true}"/>
                         <field name="gst_no" placeholder="Your Answer" widget="upper_case"/>
                         <field name="license_registered" placeholder="Your Answer" widget="upper_case" invisible="const_business in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
                         <field name="udyam_number" placeholder="Your Answer" widget="upper_case"/>
-                        <field name="gst_certificate" widget="many2many_binary"
+                        <field name="gst_certificate" widget="many2many_attachment_preview"
                                options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 1}"/>
-                        <field name="incorporation_certificate" widget="many2many_binary"
+                        <field name="incorporation_certificate" widget="many2many_attachment_preview"
                                options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 5}"
                                required="const_business in ['Pvt Ltd Co.', 'LLP']"  invisible="const_business not in ['Pvt Ltd Co.', 'LLP']"/>
-                        <field name="udyam_document" widget="many2many_binary"
+                        <field name="udyam_document" widget="many2many_attachment_preview"
                                options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 1}"
                                required="const_business in ['Sole Proprietor', 'HUF(Karta)']"/>
-                        <field name="shop_act_document" widget="many2many_binary"
+                        <field name="shop_act_document" widget="many2many_attachment_preview"
                                options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 1}"
                                required="const_business in ['Sole Proprietor', 'HUF(Karta)']"/>
                         <field name="gst_return_duration" placeholder="Your Answer"/>
-                        <field name="shop_photos" widget="many2many_binary"
+                        <field name="shop_photos" widget="many2many_attachment_preview"
                                options="{'accepted_file_extensions': 'image/*', 'number_of_files': 10}"/>
-                        <field name="shop_videos" widget="many2many_binary"
+                        <field name="shop_videos" widget="many2many_attachment_preview"
                                options="{'accepted_file_extensions': 'video/*', 'number_of_files': 10}"/>
                         <p style="margin-left: 110px; font-weight: bold;">You can upload each video upto 64MB</p>
                         <field name="comp_google_loc" placeholder="eg. Lat : 22.3511148 Long: 78.6677428"
@@ -134,13 +134,13 @@
                         <field name="partner_llp" filename="partner_llp_filename"
                                required="const_business in ['Partnership', 'LLP']"
                                invisible="const_business not in ['Partnership', 'LLP']"/>
-                        <field name="moa_aoa" widget="many2many_binary"
+                        <field name="moa_aoa" widget="many2many_attachment_preview"
                                options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 5}"
                                required="const_business in ['Pvt Ltd Co.']"
                                invisible="const_business not in ['Pvt Ltd Co.']"/>
                         <field name="cin_no" placeholder="Your Answer" widget="upper_case"
                                invisible="const_business not in ['Pvt Ltd Co.']"/>
-                        <field name="electricity_bill" widget="many2many_binary"
+                        <field name="electricity_bill" widget="many2many_attachment_preview"
                                options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 5}"/>
                     </group>
                     <group string="Bank Details(Please provide all required bank Details Carefully)"
@@ -151,7 +151,7 @@
                                 <field name="account_no" placeholder="Your Answer"/>
                                 <field name="ifsc_code" placeholder="Your Answer" widget="upper_case"/>
                                 <field name="bank_address" placeholder="Your Answer" widget="upper_case"/>
-                                <field name="bank_cheque_attachments" widget="many2many_binary"
+                                <field name="bank_cheque_attachments" widget="many2many_attachment_preview"
                                        options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 1}"/>
                             </list>
                             <form>
@@ -159,7 +159,7 @@
                                 <field name="account_no" placeholder="Your Answer"/>
                                 <field name="ifsc_code" placeholder="Your Answer" widget="upper_case"/>
                                 <field name="bank_address" placeholder="Your Answer" widget="upper_case"/>
-                                <field name="bank_cheque_attachments" widget="many2many_binary"
+                                <field name="bank_cheque_attachments" widget="many2many_attachment_preview"
                                        options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 1}"/>
                             </form>
                         </field>
