@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<odoo>
+    <record id="approve_payment_term_wizard_view_form" model="ir.ui.view">
+        <field name="name">approve.payment.term.wizard.form</field>
+        <field name="model">approve.payment.term.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Approve Payment Term Form">
+                <group>
+                    <field name="remark" placeholder="Enter remarks for approval"/>
+                </group>
+                <footer>
+                    <button name="action_approve_payment_term_credit" string="Approve" type="object"
+                            class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel" data-hotkey="x"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="approve_payment_term_wizard_action" model="ir.actions.act_window">
+        <field name="name">Approve Payment Term</field>
+        <field name="res_model">approve.payment.term.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="approve_payment_term_wizard_view_form"/>
+        <field name="target">new</field>
+        <field name="binding_model_id" ref="sale.model_sale_order"/>
+        <field name="context">{
+            'default_sale_order_id': active_id,
+            }
+        </field>
+    </record>
+</odoo>
