@@ -4,6 +4,9 @@
         <field name="model">purchase.order</field>
         <field name="inherit_id" ref="purchase.purchase_order_form"/>
         <field name="arch" type="xml">
+            <xpath expr="//button[@name='button_unlock']" position="attributes">
+                <attribute name="confirm">Are you sure you want to unlock this order? Unlocking will require PO unlock approval.</attribute>
+            </xpath>
             <xpath expr="//notebook" position="inside">
                 <page name="unlock_approval_authorities_page" string="Unlock Approval Authorities" invisible="not approval_users_ids">
                     <group>

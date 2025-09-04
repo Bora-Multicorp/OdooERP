@@ -26,7 +26,7 @@ class POUnlockApproveProductWizard(models.TransientModel):
                 'action_date': fields.Datetime.now(),
             })
             # Recompute the next approver
-            approval._update_assigned_to()
+            approval._update_assigned_to_For_unlock()
             approval._create_activity_and_send_notification_on_approval()
 
         return {'type': 'ir.actions.act_window_close'}

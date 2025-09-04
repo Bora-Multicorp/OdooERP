@@ -1,9 +1,9 @@
 from odoo import fields, models, api
 
 
-class POUnlockTeam(models.Model):
-    _name = 'po.unlock.approvers'
-    _description = 'PO Unlock Approvers'
+class POApproverTeam(models.Model):
+    _name = 'purchase.order.approvers'
+    _description = 'PO Approvers'
     _rec_name = 'user_id'
 
     sequence = fields.Integer(string='Sequence', readonly=True)

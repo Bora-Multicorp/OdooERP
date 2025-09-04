@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<!-- <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <record id="view_picking_form_inherit_qa_smart_button_toggle" model="ir.ui.view">
         <field name="name">stock.picking.form.inherit.qc.smart.button.toggle</field>
@@ -10,7 +10,7 @@
                 <button class="oe_stat_button"
                         name="action_toggle_qc_button"
                         type="object"
-                        invisible="is_qc_done == False or state in ('draft', 'confirmed', 'done', 'cancel')">
+                        invisible="is_qc_done == False">
                     <span class="fa fa-check-circle text-success" style="font-size: 24px; margin-right:8px;"/>
                     <div class="o_form_field o_stat_info">
                         <span class="o_stat_text">QC</span>
@@ -19,7 +19,7 @@
                 <button class="oe_stat_button"
                         name="action_toggle_qc_button"
                         type="object"
-                        invisible="is_qc_done == True or state in ('draft', 'confirmed', 'done', 'cancel')">
+                        invisible="is_qc_done == True">
                     <span class="fa fa-check-circle text-primary" style="font-size: 24px; margin-right:8px;"/>
                     <div class="o_form_field o_stat_info">
                         <span class="o_stat_text">QC</span>
@@ -44,4 +44,4 @@
             </xpath>
         </field>
     </record>
-</odoo>
+</odoo> -->
