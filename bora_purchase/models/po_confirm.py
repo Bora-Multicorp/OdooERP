@@ -4,44 +4,43 @@ from odoo.exceptions import ValidationError
 class PurchaseOrderConfirmApproval(models.Model):
     _inherit = 'purchase.order'
 
-    assigned_to_form_confirmation = fields.Many2one('res.users', string='Assigned To')
-    approval_users_ids = fields.One2many('po.confirm.approval.users', 'po_confirm_approval_id', 'Confirm PO Approval Authorities', help='PO confirm approval authority details')
-    existing_user_ids = fields.Many2many('res.users', compute='_compute_existing_users', store=True)
+    assigned_to_form_confirmation = fields.Many2one('res.users', string='Assigned To', tracking=True)
+    approval_users_ids_for_confirmation = fields.One2many('po.confirm.approval.users', 'po_confirm_approval_id', 'Confirm PO Approval Authorities', help='PO confirm approval authority details')
+    show_confirm_approve_reject_buttons = fields.Boolean(string="Show", compute='_show_confirm_approve_reject_buttons', store=False)
+
+    state = fields.Selection(
+        [("draft", "RFQ"), ("confirmation_pending", "Confirmation Pending"),('cancellation_pending', 'Cancellation Pending'),("sent", "RFQ Sent"),("purchase", "Purchase Order"),("cancel", "Cancelled"),("done", "Locked")],
+        string="Status",
+        tracking=True
+    )
+
     
 
-    @api.depends('approval_users_ids.user_id') 
-    def _compute_existing_users(self):
-        for record in self:
-            if record.approval_users_ids:
-                record.existing_user_ids = [(6, 0, record.approval_users_ids.mapped('user_id').ids)]
-            else:
-                record.existing_user_ids = [(6, 0, [])]
+    @api.depends('assigned_to_form_confirmation','approval_users_ids_for_confirmation.state')
+    def _show_confirm_approve_reject_buttons(self):
 
+        self.show_confirm_approve_reject_buttons = self.assigned_to_form_confirmation == self.env.user
 
-    # show_unlock_approve_reject_buttons = fields.Boolean(string="Show", compute='_show_approve_reject_buttons', store=False)
+        # # check if any user has rejected the request
+        # is_rejected = False
+        # for user_id in self.approval_users_ids_for_confirmation:
+        #     if user_id.state == 'reject':
+        #         is_rejected = True
+        #         break
 
-    # @api.depends('assigned_to','approval_users_ids.state')
-    # def _show_approve_reject_buttons(self):
+        # # check if all users have approved
+        # do_all_approve = True
+        # for user_id in self.approval_users_ids_for_confirmation:
+        #     if not user_id.state:
+        #         do_all_approve = False
 
-    #     # check if any user has rejected the request
-    #     is_rejected = False
-    #     for user_id in self.approval_users_ids:
-    #         if user_id.state == 'reject':
-    #             is_rejected = True
-    #             break
+        # if do_all_approve == True or is_rejected == True:
+        #     self.show_confirm_approve_reject_buttons = False
+        # elif self.assigned_to_form_confirmation == self.env.user:
+        #     self.show_confirm_approve_reject_buttons = True
+        # else:
+        #     self.show_confirm_approve_reject_buttons = False
 
-    #     # check if all users have approved
-    #     do_all_approve = True
-    #     for user_id in self.approval_users_ids:
-    #         if not user_id.state:
-    #             do_all_approve = False
-
-    #     if do_all_approve == True or is_rejected == True:
-    #         self.show_unlock_approve_reject_buttons = False
-    #     elif self.assigned_to == self.env.user:
-    #         self.show_unlock_approve_reject_buttons = True
-    #     else:
-    #         self.show_unlock_approve_reject_buttons = False
 
 
     def button_confirm(self):
@@ -58,13 +57,14 @@ class PurchaseOrderConfirmApproval(models.Model):
                 'user_id': approval.user_id.id,
             }))
         self.write({
-            'approval_users_ids': po_confirm_approval_user_vals
+            'approval_users_ids_for_confirmation': po_confirm_approval_user_vals,
+            'state': 'confirmation_pending'
         })
 
 
         
         if self.assigned_to_form_confirmation:
-            for user_id in self.approval_users_ids:
+            for user_id in self.approval_users_ids_for_confirmation:
                 if user_id.state == 'reject':
                     raise ValidationError(f"PO confirm request is rejected by '{user_id.user_id.name}', please review 'PO Confirm Approval Authorities' tab for more details.")                
             raise ValidationError(f"PO confirm request is now pending from '{self.assigned_to_form_confirmation.name}'.")
@@ -73,12 +73,12 @@ class PurchaseOrderConfirmApproval(models.Model):
         if self.id:
             self._update_assigned_to_form_PO_confirm()
 
-        self._create_activity_and_send_notification_for_unlock_request()
+        self._create_activity_and_send_notification_for_confirm_request()
 
     def _update_assigned_to_form_PO_confirm(self):
         for rec in self:
             next_user = None
-            for line in sorted(rec.approval_users_ids, key=lambda x: x.sequence):
+            for line in sorted(rec.approval_users_ids_for_confirmation, key=lambda x: x.sequence):
                 if not line.state:
                     next_user = line.user_id
                     break
@@ -86,11 +86,20 @@ class PurchaseOrderConfirmApproval(models.Model):
 
             if not rec.assigned_to_form_confirmation:
                 super(PurchaseOrderConfirmApproval, self).button_confirm()
-                # rec.state = 'draft'
+                self.write({
+                    'state': 'done'
+                })
 
-    def _send_notification_on_rejection(self):
+
+    def _send_notification_on_rejection_of_PO_confirmation(self):
         
         approval_users = self.env['purchase.order.approvers'].sudo().search([])
+
+        self.write({
+            'state': 'draft',
+            'assigned_to_form_confirmation': None
+        })
+
 
         for user in approval_users:
             if user.user_id == self.env.user:
@@ -109,7 +118,7 @@ class PurchaseOrderConfirmApproval(models.Model):
                     user.user_id.partner_id,
                     'simple_notification',
                     {
-                        'type': 'info',
+                        'type': 'danger',
                         'title': f'PO confirm approval request for {self.name}, rejected by {self.env.user.name}.',
                         'message':  f'',
                         'sticky': True,
@@ -163,7 +172,7 @@ class PurchaseOrderConfirmApproval(models.Model):
                 'simple_notification',
                 {
                     'type': 'info',
-                    'title': f'PO confirm aapproval request successfully submitted by you.',
+                    'title': f'PO confirm approval request successfully submitted by you.',
                     'message':  '',
                     'sticky': True,
                 },
@@ -215,6 +224,6 @@ class POConfirmApprovalUsers(models.Model):
     po_confirm_approval_id = fields.Many2one('purchase.order', string="PO Confirm Approval")
     job_id = fields.Char(string="Designation", readonly=True)
     user_id = fields.Many2one('res.users', string='User', required=True)
-    state = fields.Selection([('approve', 'Approved'), ('reject', 'Rejected')], string="Action")
+    state = fields.Selection([('approve', 'Approved'), ('reject', 'Rejected'), ('suspended', 'Suspended')], string="Action")
     remark = fields.Char('Remarks', tracking=True)
     action_date = fields.Datetime(string="Action Date")

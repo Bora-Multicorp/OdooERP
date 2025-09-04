@@ -2,3 +2,5 @@ from .po_lock_unlock import po_unlock_approve_request_wizard
 from .po_lock_unlock import po_unlock_reject_request_wizard
 from .po_confirm_approval import po_confirm_approve_request_wizard
 from .po_confirm_approval import po_confirm_reject_request_wizard
+from .po_cancel_approval import po_cancel_approve_request_wizard
+from .po_cancel_approval import po_cancel_reject_request_wizard

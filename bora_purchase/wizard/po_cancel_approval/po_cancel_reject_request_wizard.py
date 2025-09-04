@@ -3,18 +3,18 @@
 from odoo import fields, models
 
 class POConfirmRejectWizard(models.TransientModel): 
-    _name = 'reject.po.wizard'
-    _description = 'Rejection for Purchase Order Confirmation'
+    _name = 'reject.cancel.po.wizard'
+    _description = 'Rejection for Purchase Order Cancellation'
 
-    order_id = fields.Many2one('purchase.order', string="Rejection for Purchase Order Confirmation")
+    order_id = fields.Many2one('purchase.order', string="Rejection for Purchase Order Cancellation")
 
     remark = fields.Char('Remark', required=True)
 
-    def action_reject_po_confirm(self):
+    def action_reject_po_cancellation(self):
         self.ensure_one()
 
         # 1. Find the matching approval line for the currently assigned user and mark it as rejected
-        approval_line = self.order_id.approval_users_ids_for_confirmation.filtered(
+        approval_line = self.order_id.approval_users_ids_for_cancellation.filtered(
             lambda l: l.user_id == self.env.user and not l.state
         )
 
@@ -28,7 +28,7 @@ class POConfirmRejectWizard(models.TransientModel):
             })
 
         # 2. grab all remaining users can mark their status as suspended
-        pending_users_lines = self.order_id.approval_users_ids_for_confirmation.filtered(
+        pending_users_lines = self.order_id.approval_users_ids_for_cancellation.filtered(
             lambda l: not l.state
         )
 
@@ -42,8 +42,7 @@ class POConfirmRejectWizard(models.TransientModel):
 
 
         # Recompute the next approver
-        self.order_id._update_assigned_to_form_PO_confirm()
-        self.order_id._send_notification_on_rejection_of_PO_confirmation()
+        self.order_id._update_assigned_to_form_PO_cancellation()
+        self.order_id._send_notification_on_rejection_of_PO_cancellation()
 
         return {'type': 'ir.actions.act_window_close'}
-
