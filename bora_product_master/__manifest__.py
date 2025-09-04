@@ -36,6 +36,7 @@
         'views/show_hide_product_fields.xml',
         'views/product_context_change.xml',
         'views/product_template_tree_view.xml',
+        'views/IFSC_and_branch_code.xml',
         'wizards/activation_status_wizard_view.xml',
         'security/ir.model.access.csv',
         # 'static/src/xml/assets.xml',
