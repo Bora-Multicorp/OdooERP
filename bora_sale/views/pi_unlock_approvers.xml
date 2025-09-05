@@ -39,6 +39,6 @@
               name="PI Unlock Approvers"
               parent="sale.menu_sale_config"
               action="action_pi_unlock_approvers"
-              sequence="25"
+              sequence="2500"
               groups="base.user_admin"/>
 </odoo>

@@ -46,9 +46,6 @@ class StockMove(models.Model):
             },
         )
 
-
-
-
     def _get_csv_filename(self):
         self.ensure_one()
         if self.picking_id:
@@ -61,31 +58,96 @@ class StockMove(models.Model):
         writer = csv.writer(buffer)
 
         # --- Step 1: Detect which columns are needed ---
-        has_imei1 = any(bool(line.imei) for line in self.move_line_ids)
-        has_imei2 = any(bool(line.imei2) for line in self.move_line_ids)
+        has_imei1 = any(getattr(line, "imei", False) for line in self.move_line_ids)
+        has_imei2 = any(getattr(line, "imei2", False) for line in self.move_line_ids)
 
-        # --- Step 2: Build header dynamically ---
-        headers = ["Serial Number"]
+        # --- Step 2: Build header ---
+        headers = ["Product Name", "Product", "Serial Number"]
         if has_imei1:
-            headers.append("IMEI Number 1")
+            headers.append("IMEI1")
         if has_imei2:
-            headers.append("IMEI Number 2")
-
+            headers.append("IMEI2")
+        headers.append("Model")  # new field after IMEI2
+        headers.extend(["Variant Info", "SKU"])
         writer.writerow(headers)
 
-        # --- Step 3: Write rows based on available columns ---
+        # --- Step 3: Write rows ---
         for line in self.move_line_ids:
-            row = [line.lot_id.name or ""]
+            product = line.product_id
+            template = product.product_tmpl_id
+
+            # Collect variant info (Color, RAM, etc.)
+            variant_info = []
+            for ptav in product.product_template_attribute_value_ids:
+                attribute = ptav.attribute_id.name
+                value = ptav.product_attribute_value_id.name
+                variant_info.append(f"{attribute}: {value}")
+            variant_info_str = ", ".join(variant_info)
+
+            # Category + Brand
+            category_brand = template.categ_id.name or ""
+            if template.brand_id:
+                category_brand = f"{category_brand} ({template.brand_id.name})"
+
+            row = [
+                template.name or "",            # Product template name
+                category_brand,                 # Category + Brand
+                line.lot_id.name or "",         # Serial Number
+            ]
             if has_imei1:
                 row.append(line.imei or "")
             if has_imei2:
                 row.append(line.imei2 or "")
+            row.append(template.model or "")   # Model after IMEI2
+            row.extend([
+                variant_info_str,
+                product.default_code or "",     # SKU
+            ])
             writer.writerow(row)
 
         # --- Step 4: Return CSV ---
         csv_content = buffer.getvalue()
         buffer.close()
         return csv_content
+
+        # self.ensure_one()
+        # buffer = io.StringIO()
+        # writer = csv.writer(buffer)
+
+        # for lineIds in self.move_line_ids:
+        #     product = lineIds.product_id  # product.product(1853,)
+
+        #     # Get only the selected attributes/values for this variant
+        #     for ptav in product.product_template_attribute_value_ids:
+        #         attribute = ptav.attribute_id.name
+        #         value = ptav.product_attribute_value_id.name
+
+        # # --- Step 1: Detect which columns are needed ---
+        # has_imei1 = any(getattr(line, "imei", False) for line in self.move_line_ids)
+        # has_imei2 = any(getattr(line, "imei2", False) for line in self.move_line_ids)
+
+        # # --- Step 2: Build header dynamically ---
+        # headers = ["Serial Number"]
+        # if has_imei1:
+        #     headers.append("IMEI Number 1")
+        # if has_imei2:
+        #     headers.append("IMEI Number 2")
+
+        # writer.writerow(headers)
+
+        # # --- Step 3: Write rows based on available columns ---
+        # for line in self.move_line_ids:
+        #     row = [line.lot_id.name or ""]
+        #     if has_imei1:
+        #         row.append(line.imei or "")
+        #     if has_imei2:
+        #         row.append(line.imei2 or "")
+        #     writer.writerow(row)
+
+        # # --- Step 4: Return CSV ---
+        # csv_content = buffer.getvalue()
+        # buffer.close()
+        # return csv_content
     
     def _create_attachment(self, filename, csv_content, res_model, res_id):
         return self.env['ir.attachment'].create({
