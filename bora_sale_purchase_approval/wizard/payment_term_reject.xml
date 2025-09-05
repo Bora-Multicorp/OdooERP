@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<odoo>
+      <record id="reject_payment_term_wizard_view_form" model="ir.ui.view">
+        <field name="name">reject.payment.wizard.form</field>
+        <field name="model">reject.payment.term.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Reject Sales Order Form">
+                <group>
+                    <field name="sale_order_id" readonly="1" invisible="1"/>
+                    <field name="remark" placeholder="Enter remarks for rejection"/>
+                </group>
+                <footer>
+                    <button name="action_reject_payment_term" string="Reject" type="object" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel" data-hotkey="x"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Window Action that opens the Sales Order Rejection Wizard -->
+    <record id="reject_payment_term_wizard_action" model="ir.actions.act_window">
+        <field name="name">Reject Payment Term</field>
+        <field name="res_model">reject.payment.term.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="reject_payment_term_wizard_view_form"/>
+        <field name="target">new</field>
+        <field name="binding_model_id" ref="sale.model_sale_order"/>
+        <field name="context">{
+            'default_sale_order_id': active_id,
+        }
+        </field>
+    </record>
+</odoo>

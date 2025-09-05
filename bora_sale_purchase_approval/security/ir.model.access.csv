@@ -1,0 +1,15 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_sale_approval_users,sale_approval_users,model_sale_order_approval_users,,1,1,1,1
+access_payment_term_approval_users,payment_term_users,model_payment_term_approval_users,,1,1,1,1
+access_sale_approval_cancel_users,sale_approval_cancel_users,model_sale_order_cancel_approval_users,,1,1,1,1
+access_approve_sale_wizard,approve.sale.wizard,model_approve_sale_order_wizard,,1,1,1,1
+access_reject_sale_wizard,reject.sale.wizard,model_reject_sale_order_wizard,,1,1,1,1
+access_cancel_approve_sale_wizard,cancel.approve.sale.wizard,model_approve_sale_order_cancel_wizard,,1,1,1,1
+access_cancel_reject_sale_wizard,cancel.reject.sale.wizard,model_reject_sale_order_cancel_wizard,,1,1,1,1
+access_approve_payment_wizard,approve.payment.wizard,model_approve_payment_term_wizard,,1,1,1,1
+access_reject_payment_wizard,reject.payment.wizard,model_reject_payment_term_wizard,,1,1,1,1
+access_sale_approval_config,sale.approval.config,model_sale_order_approval_config,base.group_user,1,1,0,0
+access_sale_approval_config_manager,sale.approval.config,model_sale_order_approval_config,base.group_system,1,1,1,1
+access_payment_term_approval_config,payment.term.approval.config,model_payment_term_approval_config,base.group_user,1,1,0,0
+access__config_manager,payment.term.config,model_payment_term_approval_config,base.group_system,1,1,1,1
+

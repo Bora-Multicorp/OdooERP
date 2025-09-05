@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="approve_sale_order_cancel_wizard_form_view" model="ir.ui.view">
+            <field name="name">approve.sale.order.cancel.wizard.form</field>
+            <field name="model">approve.sale.order.cancel.wizard</field>
+            <field name="arch" type="xml">
+                <form string="Approve Cancellation">
+                    <group>
+                        <field name="remark" placeholder="Enter reason for approval"/>
+                    </group>
+                    <footer>
+                        <button name="action_approve_sale_order_cancel"
+                                string="Approve Cancellation"
+                                type="object"
+                                class="btn-primary"/>
+                        <button string="Cancel"
+                                class="btn-secondary"
+                                special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_approve_sale_order_cancel_wizard" model="ir.actions.act_window">
+            <field name="name">Approve Cancellation</field>
+            <field name="res_model">approve.sale.order.cancel.wizard</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+            <field name="binding_model_id" ref="sale.model_sale_order"/>
+            <field name="binding_view_types">form</field>
+        </record>
+    </data>
+</odoo>
