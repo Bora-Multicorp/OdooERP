@@ -1,5 +1,11 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-access_bora_purchase_po_unlock_approvers,bora_purchase.po_unlock_approvers,model_po_unlock_approvers,base.group_user,1,1,1,1
+access_bora_purchase_purchase_order_approvers,bora_purchase.purchase_order_approvers,model_purchase_order_approvers,base.group_user,1,1,1,1
 access_bora_po_unlock_approval_users,bora_purchase.po.unlock.approval.users,model_po_unlock_approval_users,base.group_user,1,1,1,1
 access_bora_reject_po_unlock_wizard,bora_purchase.reject.po.unlock.wizard,model_reject_po_unlock_wizard,base.group_user,1,1,1,1
 access_bora_approve_po_unlock_wizard,bora_purchase.approve.po.unlock.wizard,model_approve_po_unlock_wizard,base.group_user,1,1,1,1
+access_bora_confirm_po_wizard,bora_purchase.confirm.po.wizard,model_confirm_po_wizard,,1,1,1,1
+access_bora_reject_po_wizard,bora_purchase.reject.po.wizard,model_reject_po_wizard,,1,1,1,1
+access_bora_cancel_po_wizard,bora_purchase.cancel_po_wizard,model_cancel_po_wizard,,1,1,1,1
+access_bora_reject_cancel_po_wizard,bora_purchase.reject_cancel_po_wizard,model_reject_cancel_po_wizard,,1,1,1,1
+access_bora_po_confirm_approval_users,bora_purchase.po.confirm.approval.users,model_po_confirm_approval_users,,1,1,1,1
+access_bora_po_cancellation_approval_users,bora_purchase.po_cancellation_approval_users,model_po_cancellation_approval_users,,1,1,1,1

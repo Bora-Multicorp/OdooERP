@@ -42,6 +42,54 @@ class HideTaxFieldFromPurchaseOrderForm(models.Model):
                 continue
 
 
+# make tax field readonly for purchase order line
+class ReadonlyTaxFieldFromPurchaseOrderLine(models.Model):
+    _inherit = "purchase.order.line"
+
+    read_only_tax_field = fields.Boolean(
+        compute='_compute_readonly_tax_column_if_both_dubai'
+    )
+
+
+    @api.depends('product_id')
+    def _compute_readonly_tax_column_if_both_dubai(self):
+
+        # 1. check if product type is goods
+        self.read_only_tax_field = False
+        is_product_type_goods = False
+        for line in self:
+            if line.product_id:
+                if line.product_id.product_tmpl_id.type == 'consu':
+                    is_product_type_goods = True
+            company_registry = line.order_id.company_id.company_registry
+            if (company_registry == '1804237.01' or company_registry == '3892') and is_product_type_goods:
+                line.read_only_tax_field = True
+
+
+# make tax field readonly for sale order line
+class ReadonlyTaxFieldFromSaleOrderLine(models.Model):
+    _inherit = "sale.order.line"
+
+    read_only_tax_field = fields.Boolean(
+        compute='_compute_readonly_tax_column_if_both_dubai'
+    )
+
+
+    @api.depends('product_id')
+    def _compute_readonly_tax_column_if_both_dubai(self):
+
+        # 1. check if product type is goods
+        self.read_only_tax_field = False
+        is_product_type_goods = False
+        for line in self:
+            if line.product_id:
+                if line.product_id.product_tmpl_id.type == 'consu':
+                    is_product_type_goods = True
+            company_registry = line.order_id.company_id.company_registry
+            if (company_registry == '1804237.01' or company_registry == '3892') and is_product_type_goods:
+                line.read_only_tax_field = True
+
+
 
 # hide tax fields from sale order form
 class HideTaxFieldFormSaleOrder(models.Model):
@@ -51,10 +99,8 @@ class HideTaxFieldFormSaleOrder(models.Model):
         compute='_compute_hide_tax_column_if_both_dubai'
     )
 
-
     @api.depends('partner_id.country_id.code','order_line.product_id.product_tmpl_id')
     def _compute_hide_tax_column_if_both_dubai(self):
-
 
         for order in self:
             order.hide_tax_column = False
@@ -416,3 +462,7 @@ class HideTaxFieldFromVendorBill(models.Model):
             if is_ayaan_impex or is_bora_electronics_fzco:
                 move.hide_tax_column = True
                 continue
+
+
+    def action_invoice_sent(self):
+        print('--------------   ', self.read()[0])

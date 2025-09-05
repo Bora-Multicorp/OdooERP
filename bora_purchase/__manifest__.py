@@ -23,18 +23,23 @@ Bora purchase operations
     # always loaded
     'data': [
         'security/ir.model.access.csv',
-        'wizard/po_unlock_approve_request_views.xml',
-        'wizard/po_unlock_reject_request_views.xml',
-        'views/qc_check_on_delivery.xml',
+        'wizard/po_lock_unlock/po_unlock_approve_request_wizard.xml',
+        'wizard/po_lock_unlock/po_unlock_reject_request_wizard.xml',
+        'wizard/po_confirm_approval/po_confirm_approve_request_wizard.xml',
+        'wizard/po_confirm_approval/po_confirm_reject_request_wizard.xml',
+        'wizard/po_cancel_approval/po_cancel_approve_request_wizard.xml',
+        'wizard/po_cancel_approval/po_cancel_reject_request_wizard.xml',
+        # 'views/qc_check_on_delivery.xml',
         'views/vendor_payment_email_template.xml',
         'views/po_unlock_approvers.xml',
-        'views/po_unlock_button_inherited.xml',
         'views/po_unlock.xml',
-        'views/po_fullfill_by.xml'
+        'views/po_fullfill_by.xml',
+        'views/po_confirm.xml',
+        'views/po_cancellation.xml'
     ],
     'assets': {
         'web.assets_backend': [
-            # '/bora_purchase/static/src/js/switch_tab.js',
+            '/bora_purchase/static/src/js/switch_tab.js',
         ],
     },
 

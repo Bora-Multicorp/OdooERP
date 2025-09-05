@@ -1,0 +1,56 @@
+<odoo>
+    <record id="view_purchase_order_form_inherit_confirm_page" model="ir.ui.view">
+        <field name="name">purchase.order.form.inherit.confirm.page</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//button[@id='draft_confirm']" position="attributes">
+                <attribute name="confirm">PO confirmation requires approval by authorities, an approval request will be generated.</attribute>
+            </xpath>
+            <xpath expr="//notebook" position="inside">
+                <page name="confirm_approval_authorities_page" string="PO Confirmation Approval Authorities" invisible="not approval_users_ids_for_confirmation">
+                    <group>
+                        <field name="show_confirm_approve_reject_buttons" invisible="1"/>
+                        <field name="assigned_to_form_confirmation" options="{'no_edit': True, 'no_create': True, 'no_open': True}" invisible="not assigned_to_form_confirmation" readonly="1"/>
+                        <!-- <field name="existing_user_ids" invisible="1" widget="many2many_tags"/> -->
+                    </group>
+                    <field name="approval_users_ids_for_confirmation" nolabel="1" help="Define the PO confirm approval roles." readonly="1">
+                        <list editable="bottom">
+                            <field name="sequence"/>
+                            <field name="user_id" widget="many2one_avatar_user" options="{'no_edit': True, 'no_create': True, 'no_open': True}"/>
+                            <field name="remark"/>
+                            <field name="state" readonly="1"/>
+                            <field name="action_date" readonly="1"/>
+                        </list>
+                        <form>
+                            <group>
+                                <field name="user_id" options="{'no_edit': True, 'no_create': True, 'no_open': True}"/>
+                                <field name="state"/>
+                                <field name="remark"/>
+                            </group>
+                        </form>
+                    </field>
+                </page>
+            </xpath>
+            <xpath expr="//header" position="inside">
+                <button name="%(approve_po_confirm_wizard_action)d" string="PO Confirmation Approve" type="action" class="oe_highlight" invisible="not show_confirm_approve_reject_buttons"/>
+                <button name="%(reject_po_confirm_wizard_action)d" string="PO Confirmation Reject" type="action" class="oe_highlight" invisible="not show_confirm_approve_reject_buttons"/>
+            </xpath>
+            <xpath expr="//header/field[@name='state']" position="replace">
+                <field name="state" widget="statusbar" statusbar_visible="draft,confirmation_pending" invisible="state in ('sent', 'cancellation_pending', 'confirmation_pending', 'purchase', 'done', 'cancel')"/>
+                <field name="state" widget="statusbar" statusbar_visible="draft,confirmation_pending,done,cancel" invisible="state in ('draft', 'cancellation_pending', 'sent', 'purchase', 'cancel')"/>
+                <field name="state" widget="statusbar" statusbar_visible="draft,cancellation_pending,cancel,done" invisible="state in ('draft', 'confirmation_pending', 'sent', 'purchase', 'done', 'cancel')"/>
+                <field name="state" widget="statusbar" statusbar_visible="draft,cancel" invisible="state in ('draft', 'confirmation_pending', 'cancellation_pending', 'sent', 'purchase', 'done')"/>
+            </xpath>
+            <xpath expr="//header/button[@name='button_cancel']" position="attributes">
+                <attribute name="invisible">assigned_to_form_cancellation or assigned_to_form_confirmation</attribute>
+            </xpath>
+            <xpath expr="//header/button[@name='print_quotation']" position="attributes">
+                <attribute name="invisible">assigned_to_form_cancellation or assigned_to_form_confirmation</attribute>
+            </xpath>
+            <xpath expr="//header/button[@name='action_rfq_send']" position="attributes">
+                <attribute name="invisible">assigned_to_form_cancellation or assigned_to_form_confirmation</attribute>
+            </xpath>
+        </field>
+    </record>
+</odoo>

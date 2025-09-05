@@ -1,10 +1,13 @@
-<!-- <?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <record id="view_picking_form_inherit_qa_smart_button_toggle" model="ir.ui.view">
         <field name="name">stock.picking.form.inherit.qc.smart.button.toggle</field>
         <field name="model">stock.picking</field>
         <field name="inherit_id" ref="stock.view_picking_form"/>
         <field name="arch" type="xml">
+            <xpath expr="//field[@name='partner_id']" position="after">
+                <field name="show_qc_tab" invisible="1"/>
+            </xpath>
             <xpath expr="//div[@name='button_box']" position="inside">
 
                 <button class="oe_stat_button"
@@ -28,9 +31,8 @@
 
             </xpath>
             <xpath expr="//notebook" position="inside">
-                <page string="Quality Check" name="quality_check" invisible="not is_qc_done or not a_purchase_order">
+                <page string="Quality Check" name="quality_check" invisible="not show_qc_tab">
                     <group>
-                        <field name="a_purchase_order" invisible="1"/>
                         <field name="is_model_or_color_not_match" nolabel="1" readonly="state == 'done'"/>
                         <span>Model/Color mismatch</span>
                         <field name="qty_didnt_match" nolabel="1" readonly="state == 'done'"/>
@@ -44,4 +46,4 @@
             </xpath>
         </field>
     </record>
-</odoo> -->
+</odoo>

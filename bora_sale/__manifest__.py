@@ -39,8 +39,15 @@ Bora sale operations
         'views/IFSC_and_branch_code.xml',
         'views/customer_fields_for_india_sale_invoice.xml',
         'views/create_csv_and_download.xml',
+        'views/qc_check_on_delivery.xml',
         'data/account_group_in_sales.xml',
     ],
+    # 'assets': {
+    #     'web.assets_backend': [
+    #         '/bora_sale/static/src/js/switch_tab.js',
+    #     ],
+    # },
+
     'application': True,
     'installable': True,
     'license': 'Other proprietary'
