@@ -52,6 +52,8 @@ class PaymentTermApproval(models.Model):
     def action_confirm(self):
         """Prevent confirmation if credit payment term is not yet approved."""
         for order in self:
+            if order.user_id != self.env.user:
+                raise ValidationError(_("You can not confirm this Sale Order."))
             if order.payment_term_id and order.payment_term_id.name == "Credit Payment":
                 if not order.is_payment_approved:
                     raise ValidationError(
