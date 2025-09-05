@@ -42,6 +42,12 @@ Bora sale operations
         'views/qc_check_on_delivery.xml',
         'data/account_group_in_sales.xml',
     ],
+    'assets': {
+        'web.assets_backend': [
+            '/bora_sale/static/src/js/switch_tab.js',
+        ],
+    },
+
     'application': True,
     'installable': True,
     'license': 'Other proprietary'
