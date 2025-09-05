@@ -57,97 +57,74 @@ class StockMove(models.Model):
         buffer = io.StringIO()
         writer = csv.writer(buffer)
 
-        # --- Step 1: Detect which columns are needed ---
+        # --- Step 1: Check availability of each column ---
+        has_product_name = any(line.product_id.product_tmpl_id.name for line in self.move_line_ids)
+        has_type = any(line.product_id.product_tmpl_id.categ_id or line.product_id.product_tmpl_id.brand_id for line in self.move_line_ids)
+        has_serial = any(line.lot_id.name for line in self.move_line_ids)
         has_imei1 = any(getattr(line, "imei", False) for line in self.move_line_ids)
         has_imei2 = any(getattr(line, "imei2", False) for line in self.move_line_ids)
+        has_model = any(line.product_id.product_tmpl_id.model for line in self.move_line_ids)
+        has_variant = any(line.product_id.product_template_attribute_value_ids for line in self.move_line_ids)
+        has_sku = any(line.product_id.default_code for line in self.move_line_ids)
 
-        # --- Step 2: Build header ---
-        headers = ["Product Name", "Product", "Serial Number"]
+        # --- Step 2: Build header dynamically ---
+        headers = []
+        if has_product_name:
+            headers.append("Product Name")
+        if has_type:
+            headers.append("Type")
+        if has_serial:
+            headers.append("Serial Number")
         if has_imei1:
             headers.append("IMEI1")
         if has_imei2:
             headers.append("IMEI2")
-        headers.append("Model")  # new field after IMEI2
-        headers.extend(["Variant Info", "SKU"])
+        if has_model:
+            headers.append("Model")
+        if has_variant:
+            headers.append("Variant Info")
+        if has_sku:
+            headers.append("SKU")
+
         writer.writerow(headers)
 
-        # --- Step 3: Write rows ---
+        # --- Step 3: Write rows dynamically ---
         for line in self.move_line_ids:
             product = line.product_id
             template = product.product_tmpl_id
 
-            # Collect variant info (Color, RAM, etc.)
-            variant_info = []
-            for ptav in product.product_template_attribute_value_ids:
-                attribute = ptav.attribute_id.name
-                value = ptav.product_attribute_value_id.name
-                variant_info.append(f"{attribute}: {value}")
-            variant_info_str = ", ".join(variant_info)
-
-            # Category + Brand
-            category_brand = template.categ_id.name or ""
-            if template.brand_id:
-                category_brand = f"{category_brand} ({template.brand_id.name})"
-
-            row = [
-                template.name or "",            # Product template name
-                category_brand,                 # Category + Brand
-                line.lot_id.name or "",         # Serial Number
-            ]
+            row = []
+            if has_product_name:
+                row.append(template.name or "")
+            if has_type:
+                category_brand = template.categ_id.name or ""
+                if template.brand_id:
+                    category_brand = f"{category_brand} ({template.brand_id.name})"
+                row.append(category_brand)
+            if has_serial:
+                row.append(line.lot_id.name or "")
             if has_imei1:
                 row.append(line.imei or "")
             if has_imei2:
                 row.append(line.imei2 or "")
-            row.append(template.model or "")   # Model after IMEI2
-            row.extend([
-                variant_info_str,
-                product.default_code or "",     # SKU
-            ])
+            if has_model:
+                row.append(template.model or "")
+            if has_variant:
+                variant_info = []
+                for ptav in product.product_template_attribute_value_ids:
+                    attribute = ptav.attribute_id.name
+                    value = ptav.product_attribute_value_id.name
+                    variant_info.append(f"{attribute}: {value}")
+                row.append(", ".join(variant_info))
+            if has_sku:
+                row.append(product.default_code or "")
+
             writer.writerow(row)
 
         # --- Step 4: Return CSV ---
         csv_content = buffer.getvalue()
         buffer.close()
         return csv_content
-
-        # self.ensure_one()
-        # buffer = io.StringIO()
-        # writer = csv.writer(buffer)
-
-        # for lineIds in self.move_line_ids:
-        #     product = lineIds.product_id  # product.product(1853,)
-
-        #     # Get only the selected attributes/values for this variant
-        #     for ptav in product.product_template_attribute_value_ids:
-        #         attribute = ptav.attribute_id.name
-        #         value = ptav.product_attribute_value_id.name
-
-        # # --- Step 1: Detect which columns are needed ---
-        # has_imei1 = any(getattr(line, "imei", False) for line in self.move_line_ids)
-        # has_imei2 = any(getattr(line, "imei2", False) for line in self.move_line_ids)
-
-        # # --- Step 2: Build header dynamically ---
-        # headers = ["Serial Number"]
-        # if has_imei1:
-        #     headers.append("IMEI Number 1")
-        # if has_imei2:
-        #     headers.append("IMEI Number 2")
-
-        # writer.writerow(headers)
-
-        # # --- Step 3: Write rows based on available columns ---
-        # for line in self.move_line_ids:
-        #     row = [line.lot_id.name or ""]
-        #     if has_imei1:
-        #         row.append(line.imei or "")
-        #     if has_imei2:
-        #         row.append(line.imei2 or "")
-        #     writer.writerow(row)
-
-        # # --- Step 4: Return CSV ---
-        # csv_content = buffer.getvalue()
-        # buffer.close()
-        # return csv_content
     
     def _create_attachment(self, filename, csv_content, res_model, res_id):
         return self.env['ir.attachment'].create({
