@@ -37,7 +37,7 @@
                             <div style="text-align: center; font-weight: bold; font-size:16px">EXPORT
                                 INVOICE
                             </div>
-                            <p style="text-align:center; margin:0; font-size:13px;">(SUPPLY MEANT
+                            <p style="text-align:center; margin:0; font-size:14px;">(SUPPLY MEANT
                                 FOR EXPORT/SUPPLY
                                 TO SEZ UNIT OR SEZ DEVELOPER FOR AUTHORISED OPERATIONS ON PAYMENT OF
                                 IGST)
@@ -139,7 +139,7 @@
                                                     <td
                                                             style="padding:3px; border-bottom:1px solid black; border-right:1px solid black; width:50%;">
                                                         <span
-                                                                style="font-size:13px; margin-bottom:5px;">Invoice
+                                                                style="font-size:14px; margin-bottom:5px;">Invoice
                                                             No.:
                                                         </span>
                                                         <br/>
@@ -151,7 +151,7 @@
                                                     <td
                                                             style="padding:3px; border-bottom:1px solid black;width:50%;">
                                                         <span
-                                                                style="font-size:13px;  margin-bottom:5px;">
+                                                                style="font-size:14px;  margin-bottom:5px;">
                                                             Dated:
                                                         </span>
                                                         <br/>
@@ -166,7 +166,7 @@
                                                             style="padding:3px; border-bottom:1px solid black; border-right:1px solid black; ">
 
                                                         <span
-                                                                style="font-size:13px;  margin-bottom:5px;">
+                                                                style="font-size:14px;  margin-bottom:5px;">
                                                             Delivery Note
                                                         </span>
 
@@ -180,7 +180,7 @@
                                                             style="padding:3px; border-bottom:1px solid black;">
 
                                                         <span
-                                                                style="font-size:13px; margin-bottom:5px;">Mode/Terms of
+                                                                style="font-size:14px; margin-bottom:5px;">Mode/Terms of
                                                             Payment:
                                                         </span>
                                                         <br/>
@@ -194,7 +194,7 @@
                                                     <td
                                                             style="padding:3px; border-bottom:1px solid black; border-right:1px solid black;">
                                                         <span
-                                                                style="font-size:13px; margin-bottom:5px;">Reference
+                                                                style="font-size:14px; margin-bottom:5px;">Reference
                                                             No. &amp; Date:
                                                         </span>
                                                         <strong>
@@ -209,7 +209,7 @@
                                                     <td
                                                             style="padding:3px; border-bottom:1px solid black;">
                                                         <span
-                                                                style="font-size:13px; margin-bottom:5px;">Other
+                                                                style="font-size:14px; margin-bottom:5px;">Other
                                                             References
                                                         </span>
                                                         <br/>
@@ -226,7 +226,7 @@
                                                     <td
                                                             style="padding:3px; border-bottom:1px solid black; border-right:1px solid black;">
                                                         <span
-                                                                style="font-size:13px; margin-bottom:5px;">Buyer's
+                                                                style="font-size:14px; margin-bottom:5px;">Buyer's
                                                             Order No.:
                                                         </span>
                                                         <br/>
@@ -255,7 +255,7 @@
                                                     <td
                                                             style="padding:3px; border-bottom:1px solid black; border-right:1px solid black;">
                                                         <span
-                                                                style="font-size:13px; margin-bottom:5px;">Dispatch Doc
+                                                                style="font-size:14px; margin-bottom:5px;">Dispatch Doc
                                                             No.
                                                         </span>
                                                         <br/>
@@ -267,7 +267,7 @@
                                                     <td
                                                             style="padding:3px; border-bottom:1px solid black;">
                                                         <span
-                                                                style="font-size:13px; margin-bottom:5px;">Delivery
+                                                                style="font-size:14px; margin-bottom:5px;">Delivery
                                                             Note
                                                             Date
                                                         </span>
@@ -281,7 +281,7 @@
                                                     <td
                                                             style="padding:3px; border-bottom:1px solid black; border-right:1px solid black;">
                                                         <span
-                                                                style="font-size:13px; margin-bttom:5px;">Dispatched
+                                                                style="font-size:14px; margin-bttom:5px;">Dispatched
                                                             through
                                                         </span>
                                                         <br/>
@@ -293,7 +293,7 @@
                                                     <td
                                                             style="padding:3px; border-bottom:1px solid black;">
                                                         <span
-                                                                style="font-size:13px; margin-bottom:5px;">
+                                                                style="font-size:14px; margin-bottom:5px;">
                                                             Destination
                                                         </span>
                                                         <br/>
@@ -307,7 +307,7 @@
                                                     <td
                                                             style="padding:3px; border-bottom:1px solid black; border-right:1px solid black;">
                                                         <span
-                                                                style="font-size:13px; margin-bottom:5px;">Vessel/Flight
+                                                                style="font-size:14px; margin-bottom:5px;">Vessel/Flight
                                                             No.:
                                                         </span>
                                                         <br/>
@@ -317,7 +317,7 @@
                                                             style="padding:3px; border-bottom:1px solid black;">
                                                         <strong>
                                                             <span
-                                                                    style="font-size:13px; margin-bottom:5px;">Place
+                                                                    style="font-size:14px; margin-bottom:5px;">Place
                                                                 of receipt by shipper:
                                                             </span>
                                                         </strong>
@@ -331,7 +331,7 @@
                                                     <td
                                                             style="padding:3px; border-bottom:1px solid black; border-right:1px solid black;">
                                                         <span
-                                                                style="font-size:13px; margin-bottom:5px;">City/Port
+                                                                style="font-size:14px; margin-bottom:5px;">City/Port
                                                             of Loading:
                                                         </span>
                                                         <br/>
@@ -343,7 +343,7 @@
                                                     <td
                                                             style="padding:3px; border-bottom:1px solid black;">
                                                         <span
-                                                                style="font-size:13px; margin-bottom:5px;">City/Port
+                                                                style="font-size:14px; margin-bottom:5px;">City/Port
                                                             of Discharge:
                                                         </span>
                                                         <br/>
@@ -357,7 +357,7 @@
                                                     <td colspan="2"
                                                         style="padding:3px; border-bottom:1px solid black;">
                                                         <span
-                                                                style="font-size:13px; margin-bottom:5px;">
+                                                                style="font-size:14px; margin-bottom:5px;">
                                                             Country:
                                                         </span>
                                                         <strong>
@@ -370,7 +370,7 @@
                                                     <td colspan="2"
                                                         style="padding:3px; border-bottom:1px solid black; border-bottom:0px;">
                                                         <span
-                                                                style="font-size:13px; margin-bottom:5px;">Terms of
+                                                                style="font-size:14px; margin-bottom:5px;">Terms of
                                                             Delivery:
                                                         </span>
                                                         <br/>
@@ -506,17 +506,12 @@
                                                     <td
                                                             style="border:1px solid black; border-top: none;border-bottom: none; text-align: center;"
                                                             class="center sm"></td>
-                                                    <td style="border:1px solid black; border-top: none;border-bottom: none; padding: 5px;" class="sm">
-                                                        <p style="font-size: 14px; font-style: italic; font-weight: bold; text-align: right;">
-                                                            OUTPUT 
-                                                            <t t-set="tax_groups" t-value="o.tax_totals.get('subtotals', [])[0]['tax_groups'] if o.tax_totals.get('subtotals') else []"/>
-                                                            <span t-esc="'+'.join([group.get('group_name') for group in tax_groups])"/>
-                                                             @
-                                                            <t t-if="o.invoice_line_ids and o.invoice_line_ids[0].tax_ids">
-                                                            <t t-set="tax_percent" t-value="o.invoice_line_ids[0].tax_ids[0].amount"/>
-                                                                <span><t t-esc="tax_percent"/>%</span>
-                                                        </t>
-
+                                                    <td
+                                                            style="border:1px solid black; border-top: none;border-bottom: none; padding: 5px;"
+                                                            class="sm">
+                                                        <p
+                                                                style="font-size: 14px; font-style: italic; font-weight: bold; text-align: right;">
+                                                            OUTPUT IGST @18%
                                                         </p>
                                                     </td>
                                                     <td
@@ -528,9 +523,12 @@
                                                     <td
                                                             style="border:1px solid black; border-top: none;border-bottom: none; text-align: right;"
                                                             class="right sm">
-                                                        <t t-if="o.invoice_line_ids and o.invoice_line_ids[0].tax_ids">
-                                                            <t t-set="tax_percent" t-value="o.invoice_line_ids[0].tax_ids[0].amount"/>
-                                                            <span><t t-esc="tax_percent"/>%</span>
+                                                        <t
+                                                                t-if="o.invoice_line_ids and o.invoice_line_ids[0].tax_ids">
+                                                            <t t-set="tax_percent"
+                                                               t-value="o.invoice_line_ids[0].tax_ids[0].amount"/>
+                                                            <span><t t-esc="tax_percent"/>%
+                                                            </span>
                                                         </t>
                                                         <t t-else="">
                                                         </t>
@@ -596,9 +594,9 @@
                                                             style="border:1px solid black; text-align: center; border-bottom: 0px;"
                                                             class="right sm">Taxable
                                                     </td>
-                                                    <td style="border:1px solid black; text-align: center;" colspan="2" class="center sm">
-                                                        <t t-set="tax_groups" t-value="o.tax_totals.get('subtotals', [])[0]['tax_groups'] if o.tax_totals.get('subtotals') else []"/>
-                                                        <span t-esc="'+'.join([group.get('group_name') for group in tax_groups])"/>
+                                                    <td
+                                                            style="border:1px solid black; text-align: center;"
+                                                            colspan="2" class="center sm">IGST
                                                     </td>
                                                     <td
                                                             style="border:1px solid black; text-align: center; border-bottom: 0px;"
@@ -752,7 +750,7 @@
                                                 <td style="border: 1px solid black;border-top:0px; border-right:0px; vertical-align: top; padding: 5px; width: 50%;">
                                                     <div style="font-size: 13px line-height: 1;">
                                                         <div style="text-align:left; font-style:italic; font-family:sans-serif; font-size:14px;"><b>Terms and Conditions</b></div>
-                                                        <ol style="margin:5px; padding-left:20px; font-family:sans-serif; font-size:13px;">
+                                                        <ol style="margin:5px; padding-left:20px; font-family:sans-serif; font-size:14px;">
                                                             <li><b>Payment &amp; Delivery Terms –</b> 100% advance required before release of goods. Payments must be made only to the bank account mentioned on the invoice, in the same currency as the invoice. No credit extended.</li>
                                                             <li><b>Risk Transfer –</b> Risk passes to buyer once goods are handed to buyer/logistics partner.</li>
                                                             <li><b>No Returns Policy–</b> Goods once sold are not returnable. However, if transit damages or shortages are attributable to Bora Multicorp or its appointed logistics partner, claims will be accepted and settled through replacement or debit/credit note adjustment.</li>
@@ -989,7 +987,7 @@
                                                 <td
                                                         style="padding:5px; border-bottom:1px solid black; border-right:1px solid black;">
                                                     <div>
-                                                        <span style="font-size:13px !important;">Invoice
+                                                        <span style="font-size:14px !important;">Invoice
                                                             No.:
                                                         </span>
                                                     </div>
@@ -1003,13 +1001,13 @@
                                                 <td
                                                         style="padding:5px; border-bottom:1px solid black;">
                                                     <div>
-                                                        <span style="font-size:13px !important;">
+                                                        <span style="font-size:14px !important;">
                                                             Dated
                                                         </span>
                                                     </div>
                                                     <div>
                                                         <strong>
-                                                            <span t-field="o.invoice_date" t-options='{"format": "dd MMM yy"}'/>
+                                                            <span t-field="o.invoice_date" t-options='{"format": "dd-MMM-yy"}'/>
                                                         </strong>
                                                     </div>
                                                 </td>
@@ -1018,7 +1016,7 @@
                                                 <td
                                                         style="padding:5px; border-right:1px solid black; border-bottom:1px solid black;">
                                                     <div>
-                                                        <span style="font-size:13px !important;">Delivery
+                                                        <span style="font-size:14px !important;">Delivery
                                                             Note
                                                         </span>
                                                     </div>
@@ -1031,7 +1029,7 @@
                                                 <td
                                                         style="padding:5px; border-bottom:1px solid black;">
                                                     <div>
-                                                        <span style="font-size:13px !important;">
+                                                        <span style="font-size:14px !important;">
                                                             Mode/Terms of Payment
                                                         </span>
                                                     </div>
@@ -1047,7 +1045,7 @@
                                                 <td
                                                         style="padding:5px; border-right:1px solid black; border-bottom:1px solid black;">
                                                     <div>
-                                                        <span style="font-size:13px !important;">Supplier's
+                                                        <span style="font-size:14px !important;">Supplier's
                                                             Ref.
                                                         </span>
                                                     </div>
@@ -1060,7 +1058,7 @@
                                                 <td
                                                         style="padding:5px; border-bottom:1px solid black;">
                                                     <div>
-                                                        <span style="font-size:13px !important;">
+                                                        <span style="font-size:14px !important;">
                                                             Other Reference(s)
                                                         </span>
                                                     </div>
@@ -1075,7 +1073,7 @@
                                                 <td
                                                         style="padding:5px; border-right:1px solid black; border-bottom:1px solid black;">
                                                     <div>
-                                                        <span style="font-size:13px !important;">Buyer
+                                                        <span style="font-size:14px !important;">Buyer
                                                             Order No.
                                                         </span>
                                                     </div>
@@ -1089,13 +1087,13 @@
                                                 <td
                                                         style="padding:5px; border-bottom:1px solid black;">
                                                     <div>
-                                                        <span style="font-size:13px !important;">
+                                                        <span style="font-size:14px !important;">
                                                             Dated
                                                         </span>
                                                     </div>
                                                     <div>
                                                         <strong>
-                                                            <span t-field="o.buyer_date" t-options='{"format": "dd MMM yy"}'/>
+                                                            <span t-field="o.buyer_date" t-options='{"format": "dd-MMM-yy"}'/>
                                                         </strong>
                                                     </div>
                                                 </td>
@@ -1104,7 +1102,7 @@
                                                 <td
                                                         style="padding:5px; border-right:1px solid black; border-bottom:1px solid black;">
                                                     <div>
-                                                        <span style="font-size:13px !important;">
+                                                        <span style="font-size:14px !important;">
                                                             Dispatch Document No.
                                                         </span>
                                                     </div>
@@ -1117,13 +1115,13 @@
                                                 <td
                                                         style="padding:5px; border-bottom:1px solid black;">
                                                     <div>
-                                                        <span style="font-size:13px !important;">
+                                                        <span style="font-size:14px !important;">
                                                             Delivery Note Date
                                                         </span>
                                                     </div>
                                                     <div>
                                                         <strong>
-                                                            <span t-field="o.delivery_note_date" t-options='{"format": "dd MMM yy"}'/>
+                                                            <span t-field="o.delivery_note_date" t-options='{"format": "dd-MMM-yy"}'/>
                                                         </strong>
                                                     </div>
                                                 </td>
@@ -1132,7 +1130,7 @@
                                                 <td
                                                         style="padding:5px; border-right:1px solid black; border-bottom:1px solid black;">
                                                     <div>
-                                                        <span style="font-size:13px !important;">
+                                                        <span style="font-size:14px !important;">
                                                             Dispatch Through
                                                         </span>
                                                     </div>
@@ -1145,7 +1143,7 @@
                                                 <td
                                                         style="padding:5px; border-bottom:1px solid black;">
                                                     <div>
-                                                        <span style="font-size:13px !important;">
+                                                        <span style="font-size:14px !important;">
                                                             Destination
                                                         </span>
                                                     </div>
@@ -1159,7 +1157,7 @@
                                             <tr>
                                                 <td colspan="2" style="padding:5px;">
                                                     <div>
-                                                        <span style="font-size:13px !important;">
+                                                        <span style="font-size:14px !important;">
                                                             Terms of Delivery
                                                         </span>
                                                     </div>
@@ -1221,7 +1219,7 @@
                                                 <span t-if="country">Made in:
                                                     <span t-field="country.name"/>
                                                 </span>
-                                                <!-- <span style="font-size:13px; font-style:italic;padding-left:10px"> Made in <span t-field="row[1].product_id.product_tmpl_id.made_country"/> -->
+                                                <!-- <span style="font-size:14px; font-style:italic;padding-left:10px"> Made in <span t-field="row[1].product_id.product_tmpl_id.made_country"/> -->
                                                 <!-- </span> -->
                                             </td>
                                             <td
@@ -1300,7 +1298,7 @@
                                     </tr>
                                     <tr>
                                         <td colspan="6"
-                                            style="border-right:1px solid black;font-size:13px;border-top:1px solid black; padding:4px; text-align:right;">
+                                            style="border-right:1px solid black;font-size:14px;border-top:1px solid black; padding:4px; text-align:right;">
                                             Total Invoice Amount in AED
                                             <strong>
                                                 <span t-esc="o.currency_id.symbol"/>
@@ -1341,7 +1339,7 @@
                                     <td style="width:50%; vertical-align:top; padding:5px;">
                                         <br/>
                                         <div style="text-align:left; font-style:italic; font-family:sans-serif; font-size:14px;"><b>Terms and Conditions</b></div>
-                                            <ol style="margin:5px; padding-left:20px; font-family:sans-serif; font-size:13px;">
+                                            <ol style="margin:5px; padding-left:20px; font-family:sans-serif; font-size:14px;">
                                                 <li><b>Payment &amp; Delivery Terms –</b> 100% advance required before release of goods. Payments must be made only to the bank account mentioned on the invoice, in the same currency as the invoice. No credit extended.</li>
                                                 <li><b>Risk Transfer –</b> Risk passes to buyer once goods are handed to buyer/logistics partner.</li>
                                                 <li><b>No Returns Policy –</b> Goods once sold are not returnable. However, if transit damages or shortages are attributable to Bora Multicorp or its appointed logistics partner, claims will be accepted and settled through replacement or debit/credit note adjustment.</li>
@@ -1361,7 +1359,7 @@
                                             <div style="font-size:14px; text-align:left; font-weight:bold; margin-bottom:5px;">Company's Bank Details</div>
 
                                             <table
-                                                    style="font-size:13px; line-height:1.8; line-height:1; border-collapse:collapse; border-bottom:0px;">
+                                                    style="font-size:14px; line-height:1.8; line-height:1; border-collapse:collapse; border-bottom:0px;">
                                                 <tr>
                                                     <td
                                                             style="padding-right:10px; white-space:nowrap;">Bank
