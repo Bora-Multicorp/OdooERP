@@ -60,7 +60,7 @@ class PaymentTermApproval(models.Model):
                 states = order.credit_approval_users_ids.mapped('state')
                 if not states or any(s != 'approve' for s in states):
                     raise ValidationError(
-                        _("You cannot confirm this Sale Order until ALL Credit Payment approvers approve it.")
+                        _("You cannot confirm this Sale Order until All Credit Payment approvers approve it.")
                     )
 
                 if not order.is_payment_approved:
