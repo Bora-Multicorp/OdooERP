@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="payment_term_approval_config_view_form" model="ir.ui.view">
+        <field name="name">payment.term.approval.config.view.form</field>
+        <field name="model">payment.term.approval.config</field>
+        <field name="arch" type="xml">
+            <form string="Payment Approval Approval Settings" class="oe_form_configuration o_base_settings" create="false">
+                <sheet>
+                    <group>
+                        <field name="sequence"/>
+                        <field name="user_id" options="{'no_create': True, 'no_create_edit': True}"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="payment_term_approval_config_view_list" model="ir.ui.view">
+        <field name="name">payment.term.approval.config.view.list</field>
+        <field name="model">payment.term.approval.config</field>
+        <field name="arch" type="xml">
+            <list editable="bottom" string="Payment Term Approval Settings">
+                <field name="sequence"/>
+                <field name="user_id"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_payment_term_approval_config" model="ir.actions.act_window">
+        <field name="name">Payment Term Approval Settings</field>
+        <field name="res_model">payment.term.approval.config</field>
+        <field name="view_mode">list,form</field>
+        <field name="target">current</field>
+    </record>
+
+    <menuitem id="menu_payment_term_approval_config"
+              name="Payment Term Approvers"
+              parent="sale.menu_sale_config"
+              action="action_payment_term_approval_config"
+              groups="base.user_admin"
+              sequence="101"/>
+</odoo>
