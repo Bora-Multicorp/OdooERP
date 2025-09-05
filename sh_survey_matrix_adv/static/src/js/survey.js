@@ -175,6 +175,63 @@ SurveyFormWidget.include({
         this._selectedConstBusValue = null;
     },
 
+    _submitForm: async function (options) {
+        var params = {};
+        if (options.previousPageId) {
+            params.previous_page_id = options.previousPageId;
+        }
+        if (options.nextSkipped) {
+            params.next_skipped_page_or_question = true;
+        }
+        var route = "/survey/submit";
+
+        if (this.options.isStartScreen) {
+            route = "/survey/begin";
+            // Hide survey title in 'page_per_question' layout: it takes too much space
+            if (this.options.questionsLayout === 'page_per_question') {
+                this.$('.o_survey_main_title').fadeOut(400);
+            }
+        } else {
+            var $form = this.$('form');
+            var formData = new FormData($form[0]);
+
+            if (!options.skipValidation) {
+                // Validation pre submit
+                if (!this._validateForm($form, formData)) {
+                    return;
+                }
+            }
+            this._prepareSubmitValues(formData, params);
+            // Add Loader: after client-side validation has passed
+            this.$('.survey_loader').removeClass('d-none');
+        }
+        // prevent user from submitting more times using enter key
+        this.preventEnterSubmit = true;
+
+        if (this.options.sessionInProgress) {
+            // reset the fadeInOutDelay when attendee is submitting form
+            this.fadeInOutDelay = 400;
+            // prevent user from clicking on matrix options when form is submitted
+            this.readonly = true;
+        }
+
+        const submitPromise = rpc(
+            `${route}/${this.options.surveyToken}/${this.options.answerToken}`,
+            params
+        );
+
+        if (!this.options.isStartScreen && this.options.scoringType == 'scoring_with_answers_after_page') {
+            const [correctAnswers] = await submitPromise;
+            if (Object.keys(correctAnswers).length && document.querySelector('.js_question-wrapper')) {
+                this._showCorrectAnswers(correctAnswers, submitPromise, options);
+                return;
+            }
+        }
+        this._nextScreen(submitPromise, options);
+    },
+
+
+
     _onInputState: function (ev) {
         var $input = $(ev.currentTarget);
         var modelName = $input.data('model-name');
@@ -325,6 +382,8 @@ SurveyFormWidget.include({
             sessionStorage.removeItem("director_details_count");
         }
         this.restoreVisibleRows();
+        // Remove loader: after client-side validation has passed
+        this.$('.survey_loader').addClass('d-none');
         return def;
     },
 

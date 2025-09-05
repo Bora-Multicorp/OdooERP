@@ -42,6 +42,24 @@
 .js_cls_sh_signature_wrapper .js_cls_sh_signature_pad > div:first-child + canvas.jSignature{display: none !important;}
 
 
+.o_survey_question_error {
+    white-space: normal !important;   /* allow wrapping */
+    line-height: 1.2rem;              /* base line spacing */
+    height: auto !important;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height .3s ease, padding .3s ease;
+    padding: 0;                       /* no padding when collapsed */
+    font-size: 0.9rem;                /* good for mobile */
+}
+
+
+.o_survey_question_error.slide_in {
+    max-height: 200px;   /* large enough for 2-3 lines */
+    padding: 0.3rem 0;   /* spacing so it doesn’t look cramped */
+}
+
+
 /*.o_survey_question_error {
     white-space: normal !important;
     //line-height: 1.4rem !important; normal text spacing

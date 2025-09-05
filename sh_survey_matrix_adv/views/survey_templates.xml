@@ -1,6 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
+    <!-- Survey Loader  -->
+
+    <template id="survey_fill_form_inherit_loader" inherit_id="survey.survey_fill_form"  name="Survey Submit Loader">
+      <xpath expr="//div[@class='o_survey_error alert alert-danger d-none']" position="after">
+          <div class="survey_loader d-none text-center">
+              <i class="fa fa-spinner fa-spin fa-2x"></i>
+              <p>Submitting, please wait...</p>
+          </div>
+      </xpath>
+    </template>
+
 	<!-- QUESTION MATRIX TEMPLATES INHERITE -->
 
     <template id="sh_custom_matrix_template" name="Question:Matrix One2many">
