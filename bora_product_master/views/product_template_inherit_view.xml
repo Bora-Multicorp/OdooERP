@@ -14,6 +14,7 @@
                 <xpath expr="//field[@name='product_tooltip']" position="replace"/>
                 <xpath expr="//field[@name='type']" position="replace"/>
                 <xpath expr="//field[@name='combo_ids']" position="replace"/>
+                <xpath expr="//field[@name='service_tracking']" position="replace"/>
                 <xpath expr="//label[@for='list_price']" position="replace"/>
                 <xpath expr="//label[@for='taxes_id']" position="replace"/>
                 <xpath expr="//label[@for='standard_price']" position="replace"/>
@@ -53,7 +54,7 @@
                     <field name="is_mobile_category_selected" invisible="1"/>
                     <field name="is_packaging_material" invisible="1"/>
                     <!-- Inventory Type field -->
-                    <field name="type" widget="radio" options="{'horizontal': True}" readonly="1"/>
+                    <field name="type" widget="radio" options="{'horizontal': True}"/>
                     <field name="combo_ids" widget="many2many_tags" placeholder="e.g. Starter - Meal - Desert" invisible="type != 'combo'" options="{'no_quick_create': True,'edit_tags': True,}"/>
                     <!-- Track inventory -->
                     <label for="is_storable" class="oe_inline" invisible="type != 'consu'"/>
@@ -63,8 +64,11 @@
                     </div>
                     <field name="product_tooltip" class="fst-italic text-muted" string="" invisible="not product_tooltip"/>
                     <field name="lot_valuated" invisible="tracking == 'none'" widget="confirm_boolean"/>
-                    <field name="invoice_policy" required="1" invisible="not sale_ok or type == 'combo'"/>
-                    <field name="categ_id" string="Category" required="1" options="{'no_create': True, 'no_create_edit': True}"/>
+                    <field name="service_tracking" invisible="1 or type != 'service'"/>
+                    <field name="service_policy" string="Invoicing Policy" invisible="type != 'service' or sale_ok == False" required="type == 'service' and sale_ok == True"/>
+
+                    <field name="invoice_policy" required="1" invisible="not sale_ok or type == 'combo' or type == 'service'"/>
+                    <field name="categ_id" string="Category" required="0" options="{'no_create': True, 'no_create_edit': True}"/>
                     <field name="is_dual_sim" invisible="not is_mobile_category_selected"/>
                 </xpath>
                 <xpath expr="//group[@name='group_standard_price']" position="attributes">
@@ -124,5 +128,14 @@
                 </xpath>
             </field>
         </record>
+        <record id="sale_project_field_move" model="ir.ui.view">
+            <field name="name">sale.project.field.move</field>
+            <field name="model">product.template</field>
+            <field name="inherit_id" ref="sale_project.product_template_form_view_invoice_policy_inherit_sale_project"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='service_policy']" position="replace"/>
+            </field>
+        </record>
+
     </data>
 </odoo>

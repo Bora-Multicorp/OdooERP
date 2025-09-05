@@ -144,9 +144,17 @@ class StockMoveLine(models.Model):
             # 3.2 Uniqueness of IMEI check in all other saved items
             if record.move_id.show_IMEI_field2:
 
-                if record.imei == record.imei2:
-                    raise ValidationError(_('Both IMEI numbers must be different'))
-                
+                # check if brand is samsung or oneplus, as these two brands have imei1 and imei2 field's same value 
+                brand_record = record.product_id.product_tmpl_id.brand_id
+                brand_name = brand_record.name
+                is_brand_samsung_or_oneplus = False
+                if brand_name and (brand_name.lower() == 'samsung' or brand_name.lower() == 'oneplus'):
+                    is_brand_samsung_or_oneplus = True
+
+                if not is_brand_samsung_or_oneplus:
+                    if record.imei == record.imei2:
+                        raise ValidationError(f"Both IMEI numbers must be different for product '{record.product_id.product_tmpl_id.name}'")
+
                 imei_results = self.env['stock.quant'].search([
                     '|',
                     ('imei', '=', record.imei),
