@@ -1,0 +1,10 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_procurement_team,bora_sale.procurement_team,model_purchase_procurement_team,base.group_user,1,1,0,0
+access_procurement_team,bora_sale.procurement_team,model_purchase_procurement_team,base.group_system,1,1,1,1
+access_pi_unlock_approvers,bora_sale.pi_approvers,model_pi_unlock_approvers,base.group_system,1,1,1,1
+access_pi_unlock_approval_users,bora_sale.pi_unlock_approval_users,model_pi_unlock_approval_users,,1,1,1,1
+access_pi_unlock_reject_wizard,bora_sale.reject_pi_unlock_wizard,model_reject_pi_unlock_wizard,,1,1,1,1
+access_pi_unlock_approvee_wizard,bora_sale.approve_pi_unlock_wizard,model_approve_pi_unlock_wizard,,1,1,1,1
+access_bora_sale_place_shippr,bora_sale.bora_sale_place_shippr,model_bora_sale_place_shippr,,1,1,1,1
+access_bora_city_port_discharge,bora_sale.bora_city_port_discharge,model_bora_city_port_discharge,,1,1,1,1
+access_bora_city_port_loading,bora_sale.bora_city_port_loading,model_bora_city_port_loading,,1,1,1,1

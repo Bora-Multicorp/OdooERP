@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_sale_order_form_inherit_tax_hide_dubai" model="ir.ui.view">
+        <field name="name">sale.order.form.inherit.tax.hide.dubai</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='order_line']/list/field[@name='tax_id']" position="attributes">
+                <attribute name="column_invisible">parent.hide_tax_column</attribute>
+            </xpath>
+            <xpath expr="//field[@name='order_line']/list//field[@name='tax_id']" position="attributes">
+                <attribute name="readonly">read_only_tax_field</attribute>
+            </xpath>
+        </field>
+    </record> 
+    <record id="view_purchase_order_form_inherit_tax_hide_dubai" model="ir.ui.view">
+        <field name="name">purchase.order.form.inherit.tax.hide.dubai</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='order_line']/list/field[@name='taxes_id']" position="attributes">
+                <attribute name="column_invisible">parent.hide_tax_column</attribute>
+            </xpath>
+            <xpath expr="//field[@name='order_line']/list//field[@name='taxes_id']" position="attributes">
+                <attribute name="readonly">read_only_tax_field</attribute>
+            </xpath>
+        </field>
+    </record>
+    <record id="invoice_and_vendor_bill_form_inherit_tax_hide_dubai" model="ir.ui.view">
+        <field name="name">invoice.and.vendor.bill.form.inherit.tax.hide.dubai</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_move_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='invoice_line_ids']/list/field[@name='tax_ids']" position="attributes">
+                <attribute name="column_invisible">parent.hide_tax_column</attribute>
+            </xpath>
+            <xpath expr="//field[@name='invoice_line_ids']/list/field[@name='l10n_ae_vat_amount']" position="attributes">
+                <attribute name="column_invisible">parent.hide_tax_column</attribute>
+            </xpath>
+        </field>
+    </record>
+    <record id="hide_tax_fields_from_product_template" model="ir.ui.view">
+        <field name="name">hide.tax.fields.from.product.template</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_only_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//label[@for='taxes_id']" position="attributes">
+                <attribute name="invisible">hide_tax_fields</attribute>
+            </xpath>
+            <xpath expr="//div[@name='taxes_div']" position="attributes">
+                <attribute name="invisible">hide_tax_fields</attribute>
+            </xpath>
+            <xpath expr="//field[@name='supplier_taxes_id']" position="attributes">
+                <attribute name="invisible">hide_tax_fields</attribute>
+            </xpath>
+        </field>
+    </record>
+</odoo>
+
+
