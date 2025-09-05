@@ -250,7 +250,6 @@ class SurveyQuestion(models.Model):
         """
         import re
         from odoo.tools.translate import _
-
         def is_valid_email(val):
             return bool(re.fullmatch(r"[^@]+@[^@]+\.[^@]+", val))
 
@@ -495,6 +494,7 @@ class SurveyUserInput(models.Model):
             If an answer already exists for question and user_input_id, it will be
             overwritten (or deleted for 'choice' questions) (in order to maintain data consistency).
         """
+        overwrite_existing = True
         old_answers = self.env['survey.user_input.line'].search([
             ('user_input_id', '=', self.id),
             ('question_id', '=', question.id)
