@@ -12,28 +12,28 @@ class QACheckForDelivery(models.Model):
     boxes_are_damaged = fields.Boolean()
     activated_items_received = fields.Boolean()
 
-    a_purchase_order = fields.Boolean(
-        string='Is Purchase Order',
-        compute='_compute_is_purchase_order'
-    )
+    show_qc_tab = fields.Boolean(compute='_compute_show_qc_tab')
 
-    def _compute_is_purchase_order(self):
-        for record in self:
-            record.a_purchase_order = bool(record.purchase_id)
+    def _compute_show_qc_tab(self):
+        self.show_qc_tab = self.is_qc_done and self.picking_type_code == 'incoming'
 
-    is_qc_done = fields.Boolean(
-        string='QC check status',
-        help="A boolean field to track the state of the QC.",
-        tracking=True
-    )
+    is_qc_done = fields.Boolean( string='QC check status', help="A boolean field to track the state of the QC.", tracking=True)
+
 
     def action_toggle_qc_button(self):
 
+        message = ""
+        if self.picking_type_code == 'incoming':    
+            message = "QC passed — you may now validate the receipt."
+        else:
+            message = "QC passed — you may now validate the delivery."
+
+
         for picking in self:
             if not picking.is_qc_done:
-                picking.is_qc_done = not picking.is_qc_done
+                picking.is_qc_done = True
 
-                if picking.is_qc_done and picking.a_purchase_order:
+                if picking.is_qc_done and self.picking_type_code == 'incoming':
                     self.env['bus.bus']._sendone(
                     self.env.user.partner_id,
                     'simple_notification',
@@ -50,18 +50,18 @@ class QACheckForDelivery(models.Model):
                     {
                         'type': 'info',
                         'title': '',
-                        'message': "QC passed — you may now validate the receipt.",
+                        'message': message,
                         'sticky': True,
                     })
 
-        return {
-            "type": "ir.actions.client",
-            "tag": "switch_to_qc_tab", 
-            "params": {
-                "tab_name": "Quality Check",
-            },
-        }
-
+        # if self.picking_type_code == 'incoming':    
+        #     return {
+        #         "type": "ir.actions.client",
+        #         "tag": "switch_to_qc_tab", 
+        #         "params": {
+        #             "tab_name": "Quality Check",
+        #         },
+        #     }
 
 
     def button_validate(self):
