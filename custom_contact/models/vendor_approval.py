@@ -330,12 +330,12 @@ class ContactKYCApproval(models.Model):
 
                     # Send approval activity and notification
                     for user in record.existing_user_ids:
-                        _schedule_activity(
-                            record, user,
-                            title=f"KYC Approved for: {record.partner_id.name}",
-                            note=_(
-                                "KYC for %s has been approved. Please take necessary follow-up action.") % record.partner_id.name
-                        )
+                        # _schedule_activity(
+                        #     record, user,
+                        #     title=f"KYC Approved for: {record.partner_id.name}",
+                        #     note=_(
+                        #         "KYC for %s has been approved. Please take necessary follow-up action.") % record.partner_id.name
+                        # )
                         _send_notification(
                             record, user,
                             title=_("KYC Approved for: %s") % record.partner_id.name,
@@ -404,7 +404,6 @@ class DirectorDetails(models.Model):
     _name = "director.details"
     _rec_name = 'name'
     _description = "Directors Details"
-
     kyc_approval_id = fields.Many2one('res.partner.kyc.approval', string="KYC Approval")
     designation = fields.Char(string="Designation")
     name = fields.Char(string="Name")
