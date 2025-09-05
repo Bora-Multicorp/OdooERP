@@ -36,7 +36,7 @@ Bora sale operations
         'views/hide_tax_field_dubai.xml',
         'views/invoice_report_print_preview_action.xml',
         'views/custom_invoice_report.xml',
-        'views/IFSC_and_branch_code.xml',
+        # 'views/IFSC_and_branch_code.xml',
         'views/customer_fields_for_india_sale_invoice.xml',
         'views/create_csv_and_download.xml',
         'views/qc_check_on_delivery.xml',
