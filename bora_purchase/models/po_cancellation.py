@@ -7,12 +7,6 @@ class PurchaseOrderCancellationApproval(models.Model):
     old_state = fields.Char()
     assigned_to_form_cancellation = fields.Many2one('res.users', string='Assigned To', tracking=True)
     approval_users_ids_for_cancellation = fields.One2many('po.cancellation.approval.users', 'po_cancellation_approval_id', 'Cancellation PO Approval Authorities', help='PO cancellation approval authority details')
-    show_cancellation_approve_reject_buttons = fields.Boolean(string="Show", compute='_show_cancellation_approve_reject_buttons', store=False)
-
-
-    @api.depends('assigned_to_form_cancellation','approval_users_ids_for_cancellation.state')
-    def _show_cancellation_approve_reject_buttons(self):
-        self.show_cancellation_approve_reject_buttons = self.assigned_to_form_cancellation == self.env.user
 
 
     def button_cancel(self):

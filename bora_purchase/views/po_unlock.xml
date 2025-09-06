@@ -33,8 +33,8 @@
                 </page>
             </xpath>
             <xpath expr="//header" position="inside">
-                <button name="%(approve_po_unlock_wizard_action)d" string="PO Unlock Approve" type="action" class="oe_highlight" invisible="not show_unlock_approve_reject_buttons"/>
-                <button name="%(reject_po_wizard_action)d" string="PO Unlock Reject" type="action" class="oe_highlight" invisible="not show_unlock_approve_reject_buttons"/>
+                <button name="%(approve_po_unlock_wizard_action)d" string="Approve" type="action" class="oe_highlight" invisible="assigned_to != uid"/>
+                <button name="%(reject_po_wizard_action)d" string="Reject" type="action" class="oe_highlight" invisible="assigned_to != uid"/>
             </xpath>
         </field>
     </record>

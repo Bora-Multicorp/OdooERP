@@ -36,17 +36,8 @@
                 </page>
             </xpath>
             <xpath expr="//header" position="inside">
-                <button name="%(approve_po_cancel_wizard_action)d" string="PO Cancellation Approve" type="action" class="oe_highlight" invisible="not show_cancellation_approve_reject_buttons"/>
-                <button name="%(reject_po_cancel_wizard_action)d" string="PO Cancellation Reject" type="action" class="oe_highlight" invisible="not show_cancellation_approve_reject_buttons"/>
-            </xpath>
-            <xpath expr="//header/button[@name='button_cancel']" position="attributes">
-                <attribute name="invisible">assigned_to_form_cancellation or assigned_to_form_confirmation or state == 'cancel'</attribute>
-            </xpath>
-            <xpath expr="//header/button[@name='print_quotation']" position="attributes">
-                <attribute name="invisible">assigned_to_form_cancellation or assigned_to_form_confirmation or state == 'cancel'</attribute>
-            </xpath>
-            <xpath expr="//header/button[@name='action_rfq_send']" position="attributes">
-                <attribute name="invisible">assigned_to_form_cancellation or assigned_to_form_confirmation or state == 'cancel'</attribute>
+                <button name="%(approve_po_cancel_wizard_action)d" string="Approve" type="action" class="oe_highlight" invisible="assigned_to_form_cancellation != uid"/>
+                <button name="%(reject_po_cancel_wizard_action)d" string="Reject" type="action" class="oe_highlight" invisible="assigned_to_form_cancellation != uid"/>
             </xpath>
         </field>
     </record>
