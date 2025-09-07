@@ -18,37 +18,11 @@ class PurchaseOrderUnlock(models.Model):
                 record.existing_user_ids = [(6, 0, [])]
 
 
-    show_unlock_approve_reject_buttons = fields.Boolean(string="Show", compute='_show_approve_reject_buttons', store=False)
-
-    @api.depends('assigned_to','approval_users_ids.state')
-    def _show_approve_reject_buttons(self):
-
-        # check if any user has rejected the request
-        is_rejected = False
-        for user_id in self.approval_users_ids:
-            if user_id.state == 'reject':
-                is_rejected = True
-                break
-
-        # check if all users have approved
-        do_all_approve = True
-        for user_id in self.approval_users_ids:
-            if not user_id.state:
-                do_all_approve = False
-
-        if do_all_approve == True or is_rejected == True:
-            self.show_unlock_approve_reject_buttons = False
-        elif self.assigned_to == self.env.user:
-            self.show_unlock_approve_reject_buttons = True
-        else:
-            self.show_unlock_approve_reject_buttons = False
-
-
     def button_unlock(self):
 
         po_unlock_approval_users = self.env['purchase.order.approvers'].sudo().search([])
         if not po_unlock_approval_users:
-            raise ValidationError("Please add PO authority before submit request.")
+            raise ValidationError("Please add unlock authority before submit request.")
 
 
         po_unlock_approval_user_vals = []
@@ -58,7 +32,8 @@ class PurchaseOrderUnlock(models.Model):
                 'user_id': approval.user_id.id,
             }))
         self.write({
-            'approval_users_ids': po_unlock_approval_user_vals
+            'approval_users_ids': po_unlock_approval_user_vals,
+            'state': 'unlock_pending'
         })
 
 

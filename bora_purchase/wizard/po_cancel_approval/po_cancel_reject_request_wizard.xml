@@ -4,7 +4,7 @@
         <field name="name">cancel.reject.po.wizard.view.form</field>
         <field name="model">reject.cancel.po.wizard</field>
         <field name="arch" type="xml">
-            <form string="Rejection for Purchase Order Cancellation">
+            <form string="Rejection Cancellation Request">
                 <group> 
                     <field name="remark" placeholder="Enter remarks for purchase order cancellation"/>
                 </group>
@@ -16,7 +16,7 @@
         </field>
     </record>
     <record id="reject_po_cancel_wizard_action" model="ir.actions.act_window">
-        <field name="name">Reject Cancel PO</field>
+        <field name="name">Reject Cancel Request</field>
         <field name="res_model">reject.cancel.po.wizard</field>
         <field name="view_mode">form</field>
         <field name="view_id" ref="cancel_reject_po_wizard_view_form"/>

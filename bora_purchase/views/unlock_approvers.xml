@@ -3,7 +3,7 @@
         <field name="name">purchase.purchase.order.approvers.form</field>
         <field name="model">purchase.order.approvers</field>
         <field name="arch" type="xml">
-            <form string="PO Unlock Approvers" class="oe_form_configuration o_base_settings" create="false">
+            <form string="Unlock Approvers" class="oe_form_configuration o_base_settings" create="false">
                 <sheet>
                     <group>
                         <field name="sequence"/>
@@ -17,28 +17,31 @@
         <field name="name">sales.purchase.order.approvers.tree</field>
         <field name="model">purchase.order.approvers</field>
         <field name="arch" type="xml">
-            <list editable="bottom" string="PO Unlock Approvers">
+            <list editable="bottom" string="Unlock Approvers">
                 <field name="sequence"/>
                 <field name="user_id"/>
             </list>
         </field>
     </record>
     <record id="action_po_unlock_approvers" model="ir.actions.act_window">
-        <field name="name">PO Unlock Approvers</field>
+        <field name="name">Unlock Approvers</field>
         <field name="res_model">purchase.order.approvers</field>
         <field name="view_mode">list,form</field>
         <field name="target">current</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
-                Define your purchase order approvers here.
+                Define your purchase order unlock approvers here.
             </p>
         </field>
     </record>
-    <!-- Add menu under Configuration -->
+    <menuitem id="product_approval_group_header_menu"
+        name="PO Approvers"  parent="purchase.menu_purchase_config"
+        sequence="1000"/> 
+
     <menuitem id="po_unlock_approvers"
-              name="PO Approvers"
-              parent="purchase.menu_purchase_config"
+              name="Unlock"
+              parent="product_approval_group_header_menu"
               action="action_po_unlock_approvers"
-              sequence="1000"
+              sequence="3"
               groups="base.user_admin"/>
 </odoo>

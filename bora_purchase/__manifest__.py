@@ -18,7 +18,7 @@ Bora purchase operations
     'version': '0.1',
 
     # any module necessary for this one to work correctly
-    'depends': ['base', 'purchase'],
+    'depends': ['base', 'purchase','purchase_stock'],
 
     # always loaded
     'data': [
@@ -31,7 +31,9 @@ Bora purchase operations
         'wizard/po_cancel_approval/po_cancel_reject_request_wizard.xml',
         # 'views/qc_check_on_delivery.xml',
         'views/vendor_payment_email_template.xml',
-        'views/po_unlock_approvers.xml',
+        'views/unlock_approvers.xml',
+        'views/confirmation_approvers.xml',
+        'views/cancallation_approvers.xml',
         'views/po_unlock.xml',
         'views/po_fullfill_by.xml',
         'views/po_confirm.xml',
