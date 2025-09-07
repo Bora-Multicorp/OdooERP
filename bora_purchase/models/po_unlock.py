@@ -22,7 +22,7 @@ class PurchaseOrderUnlock(models.Model):
 
         po_unlock_approval_users = self.env['purchase.order.approvers'].sudo().search([])
         if not po_unlock_approval_users:
-            raise ValidationError("Please add PO authority before submit request.")
+            raise ValidationError("Please add unlock authority before submit request.")
 
 
         po_unlock_approval_user_vals = []

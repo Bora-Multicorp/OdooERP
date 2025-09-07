@@ -10,12 +10,9 @@ class PurchaseOrderCancellationApproval(models.Model):
 
 
     def button_cancel(self):
-
-        
-
-        po_cancellation_approval_users = self.env['purchase.order.approvers'].sudo().search([])
+        po_cancellation_approval_users = self.env['purchase.order.cancellation.approvers'].sudo().search([])
         if not po_cancellation_approval_users:
-            raise ValidationError("Please add PO authority before submit request.")
+            raise ValidationError("Please add cancellation authority before submit request.")
 
 
         po_cancel_approval_user_vals = []
@@ -29,14 +26,12 @@ class PurchaseOrderCancellationApproval(models.Model):
             'old_state': self.state,
             'state': 'cancellation_pending'
         })
-
-
         
         if self.assigned_to_form_cancellation:
             for user_id in self.approval_users_ids_for_cancellation:
                 if user_id.state == 'reject':
-                    raise ValidationError(f"PO cancellation request is rejected by '{user_id.user_id.name}', please review 'PO Cancellation Approval Authorities' tab for more details.")                
-            raise ValidationError(f"PO cancellation request is now pending from '{self.assigned_to_form_confirmation.name}'.")
+                    raise ValidationError(f"Cancellation request is rejected by '{user_id.user_id.name}', please review 'Cancellation Approval Authorities' tab for more details.")
+            raise ValidationError(f"Cancellation request is now pending from '{self.assigned_to_form_confirmation.name}'.")
         
 
         if self.id:
@@ -68,7 +63,7 @@ class PurchaseOrderCancellationApproval(models.Model):
 
     def _send_notification_on_rejection_of_PO_cancellation(self):
         
-        approval_users = self.env['purchase.order.approvers'].sudo().search([])
+        approval_users = self.env['purchase.order.cancellation.approvers'].sudo().search([])
 
         self.write({
             'assigned_to_form_confirmation': None

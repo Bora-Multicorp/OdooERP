@@ -4,7 +4,7 @@
         <field name="name">reject.po.wizard.form</field>
         <field name="model">reject.po.unlock.wizard</field>
         <field name="arch" type="xml">
-            <form string="Reject PO Form">
+            <form string="Reject Approval Request">
                 <group>
                     <!-- <field name="order_approval_id" readonly="1"/> -->
                     <field name="remark"  placeholder="Enter remarks for rejection"/>
@@ -17,7 +17,7 @@
         </field>
     </record>
     <record id="reject_po_wizard_action" model="ir.actions.act_window">
-        <field name="name">Reject PO Unlock Request</field>
+        <field name="name">Reject Unlock Request</field>
         <field name="res_model">reject.po.unlock.wizard</field>
         <field name="view_mode">form</field>
         <field name="view_id" ref="reject_po_unlck_wizard_view_form"/>

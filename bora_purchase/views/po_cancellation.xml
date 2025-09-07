@@ -9,12 +9,11 @@
                 <field name="old_state" invisible="0"/>
             </xpath>
             <xpath expr="//button[@name='button_cancel']" position="attributes">
-                <attribute name="confirm">PO cancellation requires approval by authorities, an approval request will be generated.</attribute>
+                <attribute name="confirm">Cancellation requires approval by authorities, an approval request will be generated.</attribute>
             </xpath>
             <xpath expr="//notebook" position="inside">
-                <page name="cancel_approval_authorities_page" string="PO Cancellation Approval Authorities" invisible="not approval_users_ids_for_cancellation">
+                <page name="cancel_approval_authorities_page" string="Cancellation Approval Authorities" invisible="not approval_users_ids_for_cancellation">
                     <group>
-                        <field name="show_cancellation_approve_reject_buttons" invisible="1"/>
                         <field name="assigned_to_form_cancellation" options="{'no_edit': True, 'no_create': True, 'no_open': True}" invisible="not assigned_to_form_cancellation" readonly="1"/>
                     </group>
                     <field name="approval_users_ids_for_cancellation" nolabel="1" help="Define the PO cancel approval roles." readonly="1">

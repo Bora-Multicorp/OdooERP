@@ -25,9 +25,9 @@ class PurchaseOrderConfirmApproval(models.Model):
 
     def button_confirm(self):
                 
-        po_confirm_approval_users = self.env['purchase.order.approvers'].sudo().search([])
+        po_confirm_approval_users = self.env['purchase.order.confirmation.approvers'].sudo().search([])
         if not po_confirm_approval_users:
-            raise ValidationError("Please add PO authority before submit request.")
+            raise ValidationError("Please add confirmation approval authority before submit request.")
 
         super(PurchaseOrderConfirmApproval, self).button_confirm()
 
@@ -75,7 +75,7 @@ class PurchaseOrderConfirmApproval(models.Model):
 
     def _send_notification_on_rejection_of_PO_confirmation(self):
         
-        approval_users = self.env['purchase.order.approvers'].sudo().search([])
+        confirmation_approval_users = self.env['purchase.order.confirmation.approvers'].sudo().search([])
 
         self.write({
             'state': 'draft',
@@ -83,7 +83,7 @@ class PurchaseOrderConfirmApproval(models.Model):
         })
 
 
-        for user in approval_users:
+        for user in confirmation_approval_users:
             if user.user_id == self.env.user:
                 self.env['bus.bus']._sendone(
                     user.user_id.partner_id,
