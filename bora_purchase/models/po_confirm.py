@@ -20,15 +20,8 @@ class PurchaseOrderConfirmApproval(models.Model):
         tracking=True
     )
 
-    
 
-
-    def button_confirm(self):
-                
-        po_confirm_approval_users = self.env['purchase.order.confirmation.approvers'].sudo().search([])
-        if not po_confirm_approval_users:
-            raise ValidationError("Please add confirmation approval authority before submit request.")
-
+    def assign_users(self, po_confirm_approval_users):
         super(PurchaseOrderConfirmApproval, self).button_confirm()
 
 
@@ -37,6 +30,7 @@ class PurchaseOrderConfirmApproval(models.Model):
             po_confirm_approval_user_vals.append((0, 0, {
                 'sequence': approval.sequence,
                 'user_id': approval.user_id.id,
+                'group': approval.group
             }))
         self.write({
             'approval_users_ids_for_confirmation': po_confirm_approval_user_vals,
@@ -56,6 +50,18 @@ class PurchaseOrderConfirmApproval(models.Model):
             self._update_assigned_to_form_PO_confirm()
 
         self._create_activity_and_send_notification_for_confirm_request()
+
+
+    def button_confirm(self):
+
+        po_confirm_approval_users = self.env['purchase.order.confirmation.approvers'].sudo().search([])
+        if not po_confirm_approval_users:
+            raise ValidationError("Please add confirmation approval authority before submit request.")
+
+        return self.env.ref(
+            "bora_purchase.action_confirmation_approval_user_picker_wizard"
+        ).read()[0]
+     
 
     def _update_assigned_to_form_PO_confirm(self):
         for rec in self:
@@ -106,6 +112,7 @@ class PurchaseOrderConfirmApproval(models.Model):
                         'sticky': True,
                     },
                 )
+
 
     def _create_activity_and_send_notification_on_confirm_approval(self):
 
@@ -160,6 +167,7 @@ class PurchaseOrderConfirmApproval(models.Model):
                 },
             )
 
+
     def _create_activity_and_send_notification_for_confirm_request(self):
         for rec in self:
             rec.activity_schedule(
@@ -193,7 +201,26 @@ class PurchaseOrderConfirmApproval(models.Model):
                     },
                 )
 
- 
+    
+    def reset_approval_process(self):
+
+        for order in self:
+
+            pending_approvers = order.approval_users_ids_for_confirmation.filtered(lambda u: not u.state)
+
+            pending_approvers.write({'state': 'suspended'})
+
+            activities = self.env['mail.activity'].search([
+                ('res_model', '=', 'purchase.order'),
+                ('res_id', '=', self.ids),
+                ('user_id', 'in', pending_approvers.mapped('user_id').ids),
+                ('activity_type_id', '=', self.env.ref('mail.mail_activity_data_todo').id),
+            ])
+
+            order.write({'assigned_to_form_confirmation': None, 'state':'draft'})
+
+            activities.unlink()
+
 
 
 class POConfirmApprovalUsers(models.Model):
@@ -201,6 +228,11 @@ class POConfirmApprovalUsers(models.Model):
     _rec_name = 'po_confirm_approval_id'
     _description = "PO Confirm Approval Users"
     _order = "create_date, sequence"
+
+    group = fields.Selection([
+        ('group1', 'Group 1'),
+        ('group2', 'Group 2'),
+    ], string="Groups", required=True) 
 
     sequence = fields.Integer(string='Sequence')
     po_confirm_approval_id = fields.Many2one('purchase.order', string="PO Confirm Approval")

@@ -4,29 +4,24 @@
         <field name="model">purchase.order</field>
         <field name="inherit_id" ref="purchase.purchase_order_form"/>
         <field name="arch" type="xml">
-            <xpath expr="//button[@id='draft_confirm']" position="attributes">
-                <attribute name="confirm">Purchase order confirmation requires approval by authorities, an approval request will be generated.</attribute>
-            </xpath>
             <xpath expr="//notebook" position="inside">
                 <page name="confirm_approval_authorities_page" string="Confirmation Approval Authorities" invisible="not approval_users_ids_for_confirmation">
                     <group>
-                        <field name="assigned_to_form_confirmation" options="{'no_edit': True, 'no_create': True, 'no_open': True}" invisible="not assigned_to_form_confirmation" readonly="1"/>
+                        <div class="o_row o_align_right">
+                            <label for="assigned_to_form_confirmation"/>
+                            <field name="assigned_to_form_confirmation" options="{'no_edit': True, 'no_create': True, 'no_open': True}" invisible="not assigned_to_form_confirmation" readonly="1"/>
+                            <button name="reset_approval_process" string="Reset Approval" type="object" class="btn-primary" groups="base.group_system" confirm="Are you sure you want to reset this approval process?"/>
+                        </div>
                     </group>
                     <field name="approval_users_ids_for_confirmation" nolabel="1" help="Define the PO confirm approval roles." readonly="1">
-                        <list editable="bottom">
+                        <list create="false">
                             <field name="sequence"/>
-                            <field name="user_id" widget="many2one_avatar_user" options="{'no_edit': True, 'no_create': True, 'no_open': True}"/>
-                            <field name="remark"/>
+                            <field name="user_id" widget="many2one_avatar_user" readonly="1"/>
+                            <field name="group" readonly="1"/>
+                            <field name="remark" readonly="1"/>
                             <field name="state" readonly="1"/>
                             <field name="action_date" readonly="1"/>
                         </list>
-                        <form>
-                            <group>
-                                <field name="user_id" options="{'no_edit': True, 'no_create': True, 'no_open': True}"/>
-                                <field name="state"/>
-                                <field name="remark"/>
-                            </group>
-                        </form>
                     </field>
                 </page>
             </xpath>
@@ -34,15 +29,12 @@
                 <button name="%(approve_po_confirm_wizard_action)d" string="Approve" type="action" class="oe_highlight" invisible="assigned_to_form_confirmation != uid"/>
                 <button name="%(reject_po_confirm_wizard_action)d" string="Reject" type="action" class="oe_highlight" invisible="assigned_to_form_confirmation != uid"/>
             </xpath>
-            
             <xpath expr="//button[@name='action_view_picking']" position="attributes">
                 <attribute name="invisible">1</attribute>
             </xpath>
-
             <xpath expr="//button[@name='button_draft']" position="attributes">
                 <attribute name="string">Set To RFQ</attribute>
             </xpath>
-
             <xpath expr="//div[hasclass('oe_button_box')]/button[@name='action_view_picking']" position="attributes">
                 <attribute name="invisible">state in ('confirmation_pending','cancellation_pending','unlock_pending', 'draft', 'cancel') or incoming_picking_count == 0</attribute>
             </xpath>
