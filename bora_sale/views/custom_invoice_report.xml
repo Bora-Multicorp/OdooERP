@@ -899,8 +899,8 @@
                                             </div>
                                             <div t-field="o.company_id.partner_id"
                                                  t-options='{"widget":"contact","fields":["name","address"],"no_marker":True}'/>
-                                            <t t-if="o.partner_id.state_id.name">Emirate:
-                                                <span t-field="o.partner_id.state_id.name"/>
+                                            <t t-if="o.company_id.state_id">Emirate:
+                                                <span t-field="o.company_id.state_id"/>
                                             </t>
 
                                             <t t-if="o.company_id.vat">TRN:
