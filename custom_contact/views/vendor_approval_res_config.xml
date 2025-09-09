@@ -10,6 +10,7 @@
                     <group>
                         <field name="sequence"/>
                         <field name="user_id" options="{'no_create': True, 'no_create_edit': True}"/>
+                        <field name="group"/>
                     </group>
                 </sheet>
             </form>
@@ -21,8 +22,11 @@
         <field name="model">vendor.approval.config</field>
         <field name="arch" type="xml">
             <list editable="bottom" string="Vendor Approval Settings">
+                <field name="sequence" widget="handle" class="o_data_cell_sequence"/>
                 <field name="sequence"/>
-                <field name="user_id"/>
+                <field name="default_user"/>
+                <field name="user_id"   options="{'no_edit': True, 'no_create': True, 'no_open': True}"/>
+                <field name="group"/>
             </list>
         </field>
     </record>
@@ -34,6 +38,9 @@
         <!--<field name="view_id" ref="vendor_approval_config_view_form"/>-->
         <field name="view_mode">list,form</field>
         <field name="target">current</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Define your vendor approvers here.</p>
+        </field>
         <!--<field name="context">{'module' : 'contact', 'bin_size': False}</field>-->
     </record>
 

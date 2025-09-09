@@ -209,8 +209,8 @@ class CustomContact(models.Model):
             for record in self:
                 if record.is_vendor:
                     record.supplier_rank = (record.supplier_rank or 0) + 1
-                if record.is_customer:
-                    record.customer_rank = (record.customer_rank or 0) + 1
+                # if record.is_customer:
+                #     record.customer_rank = (record.customer_rank or 0) + 1
         return res
 
     survey_ids = fields.One2many('survey.user_input', 'partner_id', string='Surveys')
@@ -338,8 +338,8 @@ class CustomContact(models.Model):
             }
             if partner.is_vendor:
                 vals['supplier_rank'] = 0
-            if partner.is_customer:
-                vals['customer_rank'] = 0
+            # if partner.is_customer:
+            #     vals['customer_rank'] = 0
 
             partner.write(vals)
 
