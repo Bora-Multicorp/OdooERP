@@ -64,21 +64,7 @@ class ContactKYCApproval(models.Model):
     #             print('1111111111111', field, field.get('name'))
     #             field.set('readonly', '1')
     #     return arch, view
-    def add_user(self, approvers):
-        if approvers:
-            approval_user_vals = []
-            for approval in approvers:
-                approval_user_vals.append((0, 0, {
-                    'sequence': approval.sequence,
-                    'user_id': approval.user_id.id,
-                    'group': approval.group
-                    # 'job_id': user.employee_id.job_title or '',  # fallback to empty if not set
-                }))
-            self.write({
-                'approval_users_ids': approval_user_vals,
-                'state': 'pending'
-            })
-            self._update_assigned_to()
+
             # defaults['approval_users_ids'] = approval_user_vals
 
 
@@ -211,8 +197,25 @@ class ContactKYCApproval(models.Model):
     rejection_date = fields.Datetime(string="Rejection Date", tracking=True)
     rejection_reason = fields.Text('Rejection Reason', tracking=True)
 
+    def add_user(self, approvers):
+        if approvers:
+            approval_user_vals = []
+            for approval in approvers:
+                approval_user_vals.append((0, 0, {
+                    'sequence': approval.sequence,
+                    'user_id': approval.user_id.id,
+                    'group': approval.group
+                    # 'job_id': user.employee_id.job_title or '',  # fallback to empty if not set
+                }))
+            self.write({
+                'approval_users_ids': approval_user_vals,
+                'state': 'pending'
+            })
+            self._update_assigned_to()
+
     def confirm_submit_form(self):
-        if not self.approval_users_ids:
+        approvers = self.env['vendor.approval.config'].sudo().search([])
+        if not approvers:
             raise ValidationError(_("Please Add Approval Authority before Submit Request"))
         return self.env.ref(
             "custom_contact.action_kyc_vendor_approval_user_picker_wizard"
@@ -231,11 +234,13 @@ class ContactKYCApproval(models.Model):
 
         for kyc in self:
             pending_approvers = kyc.approval_users_ids.filtered(lambda u: not u.state)
-
-            pending_approvers.write({'state': 'suspended', 'remark': remark})
+            pending_approvers.write({
+                'state': 'suspended',
+                'remark': f"By {self.env.user.name} - " + (f" {remark}" if remark else ""),
+                'action_date': fields.Datetime.now()})
 
             activities = self.env['mail.activity'].search([
-                ('res_model', '=', 'purchase.order'),
+                ('res_model', '=', 'res.partner.kyc.approval'),
                 ('res_id', '=', self.ids),
                 ('user_id', 'in', pending_approvers.mapped('user_id').ids),
                 ('activity_type_id', '=', self.env.ref('mail.mail_activity_data_todo').id),
