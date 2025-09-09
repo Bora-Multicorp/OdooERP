@@ -213,7 +213,10 @@ class PurchaseOrderConfirmApproval(models.Model):
 
             pending_approvers = order.approval_users_ids_for_confirmation.filtered(lambda u: not u.state)
 
-            pending_approvers.write({'state': 'suspended', 'remark': remark})
+            pending_approvers.write({
+                'state': 'suspended', 
+                'remark': f"By {self.env.user.name} - " + (f" {remark}" if remark else ""),
+                'action_date': fields.Datetime.now()})
 
             activities = self.env['mail.activity'].search([
                 ('res_model', '=', 'purchase.order'),
