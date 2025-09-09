@@ -24,7 +24,6 @@ class PurchaseOrderConfirmApproval(models.Model):
     def assign_users(self, po_confirm_approval_users):
         super(PurchaseOrderConfirmApproval, self).button_confirm()
 
-
         po_confirm_approval_user_vals = []
         for approval in po_confirm_approval_users:
             po_confirm_approval_user_vals.append((0, 0, {
@@ -60,7 +59,7 @@ class PurchaseOrderConfirmApproval(models.Model):
 
         return self.env.ref(
             "bora_purchase.action_confirmation_approval_user_picker_wizard"
-        ).read()[0]
+        ).sudo().read()[0]
      
 
     def _update_assigned_to_form_PO_confirm(self):
@@ -201,14 +200,20 @@ class PurchaseOrderConfirmApproval(models.Model):
                     },
                 )
 
+
+    def action_suspend(self):
+        return self.env.ref(
+            "bora_purchase.approve_suspend_po_confirm_wizard_action"
+        ).sudo().read()[0]
+
     
-    def suspend_approval_process(self):
+    def suspend_approval_process(self, remark):
 
         for order in self:
 
             pending_approvers = order.approval_users_ids_for_confirmation.filtered(lambda u: not u.state)
 
-            pending_approvers.write({'state': 'suspended'})
+            pending_approvers.write({'state': 'suspended', 'remark': remark})
 
             activities = self.env['mail.activity'].search([
                 ('res_model', '=', 'purchase.order'),
@@ -252,7 +257,7 @@ class POConfirmApprovalUsers(models.Model):
     _name = "po.confirm.approval.users"
     _rec_name = 'po_confirm_approval_id'
     _description = "PO Confirm Approval Users"
-    _order = "create_date, sequence"
+    # _order = "create_date, sequence"
 
     group = fields.Selection([
         ('group1', 'Group 1'),

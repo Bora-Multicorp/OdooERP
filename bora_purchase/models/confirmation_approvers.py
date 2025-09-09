@@ -10,6 +10,7 @@ class POConfirmationApproverTeam(models.Model):
 
     sequence = fields.Integer(string='Sequence', index=True)
     user_id = fields.Many2one('res.users', string='User', required=True)
+    default_user = fields.Boolean(string="Default")
     group = fields.Selection([
         ('group1', 'Group 1'),
         ('group2', 'Group 2'),
@@ -35,6 +36,32 @@ class POConfirmationApproverTeam(models.Model):
         
         return defaults
     
+
+    @api.constrains('default_user', 'group')
+    def _check_unique_default_user_per_group(self):
+        for record in self:
+            if record.default_user:
+                existing_default_users = self.search([
+                    ('id', '!=', record.id),
+                    ('group', '=', record.group),
+                    ('default_user', '=', True)
+                ])
+                if existing_default_users:
+                    # Reset the previous default user to False
+                    existing_default_users.write({'default_user': False})
+
+    @api.onchange('default_user', 'group')
+    def _onchange_default_user(self):
+        if self.default_user:
+            existing_default_users = self.search([
+                ('id', '!=', self._origin.id if self._origin else False),
+                ('group', '=', self.group),
+                ('default_user', '=', True)
+            ])
+            if existing_default_users:
+                pass
+
+
 
     @api.model
     def create(self, vals):

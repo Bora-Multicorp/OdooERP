@@ -10,7 +10,7 @@
                         <div class="o_row o_align_right">
                             <label for="assigned_to_form_confirmation"/>
                             <field name="assigned_to_form_confirmation" options="{'no_edit': True, 'no_create': True, 'no_open': True}" invisible="not assigned_to_form_confirmation" readonly="1"/>
-                            <button name="suspend_approval_process" string="Suspend" type="object" class="btn-primary" groups="base.group_system" confirm="Are you sure you want to suspend this approval process?"/>
+                            <button name="action_suspend" string="Suspend" type="object" class="btn-primary" groups="base.group_system"/>
                         </div>
                     </group>
                     <field name="approval_users_ids_for_confirmation" nolabel="1" help="Define the PO confirm approval roles." readonly="1">
