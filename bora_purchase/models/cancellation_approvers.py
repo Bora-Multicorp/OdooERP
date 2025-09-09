@@ -2,7 +2,7 @@ from odoo import fields, models, api
 import random
 
 
-class POCancellationApproverTeam(models.Model):
+class POCancellationApproverTeam(models.Model): 
     _name = 'purchase.order.cancellation.approvers'
     _description = 'Cancelation Approvers'
     _rec_name = 'user_id'

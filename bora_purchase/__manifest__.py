@@ -25,6 +25,8 @@ Bora purchase operations
         'security/ir.model.access.csv',
         'wizard/po_lock_unlock/po_unlock_approve_request_wizard.xml',
         'wizard/po_lock_unlock/po_unlock_reject_request_wizard.xml',
+        'wizard/po_lock_unlock/unlock_approval_users_picker_wizard.xml',
+        'wizard/po_lock_unlock/unlock_suspended_by_admin_wizard.xml',
         'wizard/po_confirm_approval/po_confirm_approve_request_wizard.xml',
         'wizard/po_confirm_approval/po_confirm_reject_request_wizard.xml',
         'wizard/po_confirm_approval/confirmation_approval_users_picker_wizard.xml',

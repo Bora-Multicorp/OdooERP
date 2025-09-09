@@ -2,23 +2,23 @@
 from odoo import api, fields, models, _
 from odoo.exceptions import UserError
 
-class POCancelationApprovalUsersPicker(models.TransientModel):
-    _name = 'cancelation.approval.user.picker.wizard'
-    _description = 'cancelation approval users picker'
+class POUnlockApprovalUsersPicker(models.TransientModel):
+    _name = 'unlock.approval.user.picker.wizard'
+    _description = 'unlock approval users picker'
 
-    order_id = fields.Many2one('purchase.order', string="Cancelation for Purchase Order Cancelation")
+    order_id = fields.Many2one('purchase.order', string="Cancelation for Purchase Order Unlock")
 
     group1_users = fields.Many2many(
-        comodel_name='purchase.order.cancellation.approvers',
-        relation='picker_wizard_group1_rel_cancel',   # custom relation table
+        comodel_name='purchase.order.approvers',
+        relation='picker_wizard_group1_rel_unlock',   # custom relation table
         column1='wizard_id',                   # FK to wizard
         column2='approver_id',                 # FK to approver
         string="Group 1"
     )
 
     group2_users = fields.Many2many(
-        comodel_name='purchase.order.cancellation.approvers',
-        relation='picker_wizard_group2_rel_cancel',   # DIFFERENT relation table
+        comodel_name='purchase.order.approvers',
+        relation='picker_wizard_group2_rel_unlock',   # DIFFERENT relation table
         column1='wizard_id',
         column2='approver_id',
         string="Group 2"
@@ -36,13 +36,13 @@ class POCancelationApprovalUsersPicker(models.TransientModel):
 
     def add_users_for_approval(self):
         approvers = self.group1_users | self.group2_users
-        self.order_id.assign_cancel_users(approvers)
+        self.order_id.assign_unlock_users(approvers)
 
 
     @api.model
     def default_get(self, fields):
         res = super().default_get(fields)
-        Approver = self.env['purchase.order.cancellation.approvers']
+        Approver = self.env['purchase.order.approvers']
 
         # Prefill Group 1 with only the default approvers
         group1_ids = Approver.search([

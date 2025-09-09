@@ -8,7 +8,7 @@ class PurchaseOrderCancellationApproval(models.Model):
     assigned_to_form_cancellation = fields.Many2one('res.users', string='Assigned To', tracking=True)
     approval_users_ids_for_cancellation = fields.One2many('po.cancellation.approval.users', 'po_cancellation_approval_id', 'Cancellation PO Approval Authorities', help='PO cancellation approval authority details')
 
-    def assign_users(self, po_cancellation_approval_users):
+    def assign_cancel_users(self, po_cancellation_approval_users):
 
         po_cancel_approval_user_vals = []
         for approval in po_cancellation_approval_users:

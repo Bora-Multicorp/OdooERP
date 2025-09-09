@@ -1,5 +1,7 @@
 from .po_lock_unlock import po_unlock_approve_request_wizard
 from .po_lock_unlock import po_unlock_reject_request_wizard
+from .po_lock_unlock import unlock_approval_users_picker_wizard
+from .po_lock_unlock import unlock_suspended_by_admin_wizard
 from .po_confirm_approval import po_confirm_approve_request_wizard
 from .po_confirm_approval import po_confirm_reject_request_wizard
 from .po_confirm_approval import confirmation_approval_users_picker_wizard

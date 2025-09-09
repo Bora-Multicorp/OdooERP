@@ -18,22 +18,18 @@ class PurchaseOrderUnlock(models.Model):
                 record.existing_user_ids = [(6, 0, [])]
 
 
-    def button_unlock(self):
-
-        po_unlock_approval_users = self.env['purchase.order.approvers'].sudo().search([])
-        if not po_unlock_approval_users:
-            raise ValidationError("Please add unlock authority before submit request.")
-
+    def assign_unlock_users(self, po_confirm_approval_users):
+        super(PurchaseOrderUnlock, self).button_confirm()
 
         po_unlock_approval_user_vals = []
-        for approval in po_unlock_approval_users:
+        for approval in po_confirm_approval_users:
             po_unlock_approval_user_vals.append((0, 0, {
                 'sequence': approval.sequence,
                 'user_id': approval.user_id.id,
             }))
         self.write({
             'approval_users_ids': po_unlock_approval_user_vals,
-            'state': 'unlock_pending'
+            'state': 'done'
         })
 
 
@@ -49,6 +45,70 @@ class PurchaseOrderUnlock(models.Model):
             self._update_assigned_to_For_unlock()
 
         self._create_activity_and_send_notification_for_unlock_request()
+
+
+    def button_unlock(self):
+ 
+        po_unlock_approval_users = self.env['purchase.order.approvers'].sudo().search([])
+        if not po_unlock_approval_users:
+            raise ValidationError("Please add unlock authority before submit request.")
+
+        return self.env.ref(
+            "bora_purchase.action_unlock_approval_user_picker_wizard"
+        ).sudo().read()[0]
+
+    def action_unlock_suspend(self):
+        return self.env.ref(
+            "bora_purchase.unlock_suspend_po_confirm_wizard_action"
+        ).sudo().read()[0]
+
+
+    def suspend_unlock_process(self, remark):
+
+        for order in self:
+
+            pending_approvers = order.approval_users_ids.filtered(lambda u: not u.state)
+
+            pending_approvers.write({
+                'state': 'suspended', 
+                'remark': f"By {self.env.user.name} - " + (f" {remark}" if remark else ""),
+                'action_date': fields.Datetime.now()})
+
+            activities = self.env['mail.activity'].search([
+                ('res_model', '=', 'purchase.order'),
+                ('res_id', '=', self.ids),
+                ('user_id', 'in', pending_approvers.mapped('user_id').ids),
+                ('activity_type_id', '=', self.env.ref('mail.mail_activity_data_todo').id),
+            ])
+
+            order.write({'assigned_to': None, 'state':'done'}) 
+
+            # send notification to creator
+            order.env['bus.bus']._sendone(
+                order.create_uid.partner_id,
+                'simple_notification',
+                {
+                    'type': 'danger',
+                    'title': f'PO {order.name} suspended by {self.env.user.name}. you need to initiate the approval process again.',
+                    'message':  '',
+                    'sticky': True,
+                },
+            )
+
+            #4. in the last send info message to self
+            order.env['bus.bus']._sendone(
+                self.env.user.partner_id,
+                'simple_notification',
+                {
+                    'type': 'info',
+                    'title': f'Approval process suspended successfully.',
+                    'message':  '',
+                    'sticky': True,
+                },
+            )
+
+
+            activities.unlink()
 
     def _update_assigned_to_For_unlock(self):
         for rec in self:
@@ -192,6 +252,6 @@ class POUnlockApprovalUsers(models.Model):
     po_unlock_approval_id = fields.Many2one('purchase.order', string="O Unlock Approval")
     job_id = fields.Char(string="Designation", readonly=True)
     user_id = fields.Many2one('res.users', string='User', required=True)
-    state = fields.Selection([('approve', 'Approved'), ('reject', 'Rejected')], string="Action")
+    state = fields.Selection([('approve', 'Approved'), ('reject', 'Rejected'), ('suspended', 'Suspended')], string="Action")
     remark = fields.Char('Remarks', tracking=True)
     action_date = fields.Datetime(string="Action Date")
