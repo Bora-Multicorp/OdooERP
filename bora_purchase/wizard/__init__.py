@@ -6,3 +6,5 @@ from .po_confirm_approval import confirmation_approval_users_picker_wizard
 from .po_confirm_approval import confirmation_suspended_by_admin_wizard
 from .po_cancel_approval import po_cancel_approve_request_wizard
 from .po_cancel_approval import po_cancel_reject_request_wizard
+from .po_cancel_approval import cancelation_approval_users_picker_wizard
+from .po_cancel_approval import cancelation_suspended_by_admin_wizard

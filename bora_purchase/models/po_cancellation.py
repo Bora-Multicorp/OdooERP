@@ -8,12 +8,7 @@ class PurchaseOrderCancellationApproval(models.Model):
     assigned_to_form_cancellation = fields.Many2one('res.users', string='Assigned To', tracking=True)
     approval_users_ids_for_cancellation = fields.One2many('po.cancellation.approval.users', 'po_cancellation_approval_id', 'Cancellation PO Approval Authorities', help='PO cancellation approval authority details')
 
-
-    def button_cancel(self):
-        po_cancellation_approval_users = self.env['purchase.order.cancellation.approvers'].sudo().search([])
-        if not po_cancellation_approval_users:
-            raise ValidationError("Please add cancellation authority before submit request.")
-
+    def assign_users(self, po_cancellation_approval_users):
 
         po_cancel_approval_user_vals = []
         for approval in po_cancellation_approval_users:
@@ -38,6 +33,19 @@ class PurchaseOrderCancellationApproval(models.Model):
             self._update_assigned_to_form_PO_cancellation()
 
         self._create_activity_and_send_notification_for_cancel_request()
+
+
+    def button_cancel(self):
+        po_cancellation_approval_users = self.env['purchase.order.cancellation.approvers'].sudo().search([])
+        if not po_cancellation_approval_users:
+            raise ValidationError("Please add cancellation authority before submit request.")
+
+
+        return self.env.ref(
+            "bora_purchase.action_cancelation_approval_user_picker_wizard"
+        ).sudo().read()[0]
+
+
 
     def _update_assigned_to_form_PO_cancellation(self):
         for rec in self:
@@ -182,7 +190,57 @@ class PurchaseOrderCancellationApproval(models.Model):
                     },
                 )
 
- 
+    def action_suspend(self):
+        return self.env.ref(
+            "bora_purchase.cnacel_suspend_po_confirm_wizard_action"
+        ).sudo().read()[0]
+
+    def suspend_cancelation_process(self, remark):
+
+        for order in self:
+
+            pending_approvers = order.approval_users_ids_for_cancellation.filtered(lambda u: not u.state)
+
+            pending_approvers.write({
+                'state': 'suspended', 
+                'remark': f"By {self.env.user.name} - " + (f" {remark}" if remark else ""),
+                'action_date': fields.Datetime.now()})
+
+            activities = self.env['mail.activity'].search([
+                ('res_model', '=', 'purchase.order'),
+                ('res_id', '=', self.ids),
+                ('user_id', 'in', pending_approvers.mapped('user_id').ids),
+                ('activity_type_id', '=', self.env.ref('mail.mail_activity_data_todo').id),
+            ])
+
+            order.write({'assigned_to_form_cancellation': None, 'state':self.old_state})
+
+            # send notification to creator
+            order.env['bus.bus']._sendone(
+                order.create_uid.partner_id,
+                'simple_notification',
+                {
+                    'type': 'danger',
+                    'title': f'PO {order.name} cnacellation suspended by {self.env.user.name}. you need to initiate the approval process again.',
+                    'message':  '',
+                    'sticky': True,
+                },
+            )
+
+            #4. in the last send info message to self
+            order.env['bus.bus']._sendone(
+                self.env.user.partner_id,
+                'simple_notification',
+                {
+                    'type': 'info',
+                    'title': f'Cancellation process suspended successfully.',
+                    'message':  '',
+                    'sticky': True,
+                },
+            )
+
+
+            activities.unlink()
 
 
 class POCancellationApprovalUsers(models.Model):

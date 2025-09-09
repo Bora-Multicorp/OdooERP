@@ -1,29 +1,29 @@
 <odoo>
-    <record id="view_confirmation_approval_user_picker_wizard" model="ir.ui.view">
-        <field name="name">view.confirmation.approval.user.picker.wizard</field>
-        <field name="model">confirmation.approval.user.picker.wizard</field>
+    <record id="view_cancelation_approval_user_picker_wizard" model="ir.ui.view">
+        <field name="name">view.concelation.approval.user.picker.wizard</field>
+        <field name="model">cancelation.approval.user.picker.wizard</field>
         <field name="arch" type="xml">
-            <form string="Add Users to Approval">
+            <form string="Add Users to Cancelation">
                 <sheet>
                     <group>
                         <div class="o_form_label o_text_warning" style="margin-bottom: 10px;">
-                             Confirmation requires approval, an approval request will be generated for the selected authorities.
+                             Cancelation requires approval, an approval request will be generated for the selected authorities.
                         </div>
                        <field name="group1_users" widget="many2many_tags" domain="[('group','=','group1')]" context="{'default_group': 'group1'}" options="{'color_field': 'color', 'no_edit': True, 'no_create': True, 'no_open': True}"/>
                        <field name="group2_users" widget="many2many_tags" domain="[('group','=','group2')]" context="{'default_group': 'group2'}" options="{'color_field': 'color', 'no_edit': True, 'no_create': True, 'no_open': True}"/>
                    </group>
                </sheet>
                <footer>
-                   <button string="Add Users" type="object" name="add_users_for_approval" class="btn-primary" invisible="add_button_disabled == 1"  confirm="Are you sure you want to add the selected users for approval?"/>
+                   <button string="Add Users" type="object" name="add_users_for_approval" class="btn-primary" invisible="add_button_disabled == 1"  confirm="Are you sure you want to add the selected users for cancelation?"/>
                    <button string="Cancel" class="btn-secondary" special="cancel"/>
                </footer>
            </form>
        </field>
    </record>
 
-   <record id="action_confirmation_approval_user_picker_wizard" model="ir.actions.act_window">
-       <field name="name">Confirmation Approval User Picker</field>
-       <field name="res_model">confirmation.approval.user.picker.wizard</field>
+   <record id="action_cancelation_approval_user_picker_wizard" model="ir.actions.act_window">
+       <field name="name">Cancelation Approval User Picker</field>
+       <field name="res_model">cancelation.approval.user.picker.wizard</field>
        <field name="view_mode">form</field>
        <field name="target">new</field>
         <field name="context">{

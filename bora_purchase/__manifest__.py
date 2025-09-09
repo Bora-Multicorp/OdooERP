@@ -31,6 +31,8 @@ Bora purchase operations
         'wizard/po_confirm_approval/confirmation_suspended_by_admin_wizard.xml',
         'wizard/po_cancel_approval/po_cancel_approve_request_wizard.xml',
         'wizard/po_cancel_approval/po_cancel_reject_request_wizard.xml',
+        'wizard/po_cancel_approval/cancelation_approval_users_picker_wizard.xml',
+        'wizard/po_cancel_approval/cancelation_suspended_by_admin_wizard.xml',
         # 'views/qc_check_on_delivery.xml',
         'views/vendor_payment_email_template.xml',
         'views/unlock_approvers.xml',
