@@ -44,12 +44,18 @@ class POConfirmationApprovalUsersPicker(models.TransientModel):
         res = super().default_get(fields)
         Approver = self.env['purchase.order.confirmation.approvers']
 
-        # Prefill Group 1 approvers
-        group1_ids = Approver.search([('group', '=', 'group1')]).ids
+        # Prefill Group 1 with only the default approvers
+        group1_ids = Approver.search([
+            ('group', '=', 'group1'), 
+            ('default_user', '=', True)
+        ]).ids
         res['group1_users'] = [(6, 0, group1_ids)]
 
-        # Prefill Group 2 approvers
-        group2_ids = Approver.search([('group', '=', 'group2')]).ids
+        # Prefill Group 2 with only the default approvers
+        group2_ids = Approver.search([
+            ('group', '=', 'group2'), 
+            ('default_user', '=', True)
+        ]).ids
         res['group2_users'] = [(6, 0, group2_ids)]
 
         return res

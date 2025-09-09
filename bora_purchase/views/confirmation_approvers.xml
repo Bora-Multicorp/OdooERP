@@ -21,6 +21,7 @@
             <list editable="bottom" string="Confirmation Approvers">
                 <field name="sequence" widget="handle" class="o_data_cell_sequence"/>
                 <field name="sequence"/>
+                <field name="default_user"/>
                 <field name="user_id"/>
                 <field name="group"/>
             </list>
