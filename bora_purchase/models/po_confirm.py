@@ -202,7 +202,7 @@ class PurchaseOrderConfirmApproval(models.Model):
                 )
 
     
-    def reset_approval_process(self):
+    def suspend_approval_process(self):
 
         for order in self:
 
@@ -218,6 +218,31 @@ class PurchaseOrderConfirmApproval(models.Model):
             ])
 
             order.write({'assigned_to_form_confirmation': None, 'state':'draft'})
+
+            # send notification to creator
+            order.env['bus.bus']._sendone(
+                order.create_uid.partner_id,
+                'simple_notification',
+                {
+                    'type': 'danger',
+                    'title': f'PO {order.name} suspended by {self.env.user.name}. you need to initiate the approval process again.',
+                    'message':  '',
+                    'sticky': True,
+                },
+            )
+
+            #4. in the last send info message to self
+            order.env['bus.bus']._sendone(
+                self.env.user.partner_id,
+                'simple_notification',
+                {
+                    'type': 'info',
+                    'title': f'Approval process suspended successfully.',
+                    'message':  '',
+                    'sticky': True,
+                },
+            )
+
 
             activities.unlink()
 
