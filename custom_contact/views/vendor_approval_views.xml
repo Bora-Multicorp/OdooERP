@@ -242,7 +242,7 @@
                                         <label for="deadline"/>
                                         <field name="deadline"/>
                                         <button name="action_suspend" string="Suspend" type="object" class="btn-primary"
-                                                groups="base.group_system"/>
+                                                groups="base.group_system" invisible="is_approved or not assigned_to"/>
                                     </div>
                                 </group>
                                 <field name="approval_users_ids" nolabel="1" help="Define the approval roles."
