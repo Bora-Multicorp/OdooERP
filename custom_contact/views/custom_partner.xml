@@ -113,7 +113,7 @@
             </field>
             <xpath expr="//field[@name='category_id']" position="after">
                 <field name="is_vendor" readonly="is_kyc"/>
-                <field name="is_customer" readonly="is_kyc" invisible="1"/>
+                <field name="is_customer" readonly="is_kyc" invisible="0"/>
                 <field name="is_kyc" readonly="1"/>
                 <field name="is_approved" readonly="1" invisible="not is_approved"/>
                 <field name="approval_date" readonly="1" invisible="not approval_date"/>
