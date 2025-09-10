@@ -12,6 +12,8 @@
         'wizard/approve_request_views.xml',
         'wizard/reject_request_views.xml',
         'wizard/bulk_submit_for_approval.xml',
+        'wizard/approval_users_picker_wizard.xml',
+        'wizard/suspended_by_admin_wizard.xml',
         'views/product_approval_res_config.xml',
         'views/product_approval_views.xml',
         'views/action_product_approval_view.xml',
