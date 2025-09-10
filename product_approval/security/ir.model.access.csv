@@ -5,3 +5,5 @@ access_reject_product_wizard,reject.product.wizard,model_reject_product_wizard,,
 access_product_approval_config,product.approval.config,model_product_approval_config,base.group_user,1,1,0,0
 access_product_approval_config_manager,product.approval.config,model_product_approval_config,base.group_system,1,1,1,1
 product_bulk_submit_for_approval, product.bulk.submit.for.approval,model_product_bulk_submit_approval_wizard,,1,1,1,1
+product_approval_user_picker_wizard,product_approval.product_approval_user_picker_wizard,model_product_approval_user_picker_wizard,,1,1,1,1
+product_approval_product_suspend_wizard,product_approval.product_suspend_wizard,model_product_suspend_wizard,,1,1,1,1

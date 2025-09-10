@@ -16,7 +16,6 @@
                 <xpath expr="//form/header" position="inside">
                     <button name="confirm_submit_form" string="Submit for Approval" type="object"
                                 class="oe_highlight"
-                                confirm="Do you want to submit the request?"
                                 invisible="state != 'draft' or is_approved"/>
                     <button name="%(approve_product_wizard_action)d" string="Approve" type="action"
                                 invisible="state in ('draft', 'confirmed', 'rejected', 'expired') or assigned_to != uid or is_approved"/>
@@ -28,18 +27,17 @@
                     <field name="state" widget="statusbar" statusbar_visible="draft,pending" invisible="state in ('confirmed', 'rejected')"/>
                     <field name="state" widget="statusbar" statusbar_visible="draft,pending,confirmed" invisible="state in ('draft', 'pending', 'rejected')"/>
                     <field name="state" widget="statusbar" statusbar_visible="draft,pending,rejected" invisible="state in ('draft', 'pending', 'confirmed')"/>
-                    <!-- <field name="state" widget="statusbar" statusbar_visible="draft,pending,rejected">
-                        <attribute name="invisible">state == 'draft' or 'pending' or 'confirmed'</attribute>
-                    </field> -->
                 </xpath>
                 <xpath expr="//sheet/notebook" position="inside">
                     <page string="Approval Authorities" name="approval_users" invisible="not is_hidden_for_approval">
                         <field name="is_approved" invisible="1"/>
+
                         <group>
-                            <field name="assigned_to"
-                                           options="{'no_edit': True, 'no_create': True, 'no_open': True}"
-                                           invisible="not assigned_to" readonly="1"/>
-                            <field name="existing_user_ids" invisible="1" widget="many2many_tags"/>
+                            <div class="o_row o_align_right">
+                                <label for="assigned_to"/>
+                                <field name="assigned_to" options="{'no_edit': True, 'no_create': True, 'no_open': True}" invisible="not assigned_to" readonly="1"/>
+                                <button name="action_suspend" string="Suspend" type="object" class="btn-primary" groups="base.group_system"/>
+                            </div>
                         </group>
                         <field name="approval_users_ids" nolabel="1" help="Define the approval roles."
                                        readonly="1">
@@ -75,15 +73,6 @@
                 </list>
             </field>
         </record>
-        <!-- <record id="product_approval_view_search" model="ir.ui.view">
-            <field name="name">product.approval.view.search</field>
-            <field name="model">product.approval</field>
-            <field name="arch" type="xml">
-                <search string="Search product Approval">
-                    <field name="email"/>
-                </search>
-            </field>
-        </record> -->
         <record id="product_approval_action" model="ir.actions.act_window">
             <field name="name">product Approval</field>
             <field name="res_model">product.template</field>
@@ -95,8 +84,5 @@
                 </p>
             </field>-->
         </record>
-        <!-- <menuitem id="product_approval_menu" name="Product Approval Users"
-                  action="product_approval_action"
-                  parent="stock.menu_stock_config_settings" sequence="100"/> -->
     </data>
 </odoo>

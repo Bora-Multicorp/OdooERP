@@ -10,10 +10,11 @@
                     <group>
                         <field name="sequence"/>
                         <field name="user_id" options="{'no_create': True, 'no_create_edit': True}"/>
+                        <field name="group"/>
                     </group>
                 </sheet>
             </form>
-        </field>
+        </field> 
     </record>
 
     <record id="product_approval_config_view_list" model="ir.ui.view">
@@ -21,8 +22,11 @@
         <field name="model">product.approval.config</field>
         <field name="arch" type="xml">
             <list editable="bottom" string="Product Approval Settings">
+                <field name="sequence" widget="handle" class="o_data_cell_sequence"/>
                 <field name="sequence"/>
-                <field name="user_id"/>
+                <field name="default_user"/>
+                <field name="user_id" options="{'no_edit': True, 'no_create': True, 'no_open': True}"/>
+                <field name="group"/>
             </list>
         </field>
     </record>
