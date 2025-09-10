@@ -168,7 +168,7 @@
                                                 <span style="font-size:14px;">Terms of Delivery</span>
                                                 <br />
                                                 <strong>
-                                                    <span t-esc="doc.note" />
+                                                    <span t-esc="doc.incoterm"/>
                                                 </strong>
                                             </td>
                                         </tr>
@@ -585,7 +585,7 @@
                                                 <span style="font-size:14px;">Terms of Delivery</span>
                                                 <br />
                                                 <strong>
-                                                    <span t-esc="doc.note" />
+                                                    <span t-esc="doc.incoterm"/>
                                                 </strong>
                                             </td>
                                         </tr>

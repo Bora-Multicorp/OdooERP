@@ -1,0 +1,6 @@
+<odoo>
+     <record id="sale.action_report_saleorder" model="ir.actions.report">
+        <field name="print_report_name">(object.state in ('draft', 'sent') and 'Quotation - %s' % (object.name)) or 'Proforma Invoice - %s' % (object.name)</field>
+    </record>
+</odoo>
+
