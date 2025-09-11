@@ -7,20 +7,21 @@
         <field name="arch" type="xml">
             <xpath expr="//notebook" position="inside">
                 <page name="unlock_approval_authorities_page" string="Unlock Approval Authorities" invisible="not approval_users_ids">
-                    <div class="o_row o_align_right">
+                    <div class="o_row o_align_right" invisible="not assigned_to">
                         <label for="assigned_to"/>
-                        <field name="assigned_to" options="{'no_edit': True, 'no_create': True, 'no_open': True}" invisible="not assigned_to" readonly="1"/>
+                        <field name="assigned_to" options="{'no_edit': True, 'no_create': True, 'no_open': True}" readonly="1"/>
                         <button name="action_unlock_suspend" string="Suspend" type="object" class="btn-primary" groups="base.group_system"/>
                     </div>
                     <field name="approval_users_ids" nolabel="1" help="Define the PI Unlock approval roles." readonly="1">
                         <list editable="bottom">
                             <field name="sequence"/>
                             <field name="user_id" widget="many2one_avatar_user" options="{'no_edit': True, 'no_create': True, 'no_open': True}"/>
-                            <field name="remark"/>
+                            <field name="group" readonly="1"/>
+                            <field name="remark" readonly="1"/>
                             <field name="state" readonly="1"/>
                             <field name="action_date" readonly="1"/>
                         </list>
-                        <form>
+                        <form> 
                             <group>
                                 <field name="user_id" options="{'no_edit': True, 'no_create': True, 'no_open': True}"/>
                                 <field name="state"/>

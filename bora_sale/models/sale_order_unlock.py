@@ -52,6 +52,7 @@ class SaleOrderUnlock(models.Model):
             pi_unlock_approval_user_vals.append((0, 0, {
                 'sequence': approval.sequence,
                 'user_id': approval.user_id.id,
+                'group': approval.group
             }))
         self.write({
             'approval_users_ids': pi_unlock_approval_user_vals
@@ -89,6 +90,12 @@ class SaleOrderUnlock(models.Model):
 
 
     def suspend_unlock_process(self, remark):
+
+        self.message_post(
+            body=f"Approval suspended by {self.env.user.display_name}. Reason: {remark}",
+            message_type="comment",
+            subtype_xmlid="mail.mt_note"
+        )
 
         for order in self:
 
@@ -273,6 +280,11 @@ class PIUnlockApprovalUsers(models.Model):
     _rec_name = 'pi_unlock_approval_id'
     _description = "PI Unlock Approval Users"
     _order = "create_date, sequence"
+ 
+    group = fields.Selection([
+        ('group1', 'Group 1'),
+        ('group2', 'Group 2'),
+    ], string="Groups", required=True) 
 
     sequence = fields.Integer(string='Sequence')
     pi_unlock_approval_id = fields.Many2one('sale.order', string="PI Unlock Approval")
