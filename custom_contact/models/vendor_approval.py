@@ -361,6 +361,33 @@ class ContactKYCApproval(models.Model):
             elif states and all(s == 'approve' for s in states):
                 rec.state = 'confirmed'
 
+    def _send_notification_on_rejection(self):
+
+        approval_users = self.env['vendor.approval.config'].sudo().search([])
+
+        for user in approval_users:
+            if user.user_id == self.env.user:
+                self.env['bus.bus']._sendone(
+                    user.user_id.partner_id,
+                    'simple_notification',
+                    {
+                        'type': 'info',
+                        'title': f'Vendor approval request for {self.partner_id.name}, successfully rejected by you.',
+                        'message': f'',
+                        'sticky': True,
+                    },
+                )
+            else:
+                self.env['bus.bus']._sendone(
+                    user.user_id.partner_id,
+                    'simple_notification',
+                    {
+                        'type': 'info',
+                        'title': f'Vendor approval request for {self.partner_id.name}, rejected by {self.env.user.name}.',
+                        'message': f'',
+                        'sticky': True,
+                    },
+                )
 
     def write(self, vals):
         res = super().write(vals)
@@ -444,12 +471,12 @@ class ContactKYCApproval(models.Model):
                         title=f"KYC Rejected for: {record.partner_id.name}",
                         note=_("KYC for %s has been rejected. Please take necessary action.") % record.partner_id.name
                     )
-                    _send_notification(
-                        record, user,
-                        title=_("KYC Rejected for: %s") % record.partner_id.name,
-                        message=_(
-                            "KYC for %s has been rejected. Please check the system for more details.") % record.partner_id.name
-                    )
+                    # _send_notification(
+                    #     record, user,
+                    #     title=_("KYC Rejected for: %s") % record.partner_id.name,
+                    #     message=_(
+                    #         "KYC for %s has been rejected. Please check the system for more details.") % record.partner_id.name
+                    # )
 
         return res
 

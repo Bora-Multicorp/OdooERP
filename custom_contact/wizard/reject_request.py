@@ -44,6 +44,7 @@ class RejectRequestWizard(models.TransientModel):
                 'remark': "Rejected by previous authority",
                 'action_date': fields.Datetime.now(),
             })
+        self.kyc_approval_id._send_notification_on_rejection()
 
         return {'type': 'ir.actions.act_window_close'}
 
