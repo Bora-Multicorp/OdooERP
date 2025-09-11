@@ -9,9 +9,9 @@
             </xpath>
             <xpath expr="//notebook" position="inside">
                 <page name="cancel_approval_authorities_page" string="Cancellation Approval Authorities" invisible="not approval_users_ids_for_cancellation">
-                    <div class="o_row o_align_right">
+                    <div class="o_row o_align_right" invisible="not assigned_to_form_cancellation">
                         <label for="assigned_to_form_cancellation"/>
-                        <field name="assigned_to_form_cancellation" options="{'no_edit': True, 'no_create': True, 'no_open': True}" invisible="not assigned_to_form_cancellation" readonly="1"/>
+                        <field name="assigned_to_form_cancellation" options="{'no_edit': True, 'no_create': True, 'no_open': True}" readonly="1"/>
                         <button name="action_suspend" string="Suspend" type="object" class="btn-primary" groups="base.group_system"/>
                     </div>
                     <field name="approval_users_ids_for_cancellation" nolabel="1" help="Define the PO cancel approval roles." readonly="1">
