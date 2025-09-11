@@ -197,6 +197,12 @@ class PurchaseOrderCancellationApproval(models.Model):
 
     def suspend_cancelation_process(self, remark):
 
+        self.message_post(
+            body=f"Approval suspended by {self.env.user.display_name}. Reason: {remark}",
+            message_type="comment",
+            subtype_xmlid="mail.mt_note"
+        )
+
         for order in self:
 
             pending_approvers = order.approval_users_ids_for_cancellation.filtered(lambda u: not u.state)
