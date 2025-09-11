@@ -28,7 +28,7 @@ class RejectRequestWizard(models.TransientModel):
                 'action_date': fields.Datetime.now(),
             })
             approval.write(
-                { 'state': 'rejected','rejection_date': fields.Datetime.now(), 'rejection_reason': self.remark, 'assigned_to': False,
+                { 'rejection_date': fields.Datetime.now(), 'rejection_reason': self.remark, 'assigned_to': False,
                  'is_rejected': True})
             approval.partner_id.sudo().write({'rejection_date': fields.Datetime.now(), 'rejection_reason': self.remark,
                                               'is_rejected': True})
