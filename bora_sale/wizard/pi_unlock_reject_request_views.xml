@@ -24,7 +24,7 @@
         <field name="target">new</field>
         <field name="binding_model_id" ref="model_reject_pi_unlock_wizard"/>
         <field name="context">{
-            'default_order_approval_id': active_id,
+            'default_order_id': active_id,
             }
         </field>
     </record>
