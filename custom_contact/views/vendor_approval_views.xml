@@ -19,7 +19,7 @@
                                 class="oe_highlight"
                                 confirm="Do you want to Approve the request?" invisible="1"/>
                         <button name="set_as_draft" string="Set As Draft" type="object"
-                                class="oe_highlight" confirm="Do you want to submit?"
+                                class="oe_highlight" confirm="Do you want to submit?" groups="base.group_system"
                                 invisible="state != 'rejected'"/>
                         <field name="state" widget="statusbar"/>
                         <!--<field name="state" widget="statusbar" statusbar_visible="draft,pending,confirmed,rejected"
@@ -242,7 +242,7 @@
                                         <label for="deadline"/>
                                         <field name="deadline"/>
                                         <button name="action_suspend" string="Suspend" type="object" class="btn-primary"
-                                                groups="base.group_system" invisible="is_approved or not assigned_to"/>
+                                                groups="base.group_system" invisible="not assigned_to"/>
                                     </div>
                                 </group>
                                 <field name="approval_users_ids" nolabel="1" help="Define the approval roles."

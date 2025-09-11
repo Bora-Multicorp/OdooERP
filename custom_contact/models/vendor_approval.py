@@ -204,7 +204,8 @@ class ContactKYCApproval(models.Model):
                 approval_user_vals.append((0, 0, {
                     'sequence': approval.sequence,
                     'user_id': approval.user_id.id,
-                    'group': approval.group
+                    'group': approval.group,
+                    'is_active': True,
                     # 'job_id': user.employee_id.job_title or '',  # fallback to empty if not set
                 }))
             self.write({
@@ -231,6 +232,11 @@ class ContactKYCApproval(models.Model):
         ).sudo().read()[0]
 
     def suspend_approval_process(self, remark):
+        self.message_post(
+            body = f"Approval Suspended by {self.env.user.partner_id}. Reason: {remark}" ,
+            message_type="comment",
+            subtype_xmlid="mail.mt_note",
+        )
 
         for kyc in self:
             pending_approvers = kyc.approval_users_ids.filtered(lambda u: not u.state)
@@ -290,11 +296,7 @@ class ContactKYCApproval(models.Model):
             })
 
             # Reset approval users' decision fields
-            self.approval_users_ids.write({
-                'state': False,
-                'remark': False,
-                'action_date': False,
-            })
+            self.approval_users_ids.write({'is_active': False})
 
     def approve_by_manager(self):
         self.write({'state': 'confirmed'})
@@ -343,13 +345,22 @@ class ContactKYCApproval(models.Model):
                                         },
                                         )
 
+    # def _update_state_based_on_approvals(self):
+    #     for rec in self:
+    #         states = rec.approval_users_ids.mapped('state')
+    #         if any(s == 'reject' for s in states):
+    #             rec.state = 'rejected'
+    #         elif states and all(s == 'approve' for s in states):
+    #             rec.state = 'confirmed'
     def _update_state_based_on_approvals(self):
         for rec in self:
-            states = rec.approval_users_ids.mapped('state')
+            active_lines = rec.approval_users_ids.filtered(lambda l: l.is_active)
+            states = active_lines.mapped('state')
             if any(s == 'reject' for s in states):
                 rec.state = 'rejected'
             elif states and all(s == 'approve' for s in states):
                 rec.state = 'confirmed'
+
 
     def write(self, vals):
         res = super().write(vals)
@@ -460,6 +471,7 @@ class ApprovalUsers(models.Model):
         ('group1', 'Group 1'),
         ('group2', 'Group 2'),
     ], string="Groups", required=True)
+    is_active = fields.Boolean('Active', default=True)
 
     def write(self, vals):
         res = super().write(vals)
