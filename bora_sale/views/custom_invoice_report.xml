@@ -359,16 +359,14 @@
                                                     <td colspan="2"
                                                         style="padding:3px; border-bottom:1px solid black; border-bottom:0px;">
                                                         <span
-                                                            style="font-size:14px; margin-bottom:5px;">Terms
-                                                            of
-                                                            Delivery
+                                                            style="font-size:14px; margin-bottom:5px;">Terms of Delivery
                                                         </span>
                                                         <br />
                                                         <strong>
                                                             <t t-set="sale_order"
                                                                 t-value="o.invoice_line_ids and o.invoice_line_ids[0].sale_line_ids and o.invoice_line_ids[0].sale_line_ids[0].order_id" />
                                                             <span t-if="sale_order"
-                                                                t-field="sale_order.note" />
+                                                                t-field="sale_order.incoterm" />
                                                         </strong>
                                                     </td>
                                                 </tr>
@@ -1218,7 +1216,7 @@
                                                     </div>
                                                     <div>
                                                         <strong>
-                                                            <span t-field="o.narration" />
+                                                            <span t-field="o.incoterm" />
                                                         </strong>
                                                     </div>
                                                 </td>
