@@ -114,6 +114,7 @@ class ProductApproval(models.Model):
             approval_user_vals.append((0, 0, {
                 'sequence': approval.sequence,
                 'user_id': approval.user_id.id,
+                'group': approval.group
             }))
         self.write({
             'approval_users_ids': approval_user_vals,
@@ -176,6 +177,13 @@ class ProductApproval(models.Model):
 
     def suspend_approval_process(self,remark):
         for product in self:
+
+            product.message_post(
+                body=f"Approval suspended by {self.env.user.display_name}. Reason: {remark}",
+                message_type="comment",
+                subtype_xmlid="mail.mt_note"
+            )
+
             pending_approvers = product.approval_users_ids.filtered(lambda u: not u.state)
 
             pending_approvers.write({
@@ -360,6 +368,11 @@ class ProductApprovalUsers(models.Model):
     _rec_name = 'product_approval_id'
     _description = "Approval Users"
     _order = "sequence"
+
+    group = fields.Selection([
+        ('group1', 'Group 1'),
+        ('group2', 'Group 2'),
+    ], string="Groups", required=True) 
 
     sequence = fields.Integer(string='Sequence')
     product_approval_id = fields.Many2one('product.template', string="Product Approval")
