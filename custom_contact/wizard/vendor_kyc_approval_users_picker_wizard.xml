@@ -22,7 +22,7 @@
    </record>
 
    <record id="action_kyc_vendor_approval_user_picker_wizard" model="ir.actions.act_window">
-       <field name="name">kyc vendor Approval User Picker</field>
+       <field name="name">KYC Vendor Approval User Picker</field>
        <field name="res_model">vendor.kyc.approval.user.picker.wizard</field>
        <field name="view_mode">form</field>
        <field name="target">new</field>
