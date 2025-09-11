@@ -12,7 +12,7 @@ class POSuspensionWizard(models.TransientModel):
 
     def action_done(self): 
         self.ensure_one()
-
+        
         self.order_id.suspend_approval_process(self.remark)
 
         return {'type': 'ir.actions.act_window_close'}

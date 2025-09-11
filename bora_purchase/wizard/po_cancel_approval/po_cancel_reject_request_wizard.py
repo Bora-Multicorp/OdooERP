@@ -35,7 +35,7 @@ class POConfirmRejectWizard(models.TransientModel):
         if pending_users_lines:
             pending_users_lines.write({
                 'state': 'suspended',
-                'remark': "",
+                'remark': "Rejected by previous authority.",
                 'action_date': fields.Datetime.now(),
             })
 

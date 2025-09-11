@@ -201,13 +201,18 @@ class PurchaseOrderConfirmApproval(models.Model):
                 )
 
 
-    def action_suspend(self):
+    def action_confirm_suspend(self):
         return self.env.ref(
             "bora_purchase.approve_suspend_po_confirm_wizard_action"
         ).sudo().read()[0]
 
     
     def suspend_approval_process(self, remark):
+        self.message_post(
+            body=f"Approval suspended by {self.env.user.display_name}. Reason: {remark}",
+            message_type="comment",
+            subtype_xmlid="mail.mt_note"
+        )
 
         for order in self:
 
@@ -226,6 +231,7 @@ class PurchaseOrderConfirmApproval(models.Model):
             ])
 
             order.write({'assigned_to_form_confirmation': None, 'state':'draft'})
+            print("assigned_to_form_confirmation.  => None")
 
             # send notification to creator
             order.env['bus.bus']._sendone(
