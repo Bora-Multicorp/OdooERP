@@ -33,8 +33,8 @@
             </xpath>
             <xpath expr="//header" position="inside">
                 <button name="send_documents_in_email" string="Send Documents" type="object" icon="fa-envelope" title="Send all documents to customer" invisible="state != 'sale'"/>
-                <button name="%(approve_pi_unlock_wizard_action)d" string="PI Unlock Approve" type="action" class="oe_highlight" invisible="not show_unlock_approve_reject_buttons"/>
-                <button name="%(reject_pi_wizard_action)d" string="PI Unlock Reject" type="action" class="oe_highlight" invisible="not show_unlock_approve_reject_buttons"/>
+                <button name="%(approve_pi_unlock_wizard_action)d" string="PI Unlock Approve" type="action" class="oe_highlight" invisible="assigned_to != uid"/>
+                <button name="%(reject_pi_wizard_action)d" string="PI Unlock Reject" type="action" class="oe_highlight" invisible="assigned_to != uid"/>
             </xpath>
         </field>
     </record>

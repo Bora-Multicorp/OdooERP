@@ -49,6 +49,8 @@ class PIUnlockTeam(models.Model):
                     # Reset the previous default user to False
                     existing_default_users.write({'default_user': False})
 
+
+
     @api.onchange('default_user', 'group')
     def _onchange_default_user(self):
         if self.default_user:
@@ -59,7 +61,6 @@ class PIUnlockTeam(models.Model):
             ])
             if existing_default_users:
                 pass
-
 
 
     @api.model

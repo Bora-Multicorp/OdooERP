@@ -60,11 +60,11 @@ class SaleOrderUnlock(models.Model):
 
 
         
-        if self.assigned_to:
-            for user_id in self.approval_users_ids:
-                if user_id.state == 'reject':
-                    raise ValidationError(f"Unlock request is rejected by '{user_id.user_id.name}', please review 'Unlock Approval Authorities' tab for more details.")                
-            raise ValidationError(f"Unlock request is now pending from '{self.assigned_to.name}'.")
+        # if self.assigned_to:
+        #     for user_id in self.approval_users_ids:
+        #         if user_id.state == 'reject':
+        #             raise ValidationError(f"Unlock request is rejected by '{user_id.user_id.name}', please review 'Unlock Approval Authorities' tab for more details.")                
+        #     raise ValidationError(f"Unlock request is now pending from '{self.assigned_to.name}'.")
         
 
         if self.id:
@@ -152,13 +152,19 @@ class SaleOrderUnlock(models.Model):
                     break
             rec.assigned_to = next_user
 
-            if not rec.assigned_to:
-                super(SaleOrderUnlock, self).action_unlock()
-                rec.state = 'draft'
+            # if not rec.assigned_to:
+            #     super(SaleOrderUnlock, self).action_unlock()
+
+
 
     def _send_notification_on_rejection(self):
         
         approval_users = self.env['pi.unlock.approvers'].sudo().search([])
+
+        self.write({
+            'state': 'sale',
+            'assigned_to': None
+        })
 
         for user in approval_users:
             if user.user_id == self.env.user:
@@ -189,6 +195,11 @@ class SaleOrderUnlock(models.Model):
         for rec in self:
 
             if not rec.assigned_to:
+                # Unlock the SO
+                # super(SaleOrderUnlock, self).action_unlock()
+                self.write({
+                    'state': 'draft'
+                })
                 # 1. send unlock notification to real creator
                 rec.env['bus.bus']._sendone(
                     rec.create_uid.partner_id,
