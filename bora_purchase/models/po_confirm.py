@@ -25,11 +25,10 @@ class PurchaseOrderConfirmApproval(models.Model):
         super(PurchaseOrderConfirmApproval, self).button_confirm()
 
         po_confirm_approval_user_vals = []
-        for approval in po_confirm_approval_users:
+        for index,approval in enumerate(po_confirm_approval_users):
             po_confirm_approval_user_vals.append((0, 0, {
-                'sequence': approval.sequence,
+                'sequence': index+1,
                 'user_id': approval.user_id.id,
-                'group': approval.group
             }))
         self.write({
             'approval_users_ids_for_confirmation': po_confirm_approval_user_vals,
@@ -267,11 +266,6 @@ class POConfirmApprovalUsers(models.Model):
     _rec_name = 'po_confirm_approval_id'
     _description = "PO Confirm Approval Users"
     # _order = "create_date, sequence"
-
-    group = fields.Selection([
-        ('group1', 'Group 1'),
-        ('group2', 'Group 2'),
-    ], string="Groups", required=True) 
 
     sequence = fields.Integer(string='Sequence')
     po_confirm_approval_id = fields.Many2one('purchase.order', string="PO Confirm Approval")
