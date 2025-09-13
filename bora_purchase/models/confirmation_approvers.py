@@ -50,25 +50,6 @@ class POConfirmationApproverTeam(models.Model):
         return defaults
     
 
-
-    @api.model
-    def create(self, vals):
-        if not vals.get('color'):
-            # Get all used colors
-            used_colors = set(self.search([]).mapped('color'))
-            all_colors = set(range(1, 12))  # Odoo has 11 tag colors (1..11)
-
-            # Find available colors
-            available_colors = list(all_colors - used_colors)
-
-            if not available_colors:
-                # If all colors are used, reset and pick randomly
-                available_colors = list(all_colors)
-
-            vals['color'] = random.choice(available_colors)
-
-        return super().create(vals)
-
     # Override create to handle the single approver rule
     @api.model
     def create(self, vals):

@@ -4,12 +4,12 @@ from odoo.exceptions import UserError
 
 class POConfirmationApprovalUsersPicker(models.TransientModel):
     _name = 'confirmation.approval.user.picker.wizard'
-    _description = 'Confirmation approval users picker'
+    _description = 'Confirmation approval users picker' 
     user_ids_according_to_user_selection = fields.Char(store=True)
 
     order_id = fields.Many2one('purchase.order', string="Approval for Purchase Order Confirmation")
 
-    approver1_users = fields.Many2many(
+    approver1_users = fields.Many2many( 
         comodel_name='purchase.order.confirmation.approvers',
         relation='picker_wizard_approver1_rel',   # custom relation table
         column1='wizard_id',                   # FK to wizard

@@ -30,7 +30,7 @@ class POUnlockRejectWizard(models.TransientModel):
             # approval._update_assigned_to()
 
         # 2. grab all remaining users can mark their status as suspended
-        pending_users_lines = self.order_id.approval_users_ids.filtered(
+        pending_users_lines = self.order_approval_id.approval_users_ids.filtered(
             lambda l: not l.state
         )
 
