@@ -43,7 +43,7 @@ Bora purchase operations
         'views/po_unlock.xml',
         'views/po_fullfill_by.xml',
         'views/po_confirm.xml',
-        'views/po_cancellation.xml'
+        'views/po_cancellation.xml',
     ],
     'assets': {
         'web.assets_backend': [

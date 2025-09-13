@@ -22,13 +22,6 @@ class PurchaseOrderCancellationApproval(models.Model):
             'state': 'cancellation_pending'
         })
         
-        if self.assigned_to_form_cancellation:
-            for user_id in self.approval_users_ids_for_cancellation:
-                if user_id.state == 'reject':
-                    raise ValidationError(f"Cancellation request is rejected by '{user_id.user_id.name}', please review 'Cancellation Approval Authorities' tab for more details.")
-            raise ValidationError(f"Cancellation request is now pending from '{self.assigned_to_form_confirmation.name}'.")
-        
-
         if self.id:
             self._update_assigned_to_form_PO_cancellation()
 
@@ -36,11 +29,22 @@ class PurchaseOrderCancellationApproval(models.Model):
 
 
     def button_cancel(self):
+
+        # 1. Check if authroity is configured or not
         po_cancellation_approval_users = self.env['purchase.order.cancellation.approvers'].sudo().search([])
         if not po_cancellation_approval_users:
             raise ValidationError("Please add cancellation authority before submit request.")
 
 
+        # 2. Check if any approval is pending 
+        if self.assigned_to_form_cancellation:
+            for user_id in self.approval_users_ids_for_cancellation:
+                if user_id.state == 'reject':
+                    raise ValidationError(f"Cancellation request is rejected by '{user_id.user_id.name}', please review 'Cancellation Approval Authorities' tab for more details.")
+            raise ValidationError(f"Cancellation request is now pending from '{self.assigned_to_form_confirmation.name}'.")
+        
+
+        # 3. Theen show user pciker
         return self.env.ref(
             "bora_purchase.action_cancelation_approval_user_picker_wizard"
         ).sudo().read()[0]
@@ -198,7 +202,7 @@ class PurchaseOrderCancellationApproval(models.Model):
     def suspend_cancelation_process(self, remark):
 
         self.message_post(
-            body=f"Approval suspended by {self.env.user.display_name}. Reason: {remark}",
+            body=f"Cancellation approval suspended by {self.env.user.display_name}. Reason: {remark}",
             message_type="comment",
             subtype_xmlid="mail.mt_note"
         )

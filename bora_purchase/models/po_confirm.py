@@ -34,14 +34,6 @@ class PurchaseOrderConfirmApproval(models.Model):
             'approval_users_ids_for_confirmation': po_confirm_approval_user_vals,
             'state': 'confirmation_pending'
         })
-
-
-        
-        if self.assigned_to_form_confirmation:
-            for user_id in self.approval_users_ids_for_confirmation:
-                if user_id.state == 'reject':
-                    raise ValidationError(f"PO confirm request is rejected by '{user_id.user_id.name}', please review 'PO Confirm Approval Authorities' tab for more details.")                
-            raise ValidationError(f"PO confirm request is now pending from '{self.assigned_to_form_confirmation.name}'.")
         
 
         if self.id:
@@ -52,10 +44,18 @@ class PurchaseOrderConfirmApproval(models.Model):
 
     def button_confirm(self):
 
+        # 1. Check if any aoproval authority is configured or not
         po_confirm_approval_users = self.env['purchase.order.confirmation.approvers'].sudo().search([])
         if not po_confirm_approval_users:
             raise ValidationError("Please add confirmation approval authority before submit request.")
 
+
+        # 2. Check if any approval is pending
+        if self.assigned_to_form_confirmation:
+            raise ValidationError(f"PO confirm request is now pending from '{self.assigned_to_form_confirmation.name}'.")
+
+
+        # 3. Then show user picker
         return self.env.ref(
             "bora_purchase.action_confirmation_approval_user_picker_wizard"
         ).sudo().read()[0]
@@ -208,7 +208,7 @@ class PurchaseOrderConfirmApproval(models.Model):
     
     def suspend_approval_process(self, remark):
         self.message_post(
-            body=f"Approval suspended by {self.env.user.display_name}. Reason: {remark}",
+            body=f"Confirmation approval suspended by {self.env.user.display_name}. Reason: {remark}",
             message_type="comment",
             subtype_xmlid="mail.mt_note"
         )
