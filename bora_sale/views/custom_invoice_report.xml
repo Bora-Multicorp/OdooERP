@@ -185,7 +185,7 @@
                                                         </span>
                                                         <strong>
                                                             <span style="font-size:14px;"
-                                                                t-field="o.name" /> dt. <span
+                                                                t-field="o.name" /> dt. <br/><span
                                                                 style="font-size:14px;"
                                                                 t-field="o.invoice_date" t-options='{"format": "dd-MMM-yy"}'/>
                                                         </strong>
@@ -542,7 +542,7 @@
                                                         style="border:1px solid black; text-align: center;"
                                                         class="center sm"></td>
                                                     <td style="border:1px solid black;"
-                                                        class="center sm"></td>
+                                                        class="center sm">Total</td>
                                                     <td style="border:1px solid black;"
                                                         class="center sm"></td>
                                                     <td
