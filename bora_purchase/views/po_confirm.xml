@@ -24,16 +24,22 @@
                     </field>
                 </page>
             </xpath>
+            <xpath expr="//header/button[@name='print_quotation']" position="attributes">
+                <attribute name="invisible">false</attribute>
+                <attribute name="string">Print</attribute>
+                <attribute name="class"></attribute>
+            </xpath>
             <xpath expr="//header" position="inside">
+                <!-- <button name="print_quotation" string="Print" type="object" invisible="0" groups="base.group_user" data-hotkey="k"/> -->
                 <button name="%(approve_po_confirm_wizard_action)d" string="Approve" type="action" class="oe_highlight" invisible="assigned_to_form_confirmation != uid"/>
                 <button name="%(reject_po_confirm_wizard_action)d" string="Reject" type="action" class="oe_highlight" invisible="assigned_to_form_confirmation != uid"/>
             </xpath>
-            <xpath expr="//button[@name='action_view_picking']" position="attributes">
+            <!-- <xpath expr="//button[@name='action_view_picking']" position="attributes">
                 <attribute name="invisible">1</attribute>
             </xpath>
             <xpath expr="//button[@name='button_draft']" position="attributes">
                 <attribute name="string">Set To RFQ</attribute>
-            </xpath>
+            </xpath> -->
             <xpath expr="//div[hasclass('oe_button_box')]/button[@name='action_view_picking']" position="attributes">
                 <attribute name="invisible">state in ('confirmation_pending','cancellation_pending','unlock_pending', 'draft', 'cancel') or incoming_picking_count == 0</attribute>
             </xpath>
