@@ -110,24 +110,30 @@ class ProductApproval(models.Model):
 
     def assign_users(self, approvers):
         approval_user_vals = []
-        for approval in approvers:
+        for index,approval in enumerate(approvers):
             approval_user_vals.append((0, 0, {
-                'sequence': approval.sequence,
+                'sequence': index+1,
                 'user_id': approval.user_id.id,
-                'group': approval.group
             }))
         self.write({
             'approval_users_ids': approval_user_vals,
             'state': 'pending'
         })
+        
 
-        self._update_assigned_to()
+        if self.id:
+            self._update_assigned_to()
 
+
+    def set_set_draft(self):
+        self.write({
+            'state': 'draft'
+        })
 
 
     def confirm_submit_form(self): 
-        po_confirm_approval_users = self.env['product.approval.config'].sudo().search([])
-        if not po_confirm_approval_users:
+        approval_users = self.env['product.approval.config'].sudo().search([])
+        if not approval_users:
             raise ValidationError("Please add confirmation approval authority before submit request.")
 
         return self.env.ref(
@@ -367,13 +373,7 @@ class ProductApprovalUsers(models.Model):
     _name = "product.approval.users"
     _rec_name = 'product_approval_id'
     _description = "Approval Users"
-    _order = "sequence"
-
-    group = fields.Selection([
-        ('group1', 'Group 1'),
-        ('group2', 'Group 2'),
-    ], string="Groups", required=True) 
-
+    
     sequence = fields.Integer(string='Sequence')
     product_approval_id = fields.Many2one('product.template', string="Product Approval")
     job_id = fields.Char(string="Designation", readonly=True)
