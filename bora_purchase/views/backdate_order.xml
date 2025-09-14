@@ -9,4 +9,14 @@
             </xpath>
         </field>
     </record>
+
+    <!-- <template id="report_purchaseorder_document_inherit_po_date" inherit_id="purchase.report_purchaseorder_document">
+        <xpath expr="//div[@class='mt-4']/t[@t-set='layout_document_title']" position="after">
+            <div class="mt-1">
+                <strong>PO Date: </strong>
+                <span t-esc="o.create_date and o.create_date.strftime('%d-%m-%Y %H:%M') or ''"/>
+            </div>
+        </xpath>
+    </template> -->
+
 </odoo>
