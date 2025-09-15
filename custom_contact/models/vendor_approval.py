@@ -198,20 +198,17 @@ class ContactKYCApproval(models.Model):
     rejection_reason = fields.Text('Rejection Reason', tracking=True)
 
     def add_user(self, approvers):
-        if approvers:
-            approval_user_vals = []
-            for approval in approvers:
-                approval_user_vals.append((0, 0, {
-                    'sequence': approval.sequence,
+        approval_user_vals = []
+        for index, approval in enumerate(approvers):
+            approval_user_vals.append((0, 0, {
+                    'sequence': index + 1,
                     'user_id': approval.user_id.id,
-                    'group': approval.group,
-                    'is_active': True,
-                    # 'job_id': user.employee_id.job_title or '',  # fallback to empty if not set
-                }))
-            self.write({
+            }))
+        self.write({
                 'approval_users_ids': approval_user_vals,
                 'state': 'pending'
-            })
+        })
+        if self.id:
             self._update_assigned_to()
 
     def confirm_submit_form(self):
@@ -225,6 +222,8 @@ class ContactKYCApproval(models.Model):
         # if self.id:
         #     self.write({'state': 'pending'})
         #     self._update_assigned_to()
+
+
 
     def action_suspend(self):
         return self.env.ref(
@@ -497,7 +496,7 @@ class ApprovalUsers(models.Model):
     group = fields.Selection([
         ('group1', 'Group 1'),
         ('group2', 'Group 2'),
-    ], string="Groups", required=True)
+    ], string="Groups", required=False)
     is_active = fields.Boolean('Active', default=True)
 
     def write(self, vals):

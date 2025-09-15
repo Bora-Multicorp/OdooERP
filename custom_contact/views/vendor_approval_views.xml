@@ -251,7 +251,7 @@
                                         <field name="sequence"/>
                                         <field name="user_id" widget="many2one_avatar_user"
                                                readonly="1"/>
-                                        <field name="group" readonly="1"/>
+                                        <field name="group" readonly="1" column_invisible="1"/>
                                         <field name="remark" readonly="1"/>
                                         <field name="state" readonly="1"/>
                                         <field name="action_date" readonly="1"/>
