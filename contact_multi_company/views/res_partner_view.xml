@@ -19,4 +19,12 @@
             </xpath>-->
         </field>
     </record>
+    <record id="res_partner_multi_company_rule" model="ir.rule">
+        <field name="name">Partner multi-company access</field>
+        <field name="model_id" ref="base.model_res_partner"/>
+        <field name="domain_force">
+        ['|', ('company_ids', '=', False), ('company_ids', 'in', company_ids)]
+        </field>
+        <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+    </record>
 </odoo>
