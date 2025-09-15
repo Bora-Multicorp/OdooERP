@@ -22,9 +22,9 @@ class PurchaseOrderUnlock(models.Model):
         super(PurchaseOrderUnlock, self).button_confirm()
 
         po_unlock_approval_user_vals = []
-        for approval in po_confirm_approval_users:
+        for index,approval in enumerate(po_confirm_approval_users):
             po_unlock_approval_user_vals.append((0, 0, {
-                'sequence': approval.sequence,
+                'sequence': index+1,
                 'user_id': approval.user_id.id,
             }))
         self.write({
