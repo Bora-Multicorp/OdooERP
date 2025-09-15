@@ -10,10 +10,10 @@ class PurchaseOrderCancellationApproval(models.Model):
 
     def assign_cancel_users(self, po_cancellation_approval_users):
 
-        po_cancel_approval_user_vals = []
-        for approval in po_cancellation_approval_users:
+        po_cancel_approval_user_vals = [] 
+        for index, approval in enumerate(po_cancellation_approval_users):
             po_cancel_approval_user_vals.append((0, 0, {
-                'sequence': approval.sequence,
+                'sequence': index+1,
                 'user_id': approval.user_id.id,
             }))
         self.write({
