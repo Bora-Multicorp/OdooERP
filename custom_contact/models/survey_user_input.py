@@ -57,7 +57,6 @@ class SurveyUserInput(models.Model):
 
         values = {}
         attachments_by_field = {}
-
         for line in self.user_input_line_ids:
             field_name = question_map.get(line.question_id.id)
             if not field_name:
@@ -138,54 +137,84 @@ class SurveyUserInput(models.Model):
                     values['bank_detail'] = []
                     for row_id, row in row_data_map.items():
                         cheque_file = row.get('Cancelled Cheque')
-                        cheque_name = 'Cancelled Cheque'
                         cheque_line = line_map[row_id].get('Cancelled Cheque')
                         if cheque_line and cheque_line.value_ans_sh_file_fname:
                             cheque_name = cheque_line.value_ans_sh_file_fname
-                        attachment_id = (
-                            self.env['ir.attachment'].create({
+                        else:
+                            cheque_name = 'Cancelled Cheque'
+                        if cheque_file:
+                            cheque_att_data = {
                                 'name': cheque_name,
                                 'type': 'binary',
                                 'datas': cheque_file,
-                            }).id if cheque_file else False
-                        )
+                            }
+                            bank_cheque_attachments = [(0, 0, cheque_att_data)]
+                            # attachment_id = (
+                            #     self.env['ir.attachment'].create({
+                            #         'name': cheque_name,
+                            #         'type': 'binary',
+                            #         'datas': cheque_file,
+                            #     }).id if cheque_file else False
+                            # )
+                        else:
+                            bank_cheque_attachments = False
+                            #attachment_id = False
                         values['bank_detail'].append((0, 0, {
                             'bank_name': row.get('Bank Name'),
                             'account_no': row.get('Account Number'),
                             'ifsc_code': row.get('IFSC Code'),
                             'bank_address': row.get('Bank Address'),
-                            'bank_cheque_attachments': [(6, 0, [attachment_id])] if attachment_id else False,
+                            'bank_cheque_attachments': bank_cheque_attachments,
                         }))
-
                 elif line.question_id.id == Q("custom_contact.matrix_director_detail_kyc_survey").id:
                     values['directors_detail'] = []
                     for row_id, row in row_data_map.items():
                         aadhaar_file = row.get('Aadhaar Card')
-                        aadhaar_name = 'Aadhaar Card'
                         aadhaar_line = line_map[row_id].get('Aadhaar Card')
                         if aadhaar_line and aadhaar_line.value_ans_sh_file_fname:
                             aadhaar_name = aadhaar_line.value_ans_sh_file_fname
-                        aadhaar_attachment_id = (
-                            self.env['ir.attachment'].create({
+                        else:
+                            aadhaar_name = 'Aadhaar Card'
+                        if aadhaar_file:
+                            aadhaar_data = {
                                 'name': aadhaar_name,
                                 'type': 'binary',
                                 'datas': aadhaar_file,
-                            }).id if aadhaar_file else False
-                        )
-
+                            }
+                            aadhaar_attachments = [(0, 0, aadhaar_data)]
+                            # aadhaar_attachment_id = (
+                            #     self.env['ir.attachment'].create({
+                            #         'name': aadhaar_name,
+                            #         'type': 'binary',
+                            #         'datas': aadhaar_file,
+                            #     }).id if aadhaar_file else False
+                            # )
+                        else:
+                            aadhaar_attachments = False
                         # PAN file
                         pan_file = row.get('PAN Card')
-                        pan_name = 'PAN Card'
                         pan_line = line_map[row_id].get('PAN Card')
                         if pan_line and pan_line.value_ans_sh_file_fname:
                             pan_name = pan_line.value_ans_sh_file_fname
-                        pan_attachment_id = (
-                            self.env['ir.attachment'].create({
+                        else:
+                            pan_name = 'PAN Card'
+                        if pan_file:
+                            pan_data = {
                                 'name': pan_name,
                                 'type': 'binary',
                                 'datas': pan_file,
-                            }).id if pan_file else False
-                        )
+                            }
+                            pan_attachments = [(0, 0, pan_data)]
+                            # pan_attachment_id = (
+                            #     self.env['ir.attachment'].create({
+                            #         'name': pan_name,
+                            #         'type': 'binary',
+                            #         'datas': pan_file,
+                            #     }).id if pan_file else False
+                            # )
+                        else:
+                            pan_attachments = False
+                            #pan_attachment_id = False
                         # aadhaar_line = line_map[row_id].get('Aadhaar Card')
                         # pan_line = line_map[row_id].get('PAN Card')
                         values['directors_detail'].append((0, 0, {
@@ -193,8 +222,10 @@ class SurveyUserInput(models.Model):
                             'name': row.get('Name'),
                             'contact_no': row.get('Contact Number'),
                             'email': row.get('Email Address'),
-                            'aadhaar_card_attachments': [(6, 0, [aadhaar_attachment_id])] if aadhaar_attachment_id else False,
-                            'pan_card_attachments': [(6, 0, [pan_attachment_id])] if pan_attachment_id else False,
+                            'aadhaar_card_attachments': aadhaar_attachments,
+                            'pan_card_attachments': pan_attachments,
+                            #'aadhaar_card_attachments': [(6, 0, [aadhaar_attachment_id])] if aadhaar_attachment_id else False,
+                            #'pan_card_attachments': [(6, 0, [pan_attachment_id])] if pan_attachment_id else False,
                             # 'aadhaar_card': row.get('Aadhaar Card'),
                             # 'aadhaar_card_filename': aadhaar_line.value_ans_sh_file_fname if aadhaar_line else False,
                             # 'pan_card': row.get('PAN Card'),
@@ -232,9 +263,22 @@ class SurveyUserInput(models.Model):
                 try:
                     kyc_record = self.env['res.partner.kyc.approval'].create(values)
                     if kyc_record:
+                        for field_name in attachments_by_field.keys():
+                            attachment_ids = values.get(field_name) or []
+                            if attachment_ids and attachment_ids[0][0] == 6:
+                                att_ids = attachment_ids[0][2]
+                                self.env['ir.attachment'].browse(att_ids).sudo().write({
+                                    'res_model': 'res.partner.kyc.approval',
+                                    'res_id': kyc_record.id,
+                                })
+                        # for dd in kyc_record.directors_detail:
+                        #     for dd_att in dd.aadhaar_card_attachments:
+                        #         dd_att.sudo().write({'res_model': 'director.details', 'res_id': dd.id})
+                        #     for dd_att2 in dd.pan_card_attachments:
+                        #         dd_att2.sudo().write({'res_model': 'director.details', 'res_id': dd.id})
                         # for bank in kyc_record.bank_detail:
                         #     for att in bank.bank_cheque_attachments:
-                        #         att.write({'res_id': bank.id})
+                        #         att.sudo().write({'res_model':'bank.details','res_id': bank.id})
                         partner.write({
                             'is_kyc': True,
                             'rejection_date': False,
