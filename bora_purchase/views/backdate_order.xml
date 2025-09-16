@@ -13,6 +13,17 @@
             <xpath expr="//field[@name='date_order']" position="before">
                 <field name="date_approve" readonly="state in ['purchase', 'done', 'cancel', 'unlock_pending', 'cancellation_pending', 'unlock_pending']" required="1" />
             </xpath>
+
+
+            <xpath expr="//header/button[@name='action_rfq_send'][1]" position="before">
+                <button name="action_rfq_send"
+                        string="Send PO by Email" 
+                        type="object" 
+                        context="{'send_rfq':False}"
+                        invisible="state != 'done'"
+                        class="oe_highlight"/>
+            </xpath>
+
         </field>
     </record>
 </odoo>
