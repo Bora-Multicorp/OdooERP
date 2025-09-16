@@ -32,22 +32,9 @@
             </xpath>
             <xpath expr="//header" position="inside">
                 <button name="send_documents_in_email" string="Send Documents" type="object" icon="fa-envelope" title="Send all documents to customer" invisible="state != 'sale'"/>
-                <button name="%(approve_pi_unlock_wizard_action)d" string="PI Unlock Approve" type="action" class="oe_highlight" invisible="assigned_to != uid"/>
-                <button name="%(reject_pi_wizard_action)d" string="PI Unlock Reject" type="action" class="oe_highlight" invisible="assigned_to != uid"/>
+                <button name="%(approve_pi_unlock_wizard_action)d" string="Approve" type="action" class="oe_highlight" invisible="assigned_to != uid"/>
+                <button name="%(reject_pi_wizard_action)d" string="Reject" type="action" class="oe_highlight" invisible="assigned_to != uid"/>
             </xpath>
-
-            <!-- <xpath expr="//form/header/field[@name='state']" position="attributes">
-                <attribute name="invisible">state_for_unlock == 'unlock_approval_pending'</attribute>
-                <attribute name="invisible">"1"</attribute>
-            </xpath>
-
-            <xpath expr="//form/header" position="inside">
-                <field name="state" widget="statusbar" invisible="state_for_unlock != 'unlock_approval_pending'" readonly="1"/>
-                <field name="state" widget="statusbar" statusbar_visible="unlock_approval_pending" invisible="0" readonly="1"/>
-                <field name="state" widget="statusbar" statusbar_visible="draft,pending" invisible="state in ('confirmed', 'rejected')"/>
-
-            </xpath> -->
-
         </field>
     </record>
 </odoo>

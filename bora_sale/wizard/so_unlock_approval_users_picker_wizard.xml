@@ -9,7 +9,7 @@
                         <div class="o_form_label o_text_warning" style="margin-bottom: 10px;">
                              Unlock requires approval, an approval request will be generated for the selected authorities.
                         </div>
-                       <field name="user_ids_according_to_user_selection" invisible="0"/>
+                       <field name="user_ids_according_to_user_selection" invisible="1"/>
                        <field name="approver1_users" widget="many2many_tags" domain="[('id', 'not in', approver2_users)]" options="{'color_field': 'color', 'no_edit': True, 'no_create': True, 'no_open': True}"/>
                        <field name="approver2_users" widget="many2many_tags" domain="[('id', 'not in', approver1_users)]" options="{'color_field': 'color', 'no_edit': True, 'no_create': True, 'no_open': True}"/>
                    </group>
