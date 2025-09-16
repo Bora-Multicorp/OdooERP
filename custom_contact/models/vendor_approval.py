@@ -390,6 +390,19 @@ class ContactKYCApproval(models.Model):
 
     def write(self, vals):
         res = super().write(vals)
+        attachment_fields = [
+            'gst_certificate', 'udyam_document', 'shop_act_document',
+            'shop_photos', 'shop_videos', 'pan_card_document',
+            'incorporation_certificate', 'moa_aoa', 'electricity_bill'
+        ]
+        for record in self:
+            for field in attachment_fields:
+                attachments = record[field]
+                if attachments:
+                    attachments.write({
+                        'res_model': self._name,
+                        'res_id': record.id,
+                    })
 
         def _schedule_activity(record, user, title, note):
             record.activity_schedule(
