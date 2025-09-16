@@ -22,7 +22,7 @@ class PurchaseOrderConfirmApproval(models.Model):
 
 
     def assign_users(self, po_confirm_approval_users):
-        super(PurchaseOrderConfirmApproval, self).button_confirm()
+        # super(PurchaseOrderConfirmApproval, self).button_confirm()
 
         po_confirm_approval_user_vals = []
         for approval in po_confirm_approval_users:
