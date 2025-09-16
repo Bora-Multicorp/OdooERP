@@ -11,7 +11,7 @@ class SOConfirmationApprovalUsersPicker(models.TransientModel):
 
     approver1_users = fields.Many2many(
         comodel_name='sale.order.approval.config',
-        relation='picker_wizard_approver1_rel',   # custom relation table
+        relation='picker_wizard_so_confirm_approver1_rel',   # custom relation table
         column1='wizard_id',                   # FK to wizard
         column2='approver_id',                 # FK to approver
         string="Approver 1"
@@ -19,7 +19,7 @@ class SOConfirmationApprovalUsersPicker(models.TransientModel):
 
     approver2_users = fields.Many2many(
         comodel_name='sale.order.approval.config',
-        relation='picker_wizard_approver2_rel',   # DIFFERENT relation table
+        relation='picker_wizard_so_confirm_approver2_rel',   # DIFFERENT relation table
         column1='wizard_id',
         column2='approver_id',
         string="Approver 2"
