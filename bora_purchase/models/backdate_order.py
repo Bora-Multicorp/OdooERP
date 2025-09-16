@@ -1,27 +1,17 @@
-from odoo import fields, models
+from odoo import fields, models, api
 
 class PurchaseOrder(models.Model):
     _inherit = "purchase.order"
 
-    create_date = fields.Datetime(string="PO Date", readonly=False, required=True)
+    date_approve = fields.Datetime('Create Date')
 
 
-    def create(self, vals):
-        if vals.get("create_date"):
-            # Force user-entered date
-            self = super().create(vals)
-            self.with_context(skip_update=True).write({"create_date": vals["create_date"]})
-            return self
-        return super().create(vals)
+    def button_approve(self, force=False):
+        self = self.filtered(lambda order: order._approval_allowed())
+        self.write({'state': 'purchase'})
+        self.filtered(lambda p: p.company_id.po_lock == 'lock').write({'state': 'done'})
+        return {}
 
     def write(self, vals):
-        if "create_date" in vals:
-            self.env.cr.execute(
-                "UPDATE purchase_order SET create_date=%s WHERE id IN %s",
-                (vals["create_date"], tuple(self.ids)),
-            )
-            # reload record to avoid cache mismatch
-            self.invalidate_recordset()
-            return True
+        print("--------- in WRITE =>", vals)
         return super().write(vals)
-    
