@@ -2,90 +2,45 @@
 <odoo>
     <data>
         <!-- Inherit the sales order form view to add our custom fields and buttons -->
-        <record id="view_order_form_inherit_approval" model="ir.ui.view">
+        <record id="view_order_form_inherit_cancel_approval" model="ir.ui.view">
             <field name="name">sale.order.form.inherit.approval</field>
             <field name="model">sale.order</field>
             <field name="inherit_id" ref="sale.view_order_form"/>
             <field name="arch" type="xml">
-                <xpath expr="//field[@name='payment_term_id']" position="after">
-                    <field name="cancel_is_hidden_for_approval" invisible="True"/>
-                </xpath>
-                <xpath expr="//field[@name='state']" position="replace">
-                    <!-- Default statebar visible when not in cancel flow -->
-                    <field name="state" widget="statusbar"
-                           statusbar_visible="draft,sent,sale,cancel"
-                           invisible="cancel_state in ('cancel_draft','cancel_pending','cancel_approved','cancel_rejected')"/>
-
-                    <!-- Cancel statebar visible when in cancel flow -->
-                    <field name="cancel_state" widget="statusbar"
-                           statusbar_visible="cancel_draft,cancel_pending,cancel_approved,cancel_rejected"
-                           invisible="cancel_state not in ('cancel_draft','cancel_pending','cancel_approved','cancel_rejected')"/>
-                </xpath>
-
-                <!-- Add Cancel Request button in header -->
-                <xpath expr="//header" position="inside">
-                    <button name="action_cancel_request"
-                            string="Request Cancel"
-                            type="object"
-                             class="btn-primary"
-                            invisible="state not in ('draft','sent','sale')"
-                            confirm="Do you want to cancel this order?"/>
-                </xpath>
-                   <xpath expr="//header/button[@name='action_confirm']" position="attributes">
-                    <attribute name="invisible">state != 'cancel_approved'</attribute>
-                </xpath>
-
-                <xpath expr="//header/button[@name='action_cancel']" position="attributes">
-                    <attribute name="invisible">state not in ('draft','sent','sale')</attribute>
-                </xpath>
-
-                <xpath expr="//sheet/notebook" position="inside">
-                    <page string="Approval Authorities" name="approval_users" invisible="not is_hidden_for_approval">
-                        <field name="cancel_is_approved" invisible="1"/>
-                        <group>
-                            <field name="assigned_to"
-                                   options="{'no_edit': True, 'no_create': True, 'no_open': True}"
-                                   invisible="not assigned_to" readonly="1"/>
-                            <field name="existing_user_ids" invisible="1" widget="many2many_tags"/>
-                        </group>
-                        <field name="cancel_approval_users_ids" nolabel="1" help="Define the approval roles."
-                               readonly="1">
-                            <list editable="bottom">
-                                <field name="sequence"/>
-                                <field name="user_id" widget="many2one_avatar_user"
-                                       options="{'no_edit': True, 'no_create': True, 'no_open': True}"/>
+            <xpath expr="//field[@name='partner_id']" position="after">
+                <field name="old_state" invisible="0"/>
+            </xpath>
+            <xpath expr="//notebook" position="inside">
+                <page name="cancel_approval_authorities_page" string="Cancellation Approval Authorities" invisible="not so_approval_users_ids_for_cancellation">
+                    <div class="o_row o_align_right" invisible="not so_assigned_to_form_cancellation">
+                        <label for="so_assigned_to_form_cancellation"/>
+                        <field name="so_assigned_to_form_cancellation" options="{'no_edit': True, 'no_create': True, 'no_open': True}" readonly="1"/>
+                        <button name="action_so_suspend" string="Suspend" type="object" class="btn-primary" groups="base.group_system"/>
+                    </div>
+                    <field name="so_approval_users_ids_for_cancellation" nolabel="1" help="Define the SO cancel approval roles." readonly="1">
+                        <list editable="bottom">
+                            <field name="sequence"/>
+                            <field name="user_id" widget="many2one_avatar_user" options="{'no_edit': True, 'no_create': True, 'no_open': True}"/>
+                            <field name="remark"/>
+                            <field name="state" readonly="1"/>
+                            <field name="action_date" readonly="1"/>
+                        </list>
+                        <form>
+                            <group>
+                                <field name="user_id" options="{'no_edit': True, 'no_create': True, 'no_open': True}"/>
+                                <field name="state"/>
                                 <field name="remark"/>
-                                <field name="state" readonly="1"/>
-                                <field name="action_date" readonly="1"/>
-                            </list>
-                            <form>
-                                <group>
-                                    <field name="user_id"
-                                           options="{'no_edit': True, 'no_create': True, 'no_open': True}"/>
-                                    <field name="state"/>
-                                    <field name="remark"/>
-                                </group>
-                            </form>
-                        </field>
-                    </page>
-                </xpath>
-            </field>
+                            </group>
+                        </form>
+                    </field>
+                </page>
+            </xpath>
+            <xpath expr="//header" position="inside">
+                <button name="%(approve_so_cancel_wizard_action)d" string="Approve" type="action" class="oe_highlight" invisible="so_assigned_to_form_cancellation != uid"/>
+                <button name="%(reject_so_cancel_wizard_action)d" string="Reject" type="action" class="oe_highlight" invisible="so_assigned_to_form_cancellation != uid"/>
+            </xpath>
+        </field>
         </record>
-        <record id="saleorder_approval_view_list" model="ir.ui.view">
-            <field name="name">Sale Order Approval</field>
-            <field name="model">sale.order</field>
-            <field name="arch" type="xml">
-                <list string="Order Approval" create="false" delete="false">
-                    <field name="assigned_to"/>
-                    <field name="create_date"/>
-                    <field name="state"/>
-                </list>
-            </field>
-        </record>
-        <record id="saleorder_approval_action" model="ir.actions.act_window">
-            <field name="name">Sale Order Approval</field>
-            <field name="res_model">sale.order</field>
-            <field name="view_mode">list,form</field>
-        </record>
+
     </data>
 </odoo>
