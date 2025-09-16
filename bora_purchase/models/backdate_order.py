@@ -11,7 +11,3 @@ class PurchaseOrder(models.Model):
         self.write({'state': 'purchase'})
         self.filtered(lambda p: p.company_id.po_lock == 'lock').write({'state': 'done'})
         return {}
-
-    def write(self, vals):
-        print("--------- in WRITE =>", vals)
-        return super().write(vals)

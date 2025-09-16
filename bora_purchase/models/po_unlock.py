@@ -19,7 +19,7 @@ class PurchaseOrderUnlock(models.Model):
 
 
     def assign_unlock_users(self, po_confirm_approval_users):
-        super(PurchaseOrderUnlock, self).button_confirm()
+        # super(PurchaseOrderUnlock, self).button_confirm()
 
         po_unlock_approval_user_vals = []
         for index,approval in enumerate(po_confirm_approval_users):
