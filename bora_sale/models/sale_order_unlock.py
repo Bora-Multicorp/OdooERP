@@ -8,9 +8,28 @@ class SaleOrderUnlock(models.Model):
     approval_users_ids = fields.One2many('pi.unlock.approval.users', 'pi_unlock_approval_id', 'Approval Authorities', help='PI unlock approval authority details')
     existing_user_ids = fields.Many2many('res.users', compute='_compute_existing_users', store=True)
     
-    # state = fields.Selection(selection_add=[
+    # state = fields.Selection([
+    #     ('draft', 'Quotation'),
+    #     ('sent', 'Quotation Sent'),
+    #     ('sale', 'Performa Invoice'),
     #     ('unlock_approval_pending', 'Unlock Approval Pending'),
-    # ], ondelete={'unlock_approval_pending': 'set default'})
+    #     ('cancel', 'Cancelled'),
+    # ], default='draft', string='Status', tracking=True)
+
+    # def _get_selection_state(self):
+    #     # Get the original selection field from the parent model
+    #     states = super(SaleOrderUnlock, self)._get_selection_state()
+    #     # Add your new state to the dictionary
+    #     states.append(('unlock_approval_pending', 'Unlock Approval Pending'))
+    #     return states
+
+    # state = fields.Selection(
+    #     selection=_get_selection_state,
+    #     string='Status',
+    #     index=True,
+    #     tracking=True,
+    #     default='draft'
+    # )
 
     @api.depends('approval_users_ids.user_id')
     def _compute_existing_users(self):
@@ -28,9 +47,9 @@ class SaleOrderUnlock(models.Model):
 
     def assign_unlock_users(self, pi_unlock_approval_users):
         pi_unlock_approval_user_vals = []
-        for approval in pi_unlock_approval_users:
+        for index,approval in enumerate(pi_unlock_approval_users):
             pi_unlock_approval_user_vals.append((0, 0, {
-                'sequence': approval.sequence,
+                'sequence': index+1,
                 'user_id': approval.user_id.id,
             }))
         self.write({

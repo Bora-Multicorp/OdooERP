@@ -38,6 +38,7 @@ class SOUnlockApprovalUsersPicker(models.TransientModel):
     def add_users_for_approval(self):
         user_id_strings = self.user_ids_according_to_user_selection.split(',')        
         id_list = [int(id_str.strip()) for id_str in user_id_strings]
+        print('----------  id_list =>', id_list)
         approvers = self.env['pi.unlock.approvers'].browse(id_list)
         self.order_id.assign_unlock_users(approvers)
 
