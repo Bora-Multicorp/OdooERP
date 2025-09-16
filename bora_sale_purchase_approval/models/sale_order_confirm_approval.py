@@ -5,16 +5,6 @@ from odoo.exceptions import UserError, ValidationError
 
 _logger = logging.getLogger(__name__)
 
-SALE_ORDER_STATE = [
-    ('draft', "Quotation"),
-    ("confirmation_pending", "Confirmation Pending"),
-    ('cancellation_pending', 'Cancellation Pending'),
-    ('unlock_pending', 'Unlock Pending'),
-    ('sent', "Quotation Sent"),
-    ('sale', "Proforma Invoice"),
-    ('cancel', "Cancelled"),
-]
-
 
 class SaleOrderConfimationApproval(models.Model):
     _inherit = 'sale.order'
@@ -22,20 +12,26 @@ class SaleOrderConfimationApproval(models.Model):
 
     so_assigned_to_form_confirmation = fields.Many2one('res.users', string='Assigned To', tracking=True)
     so_approval_users_ids_for_confirmation = fields.One2many('so.confirm.approval.users', 'so_confirm_approval_id',
-                                                          'Confirm SO Approval Authorities',
-                                                          help='SO confirm approval authority details')
+                                                             'Confirm SO Approval Authorities',
+                                                             help='SO confirm approval authority details')
 
     state = fields.Selection(
-        selection=SALE_ORDER_STATE,
+        [('draft', "Quotation"),
+         ("confirmation_pending", "Confirmation Pending"),
+         ('cancellation_pending', 'Cancellation Pending'),
+         ('unlock_pending', 'Unlock Pending'),
+         ('sent', "Quotation Sent"),
+         ('sale', "Proforma Invoice"),
+         ('cancel', "Cancelled"),
+         ],
         string="Status",
-        readonly=True, copy=False, index=True,
-        tracking=3,
-        default='draft')
+        tracking=True
+    )
 
     def _confirmation_error_message(self):
         """ Return whether order can be confirmed or not if not then returm error message. """
         self.ensure_one()
-        if self.state not in {'draft', 'sent','confirmation_pending','cancellation_pending'}:
+        if self.state not in {'draft', 'sent', 'confirmation_pending', 'cancellation_pending'}:
             return _("Some orders are not in a state requiring confirmation.")
         if any(
                 not line.display_type
@@ -48,7 +44,7 @@ class SaleOrderConfimationApproval(models.Model):
         return False
 
     def assign_users(self, so_confirm_approval_users):
-        super(SaleOrderConfimationApproval, self).action_confirm()
+        # super(SaleOrderConfimationApproval, self).action_confirm()
 
         so_confirm_approval_user_vals = []
         for index, approval in enumerate(so_confirm_approval_users):
