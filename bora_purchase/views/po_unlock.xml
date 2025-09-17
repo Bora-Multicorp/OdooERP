@@ -33,6 +33,23 @@
                 <button name="%(approve_po_unlock_wizard_action)d" string="Approve" type="action" class="oe_highlight" invisible="assigned_to != uid"/>
                 <button name="%(reject_po_wizard_action)d" string="Reject" type="action" class="oe_highlight" invisible="assigned_to != uid"/>
             </xpath>
+            <xpath expr="//header/button[@name='action_rfq_send'][1]" position="before">
+                <button name="action_rfq_send" string="Send PO by Email" type="object" context="{'send_rfq':False}" invisible="state != 'done' or assigned_to == uid" class="oe_highlight"/>
+            </xpath>
+            <xpath expr="//form/header/button[@name='action_view_picking']" position="attributes">
+                <attribute name="invisible">(is_shipped or state not in ('purchase', 'done') or incoming_picking_count == 0) or assigned_to == uid</attribute>
+            </xpath>
+            <xpath expr="//form/header/button[@name='confirm_reminder_mail']" position="attributes">
+                <attribute name="invisible">(state not in ('purchase', 'done') or mail_reminder_confirmed or not date_planned or effective_date) or assigned_to == uid</attribute>
+            </xpath>
+
+            <xpath expr="//button[@name='action_create_invoice'][not(contains(@class, 'oe_highlight'))]" position="attributes">
+                <attribute name="invisible">[ '|', '|', '|', ('state', 'not in', ('purchase', 'done')), ('invoice_status', 'not in', ('no', 'invoiced')), ('order_line', '=', False), ('is_assigned_to_current_user', '=', True)]</attribute>
+            </xpath>
+            <xpath expr="//form/header/button[@name='button_unlock']" position="attributes">
+                <attribute name="invisible">state != 'done' or assigned_to == uid</attribute>
+            </xpath>
+
         </field>
     </record>
 </odoo>
