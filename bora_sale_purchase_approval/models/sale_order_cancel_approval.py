@@ -70,6 +70,9 @@ class SaleOrderCancellationApproval(models.Model):
                     })
                 else:
                     super(SaleOrderCancellationApproval, self).action_cancel()
+                    self.write({
+                        'state': 'cancel'
+                    })
 
     def _send_notification_on_rejection_of_SO_cancellation(self):
 
@@ -104,7 +107,6 @@ class SaleOrderCancellationApproval(models.Model):
                 )
 
     def _create_activity_and_send_notification_on_cancellation_approval(self):
-        print("ddddddddddddddddd2222222222222222222222")
 
         for rec in self:
 
