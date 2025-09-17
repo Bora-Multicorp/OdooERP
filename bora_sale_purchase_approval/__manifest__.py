@@ -5,7 +5,7 @@
     'description': """
         This module provides a robust approval system for sales orders and purchase order, allowing you to define a sequence of approvers and track the approval status.
     """,
-    'depends': ['sale', 'base','bus','account'],
+    'depends': ['sale', 'base','sale_management','bus','account'],
     'data': [
         'data/payment_term.xml',
         'security/ir.model.access.csv',
