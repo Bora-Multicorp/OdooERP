@@ -196,6 +196,18 @@ class ContactKYCApproval(models.Model):
     is_rejected = fields.Boolean(tracking=True)
     rejection_date = fields.Datetime(string="Rejection Date", tracking=True)
     rejection_reason = fields.Text('Rejection Reason', tracking=True)
+    can_set_draft = fields.Boolean(
+        compute="_compute_can_set_draft",
+        string="Can Set Draft",
+        store=False
+    )
+
+    def _compute_can_set_draft(self):
+        for rec in self:
+            if self.env.user in rec.approval_users_ids.mapped('user_id'):
+                rec.can_set_draft = False  # approval authority → hide
+            else:
+                rec.can_set_draft = True  # creator/others → show
 
     def add_user(self, approvers):
         approval_user_vals = []
