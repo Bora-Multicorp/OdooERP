@@ -5,7 +5,7 @@
         <field name="inherit_id" ref="purchase.purchase_order_form"/>
         <field name="arch" type="xml">
             <xpath expr="//field[@name='partner_id']" position="after">
-                <field name="old_state" invisible="0"/>
+                <field name="old_state" invisible="1"/>
             </xpath>
             <xpath expr="//notebook" position="inside">
                 <page name="cancel_approval_authorities_page" string="Cancellation Approval Authorities" invisible="not approval_users_ids_for_cancellation">

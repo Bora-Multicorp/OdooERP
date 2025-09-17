@@ -44,7 +44,8 @@ Bora purchase operations
         'views/po_confirm.xml',
         'views/po_cancellation.xml',
         'views/backdate_order.xml',
-        'views/send_email_to_warehours_on_po_confirmation.xml'
+        'views/send_email_to_warehours_on_po_confirmation.xml',
+        'views/po_lock_readonly_fields.xml'
     ],
     'assets': {
         'web.assets_backend': [
