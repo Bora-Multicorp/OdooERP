@@ -118,10 +118,7 @@ class ProductApproval(models.Model):
         self.write({
             'approval_users_ids': approval_user_vals,
             'state': 'pending'
-        })
-
-        print("------- STATE =>", self.state)
-        
+        })        
 
         if self.id:
             self._update_assigned_to()
@@ -160,18 +157,37 @@ class ProductApproval(models.Model):
             
 
     def _update_state_based_on_approvals(self):
-        for rec in self:
-            # Check if there are any approval records
-            if rec.approval_users_ids:
-                # Get the last approval record
-                last_approval = rec.approval_users_ids[-1]
 
-                # Check the state of the last approval record
-                print("--------    last_approval.state =>", last_approval.state)
-                if last_approval.state == 'reject':
-                    rec.state = 'rejected'
-                elif last_approval.state == 'approve':
+        for rec in self:
+
+            # 1. check if app have approved the product
+            do_all_approved = True
+            is_any_approval_pending = False
+            for user in self.get_last_approval_group():
+                if user.state == False:
+                    is_any_approval_pending = True
+                    break
+                if user.state != 'approve':
+                    do_all_approved = False
+
+            # 2. If approved then change state accordingly
+            if is_any_approval_pending == False:
+                if do_all_approved:
                     rec.state = 'confirmed'
+                else:
+                    rec.state = 'rejected'
+
+        # for rec in self:
+        #     # Check if there are any approval records
+        #     if rec.approval_users_ids:
+        #         # Get the last approval record
+        #         last_approval = rec.approval_users_ids[-1]
+
+        #         # Check the state of the last approval record
+        #         if last_approval.state == 'reject':
+        #             rec.state = 'rejected'
+        #         elif last_approval.state == 'approve':
+                    # rec.state = 'confirmed'
 
 
     # def _update_state_based_on_approvals(self):
@@ -383,6 +399,35 @@ class ProductApproval(models.Model):
                     })
 
         return res
+
+
+    def get_last_approval_group(self):
+        self.ensure_one()  # This method should be called on a single record
+        
+        # Sort the approval users by sequence in ascending order
+        sorted_approvals = self.approval_users_ids.sorted('sequence')
+        
+        if not sorted_approvals:
+            return self.env['product.approval.users'] # Return an empty recordset
+            
+        # Get the highest sequence number
+        last_sequence_number = sorted_approvals[-1].sequence
+        
+        last_group_ids = []
+        
+        # Iterate backwards from the last record
+        for approval_line in reversed(sorted_approvals):
+            # If the sequence number is the one we're looking for
+            if approval_line.sequence == last_sequence_number:
+                last_group_ids.append(approval_line.id)
+                # Decrement the target sequence number for the next iteration
+                last_sequence_number -= 1
+            else:
+                # We've found a break in the sequence, so the group is complete
+                break
+                
+        # Return the records that belong to the last group, in the correct order
+        return self.env['product.approval.users'].browse(reversed(last_group_ids))
 
 
 
