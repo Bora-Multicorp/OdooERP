@@ -73,10 +73,13 @@ class PurchaseOrderConfirmApproval(models.Model):
             rec.assigned_to_form_confirmation = next_user
 
             if not rec.assigned_to_form_confirmation:
+                self.write({
+                    'state': 'draft'
+                })
                 super(PurchaseOrderConfirmApproval, self).button_confirm()
                 self._send__email_to_wh()
                 self.write({
-                    'state': 'done'
+                    'date_approve': rec.backdate_po
                 })
 
 
