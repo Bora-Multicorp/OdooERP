@@ -64,15 +64,21 @@ class PurchaseOrderConfirmApproval(models.Model):
      
 
     def _update_assigned_to_form_PO_confirm(self):
+
+        last_state = ""
         for rec in self:
+            for user in rec.approval_users_ids_for_confirmation:
+                last_state = user.state
+
             next_user = None
             for line in sorted(rec.approval_users_ids_for_confirmation, key=lambda x: x.sequence):
                 if not line.state:
+                    last_state = line.state
                     next_user = line.user_id
                     break
             rec.assigned_to_form_confirmation = next_user
 
-            if not rec.assigned_to_form_confirmation:
+            if not rec.assigned_to_form_confirmation and last_state == 'approve':
                 self.write({
                     'state': 'draft'
                 })
