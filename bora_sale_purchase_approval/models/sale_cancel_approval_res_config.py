@@ -38,47 +38,25 @@ class SOCancellationApproverTeam(models.Model):
             # Assign the remaining IDs back to the field
             record.existing_user_ids = [(6, 0, list(existing_user_ids_set))]
 
-    # generate sequence
     @api.model
     def default_get(self, fields_list):
         defaults = super().default_get(fields_list)
-        group_id = defaults.get('group')
-        if group_id:
-            max_sequence = self.search([('group', '=', group_id)], order="sequence desc", limit=1).sequence
-            defaults['sequence'] = (max_sequence or 0) + 1
-        else:
-            # If no group is present (e.g., from a form view), find the highest global sequence.
-            max_sequence = self.search([], order="sequence desc", limit=1).sequence
-            defaults['sequence'] = (max_sequence or 0) + 1
-
+        if 'sequence' in fields_list:
+            max_sequence = self.search([], order="sequence desc", limit=1).sequence or 0
+            defaults['sequence'] = max_sequence + 1
         return defaults
-
-    @api.constrains('default_user', 'group')
-    def _check_unique_default_user_per_group(self):
-        for record in self:
-            if record.default_user:
-                existing_default_users = self.search([
-                    ('id', '!=', record.id),
-                    ('group', '=', record.group),
-                    ('default_user', '=', True)
-                ])
-                if existing_default_users:
-                    # Reset the previous default user to False
-                    existing_default_users.write({'default_user': False})
-
-    @api.onchange('default_user', 'group')
-    def _onchange_default_user(self):
-        if self.default_user:
-            existing_default_users = self.search([
-                ('id', '!=', self._origin.id if self._origin else False),
-                ('group', '=', self.group),
-                ('default_user', '=', True)
-            ])
-            if existing_default_users:
-                pass
 
     @api.model
     def create(self, vals):
+
+        # 1. to make sure there will be only one approver and only one approver2
+        if vals.get('default_approver'):
+            # Find the old approver of the same type and reset them
+            self.search([
+                ('default_approver', '=', vals['default_approver'])
+            ]).write({'default_approver': False})
+
+        # 2. Assign color code
         if not vals.get('color'):
             # Get all used colors
             used_colors = set(self.search([]).mapped('color'))
@@ -94,6 +72,18 @@ class SOCancellationApproverTeam(models.Model):
             vals['color'] = random.choice(available_colors)
 
         return super().create(vals)
+
+    def write(self, vals):
+        # To make sure there will be only one approver and only one approver2
+        if vals.get('default_approver'):
+            # Find the old approver of the same type and reset them
+            self.search([
+                ('id', '!=', self.id),
+                ('default_approver', '=', vals['default_approver'])
+            ]).write({'default_approver': False})
+
+        return super().write(vals)
+
 
     def unlink(self):
         affected_pos = self.env['sale.order']  # empty recordset

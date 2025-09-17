@@ -19,9 +19,9 @@ class SaleOrderCancellationApproval(models.Model):
     def assign_cancel_users(self, so_cancellation_approval_users):
 
         so_cancel_approval_user_vals = []
-        for approval in so_cancellation_approval_users:
+        for index, approval in  enumerate(so_cancellation_approval_users):
             so_cancel_approval_user_vals.append((0, 0, {
-                'sequence': approval.sequence,
+                'sequence': index +1,
                 'user_id': approval.user_id.id,
             }))
         self.write({
@@ -29,14 +29,6 @@ class SaleOrderCancellationApproval(models.Model):
             'old_state': self.state,
             'state': 'cancellation_pending'
         })
-
-        if self.so_assigned_to_form_cancellation:
-            for user_id in self.so_approval_users_ids_for_cancellation:
-                if user_id.state == 'reject':
-                    raise ValidationError(
-                        f"Cancellation request is rejected by '{user_id.user_id.name}', please review 'Cancellation Approval Authorities' tab for more details.")
-            raise ValidationError(
-                f"Cancellation request is now pending from '{self.so_assigned_to_form_confirmation.name}'.")
 
         if self.id:
             self._update_assigned_to_form_SO_cancellation()
@@ -47,10 +39,18 @@ class SaleOrderCancellationApproval(models.Model):
         so_cancellation_approval_users = self.env['sale.order.cancellation.approvers'].sudo().search([])
         if not so_cancellation_approval_users:
             raise ValidationError("Please add cancellation authority before submit request.")
+        if self.so_assigned_to_form_cancellation:
+            for user_id in self.so_approval_users_ids_for_cancellation:
+                if user_id.state == 'reject':
+                    raise ValidationError(
+                        f"Cancellation request is rejected by '{user_id.user_id.name}', please review 'Cancellation Approval Authorities' tab for more details.")
+            raise ValidationError(
+                f"Cancellation request is now pending from '{self.so_assigned_to_form_confirmation.name}'.")
 
         return self.env.ref(
             "bora_sale_purchase_approval.action_cancelation_approval_user_picker_wizard"
         ).sudo().read()[0]
+
 
     def _update_assigned_to_form_SO_cancellation(self):
         for rec in self:
@@ -73,6 +73,7 @@ class SaleOrderCancellationApproval(models.Model):
                     self.write({
                         'state': 'cancel'
                     })
+
 
     def _send_notification_on_rejection_of_SO_cancellation(self):
 
@@ -105,6 +106,7 @@ class SaleOrderCancellationApproval(models.Model):
                         'sticky': True,
                     },
                 )
+
 
     def _create_activity_and_send_notification_on_cancellation_approval(self):
 
