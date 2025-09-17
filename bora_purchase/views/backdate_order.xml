@@ -11,7 +11,7 @@
                 <attribute name="invisible">True</attribute>
             </xpath>
             <xpath expr="//field[@name='date_order']" position="before">
-                <field name="date_approve" readonly="state in ['purchase', 'done', 'cancel', 'unlock_pending', 'cancellation_pending', 'unlock_pending']" required="1" />
+                <field name="backdate_po" readonly="state in ['purchase', 'done', 'cancel', 'unlock_pending', 'cancellation_pending', 'unlock_pending']" required="1" />
             </xpath>
 
 

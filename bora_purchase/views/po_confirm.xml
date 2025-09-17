@@ -30,13 +30,16 @@
             </xpath>
             <!-- <xpath expr="//button[@name='action_view_picking']" position="attributes">
                 <attribute name="invisible">1</attribute>
-            </xpath>
-            <xpath expr="//button[@name='button_draft']" position="attributes">
+            </xpath> -->
+            <!-- <xpath expr="//button[@name='button_draft']" position="attributes">
                 <attribute name="string">Set To RFQ</attribute>
             </xpath> -->
-            <xpath expr="//div[hasclass('oe_button_box')]/button[@name='action_view_picking']" position="attributes">
-                <attribute name="invisible">state in ('confirmation_pending','cancellation_pending','unlock_pending', 'draft', 'cancel') or incoming_picking_count == 0</attribute>
-            </xpath>
+            <!-- <xpath expr="//div[hasclass('oe_button_box')]/button[@name='action_view_picking']" position="attributes">
+                <attribute name="invisible">['|', ('state', 'in', ('confirmation_pending','cancellation_pending','unlock_pending', 'draft', 'cancel')), ('incoming_picking_count', '=', 0)]</attribute>
+            </xpath> -->
+            <!-- <xpath expr="//div[hasclass('oe_button_box')]/button[@name='action_view_picking']" position="attributes">
+                <attribute name="invisible">0</attribute>
+            </xpath> -->
         </field>
     </record>
 </odoo>

@@ -43,6 +43,8 @@ class PurchaseOrderConfirmApproval(models.Model):
 
 
     def button_confirm(self):
+        # super(PurchaseOrderConfirmApproval, self).button_confirm()
+        # return
 
         # 1. Check if any aoproval authority is configured or not
         po_confirm_approval_users = self.env['purchase.order.confirmation.approvers'].sudo().search([])
@@ -71,9 +73,13 @@ class PurchaseOrderConfirmApproval(models.Model):
             rec.assigned_to_form_confirmation = next_user
 
             if not rec.assigned_to_form_confirmation:
-                super(PurchaseOrderConfirmApproval, self).button_confirm()
                 self.write({
-                    'state': 'done'
+                    'state': 'draft'
+                })
+                super(PurchaseOrderConfirmApproval, self).button_confirm()
+                self._send__email_to_wh()
+                self.write({
+                    'date_approve': rec.backdate_po
                 })
 
 
@@ -230,7 +236,6 @@ class PurchaseOrderConfirmApproval(models.Model):
             ])
 
             order.write({'assigned_to_form_confirmation': None, 'state':'draft'})
-            print("assigned_to_form_confirmation.  => None")
 
             # send notification to creator
             order.env['bus.bus']._sendone(
@@ -258,6 +263,19 @@ class PurchaseOrderConfirmApproval(models.Model):
 
 
             activities.unlink()
+
+
+    def _send__email_to_wh(self):
+
+        for order in self:
+            warehouse = order.picking_type_id.warehouse_id
+            # Check if the 'email' field exists on the warehouse record
+            if hasattr(warehouse, 'email') and warehouse.email:
+            # if warehouse.email:  # Directly using your warehouse email field
+                template = self.env.ref('bora_purchase.email_template_3pl_po_notification')
+                template.email_to = warehouse.email  # Ensure the right recipient
+                template.send_mail(order.id, force_send=True)
+                
 
 
 
