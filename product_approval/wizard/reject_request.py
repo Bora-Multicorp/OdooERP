@@ -53,7 +53,6 @@ class RejectProductWizard(models.TransientModel):
             
             number_of_product_for_rejction += 1
 
-
         first_product = products[0]
         title = f"Total {number_of_product_for_rejction} products are rejected."
         message = "Activities are assigned to you."
