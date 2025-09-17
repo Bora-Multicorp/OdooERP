@@ -119,6 +119,8 @@ class ProductApproval(models.Model):
             'approval_users_ids': approval_user_vals,
             'state': 'pending'
         })
+
+        print("------- STATE =>", self.state)
         
 
         if self.id:
@@ -159,11 +161,26 @@ class ProductApproval(models.Model):
 
     def _update_state_based_on_approvals(self):
         for rec in self:
-            states = rec.approval_users_ids.mapped('state')
-            if any(s == 'reject' for s in states):
-                rec.state = 'rejected'
-            elif states and all(s == 'approve' for s in states):
-                rec.state = 'confirmed'
+            # Check if there are any approval records
+            if rec.approval_users_ids:
+                # Get the last approval record
+                last_approval = rec.approval_users_ids[-1]
+
+                # Check the state of the last approval record
+                print("--------    last_approval.state =>", last_approval.state)
+                if last_approval.state == 'reject':
+                    rec.state = 'rejected'
+                elif last_approval.state == 'approve':
+                    rec.state = 'confirmed'
+
+
+    # def _update_state_based_on_approvals(self):
+    #     for rec in self:
+    #         states = rec.approval_users_ids.mapped('state')
+    #         if any(s == 'reject' for s in states):
+    #             rec.state = 'rejected'
+    #         elif states and all(s == 'approve' for s in states):
+    #             rec.state = 'confirmed'
 
     domain_field = fields.Char(compute='_compute_domain')
     
