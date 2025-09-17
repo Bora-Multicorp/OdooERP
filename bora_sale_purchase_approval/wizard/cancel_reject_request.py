@@ -40,7 +40,7 @@ class SOConfirmRejectWizard(models.TransientModel):
 
 
             # Recompute the next approver
-            self.sale_id._update_assigned_to_form_SO_cancellation()
-            self.sale_id._send_notification_on_rejection_of_SO_cancellation()
+        self.sale_id._update_assigned_to_form_SO_cancellation()
+        self.sale_id._send_notification_on_rejection_of_SO_cancellation()
 
         return {'type': 'ir.actions.act_window_close'}

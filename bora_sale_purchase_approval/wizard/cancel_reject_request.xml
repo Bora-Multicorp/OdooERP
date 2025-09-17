@@ -22,7 +22,7 @@
         <field name="view_id" ref="cancel_reject_so_wizard_view_form"/>
         <field name="target">new</field>
         <field name="context">{
-            'default_order_id': active_id,
+            'default_sale_id': active_id,
             }
         </field>
     </record>
