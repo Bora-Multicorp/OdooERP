@@ -20,7 +20,7 @@
                                 confirm="Do you want to Approve the request?" invisible="1"/>
                         <button name="set_as_draft" string="Set As Draft" type="object"
                                 class="oe_highlight" confirm="Do you want to submit?" groups="base.group_system"
-                                invisible="state != 'rejected'"/>
+                                invisible="state != 'rejected' or not can_set_draft"/>
                         <field name="state" widget="statusbar"/>
                         <!--<field name="state" widget="statusbar" statusbar_visible="draft,pending,confirmed,rejected"
                                invisible="state in ('confirmed', 'rejected')"/>
@@ -32,6 +32,7 @@
                     <sheet>
                         <group>
                             <field name="partner_id" readonly="1"/>
+                            <field name="can_set_draft" invisible="1"/>
                             <field name="email" widget="upper_case" readonly="state not in ('draft')"/>
                             <field name="point_of_contact" placeholder="Your Answer" widget="upper_case"
                                    readonly="state not in ('draft')"/>
