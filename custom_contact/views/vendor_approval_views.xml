@@ -91,7 +91,7 @@
                             <field name="directors_detail" string="Director/Partner"
                                    readonly="state not in ['draft']"
                                    required="1">
-                                <list editable="bottom">
+                                <list editable="bottom" class="table-responsive">
                                     <field name="designation" widget="upper_case"/>
                                     <field name="name" widget="upper_case"/>
                                     <field name="contact_no"/>
@@ -105,7 +105,9 @@
                                            options="{'accepted_file_extensions': 'image/*, .pdf'}"
                                            column_invisible="1"/>
                                     <field name="aadhaar_card_attachments" widget="many2many_attachment_preview"
-                                           options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 1}"/>
+                                           options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 1}"
+                                           class="o_field_widget o_td_label text-break"
+                                           colspan="2"/>
                                     <field name="pan_card_attachments" widget="many2many_attachment_preview"
                                            options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 1}"/>
                                 </list>
@@ -123,7 +125,9 @@
                                            options="{'accepted_file_extensions': 'image/*, .pdf'}"
                                            column_invisible="1"/>
                                     <field name="aadhaar_card_attachments" widget="many2many_attachment_preview"
-                                           options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 1}"/>
+                                           options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 1}"
+                                           class="o_field_widget o_td_label text-break"
+                                           colspan="2"/>
                                     <field name="pan_card_attachments" widget="many2many_attachment_preview"
                                            options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 1}"/>
                                 </form>
