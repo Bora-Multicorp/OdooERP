@@ -365,9 +365,13 @@
                                                             <span t-field="o.invoice_incoterm_id.code"/>
                                                             <span t-field="o.invoice_incoterm_id.name"/>
                                                             <br/>
-                                                            CONTRACT DATE: <span t-field="o.contract_date" t-options='{"format": "dd-MMM-yy"}'/>
+                                                            <t t-if="o.contract_date">
+                                                                CONTRACT DATE: <span t-field="o.contract_date" t-options='{"format": "dd-MMM-yy"}'/>
+                                                            </t>
                                                             <br/>
-                                                            CONTRACT NO.: <span t-field="o.contract_number"/>
+                                                            <t t-if="o.contract_number">
+                                                                CONTRACT NO.: <span t-field="o.contract_number"/>
+                                                            </t>
                                                             <br/>
                                                             <span t-field="o.invoice_incoterm_id.description"/>
                                                         </strong>
@@ -390,8 +394,7 @@
                                                         Sl<br />No. </th>
                                                     <th
                                                         style="border:1px solid black; border-top:0px; vertical-align: middle; width:58%;">
-                                                        Description
-                                                        of Goods
+                                                        Description of Goods
                                                     </th>
                                                     <th
                                                         style="border:1px solid black; border-top:0px; vertical-align: middle; width:9%;">
@@ -504,7 +507,9 @@
                                                             OUTPUT
                                                             <span t-esc="'IGST' if o.invoice_line_ids and o.invoice_line_ids[0].tax_ids and 'IGST' in o.invoice_line_ids[0].tax_ids[0].name.upper() else 'GST'"/>
                                                             @
-                                                            <span t-esc="o.invoice_line_ids[0].tax_ids[0].amount" t-options="{'widget': 'float', 'precision': 1}"/>
+                                                            <t t-if="o.invoice_line_ids[0].tax_ids[0].amount">
+                                                                <span t-esc="o.invoice_line_ids[0].tax_ids[0].amount" t-options="{'widget': 'float', 'precision': 1}"/>
+                                                            </t>
                                                             %
                                                         </p>
                                                     </td>
@@ -517,8 +522,7 @@
                                                     <td
                                                         style="border:1px solid black; border-top: none;border-bottom: none; text-align: center;"
                                                         class="right sm">
-                                                        <t
-                                                            t-if="o.invoice_line_ids and o.invoice_line_ids[0].tax_ids">
+                                                        <t t-if="o.invoice_line_ids and o.invoice_line_ids[0].tax_ids">
                                                             <t t-set="tax_percent"
                                                                 t-value="o.invoice_line_ids[0].tax_ids[0].amount" />
                                                             <span>
@@ -590,9 +594,8 @@
                                                         style="border:1px solid black; text-align: center; border-bottom: 0px; vertical-align: bottom;"
                                                         class="right sm">Taxable
                                                     </td>
-                                                    <td
-                                                        style="border:1px solid black; text-align: center;"
-                                                        colspan="2" class="center sm">IGST
+                                                    <td style="border:1px solid black; text-align: center;" colspan="2" class="center sm">
+                                                        <span t-esc="'IGST' if o.invoice_line_ids and o.invoice_line_ids[0].tax_ids and 'IGST' in o.invoice_line_ids[0].tax_ids[0].name.upper() else 'GST'"/>
                                                     </td>
                                                     <td
                                                         style="border:1px solid black; text-align: center; border-bottom: 0px; vertical-align: bottom;"
@@ -1242,8 +1245,7 @@
                                         </th>
                                         <th
                                             style="border-right:1px solid black; padding:4px; width:55%;">
-                                            Description
-                                            of Goods
+                                            Description of Goods
                                         </th>
                                         <th
                                             style="border-right:1px solid black; padding:4px; width:10%;">
