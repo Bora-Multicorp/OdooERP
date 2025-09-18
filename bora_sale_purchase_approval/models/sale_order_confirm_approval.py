@@ -78,7 +78,7 @@ class SaleOrderConfimationApproval(models.Model):
 
         if self.so_assigned_to_form_confirmation:
             raise ValidationError(
-                f"PO confirm request is now pending from '{self.so_assigned_to_form_confirmation.name}'.")
+                f"SO confirm request is now pending from '{self.so_assigned_to_form_confirmation.name}'.")
 
         return self.env.ref(
             "bora_sale_purchase_approval.action_so_confirmation_approval_user_picker_wizard"
@@ -102,6 +102,7 @@ class SaleOrderConfimationApproval(models.Model):
     def _send_notification_on_rejection_of_SO_confirmation(self):
 
         confirmation_approval_users = self.env['sale.order.approval.config'].sudo().search([])
+        super(SaleOrderConfimationApproval, self).action_unlock()
 
         self.write({
             'state': 'draft',
@@ -154,7 +155,7 @@ class SaleOrderConfimationApproval(models.Model):
                 rec.activity_schedule(
                     act_type_xmlid='mail.mail_activity_data_todo',
                     summary=f'SO {rec.name} confirm approval request assigned to you.',
-                    note="You have been assigned to confirm this PO.",
+                    note="You have been assigned to confirm this SO.",
                     user_id=rec.so_assigned_to_form_confirmation.id,
                     date_deadline=fields.Date.context_today(self),
                 )
@@ -166,7 +167,7 @@ class SaleOrderConfimationApproval(models.Model):
                     {
                         'type': 'success',
                         'title': f'SO confirm approval request for {rec.name}, assigned to you.',
-                        'message': 'You have been assigned to confirm this PO.',
+                        'message': 'You have been assigned to confirm this SO.',
                         'sticky': True,
                     },
                 )
@@ -188,7 +189,7 @@ class SaleOrderConfimationApproval(models.Model):
             rec.activity_schedule(
                 act_type_xmlid='mail.mail_activity_data_todo',
                 summary=f'SO confirm approval for order: {rec.name}',
-                note="You have been assigned to confirm this PO.",
+                note="You have been assigned to confirm this SO.",
                 user_id=rec.so_assigned_to_form_confirmation.id,
                 date_deadline=fields.Date.context_today(self),
             )
@@ -279,7 +280,7 @@ class SOConfirmApprovalUsers(models.Model):
     ], string="Groups", required=False)
 
     sequence = fields.Integer(string='Sequence')
-    so_confirm_approval_id = fields.Many2one('sale.order', string="PO Confirm Approval")
+    so_confirm_approval_id = fields.Many2one('sale.order', string="SO Confirm Approval")
     job_id = fields.Char(string="Designation", readonly=True)
     user_id = fields.Many2one('res.users', string='User', required=True)
     state = fields.Selection([('approve', 'Approved'), ('reject', 'Rejected'), ('suspended', 'Suspended')],

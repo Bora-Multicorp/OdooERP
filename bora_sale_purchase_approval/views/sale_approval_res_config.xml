@@ -34,11 +34,16 @@
         <field name="view_mode">list,form</field>
         <field name="target">current</field>
     </record>
+     <menuitem id="sale_approvers_group_header_menu"
+        name="SO Approvers"  parent="sale.menu_sale_config"
+        sequence="100"/>
 
     <menuitem id="menu_sale_order_approval_config"
-              name="Sales Order Approvers"
-              parent="sale.menu_sale_config"
+              name="Sales Order Confirmation Approvers"
+              parent="sale_approvers_group_header_menu"
               action="action_sale_order_approval_config"
               groups="base.user_admin"
               sequence="100"/>
+
+
 </odoo>
