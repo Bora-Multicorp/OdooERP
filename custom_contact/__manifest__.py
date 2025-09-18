@@ -32,7 +32,7 @@
     ],
     'assets': {
         'web.assets_backend': [
-            'custom_contact/static/src/scss/kyc_form.css',
+            'custom_contact/static/src/css/kyc_form.css',
         ],
     },
 
