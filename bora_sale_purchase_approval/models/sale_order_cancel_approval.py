@@ -45,7 +45,7 @@ class SaleOrderCancellationApproval(models.Model):
                     raise ValidationError(
                         f"Cancellation request is rejected by '{user_id.user_id.name}', please review 'Cancellation Approval Authorities' tab for more details.")
             raise ValidationError(
-                f"Cancellation request is now pending from '{self.so_assigned_to_form_confirmation.name}'.")
+                f"Cancellation request is now pending from '{self.so_assigned_to_form_cancellation.name}'.")
 
         return self.env.ref(
             "bora_sale_purchase_approval.action_cancelation_approval_user_picker_wizard"
@@ -80,8 +80,19 @@ class SaleOrderCancellationApproval(models.Model):
         approval_users = self.env['sale.order.cancellation.approvers'].sudo().search([])
 
         self.write({
-            'so_assigned_to_form_confirmation': None
+            'so_assigned_to_form_cancellation': None
         })
+        if self.create_uid and self.create_uid.partner_id:
+            self.env['bus.bus']._sendone(
+                self.create_uid.partner_id,
+                'simple_notification',
+                {
+                    'type': 'danger',
+                    'title': f'Your SO cancellation request for {self.name} was rejected by {self.env.user.name}.',
+                    'message': '',
+                    'sticky': True,
+                },
+            )
 
         for user in approval_users:
             if user.user_id == self.env.user:
@@ -204,7 +215,7 @@ class SaleOrderCancellationApproval(models.Model):
             message_type="comment",
             subtype_xmlid="mail.mt_note"
         )
-        
+
         for order in self:
             pending_approvers = order.so_approval_users_ids_for_cancellation.filtered(lambda u: not u.state)
 
