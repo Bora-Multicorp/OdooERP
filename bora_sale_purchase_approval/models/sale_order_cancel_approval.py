@@ -204,8 +204,7 @@ class SaleOrderCancellationApproval(models.Model):
             message_type="comment",
             subtype_xmlid="mail.mt_note"
         )
-        print("mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm")
-
+        
         for order in self:
             pending_approvers = order.so_approval_users_ids_for_cancellation.filtered(lambda u: not u.state)
 
@@ -229,7 +228,7 @@ class SaleOrderCancellationApproval(models.Model):
                 'simple_notification',
                 {
                     'type': 'danger',
-                    'title': f'SO {order.name} cnacellation suspended by {self.env.user.name}. you need to initiate the approval process again.',
+                    'title': f'SO {order.name} cancellation suspended by {self.env.user.name}. you need to initiate the approval process again.',
                     'message': '',
                     'sticky': True,
                 },
