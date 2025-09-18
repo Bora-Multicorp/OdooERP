@@ -1,6 +1,6 @@
 <odoo>
-    <record id="view_sale_order_form_inherit_unlock_page" model="ir.ui.view">
-        <field name="name">sale.order.form.inherit.unlock.page</field>
+    <record id="view_sale_order_form_inherit_unlock_page_lock_field" model="ir.ui.view">
+        <field name="name">sale.order.form.inherit.unlock.page.lock.field</field>
         <field name="model">sale.order</field>
         <field name="inherit_id" ref="sale.view_order_form"/>
         <field name="arch" type="xml">
