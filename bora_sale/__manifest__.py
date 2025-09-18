@@ -18,7 +18,7 @@ Bora sale operations
     'version': '0.1',
 
     # any module necessary for this one to work correctly
-    'depends': ['base', 'crm', 'sale_management', 'purchase', 'sale', 'sale_stock', 'account', 'prt_report_attachment_preview','product'],
+    'depends': ['base', 'crm', 'sale_management', 'purchase', 'sale', 'sale_project', 'sale_stock', 'account', 'prt_report_attachment_preview','product'],
 
     # always loaded
     'data': [
@@ -42,6 +42,7 @@ Bora sale operations
         'views/customer_fields_for_india_sale_invoice.xml',
         'views/create_csv_and_download.xml',
         'views/qc_check_on_delivery.xml',
+        'views/so_lock_readonly_fields.xml',
         'data/account_group_in_sales.xml',
     ],
     # 'assets': {
