@@ -30,10 +30,10 @@
         'views/survey_templates.xml',
         'views/contacts_field_changes.xml',
     ],
-    'assets': {
-        'web.assets_backend': [
-            'custom_contact/static/src/css/kyc_form.css',
-        ],
-    },
+    # 'assets': {
+    #     'web.assets_backend': [
+    #         'custom_contact/static/src/css/kyc_form.css',
+    #     ],
+    # },
 
 }
