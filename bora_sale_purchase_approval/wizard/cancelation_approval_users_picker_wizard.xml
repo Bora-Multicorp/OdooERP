@@ -23,7 +23,7 @@
    </record>
 
    <record id="action_cancelation_approval_user_picker_wizard" model="ir.actions.act_window">
-       <field name="name">Cancelation Approval User Picker</field>
+       <field name="name">Cancellation Approval User Picker</field>
        <field name="res_model">cancelation.approval.user.picker.wizard</field>
        <field name="view_mode">form</field>
        <field name="target">new</field>

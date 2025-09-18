@@ -19,7 +19,7 @@
         </field>
     </record>
     <record id="cnacel_suspend_so_confirm_wizard_action" model="ir.actions.act_window">
-        <field name="name">Suspend Cancelation Request</field>
+        <field name="name">Suspend Cancellation Request</field>
         <field name="res_model">suspend.so.cancelation.wizard</field>
         <field name="view_mode">form</field>
         <field name="view_id" ref="cancelation_suspend_so_wizard_view_form"/>
