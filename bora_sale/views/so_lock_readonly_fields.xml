@@ -5,58 +5,76 @@
         <field name="inherit_id" ref="sale.view_order_form"/>
         <field name="arch" type="xml">
             <xpath expr="//field[@name='user_id']" position="attributes">
-                <attribute name="readonly">state=='sale'</attribute>
+                <attribute name="readonly">state in ('sale', 'unlock_pending', 'cancel')</attribute>
             </xpath>
             <xpath expr="//field[@name='team_id']" position="attributes">
-                <attribute name="readonly">state=='sale'</attribute>
+                <attribute name="readonly">state in ('sale', 'unlock_pending', 'cancel')</attribute>
             </xpath>
             <xpath expr="//page[@name='other_information']//field[@name='company_id']" position="attributes">
-                <attribute name="readonly">state=='sale'</attribute>
+                <attribute name="readonly">state in ('sale', 'unlock_pending', 'cancel')</attribute>
             </xpath>
             <xpath expr="//field[@name='client_order_ref']" position="attributes">
-                <attribute name="readonly">state=='sale'</attribute>
+                <attribute name="readonly">state in ('sale', 'unlock_pending', 'cancel')</attribute>
             </xpath>
             <xpath expr="//field[@name='tag_ids']" position="attributes">
-                <attribute name="readonly">state=='sale'</attribute>
+                <attribute name="readonly">state in ('sale', 'unlock_pending', 'cancel')</attribute>
             </xpath>
             <xpath expr="//field[@name='incoterm']" position="attributes">
-                <attribute name="readonly">state=='sale'</attribute>
+                <attribute name="readonly">state in ('sale', 'unlock_pending', 'cancel')</attribute>
             </xpath>
             <xpath expr="//field[@name='incoterm_location']" position="attributes">
-                <attribute name="readonly">state=='sale'</attribute>
+                <attribute name="readonly">state in ('sale', 'unlock_pending', 'cancel')</attribute>
             </xpath>
             <xpath expr="//field[@name='commitment_date']" position="attributes">
-                <attribute name="readonly">state=='sale'</attribute>
+                <attribute name="readonly">state in ('sale', 'unlock_pending', 'cancel')</attribute>
             </xpath>
             <xpath expr="//field[@name='fiscal_position_id']" position="attributes">
-                <attribute name="readonly">state=='sale'</attribute>
+                <attribute name="readonly">state in ('sale', 'unlock_pending', 'cancel')</attribute>
             </xpath>
             <xpath expr="//field[@name='journal_id']" position="attributes">
-                <attribute name="readonly">state=='sale'</attribute>
+                <attribute name="readonly">state in ('sale', 'unlock_pending', 'cancel')</attribute>
             </xpath>
             <xpath expr="//field[@name='origin']" position="attributes">
-                <attribute name="readonly">state=='sale'</attribute>
+                <attribute name="readonly">state in ('sale', 'unlock_pending', 'cancel')</attribute>
             </xpath>
             <xpath expr="//field[@name='opportunity_id']" position="attributes">
-                <attribute name="readonly">state=='sale'</attribute>
+                <attribute name="readonly">state in ('sale', 'unlock_pending', 'cancel')</attribute>
             </xpath>
             <xpath expr="//field[@name='campaign_id']" position="attributes">
-                <attribute name="readonly">state=='sale'</attribute>
+                <attribute name="readonly">state in ('sale', 'unlock_pending', 'cancel')</attribute>
             </xpath>
             <xpath expr="//field[@name='medium_id']" position="attributes">
-                <attribute name="readonly">state=='sale'</attribute>
+                <attribute name="readonly">state in ('sale', 'unlock_pending', 'cancel')</attribute>
             </xpath>
             <xpath expr="//field[@name='source_id']" position="attributes">
-                <attribute name="readonly">state=='sale'</attribute>
+                <attribute name="readonly">state in ('sale', 'unlock_pending', 'cancel')</attribute>
             </xpath>
             <xpath expr="//field[@name='signed_by']" position="attributes">
-                <attribute name="readonly">state=='sale'</attribute>
+                <attribute name="readonly">state in ('sale', 'unlock_pending', 'cancel')</attribute>
             </xpath>
             <xpath expr="//field[@name='signed_on']" position="attributes">
-                <attribute name="readonly">state=='sale'</attribute>
+                <attribute name="readonly">state in ('sale', 'unlock_pending', 'cancel')</attribute>
             </xpath>
             <xpath expr="//field[@name='signature']" position="attributes">
-                <attribute name="readonly">state=='sale'</attribute>
+                <attribute name="readonly">state in ('sale', 'unlock_pending', 'cancel')</attribute>
+            </xpath>
+
+
+
+            <xpath expr="//field[@name='partner_id']" position="attributes">
+                <attribute name="readonly">state in ('sale', 'unlock_pending', 'cancel')</attribute>
+            </xpath>
+            <xpath expr="//field[@name='validity_date']" position="attributes">
+                <attribute name="readonly">state in ('sale', 'unlock_pending', 'cancel')</attribute>
+            </xpath>
+            <xpath expr="//field[@name='date_order']" position="attributes">
+                <attribute name="readonly">state in ('sale', 'unlock_pending', 'cancel')</attribute>
+            </xpath>
+            <xpath expr="//field[@name='pricelist_id']" position="attributes">
+                <attribute name="readonly">state in ('sale', 'unlock_pending', 'cancel')</attribute>
+            </xpath>
+            <xpath expr="//field[@name='payment_term_id']" position="attributes">
+                <attribute name="readonly">state in ('sale', 'unlock_pending', 'cancel')</attribute>
             </xpath>
         </field>
     </record>
@@ -66,7 +84,7 @@
         <field name="inherit_id" ref="sale_project.view_order_form_inherit_sale_project"/>
         <field name="arch" type="xml">
             <xpath expr="//field[@name='project_id']" position="attributes">
-                <attribute name="readonly">state=='sale'</attribute>
+                <attribute name="readonly">state in ('sale', 'unlock_pending', 'cancel')</attribute>
             </xpath>
         </field>
     </record>
