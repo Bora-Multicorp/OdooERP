@@ -243,7 +243,7 @@
                                                         </span>
                                                         <br />
                                                         <strong>
-                                                            <span style="font-size:11px;"
+                                                            <span
                                                                 t-field="o.despatch_doc_no" />
                                                         </strong>
                                                     </td>
@@ -390,7 +390,7 @@
                                             <thead>
                                                 <tr style="text-align: center;">
                                                     <th
-                                                        style="border:1px solid black; border-top:0px; vertical-align: middle; width:3%;">
+                                                        style="border:1px solid black; border-top:0px; vertical-align: middle; padding:4px; width:3%;">
                                                         Sl<br />No. </th>
                                                     <th
                                                         style="border:1px solid black; border-top:0px; vertical-align: middle; width:58%;">
@@ -507,9 +507,9 @@
                                                             OUTPUT
                                                             <span t-esc="'IGST' if o.invoice_line_ids and o.invoice_line_ids[0].tax_ids and 'IGST' in o.invoice_line_ids[0].tax_ids[0].name.upper() else 'GST'"/>
                                                             @
-                                                            <t t-if="o.invoice_line_ids[0].tax_ids[0].amount">
+                                                            <!-- <t t-if="o.invoice_line_ids[0].tax_ids[0].amount">
                                                                 <span t-esc="o.invoice_line_ids[0].tax_ids[0].amount" t-options="{'widget': 'float', 'precision': 1}"/>
-                                                            </t>
+                                                            </t> -->
                                                             %
                                                         </p>
                                                     </td>
@@ -594,7 +594,7 @@
                                                         style="border:1px solid black; text-align: center; border-bottom: 0px; vertical-align: bottom;"
                                                         class="right sm">Taxable
                                                     </td>
-                                                    <td style="border:1px solid black; text-align: center;" colspan="2" class="center sm">
+                                                    <td style="border:1px solid black; text-align: center; vertical-align: middle;" colspan="2" class="center sm">
                                                         <span t-esc="'IGST' if o.invoice_line_ids and o.invoice_line_ids[0].tax_ids and 'IGST' in o.invoice_line_ids[0].tax_ids[0].name.upper() else 'GST'"/>
                                                     </td>
                                                     <td
@@ -742,7 +742,7 @@
                                             <tr>
                                                 <td colspan="2"
                                                     style="border-left: 1px solid black; border-right:1px solid black;">
-                                                    <div style="padding-left:3px;">
+                                                    <div style="padding-left:3px; padding-top:5px;">
                                                         <span style="font-size:11px;">Tax Amount (in
                                                             words) :
                                                         </span>
