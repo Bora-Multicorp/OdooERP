@@ -2,8 +2,8 @@
 <odoo>
 
     <template id="external_layout_inherit_custom" inherit_id="web.external_layout_standard">
-        <xpath expr="//div[1]" position="replace" />
-        <xpath expr="//div[contains(@class, 'footer')]" position="replace" />
+        <xpath expr="//div[1]" position="replace"/>
+        <xpath expr="//div[contains(@class, 'footer')]" position="replace"/>
     </template>
 
     <!--
@@ -31,314 +31,317 @@
                     <t t-if="o.company_id.partner_id.country_id.code == 'IN'">
 
                         <div class="page"
-                            style="font-size:14px; font-family:sans-serif;margin: auto;">
+                             style="font-size:14px; font-family:sans-serif;margin: auto;">
                             <t t-set="sale_order"
-                                t-value="o.invoice_line_ids and o.invoice_line_ids[0].sale_line_ids and o.invoice_line_ids[0].sale_line_ids[0].order_id or False" />
-                            <div style="text-align: center; font-weight: bold; font-size:16px">EXPORT
-                                INVOICE
-                            </div>
-                            <p style="text-align:center; margin:0; font-size:13px;">(SUPPLY MEANT
-                                FOR EXPORT/SUPPLY
-                                TO SEZ UNIT OR SEZ DEVELOPER FOR AUTHORISED OPERATIONS ON PAYMENT OF
-                                IGST)
-                            </p>
+                               t-value="o.invoice_line_ids and o.invoice_line_ids[0].sale_line_ids and o.invoice_line_ids[0].sale_line_ids[0].order_id or False"/>
+
+                                <t t-if="o.partner_id.country_id.code == 'IN'">
+                                    <div style="text-align: center; font-weight: bold; font-size:16px">CUSTOMER INVOICE</div>
+                                </t>
+                                <t t-else="" class="text-end">
+                                    <div style="text-align: center; font-weight: bold; font-size:16px">EXPORT INVOICE</div>
+                                    <p style="text-align:center; margin:0; font-size:14px;">(SUPPLY MEANT FOR EXPORT/SUPPLY TO SEZ UNIT OR SEZ DEVELOPER FOR AUTHORISED OPERATIONS ON PAYMENT OF IGST)</p>
+                                </t>
+
+
                             <table
-                                style="width:100%; border-collapse:collapse; margin-bottom:12px; font-family:sans-serif;">
+                                    style="width:100%; border-collapse:collapse; margin-bottom:12px; font-family:sans-serif;">
                                 <tr style="page-break-inside: avoid;">
                                     <td
-                                        style="width:60%; vertical-align:top; padding:0; border:1px solid black;">
+                                            style="width:60%; vertical-align:top; padding:0; border:1px solid black;">
 
                                         <div style="font-size: 14px; padding: 3px;line-height: 1.1;">
                                             <div class="md bold" style="font-weight: bold;">
-                                                <span t-field="o.company_id.name" />
+                                                <span t-field="o.company_id.name"/>
                                             </div>
                                             <div class="sm">
-                                                <span t-field="o.company_id.street" />, <br />
+                                                <span t-field="o.company_id.street"/>,
+                                                <br/>
                                                 <t
-                                                    t-if="o.company_id.street2"><span
-                                                        t-field="o.company_id.street2" />, </t>
+                                                        t-if="o.company_id.street2"><span
+                                                        t-field="o.company_id.street2"/>,
+                                                </t>
                                                 <span
-                                                    t-field="o.company_id.city" /> - <span
-                                                    t-field="o.company_id.zip" />
+                                                        t-field="o.company_id.city"/>
+                                                -
+                                                <span
+                                                        t-field="o.company_id.zip"/>
                                             </div>
-                                            <div class="s" style="margin-top:6px">GSTIN/UIN: <span
-                                                    class="bold">
-                                                    <span t-field="o.company_id.vat" />
+                                            <div class="s" style="margin-top:6px">GSTIN/UIN:
+                                                <span
+                                                        class="bold">
+                                                    <span t-field="o.company_id.vat"/>
                                                 </span>
-                                                <br />
-                                                State Name : <span class="bold">
-                                                    <span t-field="o.company_id.state_id.name" />
+                                                <br/>
+                                                State Name :
+                                                <span class="bold">
+                                                    <span t-field="o.company_id.state_id.name"/>
                                                 </span>
-                                                <br />
-                                                CIN: <span class="bold">
-                                                    <span t-field="o.company_id.company_registry" />
+                                                <br/>
+                                                CIN:
+                                                <span class="bold">
+                                                    <span t-field="o.company_id.company_registry"/>
                                                 </span>
-                                                <br />
-                                                E-Mail : <span class="bold">
-                                                    <span t-field="o.company_id.email" />
+                                                <br/>
+                                                E-Mail :
+                                                <span class="bold">
+                                                    <span t-field="o.company_id.email"/>
                                                 </span>
                                             </div>
                                         </div>
                                         <hr
-                                            style="margin:0px; height:1px; border:none; background-color:black; color:black; width:95%;" />
+                                                style="margin:0px; height:1px; border:none; background-color:black; color:black; width:95%;"/>
                                         <div style="font-size: 14px; padding: 5px;line-height: 1.1;">Consignee
-                                            (Ship to) <br />
-                                            <strong>CUSTOMER FROM <span
-                                                    t-field="o.partner_id.state_id.name" />: <span
-                                                    t-field="o.partner_id.country_id.name" />
+                                            (Ship to)
+                                            <br/>
+                                            <strong>CUSTOMER FROM<span
+                                                    t-field="o.partner_id.state_id.name"/>:
+                                                <span
+                                                        t-field="o.partner_id.country_id.name"/>
                                             </strong>
-                                            <br />
-                                            CONSIGNEE AS PER GIVEN ON PURCHASE ORDER <br />
-                                            <br />
-                                            <br />
+                                            <br/>
+                                            CONSIGNEE AS PER GIVEN ON PURCHASE ORDER
+                                            <br/>
+                                            <br/>
+                                            <br/>
                                         </div>
                                         <hr
-                                            style="margin:0px; height:1px; border:none; background-color:black; color:black; width:95%;" />
+                                                style="margin:0px; height:1px; border:none; background-color:black; color:black; width:95%;"/>
                                         <div style="font-size: 14px; padding: 5px;line-height: 1;">Buyer
-                                            (Bill to) <strong>
+                                            (Bill to)
+                                            <strong>
                                                 <div style="padding-top: 5px; margin-bottom: 5px;">
-                                                    <span t-field="o.partner_id.name" />
+                                                    <span t-field="o.partner_id.name"/>
                                                 </div>
                                             </strong>
                                             <div
-                                                style="max-width: 300px;"><span
-                                                    t-field="o.partner_id.street" />, <br />
+                                                    style="max-width: 300px;"><span
+                                                    t-field="o.partner_id.street"/>,
+                                                <br/>
                                                 <span
-                                                    t-field="o.partner_id.street2" />, <span
-                                                    t-field="o.partner_id.country_id.name" />
-                                                <br />State
-                                            Name : <span t-field="o.partner_id.state_id.name" />
+                                                        t-field="o.partner_id.street2"/>,
+                                                <span
+                                                        t-field="o.partner_id.country_id.name"/>
+                                                <br/>State
+                                                Name :
+                                                <span t-field="o.partner_id.state_id.name"/>
                                             </div>
-                                            <br />
-                                            <br />
-                                            <br />
+                                            <br/>
+                                            <br/>
+                                            <br/>
                                         </div>
 
                                     </td>
-                                    <td
-                                        style="width:40%; vertical-align:top; border:1px solid black; padding:0; border-bottom:0px;">
+                                    <td style="width:40%; vertical-align:top; border:1px solid black; padding:0; border-bottom:0px;">
                                         <div style="padding: 0px;line-height: 1.1;">
-                                            <table
-                                                style="border-collapse: collapse; width: 100%; padding: 5px;line-height: 1.1; border-bottom:0px;">
+                                            <table style="border-collapse: collapse; width: 100%; padding: 5px;line-height: 1.1; border-bottom:0px;">
                                                 <tr>
                                                     <td
-                                                        style="padding:3px; border-bottom:1px solid black; border-right:1px solid black; width:50%;">
+                                                            style="padding:3px; border-bottom:1px solid black; border-right:1px solid black; width:50%;">
                                                         <span
-                                                            style="font-size:14px; margin-bottom:5px;">Invoice
-                                                            No.
+                                                                style="font-size:14px; margin-bottom:5px;">Invoice
+                                                            No.:
                                                         </span>
-                                                        <br />
+                                                        <br/>
                                                         <strong>
                                                             <span style="font-size:14px;"
-                                                                t-field="o.name" />
+                                                                  t-field="o.name"/>
                                                         </strong>
                                                     </td>
                                                     <td
-                                                        style="padding:3px; border-bottom:1px solid black;width:50%;">
+                                                            style="padding:3px; border-bottom:1px solid black;width:50%;">
                                                         <span
-                                                            style="font-size:14px;  margin-bottom:5px;">
-                                                            Dated
+                                                                style="font-size:14px;  margin-bottom:5px;">
+                                                            Dated:
                                                         </span>
-                                                        <br />
+                                                        <br/>
                                                         <strong>
                                                             <span t-field="o.invoice_date"
-                                                                t-options='{"format": "d-MMM-y"}' />
+                                                                  t-options='{"format": "d MMM y"}'/>
                                                         </strong>
                                                     </td>
                                                 </tr>
                                                 <tr>
                                                     <td
-                                                        style="padding:3px; border-bottom:1px solid black; border-right:1px solid black; ">
+                                                            style="padding:3px; border-bottom:1px solid black; border-right:1px solid black; ">
 
                                                         <span
-                                                            style="font-size:14px;  margin-bottom:5px;">
+                                                                style="font-size:14px;  margin-bottom:5px;">
                                                             Delivery Note
                                                         </span>
 
-                                                        <br />
+                                                        <br/>
                                                         <strong>
                                                             <span style="font-size:14px;"
-                                                                t-field="o.delivery_note" />
+                                                                  t-field="o.delivery_note"/>
                                                         </strong>
                                                     </td>
                                                     <td
-                                                        style="padding:3px; border-bottom:1px solid black;">
+                                                            style="padding:3px; border-bottom:1px solid black;">
 
-                                                        <span
-                                                            style="font-size:14px; margin-bottom:5px;">Mode/Terms
-                                                            of
-                                                            Payment
+                                                        <span style="font-size:14px; margin-bottom:5px;">Mode/Terms of Payment:
                                                         </span>
-                                                        <br />
+                                                        <br/>
                                                         <strong>
-                                                            <span style="font-size:14px;"
-                                                                t-esc="o.invoice_payment_term_id.name" />
-                                                        </strong>
-                                                    </td>
-                                                </tr>
-                                                <tr>
-                                                    <td
-                                                        style="padding:3px; border-bottom:1px solid black; border-right:1px solid black;">
-                                                        <span
-                                                            style="font-size:14px; margin-bottom:5px;">Reference
-                                                            No. &amp; Date
-                                                        </span>
-                                                        <strong>
-                                                            <span style="font-size:14px;"
-                                                                t-field="o.name" /> dt. <br/><span
-                                                                style="font-size:14px;"
-                                                                t-field="o.invoice_date" t-options='{"format": "dd-MMM-yy"}'/>
-                                                        </strong>
-                                                    </td>
-                                                    <td
-                                                        style="padding:3px; border-bottom:1px solid black;">
-                                                        <span
-                                                            style="font-size:14px; margin-bottom:5px;">Other
-                                                            References
-                                                        </span>
-                                                        <br />
-                                                        <strong>
-                                                            <t t-set="sale_order"
-                                                                t-value="o.invoice_line_ids and o.invoice_line_ids[0].sale_line_ids and o.invoice_line_ids[0].sale_line_ids[0].order_id" />
-                                                            <span style="font-size:14px;"
-                                                                t-if="sale_order"
-                                                                t-field="sale_order.client_order_ref" />
-                                                        </strong>
-                                                    </td>
-                                                </tr>
-                                                <tr>
-                                                    <td
-                                                        style="padding:3px; border-bottom:1px solid black; border-right:1px solid black;">
-                                                        <span
-                                                            style="font-size:14px; margin-bottom:5px;">Buyer's
-                                                            Order No.
-                                                        </span>
-                                                        <br />
-                                                        <strong>
-                                                            <t t-set="sale_order"
-                                                                t-value="o.invoice_line_ids and o.invoice_line_ids[0].sale_line_ids and o.invoice_line_ids[0].sale_line_ids[0].order_id" />
+                                                                                                                    <t t-set="sale_order"
+                                                               t-value="o.invoice_line_ids and o.invoice_line_ids[0].sale_line_ids and o.invoice_line_ids[0].sale_line_ids[0].order_id"/>
                                                             <span t-if="sale_order"
-                                                                t-field="sale_order.name" />
-                                                        </strong>
-                                                    </td>
-                                                    <td
-                                                        style="padding:3px; border-bottom:1px solid black;">
-
-                                                        <span>Dated</span>
-
-                                                        <br />
-                                                        <strong>
-                                                            <t t-set="sale_order"
-                                                                t-value="o.invoice_line_ids and o.invoice_line_ids[0].sale_line_ids and o.invoice_line_ids[0].sale_line_ids[0].order_id" />
-                                                            <span t-if="sale_order"
-                                                                t-field="sale_order.date_order"
-                                                                t-options='{"format": "d-MMM-y"}' />
+                                                                  t-field="sale_order.payment_term_id.name"/>
                                                         </strong>
                                                     </td>
                                                 </tr>
                                                 <tr>
                                                     <td
-                                                        style="padding:3px; border-bottom:1px solid black; border-right:1px solid black;">
+                                                            style="padding:3px; border-bottom:1px solid black; border-right:1px solid black;">
                                                         <span
-                                                            style="font-size:14px; margin-bottom:5px;">Dispatch
-                                                            Doc
+                                                                style="font-size:14px; margin-bottom:5px;">Reference
+                                                            No. &amp; Date:
+                                                        </span>
+                                                        <strong>
+                                                            <span style="font-size:14px;"
+                                                                  t-field="o.name"/>
+                                                            dt.
+                                                            <span
+                                                                    style="font-size:14px;"
+                                                                    t-field="o.invoice_date"/>
+                                                        </strong>
+                                                    </td>
+                                                    <td style="padding:3px; border-bottom:1px solid black;">
+                                                        <span style="font-size:14px; margin-bottom:5px;">Other References </span>
+                                                        <br/>
+                                                        <strong>
+                                                            <span t-field="o.ref"/>
+                                                        </strong>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td
+                                                            style="padding:3px; border-bottom:1px solid black; border-right:1px solid black;">
+                                                        <span
+                                                                style="font-size:14px; margin-bottom:5px;">Buyer's
+                                                            Order No.:
+                                                        </span>
+                                                        <br/>
+                                                        <strong>
+                                                            <t t-set="sale_order"
+                                                               t-value="o.invoice_line_ids and o.invoice_line_ids[0].sale_line_ids and o.invoice_line_ids[0].sale_line_ids[0].order_id"/>
+                                                            <span t-if="sale_order"
+                                                                  t-field="sale_order.name"/>
+                                                        </strong>
+                                                    </td>
+                                                    <td
+                                                            style="padding:3px; border-bottom:1px solid black;">
+
+                                                        <span style="font-size:11px;">Dated:</span>
+
+                                                        <br/>
+                                                        <strong>
+                                                            <t t-set="sale_order"
+                                                               t-value="o.invoice_line_ids and o.invoice_line_ids[0].sale_line_ids and o.invoice_line_ids[0].sale_line_ids[0].order_id"/>
+                                                            <span t-if="sale_order" t-field="sale_order.date_order"
+                                                                  t-options='{"format": "d MMM y"}'/>
+                                                        </strong>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td
+                                                            style="padding:3px; border-bottom:1px solid black; border-right:1px solid black;">
+                                                        <span
+                                                                style="font-size:14px; margin-bottom:5px;">Dispatch Doc
                                                             No.
                                                         </span>
-                                                        <br />
+                                                        <br/>
                                                         <strong>
                                                             <span style="font-size:11px;"
-                                                                t-field="o.despatch_doc_no" />
+                                                                  t-field="o.despatch_doc_no"/>
                                                         </strong>
                                                     </td>
                                                     <td
-                                                        style="padding:3px; border-bottom:1px solid black;">
+                                                            style="padding:3px; border-bottom:1px solid black;">
                                                         <span
-                                                            style="font-size:14px; margin-bottom:5px;">Delivery
+                                                                style="font-size:14px; margin-bottom:5px;">Delivery
                                                             Note
                                                             Date
                                                         </span>
-                                                        <br />
+                                                        <br/>
                                                         <strong>
-                                                            <span t-field="o.delivery_note_date"
-                                                                t-options='{"format": "dd-MMM-yy"}' />
+                                                            <span t-field="o.delivery_note_date" t-options='{"format": "dd MMM yy"}'/>
                                                         </strong>
                                                     </td>
                                                 </tr>
                                                 <tr>
                                                     <td
-                                                        style="padding:3px; border-bottom:1px solid black; border-right:1px solid black;">
+                                                            style="padding:3px; border-bottom:1px solid black; border-right:1px solid black;">
                                                         <span
-                                                            style="font-size:14px; margin-bttom:5px;">Dispatched
+                                                                style="font-size:14px; margin-bttom:5px;">Dispatched
                                                             through
                                                         </span>
-                                                        <br />
+                                                        <br/>
                                                         <strong>
-                                                            <t t-set="sale_order"
-                                                                t-value="o.invoice_line_ids and o.invoice_line_ids[0].sale_line_ids and o.invoice_line_ids[0].sale_line_ids[0].order_id" />
-                                                            <span t-if="sale_order.dispatch_id"
-                                                                t-field="sale_order.dispatch_id" />
+                                                            <t t-set="sale_order" t-value="o.invoice_line_ids and o.invoice_line_ids[0].sale_line_ids and o.invoice_line_ids[0].sale_line_ids[0].order_id"/>
+                                                            <span t-if="sale_order.dispatch_id" t-field="sale_order.dispatch_id"/>
                                                         </strong>
                                                     </td>
                                                     <td
-                                                        style="padding:3px; border-bottom:1px solid black;">
+                                                            style="padding:3px; border-bottom:1px solid black;">
                                                         <span
-                                                            style="font-size:14px; margin-bottom:5px;">
+                                                                style="font-size:14px; margin-bottom:5px;">
                                                             Destination
                                                         </span>
-                                                        <br />
+                                                        <br/>
                                                         <strong>
                                                             <span
-                                                                t-field="o.partner_id.country_id.name" />
+                                                                    t-field="o.partner_id.country_id.name"/>
                                                         </strong>
                                                     </td>
                                                 </tr>
                                                 <tr>
                                                     <td
-                                                        style="padding:3px; border-bottom:1px solid black; border-right:1px solid black;">
+                                                            style="padding:3px; border-bottom:1px solid black; border-right:1px solid black;">
                                                         <span
-                                                            style="font-size:14px; margin-bottom:5px;">Vessel/Flight
-                                                            No.
+                                                                style="font-size:14px; margin-bottom:5px;">Vessel/Flight
+                                                            No.:
                                                         </span>
-                                                        <br />
-                                                        <span t-field="o.vessel_or_flight_no" />
+                                                        <br/>
+                                                        <span t-field="o.vessel_or_flight_no"/>
                                                     </td>
                                                     <td
-                                                        style="padding:3px; border-bottom:1px solid black;">
+                                                            style="padding:3px; border-bottom:1px solid black;">
                                                         <strong>
                                                             <span
-                                                                style="font-size:14px; margin-bottom:5px;">Place
-                                                                of receipt by shipper
+                                                                    style="font-size:14px; margin-bottom:5px;">Place
+                                                                of receipt by shipper:
                                                             </span>
                                                         </strong>
                                                         <strong>
                                                             <span
-                                                                t-field="o.place_of_recipt_by_shipper" />
+                                                                    t-field="o.place_of_recipt_by_shipper"/>
                                                         </strong>
                                                     </td>
                                                 </tr>
                                                 <tr>
                                                     <td
-                                                        style="padding:3px; border-bottom:1px solid black; border-right:1px solid black;">
+                                                            style="padding:3px; border-bottom:1px solid black; border-right:1px solid black;">
                                                         <span
-                                                            style="font-size:14px; margin-bottom:5px;">City/Port
-                                                            of Loading
+                                                                style="font-size:14px; margin-bottom:5px;">City/Port
+                                                            of Loading:
                                                         </span>
-                                                        <br />
+                                                        <br/>
                                                         <strong>
                                                             <span
-                                                                t-field="o.city_and_port_of_loading" />
+                                                                    t-field="o.city_and_port_of_loading"/>
                                                         </strong>
                                                     </td>
                                                     <td
-                                                        style="padding:3px; border-bottom:1px solid black;">
+                                                            style="padding:3px; border-bottom:1px solid black;">
                                                         <span
-                                                            style="font-size:14px; margin-bottom:5px;">City/Port
-                                                            of Discharge
+                                                                style="font-size:14px; margin-bottom:5px;">City/Port
+                                                            of Discharge:
                                                         </span>
-                                                        <br />
+                                                        <br/>
                                                         <strong>
                                                             <span
-                                                                t-field="o.city_and_port_of_discharge" />
+                                                                    t-field="o.city_and_port_of_discharge"/>
                                                         </strong>
                                                     </td>
                                                 </tr>
@@ -346,29 +349,27 @@
                                                     <td colspan="2"
                                                         style="padding:3px; border-bottom:1px solid black;">
                                                         <span
-                                                            style="font-size:14px; margin-bottom:5px;">
+                                                                style="font-size:14px; margin-bottom:5px;">
                                                             Country:
                                                         </span>
                                                         <strong>
-                                                            <span
-                                                                t-field="o.partner_id.country_id.name" />
+                                                            <span t-field="o.partner_id.country_id.name"/>
                                                         </strong>
                                                     </td>
                                                 </tr>
                                                 <tr>
-                                                    <td colspan="2"
-                                                        style="padding:3px; border-bottom:1px solid black; border-bottom:0px;">
-                                                        <span
-                                                            style="font-size:14px; margin-bottom:5px;">Terms
-                                                            of
-                                                            Delivery
-                                                        </span>
-                                                        <br />
+                                                    <td colspan="2" style="padding:3px; border-bottom:1px solid black; border-bottom:0px;">
+                                                        <span style="font-size:14px; margin-bottom:5px;">Terms of Delivery: </span>
+                                                        <br/>
                                                         <strong>
-                                                            <t t-set="sale_order"
-                                                                t-value="o.invoice_line_ids and o.invoice_line_ids[0].sale_line_ids and o.invoice_line_ids[0].sale_line_ids[0].order_id" />
-                                                            <span t-if="sale_order"
-                                                                t-field="sale_order.incoterm" />
+                                                            <span t-field="o.invoice_incoterm_id.code"/>
+                                                            <span t-field="o.invoice_incoterm_id.name"/>
+                                                            <br/>
+                                                            CONTRACT DATE: <span t-field="o.contract_date" t-options='{"format": "dd-MMM-yy"}'/>
+                                                            <br/>
+                                                            CONTRACT NO.: <span t-field="o.contract_number"/>
+                                                            <br/>
+                                                            <span t-field="o.invoice_incoterm_id.description"/>
                                                         </strong>
                                                     </td>
                                                 </tr>
@@ -380,352 +381,331 @@
                                     <td colspan="2"
                                         style="width:50%; vertical-align:top; padding:0; ">
                                         <table
-                                            style="border-collapse: collapse; width: 100%; font-size: 11px; padding: 5px;line-height: 1.1;"
-                                            class="tablewithnobottom_border">
+                                                style="border-collapse: collapse; width: 100%; font-size: 11px; padding: 5px;line-height: 1.1;"
+                                                class="tablewithnobottom_border">
                                             <thead>
                                                 <tr style="text-align: center;">
                                                     <th
-                                                        style="border:1px solid black; border-top:0px; vertical-align: middle; width:3%;">
-                                                        Sl<br />No. </th>
+                                                            style="border:1px solid black; border-top:0px; vertical-align: middle; width:3%;">
+                                                        Sl<br/>No.
+                                                    </th>
                                                     <th
-                                                        style="border:1px solid black; border-top:0px; vertical-align: middle; width:58%;">
+                                                            style="border:1px solid black; border-top:0px; vertical-align: middle; width:58%;">
                                                         Description
                                                         of Goods
                                                     </th>
                                                     <th
-                                                        style="border:1px solid black; border-top:0px; vertical-align: middle; width:9%;">
-                                                        <span
-                                                            style="display:inline-block; padding:3px;">
-                                                            HSN/SAC</span>
+                                                            style="border:1px solid black; border-top:0px; vertical-align: middle; width:9%;">
+                                                        HSN/SAC
                                                     </th>
                                                     <th
-                                                        style="border:1px solid black; border-top:0px; vertical-align: middle; width:10%;">
+                                                            style="border:1px solid black; border-top:0px; vertical-align: middle; width:10%;">
                                                         Quantity
                                                     </th>
                                                     <th
-                                                        style="border:1px solid black; border-top:0px; vertical-align: middle; width:5%;">
+                                                            style="border:1px solid black; border-top:0px; vertical-align: middle; width:5%;">
                                                         Rate
                                                     </th>
                                                     <th
-                                                        style="border:1px solid black; border-top:0px; vertical-align: middle; width:5%;">
+                                                            style="border:1px solid black; border-top:0px; vertical-align: middle; width:5%;">
                                                         per
                                                     </th>
                                                     <th
-                                                        style="border:1px solid black; border-top:0px; vertical-align: middle; width:10%;">
+                                                            style="border:1px solid black; border-top:0px; vertical-align: middle; width:10%;">
                                                         Amount
                                                     </th>
                                                 </tr>
                                             </thead>
                                             <tbody>
                                                 <t
-                                                    t-foreach="enumerate(o.invoice_line_ids, start=1)"
-                                                    t-as="row">
+                                                        t-foreach="enumerate(o.invoice_line_ids, start=1)"
+                                                        t-as="row">
                                                     <tr>
                                                         <td
-                                                            style="border:1px solid black; border-top: none;border-bottom: none; border-bottom: none !important; text-align: center;"
-                                                            class="center sm">
-                                                            <t t-esc="row[0]" />
+                                                                style="border:1px solid black; border-top: none;border-bottom: none; border-bottom: none !important; text-align: center;"
+                                                                class="center sm">
+                                                            <t t-esc="row[0]"/>
                                                         </td>
                                                         <td
-                                                            style="border:1px solid black; border-top: none;border-bottom: none; padding: 5px;"
-                                                            class="sm">
+                                                                style="border:1px solid black; border-top: none;border-bottom: none; padding: 5px;"
+                                                                class="sm">
                                                             <span class="bold"
-                                                                style="font-weight: bold; font-size: 13px padding: 5px;">
-                                                                <span t-field="row[1].name" />
+                                                                  style="font-weight: bold; font-size: 13px padding: 5px;">
+                                                                <span t-field="row[1].name"/>
                                                             </span>
-                                                            <br />
-                                                            <div
-                                                                style="margin-left: 10px;font-style: italic; padding:10px;">
+                                                            <br/>
+                                                            <div style="margin-left: 10px;font-style: italic; padding:10px;">
                                                                 <t t-set="country"
-                                                                    t-value="row[1].product_id.product_tmpl_id.made_country if 'made_country' in row[1].product_id.product_tmpl_id.fields_get() else False" />
-                                                                <span t-if="country">Made in: <span
-                                                                        t-field="country.name" />
+                                                                   t-value="row[1].product_id.product_tmpl_id.made_country if 'made_country' in row[1].product_id.product_tmpl_id.fields_get() else False"/>
+                                                                <span t-if="country">Made in:
+                                                                    <span t-field="country.name"/>
                                                                 </span>
                                                             </div>
                                                         </td>
                                                         <td
-                                                            t-if="'l10n_in_hsn_code' in row[1].product_id._fields and row[1].product_id.l10n_in_hsn_code" style="text-align: center;"
-                                                            class="text-end">
+                                                                t-if="'l10n_in_hsn_code' in row[1].product_id._fields and row[1].product_id.l10n_in_hsn_code"
+                                                                class="text-end">
                                                             <span
-                                                                t-field="row[1].product_id.l10n_in_hsn_code" />
+                                                                    t-field="row[1].product_id.l10n_in_hsn_code"/>
                                                         </td>
                                                         <td t-else="" class="text-end">
                                                             <span></span>
                                                         </td>
                                                         <td
-                                                            style="border:1px solid black; border-top: none;border-bottom: none; text-align: center;"
-                                                            class="right sm">
+                                                                style="border:1px solid black; border-top: none;border-bottom: none; text-align: center;"
+                                                                class="right sm">
                                                             <span
-                                                                t-field="row[1].quantity" /> NOS </td>
-                                                        <td
-                                                            style="border:1px solid black; border-top: none;border-bottom: none; text-align: center;"
-                                                            class="right sm">
-                                                            <span t-field="row[1].price_unit" />
+                                                                    t-field="row[1].quantity"/>
+                                                            NOS
                                                         </td>
                                                         <td
-                                                            style="border:1px solid black; border-top: none;border-bottom: none; text-align: center;"
-                                                            class="center sm">NOS
+                                                                style="border:1px solid black; border-top: none;border-bottom: none; text-align: center;"
+                                                                class="right sm">
+                                                            <span t-field="row[1].price_unit"/>
                                                         </td>
                                                         <td
-                                                            style="border:1px solid black; border-top: none;border-bottom: none; text-align: center;"
-                                                            class="right sm">
-                                                            <span t-field="row[1].price_subtotal" />
+                                                                style="border:1px solid black; border-top: none;border-bottom: none; text-align: center;"
+                                                                class="center sm">NOS
+                                                        </td>
+                                                        <td
+                                                                style="border:1px solid black; border-top: none;border-bottom: none; text-align: center;"
+                                                                class="right sm">
+                                                            <span t-field="row[1].price_subtotal"/>
                                                         </td>
                                                     </tr>
                                                 </t>
                                                 <tr>
                                                     <td
-                                                        style="border:1px solid black; border-top: none;border-bottom: none;"></td>
+                                                            style="border:1px solid black; border-top: none;border-bottom: none;"></td>
                                                     <td
-                                                        style="border:1px solid black; border-top: none;border-bottom: none;"></td>
+                                                            style="border:1px solid black; border-top: none;border-bottom: none;"></td>
                                                     <td
-                                                        style="border:1px solid black; border-top: none;border-bottom: none;"></td>
+                                                            style="border:1px solid black; border-top: none;border-bottom: none;"></td>
                                                     <td
-                                                        style="border:1px solid black; border-top: none;border-bottom: none;"></td>
+                                                            style="border:1px solid black; border-top: none;border-bottom: none;"></td>
                                                     <td
-                                                        style="border:1px solid black; border-top: none;border-bottom: none;"></td>
+                                                            style="border:1px solid black; border-top: none;border-bottom: none;"></td>
                                                     <td
-                                                        style="border:1px solid black; border-top: none;border-bottom: none;"></td>
+                                                            style="border:1px solid black; border-top: none;border-bottom: none;"></td>
                                                     <td
-                                                        style="border:1px solid black; text-align:center; border-top: none;border-bottom: none;"
-                                                        class="right sm">
-                                                        <span t-field="o.amount_untaxed" />
+                                                            style="border:1px solid black; text-align:center; border-top: none;border-bottom: none;"
+                                                            class="right sm">
+                                                        <span t-field="o.amount_untaxed"/>
                                                     </td>
                                                 </tr>
                                                 <tr>
                                                     <td
-                                                        style="border:1px solid black; border-top: none;border-bottom: none; text-align: center;"
-                                                        class="center sm"></td>
+                                                            style="border:1px solid black; border-top: none;border-bottom: none; text-align: center;"
+                                                            class="center sm"></td>
                                                     <td
-                                                        style="border:1px solid black; border-top: none;border-bottom: none; padding: 5px;"
-                                                        class="sm">
-                                                        <p style="font-size: 14px; font-style: italic; font-weight: bold; text-align: right;">
-                                                            OUTPUT
-                                                            <span t-esc="'IGST' if o.invoice_line_ids and o.invoice_line_ids[0].tax_ids and 'IGST' in o.invoice_line_ids[0].tax_ids[0].name.upper() else 'GST'"/>
-                                                            @
-                                                            <span t-esc="o.invoice_line_ids[0].tax_ids[0].amount" t-options="{'widget': 'float', 'precision': 1}"/>
-                                                            %
+                                                            style="border:1px solid black; border-top: none;border-bottom: none; padding: 5px;"
+                                                            class="sm">
+                                                        <p
+                                                                style="font-size: 14px; font-style: italic; font-weight: bold; text-align: right;">
+                                                            OUTPUT IGST @18%
                                                         </p>
                                                     </td>
                                                     <td
-                                                        style="border:1px solid black; border-top: none;border-bottom: none; text-align: center;"
-                                                        class="center sm"></td>
+                                                            style="border:1px solid black; border-top: none;border-bottom: none; text-align: center;"
+                                                            class="center sm"></td>
                                                     <td
-                                                        style="border:1px solid black; border-top: none;border-bottom: none; text-align: center;"
-                                                        class="right sm"></td>
+                                                            style="border:1px solid black; border-top: none;border-bottom: none; text-align: center;"
+                                                            class="right sm"></td>
                                                     <td
-                                                        style="border:1px solid black; border-top: none;border-bottom: none; text-align: center;"
-                                                        class="right sm">
+                                                            style="border:1px solid black; border-top: none;border-bottom: none; text-align: right;"
+                                                            class="right sm">
                                                         <t
-                                                            t-if="o.invoice_line_ids and o.invoice_line_ids[0].tax_ids">
+                                                                t-if="o.invoice_line_ids and o.invoice_line_ids[0].tax_ids">
                                                             <t t-set="tax_percent"
-                                                                t-value="o.invoice_line_ids[0].tax_ids[0].amount" />
-                                                            <span>
-                                                                <t t-esc="tax_percent" />
+                                                               t-value="o.invoice_line_ids[0].tax_ids[0].amount"/>
+                                                            <span><t t-esc="tax_percent"/>%
                                                             </span>
                                                         </t>
                                                         <t t-else="">
                                                         </t>
                                                     </td>
                                                     <td
-                                                        style="border:1px solid black; border-top: none;border-bottom: none; text-align: center;"
-                                                        class="center sm">%
+                                                            style="border:1px solid black; border-top: none;border-bottom: none; text-align: center;"
+                                                            class="center sm">%
                                                     </td>
                                                     <td
-                                                        style="border:1px solid black; border-top: none;border-bottom: none; text-align: center;"
-                                                        class="right sm">
-                                                        <span t-field="o.amount_tax" />
+                                                            style="border:1px solid black; border-top: none;border-bottom: none; text-align: center;"
+                                                            class="right sm">
+                                                        <span t-field="o.amount_tax"/>
                                                     </td>
                                                 </tr>
                                                 <tr>
                                                     <td
-                                                        style="border:1px solid black; text-align: center;"
+                                                            style="border:1px solid black; text-align: center;"
+                                                            class="center sm"></td>
+                                                    <td style="border:1px solid black;"
                                                         class="center sm"></td>
-                                                    <td style="border:1px solid black; text-align:right; padding-right:10px;" class="center sm">Total</td>
                                                     <td style="border:1px solid black;"
                                                         class="center sm"></td>
                                                     <td
-                                                        style="border:1px solid black; text-align: center; font-weight: bold;"
-                                                        class="right sm">
+                                                            style="border:1px solid black; text-align: center; font-weight: bold;"
+                                                            class="right sm">
                                                         <span
-                                                            t-esc="'%0.0f' % sum(line.quantity for line in o.invoice_line_ids)" />
-                                                        NOS </td>
+                                                                t-esc="'%0.0f' % sum(line.quantity for line in o.invoice_line_ids)"/>
+                                                        NOS
+                                                    </td>
                                                     <td
-                                                        style="border:1px solid black; text-align: center;"
-                                                        class="right sm"></td>
+                                                            style="border:1px solid black; text-align: center;"
+                                                            class="right sm"></td>
                                                     <td
-                                                        style="border:1px solid black; text-align: center;"
-                                                        class="center sm"></td>
+                                                            style="border:1px solid black; text-align: center;"
+                                                            class="center sm"></td>
                                                     <td
-                                                        style="border:1px solid black; text-align: center;"
-                                                        class="right sm">
-                                                        <span t-field="o.amount_total" />
+                                                            style="border:1px solid black; text-align: center;"
+                                                            class="right sm">
+                                                        <span t-field="o.amount_total"/>
                                                     </td>
                                                 </tr>
                                                 <tr>
                                                     <td
-                                                        style="border:1px solid black; vertical-align: middle; border-right:0px; padding:3px;"
-                                                        class="right sm" colspan="6">Amount
-                                                        Chargeable (in words) <p
-                                                            style="margin: 0px;  font-weight: bold; font-size: 13px">
+                                                            style="border:1px solid black; vertical-align: middle; border-right:0px; padding:3px;"
+                                                            class="right sm" colspan="6">Amount Chargeable (in words)
+                                                        <p
+                                                                style="margin: 0px;  font-weight: bold; font-size: 13px">
                                                             <span
-                                                                t-esc="o.currency_id.amount_to_text(o.amount_total) + ' only'" />
+                                                                    t-esc="o.currency_id.amount_to_text(o.amount_total) + ' only'"/>
                                                         </p>
                                                     </td>
                                                     <td
-                                                        style="border:1px solid black;vertical-align: baseline;text-align: center; border-left:0px;"
-                                                        class="center sm">E. &amp; O.E
+                                                            style="border:1px solid black;vertical-align: baseline;text-align: center; border-left:0px;"
+                                                            class="center sm">E. &amp; O.E
                                                     </td>
                                                 </tr>
                                                 <tr>
                                                     <td
-                                                        style="border:1px solid black; text-align: center; vertical-align: middle; border-bottom: 0px;"
-                                                        class="center sm" colspan="3">
-                                                        <span
-                                                            style="display:inline-block; padding:3px;">
-                                                            HSN/SAC</span>
+                                                            style="border:1px solid black; text-align: center; vertical-align: middle; border-bottom: 0px;"
+                                                            class="center sm" colspan="3">HSN/SAC
                                                     </td>
                                                     <td
-                                                        style="border:1px solid black; text-align: center; border-bottom: 0px; vertical-align: bottom;"
-                                                        class="right sm">Taxable
+                                                            style="border:1px solid black; text-align: center; border-bottom: 0px;"
+                                                            class="right sm">Taxable
                                                     </td>
                                                     <td
-                                                        style="border:1px solid black; text-align: center;"
-                                                        colspan="2" class="center sm">IGST
+                                                            style="border:1px solid black; text-align: center;"
+                                                            colspan="2" class="center sm">IGST
                                                     </td>
                                                     <td
-                                                        style="border:1px solid black; text-align: center; border-bottom: 0px; vertical-align: bottom;"
-                                                        class="right sm">Total
+                                                            style="border:1px solid black; text-align: center; border-bottom: 0px;"
+                                                            class="right sm">Total
                                                     </td>
                                                 </tr>
                                                 <tr>
                                                     <td
-                                                        style="border:1px solid black; text-align: center; border-top:0px;"
-                                                        class="center sm" colspan="3"></td>
+                                                            style="border:1px solid black; text-align: center;"
+                                                            class="center sm" colspan="3"></td>
                                                     <td
-                                                        style="border:1px solid black; text-align: center; border-top: 0px;"
-                                                        class="right sm">Value
+                                                            style="border:1px solid black; text-align: center; border-top: 0px;"
+                                                            class="right sm">Value
                                                     </td>
-                                                    <td style="padding:0; border:1px solid"
-                                                        colspan="2">
+                                                    <td style="padding:0; border:1px solid" colspan="2">
                                                         <table
-                                                            style="border-collapse: collapse; width: 100%; font-size: 10px; table-layout: fixed;">
+                                                                style="border-collapse: collapse; width: 100%; font-size: 10px;">
                                                             <tr>
                                                                 <td
-                                                                    style="border:1px solid black;text-align: center;border-bottom:0px; border-top: 0px;border-left: 0px; width:30px; min-width:30px; max-width:30px;">
-                                                                    <span
-                                                                        style="display:inline-block; padding:3px;">
-                                                                        Rate</span>
+                                                                        style="border:1px solid black;text-align: center;border-bottom:0px; border-top: 0px;border-left: 0px; width:50%;">
+                                                                    Rate
                                                                 </td>
                                                                 <td
-                                                                    style="border:1px solid black;text-align: center;border-top: 0px;border-right: 0px;border-bottom:0px;">
-                                                                    <span
-                                                                        style="display:inline-block; padding:3px;">
-                                                                        Amount</span>
+                                                                        style="border:1px solid black;text-align: center;border-top: 0px;border-right: 0px;border-bottom:0px; width:50%;">
+                                                                    Amount
                                                                 </td>
                                                             </tr>
                                                         </table>
                                                     </td>
                                                     <td
-                                                        style="border:1px solid black; text-align: center; border-top: 0px;"
-                                                        class="right sm">Tax Amount
+                                                            style="border:1px solid black; text-align: center; border-top: 0px;"
+                                                            class="right sm">Tax Amount
                                                     </td>
                                                 </tr>
                                                 <t
-                                                    t-foreach="enumerate(o.invoice_line_ids, start=1)"
-                                                    t-as="row">
+                                                        t-foreach="enumerate(o.invoice_line_ids, start=1)"
+                                                        t-as="row">
                                                     <tr>
                                                         <td
-                                                            t-if="'l10n_in_hsn_code' in row[1].product_id._fields and row[1].product_id.l10n_in_hsn_code"
-                                                            style="border:1px solid black; text-align: left;"
-                                                            class="center sm" colspan="3">
+                                                                t-if="'l10n_in_hsn_code' in row[1].product_id._fields and row[1].product_id.l10n_in_hsn_code"
+                                                                style="border:1px solid black; text-align: left;"
+                                                                class="center sm" colspan="3">
                                                             <span
-                                                                style="display:inline-block; padding:3px;"
-                                                                t-field="row[1].product_id.l10n_in_hsn_code" />
+                                                                    t-field="row[1].product_id.l10n_in_hsn_code"/>
                                                         </td>
                                                         <td t-else=""
                                                             style="border:1px solid black; text-align: left;"
                                                             class="center sm" colspan="3"></td>
                                                         <td
-                                                            style="border:1px solid black; text-align:center; border-top: none;border-bottom: none;"
-                                                            class="right sm">
-                                                            <span
-                                                                style="display:inline-block; padding:3px;"
-                                                                t-field="row[1].price_subtotal"
-                                                                t-options='{"widget": "monetary"}' />
+                                                                style="border:1px solid black; text-align:center; border-top: none;border-bottom: none;"
+                                                                class="right sm">
+                                                            <span t-field="row[1].price_subtotal"
+                                                                  t-options='{"widget": "monetary"}'/>
                                                         </td>
                                                         <td style="padding:0;" colspan="2">
                                                             <table
-                                                                style="border-collapse: collapse; width: 100%; font-size: 10px;  table-layout: fixed;">
+                                                                    style="border-collapse: collapse; width: 100%; font-size: 11px;">
                                                                 <tr>
                                                                     <td
-                                                                        style="border:1px solid black; padding:3px;text-align: center; border-bottom:0px; border-top: 0px; border-left: 0px; min-width:30px; width:30px; max-width:30px;">
-                                                                        <span t-if="row[1].tax_ids"
-                                                                            t-esc="row[1].tax_ids[0].amount"></span>
-                                                                        % </td>
-
-                                                                    <td
-                                                                        style="border:1px solid black;text-align: center; border-bottom:0px; border-top: 0px;border-right: 0px;">
+                                                                            style="border:1px solid black;text-align: center;border-top: 0px;border-left: 0px; width:50%;">
                                                                         <span
-                                                                            style="display:inline-block; padding:3px;"
-                                                                            t-esc="row[1].price_total - row[1].price_subtotal"
-                                                                            t-options='{"widget": "monetary", "display_currency": o.currency_id}' />
+                                                                                t-if="row[1].tax_ids"
+                                                                                t-esc="row[1].tax_ids[0].amount"/>
+                                                                        %
+                                                                    </td>
+                                                                    <td
+                                                                            style="border:1px solid black;text-align: center;border-top: 0px;border-right: 0px; width:50%;">
+                                                                        <span
+                                                                                t-esc="row[1].price_total - row[1].price_subtotal"
+                                                                                t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
                                                                     </td>
                                                                 </tr>
                                                             </table>
                                                         </td>
                                                         <td
-                                                            style="border:1px solid black; text-align: center; border-bottom: 0px;"
-                                                            class="right sm">
+                                                                style="border:1px solid black; text-align: center; border-bottom: 0px;"
+                                                                class="right sm">
                                                             <span
-                                                                t-esc="row[1].price_total - row[1].price_subtotal"
-                                                                t-options='{"widget": "monetary", "display_currency": o.currency_id}' />
+                                                                    t-esc="row[1].price_total - row[1].price_subtotal"
+                                                                    t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
                                                         </td>
                                                     </tr>
                                                 </t>
                                                 <tr>
                                                     <td
-                                                        style="border:1px solid black; text-align: right; vertical-align: middle;padding-right: 5px;"
-                                                        class="center sm" colspan="3">
-                                                        <span
-                                                            style="display:inline-block; padding:3px;">
-                                                            <strong>Total</strong>
-                                                        </span>
+                                                            style="border:1px solid black; text-align: right; vertical-align: middle;padding-right: 5px;"
+                                                            class="center sm" colspan="3">
+                                                        <strong>Total</strong>
                                                     </td>
                                                     <td
-                                                        style="border:1px solid black; text-align: center;"
-                                                        class="right sm">
+                                                            style="border:1px solid black; text-align: center;"
+                                                            class="right sm">
                                                         <strong>
-                                                            <span
-                                                                style="display:inline-block; padding:3px;"
-                                                                t-field="o.amount_untaxed" />
+                                                            <span t-field="o.amount_untaxed"/>
                                                         </strong>
                                                     </td>
-                                                    <td
-                                                        style="padding:0;border-top:1px solid black; border-bottom:1px solid black;"
+                                                    <td style="padding:0;border:1px solid black; border-top:0px;"
                                                         colspan="2">
                                                         <table
-                                                            style="border-collapse: collapse; width: 100%; font-size: 10px;  table-layout: fixed;">
+                                                                style="border-collapse: collapse; width: 100%; font-size: 11px;">
                                                             <tr>
                                                                 <td
-                                                                    style="border:1px solid black; padding:3px;text-align: center; border-top: 0px; border-left: 0px;  min-width:30px; width:30px; max-width:30px; border-bottom:0px;">
-
+                                                                        style="border:0px solid black;text-align:center;width:50%;">
                                                                 </td>
-
                                                                 <td
-                                                                    style="border:1px solid black;text-align: center;border-top: 0px;border-right: 0px;border-bottom:0px;">
-                                                                    <span
-                                                                        style="display:inline-block; padding:3px; font-weight: bold;"
-                                                                        t-field="o.amount_tax" />
+                                                                        style="border:1px solid black; border-bottom:0px; text-align: border-top:0px; center;border-top: 0px;border-right: 0px;">
+                                                                    <strong>
+                                                                        <span t-field="o.amount_tax"/>
+                                                                    </strong>
                                                                 </td>
                                                             </tr>
                                                         </table>
                                                     </td>
                                                     <td
-                                                        style="border:1px solid black; text-align: center; width:50%;"
-                                                        class="right sm">
+                                                            style="border:1px solid black; text-align: center; border-top: 0px; width:50%;"
+                                                            class="right sm">
                                                         <strong>
-                                                            <span t-field="o.amount_tax" />
+                                                            <span t-field="o.amount_tax"/>
                                                         </strong>
                                                     </td>
                                                 </tr>
@@ -734,7 +714,7 @@
                                             </tbody>
                                         </table>
                                         <table
-                                            style="border-collapse: collapse; width: 100%; font-size: 13px;">
+                                                style="border-collapse: collapse; width: 100%; font-size: 13px;">
                                             <tr>
                                                 <td colspan="2"
                                                     style="border-left: 1px solid black; border-right:1px solid black;">
@@ -744,181 +724,153 @@
                                                         </span>
                                                         <strong>
                                                             <span
-                                                                style="font-weight:bold;">
+                                                                    style="font-weight:bold;">
                                                                 <p
-                                                                    style="margin: 0px;  font-weight: bold; font-size: 13px; display: inline-block;">
+                                                                        style="margin: 0px;  font-weight: bold; font-size: 13px; display: inline-block;">
                                                                     <spans
-                                                                        t-esc="o.currency_id.amount_to_text(o.amount_tax) + ' only'" />
+                                                                            t-esc="o.currency_id.amount_to_text(o.amount_tax) + ' only'"/>
                                                                 </p>
                                                             </span>
                                                         </strong>
-                                                        <br />
-                                                        <br />
+                                                        <br/>
+                                                        <br/>
                                                     </div>
                                                 </td>
                                             </tr>
                                             <tr>
-                                                <td
-                                                    style="border: 1px solid black;border-top:0px; border-right:0px; vertical-align: top; padding: 5px; width: 50%;">
+                                                <td style="border: 1px solid black;border-top:0px; border-right:0px; vertical-align: top; padding: 5px; width: 50%;">
                                                     <div style="font-size: 13px line-height: 1;">
-                                                        <div
-                                                            style="text-align:left; font-style:italic; font-family:sans-serif; font-size:14px;">
-                                                            <b>Terms and Conditions</b>
-                                                        </div>
-                                                        <ol
-                                                            style="margin:5px; padding-left:20px; font-family:sans-serif; font-size:14px;">
-                                                            <li><b>Payment &amp; Delivery Terms –</b>
-                                                                100% advance required before release
-                                                                of goods. Payments must be made only
-                                                                to the bank account mentioned on the
-                                                                invoice, in the same currency as the
-                                                                invoice. No credit extended.</li>
-                                                            <li><b>Risk Transfer –</b> Risk passes
-                                                                to buyer once goods are handed to
-                                                                buyer/logistics partner.</li>
-                                                            <li><b>No Returns Policy–</b> Goods once
-                                                                sold are not returnable. However, if
-                                                                transit damages or shortages are
-                                                                attributable to Bora Multicorp or
-                                                                its appointed logistics partner,
-                                                                claims will be accepted and settled
-                                                                through replacement or debit/credit
-                                                                note adjustment.</li>
-                                                            <li><b>Warranty –</b> Manufacturer’s
-                                                                warranty applies where available.
-                                                                Company provides no additional
-                                                                warranty.</li>
-                                                            <li><b>Compliance –</b> Invoice is
-                                                                subject to GST and other statutory
-                                                                requirements.</li>
+                                                        <div style="text-align:left; font-style:italic; font-family:sans-serif; font-size:14px;"><b>Terms and Conditions</b></div>
+                                                        <ol style="margin:5px; padding-left:20px; font-family:sans-serif; font-size:14px;">
+                                                            <li><b>Payment &amp; Delivery Terms –</b> 100% advance required before release of goods. Payments must be made only to the bank account mentioned on the invoice, in the same currency as the invoice. No credit extended.</li>
+                                                            <li><b>Risk Transfer –</b> Risk passes to buyer once goods are handed to buyer/logistics partner.</li>
+                                                            <li><b>No Returns Policy–</b> Goods once sold are not returnable. However, if transit damages or shortages are attributable to Bora Multicorp or its appointed logistics partner, claims will be accepted and settled through replacement or debit/credit note adjustment.</li>
+                                                            <li><b>Warranty –</b> Manufacturer’s warranty applies where available. Company provides no additional warranty.</li>
+                                                            <li><b>Compliance –</b> Invoice is subject to GST and other statutory requirements.</li>
                                                         </ol>
                                                     </div>
                                                 </td>
 
-                                                <td
-                                                    style="border: 1px solid black; border-top:0px; border-left:0px; width: 50%; position: relative; min-height: 200px;">
-
-                                                    <!-- Your main content can go here -->
-
-                                                    <div
-                                                        style="position: absolute; bottom: 0; left: 0; right: 0; font-size: 11px; line-height: 1.3;">
-                                                        <span>Company's Bank Details</span><br />
-                                                        Bank Name : <t t-if="o.partner_bank_id">
+                                                <td style="border: 1px solid black; border-top:0px;border-left:0px; top;width: 50%;">
+                                                    <br/>
+                                                    <br/>
+                                                    <br/>
+                                                    <br/>
+                                                    <br/>
+                                                    <br/>
+                                                    <br/>
+                                                    <br/>
+                                                    <br/>
+                                                    <div style="font-size: 11px; line-height: 1;">
+                                                        <span>Company's Bank Details</span>
+                                                        <br/>
+                                                        Bank Name :
+                                                        <t t-if="o.partner_bank_id">
                                                             <strong>
-                                                                <span
-                                                                    t-field="o.partner_bank_id.bank_id.name" />
+                                                                <span t-field="o.partner_bank_id.bank_id.name"/>
                                                             </strong>
                                                         </t>
-        <t
-                                                            t-else="">
-                                                            <t
-                                                                t-if="o.company_id.partner_id.bank_ids">
-                                                                <t
-                                                                    t-if="o.company_id.partner_id.bank_ids[0].bank_id">
+                                                        <t t-else="">
+                                                            <t t-if="o.company_id.partner_id.bank_ids">
+                                                                <t t-if="o.company_id.partner_id.bank_ids[0].bank_id">
                                                                     <strong>
-                                                                        <span
-                                                                            t-field="o.company_id.partner_id.bank_ids[0].bank_id.name" />
+                                                                        <span t-field="o.company_id.partner_id.bank_ids[0].bank_id.name"/>
                                                                     </strong>
                                                                 </t>
                                                             </t>
                                                         </t>
-        <br />
-                                                        A/c No. : <t t-if="o.partner_bank_id">
+                                                        <br/>
+                                                        A/c No. :
+                                                        <t t-if="o.partner_bank_id">
                                                             <strong>
-                                                                <span
-                                                                    t-field="o.partner_bank_id.acc_number" />
+                                                                <span t-field="o.partner_bank_id.acc_number"/>
                                                             </strong>
                                                         </t>
-        <t
-                                                            t-else="">
-                                                            <t
-                                                                t-if="o.company_id.partner_id.bank_ids">
-                                                                <t
-                                                                    t-if="o.company_id.partner_id.bank_ids[0].acc_number">
+                                                        <t t-else="">
+                                                            <t t-if="o.company_id.partner_id.bank_ids">
+                                                                <t t-if="o.company_id.partner_id.bank_ids[0].acc_number">
                                                                     <strong>
-                                                                        <span
-                                                                            t-field="o.company_id.partner_id.bank_ids[0].acc_number" />
+                                                                        <span t-field="o.company_id.partner_id.bank_ids[0].acc_number"/>
                                                                     </strong>
                                                                 </t>
                                                             </t>
                                                         </t>
-        <br />
-                                                        Branch and IFSC code : <t
-                                                            t-if="o.partner_bank_id">
+                                                        <br/>
+                                                        Branch and IFSC code :
+                                                        <t t-if="o.partner_bank_id">
                                                             <strong>
-                                                                <span
-                                                                    t-field="o.partner_bank_id.branch" />
-                                                                <span
-                                                                    t-field="o.partner_bank_id.ifsc_code" />
+                                                                    <span t-field="o.partner_bank_id.branch"/>
+                                                                    &amp;
+                                                                    <span t-field="o.partner_bank_id.ifsc_code"/>
                                                             </strong>
                                                         </t>
-        <t
-                                                            t-else="">
-                                                            <t
-                                                                t-if="o.company_id.partner_id.bank_ids">
-                                                                <t
-                                                                    t-if="o.company_id.partner_id.bank_ids[0].acc_number">
+                                                        <t t-else="">
+                                                            <t t-if="o.company_id.partner_id.bank_ids">
+                                                                <t t-if="o.company_id.partner_id.bank_ids[0].acc_number">
                                                                     <strong>
-                                                                        <span
-                                                                            t-field="o.company_id.partner_id.bank_ids[0].acc_number" />
-                                                        &amp; <span
-                                                                            t-field="o.company_id.partner_id.bank_ids[0].acc_number" />
+                                                                        <span t-field="o.company_id.partner_id.bank_ids[0].acc_number"/>
+                                                                        &amp;
+                                                                        <span t-field="o.company_id.partner_id.bank_ids[0].ifsc_code"/>
                                                                     </strong>
                                                                 </t>
                                                             </t>
                                                         </t>
-        <br />
-                                                        SWIFT code : <t t-if="o.partner_bank_id">
+                                                        <br/>
+                                                        SWIFT code :
+                                                        <t t-if="o.partner_bank_id">
                                                             <strong>
-                                                                <span
-                                                                    t-field="o.partner_bank_id.bank_id.bic" />
-                                                            </strong>
+                                                                <span t-field="o.partner_bank_id.bank_id.bic"/>                                                             </strong>
                                                         </t>
-        <t
-                                                            t-else="">
-                                                            <t
-                                                                t-if="o.company_id.partner_id.bank_ids">
-                                                                <t
-                                                                    t-if="o.company_id.partner_id.bank_ids[0].acc_number">
+                                                        <t t-else="">
+                                                            <t t-if="o.company_id.partner_id.bank_ids">
+                                                                <t t-if="o.company_id.partner_id.bank_ids[0].acc_number">
                                                                     <strong>
-                                                                        <span
-                                                                            t-field="o.company_id.partner_id.bank_ids[0].bank_id.bic" />
+                                                                        <span t-field="o.company_id.partner_id.bank_ids[0].bank_id.bic"/>
                                                                     </strong>
                                                                 </t>
                                                             </t>
                                                         </t>
-        <br />
-
-        <table
-                                                            style="width:100%; border-collapse:collapse; margin-bottom:0; font-family:sans-serif; margin-top:10px;">
-                                                            <tr>
-                                                                <td colspan="2"
-                                                                    style="text-align:right; border:1px solid black; border-bottom:0px; border-right:0px;">
-                                                                    <div
-                                                                        style="font-weight:bold; text-align:right; padding-right:3px;">
-                                                        for <span t-field="o.company_id.name" />
-                                                                    </div>
-                                                                    <br />
-                                                                    <br />
-                                                                    <div
-                                                                        style="text-align:right; padding-right:3px; font-size:12px;">
-                                                        Authorised Signatorys
-                                                                    </div>
-                                                                </td>
-                                                            </tr>
-                                                        </table>
+                                                        <br/>
+                                                        Company's PAN/IEC Code:
+                                                        <t t-if="o.company_id.l10n_in_pan">
+                                                            <strong>
+                                                                <span t-field="o.company_id.l10n_in_pan"/>
+                                                            </strong>
+                                                        </t>
                                                     </div>
+                                                    <table style="width:100%; border-collapse:collapse; margin-bottom:0; font-family:sans-serif; margin-top:10px;">
+                                                        <tr>
+                                                            <td colspan="2"
+                                                                style="text-align:right;border:1px solid black; border-bottom:0px; border-right:0px;">
 
+                                                                <div
+                                                                        style="font-weight:bold; text-align:right; padding-right:3px;">
+                                                                    for
+                                                                    <span
+                                                                            t-field="o.company_id.name"/>
+                                                                </div>
+                                                                <br/>
+                                                                <br/>
+                                                                <div
+                                                                        style="text-align:right; padding-right:3px; font-size:12px;">
+                                                                    Authorised Signatorys
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+
+                                                    </table>
                                                 </td>
-
                                             </tr>
                                         </table>
                                     </td>
                                 </tr>
                             </table>
                             <div style="width:100%; text-align:center; margin-top:5px;">
-                                <p style="font-size:12px; font-weight:400;">SUBJECT TO PUNE
-                                    JURISDICTION <br /> This is a computer generated invoice </p>
+                                <p style="font-size:12px; font-weight:400;">SUBJECT TO PUNE JURISDICTION
+                                    <br/>
+                                    This is a computer
+                                    generated invoice
+                                </p>
                             </div>
                         </div>
                     </t>
@@ -926,48 +878,49 @@
                     <t t-else="">
                         <div class="page">
                             <t t-set="sale_order"
-                                t-value="o.invoice_line_ids and o.invoice_line_ids[0].sale_line_ids and o.invoice_line_ids[0].sale_line_ids[0].order_id or False" />
+                               t-value="o.invoice_line_ids and o.invoice_line_ids[0].sale_line_ids and o.invoice_line_ids[0].sale_line_ids[0].order_id or False"/>
                             <p
-                                style="text-align:center; font-size:18px; font-weight:bold; margin-bottom:1px; margin-top:0;">
+                                    style="text-align:center; font-size:18px; font-weight:bold; margin-bottom:1px; margin-top:0;">
                                 <strong>Commercial Invoice</strong>
                             </p>
 
                             <table
-                                style="width:100%; border-collapse:collapse; margin-bottom:0; font-family:sans-serif;">
+                                    style="width:100%; border-collapse:collapse; margin-bottom:0; font-family:sans-serif;">
                                 <tr>
-                                    <td
-                                        style="width:55%; vertical-align:top; border:1px solid black; padding:0;">
+                                    <td style="width:55%; vertical-align:top; border:1px solid black; padding:0;">
                                         <div style="padding:5px; border-bottom:1px solid black;">
                                             <div style="font-weight: bold; line-height:1;">
-                                                <span t-field="o.company_id.partner_id.name" />
+                                                <span t-field="o.company_id.partner_id.name"/>
                                             </div>
-                                            <div>
-                                                <span t-if="o.company_id.partner_id.street">
-                                                    <span t-esc="o.company_id.partner_id.street" />
-                                                </span>
-                                                <t
+                                        <div>
+                                            <span t-if="o.company_id.partner_id.street">
+                                                <span t-esc="o.company_id.partner_id.street"/>
+                                            </span>
+                                            <t
                                                     t-if="o.company_id.partner_id.street2">
-                                                    <span t-esc="o.company_id.partner_id.street2" />
-                                                </t>
-                                                <t
+                                                <span t-esc="o.company_id.partner_id.street2"/>
+                                            </t>
+                                            <t
                                                     t-if="o.company_id.partner_id.country_id">
-                                                    <span
-                                                        t-esc="o.company_id.partner_id.country_id.name" />
-                                                </t>
-
-                                            </div>
-                                            <t t-if="o.partner_id.state_id.name">Emirate: <span
-                                                    t-field="o.partner_id.state_id.name" />
+                                                <span t-esc="o.company_id.partner_id.country_id.name"/>
                                             </t>
 
-                                            <div>TRN: <span
-                                                    t-field="o.company_id.vat" />
+                                        </div>
+                                            <t t-if="o.company_id.state_id">Emirate:
+                                                <span t-field="o.company_id.state_id.name"/>
+                                            </t>
+
+                                            <div>TRN:
+                                                <span
+                                                        t-field="o.company_id.vat"/>
                                             </div>
-                                            <div> E-Mail : <span t-field="o.company_id.email" />
-                                            </div>
+                                                <div>
+                                                    E-Mail :
+                                                    <span t-field="o.company_id.email"/>
+                                                </div>
                                         </div>
                                         <div
-                                            style="padding:5px; padding-top:0px; border-bottom:1px solid black;">
+                                                style="padding:5px; padding-top:0px; border-bottom:1px solid black;">
                                             <div>
                                                 Consignee
                                             </div>
@@ -977,48 +930,48 @@
                                                 </span>
                                             </div>
                                             <div>D-15, Dubai Airport Freezone, Dubai, U.A.E.</div>
-                                            <br />
-                                            <br />
-                                            <br />
+                                            <br/>
+                                            <br/>
+                                            <br/>
                                         </div>
                                         <div style="padding:5px;">
                                             <div>
                                                 <div>Buyer</div>
                                                 <strong>
-                                                    <span t-field="o.partner_id.name" />
+                                                    <span t-field="o.partner_id.name"/>
                                                 </strong>
                                             </div>
                                             <div>
-                                                <span t-field="o.partner_id.street" />
-                                                <t t-if="o.partner_id.street2">, <span
-                                                        t-field="o.partner_id.street2" />
+                                                <span t-field="o.partner_id.street"/>
+                                                <t t-if="o.partner_id.street2">,
+                                                    <span t-field="o.partner_id.street2"/>
                                                 </t>
-                                                <t t-if="o.partner_id.city">, <span
-                                                        t-field="o.partner_id.city" />
+                                                <t t-if="o.partner_id.city">,
+                                                    <span t-field="o.partner_id.city"/>
                                                 </t>
-                                                <t t-if="o.partner_id.state_id">, <span
-                                                        t-field="o.partner_id.state_id.name" />
+                                                <t t-if="o.partner_id.state_id">,
+                                                    <span t-field="o.partner_id.state_id.name"/>
                                                 </t>
-                                                <t t-if="o.partner_id.country_id">, <span
-                                                        t-field="o.partner_id.country_id.name" />
+                                                <t t-if="o.partner_id.country_id">,
+                                                    <span t-field="o.partner_id.country_id.name"/>
                                                 </t>
                                             </div>
                                         </div>
                                         <div>
                                             <table
-                                                style="width:100%; border-collapse: collapse; line-height: 1">
+                                                    style="width:100%; border-collapse: collapse; line-height: 1">
                                                 <tr>
                                                     <td class="title"
                                                         style="padding:4px; width:30%;">Emirate
                                                     </td>
                                                     <td class="tit_value" style="padding:4px;">
-                                                        <span t-field="o.partner_id.state_id.name" />
+                                                        <span t-field="o.partner_id.state_id.name"/>
                                                     </td>
                                                 </tr>
                                                 <tr>
                                                     <td class="title" style="padding:4px;">Country</td>
                                                     <td class="tit_value" style="padding:4px;">
-                                                        <span t-field="o.partner_id.country_id.name" />
+                                                        <span t-field="o.partner_id.country_id.name"/>
                                                     </td>
                                                 </tr>
                                             </table>
@@ -1026,11 +979,11 @@
                                     </td>
 
                                     <td
-                                        style="width:45%; vertical-align:top; border:1px solid black; padding:0;">
+                                            style="width:45%; vertical-align:top; border:1px solid black; padding:0;">
                                         <table style="width:100%; border-collapse:collapse;">
                                             <tr>
                                                 <td
-                                                    style="padding:5px; border-bottom:1px solid black; border-right:1px solid black;">
+                                                        style="padding:5px; border-bottom:1px solid black; border-right:1px solid black;">
                                                     <div>
                                                         <span style="font-size:14px !important;">Invoice
                                                             No.:
@@ -1039,12 +992,12 @@
                                                     <div>
                                                         <strong>
                                                             <span
-                                                                t-esc="sale_order and sale_order.voucher_no or ''" />
+                                                                    t-esc="sale_order and sale_order.voucher_no or ''"/>
                                                         </strong>
                                                     </div>
                                                 </td>
                                                 <td
-                                                    style="padding:5px; border-bottom:1px solid black;">
+                                                        style="padding:5px; border-bottom:1px solid black;">
                                                     <div>
                                                         <span style="font-size:14px !important;">
                                                             Dated
@@ -1052,15 +1005,14 @@
                                                     </div>
                                                     <div>
                                                         <strong>
-                                                            <span t-field="o.invoice_date"
-                                                                t-options='{"format": "dd-MMM-yy"}' />
+                                                            <span t-field="o.invoice_date" t-options='{"format": "dd-MMM-yy"}'/>
                                                         </strong>
                                                     </div>
                                                 </td>
                                             </tr>
                                             <tr>
                                                 <td
-                                                    style="padding:5px; border-right:1px solid black; border-bottom:1px solid black;">
+                                                        style="padding:5px; border-right:1px solid black; border-bottom:1px solid black;">
                                                     <div>
                                                         <span style="font-size:14px !important;">Delivery
                                                             Note
@@ -1068,12 +1020,12 @@
                                                     </div>
                                                     <div>
                                                         <strong>
-                                                            <span t-field="o.delivery_note" />
+                                                            <span t-field="o.delivery_note"/>
                                                         </strong>
                                                     </div>
                                                 </td>
                                                 <td
-                                                    style="padding:5px; border-bottom:1px solid black;">
+                                                        style="padding:5px; border-bottom:1px solid black;">
                                                     <div>
                                                         <span style="font-size:14px !important;">
                                                             Mode/Terms of Payment
@@ -1082,27 +1034,26 @@
                                                     <div>
                                                         <strong>
                                                             <span
-                                                                t-esc="o.invoice_payment_term_id.name or ''" />
+                                                                    t-esc="o.invoice_payment_term_id.name or ''"/>
                                                         </strong>
                                                     </div>
                                                 </td>
                                             </tr>
                                             <tr>
                                                 <td
-                                                    style="padding:5px; border-right:1px solid black; border-bottom:1px solid black;">
+                                                        style="padding:5px; border-right:1px solid black; border-bottom:1px solid black;">
                                                     <div>
-                                                        <span style="font-size:14px !important;">Supplier's
-                                                            Ref.
+                                                        <span style="font-size:14px !important;">Supplier's Ref.
                                                         </span>
                                                     </div>
                                                     <div>
                                                         <strong>
-                                                            <span t-field="o.invoice_origin" />
+                                                            <span t-field="o.invoice_origin"/>
                                                         </strong>
                                                     </div>
                                                 </td>
                                                 <td
-                                                    style="padding:5px; border-bottom:1px solid black;">
+                                                        style="padding:5px; border-bottom:1px solid black;">
                                                     <div>
                                                         <span style="font-size:14px !important;">
                                                             Other Reference(s)
@@ -1110,14 +1061,14 @@
                                                     </div>
                                                     <div>
                                                         <strong>
-                                                            <span t-field="o.ref" />
+                                                            <span t-field="o.ref"/>
                                                         </strong>
                                                     </div>
                                                 </td>
                                             </tr>
                                             <tr>
                                                 <td
-                                                    style="padding:5px; border-right:1px solid black; border-bottom:1px solid black;">
+                                                        style="padding:5px; border-right:1px solid black; border-bottom:1px solid black;">
                                                     <div>
                                                         <span style="font-size:14px !important;">Buyer
                                                             Order No.
@@ -1126,12 +1077,12 @@
                                                     <div>
                                                         <strong>
                                                             <span
-                                                                t-esc="sale_order and sale_order.buyer_ref_no or ''" />
+                                                                    t-esc="sale_order and sale_order.buyer_ref_no or ''"/>
                                                         </strong>
                                                     </div>
                                                 </td>
                                                 <td
-                                                    style="padding:5px; border-bottom:1px solid black;">
+                                                        style="padding:5px; border-bottom:1px solid black;">
                                                     <div>
                                                         <span style="font-size:14px !important;">
                                                             Dated
@@ -1139,15 +1090,14 @@
                                                     </div>
                                                     <div>
                                                         <strong>
-                                                            <span t-field="o.buyer_date"
-                                                                t-options='{"format": "dd-MMM-yy"}' />
+                                                            <span t-field="o.buyer_date" t-options='{"format": "dd-MMM-yy"}'/>
                                                         </strong>
                                                     </div>
                                                 </td>
                                             </tr>
                                             <tr>
                                                 <td
-                                                    style="padding:5px; border-right:1px solid black; border-bottom:1px solid black;">
+                                                        style="padding:5px; border-right:1px solid black; border-bottom:1px solid black;">
                                                     <div>
                                                         <span style="font-size:14px !important;">
                                                             Dispatch Document No.
@@ -1155,12 +1105,12 @@
                                                     </div>
                                                     <div>
                                                         <strong>
-                                                            <span t-field="o.despatch_doc_no" />
+                                                            <span t-field="o.despatch_doc_no"/>
                                                         </strong>
                                                     </div>
                                                 </td>
                                                 <td
-                                                    style="padding:5px; border-bottom:1px solid black;">
+                                                        style="padding:5px; border-bottom:1px solid black;">
                                                     <div>
                                                         <span style="font-size:14px !important;">
                                                             Delivery Note Date
@@ -1168,15 +1118,14 @@
                                                     </div>
                                                     <div>
                                                         <strong>
-                                                            <span t-field="o.delivery_note_date"
-                                                                t-options='{"format": "dd-MMM-yy"}' />
+                                                            <span t-field="o.delivery_note_date" t-options='{"format": "dd-MMM-yy"}'/>
                                                         </strong>
                                                     </div>
                                                 </td>
                                             </tr>
                                             <tr>
                                                 <td
-                                                    style="padding:5px; border-right:1px solid black; border-bottom:1px solid black;">
+                                                        style="padding:5px; border-right:1px solid black; border-bottom:1px solid black;">
                                                     <div>
                                                         <span style="font-size:14px !important;">
                                                             Dispatch Through
@@ -1184,13 +1133,12 @@
                                                     </div>
                                                     <div>
                                                         <strong>
-                                                            <span t-if="sale_order.dispatch_id"
-                                                                t-field="sale_order.dispatch_id" />
+                                                            <span t-if="sale_order.dispatch_id" t-field="sale_order.dispatch_id"/>
                                                         </strong>
                                                     </div>
                                                 </td>
                                                 <td
-                                                    style="padding:5px; border-bottom:1px solid black;">
+                                                        style="padding:5px; border-bottom:1px solid black;">
                                                     <div>
                                                         <span style="font-size:14px !important;">
                                                             Destination
@@ -1198,8 +1146,7 @@
                                                     </div>
                                                     <div>
                                                         <strong>
-                                                            <span t-if="sale_order.warehouse_id"
-                                                                t-field="sale_order.warehouse_id" />
+                                                            <span t-if="sale_order.warehouse_id" t-field="sale_order.warehouse_id"/>
                                                         </strong>
                                                     </div>
                                                 </td>
@@ -1213,7 +1160,7 @@
                                                     </div>
                                                     <div>
                                                         <strong>
-                                                            <span t-field="o.incoterm" />
+                                                            <span t-field="o.narration"/>
                                                         </strong>
                                                     </div>
                                                 </td>
@@ -1224,29 +1171,29 @@
                             </table>
 
                             <table
-                                style="width:100%; border:1px solid black; border-top:0px; border-collapse:collapse;  margin-bottom:0; font-family:sans-serif;">
+                                    style="width:100%; border:1px solid black; border-top:0px; border-collapse:collapse;  margin-bottom:0; font-family:sans-serif;">
                                 <thead>
                                     <tr style="text-align:center;">
                                         <th
-                                            style="border-right:1px solid black; font-size:14px; padding:4px; width:5%;">
+                                                style="border-right:1px solid black; font-size:14px; padding:4px; width:5%;">
                                             Sl
                                             No.
                                         </th>
                                         <th
-                                            style="border-right:1px solid black; padding:4px; width:55%;">
+                                                style="border-right:1px solid black; padding:4px; width:55%;">
                                             Description
                                             of Goods
                                         </th>
                                         <th
-                                            style="border-right:1px solid black; padding:4px; width:10%;">
+                                                style="border-right:1px solid black; padding:4px; width:10%;">
                                             Quantity
                                         </th>
                                         <th
-                                            style="border-right:1px solid black; padding:4px; width:10%;">
+                                                style="border-right:1px solid black; padding:4px; width:10%;">
                                             Rate
                                         </th>
                                         <th
-                                            style="border-right:1px solid black; padding:4px; width:5%;">
+                                                style="border-right:1px solid black; padding:4px; width:5%;">
                                             Per
                                         </th>
                                         <th style="padding:4px; width:15%;">Amount</th>
@@ -1256,76 +1203,72 @@
                                     <t t-foreach="enumerate(o.invoice_line_ids, start=1)" t-as="row">
                                         <tr>
                                             <td
-                                                style="border-right:1px solid black; padding:4px; text-align:center;">
-                                                <t t-esc="row[0]" />
+                                                    style="border-right:1px solid black; padding:4px; text-align:center;">
+                                                <t t-esc="row[0]"/>
                                             </td>
                                             <td style="border-right:1px solid black; padding:4px;">
                                                 <strong>
-                                                    <span t-field="row[1].name" />
+                                                    <span t-field="row[1].name"/>
                                                 </strong>
-                                                <br />
+                                                <br/>
                                                 <t t-set="country"
-                                                    t-value="row[1].product_id.product_tmpl_id.made_country if 'made_country' in row[1].product_id.product_tmpl_id.fields_get() else False" />
-                                                <span t-if="country">Made in: <span
-                                                        t-field="country.name" />
+                                                   t-value="row[1].product_id.product_tmpl_id.made_country if 'made_country' in row[1].product_id.product_tmpl_id.fields_get() else False"/>
+                                                <span t-if="country">Made in:
+                                                    <span t-field="country.name"/>
                                                 </span>
-                                                <!-- <span style="font-size:14px;
-                                                font-style:italic;padding-left:10px"> Made in <span
-                                                t-field="row[1].product_id.product_tmpl_id.made_country"/> -->
+                                                <!-- <span style="font-size:14px; font-style:italic;padding-left:10px"> Made in <span t-field="row[1].product_id.product_tmpl_id.made_country"/> -->
                                                 <!-- </span> -->
                                             </td>
                                             <td
-                                                style="border-right:1px solid black; padding:4px; text-align:right;">
+                                                    style="border-right:1px solid black; padding:4px; text-align:right;">
                                                 <strong>
-                                                    <t t-esc="'%0.0f pcs' % row[1].quantity" />
+                                                    <t t-esc="'%0.0f pcs' % row[1].quantity"/>
                                                 </strong>
                                             </td>
                                             <td
-                                                style="border-right:1px solid black; padding:4px; text-align:right;">
-                                                <span t-esc="o.currency_id.symbol" />
+                                                    style="border-right:1px solid black; padding:4px; text-align:right;">
+                                                <span t-esc="o.currency_id.symbol"/>
                                                 <span
-                                                    t-esc="'%0.2f' % o.company_id.currency_id.round(row[1].price_unit)" />
+                                                        t-esc="'%0.2f' % o.company_id.currency_id.round(row[1].price_unit)"/>
                                             </td>
                                             <td
-                                                style="border-right:1px solid black; padding:4px;text-align:right;">
-                                                <t t-esc="row[1].quantity > 1 and 'pcs' or 'pc'" />
+                                                    style="border-right:1px solid black; padding:4px;text-align:right;">
+                                                <t t-esc="row[1].quantity > 1 and 'pcs' or 'pc'"/>
                                             </td>
-                                            <td
-                                                style="padding:4px; text-align:right; font-weight:bold;">
-                                                <span t-esc="o.currency_id.symbol" />
+                                            <td style="padding:4px; text-align:right; font-weight:bold;">
+                                                <span t-esc="o.currency_id.symbol"/>
                                                 <span
-                                                    t-esc="'%0.2f' % o.company_id.currency_id.round(row[1].price_subtotal)" />
+                                                        t-esc="'%0.2f' % o.company_id.currency_id.round(row[1].price_subtotal)"/>
                                             </td>
                                         </tr>
                                     </t>
 
                                     <tr>
                                         <td
-                                            style="border-right:1px solid black; padding:4px; text-align:center;"></td>
+                                                style="border-right:1px solid black; padding:4px; text-align:center;"></td>
                                         <td style="border-right:1px solid black; padding:4px;">
                                             <!-- <p style="font-style:italic; padding-left:10px;">
                                             Made in India </p> -->
                                         </td>
                                         <td
-                                            style="border-right:1px solid black; padding:4px; text-align:right;"></td>
+                                                style="border-right:1px solid black; padding:4px; text-align:right;"></td>
                                         <td
-                                            style="border-right:1px solid black; padding:4px; text-align:right;"></td>
+                                                style="border-right:1px solid black; padding:4px; text-align:right;"></td>
                                         <td style="border-right:1px solid black; padding:4px;"></td>
                                         <td style="padding:4px; text-align:right;"></td>
                                     </tr>
 
                                     <tr>
                                         <td
-                                            style="border-right:1px solid black; padding:4px; text-align:center;"></td>
+                                                style="border-right:1px solid black; padding:4px; text-align:center;"></td>
                                         <td style="border-right:1px solid black; padding:4px;"></td>
                                         <td
-                                            style="border-right:1px solid black; padding:4px; text-align:right;"></td>
+                                                style="border-right:1px solid black; padding:4px; text-align:right;"></td>
                                         <td
-                                            style="border-right:1px solid black; padding:4px; text-align:right;"></td>
+                                                style="border-right:1px solid black; padding:4px; text-align:right;"></td>
                                         <td style="border-right:1px solid black; padding:4px;"></td>
                                         <!--                                        <td-->
-                                        <!--                                                style="border-top:2px solid black; padding:4px;
-                                        text-align:right;">-->
+                                        <!--                                                style="border-top:2px solid black; padding:4px; text-align:right;">-->
                                         <!--                                            $ 59,821.00-->
                                         <!--                                        </td>-->
                                     </tr>
@@ -1336,52 +1279,49 @@
                                             Total
                                         </td>
                                         <td
-                                            style="padding:4px; text-align:right; border-left:1px solid black; border-right:1px solid black; font-weight:bold;">
+                                                style="padding:4px; text-align:right; border-left:1px solid black; border-right:1px solid black; font-weight:bold;">
                                             <span
-                                                t-esc="'%0.0f' % sum(line.quantity for line in o.invoice_line_ids)" />
-                                            pcs </td>
+                                                    t-esc="'%0.0f' % sum(line.quantity for line in o.invoice_line_ids)"/>
+                                            pcs
+                                        </td>
                                         <td
-                                            style="padding:4px;border-left:1px solid black; border-right:1px solid black;"></td>
+                                                style="padding:4px;border-left:1px solid black; border-right:1px solid black;"></td>
                                         <td
-                                            style="padding:4px;border-left:1px solid black; border-right:1px solid black;"></td>
+                                                style="padding:4px;border-left:1px solid black; border-right:1px solid black;"></td>
                                         <td style="padding:4px; text-align:right; font-weight:bold;">
-                                            <span t-esc="o.currency_id.symbol" />
-                                            <span t-esc="'%0.2f' % o.amount_total" />
+                                            <span t-esc="o.currency_id.symbol"/>
+                                            <span t-esc="'%0.2f' % o.amount_total"/>
                                         </td>
                                     </tr>
                                     <tr>
                                         <td colspan="6"
                                             style="border-right:1px solid black;font-size:14px;border-top:1px solid black; padding:4px; text-align:right;">
-                                            Total Invoice Amount in AED <strong>
-                                                <span t-esc="o.currency_id.symbol" />
-                                                <span
-                                                    t-esc="'%0.2f' % o.amount_total" /> @ AED <span
-                                                    t-esc="'%0.3f' % (o.company_id.currency_id._convert(1, o.currency_id, o.company_id, o.invoice_date or o.date))" />
-                                            /$ = AED <span
-                                                    t-esc="'%0.2f' % o.currency_id._convert(o.amount_total, o.company_id.currency_id, o.company_id, o.invoice_date or o.date)" />
+                                            Total Invoice Amount in AED
+                                            <strong>
+                                                <span t-esc="o.currency_id.symbol"/>
+                                                <span t-esc="'%0.2f' % o.amount_total"/>
+                                                @ AED
+                                                <span t-esc="'%0.3f' % (o.company_id.currency_id._convert(1, o.currency_id, o.company_id, o.invoice_date or o.date))"/>
+                                                /$ = AED
+                                                <span t-esc="'%0.2f' % o.currency_id._convert(o.amount_total, o.company_id.currency_id, o.company_id, o.invoice_date or o.date)"/>
                                             </strong>
                                         </td>
                                     </tr>
                                 </tbody>
                             </table>
 
-                            <table
-                                style="width:100%; border-collapse:collapse; border-top:0px;border-bottom:0px; border:1px solid black;margin-top:0;font-family:sans-serif;">
+                            <table style="width:100%; border-collapse:collapse; border-top:0px;border-bottom:0px; border:1px solid black;margin-top:0;font-family:sans-serif;">
                                 <tr>
-                                    <td style="width:50%; padding:5px; vertical-align:top;">Amount
-                                        Chargeable (in words): <br />
+                                    <td style="width:50%; padding:5px; vertical-align:top;">Amount Chargeable (in words):
+                                        <br/>
                                         <strong>
                                             <t t-set="converted_amount"
-                                                t-value="o.currency_id._convert(o.amount_total, o.company_id.currency_id, o.company_id, o.invoice_date)" />
-                                            <t t-set="company_currency"
-                                                t-value="o.company_id.currency_id" />
+                                               t-value="o.currency_id._convert(o.amount_total, o.company_id.currency_id, o.company_id, o.invoice_date)"/>
+                                            <t t-set="company_currency" t-value="o.company_id.currency_id"/>
                                             <t t-set="amount_words"
-                                                t-value="company_currency.amount_to_text(converted_amount)" />
-                                            <span
-                                                t-esc="amount_words + ' Only (' + company_currency.symbol + ' ' + ('%.2f' % converted_amount) + ')'" />
-                                            <!--                                            <span
-                                            t-esc="o.currency_id.amount_to_text(o.amount_total) + '
-                                            only'"/>-->
+                                               t-value="company_currency.amount_to_text(converted_amount)"/>
+                                            <span t-esc="amount_words + ' Only (' + company_currency.symbol + ' ' + ('%.2f' % converted_amount) + ')'"/>
+                                            <!--                                            <span t-esc="o.currency_id.amount_to_text(o.amount_total) + ' only'"/>-->
                                         </strong>
                                     </td>
 
@@ -1389,70 +1329,53 @@
                                         <div style="text-align:right; font-style:italic;">E. &amp;
                                             O.E
                                         </div>
-                                        <br />
+                                        <br/>
                                     </td>
                                 </tr>
                                 <tr>
                                     <td style="width:50%; vertical-align:top; padding:5px;">
-                                        <br />
-                                        <div
-                                            style="text-align:left; font-style:italic; font-family:sans-serif; font-size:14px;">
-                                            <b>Terms and Conditions</b>
-                                        </div>
-                                        <ol
-                                            style="margin:5px; padding-left:20px; font-family:sans-serif; font-size:14px;">
-                                            <li><b>Payment &amp; Delivery Terms –</b> 100% advance
-                                                required before release of goods. Payments must be
-                                                made only to the bank account mentioned on the
-                                                invoice, in the same currency as the invoice. No
-                                                credit extended.</li>
-                                            <li><b>Risk Transfer –</b> Risk passes to buyer once
-                                                goods are handed to buyer/logistics partner.</li>
-                                            <li><b>No Returns Policy –</b> Goods once sold are not
-                                                returnable. However, if transit damages or shortages
-                                                are attributable to Bora Multicorp or its appointed
-                                                logistics partner, claims will be accepted and
-                                                settled through replacement or debit/credit note
-                                                adjustment.</li>
-                                            <li><b>Warranty –</b> Manufacturer’s warranty applies
-                                                where available. Company provides no additional
-                                                warranty.</li>
-                                        </ol>
+                                        <br/>
+                                        <div style="text-align:left; font-style:italic; font-family:sans-serif; font-size:14px;"><b>Terms and Conditions</b></div>
+                                            <ol style="margin:5px; padding-left:20px; font-family:sans-serif; font-size:14px;">
+                                                <li><b>Payment &amp; Delivery Terms –</b> 100% advance required before release of goods. Payments must be made only to the bank account mentioned on the invoice, in the same currency as the invoice. No credit extended.</li>
+                                                <li><b>Risk Transfer –</b> Risk passes to buyer once goods are handed to buyer/logistics partner.</li>
+                                                <li><b>No Returns Policy –</b> Goods once sold are not returnable. However, if transit damages or shortages are attributable to Bora Multicorp or its appointed logistics partner, claims will be accepted and settled through replacement or debit/credit note adjustment.</li>
+                                                <li><b>Warranty –</b> Manufacturer’s warranty applies where available. Company provides no additional warranty.</li>
+                                            </ol>
                                     </td>
                                     <!-- copmany's bank details -->
                                     <td style="width:50%; vertical-align:top; padding:5px;">
                                         <div t-if="o.company_id.partner_id.bank_ids">
-                                            <br />
-                                            <br />
-                                            <br />
-                                            <br />
-                                            <br />
-                                            <br />
-                                            <br />
-                                            <div
-                                                style="font-size:14px; text-align:left; font-weight:bold; margin-bottom:5px;">Company's
-                                                Bank Details</div>
+                                            <br/>
+                                            <br/>
+                                            <br/>
+                                            <br/>
+                                            <br/>
+                                            <br/>
+                                            <br/>
+                                            <div style="font-size:14px; text-align:left; font-weight:bold; margin-bottom:5px;">Company's Bank Details</div>
 
                                             <table
-                                                style="font-size:14px; line-height:1.8; line-height:1; border-collapse:collapse; border-bottom:0px;">
+                                                    style="font-size:14px; line-height:1.8; line-height:1; border-collapse:collapse; border-bottom:0px;">
                                                 <tr>
                                                     <td
-                                                        style="padding-right:10px; white-space:nowrap;">Bank
+                                                            style="padding-right:10px; white-space:nowrap;">Bank
                                                         Name
                                                     </td>
-                                                    <td>: <t t-if="o.partner_bank_id">
+                                                    <td>:
+                                                        <t t-if="o.partner_bank_id">
                                                             <strong>
                                                                 <span
-                                                                    t-field="o.partner_bank_id.bank_name" />
+                                                                        t-field="o.partner_bank_id.bank_name"/>
                                                             </strong>
                                                         </t>
                                                         <t
-                                                            t-else="">
+                                                                t-else="">
                                                             <t
-                                                                t-if="o.company_id.partner_id.bank_ids and o.company_id.partner_id.bank_ids[0].bank_id">
+                                                                    t-if="o.company_id.partner_id.bank_ids and o.company_id.partner_id.bank_ids[0].bank_id">
                                                                 <strong>
                                                                     <span
-                                                                        t-field="o.company_id.partner_id.bank_ids[0].bank_id.name" />
+                                                                            t-field="o.company_id.partner_id.bank_ids[0].bank_id.name"/>
                                                                 </strong>
                                                             </t>
                                                         </t>
@@ -1460,19 +1383,20 @@
                                                 </tr>
                                                 <tr>
                                                     <td>A/c No.</td>
-                                                    <td>: <t t-if="o.partner_bank_id">
+                                                    <td>:
+                                                        <t t-if="o.partner_bank_id">
                                                             <strong>
                                                                 <span
-                                                                    t-field="o.partner_bank_id.acc_number" />
+                                                                        t-field="o.partner_bank_id.acc_number"/>
                                                             </strong>
                                                         </t>
                                                         <t
-                                                            t-else="">
+                                                                t-else="">
                                                             <t
-                                                                t-if="o.company_id.partner_id.bank_ids and o.company_id.partner_id.bank_ids[0].acc_number">
+                                                                    t-if="o.company_id.partner_id.bank_ids and o.company_id.partner_id.bank_ids[0].acc_number">
                                                                 <strong>
                                                                     <span
-                                                                        t-field="o.company_id.partner_id.bank_ids[0].acc_number" />
+                                                                            t-field="o.company_id.partner_id.bank_ids[0].acc_number"/>
                                                                 </strong>
                                                             </t>
                                                         </t>
@@ -1480,19 +1404,20 @@
                                                 </tr>
                                                 <tr>
                                                     <td>IBAN</td>
-                                                    <td>: <t t-if="o.partner_bank_id">
+                                                    <td>:
+                                                        <t t-if="o.partner_bank_id">
                                                             <strong>
                                                                 <span
-                                                                    t-field="o.partner_bank_id.acc_number" />
+                                                                        t-field="o.partner_bank_id.acc_number"/>
                                                             </strong>
                                                         </t>
                                                         <t
-                                                            t-else="">
+                                                                t-else="">
                                                             <t
-                                                                t-if="o.company_id.partner_id.bank_ids and o.company_id.partner_id.bank_ids[0].acc_number">
+                                                                    t-if="o.company_id.partner_id.bank_ids and o.company_id.partner_id.bank_ids[0].acc_number">
                                                                 <strong>
                                                                     <span
-                                                                        t-field="o.company_id.partner_id.bank_ids[0].acc_number" />
+                                                                            t-field="o.company_id.partner_id.bank_ids[0].acc_number"/>
                                                                 </strong>
                                                             </t>
                                                         </t>
@@ -1500,19 +1425,20 @@
                                                 </tr>
                                                 <tr>
                                                     <td>Branch &amp;amp; SWIFT Code</td>
-                                                    <td>: <t t-if="o.partner_bank_id.bank_id.bic">
+                                                    <td>:
+                                                        <t t-if="o.partner_bank_id.bank_id.bic">
                                                             <strong>
                                                                 <span
-                                                                    t-field="o.partner_bank_id.bank_id.bic" />
+                                                                        t-field="o.partner_bank_id.bank_id.bic"/>
                                                             </strong>
                                                         </t>
                                                         <t
-                                                            t-else="">
+                                                                t-else="">
                                                             <t
-                                                                t-if="o.company_id.partner_id.bank_ids and o.company_id.partner_id.bank_ids[0].bank_id.bic">
+                                                                    t-if="o.company_id.partner_id.bank_ids and o.company_id.partner_id.bank_ids[0].bank_id.bic">
                                                                 <strong>
                                                                     <span
-                                                                        t-field="o.company_id.partner_id.bank_ids[0].bank_id.bic" />
+                                                                            t-field="o.company_id.partner_id.bank_ids[0].bank_id.bic"/>
                                                                 </strong>
                                                             </t>
                                                         </t>
@@ -1526,24 +1452,27 @@
 
                             <!-- Customer's Seal and Signature AND Authorised Signatory -->
                             <table
-                                style="width:100%; margin-top:0; border-collapse: collapse; border-top:0px; font-family:sans-serif;">
+                                    style="width:100%; margin-top:0; border-collapse: collapse; border-top:0px; font-family:sans-serif;">
                                 <tr>
                                     <td
-                                        style="width:50%;padding:5px; border-right:0px; border-top:0px !important; border:1px solid black;">
-                                        <div style="text-align:left;">Customer's Seal and Signature <br />
-                                            <br />
-                                            <br />
+                                            style="width:50%;padding:5px; border-right:0px; border-top:0px !important; border:1px solid black;">
+                                        <div style="text-align:left;">Customer's Seal and Signature
+                                            <br/>
+                                            <br/>
+                                            <br/>
                                         </div>
                                     </td>
                                     <td
-                                        style="width:50%; vertical-align:bottom; border-top:0px !important; padding:5px;border:1px solid black;">
+                                            style="width:50%; vertical-align:bottom; border-top:0px !important; padding:5px;border:1px solid black;">
                                         <div style="text-align:right;">
-                                            <strong>for <span t-field="o.company_id.name" />
+                                            <strong>for
+                                                <span t-field="o.company_id.name"/>
                                             </strong>
-                                            <br />
-                                            <br />
-                                            <br />
-                                            Authorised Signatory </div>
+                                            <br/>
+                                            <br/>
+                                            <br/>
+                                            Authorised Signatory
+                                        </div>
                                     </td>
                                 </tr>
                             </table>
