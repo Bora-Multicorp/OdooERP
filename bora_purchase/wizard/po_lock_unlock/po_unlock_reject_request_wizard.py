@@ -14,7 +14,7 @@ class POUnlockRejectWizard(models.TransientModel):
         self.ensure_one()
         approval = self.order_approval_id
 
-        # Find the matching approval line for the currently assigned user
+        # 1. Find the matching approval line for the currently assigned user
         approval_line = approval.approval_users_ids.filtered(
             lambda l: l.user_id == self.env.user and not l.state
         )
@@ -28,5 +28,17 @@ class POUnlockRejectWizard(models.TransientModel):
             # Recompute the next approver
             approval._send_notification_on_rejection()
             # approval._update_assigned_to()
+
+        # 2. grab all remaining users can mark their status as suspended
+        pending_users_lines = self.order_approval_id.approval_users_ids.filtered(
+            lambda l: not l.state
+        )
+
+        if pending_users_lines:
+            pending_users_lines.write({
+                'state': 'suspended',
+                'remark': "Rejected by previous authority",
+                'action_date': fields.Datetime.now(),
+            })
 
         return {'type': 'ir.actions.act_window_close'}

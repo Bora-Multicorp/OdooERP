@@ -35,7 +35,6 @@ Bora purchase operations
         'wizard/po_cancel_approval/po_cancel_reject_request_wizard.xml',
         'wizard/po_cancel_approval/cancelation_approval_users_picker_wizard.xml',
         'wizard/po_cancel_approval/cancelation_suspended_by_admin_wizard.xml',
-        # 'views/qc_check_on_delivery.xml',
         'views/vendor_payment_email_template.xml',
         'views/unlock_approvers.xml',
         'views/confirmation_approvers.xml',
@@ -43,7 +42,10 @@ Bora purchase operations
         'views/po_unlock.xml',
         'views/po_fullfill_by.xml',
         'views/po_confirm.xml',
-        'views/po_cancellation.xml'
+        'views/po_cancellation.xml',
+        'views/backdate_order.xml',
+        'views/send_email_to_warehours_on_po_confirmation.xml',
+        'views/po_lock_readonly_fields.xml'
     ],
     'assets': {
         'web.assets_backend': [

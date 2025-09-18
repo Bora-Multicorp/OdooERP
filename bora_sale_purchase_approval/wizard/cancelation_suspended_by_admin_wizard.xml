@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<odoo>
+    <record id="cancelation_suspend_so_wizard_view_form" model="ir.ui.view">
+        <field name="name">cancel.suspend.so.wizard.view.form</field>
+        <field name="model">suspend.so.cancelation.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Cancel Suspend">
+                <group>
+                    <div class="o_form_label o_text_warning" style="margin-bottom: 10px;">
+                            Are you sure you want to suspend this Cancellation approval process?
+                    </div>
+                    <field name="remark" placeholder="Enter remarks for suspension"/>
+                </group>
+                <footer>
+                    <button name="action_done" string="Suspend" type="object" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel" data-hotkey="x"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+    <record id="cnacel_suspend_so_confirm_wizard_action" model="ir.actions.act_window">
+        <field name="name">Suspend Cancelation Request</field>
+        <field name="res_model">suspend.so.cancelation.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="cancelation_suspend_so_wizard_view_form"/>
+        <field name="target">new</field>
+        <field name="context">{
+            'default_sale_id': active_id,
+            }
+        </field>
+    </record>
+</odoo>

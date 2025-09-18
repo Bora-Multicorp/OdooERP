@@ -1,0 +1,28 @@
+<odoo>
+    <record id="view_purchase_order_backdate" model="ir.ui.view">
+        <field name="name">view.purchase.order.backdate</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@name='date_approve']" position="attributes">
+                <attribute name="invisible">True</attribute>
+            </xpath>
+            <xpath expr="//label[@for='date_approve']" position="attributes">
+                <attribute name="invisible">True</attribute>
+            </xpath>
+            <xpath expr="//field[@name='date_order']" position="before">
+                <field name="backdate_po" readonly="state in ['purchase', 'done', 'cancel', 'unlock_pending', 'cancellation_pending', 'unlock_pending']" required="1" />
+            </xpath>
+        </field>
+    </record>
+    <record id="view_purchase_order_backdate_tree" model="ir.ui.view">
+        <field name="name">view.purchase.order.backdate.tree</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='date_approve']" position="attributes">
+                <attribute name="string">Order Date</attribute>
+            </xpath>
+        </field>
+    </record>
+</odoo>

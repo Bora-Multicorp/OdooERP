@@ -9,8 +9,9 @@
                         <div class="o_form_label o_text_warning" style="margin-bottom: 10px;">
                              Confirmation requires approval, an approval request will be generated for the selected authorities.
                         </div>
-                       <field name="group1_users" widget="many2many_tags" domain="[('group','=','group1')]" context="{'default_group': 'group1'}" options="{'color_field': 'color', 'no_edit': True, 'no_create': True, 'no_open': True}"/>
-                       <field name="group2_users" widget="many2many_tags" domain="[('group','=','group2')]" context="{'default_group': 'group2'}" options="{'color_field': 'color', 'no_edit': True, 'no_create': True, 'no_open': True}"/>
+                       <field name="user_ids_according_to_user_selection" invisible="1"/>
+                       <field name="approver1_users" widget="many2many_tags" domain="[('id', 'not in', approver2_users)]" options="{'color_field': 'color', 'no_edit': True, 'no_create': True, 'no_open': True}"/>
+                       <field name="approver2_users" widget="many2many_tags" domain="[('id', 'not in', approver1_users)]" options="{'color_field': 'color', 'no_edit': True, 'no_create': True, 'no_open': True}"/>
                    </group>
                </sheet>
                <footer>
@@ -18,8 +19,8 @@
                    <button string="Cancel" class="btn-secondary" special="cancel"/>
                </footer>
            </form>
-       </field>
-   </record>
+       </field> 
+   </record> 
 
    <record id="action_confirmation_approval_user_picker_wizard" model="ir.actions.act_window">
        <field name="name">Confirmation Approval User Picker</field>

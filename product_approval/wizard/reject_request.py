@@ -23,11 +23,12 @@ class RejectProductWizard(models.TransientModel):
             if product.state != 'pending':
                 continue
 
-                    
+
+
+            # 1. Find the matching approval line for the currently assigned user and mark it as rejected                    
             approval_line = product.approval_users_ids.filtered(
                 lambda l: l.user_id == current_user and not l.state
             )
-
 
             if approval_line:
                 approval_line.write({
@@ -35,8 +36,22 @@ class RejectProductWizard(models.TransientModel):
                     'remark': self.remark,
                     'action_date': fields.Datetime.now(),
                 })
-            number_of_product_for_rejction += 1 
 
+
+            # 2. grab all remaining users can mark their status as suspended
+            pending_users_lines = product.approval_users_ids.filtered(
+                lambda l: not l.state
+            )
+
+            if pending_users_lines:
+                pending_users_lines.write({
+                    'state': 'suspended',
+                    'remark': "Rejected by previous authority",
+                    'action_date': fields.Datetime.now(),
+                })
+
+            
+            number_of_product_for_rejction += 1
 
         first_product = products[0]
         title = f"Total {number_of_product_for_rejction} products are rejected."
@@ -79,5 +94,11 @@ class RejectProductWizard(models.TransientModel):
                             'sticky': True,
                         },
                     )
+
+        # 3. Remove assignee 
+        product.write({
+            'assigned_to': None
+        })
+
 
         return {'type': 'ir.actions.act_window_close'}

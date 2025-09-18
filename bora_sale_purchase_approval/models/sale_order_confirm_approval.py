@@ -10,174 +10,279 @@ class SaleOrderConfimationApproval(models.Model):
     _inherit = 'sale.order'
     _description = 'Sales Order Approval Queue'
 
-    is_hidden_for_approval = fields.Boolean(default=False)
-    is_approved = fields.Boolean(string='Is Approved', default=False,
-                                 help="Indicates if the sales order has been approved.")
+    so_assigned_to_form_confirmation = fields.Many2one('res.users', string='Assigned To', tracking=True)
+    so_approval_users_ids_for_confirmation = fields.One2many('so.confirm.approval.users', 'so_confirm_approval_id',
+                                                             'Confirm SO Approval Authorities',
+                                                             help='SO confirm approval authority details')
 
-    existing_user_ids = fields.Many2many('res.users', compute='_compute_existing_users', store=True)
-
-    state = fields.Selection([
-            ('custom_draft', 'Draft'),
-            ('confirmation_pending', 'Confirmation Pending'),
-            ('approved', 'Approved'),
-            ('rejected', 'Rejected'),
-            ('draft', 'Quotation'),
-            ('sent', 'Quotation Sent'),
-            ('sale', 'Sales Order'),
-            ('done', 'Locked'),
-            ('cancel', 'Cancelled')],
+    state = fields.Selection(
+        [('draft', "Quotation"),
+         ("confirmation_pending", "Confirmation Pending"),
+         ('cancellation_pending', 'Cancellation Pending'),
+         ('unlock_pending', 'Unlock Pending'),
+         ('sent', "Quotation Sent"),
+         ('sale', "Proforma Invoice"),
+         ('cancel', "Cancelled"),
+         ],
         string="Status",
-        default="custom_draft",   # ✅ set your custom default state
         tracking=True
     )
 
-    confirm_approval_users_ids = fields.One2many('sale.order.approval.users', 'sale_order_id', 'Approval Authorities',
-                                         help='Approval Authority Details')
-    assigned_to = fields.Many2one('res.users', string='Assigned To')
-
-
-
-    # @api.model
-    # def create(self, vals):
-    #     if not vals.get("state"):
-    #         vals["state"] = "custom_draft"
-    #     return super(SaleOrderConfimationApproval, self).create(vals)
-
-    def action_draft_confirm(self):
-        """
-        Overrides the standard action_confirm. If approval is needed, it triggers the approval flow.
-        """
+    def _confirmation_error_message(self):
+        """ Return whether order can be confirmed or not if not then returm error message. """
         self.ensure_one()
+        if self.state not in {'draft', 'sent', 'confirmation_pending', 'cancellation_pending'}:
+            return _("Some orders are not in a state requiring confirmation.")
+        if any(
+                not line.display_type
+                and not line.is_downpayment
+                and not line.product_id
+                for line in self.order_line
+        ):
+            return _("A line on these orders missing a product, you cannot confirm it.")
 
-        # bring approval users here instead of default_get
-        if not self.confirm_approval_users_ids:
-            approval_config_users = self.env['sale.order.approval.config'].sudo().search([])
-            if approval_config_users:
-                approval_user_vals = []
-                for approval in approval_config_users:
-                    approval_user_vals.append((0, 0, {
-                        'sequence': approval.sequence,
-                        'user_id': approval.user_id.id,
-                    }))
-                self.write({'confirm_approval_users_ids': approval_user_vals})
+        return False
 
-        if self.state == 'custom_draft':
-            if not self.confirm_approval_users_ids:
-                raise ValidationError(_("Please add Approval Authority before submitting the request."))
-            self.write({'state': 'confirmation_pending', 'is_hidden_for_approval': True})
-            self._update_assigned_to()
-            return
+    def assign_users(self, so_confirm_approval_users):
+        # super(SaleOrderConfimationApproval, self).action_confirm()
 
-        # Call the original Odoo method if approval isn't needed
-        return super(SaleOrderConfimationApproval, self).action_confirm()
+        so_confirm_approval_user_vals = []
+        for index, approval in enumerate(so_confirm_approval_users):
+            so_confirm_approval_user_vals.append((0, 0, {
+                'sequence': index + 1,
+                'user_id': approval.user_id.id,
+            }))
+        self.write({
+            'so_approval_users_ids_for_confirmation': so_confirm_approval_user_vals,
+            'state': 'confirmation_pending'
+        })
 
+        # if self.so_assigned_to_form_confirmation:
+        #     for user_id in self.so_approval_users_ids_for_confirmation:
+        #         if user_id.state == 'reject':
+        #             raise ValidationError(
+        #                 f"PO confirm request is rejected by '{user_id.user_id.name}', please review 'PO Confirm Approval Authorities' tab for more details.")
+        #     raise ValidationError(
+        #         f"PO confirm request is now pending from '{self.so_assigned_to_form_confirmation.name}'.")
 
+        if self.id:
+            self._update_assigned_to_form_SO_confirm()
 
-    @api.depends('confirm_approval_users_ids.user_id')
-    def _compute_existing_users(self):
-        """Computes the list of existing users in the approval chain."""
-        for record in self:
-            if record.confirm_approval_users_ids:
-                record.existing_user_ids = [(6, 0, record.confirm_approval_users_ids.mapped('user_id').ids)]
-            else:
-                record.existing_user_ids = [(6, 0, [])]
+        self._create_activity_and_send_notification_for_confirm_request()
 
+    def action_confirm(self):
 
-    def _update_assigned_to(self, send_notification=True):
+        so_confirm_approval_users = self.env['sale.order.approval.config'].sudo().search([])
+        if not so_confirm_approval_users:
+            raise ValidationError("Please add confirmation approval authority before submit request.")
+
+        if self.so_assigned_to_form_confirmation:
+            raise ValidationError(
+                f"PO confirm request is now pending from '{self.so_assigned_to_form_confirmation.name}'.")
+
+        return self.env.ref(
+            "bora_sale_purchase_approval.action_so_confirmation_approval_user_picker_wizard"
+        ).sudo().read()[0]
+
+    def _update_assigned_to_form_SO_confirm(self):
         for rec in self:
             next_user = None
-            for line in sorted(rec.confirm_approval_users_ids, key=lambda x: x.sequence):
+            for line in sorted(rec.so_approval_users_ids_for_confirmation, key=lambda x: x.sequence):
                 if not line.state:
                     next_user = line.user_id
                     break
-            rec.assigned_to = next_user
+            rec.so_assigned_to_form_confirmation = next_user
 
-            if rec.assigned_to:
-                rec._create_confirm_sale_order_activity_and_send_notification(send_notification)
+            if not rec.so_assigned_to_form_confirmation:
+                super(SaleOrderConfimationApproval, self).action_confirm()
+                self.write({
+                    'state': 'sale'
+                })
 
-    def _update_state_based_on_approvals(self):
-        for rec in self:
-            states = rec.confirm_approval_users_ids.mapped('state')
-            if any(s == 'reject' for s in states):
-                rec.state = 'rejected'
-            elif states and all(s == 'approve' for s in states):
-                rec.state = 'approved'
-                rec.is_hidden_for_approval = False
-                rec.is_approved = True
-                rec.state = 'draft'
+    def _send_notification_on_rejection_of_SO_confirmation(self):
 
+        confirmation_approval_users = self.env['sale.order.approval.config'].sudo().search([])
 
+        self.write({
+            'state': 'draft',
+            'so_assigned_to_form_confirmation': None
+        })
 
-    domain_field = fields.Char(compute='_compute_domain')
-
-    @api.depends('state')
-    def _compute_domain(self):
-        for rec in self:
-            if rec.state == 'draft':
-                rec.domain_field = "[('active', '=', False), ('is_hidden_for_approval', '=', True), '|', ('create_uid', '=', uid)]"
+        for user in confirmation_approval_users:
+            if user.user_id == self.env.user:
+                self.env['bus.bus']._sendone(
+                    user.user_id.partner_id,
+                    'simple_notification',
+                    {
+                        'type': 'info',
+                        'title': f'SO confirm approval request for {self.name}, successfully rejected by you.',
+                        'message': f'',
+                        'sticky': True,
+                    },
+                )
             else:
-                rec.domain_field = "[('active', '=', False), ('is_hidden_for_approval', '=', True)]"
+                self.env['bus.bus']._sendone(
+                    user.user_id.partner_id,
+                    'simple_notification',
+                    {
+                        'type': 'danger',
+                        'title': f'SO confirm approval request for {self.name}, rejected by {self.env.user.name}.',
+                        'message': f'',
+                        'sticky': True,
+                    },
+                )
 
-    def _create_confirm_sale_order_activity_and_send_notification(self, send_notification=True):
-        """Schedules an activity and sends a notification to the assigned user."""
+    def _create_activity_and_send_notification_on_confirm_approval(self):
+
         for rec in self:
-            rec.activity_schedule(
-                act_type_xmlid='mail.mail_activity_data_todo',
-                summary=f'Sales Order Confirmation approval for: {rec.name}',
-                note=_("You have been assigned to review this sales order Cancellation."),
-                user_id=rec.assigned_to.id,
-                date_deadline=fields.Date.context_today(self),
-            )
-            if send_notification == True:
+
+            if not rec.so_assigned_to_form_confirmation:
                 rec.env['bus.bus']._sendone(
-                    rec.assigned_to.partner_id,
+                    rec.create_uid.partner_id,
                     'simple_notification',
                     {
                         'type': 'success',
-                        'title': _("Sales Order Confirmation approval for %s") % rec.name,
-                        'message': _("Activity assigned to you."),
+                        'title': f'SO {rec.name} successfully confirmed by approvers, you can now proceed further.',
+                        'message': '',
                         'sticky': True,
                     },
+                )
+
+            else:
+
+                # 1. schedule activity for next assignee
+                rec.activity_schedule(
+                    act_type_xmlid='mail.mail_activity_data_todo',
+                    summary=f'SO {rec.name} confirm approval request assigned to you.',
+                    note="You have been assigned to confirm this PO.",
+                    user_id=rec.so_assigned_to_form_confirmation.id,
+                    date_deadline=fields.Date.context_today(self),
+                )
+
+                # 2. send notification to next approver
+                rec.env['bus.bus']._sendone(
+                    rec.so_assigned_to_form_confirmation.partner_id,
+                    'simple_notification',
+                    {
+                        'type': 'success',
+                        'title': f'SO confirm approval request for {rec.name}, assigned to you.',
+                        'message': 'You have been assigned to confirm this PO.',
+                        'sticky': True,
+                    },
+                )
+
+            # 4. in the last send info message to self
+            rec.env['bus.bus']._sendone(
+                self.env.user.partner_id,
+                'simple_notification',
+                {
+                    'type': 'info',
+                    'title': f'SO confirm approval request successfully submitted by you.',
+                    'message': '',
+                    'sticky': True,
+                },
             )
 
+    def _create_activity_and_send_notification_for_confirm_request(self):
+        for rec in self:
+            rec.activity_schedule(
+                act_type_xmlid='mail.mail_activity_data_todo',
+                summary=f'SO confirm approval for order: {rec.name}',
+                note="You have been assigned to confirm this PO.",
+                user_id=rec.so_assigned_to_form_confirmation.id,
+                date_deadline=fields.Date.context_today(self),
+            )
 
-            if self.env.user.partner_id != rec.assigned_to.partner_id:
-                    rec.env['bus.bus']._sendone(
-                        self.env.user.partner_id,
-                        'simple_notification',
-                        {
-                            'type': 'info',
-                            'title': f"Sale Order '{rec.name}' successfully submitted for approval",
-                            'message': "",
-                            'sticky': True,
-                        },
-                    )
+            rec.env['bus.bus']._sendone(
+                rec.so_assigned_to_form_confirmation.partner_id,
+                'simple_notification',
+                {
+                    'type': 'success',
+                    'title': f'SO confirm approval request for {rec.name}, assigned to you.',
+                    'message': f'Activity assigned to you.',
+                    'sticky': True,
+                },
+            )
+
+            if rec.so_assigned_to_form_confirmation.partner_id != self.env.user.partner_id:
+                rec.env['bus.bus']._sendone(
+                    self.env.user.partner_id,
+                    'simple_notification',
+                    {
+                        'type': 'info',
+                        'title': f'SO {rec.name} confirm approval request sent successfully.',
+                        'message': '',
+                        'sticky': True,
+                    },
+                )
+
+    def action_suspend(self):
+        return self.env.ref(
+            "bora_sale_purchase_approval.approve_suspend_so_confirm_wizard_action"
+        ).sudo().read()[0]
+
+    def suspend_approval_process(self, remark):
+
+        for order in self:
+            pending_approvers = order.so_approval_users_ids_for_confirmation.filtered(lambda u: not u.state)
+
+            pending_approvers.write({
+                'state': 'suspended',
+                'remark': f"By {self.env.user.name} - " + (f" {remark}" if remark else ""),
+                'action_date': fields.Datetime.now()})
+
+            activities = self.env['mail.activity'].search([
+                ('res_model', '=', 'sale.order'),
+                ('res_id', '=', self.ids),
+                ('user_id', 'in', pending_approvers.mapped('user_id').ids),
+                ('activity_type_id', '=', self.env.ref('mail.mail_activity_data_todo').id),
+            ])
+
+            order.write({'so_assigned_to_form_confirmation': None, 'state': 'draft'})
+
+            # send notification to creator
+            order.env['bus.bus']._sendone(
+                order.create_uid.partner_id,
+                'simple_notification',
+                {
+                    'type': 'danger',
+                    'title': f'SO {order.name} suspended by {self.env.user.name}. you need to initiate the approval process again.',
+                    'message': '',
+                    'sticky': True,
+                },
+            )
+
+            # 4. in the last send info message to self
+            order.env['bus.bus']._sendone(
+                self.env.user.partner_id,
+                'simple_notification',
+                {
+                    'type': 'info',
+                    'title': f'Approval process suspended successfully.',
+                    'message': '',
+                    'sticky': True,
+                },
+            )
+
+            activities.unlink()
 
 
-class SaleOrderApprovalUsers(models.Model):
-    _name = "sale.order.approval.users"
-    _rec_name = 'user_id'
-    _description = "Sales Order Approval Users"
-    _order = "sequence"
+class SOConfirmApprovalUsers(models.Model):
+    _name = "so.confirm.approval.users"
+    _rec_name = 'so_confirm_approval_id'
+    _description = "SO Confirm Approval Users"
+    # _order = "create_date, sequence"
+
+    group = fields.Selection([
+        ('group1', 'Group 1'),
+        ('group2', 'Group 2'),
+    ], string="Groups", required=False)
 
     sequence = fields.Integer(string='Sequence')
-    sale_order_id = fields.Many2one('sale.order', string="Sales Order")
+    so_confirm_approval_id = fields.Many2one('sale.order', string="PO Confirm Approval")
+    job_id = fields.Char(string="Designation", readonly=True)
     user_id = fields.Many2one('res.users', string='User', required=True)
-    state = fields.Selection([('approve', 'Approved'), ('reject', 'Rejected')], string="Action")
+    state = fields.Selection([('approve', 'Approved'), ('reject', 'Rejected'), ('suspended', 'Suspended')],
+                             string="Action")
     remark = fields.Char('Remarks', tracking=True)
     action_date = fields.Datetime(string="Action Date")
-
-    def write(self, vals):
-        res = super().write(vals)
-        for rec in self:
-            if rec.sale_order_id:
-                rec.sale_order_id._update_state_based_on_approvals()
-        return res
-
-    @api.model_create_multi
-    def create(self, vals_list):
-        res_list = super(SaleOrderApprovalUsers, self).create(vals_list)
-        for res in res_list:
-            if res.sale_order_id:
-                res.sale_order_id._update_state_based_on_approvals()
-        return res_list

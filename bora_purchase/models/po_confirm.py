@@ -25,24 +25,15 @@ class PurchaseOrderConfirmApproval(models.Model):
         # super(PurchaseOrderConfirmApproval, self).button_confirm()
 
         po_confirm_approval_user_vals = []
-        for approval in po_confirm_approval_users:
+        for index,approval in enumerate(po_confirm_approval_users):
             po_confirm_approval_user_vals.append((0, 0, {
-                'sequence': approval.sequence,
+                'sequence': index+1,
                 'user_id': approval.user_id.id,
-                'group': approval.group
             }))
         self.write({
             'approval_users_ids_for_confirmation': po_confirm_approval_user_vals,
             'state': 'confirmation_pending'
         })
-
-
-        
-        if self.assigned_to_form_confirmation:
-            for user_id in self.approval_users_ids_for_confirmation:
-                if user_id.state == 'reject':
-                    raise ValidationError(f"PO confirm request is rejected by '{user_id.user_id.name}', please review 'PO Confirm Approval Authorities' tab for more details.")                
-            raise ValidationError(f"PO confirm request is now pending from '{self.assigned_to_form_confirmation.name}'.")
         
 
         if self.id:
@@ -52,29 +43,49 @@ class PurchaseOrderConfirmApproval(models.Model):
 
 
     def button_confirm(self):
+        # super(PurchaseOrderConfirmApproval, self).button_confirm()
+        # return
 
+        # 1. Check if any aoproval authority is configured or not
         po_confirm_approval_users = self.env['purchase.order.confirmation.approvers'].sudo().search([])
         if not po_confirm_approval_users:
             raise ValidationError("Please add confirmation approval authority before submit request.")
 
+
+        # 2. Check if any approval is pending
+        if self.assigned_to_form_confirmation:
+            raise ValidationError(f"PO confirm request is now pending from '{self.assigned_to_form_confirmation.name}'.")
+
+
+        # 3. Then show user picker
         return self.env.ref(
             "bora_purchase.action_confirmation_approval_user_picker_wizard"
         ).sudo().read()[0]
      
 
     def _update_assigned_to_form_PO_confirm(self):
+
+        last_state = ""
         for rec in self:
+            for user in rec.approval_users_ids_for_confirmation:
+                last_state = user.state
+
             next_user = None
             for line in sorted(rec.approval_users_ids_for_confirmation, key=lambda x: x.sequence):
                 if not line.state:
+                    last_state = line.state
                     next_user = line.user_id
                     break
             rec.assigned_to_form_confirmation = next_user
 
-            if not rec.assigned_to_form_confirmation:
-                super(PurchaseOrderConfirmApproval, self).button_confirm()
+            if not rec.assigned_to_form_confirmation and last_state == 'approve':
                 self.write({
-                    'state': 'done'
+                    'state': 'draft'
+                })
+                super(PurchaseOrderConfirmApproval, self).button_confirm()
+                self._send__email_to_wh()
+                self.write({
+                    'date_approve': rec.backdate_po
                 })
 
 
@@ -201,13 +212,18 @@ class PurchaseOrderConfirmApproval(models.Model):
                 )
 
 
-    def action_suspend(self):
+    def action_confirm_suspend(self):
         return self.env.ref(
             "bora_purchase.approve_suspend_po_confirm_wizard_action"
         ).sudo().read()[0]
 
     
     def suspend_approval_process(self, remark):
+        self.message_post(
+            body=f"Confirmation approval suspended by {self.env.user.display_name}. Reason: {remark}",
+            message_type="comment",
+            subtype_xmlid="mail.mt_note"
+        )
 
         for order in self:
 
@@ -255,17 +271,25 @@ class PurchaseOrderConfirmApproval(models.Model):
             activities.unlink()
 
 
+    def _send__email_to_wh(self):
+
+        for order in self:
+            warehouse = order.picking_type_id.warehouse_id
+            # Check if the 'email' field exists on the warehouse record
+            if hasattr(warehouse, 'email') and warehouse.email:
+            # if warehouse.email:  # Directly using your warehouse email field
+                template = self.env.ref('bora_purchase.email_template_3pl_po_notification')
+                template.email_to = warehouse.email  # Ensure the right recipient
+                template.send_mail(order.id, force_send=True)
+                
+
+
 
 class POConfirmApprovalUsers(models.Model):
     _name = "po.confirm.approval.users"
     _rec_name = 'po_confirm_approval_id'
     _description = "PO Confirm Approval Users"
     # _order = "create_date, sequence"
-
-    group = fields.Selection([
-        ('group1', 'Group 1'),
-        ('group2', 'Group 2'),
-    ], string="Groups", required=True) 
 
     sequence = fields.Integer(string='Sequence')
     po_confirm_approval_id = fields.Many2one('purchase.order', string="PO Confirm Approval")

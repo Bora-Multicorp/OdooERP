@@ -14,45 +14,39 @@
                     <field name="is_hidden_for_approval" invisible="True"/>
                 </xpath>
                 <xpath expr="//form/header" position="inside">
-                    <button name="confirm_submit_form" string="Submit for Approval" type="object"
-                                class="oe_highlight"
-                                invisible="state != 'draft' or is_approved"/>
-                    <button name="%(approve_product_wizard_action)d" string="Approve" type="action"
-                                invisible="state in ('draft', 'confirmed', 'rejected', 'expired') or assigned_to != uid or is_approved"/>
-                    <button name="%(reject_product_wizard_action)d" string="Reject" type="action"
-                                invisible="state in ('draft', 'confirmed', 'rejected', 'expired') or assigned_to != uid or is_approved"/>
-                    <button name="approve_by_manager" string="Approval By Manager" type="object"
-                                class="oe_highlight"
-                                confirm="Do you want to Approve the request?" invisible="1"/>
+                    <button name="confirm_submit_form" string="Submit for Approval" type="object" class="oe_highlight" invisible="state != 'draft' or is_approved"/>
+                    <button name="%(approve_product_wizard_action)d" string="Approve" type="action" class="btn-primary" invisible="assigned_to != uid"/>
+                    <button name="%(reject_product_wizard_action)d" string="Reject" type="action" class="btn-primary" invisible="assigned_to != uid"/>
+                    <button name="approve_by_manager" string="Approval By Manager" type="object" class="oe_highlight" confirm="Do you want to Approve the request?" invisible="1"/>
+                    <button name="set_set_draft" string="Set To Draft" type="object" invisible="state != 'rejected'"/>
                     <field name="state" widget="statusbar" statusbar_visible="draft,pending" invisible="state in ('confirmed', 'rejected')"/>
                     <field name="state" widget="statusbar" statusbar_visible="draft,pending,confirmed" invisible="state in ('draft', 'pending', 'rejected')"/>
                     <field name="state" widget="statusbar" statusbar_visible="draft,pending,rejected" invisible="state in ('draft', 'pending', 'confirmed')"/>
                 </xpath>
+                <xpath expr="//form/header/button[@name='action_open_label_layout']" position="attributes">
+                    <attribute name="invisible">type == 'service' or assigned_to == uid</attribute>
+                </xpath>
                 <xpath expr="//sheet/notebook" position="inside">
-                    <page string="Approval Authorities" name="approval_users" invisible="not is_hidden_for_approval">
+                    <page string="Approval Authorities" name="approval_users" invisible="not approval_users_ids">
                         <field name="is_approved" invisible="1"/>
-
                         <group>
-                            <div class="o_row o_align_right">
+                            <div class="o_row o_align_right" invisible="not assigned_to">
                                 <label for="assigned_to"/>
-                                <field name="assigned_to" options="{'no_edit': True, 'no_create': True, 'no_open': True}" invisible="not assigned_to" readonly="1"/>
+                                <field name="assigned_to" options="{'no_edit': True, 'no_create': True, 'no_open': True}" readonly="1"/>
                                 <button name="action_suspend" string="Suspend" type="object" class="btn-primary" groups="base.group_system"/>
                             </div>
                         </group>
-                        <field name="approval_users_ids" nolabel="1" help="Define the approval roles."
-                                       readonly="1">
+                        <field name="approval_users_ids" nolabel="1" help="Define the approval roles." readonly="1">
                             <list editable="bottom">
                                 <field name="sequence"/>
-                                <field name="user_id" widget="many2one_avatar_user"
-                                               options="{'no_edit': True, 'no_create': True, 'no_open': True}"/>
+                                <field name="user_id" widget="many2one_avatar_user" options="{'no_edit': True, 'no_create': True, 'no_open': True}"/>
                                 <field name="remark"/>
                                 <field name="state" readonly="1"/>
                                 <field name="action_date" readonly="1"/>
                             </list>
                             <form>
                                 <group>
-                                    <field name="user_id"
-                                                   options="{'no_edit': True, 'no_create': True, 'no_open': True}"/>
+                                    <field name="user_id" options="{'no_edit': True, 'no_create': True, 'no_open': True}"/>
                                     <field name="state"/>
                                     <field name="remark"/>
                                 </group>

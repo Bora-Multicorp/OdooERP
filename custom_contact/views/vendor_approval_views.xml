@@ -19,8 +19,8 @@
                                 class="oe_highlight"
                                 confirm="Do you want to Approve the request?" invisible="1"/>
                         <button name="set_as_draft" string="Set As Draft" type="object"
-                                class="oe_highlight" confirm="Do you want to submit?"
-                                invisible="state != 'rejected'"/>
+                                class="oe_highlight" confirm="Do you want to submit?" groups="base.group_system"
+                                invisible="state != 'rejected' or not can_set_draft"/>
                         <field name="state" widget="statusbar"/>
                         <!--<field name="state" widget="statusbar" statusbar_visible="draft,pending,confirmed,rejected"
                                invisible="state in ('confirmed', 'rejected')"/>
@@ -32,6 +32,7 @@
                     <sheet>
                         <group>
                             <field name="partner_id" readonly="1"/>
+                            <field name="can_set_draft" invisible="1"/>
                             <field name="email" widget="upper_case" readonly="state not in ('draft')"/>
                             <field name="point_of_contact" placeholder="Your Answer" widget="upper_case"
                                    readonly="state not in ('draft')"/>
@@ -242,7 +243,7 @@
                                         <label for="deadline"/>
                                         <field name="deadline"/>
                                         <button name="action_suspend" string="Suspend" type="object" class="btn-primary"
-                                                groups="base.group_system"/>
+                                                groups="base.group_system" invisible="not assigned_to"/>
                                     </div>
                                 </group>
                                 <field name="approval_users_ids" nolabel="1" help="Define the approval roles."
@@ -251,7 +252,7 @@
                                         <field name="sequence"/>
                                         <field name="user_id" widget="many2one_avatar_user"
                                                readonly="1"/>
-                                        <field name="group" readonly="1"/>
+                                        <field name="group" readonly="1" column_invisible="1"/>
                                         <field name="remark" readonly="1"/>
                                         <field name="state" readonly="1"/>
                                         <field name="action_date" readonly="1"/>

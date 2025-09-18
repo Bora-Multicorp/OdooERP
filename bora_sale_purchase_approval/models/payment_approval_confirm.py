@@ -32,6 +32,7 @@ class PaymentTermApproval(models.Model):
         string="Credit Status",
         compute="_compute_credit_status_message"
     )
+
     #
     # # Default Approval Users setup
     # @api.model
@@ -52,8 +53,8 @@ class PaymentTermApproval(models.Model):
     def action_confirm(self):
         """Prevent confirmation if credit payment term is not yet approved."""
         for order in self:
-            if order.user_id != self.env.user:
-                raise ValidationError(_("You can not confirm this Sale Order."))
+            # if order.user_id != self.env.user:
+            #     raise ValidationError(_("You can not confirm this Sale Order."))
             if order.payment_term_id and order.payment_term_id.name == "Credit Payment":
                 if not order.is_payment_approved:
                     raise ValidationError(
@@ -92,7 +93,6 @@ class PaymentTermApproval(models.Model):
                 elif order.is_pending_approval:
                     msg = "<div class='alert alert-warning'>⏳ Payment Credit Term is in <b>Pending Approval</b>.</div>"
             order.credit_status_message = msg
-
 
     # Submit for approval
     # def confirm_submit_form(self):
@@ -142,7 +142,16 @@ class PaymentTermApproval(models.Model):
             if not order.is_payment_rejected:
                 raise ValidationError(_("Reset is only allowed if the credit approval was rejected."))
 
-            # Keep old lines as history, create new lines
+                # Keep old lines as history, create new lines
+                # Keep old lines as history, create new lines
+            for line in order.credit_approval_users_ids:
+                if not line.remark:
+                    # approver never acted in this cycle
+                    line.write({
+                        'state': 'suspended',
+                        'remark': 'Suspended',
+                        'action_date': fields.Datetime.now(),
+                    })
             approval_user_vals = []
             payment_approval_users = self.env['payment.term.approval.config'].sudo().search([])
             for approval in payment_approval_users:
@@ -235,7 +244,7 @@ class PaymentTermApprovalUsers(models.Model):
     payment_approval_id = fields.Many2one('sale.order', string="Payment Approval")
     job_id = fields.Char(string="Designation", readonly=True)
     user_id = fields.Many2one('res.users', string='User', required=True)
-    state = fields.Selection([('approve', 'Approved'), ('reject', 'Rejected'),('reset', 'Reset'),], string="Action")
+    state = fields.Selection([('approve', 'Approved'), ('reject', 'Rejected'),('suspended', 'Suspended'),('reset', 'Reset'), ], string="Action")
     remark = fields.Char('Remarks', tracking=True)
     action_date = fields.Datetime(string="Action Date")
 

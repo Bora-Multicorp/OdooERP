@@ -110,23 +110,29 @@ class ProductApproval(models.Model):
 
     def assign_users(self, approvers):
         approval_user_vals = []
-        for approval in approvers:
+        for index,approval in enumerate(approvers):
             approval_user_vals.append((0, 0, {
-                'sequence': approval.sequence,
+                'sequence': index+1,
                 'user_id': approval.user_id.id,
             }))
         self.write({
             'approval_users_ids': approval_user_vals,
             'state': 'pending'
+        })        
+
+        if self.id:
+            self._update_assigned_to()
+
+
+    def set_set_draft(self):
+        self.write({
+            'state': 'draft'
         })
-
-        self._update_assigned_to()
-
 
 
     def confirm_submit_form(self): 
-        po_confirm_approval_users = self.env['product.approval.config'].sudo().search([])
-        if not po_confirm_approval_users:
+        approval_users = self.env['product.approval.config'].sudo().search([])
+        if not approval_users:
             raise ValidationError("Please add confirmation approval authority before submit request.")
 
         return self.env.ref(
@@ -151,12 +157,46 @@ class ProductApproval(models.Model):
             
 
     def _update_state_based_on_approvals(self):
+
         for rec in self:
-            states = rec.approval_users_ids.mapped('state')
-            if any(s == 'reject' for s in states):
-                rec.state = 'rejected'
-            elif states and all(s == 'approve' for s in states):
-                rec.state = 'confirmed'
+
+            # 1. check if app have approved the product
+            do_all_approved = True
+            is_any_approval_pending = False
+            for user in self.get_last_approval_group():
+                if user.state == False:
+                    is_any_approval_pending = True
+                    break
+                if user.state != 'approve':
+                    do_all_approved = False
+
+            # 2. If approved then change state accordingly
+            if is_any_approval_pending == False:
+                if do_all_approved:
+                    rec.state = 'confirmed'
+                else:
+                    rec.state = 'rejected'
+
+        # for rec in self:
+        #     # Check if there are any approval records
+        #     if rec.approval_users_ids:
+        #         # Get the last approval record
+        #         last_approval = rec.approval_users_ids[-1]
+
+        #         # Check the state of the last approval record
+        #         if last_approval.state == 'reject':
+        #             rec.state = 'rejected'
+        #         elif last_approval.state == 'approve':
+                    # rec.state = 'confirmed'
+
+
+    # def _update_state_based_on_approvals(self):
+    #     for rec in self:
+    #         states = rec.approval_users_ids.mapped('state')
+    #         if any(s == 'reject' for s in states):
+    #             rec.state = 'rejected'
+    #         elif states and all(s == 'approve' for s in states):
+    #             rec.state = 'confirmed'
 
     domain_field = fields.Char(compute='_compute_domain')
     
@@ -176,6 +216,13 @@ class ProductApproval(models.Model):
 
     def suspend_approval_process(self,remark):
         for product in self:
+
+            product.message_post(
+                body=f"Approval suspended by {self.env.user.display_name}. Reason: {remark}",
+                message_type="comment",
+                subtype_xmlid="mail.mt_note"
+            )
+
             pending_approvers = product.approval_users_ids.filtered(lambda u: not u.state)
 
             pending_approvers.write({
@@ -354,13 +401,41 @@ class ProductApproval(models.Model):
         return res
 
 
+    def get_last_approval_group(self):
+        self.ensure_one()  # This method should be called on a single record
+        
+        # Sort the approval users by sequence in ascending order
+        sorted_approvals = self.approval_users_ids.sorted('sequence')
+        
+        if not sorted_approvals:
+            return self.env['product.approval.users'] # Return an empty recordset
+            
+        # Get the highest sequence number
+        last_sequence_number = sorted_approvals[-1].sequence
+        
+        last_group_ids = []
+        
+        # Iterate backwards from the last record
+        for approval_line in reversed(sorted_approvals):
+            # If the sequence number is the one we're looking for
+            if approval_line.sequence == last_sequence_number:
+                last_group_ids.append(approval_line.id)
+                # Decrement the target sequence number for the next iteration
+                last_sequence_number -= 1
+            else:
+                # We've found a break in the sequence, so the group is complete
+                break
+                
+        # Return the records that belong to the last group, in the correct order
+        return self.env['product.approval.users'].browse(reversed(last_group_ids))
+
+
 
 class ProductApprovalUsers(models.Model):
     _name = "product.approval.users"
     _rec_name = 'product_approval_id'
     _description = "Approval Users"
-    _order = "sequence"
-
+    
     sequence = fields.Integer(string='Sequence')
     product_approval_id = fields.Many2one('product.template', string="Product Approval")
     job_id = fields.Char(string="Designation", readonly=True)

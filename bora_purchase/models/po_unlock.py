@@ -19,12 +19,12 @@ class PurchaseOrderUnlock(models.Model):
 
 
     def assign_unlock_users(self, po_confirm_approval_users):
-        super(PurchaseOrderUnlock, self).button_confirm()
+        # super(PurchaseOrderUnlock, self).button_confirm()
 
         po_unlock_approval_user_vals = []
-        for approval in po_confirm_approval_users:
+        for index,approval in enumerate(po_confirm_approval_users):
             po_unlock_approval_user_vals.append((0, 0, {
-                'sequence': approval.sequence,
+                'sequence': index+1,
                 'user_id': approval.user_id.id,
             }))
         self.write({
@@ -32,13 +32,6 @@ class PurchaseOrderUnlock(models.Model):
             'state': 'done'
         })
 
-
-        
-        if self.assigned_to:
-            for user_id in self.approval_users_ids:
-                if user_id.state == 'reject':
-                    raise ValidationError(f"Unlock request is rejected by '{user_id.user_id.name}', please review 'Unlock Approval Authorities' tab for more details.")                
-            raise ValidationError(f"Unlock request is now pending from '{self.assigned_to.name}'.")
         
 
         if self.id:
@@ -49,13 +42,21 @@ class PurchaseOrderUnlock(models.Model):
 
     def button_unlock(self):
  
+        # 1. Check if the authority configured or not
         po_unlock_approval_users = self.env['purchase.order.approvers'].sudo().search([])
         if not po_unlock_approval_users:
             raise ValidationError("Please add unlock authority before submit request.")
 
+
+        # 2. Check if request is pending 
+        if self.assigned_to:
+            raise ValidationError(f"Unlock request is now pending from '{self.assigned_to.name}'.")
+
+        # 3. Show picker
         return self.env.ref(
             "bora_purchase.action_unlock_approval_user_picker_wizard"
         ).sudo().read()[0]
+
 
     def action_unlock_suspend(self):
         return self.env.ref(
@@ -64,6 +65,12 @@ class PurchaseOrderUnlock(models.Model):
 
 
     def suspend_unlock_process(self, remark):
+
+        self.message_post(
+            body=f"Unlock approval suspended by {self.env.user.display_name}. Reason: {remark}",
+            message_type="comment",
+            subtype_xmlid="mail.mt_note"
+        )
 
         for order in self:
 
@@ -127,8 +134,13 @@ class PurchaseOrderUnlock(models.Model):
         
         approval_users = self.env['purchase.order.approvers'].sudo().search([])
 
+        self.write({
+            'state': 'done',
+            'assigned_to': None
+        })
+
         for user in approval_users:
-            if user.user_id == self.env.user:
+            if user.user_id == self.env.user: 
                 self.env['bus.bus']._sendone(
                     user.user_id.partner_id,
                     'simple_notification', 
@@ -144,7 +156,7 @@ class PurchaseOrderUnlock(models.Model):
                     user.user_id.partner_id,
                     'simple_notification',
                     {
-                        'type': 'info',
+                        'type': 'danger',
                         'title': f'PO unlock approval request for {self.name}, rejected by {self.env.user.name}.',
                         'message':  f'',
                         'sticky': True,

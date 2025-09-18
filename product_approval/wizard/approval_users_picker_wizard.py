@@ -5,23 +5,24 @@ from odoo.exceptions import UserError
 class ApprovalUsersPicker(models.TransientModel):
     _name = 'product.approval.user.picker.wizard'
     _description = 'Product approval users picker'
+    user_ids_according_to_user_selection = fields.Char(store=True)
 
     product_id = fields.Many2one('product.template', string="Approval for Product Confirmation")
 
-    group1_users = fields.Many2many(
+    approver1_users = fields.Many2many( 
         comodel_name='product.approval.config',
-        relation='product_approval_picker_wizard_group1_rel',   # custom relation table
+        relation='picker_wizard_product_approver1_rel',   # custom relation table
         column1='wizard_id',                   # FK to wizard
         column2='approver_id',                 # FK to approver
-        string="Group 1"
+        string="Approver 1"
     )
 
-    group2_users = fields.Many2many(
+    approver2_users = fields.Many2many(
         comodel_name='product.approval.config',
-        relation='product_approval_picker_wizard_group2_rel',   # DIFFERENT relation table
+        relation='picker_wizard_product_approver2_rel',   # DIFFERENT relation table
         column1='wizard_id',
         column2='approver_id',
-        string="Group 2"
+        string="Approver 2"
     )
 
     add_button_disabled = fields.Boolean(
@@ -29,14 +30,22 @@ class ApprovalUsersPicker(models.TransientModel):
         compute='_compute_add_button_disabled'
     )
 
-    @api.depends('group1_users', 'group2_users')
+    @api.depends('approver1_users', 'approver2_users')
     def _compute_add_button_disabled(self):
         for rec in self:
-            rec.add_button_disabled = not (rec.group1_users or rec.group2_users)
+            rec.add_button_disabled = not (rec.approver1_users or rec.approver2_users)
 
     def add_users_for_approval(self):
-        approvers = self.group1_users | self.group2_users
+        user_id_strings = self.user_ids_according_to_user_selection.split(',')        
+        id_list = [int(id_str.strip()) for id_str in user_id_strings]
+        approvers = self.env['product.approval.config'].browse(id_list)
         self.product_id.assign_users(approvers)
+
+    @api.onchange('approver1_users', 'approver2_users')
+    def _user_change(self):
+        approvers = self.approver1_users | self.approver2_users
+        self.user_ids_according_to_user_selection = ','.join(str(u.id) for u in approvers)
+        self.user_ids_according_to_user_selection = self.user_ids_according_to_user_selection.replace("NewId_", "")
 
 
     @api.model
@@ -44,18 +53,16 @@ class ApprovalUsersPicker(models.TransientModel):
         res = super().default_get(fields)
         Approver = self.env['product.approval.config']
 
-        # Prefill Group 1 with only the default approvers
-        group1_ids = Approver.search([
-            ('group', '=', 'group1'), 
-            ('default_user', '=', True)
+        # Prefill Approver 1 with only the default approvers
+        approver1_ids = Approver.search([
+            ('default_approver', '=', 'approver1')
         ]).ids
-        res['group1_users'] = [(6, 0, group1_ids)]
+        res['approver1_users'] = [(6, 0, approver1_ids)]
 
-        # Prefill Group 2 with only the default approvers
-        group2_ids = Approver.search([
-            ('group', '=', 'group2'), 
-            ('default_user', '=', True)
+        # Prefill Approver 2 with only the default approvers
+        approver2_ids = Approver.search([
+            ('default_approver', '=', 'approver2')
         ]).ids
-        res['group2_users'] = [(6, 0, group2_ids)]
+        res['approver2_users'] = [(6, 0, approver2_ids)]
 
         return res

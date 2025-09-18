@@ -7,17 +7,16 @@
             <xpath expr="//notebook" position="inside">
                 <page name="confirm_approval_authorities_page" string="Confirmation Approval Authorities" invisible="not approval_users_ids_for_confirmation">
                     <group>
-                        <div class="o_row o_align_right">
+                        <div class="o_row o_align_right" invisible="not assigned_to_form_confirmation">
                             <label for="assigned_to_form_confirmation"/>
-                            <field name="assigned_to_form_confirmation" options="{'no_edit': True, 'no_create': True, 'no_open': True}" invisible="not assigned_to_form_confirmation" readonly="1"/>
-                            <button name="action_suspend" string="Suspend" type="object" class="btn-primary" groups="base.group_system"/>
+                            <field name="assigned_to_form_confirmation" options="{'no_edit': True, 'no_create': True, 'no_open': True}" readonly="1"/>
+                            <button name="action_confirm_suspend" string="Suspend" type="object" class="btn-primary" groups="base.group_system"/>
                         </div>
                     </group>
                     <field name="approval_users_ids_for_confirmation" nolabel="1" help="Define the PO confirm approval roles." readonly="1">
                         <list create="false">
                             <field name="sequence"/>
                             <field name="user_id" widget="many2one_avatar_user" readonly="1"/>
-                            <field name="group" readonly="1"/>
                             <field name="remark" readonly="1"/>
                             <field name="state" readonly="1"/>
                             <field name="action_date" readonly="1"/>
@@ -29,15 +28,18 @@
                 <button name="%(approve_po_confirm_wizard_action)d" string="Approve" type="action" class="oe_highlight" invisible="assigned_to_form_confirmation != uid"/>
                 <button name="%(reject_po_confirm_wizard_action)d" string="Reject" type="action" class="oe_highlight" invisible="assigned_to_form_confirmation != uid"/>
             </xpath>
-            <xpath expr="//button[@name='action_view_picking']" position="attributes">
+            <!-- <xpath expr="//button[@name='action_view_picking']" position="attributes">
                 <attribute name="invisible">1</attribute>
-            </xpath>
-            <xpath expr="//button[@name='button_draft']" position="attributes">
+            </xpath> -->
+            <!-- <xpath expr="//button[@name='button_draft']" position="attributes">
                 <attribute name="string">Set To RFQ</attribute>
-            </xpath>
-            <xpath expr="//div[hasclass('oe_button_box')]/button[@name='action_view_picking']" position="attributes">
-                <attribute name="invisible">state in ('confirmation_pending','cancellation_pending','unlock_pending', 'draft', 'cancel') or incoming_picking_count == 0</attribute>
-            </xpath>
+            </xpath> -->
+            <!-- <xpath expr="//div[hasclass('oe_button_box')]/button[@name='action_view_picking']" position="attributes">
+                <attribute name="invisible">['|', ('state', 'in', ('confirmation_pending','cancellation_pending','unlock_pending', 'draft', 'cancel')), ('incoming_picking_count', '=', 0)]</attribute>
+            </xpath> -->
+            <!-- <xpath expr="//div[hasclass('oe_button_box')]/button[@name='action_view_picking']" position="attributes">
+                <attribute name="invisible">0</attribute>
+            </xpath> -->
         </field>
     </record>
 </odoo>
