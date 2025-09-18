@@ -43,6 +43,7 @@ Bora sale operations
         'views/create_csv_and_download.xml',
         'views/qc_check_on_delivery.xml',
         'views/so_lock_readonly_fields.xml',
+        'views/incoterm_inherit.xml',
         'data/account_group_in_sales.xml',
     ],
     # 'assets': {

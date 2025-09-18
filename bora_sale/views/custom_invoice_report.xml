@@ -34,14 +34,16 @@
                              style="font-size:14px; font-family:sans-serif;margin: auto;">
                             <t t-set="sale_order"
                                t-value="o.invoice_line_ids and o.invoice_line_ids[0].sale_line_ids and o.invoice_line_ids[0].sale_line_ids[0].order_id or False"/>
-                            <div style="text-align: center; font-weight: bold; font-size:16px">EXPORT
-                                INVOICE
-                            </div>
-                            <p style="text-align:center; margin:0; font-size:14px;">(SUPPLY MEANT
-                                FOR EXPORT/SUPPLY
-                                TO SEZ UNIT OR SEZ DEVELOPER FOR AUTHORISED OPERATIONS ON PAYMENT OF
-                                IGST)
-                            </p>
+
+                                <t t-if="o.partner_id.country_id.code == 'IN'">
+                                    <div style="text-align: center; font-weight: bold; font-size:16px">CUSTOMER INVOICE</div>
+                                </t>
+                                <t t-else="" class="text-end">
+                                    <div style="text-align: center; font-weight: bold; font-size:16px">EXPORT INVOICE</div>
+                                    <p style="text-align:center; margin:0; font-size:14px;">(SUPPLY MEANT FOR EXPORT/SUPPLY TO SEZ UNIT OR SEZ DEVELOPER FOR AUTHORISED OPERATIONS ON PAYMENT OF IGST)</p>
+                                </t>
+
+
                             <table
                                     style="width:100%; border-collapse:collapse; margin-bottom:12px; font-family:sans-serif;">
                                 <tr style="page-break-inside: avoid;">
@@ -130,11 +132,9 @@
                                         </div>
 
                                     </td>
-                                    <td
-                                            style="width:40%; vertical-align:top; border:1px solid black; padding:0; border-bottom:0px;">
+                                    <td style="width:40%; vertical-align:top; border:1px solid black; padding:0; border-bottom:0px;">
                                         <div style="padding: 0px;line-height: 1.1;">
-                                            <table
-                                                    style="border-collapse: collapse; width: 100%; padding: 5px;line-height: 1.1; border-bottom:0px;">
+                                            <table style="border-collapse: collapse; width: 100%; padding: 5px;line-height: 1.1; border-bottom:0px;">
                                                 <tr>
                                                     <td
                                                             style="padding:3px; border-bottom:1px solid black; border-right:1px solid black; width:50%;">
@@ -179,14 +179,14 @@
                                                     <td
                                                             style="padding:3px; border-bottom:1px solid black;">
 
-                                                        <span
-                                                                style="font-size:14px; margin-bottom:5px;">Mode/Terms of
-                                                            Payment:
+                                                        <span style="font-size:14px; margin-bottom:5px;">Mode/Terms of Payment:
                                                         </span>
                                                         <br/>
                                                         <strong>
-                                                            <span style="font-size:14px;"
-                                                                  t-esc="o.invoice_payment_term_id.name"/>
+                                                                                                                    <t t-set="sale_order"
+                                                               t-value="o.invoice_line_ids and o.invoice_line_ids[0].sale_line_ids and o.invoice_line_ids[0].sale_line_ids[0].order_id"/>
+                                                            <span t-if="sale_order"
+                                                                  t-field="sale_order.payment_term_id.name"/>
                                                         </strong>
                                                     </td>
                                                 </tr>
@@ -206,19 +206,11 @@
                                                                     t-field="o.invoice_date"/>
                                                         </strong>
                                                     </td>
-                                                    <td
-                                                            style="padding:3px; border-bottom:1px solid black;">
-                                                        <span
-                                                                style="font-size:14px; margin-bottom:5px;">Other
-                                                            References
-                                                        </span>
+                                                    <td style="padding:3px; border-bottom:1px solid black;">
+                                                        <span style="font-size:14px; margin-bottom:5px;">Other References </span>
                                                         <br/>
                                                         <strong>
-                                                            <t t-set="sale_order"
-                                                               t-value="o.invoice_line_ids and o.invoice_line_ids[0].sale_line_ids and o.invoice_line_ids[0].sale_line_ids[0].order_id"/>
-                                                            <span style="font-size:14px;"
-                                                                  t-if="sale_order"
-                                                                  t-field="sale_order.client_order_ref"/>
+                                                            <span t-field="o.ref"/>
                                                         </strong>
                                                     </td>
                                                 </tr>
@@ -361,24 +353,23 @@
                                                             Country:
                                                         </span>
                                                         <strong>
-                                                            <span
-                                                                    t-field="o.partner_id.country_id.name"/>
+                                                            <span t-field="o.partner_id.country_id.name"/>
                                                         </strong>
                                                     </td>
                                                 </tr>
                                                 <tr>
-                                                    <td colspan="2"
-                                                        style="padding:3px; border-bottom:1px solid black; border-bottom:0px;">
-                                                        <span
-                                                                style="font-size:14px; margin-bottom:5px;">Terms of
-                                                            Delivery:
-                                                        </span>
+                                                    <td colspan="2" style="padding:3px; border-bottom:1px solid black; border-bottom:0px;">
+                                                        <span style="font-size:14px; margin-bottom:5px;">Terms of Delivery: </span>
                                                         <br/>
                                                         <strong>
-                                                            <t t-set="sale_order"
-                                                               t-value="o.invoice_line_ids and o.invoice_line_ids[0].sale_line_ids and o.invoice_line_ids[0].sale_line_ids[0].order_id"/>
-                                                            <span t-if="sale_order"
-                                                                  t-field="sale_order.note"/>
+                                                            <span t-field="o.invoice_incoterm_id.code"/>
+                                                            <span t-field="o.invoice_incoterm_id.name"/>
+                                                            <br/>
+                                                            CONTRACT DATE: <span t-field="o.contract_date" t-options='{"format": "dd-MMM-yy"}'/>
+                                                            <br/>
+                                                            CONTRACT NO.: <span t-field="o.contract_number"/>
+                                                            <br/>
+                                                            <span t-field="o.invoice_incoterm_id.description"/>
                                                         </strong>
                                                     </td>
                                                 </tr>
@@ -809,6 +800,7 @@
                                                         <t t-if="o.partner_bank_id">
                                                             <strong>
                                                                     <span t-field="o.partner_bank_id.branch"/>
+                                                                    &amp;
                                                                     <span t-field="o.partner_bank_id.ifsc_code"/>
                                                             </strong>
                                                         </t>
@@ -818,7 +810,7 @@
                                                                     <strong>
                                                                         <span t-field="o.company_id.partner_id.bank_ids[0].acc_number"/>
                                                                         &amp;
-                                                                        <span t-field="o.company_id.partner_id.bank_ids[0].acc_number"/>
+                                                                        <span t-field="o.company_id.partner_id.bank_ids[0].ifsc_code"/>
                                                                     </strong>
                                                                 </t>
                                                             </t>
@@ -839,6 +831,12 @@
                                                             </t>
                                                         </t>
                                                         <br/>
+                                                        Company's PAN/IEC Code:
+                                                        <t t-if="o.company_id.l10n_in_pan">
+                                                            <strong>
+                                                                <span t-field="o.company_id.l10n_in_pan"/>
+                                                            </strong>
+                                                        </t>
                                                     </div>
                                                     <table style="width:100%; border-collapse:collapse; margin-bottom:0; font-family:sans-serif; margin-top:10px;">
                                                         <tr>
@@ -1045,8 +1043,7 @@
                                                 <td
                                                         style="padding:5px; border-right:1px solid black; border-bottom:1px solid black;">
                                                     <div>
-                                                        <span style="font-size:14px !important;">Supplier's
-                                                            Ref.
+                                                        <span style="font-size:14px !important;">Supplier's Ref.
                                                         </span>
                                                     </div>
                                                     <div>
