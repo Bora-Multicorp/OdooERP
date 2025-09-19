@@ -109,7 +109,8 @@
                                            class="o_field_widget o_td_label text-break"
                                            colspan="2"/>
                                     <field name="pan_card_attachments" widget="many2many_attachment_preview"
-                                           options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 1}"/>
+                                           options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 1}"
+                                           class="o_field_widget o_td_label text-break" colspan="2"/>
                                 </list>
                                 <form>
                                     <field name="designation" widget="upper_case"/>
@@ -129,7 +130,8 @@
                                            class="o_field_widget o_td_label text-break"
                                            colspan="2"/>
                                     <field name="pan_card_attachments" widget="many2many_attachment_preview"
-                                           options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 1}"/>
+                                           options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 1}"
+                                           class="o_field_widget o_td_label text-break" colspan="2"/>
                                 </form>
                             </field>
                             <!--                            <field name="director_name" placeholder="Your Answer"-->
