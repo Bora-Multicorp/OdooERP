@@ -67,15 +67,20 @@
             <xpath expr="//field[@name='date_order' and @groups='base.group_no_one']" position="attributes">
                 <attribute name="readonly">state in ('sale', 'unlock_pending', 'cancel')</attribute>
             </xpath>
-            <!-- <xpath expr="//group[@name='date_approve']/field[@name='date_order' and not(@groups)]" position="attributes">
-                <attribute name="readonly">state in ('sale', 'unlock_pending', 'cancel')</attribute>
-            </xpath> -->
             <xpath expr="//field[@name='pricelist_id']" position="attributes">
                 <attribute name="readonly">state in ('sale', 'unlock_pending', 'cancel')</attribute>
             </xpath>
             <xpath expr="//field[@name='payment_term_id']" position="attributes">
                 <attribute name="readonly">state in ('sale', 'unlock_pending', 'cancel')</attribute>
             </xpath>
+            <xpath expr="//field[@name='require_signature']" position="attributes">
+                <attribute name="readonly">state in ('sale', 'unlock_pending', 'cancel')</attribute>
+            </xpath>
+            <xpath expr="//field[@name='require_payment']" position="attributes">
+                <attribute name="readonly">state in ('sale', 'unlock_pending', 'cancel')</attribute>
+            </xpath>
+
+            
         </field>
     </record>
     <record id="view_sale_order_form_inherit_unlock_page_other_field" model="ir.ui.view">
@@ -88,4 +93,19 @@
             </xpath>
         </field>
     </record>
+
+    <record id="maake_warehouse_id_field_readonly" model="ir.ui.view">
+        <field name="name">maake.warehouse.id.field.readonly</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale_stock.view_order_form_inherit_sale_stock"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='warehouse_id'][not(@invisible)]" position="attributes">
+                <attribute name="readonly">state in ('sale', 'unlock_pending', 'cancel')</attribute>
+            </xpath>
+        </field>
+    </record>
+
+
+
+    
 </odoo>
