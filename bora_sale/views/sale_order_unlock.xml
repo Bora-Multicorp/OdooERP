@@ -36,10 +36,10 @@
                 <button name="%(reject_pi_wizard_action)d" string="Reject" type="action" class="oe_highlight" invisible="assigned_to != uid"/>
             </xpath>
             <xpath expr="//form/header/button[@name='action_unlock']" position="attributes">
-                <attribute name="invisible">state in ('unlock_pending', 'cancel')</attribute>
+                <attribute name="invisible">state in ('unlock_pending', 'cancel', 'draft', 'confirmation_pending', 'cancellation_pending')</attribute>
             </xpath>
             <xpath expr="//form/header/button[@name='action_preview_sale_order']" position="attributes">
-                <attribute name="invisible">state in ('unlock_pending', 'cancel')</attribute>
+                <attribute name="invisible">state in ('unlock_pending', 'cancel', 'confirmation_pending', 'cancellation_pending')</attribute>
             </xpath>
         </field>
     </record>
