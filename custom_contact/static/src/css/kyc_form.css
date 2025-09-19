@@ -1,0 +1,9 @@
+.o_list_renderer table {
+    table-layout: auto !important;
+    width: 100% !important;
+    word-wrap: break-word;
+}
+
+.o_list_renderer td {
+    white-space: normal !important;
+}
