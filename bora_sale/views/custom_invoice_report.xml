@@ -373,7 +373,7 @@
                                                                 CONTRACT NO.: <span t-field="o.contract_number"/>
                                                             </t>
                                                             <br/>
-                                                            <span t-field="o.invoice_incoterm_id.description"/>
+                                                            <span t-field="o.incoterm_description"/>
                                                         </strong>
                                                     </td>
                                                 </tr>
