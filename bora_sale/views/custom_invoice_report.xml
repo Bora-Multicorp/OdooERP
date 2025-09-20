@@ -39,7 +39,7 @@
                                 </t>
                                 <t t-else="" class="text-end">
                                     <div style="text-align: center; font-weight: bold; font-size:16px">EXPORT INVOICE</div>
-                                    <p style="text-align:center; margin:0; font-size:14px;">(SUPPLY MEANT FOR EXPORT/SUPPLY TO SEZ UNIT OR SEZ DEVELOPER FOR AUTHORISED OPERATIONS ON PAYMENT OF IGST)</p>
+                                    <p style="text-align:center; margin: 8px auto; font-size:12px;">(SUPPLY MEANT FOR EXPORT/SUPPLY TO SEZ UNIT OR SEZ DEVELOPER FOR AUTHORISED OPERATIONS ON PAYMENT OF IGST)</p>
                                 </t>
                             <table
                                 style="width:100%; border-collapse:collapse; margin-bottom:12px; font-family:sans-serif;">
@@ -93,21 +93,39 @@
                                         </div>
                                         <hr
                                             style="margin:0px; height:1px; border:none; background-color:black; color:black; width:95%;" />
-                                        <div style="font-size: 14px; padding: 5px;line-height: 1;">Buyer
-                                            (Bill to) <strong>
+                                        <div style="font-size: 14px; padding: 5px;line-height: 1;">Buyer (Bill to) <strong>
                                                 <div style="padding-top: 5px; margin-bottom: 5px;">
                                                     <span t-field="o.partner_id.name" />
                                                 </div>
                                             </strong>
-                                            <div
-                                                style="max-width: 300px;"><span
-                                                    t-field="o.partner_id.street" />, <br />
-                                                <span
-                                                    t-field="o.partner_id.street2" />, <span
-                                                    t-field="o.partner_id.country_id.name" />
-                                                <br />State
-                                            Name : <span t-field="o.partner_id.state_id.name" />
+
+
+                                            <div style="max-width: 300px;">
+                                                <t t-if="o.partner_id.street">
+                                                    <span t-field="o.partner_id.street"/>, 
+                                                    <br/>
+                                                </t>
+                                                <t t-if="o.partner_id.street2">
+                                                    <span t-field="o.partner_id.street2"/>, 
+                                                    <br/>
+                                                </t>
+                                                <t t-if="o.partner_id.city">
+                                                    <span t-field="o.partner_id.city"/>, 
+                                                </t>
+                                                <t t-if="o.partner_id.state_id.name">
+                                                    <span t-field="o.partner_id.state_id.name"/>, 
+                                                    <br/>
+                                                </t>
+                                                <t t-if="o.partner_id.country_id.name">
+                                                    <span t-field="o.partner_id.country_id.name"/>
+                                                </t>
+                                                <t t-if="o.partner_id.zip">
+                                                    - <span t-field="o.partner_id.zip"/>
+                                                </t>
+                                                <br/>
                                             </div>
+
+
                                             <br />
                                             <br />
                                             <br />
@@ -186,7 +204,7 @@
                                                         </span>
                                                         <strong>
                                                             <span style="font-size:14px;"
-                                                                t-field="o.name" /> dt. <br/><span
+                                                                t-field="o.name" /> <br/>dt. <span
                                                                 style="font-size:14px;"
                                                                 t-field="o.invoice_date" t-options='{"format": "dd-MMM-yy"}'/>
                                                         </strong>
@@ -284,7 +302,8 @@
                                                         </span>
                                                         <br />
                                                         <strong>
-                                                            <span t-field="o.incoterm_location"/>
+                                                            <span
+                                                                t-field="o.partner_id.country_id.name" />
                                                         </strong>
                                                     </td>
                                                 </tr>
@@ -448,7 +467,7 @@
                                                         </td>
                                                         <td
                                                             t-if="'l10n_in_hsn_code' in row[1].product_id._fields and row[1].product_id.l10n_in_hsn_code" style="text-align: center;"
-                                                            class="text-end">
+                                                            >
                                                             <span
                                                                 t-field="row[1].product_id.l10n_in_hsn_code" />
                                                         </td>
@@ -489,11 +508,12 @@
                                                         style="border:1px solid black; border-top: none;border-bottom: none;"></td>
                                                     <td
                                                         style="border:1px solid black; border-top: none;border-bottom: none;"></td>
-                                                    <td
-                                                        style="border:1px solid black; text-align:center; border-top: none;border-bottom: none;"
-                                                        class="right sm">
-                                                        <span t-field="o.amount_untaxed" />
-                                                    </td>
+                                                    <t t-set="unique_tax_amounts_list" t-value="sorted(list(set(sum(o.invoice_line_ids.mapped('tax_ids'), o.env['account.tax']))), key=lambda l: l.amount)"/>
+                                                    <t t-if="len(unique_tax_amounts_list) > 0">
+                                                        <td style="border:1px solid black; text-align:center; border-top: none;border-bottom: none;" class="right sm">
+                                                            <span t-field="o.amount_untaxed"/>
+                                                        </td>
+                                                    </t>
                                                 </tr>
                                                 <tr>
                                                     <td
@@ -502,15 +522,22 @@
                                                     <td
                                                         style="border:1px solid black; border-top: none;border-bottom: none; padding: 5px;"
                                                         class="sm">
-                                                        <p style="font-size: 14px; font-style: italic; font-weight: bold; text-align: right;">
-                                                            OUTPUT
-                                                            <span t-esc="'IGST' if o.invoice_line_ids and o.invoice_line_ids[0].tax_ids and 'IGST' in o.invoice_line_ids[0].tax_ids[0].name.upper() else 'GST'"/>
-                                                            @
-                                                            <!-- <t t-if="o.invoice_line_ids[0].tax_ids[0].amount">
-                                                                <span t-esc="o.invoice_line_ids[0].tax_ids[0].amount" t-options="{'widget': 'float', 'precision': 1}"/>
-                                                            </t> -->
-                                                            %
-                                                        </p>
+                                                        <t t-set="unique_tax_amounts" t-value="sorted(list(set(sum(o.invoice_line_ids.mapped('tax_ids'), o.env['account.tax']))), key=lambda l: l.amount)"/>
+                                                        <t t-if="unique_tax_amounts">
+                                                            <p style="font-size: 14px; font-style: italic; font-weight: bold; text-align: right;">
+                                                                OUTPUT
+                                                                <span t-esc="'IGST' if o.invoice_line_ids and o.invoice_line_ids[0].tax_ids and 'IGST' in o.invoice_line_ids[0].tax_ids[0].name.upper() else 'GST'"/>
+                                                                @
+                                                                <t t-set="formatted_amounts" t-value="', '.join(str(int(l.amount)) + '%' for l in unique_tax_amounts)"/>
+                                                                <t t-if="len(unique_tax_amounts) &gt; 1">
+                                                                    <span t-esc="'(' + formatted_amounts + ')'"/>
+                                                                </t>
+                                                                <t t-else="">
+                                                                    <span t-esc="formatted_amounts"/>
+                                                                </t>
+                                                            </p>
+                                                        </t>
+
                                                     </td>
                                                     <td
                                                         style="border:1px solid black; border-top: none;border-bottom: none; text-align: center;"
@@ -518,50 +545,53 @@
                                                     <td
                                                         style="border:1px solid black; border-top: none;border-bottom: none; text-align: center;"
                                                         class="right sm"></td>
-                                                    <td
-                                                        style="border:1px solid black; border-top: none;border-bottom: none; text-align: center;"
-                                                        class="right sm">
-                                                        <t t-if="o.invoice_line_ids and o.invoice_line_ids[0].tax_ids">
-                                                            <t t-set="tax_percent"
-                                                                t-value="o.invoice_line_ids[0].tax_ids[0].amount" />
-                                                            <span>
-                                                                <t t-esc="tax_percent" />
-                                                            </span>
-                                                        </t>
-                                                        <t t-else="">
-                                                        </t>
+                                                    <td style="border:1px solid black; border-top: none;border-bottom: none; text-align: center;" class="right sm">
+                                                        <t t-set="formatted_amounts" t-value="', '.join(str(int(l.amount)) for l in unique_tax_amounts)"/>
+                                                        <span t-esc="formatted_amounts"/>
                                                     </td>
-                                                    <td
-                                                        style="border:1px solid black; border-top: none;border-bottom: none; text-align: center;"
-                                                        class="center sm">%
-                                                    </td>
-                                                    <td
-                                                        style="border:1px solid black; border-top: none;border-bottom: none; text-align: center;"
-                                                        class="right sm">
-                                                        <span t-field="o.amount_tax" />
-                                                    </td>
+                                                    <t t-set="unique_tax_amounts_list" t-value="sorted(list(set(sum(o.invoice_line_ids.mapped('tax_ids'), o.env['account.tax']))), key=lambda l: l.amount)"/>
+                                                    <t t-if="len(unique_tax_amounts_list) > 0">
+                                                        <td style="border:1px solid black; border-top: none;border-bottom: none; text-align: center;" class="center sm">%</td>
+                                                    </t>
+                                                    <t t-else="">
+                                                        <td style="border:1px solid black; border-top: none;border-bottom: none; text-align: center;" class="center sm"></td>
+                                                    </t>
+
+
+
+                                                    <t t-set="unique_tax_amounts_list" t-value="sorted(list(set(sum(o.invoice_line_ids.mapped('tax_ids'), o.env['account.tax']))), key=lambda l: l.amount)"/>
+                                                    <t t-if="len(unique_tax_amounts_list) > 0">
+                                                        <td style="border:1px solid black; border-top: none;border-bottom: none; text-align: center;" class="right sm">
+                                                            <span t-field="o.amount_tax" />
+                                                        </td>
+                                                    </t>
+                                                    <t t-else="">
+                                                        <td style="border:1px solid black; border-top: none;border-bottom: none; text-align: center;" class="center sm"></td>
+                                                    </t>
+
+
                                                 </tr>
                                                 <tr>
                                                     <td
-                                                        style="border:1px solid black; text-align: center;"
+                                                        style="border:1px solid black; text-align: center; padding:5px;"
                                                         class="center sm"></td>
-                                                    <td style="border:1px solid black; text-align:right; padding-right:10px;" class="center sm">Total</td>
-                                                    <td style="border:1px solid black;"
+                                                    <td style="border:1px solid black; text-align:right; padding-right:10px; padding:5px;" class="center sm">Total</td>
+                                                    <td style="border:1px solid black; padding:5px;"
                                                         class="center sm"></td>
                                                     <td
-                                                        style="border:1px solid black; text-align: center; font-weight: bold;"
+                                                        style="border:1px solid black; text-align: center; font-weight: bold;padding:5px;"
                                                         class="right sm">
                                                         <span
                                                             t-esc="'%0.0f' % sum(line.quantity for line in o.invoice_line_ids)" />
                                                         NOS </td>
                                                     <td
-                                                        style="border:1px solid black; text-align: center;"
+                                                        style="border:1px solid black; text-align: center;padding:5px;"
                                                         class="right sm"></td>
                                                     <td
-                                                        style="border:1px solid black; text-align: center;"
+                                                        style="border:1px solid black; text-align: center;padding:5px;"
                                                         class="center sm"></td>
                                                     <td
-                                                        style="border:1px solid black; text-align: center;"
+                                                        style="border:1px solid black; text-align: center;padding:5px;"
                                                         class="right sm">
                                                         <span t-field="o.amount_total" />
                                                     </td>
@@ -569,197 +599,133 @@
                                                 <tr>
                                                     <td
                                                         style="border:1px solid black; vertical-align: middle; border-right:0px; padding:3px;"
-                                                        class="right sm" colspan="6">Amount
-                                                        Chargeable (in words) <p
+                                                        class="right sm" colspan="6">Amount Chargeable (in words) <p
                                                             style="margin: 0px;  font-weight: bold; font-size: 13px">
-                                                            <span
-                                                                t-esc="o.currency_id.amount_to_text(o.amount_total) + ' only'" />
+                                                            <span t-esc="o.currency_id.amount_to_text(o.amount_total) + ' only'" />
                                                         </p>
                                                     </td>
                                                     <td
-                                                        style="border:1px solid black;vertical-align: baseline;text-align: center; border-left:0px;"
+                                                        style="border:1px solid black;vertical-align: baseline;text-align: center; border-left:0px; padding:3px;"
                                                         class="center sm">E. &amp; O.E
                                                     </td>
                                                 </tr>
-                                                <tr>
-                                                    <td
-                                                        style="border:1px solid black; text-align: center; vertical-align: middle; border-bottom: 0px;"
-                                                        class="center sm" colspan="3">
-                                                        <span
-                                                            style="display:inline-block; padding:3px;">
-                                                            HSN/SAC</span>
-                                                    </td>
-                                                    <td
-                                                        style="border:1px solid black; text-align: center; border-bottom: 0px; vertical-align: bottom;"
-                                                        class="right sm">Taxable
-                                                    </td>
-                                                    <td style="border:1px solid black; text-align: center; vertical-align: middle;" colspan="2" class="center sm">
-                                                        <span t-esc="'IGST' if o.invoice_line_ids and o.invoice_line_ids[0].tax_ids and 'IGST' in o.invoice_line_ids[0].tax_ids[0].name.upper() else 'GST'"/>
-                                                    </td>
-                                                    <td
-                                                        style="border:1px solid black; text-align: center; border-bottom: 0px; vertical-align: bottom;"
-                                                        class="right sm">Total
-                                                    </td>
-                                                </tr>
-                                                <tr>
-                                                    <td
-                                                        style="border:1px solid black; text-align: center; border-top:0px;"
-                                                        class="center sm" colspan="3"></td>
-                                                    <td
-                                                        style="border:1px solid black; text-align: center; border-top: 0px;"
-                                                        class="right sm">Value
-                                                    </td>
-                                                    <td style="padding:0; border:1px solid"
-                                                        colspan="2">
-                                                        <table
-                                                            style="border-collapse: collapse; width: 100%; font-size: 10px; table-layout: fixed;">
-                                                            <tr>
-                                                                <td
-                                                                    style="border:1px solid black;text-align: center;border-bottom:0px; border-top: 0px;border-left: 0px; width:30px; min-width:30px; max-width:30px;">
-                                                                    <span
-                                                                        style="display:inline-block; padding:3px;">
-                                                                        Rate</span>
-                                                                </td>
-                                                                <td
-                                                                    style="border:1px solid black;text-align: center;border-top: 0px;border-right: 0px;border-bottom:0px;">
-                                                                    <span
-                                                                        style="display:inline-block; padding:3px;">
-                                                                        Amount</span>
-                                                                </td>
-                                                            </tr>
-                                                        </table>
-                                                    </td>
-                                                    <td
-                                                        style="border:1px solid black; text-align: center; border-top: 0px;"
-                                                        class="right sm">Tax Amount
-                                                    </td>
-                                                </tr>
-                                                <t
-                                                    t-foreach="enumerate(o.invoice_line_ids, start=1)"
-                                                    t-as="row">
+                                                <t t-set="has_any_taxes" t-value="any(line.tax_ids for line in o.invoice_line_ids)"/>
+                                                <t t-if="has_any_taxes">
                                                     <tr>
-                                                        <td
-                                                            t-if="'l10n_in_hsn_code' in row[1].product_id._fields and row[1].product_id.l10n_in_hsn_code"
-                                                            style="border:1px solid black; text-align: left;"
-                                                            class="center sm" colspan="3">
-                                                            <span
-                                                                style="display:inline-block; padding:3px;"
-                                                                t-field="row[1].product_id.l10n_in_hsn_code" />
+                                                        <td style="border:1px solid black; text-align: center; vertical-align: middle; border-bottom: 0px;" class="center sm" colspan="3">
+                                                            <span style="display:inline-block; padding:3px;">HSN/SAC</span>
                                                         </td>
-                                                        <td t-else=""
-                                                            style="border:1px solid black; text-align: left;"
-                                                            class="center sm" colspan="3"></td>
-                                                        <td
-                                                            style="border:1px solid black; text-align:center; border-top: none;border-bottom: none;"
-                                                            class="right sm">
-                                                            <span
-                                                                style="display:inline-block; padding:3px;"
-                                                                t-field="row[1].price_subtotal"
-                                                                t-options='{"widget": "monetary"}' />
+                                                        <td style="border:1px solid black; text-align: center; border-bottom: 0px; vertical-align: bottom;" class="right sm">Taxable
                                                         </td>
-                                                        <td style="padding:0;" colspan="2">
-                                                            <table
-                                                                style="border-collapse: collapse; width: 100%; font-size: 10px;  table-layout: fixed;">
+                                                        <td style="border:1px solid black; text-align: center; vertical-align: middle;" colspan="2" class="center sm">
+                                                            <span t-esc="'IGST' if o.invoice_line_ids and o.invoice_line_ids[0].tax_ids and 'IGST' in o.invoice_line_ids[0].tax_ids[0].name.upper() else 'GST'"/>
+                                                        </td>
+                                                        <td style="border:1px solid black; text-align: center; border-bottom: 0px; vertical-align: bottom;" class="right sm">Total
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td style="border:1px solid black; text-align: center; border-top:0px;" class="center sm" colspan="3"></td>
+                                                        <td style="border:1px solid black; text-align: center; border-top: 0px;" class="right sm">Value
+                                                        </td>
+                                                        <td style="padding:0; border:1px solid" colspan="2">
+                                                            <table style="border-collapse: collapse; width: 100%; font-size: 10px; table-layout: fixed;">
                                                                 <tr>
-                                                                    <td
-                                                                        style="border:1px solid black; padding:3px;text-align: center; border-bottom:0px; border-top: 0px; border-left: 0px; min-width:30px; width:30px; max-width:30px;">
-                                                                        <span t-if="row[1].tax_ids"
-                                                                            t-esc="row[1].tax_ids[0].amount"></span>
-                                                                        % </td>
-
-                                                                    <td
-                                                                        style="border:1px solid black;text-align: center; border-bottom:0px; border-top: 0px;border-right: 0px;">
-                                                                        <span
-                                                                            style="display:inline-block; padding:3px;"
-                                                                            t-esc="row[1].price_total - row[1].price_subtotal"
-                                                                            t-options='{"widget": "monetary", "display_currency": o.currency_id}' />
+                                                                    <td style="border:1px solid black;text-align: center;border-bottom:0px; border-top: 0px;border-left: 0px; width:30px; min-width:30px; max-width:30px;">
+                                                                        <span style="display:inline-block; padding:3px;"> Rate</span>
+                                                                    </td>
+                                                                    <td style="border:1px solid black;text-align: center;border-top: 0px;border-right: 0px;border-bottom:0px;">
+                                                                        <span style="display:inline-block; padding:3px;"> Amount</span>
                                                                     </td>
                                                                 </tr>
                                                             </table>
                                                         </td>
-                                                        <td
-                                                            style="border:1px solid black; text-align: center; border-bottom: 0px;"
-                                                            class="right sm">
-                                                            <span
-                                                                t-esc="row[1].price_total - row[1].price_subtotal"
-                                                                t-options='{"widget": "monetary", "display_currency": o.currency_id}' />
+                                                        <td style="border:1px solid black; text-align: center; border-top: 0px;" class="right sm">Tax Amount
+                                                        </td>
+                                                    </tr>
+                                                    <t t-foreach="enumerate(o.invoice_line_ids, start=1)" t-as="row">
+                                                        <t t-if="row[1].tax_ids">
+                                                            <tr>
+                                                                <td t-if="'l10n_in_hsn_code' in row[1].product_id._fields and row[1].product_id.l10n_in_hsn_code" style="border:1px solid black; text-align: left;" class="center sm" colspan="3">
+                                                                    <span style="display:inline-block; padding:3px;" t-field="row[1].product_id.l10n_in_hsn_code" />
+                                                                </td>
+                                                                <td t-else="" style="border:1px solid black; text-align: left;" class="center sm" colspan="3"></td>
+                                                                <td style="border:1px solid black; text-align:center; border-top: none;border-bottom: none;" class="right sm">
+                                                                    <span style="display:inline-block; padding:3px;" t-field="row[1].price_subtotal" t-options='{"widget": "monetary"}' />
+                                                                </td>
+                                                                <td style="padding:0;" colspan="2">
+                                                                    <table style="border-collapse: collapse; width: 100%; font-size: 10px;  table-layout: fixed;">
+                                                                        <tr>
+                                                                            <td style="border:1px solid black; padding:3px;text-align: center; border-bottom:0px; border-top: 0px; border-left: 0px; min-width:30px; width:30px; max-width:30px;">
+                                                                                <span t-if="row[1].tax_ids" t-esc="row[1].tax_ids[0].amount"></span>%
+                                                                            </td>
+                                                                            <td style="border:1px solid black;text-align: center; border-bottom:0px; border-top: 0px;border-right: 0px;">
+                                                                                <span style="display:inline-block; padding:3px;" t-esc="row[1].price_total - row[1].price_subtotal" t-options='{"widget": "monetary", "display_currency": o.currency_id}' />
+                                                                            </td>
+                                                                        </tr>
+                                                                    </table>
+                                                                </td>
+                                                                <td style="border:1px solid black; text-align: center; border-bottom: 0px;" class="right sm">
+                                                                    <span t-esc="row[1].price_total - row[1].price_subtotal" t-options='{"widget": "monetary", "display_currency": o.currency_id}' />
+                                                                </td>
+                                                            </tr>
+                                                        </t>
+                                                    </t>
+                                                    <tr>
+                                                        <td style="border:1px solid black; text-align: right; vertical-align: middle;padding-right: 5px;" class="center sm" colspan="3">
+                                                            <span style="display:inline-block; padding:3px;">
+                                                                <strong>Total</strong>
+                                                            </span>
+                                                        </td>
+                                                        <td style="border:1px solid black; text-align: center;" class="right sm">
+                                                            <strong>
+                                                                <span style="display:inline-block; padding:3px;" t-field="o.amount_untaxed" />
+                                                            </strong>
+                                                        </td>
+                                                        <td style="padding:0;border-top:1px solid black; border-bottom:1px solid black;" colspan="2">
+                                                            <table style="border-collapse: collapse; width: 100%; font-size: 10px;  table-layout: fixed;">
+                                                                <tr>
+                                                                    <td style="border:1px solid black; padding:3px;text-align: center; border-top: 0px; border-left: 0px;  min-width:30px; width:30px; max-width:30px; border-bottom:0px;">
+                                                                    </td>
+                                                                    <td style="border:1px solid black;text-align: center;border-top: 0px;border-right: 0px;border-bottom:0px;">
+                                                                        <span style="display:inline-block; padding:3px; font-weight: bold;" t-field="o.amount_tax" />
+                                                                    </td>
+                                                                </tr>
+                                                            </table>
+                                                        </td>
+                                                        <td style="border:1px solid black; text-align: center; width:50%;" class="right sm">
+                                                            <strong>
+                                                                <span t-field="o.amount_tax" />
+                                                            </strong>
                                                         </td>
                                                     </tr>
                                                 </t>
-                                                <tr>
-                                                    <td
-                                                        style="border:1px solid black; text-align: right; vertical-align: middle;padding-right: 5px;"
-                                                        class="center sm" colspan="3">
-                                                        <span
-                                                            style="display:inline-block; padding:3px;">
-                                                            <strong>Total</strong>
-                                                        </span>
-                                                    </td>
-                                                    <td
-                                                        style="border:1px solid black; text-align: center;"
-                                                        class="right sm">
-                                                        <strong>
-                                                            <span
-                                                                style="display:inline-block; padding:3px;"
-                                                                t-field="o.amount_untaxed" />
-                                                        </strong>
-                                                    </td>
-                                                    <td
-                                                        style="padding:0;border-top:1px solid black; border-bottom:1px solid black;"
-                                                        colspan="2">
-                                                        <table
-                                                            style="border-collapse: collapse; width: 100%; font-size: 10px;  table-layout: fixed;">
-                                                            <tr>
-                                                                <td
-                                                                    style="border:1px solid black; padding:3px;text-align: center; border-top: 0px; border-left: 0px;  min-width:30px; width:30px; max-width:30px; border-bottom:0px;">
-
-                                                                </td>
-
-                                                                <td
-                                                                    style="border:1px solid black;text-align: center;border-top: 0px;border-right: 0px;border-bottom:0px;">
-                                                                    <span
-                                                                        style="display:inline-block; padding:3px; font-weight: bold;"
-                                                                        t-field="o.amount_tax" />
-                                                                </td>
-                                                            </tr>
-                                                        </table>
-                                                    </td>
-                                                    <td
-                                                        style="border:1px solid black; text-align: center; width:50%;"
-                                                        class="right sm">
-                                                        <strong>
-                                                            <span t-field="o.amount_tax" />
-                                                        </strong>
-                                                    </td>
-                                                </tr>
 
 
                                             </tbody>
                                         </table>
                                         <table
                                             style="border-collapse: collapse; width: 100%; font-size: 13px;">
-                                            <tr>
-                                                <td colspan="2"
-                                                    style="border-left: 1px solid black; border-right:1px solid black;">
-                                                    <div style="padding-left:3px; padding-top:5px;">
-                                                        <span style="font-size:11px;">Tax Amount (in
-                                                            words) :
-                                                        </span>
-                                                        <strong>
-                                                            <span
-                                                                style="font-weight:bold;">
-                                                                <p
-                                                                    style="margin: 0px;  font-weight: bold; font-size: 13px; display: inline-block;">
-                                                                    <spans
-                                                                        t-esc="o.currency_id.amount_to_text(o.amount_tax) + ' only'" />
-                                                                </p>
+                                            <t t-set="has_any_taxes" t-value="any(line.tax_ids for line in o.invoice_line_ids)"/>
+                                            <t t-if="has_any_taxes">
+                                                <tr>
+                                                    <td colspan="2" style="border-left: 1px solid black; border-right:1px solid black;">
+                                                        <div style="padding-left:3px; padding-top:5px;">
+                                                            <span style="font-size:11px;">Tax Amount (in words) :
                                                             </span>
-                                                        </strong>
-                                                        <br />
-                                                        <br />
-                                                    </div>
-                                                </td>
-                                            </tr>
+                                                            <strong>
+                                                                <span style="font-weight:bold;">
+                                                                    <p style="margin: 0px;  font-weight: bold; font-size: 13px; display: inline-block;">
+                                                                        <spans t-esc="o.currency_id.amount_to_text(o.amount_tax) + ' only'" />
+                                                                    </p>
+                                                                </span>
+                                                            </strong>
+                                                            <br />
+                                                            <br />
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            </t>
+
                                             <tr>
                                                 <td
                                                     style="border: 1px solid black;border-top:0px; border-right:0px; vertical-align: top; padding: 5px; width: 50%;">
@@ -1284,7 +1250,7 @@
                                                 <!-- </span> -->
                                             </td>
                                             <td
-                                                style="border-right:1px solid black; padding:4px; text-align:right;">
+                                                style="border-right:1px solid black; padding:4px; text-align:center;">
                                                 <strong>
                                                     <t t-esc="'%0.0f pcs' % row[1].quantity" />
                                                 </strong>
