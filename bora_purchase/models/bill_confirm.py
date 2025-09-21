@@ -13,10 +13,11 @@ class ShowBillPaymentButtonToAccountsGroup(models.Model):
 
         sales_account_group = self.env.ref('bora_sale.account_group_for_sales')
 
-        if sales_account_group:
-            users_in_group = sales_account_group.users
+        company_id = self.company_id.id
+        accounts_users = sales_account_group.users.filtered(lambda u: u.company_id.id == company_id)
 
-            for user in users_in_group:
+        if accounts_users:
+            for user in accounts_users:
 
                 self.activity_schedule(
                     act_type_xmlid='mail.mail_activity_data_todo',
@@ -37,7 +38,7 @@ class ShowBillPaymentButtonToAccountsGroup(models.Model):
                     },
                 )
         else:
-            raise UserError("No account member added, please contact to Administrator.")
+            raise UserError(f"No account member added for {self.company_id.name}, please contact to Administrator.")
 
 
 
