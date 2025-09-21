@@ -158,8 +158,7 @@
                                                         </span>
                                                         <br />
                                                         <strong>
-                                                            <span t-field="o.invoice_date"
-                                                                t-options='{"format": "d-MMM-y"}' />
+                                                            <span t-field="o.invoice_date" t-options='{"format": "d-MMM-yy"}' />
                                                         </strong>
                                                     </td>
                                                 </tr>
@@ -247,7 +246,7 @@
                                                                 t-value="o.invoice_line_ids and o.invoice_line_ids[0].sale_line_ids and o.invoice_line_ids[0].sale_line_ids[0].order_id" />
                                                             <span t-if="sale_order"
                                                                 t-field="sale_order.date_order"
-                                                                t-options='{"format": "d-MMM-y"}' />
+                                                                t-options='{"format": "d-MMM-yy"}' />
                                                         </strong>
                                                     </td>
                                                 </tr>
@@ -319,12 +318,10 @@
                                                     </td>
                                                     <td
                                                         style="padding:3px; border-bottom:1px solid black;">
-                                                        <strong>
                                                             <span
                                                                 style="font-size:14px; margin-bottom:5px;">Place
                                                                 of receipt by shipper
                                                             </span>
-                                                        </strong>
                                                         <strong>
                                                             <span
                                                                 t-field="o.place_of_recipt_by_shipper" />
