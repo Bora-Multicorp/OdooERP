@@ -303,7 +303,7 @@
                                                         <br />
                                                         <strong>
                                                             <span
-                                                                t-field="o.partner_id.country_id.name" />
+                                                                t-field="o.incoterm_location" />
                                                         </strong>
                                                     </td>
                                                 </tr>
