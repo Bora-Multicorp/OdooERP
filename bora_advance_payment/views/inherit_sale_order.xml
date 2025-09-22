@@ -8,7 +8,7 @@
                 <button name="action_view_advance_payments"
                         type="object"
                         class="oe_stat_button"
-                        icon="fa-money">
+                        icon="fa-usd">
                     <div class="o_stat_info">
                         <span class="o_stat_value">
                             <field name="advance_payment_total" nolabel="1"/>

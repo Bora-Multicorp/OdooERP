@@ -29,7 +29,7 @@ class AccountPayment(models.Model):
                 'simple_notification',
                 {
                     'type': 'info',
-                    'title': f'Request fpr advance payment of {self.currency_id.symbol}{self.amount}, generated successfully.',
+                    'title': f'Request for advance payment of {self.currency_id.symbol}{self.amount}, generated successfully.',
                     'message':  f'Advance payment request generated.',
                     'sticky': False,
                 },
@@ -39,7 +39,7 @@ class AccountPayment(models.Model):
             for user in accounts_users:
                 self.activity_schedule(
                     act_type_xmlid='mail.mail_activity_data_todo',
-                    summary = f'Request fpr advance payment {self.name}, for {self.sale_order_name} generated.',
+                    summary = f'Request for advance payment {self.name}, for {self.sale_order_name} generated.',
                     note="You have been assigned to receive the advance payment",
                     user_id=user.id,
                     date_deadline=fields.Date.context_today(self),
@@ -50,7 +50,7 @@ class AccountPayment(models.Model):
                     'simple_notification',
                     {
                         'type': 'info',
-                        'title': f'Request fpr advance payment {self.name}, for {self.sale_order_name} generated.',
+                        'title': f'Request for advance payment {self.name}, for {self.sale_order_name} generated.',
                         'message':  f'Activity assigned to you.',
                         'sticky': True,
                     },
