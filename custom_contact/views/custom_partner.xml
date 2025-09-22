@@ -22,6 +22,7 @@
         <field name="arch" type="xml">
             <xpath expr="//field[@name='partner_id']" position="replace">
                 <field name="partner_id" widget="res_partner_many2one"
+                       options="{'no_create': True, 'no_create_edit': True}"
                        context="{'res_partner_search_mode': 'customer', 'show_address': 1, 'show_vat': True}"
                        placeholder="Type to find a customer..." readonly="state in ['cancel', 'sale']"/>
             </xpath>
@@ -92,7 +93,7 @@
             <xpath expr="//form/sheet" position="before">
                 <header>
                     <button name="%(vendor_kyc_wizard_action)d" string="KYC Form" type="action"
-                            class="btn btn-primary" invisible="is_kyc or (not is_vendor)"
+                            class="btn btn-primary" invisible="is_kyc or (not is_vendor and not is_customer)"
                             display="always"/>
                     <button name="%(rekyc_request_wizard_action)d" string="Re-KYC" type="action"
                             class="oe_highlight" invisible="not is_approved"/>
@@ -113,7 +114,7 @@
             </field>
             <xpath expr="//field[@name='category_id']" position="after">
                 <field name="is_vendor" readonly="is_kyc"/>
-                <field name="is_customer" readonly="is_kyc" invisible="0"/>
+                <field name="is_customer" readonly="is_kyc"/>
                 <field name="is_kyc" readonly="1"/>
                 <field name="is_approved" readonly="1" invisible="not is_approved"/>
                 <field name="approval_date" readonly="1" invisible="not approval_date"/>

@@ -65,24 +65,21 @@ class ContactKYCApproval(models.Model):
     #             field.set('readonly', '1')
     #     return arch, view
 
-            # defaults['approval_users_ids'] = approval_user_vals
+    @api.model
+    def default_get(self, fields_list):
+        defaults = super().default_get(fields_list)
+        vendor_approval_users = self.env['vendor.approval.config'].sudo().search([])
 
-
-    # @api.model
-    # def default_get(self, fields_list):
-    #     defaults = super().default_get(fields_list)
-    #     vendor_approval_users = self.env['vendor.approval.config'].sudo().search([])
-    #
-    #     if vendor_approval_users:
-    #         approval_user_vals = []
-    #         for approval in vendor_approval_users:
-    #             approval_user_vals.append((0, 0, {
-    #                 'sequence': approval.sequence,
-    #                 'user_id': approval.user_id.id,
-    #                 # 'job_id': user.employee_id.job_title or '',  # fallback to empty if not set
-    #             }))
-    #         defaults['approval_users_ids'] = approval_user_vals
-    #     return defaults
+        if vendor_approval_users:
+            approval_user_vals = []
+            for approval in vendor_approval_users:
+                approval_user_vals.append((0, 0, {
+                    'sequence': approval.sequence,
+                    'user_id': approval.user_id.id,
+                    # 'job_id': user.employee_id.job_title or '',  # fallback to empty if not set
+                }))
+            defaults['approval_users_ids'] = approval_user_vals
+        return defaults
 
     @api.depends('approval_users_ids.user_id')
     def _compute_existing_users(self):
@@ -161,7 +158,7 @@ class ContactKYCApproval(models.Model):
                                             ('6', '6'),
                                             ('7', '7')], string="Number of Managing Partner / Directors")
     directors_detail = fields.One2many('director.details', 'kyc_approval_id', string="KYC Details", tracking=True)
-    pan_no = fields.Char(string="PAN Number", required=True)
+    pan_no = fields.Char(string="PAN Number", required=False)
     comp_google_loc = fields.Char(string="Google Location of Shop", required=False)
     partner_llp_filename = fields.Char()
     partner_llp = fields.Binary(string="Partnership Deed or LLP Deed", required=False)
@@ -196,100 +193,13 @@ class ContactKYCApproval(models.Model):
     is_rejected = fields.Boolean(tracking=True)
     rejection_date = fields.Datetime(string="Rejection Date", tracking=True)
     rejection_reason = fields.Text('Rejection Reason', tracking=True)
-    can_set_draft = fields.Boolean(
-        compute="_compute_can_set_draft",
-        string="Can Set Draft",
-        store=False
-    )
-
-    def _compute_can_set_draft(self):
-        for rec in self:
-            if self.env.user in rec.approval_users_ids.mapped('user_id'):
-                rec.can_set_draft = False  # approval authority → hide
-            else:
-                rec.can_set_draft = True  # creator/others → show
-
-    def add_user(self, approvers):
-        approval_user_vals = []
-        for index, approval in enumerate(approvers):
-            approval_user_vals.append((0, 0, {
-                    'sequence': index + 1,
-                    'user_id': approval.user_id.id,
-            }))
-        self.write({
-                'approval_users_ids': approval_user_vals,
-                'state': 'pending'
-        })
-        if self.id:
-            self._update_assigned_to()
 
     def confirm_submit_form(self):
-        approvers = self.env['vendor.approval.config'].sudo().search([])
-        if not approvers:
+        if not self.approval_users_ids:
             raise ValidationError(_("Please Add Approval Authority before Submit Request"))
-        return self.env.ref(
-            "custom_contact.action_kyc_vendor_approval_user_picker_wizard"
-        ).sudo().read()[0]
-
-        # if self.id:
-        #     self.write({'state': 'pending'})
-        #     self._update_assigned_to()
-
-
-
-    def action_suspend(self):
-        return self.env.ref(
-            "custom_contact.approve_suspend_vendor_confirm_wizard_action"
-        ).sudo().read()[0]
-
-    def suspend_approval_process(self, remark):
-        self.message_post(
-            body = f"Approval Suspended by {self.env.user.partner_id}. Reason: {remark}" ,
-            message_type="comment",
-            subtype_xmlid="mail.mt_note",
-        )
-
-        for kyc in self:
-            pending_approvers = kyc.approval_users_ids.filtered(lambda u: not u.state)
-            pending_approvers.write({
-                'state': 'suspended',
-                'remark': f"By {self.env.user.name} - " + (f" {remark}" if remark else ""),
-                'action_date': fields.Datetime.now()})
-
-            activities = self.env['mail.activity'].search([
-                ('res_model', '=', 'res.partner.kyc.approval'),
-                ('res_id', '=', self.ids),
-                ('user_id', 'in', pending_approvers.mapped('user_id').ids),
-                ('activity_type_id', '=', self.env.ref('mail.mail_activity_data_todo').id),
-            ])
-
-            kyc.write({'assigned_to': None, 'state': 'draft'})
-
-            # send notification to creator
-            kyc.env['bus.bus']._sendone(
-                kyc.create_uid.partner_id,
-                'simple_notification',
-                {
-                    'type': 'danger',
-                    'title': f'KYC for {kyc.partner_id.name} suspended by {self.env.user.name}. you need to initiate the approval process again.',
-                    'message': '',
-                    'sticky': True,
-                },
-            )
-
-            # 4. in the last send info message to self
-            kyc.env['bus.bus']._sendone(
-                self.env.user.partner_id,
-                'simple_notification',
-                {
-                    'type': 'info',
-                    'title': f'Approval process suspended successfully.',
-                    'message': '',
-                    'sticky': True,
-                },
-            )
-
-            activities.unlink()
+        if self.id:
+            self.write({'state': 'pending'})
+            self._update_assigned_to()
 
     def set_as_draft(self):
         if self.id:
@@ -307,7 +217,11 @@ class ContactKYCApproval(models.Model):
             })
 
             # Reset approval users' decision fields
-            self.approval_users_ids.write({'is_active': False})
+            self.approval_users_ids.write({
+                'state': False,
+                'remark': False,
+                'action_date': False,
+            })
 
     def approve_by_manager(self):
         self.write({'state': 'confirmed'})
@@ -346,59 +260,23 @@ class ContactKYCApproval(models.Model):
             )
 
             rec.env['bus.bus']._sendone(rec.assigned_to.partner_id,
-                                        'simple_notification',
-                                        {
-                                            'type': 'success',
-                                            'title': _("KYC Approval for: %s") % rec.partner_id.name,
-                                            # 'message': _("Activity assigned to you: %s") % rec.assigned_to.name,
-                                            'message': _("Activity assigned to you."),
-                                            'sticky': True,
-                                        },
-                                        )
+                'simple_notification',
+                {
+                    'type': 'success',
+                    'title': _("KYC Approval for: %s") % rec.partner_id.name,
+                    #'message': _("Activity assigned to you: %s") % rec.assigned_to.name,
+                    'message': _("Activity assigned to you."),
+                    'sticky': True,
+                },
+            )
 
-    # def _update_state_based_on_approvals(self):
-    #     for rec in self:
-    #         states = rec.approval_users_ids.mapped('state')
-    #         if any(s == 'reject' for s in states):
-    #             rec.state = 'rejected'
-    #         elif states and all(s == 'approve' for s in states):
-    #             rec.state = 'confirmed'
     def _update_state_based_on_approvals(self):
         for rec in self:
-            active_lines = rec.approval_users_ids.filtered(lambda l: l.is_active)
-            states = active_lines.mapped('state')
+            states = rec.approval_users_ids.mapped('state')
             if any(s == 'reject' for s in states):
                 rec.state = 'rejected'
             elif states and all(s == 'approve' for s in states):
                 rec.state = 'confirmed'
-
-    def _send_notification_on_rejection(self):
-
-        approval_users = self.env['vendor.approval.config'].sudo().search([])
-
-        for user in approval_users:
-            if user.user_id == self.env.user:
-                self.env['bus.bus']._sendone(
-                    user.user_id.partner_id,
-                    'simple_notification',
-                    {
-                        'type': 'info',
-                        'title': f'Vendor approval request for {self.partner_id.name}, successfully rejected by you.',
-                        'message': f'',
-                        'sticky': True,
-                    },
-                )
-            else:
-                self.env['bus.bus']._sendone(
-                    user.user_id.partner_id,
-                    'simple_notification',
-                    {
-                        'type': 'info',
-                        'title': f'Vendor approval request for {self.partner_id.name}, rejected by {self.env.user.name}.',
-                        'message': f'',
-                        'sticky': True,
-                    },
-                )
 
     def write(self, vals):
         res = super().write(vals)
@@ -465,12 +343,12 @@ class ContactKYCApproval(models.Model):
 
                     # Send approval activity and notification
                     for user in record.existing_user_ids:
-                        # _schedule_activity(
-                        #     record, user,
-                        #     title=f"KYC Approved for: {record.partner_id.name}",
-                        #     note=_(
-                        #         "KYC for %s has been approved. Please take necessary follow-up action.") % record.partner_id.name
-                        # )
+                        _schedule_activity(
+                            record, user,
+                            title=f"KYC Approved for: {record.partner_id.name}",
+                            note=_(
+                                "KYC for %s has been approved. Please take necessary follow-up action.") % record.partner_id.name
+                        )
                         _send_notification(
                             record, user,
                             title=_("KYC Approved for: %s") % record.partner_id.name,
@@ -495,12 +373,12 @@ class ContactKYCApproval(models.Model):
                         title=f"KYC Rejected for: {record.partner_id.name}",
                         note=_("KYC for %s has been rejected. Please take necessary action.") % record.partner_id.name
                     )
-                    # _send_notification(
-                    #     record, user,
-                    #     title=_("KYC Rejected for: %s") % record.partner_id.name,
-                    #     message=_(
-                    #         "KYC for %s has been rejected. Please check the system for more details.") % record.partner_id.name
-                    # )
+                    _send_notification(
+                        record, user,
+                        title=_("KYC Rejected for: %s") % record.partner_id.name,
+                        message=_(
+                            "KYC for %s has been rejected. Please check the system for more details.") % record.partner_id.name
+                    )
 
         return res
 
@@ -515,14 +393,9 @@ class ApprovalUsers(models.Model):
     sequence = fields.Integer(string='Sequence')
     job_id = fields.Char(string="Designation", readonly=True)
     user_id = fields.Many2one('res.users', string='User', required=True)
-    state = fields.Selection([('approve', 'Approved'), ('reject', 'Rejected'), ('suspended', 'Suspended')], string="Action")
+    state = fields.Selection([('approve', 'Approved'), ('reject', 'Rejected')], string="Action")
     remark = fields.Text('Remarks', tracking=True)
     action_date = fields.Datetime(string="Action Date")
-    group = fields.Selection([
-        ('group1', 'Group 1'),
-        ('group2', 'Group 2'),
-    ], string="Groups", required=False)
-    is_active = fields.Boolean('Active', default=True)
 
     def write(self, vals):
         res = super().write(vals)
@@ -544,6 +417,7 @@ class DirectorDetails(models.Model):
     _name = "director.details"
     _rec_name = 'name'
     _description = "Directors Details"
+
     kyc_approval_id = fields.Many2one('res.partner.kyc.approval', string="KYC Approval")
     designation = fields.Char(string="Designation")
     name = fields.Char(string="Name")
@@ -562,7 +436,6 @@ class DirectorDetails(models.Model):
         string="PAN Card",
         required=False
     )
-
     @api.model_create_multi
     def create(self, vals_list):
         res_list = super().create(vals_list)

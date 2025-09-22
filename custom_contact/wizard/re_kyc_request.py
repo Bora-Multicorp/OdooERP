@@ -25,8 +25,8 @@ class ReKYCRequestWizard(models.TransientModel):
         # Adjust partner ranks
         if partner.is_vendor:
             update_vals['supplier_rank'] = 0
-        # if partner.is_customer:
-        #     update_vals['customer_rank'] = 0
+        if partner.is_customer:
+            update_vals['customer_rank'] = 0
 
         partner.write(update_vals)
 

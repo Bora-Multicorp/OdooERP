@@ -265,7 +265,7 @@ class VendorKycWizard(models.TransientModel):
                                    help="Short Video")
     bank_detail = fields.One2many('bank.detail', 'kyc_wizard_id', string="Bank Detail")
     address_detail = fields.One2many('address.detail', 'kyc_wizard_id', string="Address Detail")
-    pan_no = fields.Char(string="PAN Number(Company)", required=True)
+    pan_no = fields.Char(string="PAN Number(Company)", required=False)
     pan_card_document = fields.Many2many('ir.attachment', 'pan_card_company_documents_rel', 'wizard_id',
                                          'attachment_id',
                                          string="PAN Card Document(Company)")
