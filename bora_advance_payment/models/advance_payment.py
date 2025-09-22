@@ -18,9 +18,24 @@ class AccountPayment(models.Model):
         sales_account_group = self.env.ref('bora_sale.account_group_for_sales')
 
         company_id = self.company_id.id
-        accounts_users = sales_account_group.users.filtered(lambda u: u.company_id.id == company_id)
+        accounts_users = sales_account_group.users.filtered(lambda u: company_id in u.company_ids.ids)
+
 
         if accounts_users:
+
+            # send notification to own
+            self.env['bus.bus']._sendone(
+                self.env.user.partner_id,
+                'simple_notification',
+                {
+                    'type': 'info',
+                    'title': f'Request fpr advance payment of {self.currency_id.symbol}{self.amount}, generated successfully.',
+                    'message':  f'Advance payment request generated.',
+                    'sticky': False,
+                },
+            )
+
+
             for user in accounts_users:
                 self.activity_schedule(
                     act_type_xmlid='mail.mail_activity_data_todo',
@@ -44,12 +59,45 @@ class AccountPayment(models.Model):
             raise UserError(f"No account member added for {self.company_id.name}, please contact to Administrator.")
 
 
+    def action_validate(self):
+        super(AccountPayment, self).action_validate()
+
+        if self.sale_order_name == False:
+            return
+        
+        # 1. Send notification to creator
+        self.env['bus.bus']._sendone(
+            self.create_uid.partner_id,
+            'simple_notification',
+            {
+                'type': 'success',
+                'title': f"Advance payment of {self.currency_id.symbol}{self.amount} has been received, for {self.sale_order_name}.",
+                'message':  '',
+                'sticky': True,
+            },
+        )
+
+        # 2. Send notification to own
+        self.env['bus.bus']._sendone(
+            self.env.user.partner_id,
+            'simple_notification',
+            {
+                'type': 'info',
+                # 'title': f'Advance payment validated successfully.',
+                'message':  f'Payment validated successfully..',
+                'sticky': False,
+            },
+        )
+
+
+
+
 
 class AdvancePaymentForSaleOrder(models.Model):
     _inherit = 'sale.order'
 
     advance_payment_count = fields.Integer(
-        string="Advance Payments",
+        string="Advance",
         compute="_compute_advance_payment_count"
     )
 
@@ -63,7 +111,7 @@ class AdvancePaymentForSaleOrder(models.Model):
         for order in self:
             payments = self.env['account.payment'].search([
                 ('sale_order_id', '=', order.id),
-                # ('state', '=', 'posted'),   # only confirmed payments
+                ('state', '=', 'paid'),   # only confirmed payments
             ])
             order.advance_payment_count = len(payments)
             order.advance_payment_total = sum(payments.mapped('amount'))

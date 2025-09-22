@@ -14,7 +14,7 @@
                             <field name="advance_payment_total" nolabel="1"/>
                         </span>
                         <span class="o_stat_text">
-                            Advance Payments (<field name="advance_payment_count" nolabel="1"/>)
+                            Advance (<field name="advance_payment_count" nolabel="1"/>)
                         </span>
                     </div>
                 </button>
