@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 {
-    'name': "bora_advance_payment",
+    'name': "Bora Advance Payment",
 
     'summary': "Advance payment",
 

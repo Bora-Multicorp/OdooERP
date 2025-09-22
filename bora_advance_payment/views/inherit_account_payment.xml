@@ -28,10 +28,17 @@
             </xpath>
             <xpath expr="//div[@class='oe_title']" position="replace"/>
             <xpath expr="//header/button[@name='action_post']" position="attributes">
-                <attribute name="confirm">Are you sure you want to submit the advance payment request?</attribute>
+                <attribute name="confirm">Are you sure you want to submit the payment request?</attribute>
+            </xpath>
+            <xpath expr="//header/button[@name='action_draft']" position="attributes">
+                <attribute name="confirm">Are you sure you want to move this payment request back to draft?</attribute>
+            </xpath>
+            <xpath expr="//header/button[@name='action_cancel']" position="attributes">
+                <attribute name="confirm">Are you sure you want to cancel this payment request?</attribute>
             </xpath>
             <xpath expr="//header/button[@name='action_validate']" position="attributes">
                 <attribute name="groups">bora_sale.account_group_for_sales</attribute>
+                <attribute name="confirm">Are you sure you want to validate this payment request?</attribute>
             </xpath>
             <xpath expr="//header/button[@name='mark_as_sent']" position="attributes">
                 <attribute name="invisible">1</attribute>
@@ -47,7 +54,7 @@
         <field name="inherit_id" ref="account.view_account_payment_tree"/>
         <field name="arch" type="xml">
             <xpath expr="//field[@name='name']" position="before">
-                <field name="sale_order_name" readonly="1" string="Salee Order" optional="hidden"/>
+                <field name="sale_order_name" readonly="1" string="Sale Order" optional="hidden"/>
             </xpath>
         </field>
     </record>
