@@ -18,7 +18,7 @@
     'version': '0.1',
 
     # any module necessary for this one to work correctly
-    'depends': ['base', 'product', 'stock', 'purchase','sale_project', 'sale_management', 'product_multi_company', 'product_multi_images', 'product_dimension', 'case_sensitive_widget', 'stock_barcode'],
+    'depends': ['base', 'product', 'stock', 'sale_project', 'purchase', 'sale_management', 'product_multi_company', 'product_multi_images', 'product_dimension', 'case_sensitive_widget', 'stock_barcode'],
 
     # always loaded
     'data': [
@@ -36,7 +36,6 @@
         'views/show_hide_product_fields.xml',
         'views/product_context_change.xml',
         'views/product_template_tree_view.xml',
-        'views/IFSC_and_branch_code.xml',
         'wizards/activation_status_wizard_view.xml',
         'security/ir.model.access.csv',
         # 'static/src/xml/assets.xml',
@@ -47,7 +46,7 @@
 
     'assets': {
         'web.assets_backend': [
-            '/bora_product_master/static/sample/IMEI_ACTIVATION_SAMPLE_REPORT.xlsx',
+            '/bora_product_master/static/sample/IMEI_ACTIVATION_SAMPLE_REPORT.xlsx'
             '/bora_product_master/static/src/js/barcode_focus_change.js',
         ],
     },
