@@ -83,7 +83,7 @@ class SaleOrderCancellationApproval(models.Model):
                     'simple_notification',
                     {
                         'type': 'danger',
-                        'title': f'Your SO cancellation request for {rec.name} was rejected by {rec.env.user.name}.',
+                        'title': f'SO cancellation request for {rec.name} was rejected by {rec.env.user.name}.',
                         'message': '',
                         'sticky': True,
                     },
