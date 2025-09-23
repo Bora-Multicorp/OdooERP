@@ -37,7 +37,9 @@ class POD_in_stock_picking(models.Model):
     def send_pod_to_accounts_group(self):
         self.ensure_one()
         sales_account_group = self.env.ref('bora_sale.account_group_for_sales')
-        sales_account_group_partner_ids = sales_account_group.users.mapped('partner_id').ids
+        company_id = self.company_id.id
+        accounts_users = sales_account_group.users.filtered(lambda u: company_id in u.company_ids.ids)
+        sales_account_group_partner_ids = accounts_users.users.mapped('partner_id').ids
 
         attachments = self.env['ir.attachment'].search([
             ('res_model', '=', 'stock.picking'),
@@ -49,8 +51,8 @@ class POD_in_stock_picking(models.Model):
         if not attachment_ids:
             raise UserError("No document added, you can add documents from documents section.")
         
-        if not sales_account_group.users:
-            raise UserError("No account member added, please contact to Administrator.")
+        if not accounts_users:
+            raise UserError(f"No account member added for {self.company_id.name}, please contact to Administrator.")
         
 
         ctx = {

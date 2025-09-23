@@ -14,7 +14,7 @@ class ShowPaymentButtonToAccountsGroup(models.Model):
         sales_account_group = self.env.ref('bora_sale.account_group_for_sales')
 
         company_id = self.company_id.id
-        accounts_users = sales_account_group.users.filtered(lambda u: u.company_id.id == company_id)
+        accounts_users = sales_account_group.users.filtered(lambda u: company_id in u.company_ids.ids)
 
         if accounts_users:
             for user in accounts_users:
