@@ -6,6 +6,9 @@ class ResPartnerBank(models.Model):
 
     ifsc_code = fields.Char(string='IFSC Code', size=11, help='Indian Financial System Code (11 alphanumeric characters)')
     branch = fields.Char(string='Branch', help='Name of the branch')
+    sol_number = fields.Char(string="SOL Number", help="Bank branch Service Outlet Number")
+    ad_code = fields.Char(string="AD Code", help="Authorized Dealer Code for export/import")
+    
 
     show_IFSC_code = fields.Boolean(
         compute='_compute_show_ifsc_code',
