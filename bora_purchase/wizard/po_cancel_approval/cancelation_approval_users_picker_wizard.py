@@ -3,7 +3,7 @@ from odoo import api, fields, models, _
 from odoo.exceptions import UserError
 
 class POCancelationApprovalUsersPicker(models.TransientModel):
-    _name = 'cancelation.approval.user.picker.wizard'
+    _name = 'cancelation.approval.user.picker.wizard.po'
     _description = 'cancelation approval users picker'
 
     order_id = fields.Many2one('purchase.order', string="Cancellation for Purchase Order Cancellation")
