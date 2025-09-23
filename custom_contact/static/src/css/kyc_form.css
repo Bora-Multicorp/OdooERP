@@ -1,0 +1,12 @@
+.o_list_renderer table {
+    table-layout: auto !important;
+    width: 100% !important;
+    word-wrap: break-word;
+}
+
+.o_list_renderer td {
+    white-space: normal !important;
+}
+.image_withcard .o_attachment.o_attachment_many2many {
+  min-width: 160px;
+}
