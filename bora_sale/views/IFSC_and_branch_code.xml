@@ -9,6 +9,8 @@
                 <field name = "show_IFSC_code" invisible="1"/>
                 <field name="ifsc_code" invisible = "not show_IFSC_code"/>
                 <field name="branch" invisible="not show_IFSC_code"/>
+                <field name="sol_number" invisible = "not show_IFSC_code"/>
+                <field name="ad_code" invisible="not show_IFSC_code"/>
             </xpath>
             </field>
     </record>
