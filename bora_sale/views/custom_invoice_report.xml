@@ -408,7 +408,7 @@
                                                         style="border:1px solid black; border-top:0px; vertical-align: middle; padding:4px; width:3%;">
                                                         Sl<br />No. </th>
                                                     <th
-                                                        style="border:1px solid black; border-top:0px; vertical-align: middle; width:58%;">
+                                                        style="border:1px solid black; border-top:0px; vertical-align: middle; width:48%;">
                                                         Description of Goods
                                                     </th>
                                                     <th
@@ -422,7 +422,7 @@
                                                         Quantity
                                                     </th>
                                                     <th
-                                                        style="border:1px solid black; border-top:0px; vertical-align: middle; width:5%;">
+                                                        style="border:1px solid black; border-top:0px; vertical-align: middle; width:12%;">
                                                         Rate
                                                     </th>
                                                     <th
@@ -430,7 +430,7 @@
                                                         per
                                                     </th>
                                                     <th
-                                                        style="border:1px solid black; border-top:0px; vertical-align: middle; width:10%;">
+                                                        style="border:1px solid black; border-top:0px; vertical-align: middle; width:13%;">
                                                         Amount
                                                     </th>
                                                 </tr>
@@ -627,7 +627,7 @@
                                                         <td style="padding:0; border:1px solid" colspan="2">
                                                             <table style="border-collapse: collapse; width: 100%; font-size: 10px; table-layout: fixed;">
                                                                 <tr>
-                                                                    <td style="border:1px solid black;text-align: center;border-bottom:0px; border-top: 0px;border-left: 0px; width:30px; min-width:30px; max-width:30px;">
+                                                                    <td style="border:1px solid black;text-align: center;border-bottom:0px; border-top: 0px;border-left: 0px;">
                                                                         <span style="display:inline-block; padding:3px;"> Rate</span>
                                                                     </td>
                                                                     <td style="border:1px solid black;text-align: center;border-top: 0px;border-right: 0px;border-bottom:0px;">
@@ -652,7 +652,7 @@
                                                                 <td style="padding:0;" colspan="2">
                                                                     <table style="border-collapse: collapse; width: 100%; font-size: 10px;  table-layout: fixed;">
                                                                         <tr>
-                                                                            <td style="border:1px solid black; padding:3px;text-align: center; border-bottom:0px; border-top: 0px; border-left: 0px; min-width:30px; width:30px; max-width:30px;">
+                                                                            <td style="border:1px solid black; padding:3px;text-align: center; border-bottom:0px; border-top: 0px; border-left: 0px;">
                                                                                 <span t-if="row[1].tax_ids" t-esc="row[1].tax_ids[0].amount"></span>%
                                                                             </td>
                                                                             <td style="border:1px solid black;text-align: center; border-bottom:0px; border-top: 0px;border-right: 0px;">
@@ -681,7 +681,7 @@
                                                         <td style="padding:0;border-top:1px solid black; border-bottom:1px solid black;" colspan="2">
                                                             <table style="border-collapse: collapse; width: 100%; font-size: 10px;  table-layout: fixed;">
                                                                 <tr>
-                                                                    <td style="border:1px solid black; padding:3px;text-align: center; border-top: 0px; border-left: 0px;  min-width:30px; width:30px; max-width:30px; border-bottom:0px;">
+                                                                    <td style="border:1px solid black; padding:3px;text-align: center; border-top: 0px; border-left: 0px;border-bottom:0px;">
                                                                     </td>
                                                                     <td style="border:1px solid black;text-align: center;border-top: 0px;border-right: 0px;border-bottom:0px;">
                                                                         <span style="display:inline-block; padding:3px; font-weight: bold;" t-field="o.amount_tax" />
@@ -809,52 +809,76 @@
                                                             </t>
                                                         </t>
         <br />
-                                                        Branch and IFSC code : <t
-                                                            t-if="o.partner_bank_id">
+                                                        Branch and IFSC code : 
+                                                        <t t-if="o.partner_bank_id">
                                                             <strong>
-                                                                <span
-                                                                    t-field="o.partner_bank_id.branch" />
-                                                                <span
-                                                                    t-field="o.partner_bank_id.ifsc_code" />
+                                                                <span t-field="o.partner_bank_id.branch" />
+                                                                <span t-field="o.partner_bank_id.ifsc_code" />
                                                             </strong>
                                                         </t>
-        <t
-                                                            t-else="">
-                                                            <t
-                                                                t-if="o.company_id.partner_id.bank_ids">
-                                                                <t
-                                                                    t-if="o.company_id.partner_id.bank_ids[0].acc_number">
+                                                        <t t-else="">
+                                                            <t t-if="o.company_id.partner_id.bank_ids">
+                                                                <t t-if="o.company_id.partner_id.bank_ids[0].acc_number">
                                                                     <strong>
-                                                                        <span
-                                                                            t-field="o.company_id.partner_id.bank_ids[0].acc_number" />
-                                                        &amp; <span
-                                                                            t-field="o.company_id.partner_id.bank_ids[0].acc_number" />
+                                                                        <span t-field="o.company_id.partner_id.bank_ids[0].branch" />
+                                                                        &amp; <span t-field="o.company_id.partner_id.bank_ids[0].ifsc_code" />
                                                                     </strong>
                                                                 </t>
                                                             </t>
                                                         </t>
-        <br />
-                                                        SWIFT code : <t t-if="o.partner_bank_id">
+                                                        <br />
+                                                        Branch SOL ID : 
+                                                        <t t-if="o.partner_bank_id">
                                                             <strong>
-                                                                <span
-                                                                    t-field="o.partner_bank_id.bank_id.bic" />
+                                                                <span t-field="o.partner_bank_id.sol_number" />
                                                             </strong>
                                                         </t>
-        <t
-                                                            t-else="">
-                                                            <t
-                                                                t-if="o.company_id.partner_id.bank_ids">
-                                                                <t
-                                                                    t-if="o.company_id.partner_id.bank_ids[0].acc_number">
+                                                        <t t-else="">
+                                                            <t t-if="o.company_id.partner_id.bank_ids">
+                                                                <t t-if="o.company_id.partner_id.bank_ids[0].sol_number">
                                                                     <strong>
-                                                                        <span
-                                                                            t-field="o.company_id.partner_id.bank_ids[0].bank_id.bic" />
+                                                                        <span t-field="o.company_id.partner_id.bank_ids[0].sol_number" />
                                                                     </strong>
                                                                 </t>
                                                             </t>
                                                         </t>
-        <br />
-                                                                Company's PAN/IEC Code:
+                                                        <br />
+                                                        Bank AD Code : 
+                                                        <t t-if="o.partner_bank_id">
+                                                            <strong>
+                                                                <span t-field="o.partner_bank_id.ad_code" />
+                                                            </strong>
+                                                        </t>
+                                                        <t t-else="">
+                                                            <t t-if="o.company_id.partner_id.bank_ids">
+                                                                <t t-if="o.company_id.partner_id.bank_ids[0].ad_code">
+                                                                    <strong>
+                                                                        <span t-field="o.company_id.partner_id.bank_ids[0].ad_code" />
+                                                                    </strong>
+                                                                </t>
+                                                            </t>
+                                                        </t>
+                                                        <br />
+
+
+                                                        SWIFT code : 
+                                                        <t t-if="o.partner_bank_id">
+                                                            <strong>
+                                                                <span t-field="o.partner_bank_id.bank_id.bic" />
+                                                            </strong>
+                                                        </t>
+                                                        <t t-else="">
+                                                            <t t-if="o.company_id.partner_id.bank_ids">
+                                                                <t t-if="o.company_id.partner_id.bank_ids[0].acc_number">
+                                                                    <strong>
+                                                                        <span t-field="o.company_id.partner_id.bank_ids[0].bank_id.bic" />
+                                                                    </strong>
+                                                                </t>
+                                                            </t>
+                                                        </t>
+                                                        <br />
+
+                                                        Company's PAN/IEC Code :
                                                         <t t-if="o.company_id.l10n_in_pan">
                                                             <strong>
                                                                 <span t-field="o.company_id.l10n_in_pan"/>
@@ -1186,7 +1210,7 @@
                                                     </div>
                                                     <div>
                                                         <strong>
-                                                            <span t-field="o.incoterm" />
+                                                            <!-- <span t-field="o.incoterm" /> -->
                                                         </strong>
                                                     </div>
                                                 </td>
@@ -1197,31 +1221,31 @@
                             </table>
 
                             <table
-                                style="width:100%; border:1px solid black; border-top:0px; border-collapse:collapse;  margin-bottom:0; font-family:sans-serif;">
+                                style="width:100%; border:1px solid black; border-bottom:0px; border-top:0px;vertical-align: middle; border-collapse:collapse;  margin-bottom:0; font-family:sans-serif;">
                                 <thead>
                                     <tr style="text-align:center;">
                                         <th
-                                            style="border-right:1px solid black; font-size:14px; padding:4px; width:5%;">
+                                            style="border:1px solid black; border-top:0px;vertical-align: middle; font-size:14px; padding:4px; width:3%;">
                                             Sl
                                             No.
                                         </th>
                                         <th
-                                            style="border-right:1px solid black; padding:4px; width:55%;">
+                                            style="border:1px solid black; border-top:0px;vertical-align: middle; padding:4px; width:48%;">
                                             Description of Goods
                                         </th>
                                         <th
-                                            style="border-right:1px solid black; padding:4px; width:10%;">
+                                            style="border:1px solid black; border-top:0px;vertical-align: middle; padding:4px; width:10%;">
                                             Quantity
                                         </th>
                                         <th
-                                            style="border-right:1px solid black; padding:4px; width:10%;">
+                                            style="border:1px solid black; border-top:0px;vertical-align: middle; padding:4px; width:12%;">
                                             Rate
                                         </th>
                                         <th
-                                            style="border-right:1px solid black; padding:4px; width:5%;">
+                                            style="border:1px solid black; border-top:0px;vertical-align: middle; padding:4px; width:5%;">
                                             Per
                                         </th>
-                                        <th style="padding:4px; width:15%;">Amount</th>
+                                        <th style="border:1px solid black; border-top:0px;vertical-align: middle;  padding:4px; width:13%;">Amount</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -1253,13 +1277,13 @@
                                                 </strong>
                                             </td>
                                             <td
-                                                style="border-right:1px solid black; padding:4px; text-align:right;">
+                                                style="border-right:1px solid black; padding:4px; text-align:center;">
                                                 <span t-esc="o.currency_id.symbol" />
                                                 <span
                                                     t-esc="'%0.2f' % o.company_id.currency_id.round(row[1].price_unit)" />
                                             </td>
                                             <td
-                                                style="border-right:1px solid black; padding:4px;text-align:right;">
+                                                style="border-right:1px solid black; padding:4px;text-align:center;">
                                                 <t t-esc="row[1].quantity > 1 and 'pcs' or 'pc'" />
                                             </td>
                                             <td
@@ -1308,7 +1332,7 @@
                                             Total
                                         </td>
                                         <td
-                                            style="padding:4px; text-align:right; border-left:1px solid black; border-right:1px solid black; font-weight:bold;">
+                                            style="padding:4px; text-align:center; border-left:1px solid black; border-right:1px solid black; font-weight:bold;">
                                             <span
                                                 t-esc="'%0.0f' % sum(line.quantity for line in o.invoice_line_ids)" />
                                             pcs </td>
