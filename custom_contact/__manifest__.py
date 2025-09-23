@@ -7,7 +7,7 @@
     'version': '0.1',
     'license': 'LGPL-3',
     # any module necessary for this one to work correctly
-    'depends': ['base', 'contacts', 'account', 'accountant', 'purchase', 'sale', 'survey', 'case_sensitive_widget', 'sh_survey_matrix_adv', 'base_multi_company'],
+    'depends': ['base', 'contacts', 'account', 'accountant', 'purchase', 'sale', 'survey', 'case_sensitive_widget', 'sh_survey_matrix_adv','base_multi_company'],
     # always loaded
     'data': [
         'security/ir.model.access.csv',
@@ -20,6 +20,8 @@
         'wizard/reject_request_views.xml',
         'wizard/re_kyc_request_views.xml',
         'wizard/survey_invite_inherit.xml',
+        'wizard/vendor_kyc_approval_users_picker_wizard.xml',
+        'wizard/vendor_suspended_by_admin_wizard.xml',
         'views/vendor_approval_res_config.xml',
         'views/custom_partner.xml',
         'views/master_view.xml',
@@ -28,5 +30,10 @@
         'views/survey_templates.xml',
         'views/contacts_field_changes.xml',
     ],
+    'assets': {
+        'web.assets_backend': [
+            'custom_contact/static/src/css/kyc_form.css',
+        ],
+    },
 
 }
