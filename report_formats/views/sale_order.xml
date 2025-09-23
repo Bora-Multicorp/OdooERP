@@ -5,7 +5,7 @@
         <field name="inherit_id" ref="sale.view_order_form"/>
         <field name="arch" type="xml">
             <xpath expr="//field[@name='partner_shipping_id']" position="after">
-                <field name="dispatch_id" readonly="state == 'sale'"/>
+                <field name="dispatch_id" readonly="state in ('sale','unlock_pending','cancel')"/>
                 <field name="buyer_ref_no"/>
                 <field name="voucher_no"/>
             </xpath>
