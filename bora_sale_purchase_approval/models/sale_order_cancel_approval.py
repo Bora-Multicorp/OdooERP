@@ -80,18 +80,6 @@ class SaleOrderCancellationApproval(models.Model):
         self.write({
             'so_assigned_to_form_cancellation': None
         })
-        if self.create_uid and self.create_uid.partner_id:
-            self.env['bus.bus']._sendone(
-                self.create_uid.partner_id,
-                'simple_notification',
-                {
-                    'type': 'danger',
-                    'title': f'Your SO cancellation request for {self.name} was rejected by {self.env.user.name}.',
-                    'message': '',
-                    'sticky': True,
-                },
-            )
-
         for user in approval_users:
             if user.user_id == self.env.user:
                 self.env['bus.bus']._sendone(
