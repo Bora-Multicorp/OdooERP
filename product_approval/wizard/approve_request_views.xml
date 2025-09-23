@@ -14,7 +14,9 @@
                 </footer>
             </form> 
         </field>
-    </record>
+    </record> 
+
+    
     <record id="approve_product_wizard_action" model="ir.actions.act_window">
         <field name="name">Approve Product</field>
         <field name="res_model">approve.product.wizard</field>
