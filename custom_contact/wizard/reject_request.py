@@ -28,11 +28,23 @@ class RejectRequestWizard(models.TransientModel):
                 'action_date': fields.Datetime.now(),
             })
             approval.write(
-                {'rejection_date': fields.Datetime.now(), 'rejection_reason': self.remark, 'assigned_to': False,
+                { 'rejection_date': fields.Datetime.now(), 'rejection_reason': self.remark, 'assigned_to': False,
                  'is_rejected': True})
             approval.partner_id.sudo().write({'rejection_date': fields.Datetime.now(), 'rejection_reason': self.remark,
                                               'is_rejected': True})
             # Recompute the next approver
             # approval._update_assigned_to()
+        pending_users_lines = self.kyc_approval_id.approval_users_ids.filtered(
+            lambda l: not l.state
+        )
+
+        if pending_users_lines:
+            pending_users_lines.write({
+                'state': 'suspended',
+                'remark': "Rejected by previous authority",
+                'action_date': fields.Datetime.now(),
+            })
+        self.kyc_approval_id._send_notification_on_rejection()
 
         return {'type': 'ir.actions.act_window_close'}
+

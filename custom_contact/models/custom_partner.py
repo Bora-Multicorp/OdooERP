@@ -5,6 +5,7 @@ from odoo import api, fields, models, _
 from odoo.exceptions import ValidationError
 import re
 from datetime import timedelta, date
+from lxml import etree
 
 class CustomContact(models.Model):
     _inherit = 'res.partner'
@@ -170,20 +171,20 @@ class CustomContact(models.Model):
     #                     "Mobile number must be valid digits only (optionally starting with '+').\nInvalid Value: %s"
     #                 ) % rec.mobile)
 
-
     @api.model
-    def _get_view(self, view_id=None, view_type='form', **options):
-        arch, view = super()._get_view(view_id, view_type, **options)
+    def get_view(self, view_id=None, view_type='form', **options):
+        result = super().get_view(view_id, view_type, **options)
 
-        action_id = options.get('action_id')
-        contact_action = self.env.ref('contacts.action_contacts', raise_if_not_found=False)
+        if 'action_id' in options:
+            vendor_action = self.env.ref('account.res_partner_action_supplier', raise_if_not_found=False)
 
-        if action_id and contact_action and action_id != contact_action.id:
-            if view_type in ('kanban', 'list', 'form'):
-                for node in arch.xpath('//form | //kanban | //list'):
-                    node.set('create', 'false')
-        return arch, view
+            # ✅ Only disable "New" button on Vendor action
+            if vendor_action and vendor_action.id == options['action_id']:
+                root = etree.fromstring(result['arch'])
+                root.set('create', 'false')   # removes "New" button
+                result['arch'] = etree.tostring(root)
 
+        return result
     custom_type = fields.Many2one('res.partner.location.type', string="Type", tracking=True,
                                   help='Contact Location Type', copy=False)
     custom_address_type = fields.Many2one('res.partner.address.type', string="Address Type", tracking=True,
@@ -205,12 +206,18 @@ class CustomContact(models.Model):
 
     def write(self, vals):
         res = super().write(vals)
-        if vals.get('is_approved') is True:
-            for record in self:
-                if record.is_vendor:
-                    record.supplier_rank = (record.supplier_rank or 0) + 1
-                if record.is_customer:
-                    record.customer_rank = (record.customer_rank or 0) + 1
+
+        for record in self:
+            # If marked as Customer → directly set customer_rank (no approval needed)
+            if vals.get('is_customer') or record.is_customer:
+                if record.customer_rank != 1:
+                    super(CustomContact, record.sudo()).write({'customer_rank': 1})
+
+            # If marked as Vendor → require approval
+            if vals.get('is_approved') is True and (vals.get('is_vendor') or record.is_vendor):
+                if record.supplier_rank != 1:
+                    super(CustomContact, record.sudo()).write({'supplier_rank': 1})
+
         return res
 
     survey_ids = fields.One2many('survey.user_input', 'partner_id', string='Surveys')
@@ -338,8 +345,8 @@ class CustomContact(models.Model):
             }
             if partner.is_vendor:
                 vals['supplier_rank'] = 0
-            if partner.is_customer:
-                vals['customer_rank'] = 0
+            # if partner.is_customer:
+            #     vals['customer_rank'] = 0
 
             partner.write(vals)
 
