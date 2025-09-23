@@ -64,7 +64,7 @@
             <xpath expr="//field[@name='validity_date']" position="attributes">
                 <attribute name="readonly">state in ('sale', 'unlock_pending', 'cancel')</attribute>
             </xpath>
-            <xpath expr="//field[@name='date_order' and @groups='base.group_no_one']" position="attributes">
+            <xpath expr="//field[@name='date_order'][last()]" position="attributes">
                 <attribute name="readonly">state in ('sale', 'unlock_pending', 'cancel')</attribute>
             </xpath>
             <xpath expr="//field[@name='pricelist_id']" position="attributes">
