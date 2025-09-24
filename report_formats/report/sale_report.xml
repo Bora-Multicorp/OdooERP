@@ -184,16 +184,16 @@
                                                     <span t-field="doc.incoterm.code"/>
                                                     <span t-field="doc.incoterm.name"/>
                                                     <br/>
-                                                    <t t-if="doc.contract_date">
-                                                        CONTRACT DATE:
-                                                        <span t-field="doc.contract_date"
-                                                              t-options='{"format": "dd-MMM-yy"}'/>
-                                                    </t>
-                                                    <br/>
-                                                    <t t-if="doc.contract_number">
-                                                        CONTRACT NO.:
-                                                        <span t-field="doc.contract_number"/>
-                                                    </t>
+<!--                                                    <t t-if="doc.contract_date">-->
+<!--                                                        CONTRACT DATE:-->
+<!--                                                        <span t-field="doc.contract_date"-->
+<!--                                                              t-options='{"format": "dd-MMM-yy"}'/>-->
+<!--                                                    </t>-->
+<!--                                                    <br/>-->
+<!--                                                    <t t-if="doc.contract_number">-->
+<!--                                                        CONTRACT NO.:-->
+<!--                                                        <span t-field="doc.contract_number"/>-->
+<!--                                                    </t>-->
                                                     <br/>
                                                     <span t-field="doc.incoterm_description"/>
                                                 </strong>
@@ -662,16 +662,16 @@
                                                     <span t-field="doc.incoterm.code"/>
                                                     <span t-field="doc.incoterm.name"/>
                                                     <br/>
-                                                    <t t-if="doc.contract_date">
-                                                        CONTRACT DATE:
-                                                        <span t-field="doc.contract_date"
-                                                              t-options='{"format": "dd-MMM-yy"}'/>
-                                                    </t>
-                                                    <br/>
-                                                    <t t-if="doc.contract_number">
-                                                        CONTRACT NO.:
-                                                        <span t-field="doc.contract_number"/>
-                                                    </t>
+<!--                                                    <t t-if="doc.contract_date">-->
+<!--                                                        CONTRACT DATE:-->
+<!--                                                        <span t-field="doc.contract_date"-->
+<!--                                                              t-options='{"format": "dd-MMM-yy"}'/>-->
+<!--                                                    </t>-->
+<!--                                                    <br/>-->
+<!--                                                    <t t-if="doc.contract_number">-->
+<!--                                                        CONTRACT NO.:-->
+<!--                                                        <span t-field="doc.contract_number"/>-->
+<!--                                                    </t>-->
                                                     <br/>
                                                     <span t-field="doc.incoterm_description"/>
                                                 </strong>
