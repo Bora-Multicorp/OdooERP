@@ -194,9 +194,9 @@
 <!--                                                        CONTRACT NO.:-->
 <!--                                                        <span t-field="doc.contract_number"/>-->
 <!--                                                    </t>-->
-                                                    <br/>
-                                                    <span t-field="doc.incoterm_description"/>
-                                                </strong>
+<!--                                                    <br/>-->
+<!--                                                    <span t-field="doc.incoterm_description"/>-->
+<!--                                                </strong>-->
                                             </td>
                                         </tr>
                                     </table>
@@ -672,8 +672,8 @@
 <!--                                                        CONTRACT NO.:-->
 <!--                                                        <span t-field="doc.contract_number"/>-->
 <!--                                                    </t>-->
-                                                    <br/>
-                                                    <span t-field="doc.incoterm_description"/>
+<!--                                                    <br/>-->
+<!--                                                    <span t-field="doc.incoterm_description"/>-->
                                                 </strong>
                                             </td>
                                         </tr>
