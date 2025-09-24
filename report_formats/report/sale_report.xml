@@ -181,8 +181,8 @@
                                                 </span>
                                                 <br/>
                                                 <strong>
-                                                    <span t-field="doc.invoice_incoterm_id.code"/>
-                                                    <span t-field="doc.invoice_incoterm_id.name"/>
+                                                    <span t-field="doc.incoterm.code"/>
+                                                    <span t-field="doc.incoterm.name"/>
                                                     <br/>
                                                     <t t-if="doc.contract_date">
                                                         CONTRACT DATE:
@@ -659,8 +659,8 @@
                                                 </span>
                                                 <br/>
                                                 <strong>
-                                                    <span t-field="doc.invoice_incoterm_id.code"/>
-                                                    <span t-field="doc.invoice_incoterm_id.name"/>
+                                                    <span t-field="doc.incoterm.code"/>
+                                                    <span t-field="doc.incoterm.name"/>
                                                     <br/>
                                                     <t t-if="doc.contract_date">
                                                         CONTRACT DATE:
