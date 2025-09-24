@@ -196,7 +196,7 @@
 <!--                                                    </t>-->
 <!--                                                    <br/>-->
 <!--                                                    <span t-field="doc.incoterm_description"/>-->
-<!--                                                </strong>-->
+                                                </strong>
                                             </td>
                                         </tr>
                                     </table>
