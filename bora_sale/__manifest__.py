@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 {
-    'name': "bora sale op",
+    'name': "bora sale operations",
 
     'summary': "Bora sale operations",
 
