@@ -285,7 +285,7 @@
                                 </tr>
                             </tbody>
                         </table>
-                        <table style="width:100%; border-collapse:collapse; margin-top:0;">
+                        <table style="width:100%; border-collapse:collapse; margin-top:0; border-bottom:1px solid black;">
                             <tr>
                                 <td
                                     style="width:50%; vertical-align:top; border:1px solid black; padding:5px; border-bottom:none; border-right:none;">
@@ -327,7 +327,7 @@
                                 </td>
                             </tr>
                             <tr>
-                                <td style="width:50%; vertical-align:top; padding:5px;">                                   
+                                <td style="width:50%; vertical-align:top; padding:5px;border-left:1px solid black;">                                   
                                     <div
                                         style="text-align:left; font-style:italic; font-family:sans-serif; font-size:14px;">
                                         <b>Terms and Conditions</b>
@@ -352,14 +352,16 @@
                                             business credentials before order confirmation.</li>
                                     </ol>
                                 </td>
-                                <td style="width:50%; vertical-align:top; padding:5px; border-right:1px solid black;">
+                                <td style="width:50%; vertical-align:top; padding:5px; border-right:1px solid black;position: relative;">
+                                     <div
+                                                        style="position: absolute; bottom: 0; left: 0; right: 0; font-size: 11px; line-height: 1.3;">
                                     <div style="font-size:13px; text-align:left;">
                                         <strong>Company's Bank Details</strong>
                                     </div>
                                     <t t-set="bank"
                                         t-value="doc.company_id.partner_id.bank_ids and doc.company_id.partner_id.bank_ids[0]" />
                                     <t t-if="bank">
-                                        <table style="width:100%; font-size:14px;">
+                                        <table style="width:100%; font-size:14px;  border-collapse: collapse;">
                                             <tr>
                                                 <td style="width:35%;">
                                                     Bank Name
@@ -387,32 +389,28 @@
                                                 </tr>
                                             </t>
                                             <tr>
-                                                <td style="width:35%; vertical-align: top;">
-                                                    Branch &amp; SWIFT Code
-                                                </td>
+                                                <td style="vertical-align: top;">
+                                                    Branch &amp; SWIFT Code                                                </td>
                                                <td style="width:65%; font-weight:bold; padding-left:15px; text-indent:-10px; vertical-align: top;">: <span
                                                         t-field="bank.bank_id.bic" />
-                                                </td>
+                                                </td>                                                               
                                             </tr>
-                                        </table>
-                                    </t>
-                                </td>
-                            </tr>
-                        </table>
-                        <table
-                            style="width:100%; margin-top:0; border-collapse: collapse;font-size:14px;">
-                            <tr>
-                                <td style="width:50%; border-top:0px; border-left:1px solid black; border-bottom:1px solid black;" />
-                                <td
-                                      style="height:60px; vertical-align:bottom; padding:5px;width:50%; border:1px solid black;">
+                                            <tr>
+                                                 <td colspan="2"
+                                      style="height:60px; vertical-align:bottom; padding:5px; border:1px solid black; border-bottom:0px; border-collapse:collapse;">
                                     <div
-                                        style="float:right; width:50%; text-align:right; box-sizing:border-box; padding-left:5px;">
+                                        style="float:right;text-align:right; box-sizing:border-box; padding-left:5px;">
                                          <strong>for
                                             <span t-field="doc.company_id.name" />
                                         </strong>
                                         <br />
                                         <br />
                                         Authorised Signatory </div>
+                                </td>
+                                            </tr>
+                                        </table>
+                                    </t>
+                                    </div>
                                 </td>
                             </tr>
                         </table>
@@ -767,14 +765,16 @@
                                             credentials and adhere to export regulations.</li>
                                     </ol>
                                 </td>
-                              <td style="width:50%; vertical-align:top; padding:5px; border-right:1px solid black;">
+                              <td style="width:50%; vertical-align:top; padding:5px; border-right:1px solid black; position: relative;">
+                                 <div
+                                                        style="position: absolute; bottom: 0; left: 0; right: 0; font-size: 11px; line-height: 1.3;">
                                     <div style="font-size:14px; text-align:left;">
                                         <strong>Company's Bank Details</strong>
                                     </div>
                                     <t t-set="bank"
                                         t-value="doc.company_id.partner_id.bank_ids and doc.company_id.partner_id.bank_ids[0]" />
                                     <t t-if="bank">
-                                        <table style="width:100%; font-size:13px;">
+                                        <table style="width:100%; font-size:14px;  border-collapse: collapse;">
                                             <tr>
                                                 <td style="width:35%;">
                                                     Bank Name
@@ -802,26 +802,19 @@
                                                 </tr>
                                             </t>
                                             <tr>
-                                                <td style="width:35%; vertical-align: top;">
-                                                    Branch &amp; SWIFT Code
+                                                <td style="vertical-align: top;">
+                                                    Branch &amp; SWIFT Code 2
                                                 </td>
                                                 <td style="width:65%; font-weight:bold; padding-left:15px; text-indent:-10px; vertical-align: top;">: <span
                                                         t-field="bank.bank_id.bic" />
                                                 </td>
+                                                
                                             </tr>
-                                        </table>
-                                    </t>
-                                </td>
-                            </tr>
-                        </table>
-                        <table
-                            style="width:100%; margin-top:0; border-collapse: collapse;font-size:14px;">
-                            <tr>
-                                <td style="width:50%; border-top:0px; border-left:1px solid black; border-bottom:1px solid black;" />
-                                <td
-                                    style="height:60px; vertical-align:bottom; padding:5px;width:50%; border:1px solid black;">
+                                            <tr>
+                                                                                <td colspan="2"
+                                    style="height:60px; vertical-align:bottom; padding:5px; border:1px solid black; border-bottom:0px; border-collapse:collapse;">
                                     <div
-                                        style="float:right; width:50%; text-align:right; box-sizing:border-box; padding-left:5px;">
+                                        style="float:right; text-align:right; box-sizing:border-box; padding-left:5px;">
                                         <strong>for 
                                             <span t-field="doc.company_id.name" />
                                         </strong>
@@ -829,8 +822,13 @@
                                         <br />
                                         Authorised Signatory </div>
                                 </td>
+                                            </tr>
+                                        </table>
+                                    </t>
+                                </div>
+                                </td>
                             </tr>
-                        </table>
+                        </table>                  
                     </div>
                     <div style="text-align:center; margin-top:10px; font-size:13px;">SUBJECT TO DUBAI, U.A.E.
                         JURISDICTION <br /> This is a Computer Generated Document </div>
