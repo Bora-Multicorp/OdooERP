@@ -1493,15 +1493,25 @@
                                             style="border-right:1px solid black;font-size:14px;border-top:1px solid black; padding:4px; text-align:right;">
                                             Total Invoice Amount in AED
                                             <strong>
-                                                <span t-esc="o.currency_id.symbol"/>
-                                                <span
-                                                        t-esc="'%0.2f' % o.amount_total"/>
-                                                @ AED
-                                                <span
-                                                        t-esc="'%0.3f' % (o.company_id.currency_id._convert(1, o.currency_id, o.company_id, o.invoice_date or o.date))"/>
-                                                /$ = AED
-                                                <span
-                                                        t-esc="'%0.2f' % o.currency_id._convert(o.amount_total, o.company_id.currency_id, o.company_id, o.invoice_date or o.date)"/>
+                                                <t t-if="o.is_exchange and o.manual_exchange_rate">
+                                                    <span t-esc="o.currency_id.symbol"/>
+                                                    <span t-esc="'%0.2f' % o.amount_total"/>
+                                                    @ AED
+                                                    <span t-esc="'%0.3f' % o.manual_exchange_rate"/>
+                                                    /$ = AED
+                                                    <span t-esc="'%0.2f' % (o.amount_total * o.manual_exchange_rate)"/>
+                                                </t>
+                                                <t t-else="">
+                                                    <span t-esc="o.currency_id.symbol"/>
+                                                    <span
+                                                            t-esc="'%0.2f' % o.amount_total"/>
+                                                    @ AED
+                                                    <span
+                                                            t-esc="'%0.3f' % (o.company_id.currency_id._convert(1, o.currency_id, o.company_id, o.invoice_date or o.date))"/>
+                                                    /$ = AED
+                                                    <span
+                                                            t-esc="'%0.2f' % o.currency_id._convert(o.amount_total, o.company_id.currency_id, o.company_id, o.invoice_date or o.date)"/>
+                                                </t>
                                             </strong>
                                         </td>
                                     </tr>
@@ -1515,6 +1525,11 @@
                                         Chargeable (in words):
                                         <br/>
                                         <strong>
+                                            <t t-if="o.is_exchange and o.manual_exchange_rate">
+                                                <t t-set="converted_amount"
+                                                   t-value="o.amount_total * o.manual_exchange_rate"/>
+                                            </t>
+                                            <t t-else="">
                                             <t t-set="converted_amount"
                                                t-value="o.currency_id._convert(o.amount_total, o.company_id.currency_id, o.company_id, o.invoice_date)"/>
                                             <t t-set="company_currency"
@@ -1524,6 +1539,7 @@
                                                t-value="company_currency.amount_to_text(converted_amount).replace(company_currency.currency_unit_label, '').replace(company_currency.name, '').strip()"/>
                                             <span
                                                     t-esc="company_currency.currency_unit_label + ' ' + amount_words + ' Only (' + company_currency.symbol + ' ' + ('%.2f' % converted_amount) + ')'"/>
+                                            </t>
                                         </strong>
                                     </td>
 
