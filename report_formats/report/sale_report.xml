@@ -485,7 +485,7 @@
                                                         Bank AD Code :
                                                     </td>
                                                     <strong>
-                                                        <span t-field="bank.partner_bank_id.ad_code"/>
+                                                        <span t-field="bank.ad_code"/>
                                                     </strong>
                                                 </tr>
 
