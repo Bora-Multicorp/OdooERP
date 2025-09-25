@@ -48,8 +48,8 @@
                             string="Reset Credit Approval"
                             type="object"
                             class="btn-secondary"
-                            confirm="Are you sure you want to reset the credit approval process?"
-                            invisible="is_payment_rejected != True or user_id != uid"/>
+                            confirm="Are you sure you want to reset the credit approval process?" groups="base.group_system"
+                            invisible="is_payment_rejected != True"/>
                 </xpath>
 
                 <!-- Approval page -->
