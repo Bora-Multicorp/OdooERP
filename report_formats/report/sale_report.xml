@@ -461,32 +461,35 @@
                                                 </t>
                                                 <tr>
                                                     <td style="vertical-align: top;">
-                                                        Branch and IFSC code :
+                                                        Branch and IFSC code
                                                     </td>
-                                                    <strong>
+                                                    <td style="width:65%; font-weight:bold; padding-left:15px; text-indent:-10px; vertical-align: top;">
+                                                        :
                                                         <span t-field="bank.branch"/>
                                                         <span t-field="bank.ifsc_code"/>
-                                                    </strong>
+                                                    </td>
 
                                                 </tr>
                                                 <br/>
                                                 <tr>
                                                     <td style="vertical-align: top;">
-                                                        Branch SOL ID :
+                                                        Branch SOL ID
                                                     </td>
-                                                    <strong>
+                                                    <td style="width:65%; font-weight:bold; padding-left:15px; text-indent:-10px; vertical-align: top;">
+                                                        :
                                                         <span t-field="bank.sol_number"/>
-                                                    </strong>
+                                                    </td>
                                                 </tr>
 
                                                 <br/>
                                                 <tr>
                                                     <td style="vertical-align: top;">
-                                                        Bank AD Code :
+                                                        Bank AD Code
                                                     </td>
-                                                    <strong>
+                                                    <td style="width:65%; font-weight:bold; padding-left:15px; text-indent:-10px; vertical-align: top;">
+                                                        :
                                                         <span t-field="bank.ad_code"/>
-                                                    </strong>
+                                                    </td>
                                                 </tr>
 
 
@@ -503,13 +506,17 @@
                                                 </tr>
                                                 <tr>
                                                     <td style="vertical-align: top;">
-                                                        Company's PAN/IEC Code:
-                                                        <t t-if="doc.company_id.l10n_in_pan">
-                                                            <strong>
-                                                                <span t-field="doc.company_id.l10n_in_pan"/>
-                                                            </strong>
-                                                        </t>
+                                                        Company's PAN/IEC Code
                                                     </td>
+                                                    <td style="width:65%; font-weight:bold; padding-left:15px; text-indent:-10px; vertical-align: top;">
+                                                        :
+                                                         <t t-if="doc.company_id.l10n_in_pan">
+
+                                                                                <span t-field="doc.company_id.l10n_in_pan"/>
+
+                                                                        </t>
+                                                    </td>
+
                                                 </tr>
                                                 <tr>
                                                     <td colspan="2"
