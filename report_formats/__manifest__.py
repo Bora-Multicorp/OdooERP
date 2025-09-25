@@ -1,7 +1,7 @@
 {
     "name": "Bora dubai report formats",
     "version": "1.0",
-    "depends": ["sale","account"],
+    "depends": ["sale","account","sale_stock"],
     "author": "Custom",
     "category": "Sale",
     "description": "Reports format",
