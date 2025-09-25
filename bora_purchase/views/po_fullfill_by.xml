@@ -6,6 +6,7 @@
         <field name="arch" type="xml">
             <xpath expr="//field[@name='currency_id']" position="after">
                 <field name="fulfillment_by" widget="radio" options="{'horizontal': true}" readonly = "state in ('cancel','done','purchase')"/>
+                <field name="delivery_partner" readonly = "state in ('cancel','done','purchase')" invisible = "fulfillment_by != 'bora'" required= "fulfillment_by == 'bora'"/>
             </xpath>
         </field>
     </record>
