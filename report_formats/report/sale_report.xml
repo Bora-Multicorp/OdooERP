@@ -68,7 +68,7 @@
                                     </div>
 
                                     <div style="padding:5px; border-bottom:1px solid black;">
-                                        <span style="font-size:14px;">Consignee</span>
+                                        <span style="font-size:14px;">Consignee(Ship to)</span>
                                         <p>
                                             <strong t-field="doc.partner_shipping_id.name"/>
                                             <br/>
@@ -91,7 +91,7 @@
                                         <br/>
                                     </div>
                                     <div style="padding:5px;">
-                                        <span style="font-size:14px;">Buyer</span>
+                                        <span style="font-size:14px;">Buyer(Bill to)</span>
                                         <br/>
                                         <strong>
                                             <div t-field="doc.partner_invoice_id"/>
