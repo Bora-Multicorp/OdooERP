@@ -1499,7 +1499,7 @@
                                                     @ AED
                                                     <span t-esc="'%0.3f' % sale_order.manual_exchange_rate"/>
                                                     /$ = AED
-                                                    <span t-esc="'%0.2f' % (o.amount_total * o.manual_exchange_rate)"/>
+                                                    <span t-esc="'%0.2f' % (o.amount_total * sale_order.manual_exchange_rate)"/>
                                                 </t>
                                                 <t t-else="">
                                                     <span t-esc="o.currency_id.symbol"/>
