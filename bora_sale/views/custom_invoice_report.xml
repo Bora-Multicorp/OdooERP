@@ -1493,11 +1493,11 @@
                                             style="border-right:1px solid black;font-size:14px;border-top:1px solid black; padding:4px; text-align:right;">
                                             Total Invoice Amount in AED
                                             <strong>
-                                                <t t-if="o.is_exchange and o.manual_exchange_rate">
+                                                <t t-if="sale_order.is_exchange and sale_order.manual_exchange_rate">
                                                     <span t-esc="o.currency_id.symbol"/>
                                                     <span t-esc="'%0.2f' % o.amount_total"/>
                                                     @ AED
-                                                    <span t-esc="'%0.3f' % o.manual_exchange_rate"/>
+                                                    <span t-esc="'%0.3f' % sale_order.manual_exchange_rate"/>
                                                     /$ = AED
                                                     <span t-esc="'%0.2f' % (o.amount_total * o.manual_exchange_rate)"/>
                                                 </t>
@@ -1525,9 +1525,9 @@
                                         Chargeable (in words):
                                         <br/>
                                         <strong>
-                                            <t t-if="o.is_exchange and o.manual_exchange_rate">
+                                            <t t-if="sale_order.is_exchange and sale_order.manual_exchange_rate">
                                                 <t t-set="converted_amount"
-                                                   t-value="o.amount_total * o.manual_exchange_rate"/>
+                                                   t-value="o.amount_total * sale_order.manual_exchange_rate"/>
                                             </t>
                                             <t t-else="">
                                             <t t-set="converted_amount"
