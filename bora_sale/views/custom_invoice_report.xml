@@ -1060,7 +1060,7 @@
                                             </div>
                                             <t t-if="o.partner_id.state_id.name">Emirate:
                                                 <span
-                                                        t-field="o.partner_id.state_id.name"/>
+                                                        t-field="o.company_id.partner_id.state_id.name"/>
                                             </t>
 
                                             <div>TRN:
@@ -1519,11 +1519,11 @@
                                                t-value="o.currency_id._convert(o.amount_total, o.company_id.currency_id, o.company_id, o.invoice_date)"/>
                                             <t t-set="company_currency"
                                                t-value="o.company_id.currency_id"/>
-                                            <!-- remove the currency label from the words -->
+                                            <!-- Remove default currency name from amount_to_text -->
                                             <t t-set="amount_words"
-                                               t-value="company_currency.amount_to_text(converted_amount).replace(company_currency.currency_unit_label, '').strip()"/>
+                                               t-value="company_currency.amount_to_text(converted_amount).replace(company_currency.currency_unit_label, '').replace(company_currency.name, '').strip()"/>
                                             <span
-                                                    t-esc="company_currency.name + ' ' + amount_words + ' Only (' + company_currency.symbol + ' ' + ('%.2f' % converted_amount) + ')'"/>
+                                                    t-esc="company_currency.currency_unit_label + ' ' + amount_words + ' Only (' + company_currency.symbol + ' ' + ('%.2f' % converted_amount) + ')'"/>
                                         </strong>
                                     </td>
 
