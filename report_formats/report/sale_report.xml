@@ -328,7 +328,7 @@
                                         <br/>
                                         <div style="font-weight:bold;">
 
-                                            <span t-esc="doc.currency_id.amount_to_text(o.amount_total) + ' only'" />
+                                            <span t-esc="doc.currency_id.amount_to_text(doc.amount_total) + ' only'" />
                                         </div>
                                     </div>
 
