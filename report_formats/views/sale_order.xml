@@ -11,4 +11,16 @@
             </xpath>
         </field>
     </record>
+    <record id="view_order_form_incoterm_fields" model="ir.ui.view">
+        <field name="name">sale.order.form.invoice.incoterm</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale_stock.view_order_form_inherit_sale_stock"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='incoterm_location']" position="after">
+                <field name="contract_date" required="1"/>
+                <field name="contract_number" required="1"/>
+                <field name="incoterm_description" required="1"/>
+            </xpath>
+        </field>
+    </record>
 </odoo>
