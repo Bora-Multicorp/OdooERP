@@ -314,7 +314,9 @@
                                                             No.
                                                         </span>
                                                         <br />
-                                                        <span t-field="o.vessel_or_flight_no" />
+                                                        <strong>
+                                                            <span t-field="o.vessel_or_flight_no" />
+                                                        </strong>
                                                     </td>
                                                     <td
                                                         style="padding:3px; border-bottom:1px solid black;">
@@ -899,7 +901,7 @@
                                                                     <br />
                                                                     <div
                                                                         style="text-align:right; padding-right:3px; font-size:12px;">
-                                                        Authorised Signatorys
+                                                        Authorised Signatory
                                                                     </div>
                                                                 </td>
                                                             </tr>
