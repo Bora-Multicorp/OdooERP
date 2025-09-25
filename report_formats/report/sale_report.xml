@@ -3,6 +3,7 @@
     <template id="report_saleorder_document_befpo_inherit"
               inherit_id="sale.report_saleorder_document">
         <xpath expr="//t[@t-call='web.external_layout']" position="replace">
+            <t t-call="web.external_layout">
             <t t-foreach="docs" t-as="doc">
                 <t t-if="doc.company_id.partner_id.country_id.code == 'IN'">
                     <div class="page" style="font-size:14px; font-family:sans-serif;margin: auto;">
@@ -316,23 +317,6 @@
                                         <span t-esc="'%0.2f' % doc.amount_total"/>
                                     </td>
                                 </tr>
-                                <tr
-                                        style="border-top:1px solid black;border-left:1px solid black; border-right:1px solid black;">
-                                    <td colspan="6" style="padding:4px; text-align:right;">Total
-                                        Invoice Amount in AED
-                                        <strong>
-                                            <span t-esc="doc.currency_id.symbol"/>
-                                            <span
-                                                    t-esc="'%0.2f' % doc.amount_total"/>
-                                            @ AED
-                                            <span
-                                                    t-esc="'%0.3f' % (doc.company_id.currency_id._convert(1, doc.currency_id, doc.company_id, doc.date_order))"/>
-                                            /$ = AED
-                                            <span
-                                                    t-esc="'%0.2f' % doc.currency_id._convert(doc.amount_total, doc.company_id.currency_id, doc.company_id, doc.date_order)"/>
-                                        </strong>
-                                    </td>
-                                </tr>
                             </tbody>
                         </table>
                         <table style="width:100%; border-collapse:collapse; margin-top:0; border-bottom:1px solid black;">
@@ -343,26 +327,11 @@
                                         (in words):
                                         <br/>
                                         <div style="font-weight:bold;">
-                                            <!--                                    <t t-if="doc.currency_id.name == 'AED'">-->
-                                            <!--                                        <t t-set="amount_words"-->
-                                            <!--
-                                            t-value="doc.currency_id.amount_to_text(doc.amount_total)"
-                                            />-->
-                                            <!--                                        <span-->
-                                            <!--                                            t-esc="amount_words + ' Only (' +
-                                            doc.currency_id.symbol + ' ' + ('%.2f' %
-                                            doc.amount_total) + ')'" />-->
-                                            <!--                                    </t>-->
-                                            <t t-set="converted_amount"
-                                               t-value="doc.currency_id._convert(doc.amount_total, doc.company_id.currency_id, doc.company_id, doc.date_order)"/>
-                                            <t t-set="company_currency"
-                                               t-value="doc.company_id.currency_id"/>
-                                            <t t-set="amount_words"
-                                               t-value="company_currency.amount_to_text(converted_amount)"/>
-                                            <span
-                                                    t-esc="amount_words + ' Only (' + company_currency.symbol + ' ' + ('%.2f' % converted_amount) + ')'"/>
+
+                                            <span t-esc="doc.currency_id.amount_to_text(o.amount_total) + ' only'" />
                                         </div>
                                     </div>
+
                                 </td>
                                 <td
                                         style="width:50%; vertical-align:top; border:1px solid black; padding:5px; border-bottom:0px; border-left:none;">
@@ -539,8 +508,7 @@
                             </tr>
                         </table>
                     </div>
-                    <div style="text-align:center; margin-top:10px;">SUBJECT TO DUBAI, U.A.E.
-                        JURISDICTION
+                    <div style="text-align:center; margin-top:10px;"> SUBJECT TO PUNE JURISDICTION for bora LLP
                         <br/>
                         This is a Computer Generated Document
                     </div>
@@ -1036,6 +1004,7 @@
                         This is a Computer Generated Document
                     </div>
                 </t>
+            </t>
             </t>
         </xpath>
     </template>
