@@ -69,9 +69,23 @@
                                     <div style="padding:5px; border-bottom:1px solid black;">
                                         <span style="font-size:14px;">Consignee</span>
                                         <p>
-                                            <strong>Captains Freight Services FZCO</strong>
+                                            <strong t-field="doc.partner_shipping_id.name"/>
                                             <br/>
-                                            D-15, Dubai Airport Freezone, Dubai, U.A.E.
+                                            <span t-field="doc.partner_shipping_id.street"/>
+                                            <br t-if="doc.partner_shipping_id.street2"/>
+                                            <span t-field="doc.partner_shipping_id.street2"/>
+                                            <br/>
+                                            <span t-field="doc.partner_shipping_id.city"/>
+                                            <t t-if="doc.partner_shipping_id.state_id">
+                                                ,
+                                                <span t-field="doc.partner_shipping_id.state_id.name"/>
+                                            </t>
+                                            <t t-if="doc.partner_shipping_id.zip">
+                                                -
+                                                <span t-field="doc.partner_shipping_id.zip"/>
+                                            </t>
+                                            <br/>
+                                            <span t-field="doc.partner_shipping_id.country_id.name"/>
                                         </p>
                                         <br/>
                                     </div>
@@ -456,6 +470,16 @@
                                                     </td>
                                                 </tr>
                                                 <tr>
+                                                    <td style="vertical-align: top;">
+                                                        Company's PAN/IEC Code:
+                                                        <t t-if="doc.company_id.l10n_in_pan">
+                                                            <strong>
+                                                                <span t-field="doc.company_id.l10n_in_pan"/>
+                                                            </strong>
+                                                        </t>
+                                                    </td>
+                                                </tr>
+                                                <tr>
                                                     <td colspan="2"
                                                         style="height:60px; vertical-align:bottom; padding:5px; border:1px solid black; border-bottom:0px; border-collapse:collapse;">
                                                         <div
@@ -547,9 +571,25 @@
                                     <div style="padding:5px; border-bottom:1px solid black;">
                                         <span style="font-size:14px;">Consignee</span>
                                         <p>
-                                            <strong>Captains Freight Services FZCO</strong>
-                                            <br/>
-                                            D-15, Dubai Airport Freezone, Dubai, U.A.E.
+                                            <p>
+                                                <strong t-field="doc.partner_shipping_id.name"/>
+                                                <br/>
+                                                <span t-field="doc.partner_shipping_id.street"/>
+                                                <br t-if="doc.partner_shipping_id.street2"/>
+                                                <span t-field="doc.partner_shipping_id.street2"/>
+                                                <br/>
+                                                <span t-field="doc.partner_shipping_id.city"/>
+                                                <t t-if="doc.partner_shipping_id.state_id">
+                                                    ,
+                                                    <span t-field="doc.partner_shipping_id.state_id.name"/>
+                                                </t>
+                                                <t t-if="doc.partner_shipping_id.zip">
+                                                    -
+                                                    <span t-field="doc.partner_shipping_id.zip"/>
+                                                </t>
+                                                <br/>
+                                                <span t-field="doc.partner_shipping_id.country_id.name"/>
+                                            </p>
                                         </p>
                                         <br/>
                                     </div>
@@ -921,7 +961,7 @@
                                                 </t>
                                                 <tr>
                                                     <td style="vertical-align: top;">
-                                                        Branch &amp; SWIFT Code 2
+                                                        Branch &amp; SWIFT Code
                                                     </td>
                                                     <td style="width:65%; font-weight:bold; padding-left:15px; text-indent:-10px; vertical-align: top;">
                                                         :
