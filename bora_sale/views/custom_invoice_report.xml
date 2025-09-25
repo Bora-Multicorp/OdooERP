@@ -970,12 +970,25 @@
                                             <div>
                                                 Consignee
                                             </div>
-                                            <div>
-                                                <span style=" font-weight: bold;">Captains Freight
-                                                    Services FZCO
-                                                </span>
-                                            </div>
-                                            <div>D-15, Dubai Airport Freezone, Dubai, U.A.E.</div>
+                                            <p>
+                                            <strong t-field="o.partner_shipping_id.name"/>
+                                            <br/>
+                                            <span t-field="o.partner_shipping_id.street"/>
+                                            <br t-if="o.partner_shipping_id.street2"/>
+                                            <span t-field="o.partner_shipping_id.street2"/>
+                                            <br/>
+                                            <span t-field="o.partner_shipping_id.city"/>
+                                            <t t-if="o.partner_shipping_id.state_id">
+                                                ,
+                                                <span t-field="o.partner_shipping_id.state_id.name"/>
+                                            </t>
+                                            <t t-if="o.partner_shipping_id.zip">
+                                                -
+                                                <span t-field="o.partner_shipping_id.zip"/>
+                                            </t>
+                                            <br/>
+                                            <span t-field="o.partner_shipping_id.country_id.name"/>
+                                        </p>
                                             <br />
                                             <br />
                                             <br />
@@ -1196,9 +1209,9 @@
                                                         </span>
                                                     </div>
                                                     <div>
-                                                        <strong>
-                                                            <span t-if="sale_order.warehouse_id"
-                                                                t-field="sale_order.warehouse_id" />
+                                                    <strong>
+                                                            <span
+                                                                t-field="o.incoterm_location" />
                                                         </strong>
                                                     </div>
                                                 </td>
@@ -1212,7 +1225,18 @@
                                                     </div>
                                                     <div>
                                                         <strong>
-                                                            <!-- <span t-field="o.incoterm" /> -->
+                                                            <span t-field="o.invoice_incoterm_id.code"/>
+                                                            <span t-field="o.invoice_incoterm_id.name"/>
+                                                            <br/>
+                                                            <t t-if="o.contract_date">
+                                                                CONTRACT DATE: <span t-field="o.contract_date" t-options='{"format": "dd-MMM-yy"}'/>
+                                                            </t>
+                                                            <br/>
+                                                            <t t-if="o.contract_number">
+                                                                CONTRACT NO.: <span t-field="o.contract_number"/>
+                                                            </t>
+                                                            <br/>
+                                                            <span t-field="o.incoterm_description"/>
                                                         </strong>
                                                     </div>
                                                 </td>
@@ -1376,7 +1400,7 @@
                                             <t t-set="amount_words"
                                                 t-value="company_currency.amount_to_text(converted_amount)" />
                                             <span
-                                                t-esc="amount_words + ' Only (' + company_currency.symbol + ' ' + ('%.2f' % converted_amount) + ')'" />
+                                                t-esc="company_currency.currency_unit_label + ' ' + amount_words + ' Only (' + company_currency.symbol + ' ' + ('%.2f' % converted_amount) + ')'" />
                                             <!--                                            <span
                                             t-esc="o.currency_id.amount_to_text(o.amount_total) + '
                                             only'"/>-->
