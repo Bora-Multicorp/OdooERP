@@ -100,7 +100,7 @@ class SaleOrderConfimationApproval(models.Model):
                 # If any rejected → block
                 if any(s == 'reject' for s in states):
                     raise ValidationError(
-                        _("This Sale Order cannot be confirmed unitl credit term approved")
+                        _("This Sale Order cannot be confirmed until credit term approved")
                     )
 
                 # If not all approved → block
