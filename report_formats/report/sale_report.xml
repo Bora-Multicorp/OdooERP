@@ -790,7 +790,7 @@
                                                     style="border-right:1px solid black; padding:4px; text-align:right;">
                                                 <span t-esc="doc.currency_id.symbol"/>
                                                 <span
-                                                        t-esc="'%0.2f' % doc.company_id.currency_id.round(row[1].price_unit)"/>
+                                                        t-esc="'%0.2f' % doc.currency_id.round(row[1].price_unit)"/>
                                             </td>
                                             <td
                                                     style="border-right:1px solid black; text-align:center; padding:4px;">
@@ -801,7 +801,7 @@
                                                 <strong>
                                                     <span t-esc="doc.currency_id.symbol"/>
                                                     <span
-                                                            t-esc="'%0.2f' % doc.company_id.currency_id.round(row[1].price_subtotal)"/>
+                                                            t-esc="'%0.2f' % doc.currency_id.round(row[1].price_subtotal)"/>
                                                 </strong>
                                             </td>
                                         </tr>
