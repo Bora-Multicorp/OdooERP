@@ -189,13 +189,6 @@ class PaymentTermApproval(models.Model):
             states = current_lines.mapped('state')
 
             if any(s == 'reject' for s in states):
-                # Suspend remaining approvers
-                for line in current_lines.filtered(lambda l: not l.state):
-                    line.write({
-                        'state': 'suspended',
-                        'remark': f"Suspended by previous authority ({rec.env.user.name})",
-                        'action_date': fields.Datetime.now()
-                    })
                 rec.is_payment_rejected = True
                 rec.is_pending_approval = False
                 rec.is_payment_approved = False
