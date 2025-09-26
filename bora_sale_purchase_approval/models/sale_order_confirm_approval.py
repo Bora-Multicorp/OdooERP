@@ -100,13 +100,13 @@ class SaleOrderConfimationApproval(models.Model):
                 # If any rejected → block
                 if any(s == 'reject' for s in states):
                     raise ValidationError(
-                        _("This Sale Order cannot be confirmed because it was rejected in the active credit approval cycle.")
+                        _("This Sale Order cannot be confirmed unitl credit term approved")
                     )
 
                 # If not all approved → block
                 if any(s != 'approve' for s in states):
                     raise ValidationError(
-                        _("You cannot confirm this Sale Order until all approvers in the active credit cycle approve it.")
+                        _("You cannot confirm this Sale Order until all approvers approves Credit Payment Term")
                     )
 
                 # Passed → mark as approved
