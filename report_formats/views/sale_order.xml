@@ -17,9 +17,9 @@
         <field name="inherit_id" ref="sale_stock.view_order_form_inherit_sale_stock"/>
         <field name="arch" type="xml">
             <xpath expr="//field[@name='incoterm_location']" position="after">
-                <field name="contract_date" required="1"/>
-                <field name="contract_number" required="1"/>
-                <field name="incoterm_description" required="1"/>
+                <field name="contract_date" required="1" readonly="state in ('sale','unlock_pending','cancel')"/>
+                <field name="contract_number" required="1" readonly="state in ('sale','unlock_pending','cancel')"/>
+                <field name="incoterm_description" required="1" readonly="state in ('sale','unlock_pending','cancel')"/>
             </xpath>
         </field>
     </record>
