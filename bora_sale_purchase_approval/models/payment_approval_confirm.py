@@ -50,27 +50,27 @@ class PaymentTermApproval(models.Model):
     #         defaults['credit_approval_users_ids'] = approval_user_vals
     #     return defaults
 
-    def action_confirm(self):
-        """Prevent confirmation if credit payment term is not yet approved."""
-        for order in self:
-            # if order.user_id != self.env.user:
-            #     raise ValidationError(_("You can not confirm this Sale Order."))
-            if order.payment_term_id and order.payment_term_id.name == "Credit Payment":
-                if not order.is_payment_approved:
-                    raise ValidationError(
-                        _("You cannot confirm this Sale Order until the Credit Payment Term is approved.")
-                    )
-                states = order.credit_approval_users_ids.mapped('state')
-                if not states or any(s != 'approve' for s in states):
-                    raise ValidationError(
-                        _("You cannot confirm this Sale Order until All Credit Payment approvers approve it.")
-                    )
-
-                if not order.is_payment_approved:
-                    raise ValidationError(
-                        _("Credit Payment Term must be fully approved before confirmation.")
-                    )
-        return super(PaymentTermApproval, self).action_confirm()
+    # def action_confirm(self):
+    #     """Prevent confirmation if credit payment term is not yet approved."""
+    #     for order in self:
+    #         # if order.user_id != self.env.user:
+    #         #     raise ValidationError(_("You can not confirm this Sale Order."))
+    #         if order.payment_term_id and order.payment_term_id.name == "Credit Payment":
+    #             if not order.is_payment_approved:
+    #                 raise ValidationError(
+    #                     _("You cannot confirm this Sale Order until the Credit Payment Term is approved.")
+    #                 )
+    #             states = order.credit_approval_users_ids.mapped('state')
+    #             if not states or any(s != 'approve' for s in states):
+    #                 raise ValidationError(
+    #                     _("You cannot confirm this Sale Order until All Credit Payment approvers approve it.")
+    #                 )
+    #
+    #             if not order.is_payment_approved:
+    #                 raise ValidationError(
+    #                     _("Credit Payment Term must be fully approved before confirmation.")
+    #                 )
+    #     return super(PaymentTermApproval, self).action_confirm()
 
     @api.depends('credit_approval_users_ids.user_id')
     def _compute_existing_users(self):

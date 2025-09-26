@@ -21,7 +21,7 @@
         <field name="arch" type="xml">
             <list editable="bottom" string="Payment Term Approval Settings">
                 <field name="sequence"/>
-                <field name="user_id"/>
+                <field name="user_id" options="{'no_create': True, 'no_create_edit': True}"/>
             </list>
         </field>
     </record>
