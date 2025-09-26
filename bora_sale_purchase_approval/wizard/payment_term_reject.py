@@ -31,8 +31,22 @@ class RejectPaymentTermWizard(models.TransientModel):
                 'remark': self.remark,
                 'action_date': fields.Datetime.now(),
             })
+            pending_users_lines = sale_order.credit_approval_users_ids.filtered(
+                lambda l: not l.state
+            )
+            if pending_users_lines:
+                pending_users_lines.write({
+                    'state': 'suspended',
+                    'remark': f"Suspended because rejected by {current_user.name}",
+                    'action_date': fields.Datetime.now(),
+                })
+
+            # 3. Update flags on SO
             sale_order.write({
-                "is_payment_rejected": True,
+                'is_payment_rejected': True,
+                'is_pending_approval': False,
+                'is_payment_approved': False,
+                'credit_assigned_to': False,
             })
 
         return {'type': 'ir.actions.act_window_close'}
