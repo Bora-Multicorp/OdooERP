@@ -39,7 +39,7 @@
                                 </t>
                                 <t t-else="" class="text-end">
                                     <div style="text-align: center; font-weight: bold; font-size:16px">EXPORT INVOICE</div>
-                                    <p style="text-align:center; margin: 8px auto; font-size:12px;">(SUPPLY MEANT FOR EXPORT/SUPPLY TO SEZ UNIT OR SEZ DEVELOPER FOR AUTHORISED OPERATIONS ON PAYMENT OF IGST)</p>
+                                    <p style="text-align:center; margin: 8px auto; font-size:11px;">(SUPPLY MEANT FOR EXPORT/SUPPLY TO SEZ UNIT OR SEZ DEVELOPER FOR AUTHORISED OPERATIONS ON PAYMENT OF IGST)</p>
                                 </t>
                             <table style="width:100%; margin-bottom:12px; font-family:sans-serif;">
                                 <!-- # 1 Header Information -->
