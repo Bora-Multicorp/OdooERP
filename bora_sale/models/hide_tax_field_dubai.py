@@ -204,6 +204,7 @@ class HideTaxFieldFromSaleOrderTotalSection(models.Model):
     def _get_tax_totals_summary(self, base_lines, currency, company, cash_rounding=None):
 
         partner_id = next((line.get('partner_id') for line in base_lines if line.get('partner_id')), False)
+        partner = False
         if partner_id:
             partner = self.env['res.partner'].browse(partner_id.id)
         
@@ -240,9 +241,10 @@ class HideTaxFieldFromSaleOrderTotalSection(models.Model):
                 tax_totals_summary['subtotals'] = []
             
             # 2.2 if selling company is India and customer's country is other then India then
-            elif company.country_id.code == india_code and partner.country_id.code != india_code:
-                # If India company exporting, hide tax details (Zero-rated export)
-                tax_totals_summary['subtotals'] = []
+            if partner:
+                if company.country_id.code == india_code and partner.country_id.code != india_code:
+                    # If India company exporting, hide tax details (Zero-rated export)
+                    tax_totals_summary['subtotals'] = []
 
 
         return tax_totals_summary
