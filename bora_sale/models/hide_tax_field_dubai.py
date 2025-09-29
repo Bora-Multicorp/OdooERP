@@ -202,21 +202,10 @@ class HideTaxFieldFromSaleOrderTotalSection(models.Model):
 
     @api.model
     def _get_tax_totals_summary(self, base_lines, currency, company, cash_rounding=None):
-        # NOTE: base_lines, currency, company, cash_rounding=None are all passed in as arguments, 
-        # so they are available in the scope of this function.
-        # However, the customer (partner) is NOT passed in, so we must find it.
-        
-        # Try to find the document that triggered this tax calculation from the context.
-        # This is the standard, though not always guaranteed, Odoo way.
-        partner = self.env['res.partner']
-        if self.env.context.get('partner_id'):
-            partner = self.env['res.partner'].browse(self.env.context['partner_id'])
-        elif self.env.context.get('move_type'):
-            # This is likely from an account.move (invoice)
-            move_id = self.env.context.get('active_id')
-            if move_id:
-                move = self.env['account.move'].browse(move_id)
-                partner = move.partner_id
+
+        partner_id = next((line.get('partner_id') for line in base_lines if line.get('partner_id')), False)
+        if partner_id:
+            partner = self.env['res.partner'].browse(partner_id.id)
         
         # Call super to get the original tax totals summary
         tax_totals_summary = super(HideTaxFieldFromSaleOrderTotalSection, self)._get_tax_totals_summary(
@@ -257,6 +246,7 @@ class HideTaxFieldFromSaleOrderTotalSection(models.Model):
 
 
         return tax_totals_summary
+
 
     # @api.model
     # def _get_tax_totals_summary(self, base_lines, currency, company, cash_rounding=None):
@@ -497,6 +487,11 @@ class HideTaxFieldFromSaleOrderTotalSection(models.Model):
     #     # -------------------------  CUSTOM WORK FOR SHOW/HIDE TAX FIELDS --------------------------
     #     # ------------------------------------------------------------------------------------------
 
+    #     # Get customer so that we can check the country
+    #     partner_id = next((line.get('partner_id') for line in base_lines if line.get('partner_id')), False)
+    #     if partner_id:
+    #         partner = self.env['res.partner'].browse(partner_id.id)
+
     #     # 1. check if there is any product in orderline with service exist
     #     is_taxable_item_exist_in_orderline = False
     #     for base_line in base_lines:
@@ -513,8 +508,12 @@ class HideTaxFieldFromSaleOrderTotalSection(models.Model):
     #         is_bora_electronics_fzco = (company.company_registry == '3892') 
 
     #         # 2.1 if any copmany is tax free then hide tax details
-    #         if is_ayaan_impex or is_bora_electronics_fzco:  
+    #         if is_ayaan_impex or is_bora_electronics_fzco:
     #             tax_totals_summary['subtotals'] = []
+
+    #         if partner.country_id.code:
+    #             if company.country_id.code == 'IN' and partner.country_id.code != 'IN':
+    #                 tax_totals_summary['subtotals'] = []
 
     #     return tax_totals_summary
 
