@@ -282,7 +282,7 @@
                                             class="right sm" colspan="6">Amount Chargeable (in words)
                                         <p
                                                 style="margin: 0px;  font-weight: bold; font-size: 13px">
-                                            <span t-esc="doc.currency_id.amount_to_text(o.amount_total) + ' only'"/>
+                                            <span t-esc="doc.currency_id.amount_to_text(doc.amount_total) + ' only'"/>
                                         </p>
                                     </td>
                                     <td
