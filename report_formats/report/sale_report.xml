@@ -165,7 +165,7 @@
                                                     </strong>
                                                 </td>
                                             </tr>
-                                            <tr>
+                                            <tr style="border-bottom:none;">
                                                 <td colspan="2" style="padding:3px; border-bottom:0;">
                                                     <span style="font-size:14px; margin-bottom:5px;">Terms of Delivery
                                                     </span>
