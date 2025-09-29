@@ -281,9 +281,9 @@
                                         <div style="font-size:14px; text-align:left;">
                                             Amount Chargeable (in words):
                                             <br/>
-                                            <div style="font-weight:bold;">
+                                            <span style="font-weight:bold; display:block; margin-top:2px;">
                                                 <span t-esc="doc.currency_id.amount_to_text(doc.amount_total) + ' only'"/>
-                                            </div>
+                                            </span>
                                         </div>
                                     </td>
                                     <td style="width:50%; vertical-align:top; border:1px solid black; padding:5px; border-bottom:0px; border-left:none;">
@@ -349,12 +349,12 @@
                                                     <br/>
                                                     A/c No. :
                                                     <strong>
-                                                          <span t-field="bank.acc_number"/>
+                                                        <span t-field="bank.acc_number"/>
                                                     </strong>
                                                     <br/>
                                                     Branch and IFSC code :
                                                     <strong>
-                                                       <span t-field="bank.branch"/>
+                                                        <span t-field="bank.branch"/>
                                                         <span t-field="bank.ifsc_code"/>
                                                     </strong>
                                                     <br/>
@@ -365,21 +365,21 @@
                                                     <br/>
                                                     Bank AD Code :
                                                     <strong>
-                                                       <span t-field="bank.ad_code"/>
+                                                        <span t-field="bank.ad_code"/>
                                                     </strong>
                                                     <br/>
                                                     SWIFT code :
                                                     <strong>
-                                                      <span t-field="bank.bank_id.bic"/>
+                                                        <span t-field="bank.bank_id.bic"/>
                                                     </strong>
                                                     <br/>
                                                     Company's PAN/IEC Code :
                                                     <strong>
-                                                       <t t-if="doc.company_id.l10n_in_pan">
+                                                        <t t-if="doc.company_id.l10n_in_pan">
 
-                                                                <span t-field="doc.company_id.l10n_in_pan"/>
+                                                            <span t-field="doc.company_id.l10n_in_pan"/>
 
-                                                            </t>
+                                                        </t>
                                                     </strong>
                                                 </div>
                                             </t>
@@ -388,7 +388,7 @@
                                                     <td colspan="2" style="text-align:right; border:none;">
                                                         <div style="font-weight:bold; text-align:right; padding-right:3px;">
                                                             for
-                                                              <span t-field="doc.company_id.name"/>
+                                                            <span t-field="doc.company_id.name"/>
                                                         </div>
                                                         <br/>
                                                         <br/>
@@ -690,10 +690,10 @@
                                                 <t t-if="doc.is_exchange and doc.manual_exchange_rate">
                                                     <span t-esc="doc.currency_id.symbol"/>
                                                     <span t-esc="'%0.2f' % doc.amount_total"/>
-<!--                                                    @ AED-->
-<!--                                                    <span t-esc="'%0.3f' % doc.manual_exchange_rate"/>-->
-<!--                                                    /$ = AED-->
-<!--                                                    <span t-esc="'%0.2f' % (doc.amount_total * doc.manual_exchange_rate)"/>-->
+                                                    <!--                                                    @ AED-->
+                                                    <!--                                                    <span t-esc="'%0.3f' % doc.manual_exchange_rate"/>-->
+                                                    <!--                                                    /$ = AED-->
+                                                    <!--                                                    <span t-esc="'%0.2f' % (doc.amount_total * doc.manual_exchange_rate)"/>-->
                                                 </t>
                                                 <t t-else="">
                                                     <span t-esc="doc.currency_id.symbol"/>
@@ -718,7 +718,8 @@
                                                 <t t-if="doc.is_exchange and doc.manual_exchange_rate">
                                                     <t t-set="converted_amount" t-value="doc.amount_total"/>
                                                     <t t-set="company_currency" t-value="doc.currency_id"/>
-                                                    <t t-set="amount_words" t-value="company_currency.amount_to_text(converted_amount)"/>
+                                                    <t t-set="amount_words"
+                                                       t-value="company_currency.amount_to_text(converted_amount)"/>
                                                     <span t-esc="amount_words + ' Only (' + company_currency.symbol + ' ' + ('%.2f' % converted_amount) + ')'"/>
                                                 </t>
                                                 <t t-else="">
