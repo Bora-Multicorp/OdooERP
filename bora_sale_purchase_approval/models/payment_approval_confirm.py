@@ -50,27 +50,27 @@ class PaymentTermApproval(models.Model):
     #         defaults['credit_approval_users_ids'] = approval_user_vals
     #     return defaults
 
-    def action_confirm(self):
-        """Prevent confirmation if credit payment term is not yet approved."""
-        for order in self:
-            # if order.user_id != self.env.user:
-            #     raise ValidationError(_("You can not confirm this Sale Order."))
-            if order.payment_term_id and order.payment_term_id.name == "Credit Payment":
-                if not order.is_payment_approved:
-                    raise ValidationError(
-                        _("You cannot confirm this Sale Order until the Credit Payment Term is approved.")
-                    )
-                states = order.credit_approval_users_ids.mapped('state')
-                if not states or any(s != 'approve' for s in states):
-                    raise ValidationError(
-                        _("You cannot confirm this Sale Order until All Credit Payment approvers approve it.")
-                    )
-
-                if not order.is_payment_approved:
-                    raise ValidationError(
-                        _("Credit Payment Term must be fully approved before confirmation.")
-                    )
-        return super(PaymentTermApproval, self).action_confirm()
+    # def action_confirm(self):
+    #     """Prevent confirmation if credit payment term is not yet approved."""
+    #     for order in self:
+    #         # if order.user_id != self.env.user:
+    #         #     raise ValidationError(_("You can not confirm this Sale Order."))
+    #         if order.payment_term_id and order.payment_term_id.name == "Credit Payment":
+    #             if not order.is_payment_approved:
+    #                 raise ValidationError(
+    #                     _("You cannot confirm this Sale Order until the Credit Payment Term is approved.")
+    #                 )
+    #             states = order.credit_approval_users_ids.mapped('state')
+    #             if not states or any(s != 'approve' for s in states):
+    #                 raise ValidationError(
+    #                     _("You cannot confirm this Sale Order until All Credit Payment approvers approve it.")
+    #                 )
+    #
+    #             if not order.is_payment_approved:
+    #                 raise ValidationError(
+    #                     _("Credit Payment Term must be fully approved before confirmation.")
+    #                 )
+    #     return super(PaymentTermApproval, self).action_confirm()
 
     @api.depends('credit_approval_users_ids.user_id')
     def _compute_existing_users(self):
@@ -142,26 +142,21 @@ class PaymentTermApproval(models.Model):
             if not order.is_payment_rejected:
                 raise ValidationError(_("Reset is only allowed if the credit approval was rejected."))
 
-                # Keep old lines as history, create new lines
-                # Keep old lines as history, create new lines
-            for line in order.credit_approval_users_ids:
-                if not line.remark:
-                    # approver never acted in this cycle
-                    line.write({
-                        'state': 'suspended',
-                        'remark': 'Suspended',
-                        'action_date': fields.Datetime.now(),
-                    })
+            # Step 1: mark all previous active lines as inactive
+            order.credit_approval_users_ids.filtered(lambda l: l.active_cycle).write({'active_cycle': False})
+
+            # Step 2: create fresh approval lines for the new cycle
             approval_user_vals = []
             payment_approval_users = self.env['payment.term.approval.config'].sudo().search([])
             for approval in payment_approval_users:
                 approval_user_vals.append((0, 0, {
                     'sequence': approval.sequence,
                     'user_id': approval.user_id.id,
+                    'active_cycle': True,  # mark new lines as active
                 }))
             order.write({'credit_approval_users_ids': approval_user_vals})
 
-            # Reset flags
+            # Step 3: reset the order flags
             order.write({
                 'is_payment_rejected': False,
                 'is_payment_approved': False,
@@ -187,16 +182,24 @@ class PaymentTermApproval(models.Model):
                 rec._create_payment_term_activity_and_send_notification(send_notification)
 
     def _update_state_based_on_approvals(self):
-        """Called from payment.term.approval.users to update boolean fields."""
         for rec in self:
-            states = rec.credit_approval_users_ids.mapped('state')
+            # Only act on active lines for the current cycle
+            current_lines = rec.credit_approval_users_ids.filtered(lambda l: l.active_cycle)
+
+            states = current_lines.mapped('state')
+
             if any(s == 'reject' for s in states):
                 rec.is_payment_rejected = True
                 rec.is_pending_approval = False
                 rec.is_payment_approved = False
+
             elif states and all(s == 'approve' for s in states):
                 rec.is_payment_approved = True
                 rec.is_pending_approval = False
+                rec.is_payment_rejected = False
+            else:
+                rec.is_pending_approval = True
+                rec.is_payment_approved = False
                 rec.is_payment_rejected = False
 
     def _create_payment_term_activity_and_send_notification(self, send_notification=True):
@@ -238,7 +241,7 @@ class PaymentTermApprovalUsers(models.Model):
     _name = "payment.term.approval.users"
     _rec_name = 'payment_approval_id'
     _description = "Approval Users"
-    _order = "sequence"
+    # _order = "sequence"
 
     sequence = fields.Integer(string='Sequence')
     payment_approval_id = fields.Many2one('sale.order', string="Payment Approval")
@@ -247,6 +250,7 @@ class PaymentTermApprovalUsers(models.Model):
     state = fields.Selection([('approve', 'Approved'), ('reject', 'Rejected'),('suspended', 'Suspended'),('reset', 'Reset'), ], string="Action")
     remark = fields.Char('Remarks', tracking=True)
     action_date = fields.Datetime(string="Action Date")
+    active_cycle = fields.Boolean(string="Active Cycle", default=True)
 
     def write(self, vals):
         res = super().write(vals)

@@ -74,21 +74,12 @@ class SaleOrderCancellationApproval(models.Model):
 
 
     def _send_notification_on_rejection_of_SO_cancellation(self):
-        for rec in self:
-            # reset assigned approver
-            rec.write({'so_assigned_to_form_cancellation': None})
-            if rec.create_uid and rec.create_uid.partner_id:
-                rec.env['bus.bus']._sendone(
-                    rec.create_uid.partner_id,
-                    'simple_notification',
-                    {
-                        'type': 'danger',
-                        'title': f'SO cancellation request for {rec.name} was rejected by {rec.env.user.name}.',
-                        'message': '',
-                        'sticky': True,
-                    },
-                )
+
         approval_users = self.env['sale.order.cancellation.approvers'].sudo().search([])
+
+        self.write({
+            'so_assigned_to_form_cancellation': None
+        })
         for user in approval_users:
             if user.user_id == self.env.user:
                 self.env['bus.bus']._sendone(
@@ -112,7 +103,6 @@ class SaleOrderCancellationApproval(models.Model):
                         'sticky': True,
                     },
                 )
-
 
     def _create_activity_and_send_notification_on_cancellation_approval(self):
 

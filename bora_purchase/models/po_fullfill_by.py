@@ -8,10 +8,20 @@ class PurchaseOrderInherited(models.Model):
         ('vendor', 'Vendor')
     ], string="Fulfillment By", required=True, default='vendor')
 
+    delivery_partner = fields.Many2one("delivery.partners",  string="Delivery Partner")
+
+
+    @api.onchange("fulfillment_by")
+    def _onchange_fulfillment_by(self):
+        for order in self:
+            if order.fulfillment_by == "vendor":
+                order.delivery_partner = False
+                print('Delivery partner reset to False')
+
 
     # This for UI
     @api.onchange("partner_id", "company_id")
-    def _onchange_fulfillment_by(self):
+    def _onchange_partner_id(self):
         all_companies = self.env['res.company'].search([])
         bora_partners = all_companies.mapped('partner_id')
         for order in self:
@@ -19,7 +29,6 @@ class PurchaseOrderInherited(models.Model):
                 order.fulfillment_by = "bora"
             else:
                 order.fulfillment_by = "vendor"
-
 
 
 
@@ -42,3 +51,15 @@ class PurchaseOrderInherited(models.Model):
             for order in self:
                 order.fulfillment_by = self._get_fulfillment_by(order.partner_id)
         return res
+
+
+
+
+
+
+
+
+class DeliveryPartners(models.Model):
+    _name = 'delivery.partners'
+    _description = 'Delivery Partners'
+    name = fields.Char(string='Name', required=True)

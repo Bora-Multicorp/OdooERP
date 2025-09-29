@@ -70,15 +70,57 @@ class SaleOrderConfimationApproval(models.Model):
 
         self._create_activity_and_send_notification_for_confirm_request()
 
+    # def action_confirm(self):
+    #
+    #     so_confirm_approval_users = self.env['sale.order.approval.config'].sudo().search([])
+    #     if not so_confirm_approval_users:
+    #         raise ValidationError("Please add confirmation approval authority before submit request.")
+    #
+    #     if self.so_assigned_to_form_confirmation:
+    #         raise ValidationError(
+    #             f"SO confirm request is now pending from '{self.so_assigned_to_form_confirmation.name}'.")
+    #
+    #     return self.env.ref(
+    #         "bora_sale_purchase_approval.action_so_confirmation_approval_user_picker_wizard"
+    #     ).sudo().read()[0]
+
     def action_confirm(self):
+        for order in self:
+            # === Step 1: Check credit payment approval ===
+            if order.payment_term_id and order.payment_term_id.name == "Credit Payment":
+                active_lines = order.credit_approval_users_ids.filtered(lambda l: l.active_cycle)
 
-        so_confirm_approval_users = self.env['sale.order.approval.config'].sudo().search([])
-        if not so_confirm_approval_users:
-            raise ValidationError("Please add confirmation approval authority before submit request.")
+                if not active_lines:
+                    raise ValidationError(
+                        _("No active credit approval cycle found. Please submit the order for credit approval first.")
+                    )
 
-        if self.so_assigned_to_form_confirmation:
-            raise ValidationError(
-                f"SO confirm request is now pending from '{self.so_assigned_to_form_confirmation.name}'.")
+                states = active_lines.mapped('state')
+
+                # If any rejected → block
+                if any(s == 'reject' for s in states):
+                    raise ValidationError(
+                        _("This Sale Order cannot be confirmed until credit term approved")
+                    )
+
+                # If not all approved → block
+                if any(s != 'approve' for s in states):
+                    raise ValidationError(
+                        _("You cannot confirm this Sale Order until all approvers approves Credit Payment Term")
+                    )
+
+                # Passed → mark as approved
+                order.is_payment_approved = True
+
+            # === Step 2: Proceed with SO confirmation approval ===
+            so_confirm_approval_users = self.env['sale.order.approval.config'].sudo().search([])
+            if not so_confirm_approval_users:
+                raise ValidationError(_("Please add confirmation approval authority before submitting the request."))
+
+            if order.so_assigned_to_form_confirmation:
+                raise ValidationError(
+                    _("SO confirm request is now pending from '%s'.") % order.so_assigned_to_form_confirmation.name
+                )
 
         return self.env.ref(
             "bora_sale_purchase_approval.action_so_confirmation_approval_user_picker_wizard"
