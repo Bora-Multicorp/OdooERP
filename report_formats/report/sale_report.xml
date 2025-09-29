@@ -276,23 +276,26 @@
                                 </tbody>
                             </table>
                             <table style="width:100%; border-collapse:collapse; margin-top:0; border-bottom:1px solid black;">
-                                <tr>
-                                    <!-- Left side: Amount in words -->
-                                    <td style="width:70%; vertical-align:top; border:1px solid black; padding:5px; border-bottom:none; border-right:none;">
-                                        <div style="font-size:14px; text-align:left; white-space:normal; word-wrap:break-word;">
-                                            Amount Chargeable (in words):
+                               <tr>
+                                    <td
+                                            style="width:70%; vertical-align:top; border:1px solid black; padding:5px; border-bottom:none; border-right:none;">
+                                        <div style="font-size:14px; text-align:left;">Amount Chargeable
+                                            (in words):
                                             <br/>
-                                            <strong>
-                                                <span t-esc="doc.currency_id.amount_to_text(doc.amount_total) + ' only'"/>
-                                            </strong>
-                                        </div>
-                                    </td>
+                                            <div style="font-weight:bold;">
 
-                                    <!-- Right side: E.&O.E -->
-                                    <td style="width:30%; vertical-align:top; border:1px solid black; padding:5px; border-bottom:none; border-left:none;">
-                                        <div style="text-align:right; font-size:14px; font-style:italic;">
-                                            E. &amp; O.E
+                                                <span t-esc="doc.currency_id.amount_to_text(doc.amount_total) + ' only'"/>
+                                            </div>
                                         </div>
+
+                                    </td>
+                                    <td
+                                            style="width:30%; vertical-align:top; border:1px solid black; padding:5px; border-bottom:0px; border-left:none;">
+                                        <div
+                                                style="text-align:right; font-size:14px; font-style:italic;">E.
+                                            &amp; O.E
+                                        </div>
+                                        <br/>
                                         <br/>
                                         <br/>
                                         <br/>
