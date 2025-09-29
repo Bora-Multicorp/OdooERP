@@ -3,30 +3,80 @@
     <record id="email_template_wh_notification" model="mail.template">
         <field name="name">Warehouse Notification for Freezone/Bora Global Order</field>
         <field name="model_id" ref="sale.model_sale_order"/>
-        <field name="subject">New Order  Notification for Freezone /Bora Global Order</field>
+        <field name="subject">New Order Notification for Freezone /Bora Global Order</field>
         <field name="email_from">{{ user.email_formatted }}</field>
         <field name="body_html" type="html">
             <p>Hello Warehouse Team,</p>
             <p>A new sales order has been confirmed. Please prepare the following items for shipment.
             </p>
+            <!-- Customer Information -->
+            <h3 style="color:#444; border-bottom:1px solid #ddd; padding-bottom:4px;">Order Information</h3>
+            <table style="width:100%; font-size:13px;">
+                <tr>
+                    <td>
+                        <b>Sales Order:</b>
+                        <t t-out="object.name"/>
+                    </td>
+                    <td>
+                        <b>Customer:</b>
+                        <t t-out="object.partner_id.name"/>
+                        <br/>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <b>Invoice Address:</b>
+                        <t t-out="object.partner_invoice_id.name"/>
+                    </td>
+                    <td>
+                        <b>Delivery Address:</b>
+                        <t t-out="object.partner_shipping_id.name"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <b>Order Date:</b>
+                         <t t-out="object.date_order"/>
+                    </td>
+                    <td>
+                        <b>Expiration:</b>
+                         <t t-out="object.validity_date "/>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <b>Payment Terms:</b>
+                         <t t-out="payment_term_id"/>
+                    </td>
+                    <td>
+                        <b>Pricelist:</b>
+                         <t t-out="object.pricelist_id.name "/>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <b>Dispatch Through:</b>
+                         <t t-out="object.dispatch_id"/>
+                    </td>
+                    <td>
+                        <b>Trade Type:</b>
+                        <t t-out="object.trade_type"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <b>Buyer’s Ref/Order No:</b>
+                         <t t-out="object.buyer_ref_no"/>
+                    </td>
+                    <td>
+                        <b>Voucher No:</b>
+                         <t t-out="object.voucher_no"/>
+                    </td>
 
-            <p>
-                <b>Order Details:</b>
-            </p>
-            <ul>
-                <li>
-                    <b>Sales Order:</b>
-                    <t t-out="object.name"/>
-                </li>
-                <li>
-                    <b>Customer:</b>
-                    <t t-out="object.partner_id.name"/>
-                </li>
-                <li>
-                    <b>Warehouse:</b>
-                    <t t-out="object.warehouse_id.name"/>
-                </li>
-            </ul>
+                </tr>
+            </table>
+            <br/>
+            <br/>
 
             <p>
                 <b>Products to be Shipped:</b>
@@ -36,6 +86,7 @@
                     <tr style="background-color: #f2f2f2;">
                         <th style="padding: 8px; border: 1px solid #ddd; text-align: left;">Product</th>
                         <th style="padding: 8px; border: 1px solid #ddd; text-align: right;">Quantity</th>
+                        <th style="padding: 8px; border:1px solid #ddd; text-align:right;">Unit Price</th>
                         <th style="padding: 8px; border: 1px solid #ddd; text-align: right;">Amount</th>
                     </tr>
                 </thead>
@@ -49,13 +100,18 @@
                                 <t t-out="line.product_uom_qty"/>
                                 <t t-out="line.product_uom.name"/>
                             </td>
-                              <td style="padding: 8px; border: 1px solid #ddd; text-align: right;">
+                            <td style="padding: 8px; border: 1px solid #ddd; text-align: right;">
+                                <t t-out="line.price_unit"/>
+                            </td>
+
+                            <td style="padding: 8px; border: 1px solid #ddd; text-align: right;">
                                 <t t-out="line.price_subtotal"/>
                             </td>
                         </tr>
                     </t>
                 </tbody>
             </table>
+
             <br/>
             <p>Best regards,</p>
         </field>
