@@ -166,7 +166,7 @@
                                                 </td>
                                             </tr>
                                             <tr>
-                                                <td colspan="2" style="padding:3px; border-bottom:none !important;">
+                                                <td colspan="2" style="padding:3px; border-bottom:0;">
                                                     <span style="font-size:14px; margin-bottom:5px;">Terms of Delivery
                                                     </span>
                                                     <br/>
@@ -285,9 +285,13 @@
                                             <span t-esc="doc.currency_id.amount_to_text(doc.amount_total) + ' only'"/>
                                         </p>
                                     </td>
-                                    <td
-                                            style="border:1px solid black;vertical-align: baseline;text-align: center; border-left:0px; padding:3px;"
-                                            class="center sm">E. &amp; O.E
+                                    <td style="border:1px solid black;
+                                                   vertical-align: middle;
+                                                   text-align: center;
+                                                   border-left:0px;
+                                                   padding:3px;
+                                                   white-space: nowrap;">
+                                            E. &amp; O.E
                                     </td>
 
                                 </tr>
