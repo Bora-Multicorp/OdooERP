@@ -30,7 +30,8 @@
 
                     <t t-if="o.company_id.partner_id.country_id.code == 'IN'">
 
-                        <div class="page" style="font-size:14px; font-family:sans-serif;">
+                        <div>
+                        <!-- <div class="page" style="font-size:14px; font-family:sans-serif;"> -->
                             <t t-set="sale_order"
                                 t-value="o.invoice_line_ids and o.invoice_line_ids[0].sale_line_ids and o.invoice_line_ids[0].sale_line_ids[0].order_id or False" />
                                 <t t-if="o.partner_id.country_id.code == 'IN'">
