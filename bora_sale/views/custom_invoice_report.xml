@@ -29,11 +29,9 @@
                 <main class="o_report_content" font-family="sans-serif">
 
                     <t t-if="o.company_id.partner_id.country_id.code == 'IN'">
-
-                        <div class="page"
-                            style="font-size:14px; font-family:sans-serif;margin: auto;">
-                            <t t-set="sale_order"
-                                t-value="o.invoice_line_ids and o.invoice_line_ids[0].sale_line_ids and o.invoice_line_ids[0].sale_line_ids[0].order_id or False" />
+                        <!-- <div class="page" style="font-size:14px; font-family:sans-serif;margin: auto;"> -->
+                        <div class="page">
+                            <t t-set="sale_order" t-value="o.invoice_line_ids and o.invoice_line_ids[0].sale_line_ids and o.invoice_line_ids[0].sale_line_ids[0].order_id or False" />
                                 <t t-if="o.partner_id.country_id.code == 'IN'">
                                     <div style="text-align: center; font-weight: bold; font-size:16px">CUSTOMER INVOICE</div>
                                 </t>
@@ -915,9 +913,8 @@
                                     </td>
                                 </tr>
                             </table>
-                            <div style="width:100%; text-align:center; margin-top:5px;">
-                                <p style="font-size:12px; font-weight:400;">SUBJECT TO PUNE
-                                    JURISDICTION <br /> This is a computer generated invoice </p>
+                            <div style="width:100%; text-align:center;">
+                                <p style="font-size:12px; font-weight:400;">SUBJECT TO PUNE JURISDICTION <br /> This is a computer generated invoice </p>
                             </div>
                         </div>
                     </t>
