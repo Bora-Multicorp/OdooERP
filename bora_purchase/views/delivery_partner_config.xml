@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="purchase_order_delivery_partner_config_view_form" model="ir.ui.view">
+        <field name="name">purchase.order.delivery.partner.config.view.form</field>
+        <field name="model">delivery.partners</field>
+        <field name="arch" type="xml">
+            <form string="Delivery Partners Settings" class="oe_form_configuration o_base_settings" create="false">
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="purchase_delivery_partner_config_view_list" model="ir.ui.view">
+        <field name="name">purchase.order.delivery.partner.config.view.list</field>
+        <field name="model">delivery.partners</field>
+        <field name="arch" type="xml">
+            <list editable="bottom" string="Delivery Partners Settings">
+                <field name="name"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_delivery_partners_config" model="ir.actions.act_window">
+        <field name="name">Delivery Partners Config</field>
+        <field name="res_model">delivery.partners</field>
+        <field name="view_mode">list,form</field>
+        <field name="target">current</field>
+    </record>
+      <menuitem id="menu_delivery_partner_root"
+              name="Delivery Partner Configuration"
+              parent="purchase.menu_purchase_config"
+              sequence="50"/>
+
+    <menuitem id="menu_delivery_partners"
+              name="Delivery Partners"
+              parent="menu_delivery_partner_root"
+              action="action_delivery_partners_config"
+              sequence="10"/>
+
+
+</odoo>
