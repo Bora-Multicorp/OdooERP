@@ -46,7 +46,7 @@
                                 <!-- # 4. FOOTER -->
                                <tr style="page-break-inside: avoid;">
                                     <td style="width:50%; vertical-align:top; padding:0;" colspan="2">
-                                        <table style="border: 1px solid black; width: 100%; font-size: 13px;">
+                                        <table style="width: 100%; font-size: 13px;">
                                             <tr>
                                                 <td style="vertical-align: top; padding: 5px; width: 50%;">
                                                     <span>col1</span>
@@ -54,11 +54,6 @@
 
                                                 <td style="vertical-align: top; padding: 5px; width: 50%;">
                                                     <span>col1</span>
-                                                </td>
-                                            </tr>
-                                            <tr style="width:100%; vertical-align:top; border:1px solid red; padding:0;">
-                                                <td>
-                                                    <p style="font-size:12px; font-weight:400;">SUBJECT TO PUNE JURISDICTION <br /> This is a computer generated invoice </p>
                                                 </td>
                                             </tr>
                                         </table>
