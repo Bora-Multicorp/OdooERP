@@ -394,6 +394,220 @@
                                         </div>
                                     </td>
                                 </tr>
+                                <!-- # 2. PRODUCT TABLE -->
+                                <tr>
+                                <td style="width:50%; vertical-align:top; padding:0;" colspan="2">
+                                        <table style="border-collapse: collapse; width: 100%; font-size: 11px;line-height: 1.1;" class="tablewithnobottom_border">
+                                            <thead>
+                                                <tr style="text-align: center;">
+                                                    <th
+                                                        style="border:1px solid black; border-top:0px; vertical-align: middle; padding:4px; width:3%;">
+                                                        Sl<br />No. </th>
+                                                    <th
+                                                        style="border:1px solid black; border-top:0px; vertical-align: middle; width:48%;">
+                                                        Description of Goods
+                                                    </th>
+                                                    <th
+                                                        style="border:1px solid black; border-top:0px; vertical-align: middle; width:9%;">
+                                                        <span
+                                                            style="display:inline-block; padding:3px;">
+                                                            HSN/SAC</span>
+                                                    </th>
+                                                    <th
+                                                        style="border:1px solid black; border-top:0px; vertical-align: middle; width:10%;">
+                                                        Quantity
+                                                    </th>
+                                                    <th
+                                                        style="border:1px solid black; border-top:0px; vertical-align: middle; width:12%;">
+                                                        Rate
+                                                    </th>
+                                                    <th
+                                                        style="border:1px solid black; border-top:0px; vertical-align: middle; width:5%;">
+                                                        per
+                                                    </th>
+                                                    <th
+                                                        style="border:1px solid black; border-top:0px; vertical-align: middle; width:13%;">
+                                                        Amount
+                                                    </th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <t t-foreach="enumerate(o.invoice_line_ids, start=1)" t-as="row">
+                                                    <tr>
+                                                        <td
+                                                            style="border:1px solid black; border-top: none;border-bottom: none; border-bottom: none !important; text-align: center;"
+                                                            class="center sm">
+                                                            <t t-esc="row[0]" />
+                                                        </td>
+                                                        <td
+                                                            style="border:1px solid black; border-top: none;border-bottom: none; padding: 5px;"
+                                                            class="sm">
+                                                            <span class="bold"
+                                                                style="font-weight: bold; font-size: 13px padding: 5px;">
+                                                                <span t-field="row[1].name" />
+                                                            </span>
+                                                            <br />
+                                                            <div
+                                                                style="margin-left: 10px;font-style: italic; padding:10px;">
+                                                                <t t-set="country"
+                                                                    t-value="row[1].product_id.product_tmpl_id.made_country if 'made_country' in row[1].product_id.product_tmpl_id.fields_get() else False" />
+                                                                <span t-if="country">Made in: <span
+                                                                        t-field="country.name" />
+                                                                </span>
+                                                            </div>
+                                                        </td>
+                                                        <td
+                                                            t-if="'l10n_in_hsn_code' in row[1].product_id._fields and row[1].product_id.l10n_in_hsn_code" style="text-align: center;"
+                                                            >
+                                                            <span
+                                                                t-field="row[1].product_id.l10n_in_hsn_code" />
+                                                        </td>
+                                                        <td t-else="" class="text-end">
+                                                            <span></span>
+                                                        </td>
+                                                        <td
+                                                            style="border:1px solid black; border-top: none;border-bottom: none; text-align: center;"
+                                                            class="right sm">
+                                                            <span
+                                                                t-field="row[1].quantity" /> NOS </td>
+                                                        <td
+                                                            style="border:1px solid black; border-top: none;border-bottom: none; text-align: center;"
+                                                            class="right sm">
+                                                            <span t-field="row[1].price_unit" />
+                                                        </td>
+                                                        <td
+                                                            style="border:1px solid black; border-top: none;border-bottom: none; text-align: center;"
+                                                            class="center sm">NOS
+                                                        </td>
+                                                        <td
+                                                            style="border:1px solid black; border-top: none;border-bottom: none; text-align: center;"
+                                                            class="right sm">
+                                                            <span t-field="row[1].price_subtotal" />
+                                                        </td>
+                                                    </tr>
+                                                </t>
+                                                <tr>
+                                                    <td
+                                                        style="border:1px solid black; border-top: none;border-bottom: none;"></td>
+                                                    <td
+                                                        style="border:1px solid black; border-top: none;border-bottom: none;"></td>
+                                                    <td
+                                                        style="border:1px solid black; border-top: none;border-bottom: none;"></td>
+                                                    <td
+                                                        style="border:1px solid black; border-top: none;border-bottom: none;"></td>
+                                                    <td
+                                                        style="border:1px solid black; border-top: none;border-bottom: none;"></td>
+                                                    <td
+                                                        style="border:1px solid black; border-top: none;border-bottom: none;"></td>
+                                                    <t t-set="unique_tax_amounts_list" t-value="sorted(list(set(sum(o.invoice_line_ids.mapped('tax_ids'), o.env['account.tax']))), key=lambda l: l.amount)"/>
+                                                    <t t-if="len(unique_tax_amounts_list) > 0">
+                                                        <td style="border:1px solid black; text-align:center; border-top: none;border-bottom: none;" class="right sm">
+                                                            <span t-field="o.amount_untaxed"/>
+                                                        </td>
+                                                    </t>
+                                                </tr>
+                                                <tr>
+                                                    <td
+                                                        style="border:1px solid black; border-top: none;border-bottom: none; text-align: center;"
+                                                        class="center sm"></td>
+                                                    <td
+                                                        style="border:1px solid black; border-top: none;border-bottom: none; padding: 5px;"
+                                                        class="sm">
+                                                        <t t-set="unique_tax_amounts" t-value="sorted(list(set(sum(o.invoice_line_ids.mapped('tax_ids'), o.env['account.tax']))), key=lambda l: l.amount)"/>
+                                                        <t t-if="unique_tax_amounts">
+                                                            <p style="font-size: 14px; font-style: italic; font-weight: bold; text-align: right;">
+                                                                OUTPUT
+                                                                <span t-esc="'IGST' if o.invoice_line_ids and o.invoice_line_ids[0].tax_ids and 'IGST' in o.invoice_line_ids[0].tax_ids[0].name.upper() else 'GST'"/>
+                                                                @
+                                                                <t t-set="formatted_amounts" t-value="', '.join(str(int(l.amount)) + '%' for l in unique_tax_amounts)"/>
+                                                                <t t-if="len(unique_tax_amounts) &gt; 1">
+                                                                    <span t-esc="'(' + formatted_amounts + ')'"/>
+                                                                </t>
+                                                                <t t-else="">
+                                                                    <span t-esc="formatted_amounts"/>
+                                                                </t>
+                                                            </p>
+                                                        </t>
+
+                                                    </td>
+                                                    <td
+                                                        style="border:1px solid black; border-top: none;border-bottom: none; text-align: center;"
+                                                        class="center sm"></td>
+                                                    <td
+                                                        style="border:1px solid black; border-top: none;border-bottom: none; text-align: center;"
+                                                        class="right sm"></td>
+                                                    <td style="border:1px solid black; border-top: none;border-bottom: none; text-align: center;" class="right sm">
+                                                        <t t-set="formatted_amounts" t-value="', '.join(str(int(l.amount)) for l in unique_tax_amounts)"/>
+                                                        <span t-esc="formatted_amounts"/>
+                                                    </td>
+                                                    <t t-set="unique_tax_amounts_list" t-value="sorted(list(set(sum(o.invoice_line_ids.mapped('tax_ids'), o.env['account.tax']))), key=lambda l: l.amount)"/>
+                                                    <t t-if="len(unique_tax_amounts_list) > 0">
+                                                        <td style="border:1px solid black; border-top: none;border-bottom: none; text-align: center;" class="center sm">%</td>
+                                                    </t>
+                                                    <t t-else="">
+                                                        <td style="border:1px solid black; border-top: none;border-bottom: none; text-align: center;" class="center sm"></td>
+                                                    </t>
+
+
+
+                                                    <t t-set="unique_tax_amounts_list" t-value="sorted(list(set(sum(o.invoice_line_ids.mapped('tax_ids'), o.env['account.tax']))), key=lambda l: l.amount)"/>
+                                                    <t t-if="len(unique_tax_amounts_list) > 0">
+                                                        <td style="border:1px solid black; border-top: none;border-bottom: none; text-align: center;" class="right sm">
+                                                            <span t-field="o.amount_tax" />
+                                                        </td>
+                                                    </t>
+                                                    <t t-else="">
+                                                        <td style="border:1px solid black; border-top: none;border-bottom: none; text-align: center;" class="center sm"></td>
+                                                    </t>
+
+
+                                                </tr>
+                                                <tr>
+                                                    <td
+                                                        style="border:1px solid black; text-align: center; padding:5px;"
+                                                        class="center sm"></td>
+                                                    <td style="border:1px solid black; text-align:right; padding-right:10px; padding:5px;" class="center sm">Total</td>
+                                                    <td style="border:1px solid black; padding:5px;"
+                                                        class="center sm"></td>
+                                                    <td
+                                                        style="border:1px solid black; text-align: center; font-weight: bold;padding:5px;"
+                                                        class="right sm">
+                                                        <span
+                                                            t-esc="'%0.0f' % sum(line.quantity for line in o.invoice_line_ids)" />
+                                                        NOS </td>
+                                                    <td
+                                                        style="border:1px solid black; text-align: center;padding:5px;"
+                                                        class="right sm"></td>
+                                                    <td
+                                                        style="border:1px solid black; text-align: center;padding:5px;"
+                                                        class="center sm"></td>
+                                                    <td
+                                                        style="border:1px solid black; text-align: center;padding:5px;"
+                                                        class="right sm">
+                                                        <span t-field="o.amount_total" />
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td
+                                                        style="border:1px solid black; vertical-align: middle; border-right:0px; padding:3px;"
+                                                        class="right sm" colspan="6">Amount Chargeable (in words) <p
+                                                            style="margin: 0px;  font-weight: bold; font-size: 13px">
+                                                            <span t-esc="o.currency_id.amount_to_text(o.amount_total) + ' only'" />
+                                                        </p>
+                                                    </td>
+                                                    <td
+                                                        style="border:1px solid black;vertical-align: baseline;text-align: center; border-left:0px; padding:3px;"
+                                                        class="center sm">E. &amp; O.E
+                                                    </td>
+                                                </tr>
+
+
+
+
+                                            </tbody>
+                                        </table>
+                                    </td>
+                                </tr>
                             </table>
                             <div style="width:100%; text-align:center;">
                                 <p style="font-size:12px; font-weight:400;">SUBJECT TO PUNE JURISDICTION <br /> This is a computer generated invoices </p>
