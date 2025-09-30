@@ -13,3 +13,4 @@ from . import po_cancellation
 from . import confirmation_approvers
 from . import cancellation_approvers
 from . import backdate_order
+from . import delivery_partners_config

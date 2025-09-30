@@ -40,6 +40,7 @@ Bora purchase operations
         'views/confirmation_approvers.xml',
         'views/cancallation_approvers.xml',
         'views/po_unlock.xml',
+        'views/delivery_partner_config.xml',
         'views/po_fullfill_by.xml',
         'views/po_confirm.xml',
         'views/po_cancellation.xml',
