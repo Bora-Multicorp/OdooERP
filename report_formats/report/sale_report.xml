@@ -691,7 +691,6 @@
                                             Total Invoice Amount in AED
                                                            <strong>
                                                 <t t-if="doc.manual_exchange_rate">
-                                                    <!-- If manual rate is provided -->
 <!--                                                    <span t-esc="doc.currency_id.symbol"/>-->
                                                     <span t-esc="'%0.2f' % (doc.amount_total * doc.manual_exchange_rate)"/>
                                                 </t>
@@ -732,7 +731,7 @@
                                                     <span t-esc="company_currency.currency_unit_label + ' ' + amount_words + ' Only (' + company_currency.symbol + ' ' + ('%.2f' % converted_amount) + ')'"/>
                                                 </t>
                                             </div>
-                                            
+
                                         </div>
                                     </td>
                                     <td style="width:50%; vertical-align:top; padding:5px;border-right:1px solid black;border-top:1px solid black;">
