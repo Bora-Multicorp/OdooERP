@@ -128,6 +128,31 @@ class HideTaxFieldFormSaleOrder(models.Model):
         compute='_compute_hide_tax_column_if_both_dubai'
     )
 
+
+    def _compute_fiscal_position_id(self):
+        # Always call the standard super method first to allow Odoo's default logic to run
+        super(HideTaxFieldFormSaleOrder, self)._compute_fiscal_position_id()
+        
+        # Now, apply your custom override logic
+        for order in self:
+            # Check if the automatic detection is needed
+            is_indian_company = order.company_id.country_id.code == 'IN'
+            is_non_indian_partner = order.partner_id.country_id.code != 'IN'
+            
+            if is_indian_company and is_non_indian_partner:
+                # 1. Search for the specific Export FP
+                export_fp = self.env['account.fiscal.position'].search([
+                    ('name', '=', 'Export - Zero Rated'),
+                    ('active', '=', True),
+                    '|', ('company_id', '=', False), ('company_id', '=', order.company_id.id)
+                ], limit=1)
+                
+                # 2. Set the fiscal position if found
+                if export_fp:
+                    order.fiscal_position_id = export_fp
+            order._recompute_taxes()
+            
+
     @api.depends('partner_id.country_id.code','order_line.product_id.product_tmpl_id')
     def _compute_hide_tax_column_if_both_dubai(self):
 
@@ -160,7 +185,7 @@ class HideTaxFieldFormSaleOrder(models.Model):
                 continue
 
 
-            # 3. Check if current copmany is India and customer is not from india
+            # # 3. Check if current copmany is India and customer is not from india
             selling_company_country_code = order.company_id.country_id.code
             customer_country_code = order.partner_id.country_id.code
             
