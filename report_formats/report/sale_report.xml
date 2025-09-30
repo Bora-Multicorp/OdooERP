@@ -201,10 +201,10 @@
                                             <br/>
                                             No.
                                         </td>
-                                        <td style="border:1px solid black; border-top:0px; padding:4px; width:50%;text-align:center;">
+                                        <td style="border:1px solid black; border-top:0px; padding:4px; width:45%;text-align:center;">
                                             Description of Goods
                                         </td>
-                                        <td style="border:1px solid black; border-top:0px; padding:4px; text-align:right; width:10%;text-align:center;">
+                                        <td style="border:1px solid black; border-top:0px; padding:4px; text-align:right; width:12%;text-align:center;">
                                             Quantity
                                         </td>
                                         <td style="border:1px solid black; border-top:0px; padding:4px; text-align:right; width:15%;text-align:center;">
@@ -213,7 +213,7 @@
                                         <td style="border:1px solid black; border-top:0px; padding:4px; width:5%;text-align:center;">
                                             per
                                         </td>
-                                        <td style="border:1px solid black; border-top:0px; padding:4px; text-align:right; width:15%;text-align:center;">
+                                        <td style="border:1px solid black; border-top:0px; padding:4px; text-align:right; width:18%;text-align:center;">
                                             Amount
                                         </td>
                                     </tr>
@@ -276,7 +276,7 @@
                                 </tbody>
                             </table>
                             <table style="width:100%; border-collapse:collapse; margin-top:0; border-bottom:1px solid black;">
-                               <tr>
+                                <tr>
                                     <td
                                             style="width:70%; vertical-align:top; border:1px solid black; padding:5px; border-bottom:none; border-right:none;">
                                         <div style="font-size:14px; text-align:left;">Amount Chargeable
@@ -295,9 +295,6 @@
                                                 style="text-align:right; font-size:14px; font-style:italic;">E.
                                             &amp; O.E
                                         </div>
-                                        <br/>
-                                        <br/>
-                                        <br/>
                                         <br/>
                                         <br/>
                                     </td>
@@ -617,10 +614,10 @@
                                             <br/>
                                             No.
                                         </td>
-                                        <td style="border:1px solid black; border-top:0px; padding:4px; width:50%;text-align:center;">
+                                        <td style="border:1px solid black; border-top:0px; padding:4px; width:45%;text-align:center;">
                                             Description of Goods
                                         </td>
-                                        <td style="border:1px solid black; border-top:0px; padding:4px; text-align:right; width:10%;text-align:center;">
+                                        <td style="border:1px solid black; border-top:0px; padding:4px; text-align:right; width:12%;text-align:center;">
                                             Quantity
                                         </td>
                                         <td style="border:1px solid black; border-top:0px; padding:4px; text-align:right; width:15%;text-align:center;">
@@ -629,7 +626,7 @@
                                         <td style="border:1px solid black; border-top:0px; padding:4px; width:5%;text-align:center;">
                                             per
                                         </td>
-                                        <td style="border:1px solid black; border-top:0px; padding:4px; text-align:right; width:15%;text-align:center;">
+                                        <td style="border:1px solid black; border-top:0px; padding:4px; text-align:right; width:18%;text-align:center;">
                                             Amount
                                         </td>
                                     </tr>
@@ -744,7 +741,7 @@
                                         </div>
                                         <br/>
                                         <br/>
-                                        <br/>
+                                    
                                     </td>
                                 </tr>
                                 <tr>
@@ -785,59 +782,55 @@
                                     </td>
                                     <td style="width:50%; vertical-align:top; padding:5px; border-right:1px solid black; position: relative;">
                                         <div style="position: absolute; bottom: 0; left: 0; right: 0; font-size: 11px; line-height: 1.3;">
-                                            <div style="font-size:14px; text-align:left;">
-                                                <strong>Company's Bank Details</strong>
-                                            </div>
                                             <t t-set="bank"
                                                t-value="doc.company_id.partner_id.bank_ids and doc.company_id.partner_id.bank_ids[0]"/>
                                             <t t-if="bank">
-                                                <table style="width:100%; font-size:14px; border-collapse: collapse;">
-                                                    <tr>
-                                                        <td style="width:35%;">Bank Name</td>
-                                                        <td style="width:65%; font-weight:bold; padding-left:15px; text-indent:-10px;">
-                                                            :
-                                                            <span t-field="bank.bank_id.name"/>
-                                                        </td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td style="width:35%;">A/c No.</td>
-                                                        <td style="width:65%; font-weight:bold; padding-left:15px; text-indent:-10px;">
-                                                            :
-                                                            <span t-field="bank.acc_number"/>
-                                                        </td>
-                                                    </tr>
+                                                <div style="margin-left:5px;">
+                                                    <span>
+                                                        <strong>Company's Bank Details</strong>
+                                                    </span>
+                                                    <br/>
+                                                    Bank Name :
+                                                    <strong>
+                                                        <span t-field="bank.bank_id.name"/>
+                                                    </strong>
+                                                    A/c No. :
+                                                    <strong>
+                                                        <span t-field="bank.acc_number"/>
+                                                    </strong>
+                                                    <br/>
                                                     <t t-if="bank.acc_type == 'iban'">
-                                                        <tr>
-                                                            <td style="width:35%;">IBAN</td>
-                                                            <td style="width:65%; font-weight:bold; padding-left:15px; text-indent:-10px;">
-                                                                :
-                                                                <span t-field="bank.acc_number"/>
-                                                            </td>
-                                                        </tr>
+                                                        IBAN :
+                                                        <strong>
+                                                            <span t-field="bank.acc_number"/>
+                                                        </strong>
+                                                        <br/>
+
                                                     </t>
-                                                    <tr>
-                                                        <td style="vertical-align: top;">Branch &amp; SWIFT Code</td>
-                                                        <td style="width:65%; font-weight:bold; padding-left:15px; text-indent:-10px; vertical-align: top;">
-                                                            :
-                                                            <span t-field="bank.bank_id.bic"/>
-                                                        </td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td colspan="2"
-                                                            style="height:60px; vertical-align:bottom; padding:5px; border:1px solid black; border-bottom:0px; border-collapse:collapse;">
-                                                            <div style="float:right; text-align:right; box-sizing:border-box; padding-left:5px;">
-                                                                <strong>
-                                                                    for
-                                                                    <span t-field="doc.company_id.name"/>
-                                                                </strong>
-                                                                <br/>
-                                                                <br/>
-                                                                Authorised Signatory
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                </table>
+                                                    Branch &amp; SWIFT Code:
+                                                    <strong>
+                                                        <span t-field="bank.bank_id.bic"/>
+                                                    </strong>
+
+                                                </div>
                                             </t>
+
+
+                                            <table style="width:100%; font-size:14px; border-collapse: collapse; margin-bottom:0; font-family:sans-serif; margin-top:10px;">
+                                                <tr>
+                                                    <td colspan="2" style="text-align:right; border:none;">
+                                                        <div style="font-weight:bold; text-align:right; padding-right:3px;">
+                                                            for
+                                                            <span t-field="doc.company_id.name"/>
+                                                        </div>
+                                                        <br/>
+                                                        <br/>
+                                                        <div style="text-align:right; padding-right:3px; font-size:12px;">
+                                                            Authorised Signatory
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            </table>
                                         </div>
                                     </td>
                                 </tr>
