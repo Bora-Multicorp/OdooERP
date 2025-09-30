@@ -39,6 +39,13 @@
                                     <div style="text-align: center; font-weight: bold; font-size:16px">EXPORT INVOICE</div>
                                     <p style="text-align:center; margin: 8px auto; font-size:11px;">(SUPPLY MEANT FOR EXPORT/SUPPLY TO SEZ UNIT OR SEZ DEVELOPER FOR AUTHORISED OPERATIONS ON PAYMENT OF IGST)</p>
                                 </t>
+                            <table style="width:100%; margin-bottom:12px; font-family:sans-serif;">
+                                <tr>
+                                    <td>
+                                    <span>products</span>
+                                    </td>
+                                </tr>
+                            </table>
                             <div style="width:100%; text-align:center;">
                                 <p style="font-size:12px; font-weight:400;">SUBJECT TO PUNE JURISDICTION <br /> This is a computer generated invoices </p>
                             </div>
