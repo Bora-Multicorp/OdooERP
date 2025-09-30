@@ -128,6 +128,13 @@ class HideTaxFieldFormSaleOrder(models.Model):
         compute='_compute_hide_tax_column_if_both_dubai'
     )
 
+    @api.onchange('partner_id')
+    def _remove_line_items(self):
+        if self.order_line:
+            self.order_line = [(5, 0, 0)]
+
+        return super(HideTaxFieldFormSaleOrder, self)._onchange_partner_id()
+
 
     def _compute_fiscal_position_id(self):
         # Always call the standard super method first to allow Odoo's default logic to run
