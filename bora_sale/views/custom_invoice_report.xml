@@ -41,9 +41,19 @@
                                     <div style="text-align: center; font-weight: bold; font-size:16px">EXPORT INVOICE</div>
                                     <p style="text-align:center; margin: 8px auto; font-size:11px;">(SUPPLY MEANT FOR EXPORT/SUPPLY TO SEZ UNIT OR SEZ DEVELOPER FOR AUTHORISED OPERATIONS ON PAYMENT OF IGST)</p>
                                 </t>
-                                <table>
-                            <!-- <table style="width:100%; margin-bottom:12px; font-family:sans-serif;"> -->
-                                <!-- # 4. FOOTER -->
+                                                                        <table style="width: 100%; font-size: 13px;">
+                                            <tr>
+                                                <td style="vertical-align: top; padding: 5px; width: 50%;">
+                                                    <span>col1</span>
+                                                </td>
+
+                                                <td style="vertical-align: top; padding: 5px; width: 50%;">
+                                                    <span>col1</span>
+                                                </td>
+                                            </tr>
+                                        </table>
+
+                                <!-- <table>
                                <tr style="page-break-inside: avoid;">
                                     <td style="width:50%; vertical-align:top; padding:0;" colspan="2">
                                         <table style="width: 100%; font-size: 13px;">
@@ -59,14 +69,7 @@
                                         </table>
                                     </td>
                                 </tr>
-                                <!-- <tr>
-                                    <td>
-                                <p style="font-size:12px; font-weight:400;">SUBJECT TO PUNE
-                                    JURISDICTION <br /> This is a computer generated invoice </p>
-
-                                    </td>
-                                </tr> -->
-                            </table>
+                            </table> -->
                         </div>
                     </t>
 
