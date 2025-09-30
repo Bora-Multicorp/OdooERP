@@ -30,16 +30,16 @@
 
                     <t t-if="o.company_id.partner_id.country_id.code == 'IN'">
 
-    <table style="width: 100%; font-size: 13px; border: 0 !important; border-collapse: collapse; border-style: none !important;"> 
+    <table style="width: 100%; font-size: 13px; border: 0 !important; border-collapse: collapse; border-style: none !important; border-color: green !important;"> 
         <!-- Adding explicit border-style: none !important for maximum compatibility -->
-        <tr style="border: 0 !important; border-style: none !important;"> <!-- Added explicit border removal on TR -->
+        <tr style="border: 0 !important; border-style: none !important; border-color: green !important;"> <!-- Added explicit border removal on TR -->
             <!-- Also ensure TD borders are explicitly zero -->
-            <td style="vertical-align: top; padding: 5px; width: 50%; border: 0 !important; border-style: none !important;"> 
+            <td style="vertical-align: top; padding: 5px; width: 50%; border: 0 !important; border-style: none !important; border-color: green !important;"> 
                 <span>col1</span>
             </td>
 
             <!-- Also ensure TD borders are explicitly zero -->
-            <td style="vertical-align: top; padding: 5px; width: 50%; border: 0 !important; border-style: none !important;"> 
+            <td style="vertical-align: top; padding: 5px; width: 50%; border: 0 !important; border-style: none !important; border-color: green !important;"> 
                 <span>col1</span>
             </td>
         </tr>
