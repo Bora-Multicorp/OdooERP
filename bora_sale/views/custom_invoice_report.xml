@@ -230,6 +230,11 @@
                                         </table>
                                     </td>
                                 </tr>
+                                <tr>
+                                    <td style="width:50%; height:200px; border: 1px solid red">
+                                        <span>border</span>
+                                    </td>
+                                </tr>
                             </table>
                             <div style="width:100%; text-align:center;">
                                 <p style="font-size:12px; font-weight:400;">SUBJECT TO PUNE JURISDICTION <br /> This is a computer generated invoices </p>
