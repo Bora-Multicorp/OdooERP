@@ -10,7 +10,7 @@ from dateutil.relativedelta import relativedelta
 class StockQuantInherit(models.Model):
     _inherit = 'stock.quant'
 
-    imei = fields.Char(string='IMEI')
+    imei = fields.Char(string='IMEI 1')
     imei2 = fields.Char(string='IMEI 2')
     active_months = fields.Char(string="Activated Months", compute="_compute_active_months", store=True)
     activation_date = fields.Date(string="Activation Date", help="Mobile phone activation date.")

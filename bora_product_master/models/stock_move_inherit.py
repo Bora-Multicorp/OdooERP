@@ -43,7 +43,7 @@ class StockMove(models.Model):
 class StockMoveLine(models.Model):
     _inherit = 'stock.move.line'
 
-    imei = fields.Char(string="IMEI", compute="_compute_imei", store=True, readonly=False)
+    imei = fields.Char(string='IMEI 1', compute="_compute_imei", store=True, readonly=False)
     imei2 = fields.Char(string='IMEI 2', compute="_compute_imei", store=True, readonly=False)
 
     def _compute_imei(self):
