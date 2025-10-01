@@ -3,59 +3,150 @@
     <record id="email_template_wh_notification" model="mail.template">
         <field name="name">Warehouse Notification for Freezone/Bora Global Order</field>
         <field name="model_id" ref="sale.model_sale_order"/>
-        <field name="subject">New Order  Notification for Freezone /Bora Global Order</field>
+        <field name="subject">New Order Notification for Freezone /Bora Global Order</field>
         <field name="email_from">{{ user.email_formatted }}</field>
         <field name="body_html" type="html">
             <p>Hello Warehouse Team,</p>
             <p>A new sales order has been confirmed. Please prepare the following items for shipment.
             </p>
+            <!-- Customer Information -->
+            <h3 style="color:#444; border-bottom:1px solid #ddd; padding-bottom:4px;">Order Information</h3>
+            <table style="width:100%; font-size:13px;">
+                <tr>
+                    <td>
+                        <b>Sales Order:</b>
+                        <t t-out="object.name"/>
+                    </td>
+                    <td>
+                        <b>Customer:</b>
+                        <t t-out="object.partner_id.name"/>
+                        <br/>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <b>Invoice Address:</b>
+                        <t t-out="object.partner_invoice_id.name"/>
+                        <br/>
+                        <t t-out="object.partner_invoice_id.street"/>
+                        <br/>
+                        <t t-out="object.partner_invoice_id.street2"/>
+                        <br/>
+                        <t t-out="object.partner_invoice_id.city"/>
+                        <t t-out="object.partner_invoice_id.state_id.name"/>
+                        <t t-out="object.partner_invoice_id.zip"/>
+                        <br/>
+                        <t t-out="object.partner_invoice_id.country_id.name"/>
+                    </td>
+                    <td>
+                        <b>Delivery Address:</b>
+                        <t t-out="object.partner_shipping_id.name"/>
+                        <br/>
+                        <t t-out="object.partner_shipping_id.street"/>
+                        <br/>
+                        <t t-out="object.partner_shipping_id.street2"/>
+                        <br/>
+                        <t t-out="object.partner_shipping_id.city"/>
+                        <t t-out="object.partner_shipping_id.state_id.name"/>
+                        <t t-out="object.partner_shipping_id.zip"/>
+                        <br/>
+                        <t t-out="object.partner_shipping_id.country_id.name"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <b>Order Date:</b>
+                        <t t-out="object.date_order"/>
+                    </td>
+                    <td>
+                        <b>Expiration:</b>
+                        <t t-out="object.validity_date "/>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <b>Payment Terms:</b>
+                        <t t-out="object.payment_term_id.name"/>
+                    </td>
+                    <td>
+                        <b>Pricelist:</b>
+                        <t t-out="object.pricelist_id.name"/>(<t t-out="object.pricelist_id.currency_id.name"/>)
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <b>Dispatch Through:</b>
+                        <t t-out="object.dispatch_id"/>
+                    </td>
+                    <td>
+                        <b>Trade Type:</b>
+                        <t t-out="object._fields['trade_type'].convert_to_export(object.trade_type, object)"/>
 
-            <p>
-                <b>Order Details:</b>
-            </p>
-            <ul>
-                <li>
-                    <b>Sales Order:</b>
-                    <t t-out="object.name"/>
-                </li>
-                <li>
-                    <b>Customer:</b>
-                    <t t-out="object.partner_id.name"/>
-                </li>
-                <li>
-                    <b>Warehouse:</b>
-                    <t t-out="object.warehouse_id.name"/>
-                </li>
-            </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <b>Buyer’s Ref/Order No:</b>
+                        <t t-out="object.buyer_ref_no"/>
+                    </td>
+                    <td>
+                        <b>Voucher No:</b>
+                        <t t-out="object.voucher_no"/>
+                    </td>
+
+                </tr>
+            </table>
+            <br/>
+            <br/>
 
             <p>
                 <b>Products to be Shipped:</b>
             </p>
-            <table class="table table-bordered" style="width: 100%; border-collapse: collapse;">
+            <table style="width:100%; border-collapse: collapse; font-size:13px;">
                 <thead>
-                    <tr style="background-color: #f2f2f2;">
-                        <th style="padding: 8px; border: 1px solid #ddd; text-align: left;">Product</th>
-                        <th style="padding: 8px; border: 1px solid #ddd; text-align: right;">Quantity</th>
-                        <th style="padding: 8px; border: 1px solid #ddd; text-align: right;">Amount</th>
+                    <tr style="background:#f2f2f2;">
+                        <th style="border:1px solid #ddd; padding:6px; text-align:left;">Product</th>
+                        <th style="border:1px solid #ddd; padding:6px; text-align:right;">Quantity</th>
+                        <th style="border:1px solid #ddd; padding:6px; text-align:right;">Delivered</th>
+                        <th style="border:1px solid #ddd; padding:6px; text-align:right;">Invoiced</th>
+                        <th style="border:1px solid #ddd; padding:6px; text-align:left;">UoM</th>
+                        <th style="border:1px solid #ddd; padding:6px; text-align:right;">Unit Price</th>
+                        <th style="border:1px solid #ddd; padding:6px; text-align:right;">Disc.%</th>
+                        <th style="border:1px solid #ddd; padding:6px; text-align:right;">Amount</th>
                     </tr>
                 </thead>
                 <tbody>
                     <t t-foreach="object.order_line" t-as="line">
                         <tr>
-                            <td style="padding: 8px; border: 1px solid #ddd; text-align: left;">
+                            <td style="border:1px solid #ddd; padding:6px;">
                                 <t t-out="line.product_id.display_name"/>
                             </td>
-                            <td style="padding: 8px; border: 1px solid #ddd; text-align: right;">
+                            <td style="border:1px solid #ddd; padding:6px; text-align:right;">
                                 <t t-out="line.product_uom_qty"/>
+                            </td>
+                            <td style="border:1px solid #ddd; padding:6px; text-align:right;">
+                                <t t-out="line.qty_delivered"/>
+                            </td>
+                            <td style="border:1px solid #ddd; padding:6px; text-align:right;">
+                                <t t-out="line.qty_invoiced"/>
+                            </td>
+                            <td style="border:1px solid #ddd; padding:6px; text-align:left;">
                                 <t t-out="line.product_uom.name"/>
                             </td>
-                              <td style="padding: 8px; border: 1px solid #ddd; text-align: right;">
-                                <t t-out="line.price_subtotal"/>
+                            <td style="border:1px solid #ddd; padding:6px; text-align:right;">
+                                <t t-out="format_amount(line.price_unit, object.currency_id)"/>
+                            </td>
+                            <td style="border:1px solid #ddd; padding:6px; text-align:right;">
+                                <t t-out="line.discount"/>%
+                            </td>
+                            <td style="border:1px solid #ddd; padding:6px; text-align:right;">
+                                <t t-out="format_amount(line.price_subtotal, object.currency_id)"/>
                             </td>
                         </tr>
                     </t>
                 </tbody>
             </table>
+
             <br/>
             <p>Best regards,</p>
         </field>

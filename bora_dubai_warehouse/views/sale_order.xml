@@ -11,7 +11,7 @@
                     </div>
                 </xpath>
                 <xpath expr="//field[@name='partner_shipping_id']" position="after">
-                    <field name="trade_type"/>
+                    <field name="trade_type" readonly="state in ('sale','unlock_pending','cancel')"/>
                 </xpath>
             </field>
         </record>
