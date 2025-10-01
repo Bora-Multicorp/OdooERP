@@ -21,7 +21,7 @@
         <field name="arch" type="xml">
             <list editable="bottom" string="Payment Term Approval Settings">
                 <field name="sequence"/>
-                <field name="user_id"/>
+                <field name="user_id" options="{'no_create': True, 'no_create_edit': True}"/>
             </list>
         </field>
     </record>
@@ -35,7 +35,7 @@
 
     <menuitem id="menu_payment_term_approval_config"
               name="Payment Term Approvers"
-              parent="sale.menu_sale_config"
+              parent="sale_approvers_group_header_menu"
               action="action_payment_term_approval_config"
               groups="base.user_admin"
               sequence="101"/>

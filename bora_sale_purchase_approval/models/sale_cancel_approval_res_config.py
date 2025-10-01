@@ -1,14 +1,14 @@
-# -*- coding: utf-8 -*-
-from odoo import models, fields, api, _
-from odoo.exceptions import ValidationError
+from odoo import fields, models, api
 import random
 
-class SaleOrderApprovalConfig(models.Model):
-    _name = "sale.order.approval.config"
-    _description = "Sales Order Approval Settings"
-    _rec_name = 'user_id'
 
-    sequence = fields.Integer(string='Sequence', index=True)
+class SOCancellationApproverTeam(models.Model):
+    _name = 'sale.order.cancellation.approvers'
+    _description = 'Cancelation Approvers'
+    _rec_name = 'user_id'
+    _order = 'sequence'
+
+    sequence = fields.Integer(string='Sequence', readonly=True)
     user_id = fields.Many2one('res.users', string='User', required=True)
     default_approver = fields.Selection([
         ('approver1', 'Approver 1'),
@@ -24,7 +24,7 @@ class SaleOrderApprovalConfig(models.Model):
     @api.depends('user_id')
     def _compute_existing_user_ids(self):
         # Get all existing users' IDs
-        existing_user_ids_list = self.env['sale.order.approval.config'].search([]).user_id.ids
+        existing_user_ids_list = self.env['sale.order.cancellation.approvers'].search([]).user_id.ids
 
         # Convert the list to a set for efficient removal
         existing_user_ids_set = set(existing_user_ids_list)
@@ -84,20 +84,20 @@ class SaleOrderApprovalConfig(models.Model):
 
         return super().write(vals)
 
+
     def unlink(self):
-        # Step 1: Collect all affected purchase orders
         affected_pos = self.env['sale.order']  # empty recordset
 
         for approver in self:
             # Find all POs where this approver is linked
             pos = self.env['sale.order'].search([
-                ('so_approval_users_ids_for_confirmation.user_id', '=', approver.user_id.id)
+                ('so_approval_users_ids_for_cancellation.user_id', '=', approver.user_id.id)
             ])
             affected_pos |= pos  # accumulate affected POs
 
             # Delete linked PO approval users with empty state
             for so in pos:
-                records_to_delete = so.approval_users_ids_for_confirmation.filtered(
+                records_to_delete = so.so_approval_users_ids_for_cancellation.filtered(
                     lambda r: r.user_id == approver.user_id and not r.state
                 )
                 records_to_delete.unlink()
@@ -106,13 +106,12 @@ class SaleOrderApprovalConfig(models.Model):
         result = super().unlink()
 
         # Step 3: Re-sequence all remaining approvers globally
-        all_approvers = self.env['sale.order.approval.config'].search([], order='sequence')
+        all_approvers = self.env['sale.order.cancellation.approvers'].search([], order='sequence')
         for idx, record in enumerate(all_approvers, start=1):
             record.sequence = idx
 
-        # Step 4: Re-sequence PO approval users per purchase order
         for so in affected_pos:
-            so_users = so.so_approval_users_ids_for_confirmation.sorted(key='sequence')
+            so_users =so.so_approval_users_ids_for_cancellation.sorted(key='sequence')
             for idx, user in enumerate(so_users, start=1):
                 user.sequence = idx
 
