@@ -9,20 +9,19 @@ class ShowPaymentButtonToAccountsGroup(models.Model):
         super(ShowPaymentButtonToAccountsGroup, self).action_post()
 
         if self.env.context.get('active_model') != 'sale.advance.payment.inv':
-            # can show a notification here
             return
 
         sales_account_group = self.env.ref('bora_sale.account_group_for_sales')
 
-        if sales_account_group:
-            users_in_group = sales_account_group.users
+        company_id = self.company_id.id
+        accounts_users = sales_account_group.users.filtered(lambda u: company_id in u.company_ids.ids)
 
-            for user in users_in_group:
-
+        if accounts_users:
+            for user in accounts_users:
                 self.activity_schedule(
                     act_type_xmlid='mail.mail_activity_data_todo',
                     summary = f'Invoice {self.name} is now ready for payment.',
-                    note="You have been assigned to unlock this PI.",
+                    note="",
                     user_id=user.id,
                     date_deadline=fields.Date.context_today(self),
                 )
@@ -38,8 +37,4 @@ class ShowPaymentButtonToAccountsGroup(models.Model):
                     },
                 )
         else:
-            raise UserError("No account member added, please contact to Administrator.")
-
-
-
-    
+            raise UserError(f"No account member added for {self.company_id.name}, please contact to Administrator.")

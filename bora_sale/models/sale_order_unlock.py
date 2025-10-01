@@ -8,7 +8,6 @@ class SaleOrderUnlock(models.Model):
     approval_users_ids = fields.One2many('pi.unlock.approval.users', 'pi_unlock_approval_id', 'Approval Authorities', help='PI unlock approval authority details')
     existing_user_ids = fields.Many2many('res.users', compute='_compute_existing_users', store=True)
     
-
     @api.depends('approval_users_ids.user_id')
     def _compute_existing_users(self):
         for record in self:
@@ -23,60 +22,100 @@ class SaleOrderUnlock(models.Model):
 
     show_unlock_approve_reject_buttons = fields.Boolean(string="Show", compute='_show_approve_reject_buttons', store=False)
 
-    @api.depends('assigned_to','approval_users_ids.state')
-    def _show_approve_reject_buttons(self):
-
-        # check if any user has rejected the request
-        is_rejected = False
-        for user_id in self.approval_users_ids:
-            if user_id.state == 'reject':
-                is_rejected = True
-                break
-
-        # check if all users have approved
-        do_all_approve = True
-        for user_id in self.approval_users_ids:
-            if not user_id.state:
-                do_all_approve = False
-
-        if do_all_approve == True or is_rejected == True:
-            self.show_unlock_approve_reject_buttons = False
-        elif self.assigned_to == self.env.user:
-            self.show_unlock_approve_reject_buttons = True
-        else:
-            self.show_unlock_approve_reject_buttons = False
-
-
-    def action_unlock(self):
-
-        pi_unlock_approval_users = self.env['pi.unlock.approvers'].sudo().search([])
-        if not pi_unlock_approval_users:
-            raise ValidationError("Please Add PI Unlock Authority before Submit Request.")
-
-
+    def assign_unlock_users(self, pi_unlock_approval_users):
         pi_unlock_approval_user_vals = []
-        for approval in pi_unlock_approval_users:
+        for index,approval in enumerate(pi_unlock_approval_users):
             pi_unlock_approval_user_vals.append((0, 0, {
-                'sequence': approval.sequence,
+                'sequence': index+1,
                 'user_id': approval.user_id.id,
             }))
         self.write({
-            'approval_users_ids': pi_unlock_approval_user_vals
+            'approval_users_ids': pi_unlock_approval_user_vals,
+            'state': 'unlock_pending' 
         })
 
-
-        
-        if self.assigned_to:
-            for user_id in self.approval_users_ids:
-                if user_id.state == 'reject':
-                    raise ValidationError(f"Unlock request is rejected by '{user_id.user_id.name}', please review 'Unlock Approval Authorities' tab for more details.")                
-            raise ValidationError(f"Unlock request is now pending from '{self.assigned_to.name}'.")
-        
 
         if self.id:
             self._update_assigned_to()
 
         self._create_activity_and_send_notification_for_unlock_request()
+
+
+    def action_unlock(self):
+
+        # 1. Check if the authority configured or not
+        pi_unlock_approval_users = self.env['pi.unlock.approvers'].sudo().search([])
+        if not pi_unlock_approval_users:
+            raise ValidationError("Please Add PI Unlock Authority before Submit Request.")
+
+        # 2. Check if request is pending 
+        if self.assigned_to:
+            raise ValidationError(f"Unlock request is now pending from '{self.assigned_to.name}'.")
+
+        # 3. Show picker
+        return self.env.ref(
+            "bora_sale.action_so_unlock_approval_user_picker_wizard"
+        ).sudo().read()[0]
+
+    def action_unlock_suspend(self):
+        return self.env.ref(
+            "bora_sale.unlock_so_suspend_confirm_wizard_action"
+        ).sudo().read()[0]
+
+
+    def suspend_unlock_process(self, remark):
+
+        self.message_post(
+            body=f"Approval suspended by {self.env.user.display_name}. Reason: {remark}",
+            message_type="comment",
+            subtype_xmlid="mail.mt_note"
+        )
+
+        for order in self:
+
+            pending_approvers = order.approval_users_ids.filtered(lambda u: not u.state)
+
+            pending_approvers.write({
+                'state': 'suspended', 
+                'remark': f"By {self.env.user.name} - " + (f" {remark}" if remark else ""),
+                'action_date': fields.Datetime.now()})
+
+            activities = self.env['mail.activity'].search([
+                ('res_model', '=', 'sale.order'),
+                ('res_id', '=', self.ids),
+                ('user_id', 'in', pending_approvers.mapped('user_id').ids),
+                ('activity_type_id', '=', self.env.ref('mail.mail_activity_data_todo').id),
+            ])
+
+            order.write({'assigned_to': None, 'state':'sale'}) 
+
+            # send notification to creator
+            order.env['bus.bus']._sendone(
+                order.create_uid.partner_id,
+                'simple_notification',
+                {
+                    'type': 'danger',
+                    'title': f'SO {order.name} suspended by {self.env.user.name}. you need to initiate the approval process again.',
+                    'message':  '',
+                    'sticky': True,
+                },
+            )
+
+            #4. in the last send info message to self
+            order.env['bus.bus']._sendone(
+                self.env.user.partner_id,
+                'simple_notification',
+                {
+                    'type': 'info',
+                    'title': f'Approval process suspended successfully.',
+                    'message':  '',
+                    'sticky': True,
+                },
+            )
+
+            activities.unlink()
+
+
 
     def _update_assigned_to(self):
         for rec in self:
@@ -87,13 +126,21 @@ class SaleOrderUnlock(models.Model):
                     break
             rec.assigned_to = next_user
 
-            if not rec.assigned_to:
-                super(SaleOrderUnlock, self).action_unlock()
-                rec.state = 'draft'
+            # if not rec.assigned_to:
+            #     super(SaleOrderUnlock, self).action_unlock()
+
+
 
     def _send_notification_on_rejection(self):
+
+        print("************************ LLLLLLL *********")
         
         approval_users = self.env['pi.unlock.approvers'].sudo().search([])
+
+        self.write({
+            'state': 'sale',
+            'assigned_to': None
+        })
 
         for user in approval_users:
             if user.user_id == self.env.user:
@@ -112,7 +159,7 @@ class SaleOrderUnlock(models.Model):
                     user.user_id.partner_id,
                     'simple_notification',
                     {
-                        'type': 'info',
+                        'type': 'danger',
                         'title': f'PI unlock approval request for {self.name}, rejected by {self.env.user.name}.',
                         'message':  f'',
                         'sticky': True,
@@ -124,6 +171,11 @@ class SaleOrderUnlock(models.Model):
         for rec in self:
 
             if not rec.assigned_to:
+                # Unlock the SO
+                super(SaleOrderUnlock, self).action_unlock()
+                self.write({
+                    'state': 'draft'
+                })
                 # 1. send unlock notification to real creator
                 rec.env['bus.bus']._sendone(
                     rec.create_uid.partner_id,
@@ -215,26 +267,27 @@ class PIUnlockApprovalUsers(models.Model):
     _rec_name = 'pi_unlock_approval_id'
     _description = "PI Unlock Approval Users"
     _order = "create_date, sequence"
+ 
 
     sequence = fields.Integer(string='Sequence')
     pi_unlock_approval_id = fields.Many2one('sale.order', string="PI Unlock Approval")
     job_id = fields.Char(string="Designation", readonly=True)
     user_id = fields.Many2one('res.users', string='User', required=True)
-    state = fields.Selection([('approve', 'Approved'), ('reject', 'Rejected')], string="Action")
+    state = fields.Selection([('approve', 'Approved'), ('reject', 'Rejected'), ('suspended', 'Suspended')], string="Action")
     remark = fields.Char('Remarks', tracking=True)
     action_date = fields.Datetime(string="Action Date")
 
-    def write(self, vals):
-        res = super().write(vals)
-        for rec in self:
-            if rec.pi_unlock_approval_id:
-                rec.pi_unlock_approval_id._update_state_based_on_approvals()
-        return res
+    # def write(self, vals):
+    #     res = super().write(vals)
+    #     for rec in self:
+    #         if rec.pi_unlock_approval_id:
+    #             rec.pi_unlock_approval_id._update_state_based_on_approvals()
+    #     return res
     
-    @api.model_create_multi
-    def create(self, vals_list):
-        res_list = super(PIUnlockApprovalUsers, self).create(vals_list)
-        for res in res_list:
-            if res.pi_unlock_approval_id:
-                res.pi_unlock_approval_id._update_state_based_on_approvals()
-        return res_list
+    # @api.model_create_multi
+    # def create(self, vals_list):
+    #     res_list = super(PIUnlockApprovalUsers, self).create(vals_list)
+    #     for res in res_list:
+    #         if res.pi_unlock_approval_id:
+    #             res.pi_unlock_approval_id._update_state_based_on_approvals()
+    #     return res_list
