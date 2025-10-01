@@ -8,9 +8,12 @@
             <field name="inherit_id" ref="sale.view_order_form"/>
             <field name="arch" type="xml">
                 <!-- Show banner above form -->
-                      <xpath expr="//sheet" position="before">
+                <xpath expr="//sheet" position="before">
                     <field name="credit_status_message" readonly="1" widget="html"/>
                 </xpath>
+<!--                <xpath expr="//field[@name='payment_term_id']" position="attributes">-->
+<!--                    <attribute name="readonly">state=='sale'</attribute>-->
+<!--                </xpath>-->
 
                 <!-- keep payment_term modifications -->
                 <xpath expr="//field[@name='payment_term_id']" position="after">
@@ -18,7 +21,7 @@
                     <field name="is_payment_approved" invisible="1"/>
                     <field name="is_payment_rejected" invisible="1"/>
                     <field name="credit_due_date"
-                           invisible="payment_term_id not in [%(bora_sale_purchase_approval.custom_account_payment_term_credit)d]"/>
+                           invisible="payment_term_id not in [%(bora_sale_purchase_approval.custom_account_payment_term_credit)d]" readonly="state in ('sale','unlock_pending','cancel')"/>
                 </xpath>
 
                 <!-- Add custom buttons -->
@@ -34,24 +37,25 @@
 
                     <!-- Approve button -->
                     <button name="%(approve_payment_term_wizard_action)d" string="Credit Approve" type="action"
-                             class="oe_highlight"
+                            class="oe_highlight"
                             invisible="not is_pending_approval or credit_assigned_to != uid or is_payment_rejected"/>
 
                     <!-- Reject button -->
                     <button name="%(reject_payment_term_wizard_action)d" string="Credit Reject" type="action"
                             class="oe_highlight"
                             invisible="not is_pending_approval or credit_assigned_to != uid or is_payment_rejected"/>
-                     <button name="action_reset_credit_approval"
-                        string="Reset Credit Approval"
-                        type="object"
-                        class="btn-secondary"
-                        confirm="Are you sure you want to reset the credit approval process?"
-                        invisible="is_payment_rejected != True or user_id != uid"/>
+                    <button name="action_reset_credit_approval"
+                            string="Reset Credit Approval"
+                            type="object"
+                            class="btn-secondary"
+                            confirm="Are you sure you want to reset the credit approval process?" groups="base.group_system"
+                            invisible="is_payment_rejected != True"/>
                 </xpath>
 
                 <!-- Approval page -->
                 <xpath expr="//sheet/notebook" position="inside">
-                    <page string="Credit Approval Authorities" name="approval_users" invisible="payment_term_id not in [%(bora_sale_purchase_approval.custom_account_payment_term_credit)d] or (not is_pending_approval and not credit_approval_users_ids) ">
+                    <page string="Credit Approval Authorities" name="approval_users"
+                          invisible="payment_term_id not in [%(bora_sale_purchase_approval.custom_account_payment_term_credit)d] or (not is_pending_approval and not credit_approval_users_ids) ">
                         <field name="is_payment_approved" invisible="1"/>
                         <group>
                             <field name="credit_assigned_to"
