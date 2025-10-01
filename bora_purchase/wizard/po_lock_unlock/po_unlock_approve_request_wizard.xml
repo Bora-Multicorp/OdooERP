@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<odoo>
+    <record id="approve_po_wizard_view_form" model="ir.ui.view">
+        <field name="name">approve.po.wizard.form</field>
+        <field name="model">approve.po.unlock.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Approve Unlock Request">
+                <group> 
+                    <!-- <field name="order_approval_id" readonly="1"/> -->
+                    <field name="remark" placeholder="Enter remarks for approval"/>
+                </group>
+                <footer>
+                    <button name="action_approve_po_unlock" string="Approve" type="object" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel" data-hotkey="x"/>
+                </footer>
+            </form> 
+        </field>
+    </record>
+    <record id="approve_po_unlock_wizard_action" model="ir.actions.act_window">
+        <field name="name">Approval Unlock Request</field>
+        <field name="res_model">approve.po.unlock.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="approve_po_wizard_view_form"/>
+        <field name="target">new</field>
+        <field name="binding_model_id" ref="model_approve_po_unlock_wizard"/>
+        <field name="context">{
+            'default_order_approval_id': active_id,
+            }
+        </field>
+    </record>
+</odoo>

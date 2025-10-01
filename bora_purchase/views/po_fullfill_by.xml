@@ -1,0 +1,13 @@
+<odoo>
+    <record id="po_fullfill_by" model="ir.ui.view">
+        <field name="name">po.fullfill.by</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='currency_id']" position="after">
+                <field name="fulfillment_by" widget="radio" options="{'horizontal': true}" readonly = "state in ('cancel','done','purchase')"/>
+                <field name="delivery_partner" options="{'no_edit': True, 'no_create': True, 'no_open': True}" readonly = "state in ('cancel','done','purchase')" invisible = "fulfillment_by != 'bora'" required= "fulfillment_by == 'bora'"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>
