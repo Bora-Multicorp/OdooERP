@@ -1,9 +1,0 @@
-<odoo>
-    <data>
-        <template id="assets_backend_custom_notification" inherit_id="web.assets_backend">
-            <xpath expr="." position="inside">
-                <script type="text/javascript" src="/bora_product_master/static/src/js/delayed_reload.js"/>
-            </xpath>
-        </template>
-    </data>
-</odoo>

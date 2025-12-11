@@ -1,7 +1,0 @@
-/* readonly/disabled fields ko normal dikhane ke liye */
-.o_field_widget.o_readonly_modifier input,
-.o_field_widget.o_disabled input,
-input[disabled],
-input[readonly] {   
-    opacity: 1 !important;
-}

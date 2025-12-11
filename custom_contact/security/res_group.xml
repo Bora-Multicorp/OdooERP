@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!--<odoo>
-    <record id="module_category_res_partner_custom" model="ir.module.category">
-        <field name="name">Contact Customization</field>
-        <field name="sequence">15</field>
-    </record>
-</odoo>-->
