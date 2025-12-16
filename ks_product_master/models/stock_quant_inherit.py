@@ -28,6 +28,7 @@ class StockQuantInherit(models.Model):
 
     @api.depends('activation_date')
     def _compute_active_months(self):
+        """To compute active month"""
         for rec in self:
             if rec.activation_date:
                 rec.activation_status = True
