@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <!-- Extend the main TraceabilityReport template to add IMEI column headers -->
+    <t t-name="ks_product_master.TraceabilityReport" t-inherit="stock.TraceabilityReport" t-inherit-mode="extension">
+        <!-- Add IMEI 1 and IMEI 2 headers after Quantity column -->
+        <xpath expr="//th[text()='Quantity']" position="after">
+            <th class="o_report_line_header">IMEI 1</th>
+            <th class="o_report_line_header">IMEI 2</th>
+        </xpath>
+    </t>
+
+    <!-- Extend the ReportMRPLines template to add IMEI column values -->
+    <t t-name="ks_product_master.ReportMRPLines" t-inherit="stock.ReportMRPLines" t-inherit-mode="extension">
+        <!-- Add IMEI columns after the last td in each row (after the columns loop) -->
+        <xpath expr="//tr/t[@t-foreach='line.columns']" position="after">
+            <!-- IMEI 1 Column - shown only for Mobile/Phone category products -->
+            <td>
+                <span t-if="line.show_imei_1" t-esc="line.imei_1 || ''"/>
+            </td>
+            <!-- IMEI 2 Column - shown only for Mobile/Phone category AND is_dual_sim -->
+            <td>
+                <span t-if="line.show_imei_2" t-esc="line.imei_2 || ''"/>
+            </td>
+        </xpath>
+    </t>
+
+</templates>
+

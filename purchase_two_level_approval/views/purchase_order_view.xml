@@ -1,0 +1,269 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- 
+    =============================================
+    PURCHASE ORDER FORM VIEW EXTENSION
+    =============================================
+    
+    This view extension adds:
+    1. PM Approval tab with PM1/PM2 assignment and status
+    2. Approval buttons visible only to PM users
+    3. Direct confirm button for PM/A/C Head
+    4. Visual indicators for approval status
+    5. Lock indicator for normal users
+    -->
+
+    <record id="purchase_order_form_inherit_two_level_approval" model="ir.ui.view">
+        <field name="name">purchase.order.form.inherit.two.level.approval</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_form"/>
+        <field name="priority">100</field>
+        <field name="arch" type="xml">
+            <!-- Add new state to the statusbar -->
+            <xpath expr="//field[@name='state'][@widget='statusbar']" position="replace">
+                <field name="state" widget="statusbar" statusbar_visible="draft,sent,pending_pm_approval,purchase,done"/>
+            </xpath>
+
+            <!-- Add approval status badge in header area -->
+            <xpath expr="//field[@name='state'][@widget='statusbar']" position="before">
+                <field name="approval_status" widget="badge" decoration-info="approval_status == 'pending'" decoration-warning="approval_status == 'partial'" decoration-success="approval_status == 'approved'" invisible="approval_status == 'not_submitted'" class="me-2"/>
+                <field name="is_locked_for_user" invisible="1"/>
+                <field name="is_pm_or_ac_head" invisible="1"/>
+                <field name="can_approve_as_pm1" invisible="1"/>
+                <field name="can_approve_as_pm2" invisible="1"/>
+            </xpath>
+
+            <!-- Add locked indicator banner for normal users -->
+            <xpath expr="//sheet" position="before">
+                <div class="alert alert-warning text-center mb-0" role="alert" invisible="not is_locked_for_user">
+                    <strong><i class="fa fa-lock me-2"/>This Purchase Order is locked</strong> - Pending PM approval. Only PM users or A/C Head can edit.
+                </div>
+            </xpath>
+
+            <!-- Add PM approval buttons in the header -->
+            <xpath expr="//button[@name='button_confirm']" position="after">
+                <!-- Confirm as PM button - visible only to PM/A/C Head -->
+                <button name="action_confirm_as_pm" 
+                        string="Confirm as PM" 
+                        type="object" 
+                        class="btn-primary"
+                        invisible="state not in ['draft', 'sent', 'pending_pm_approval'] or not is_pm_or_ac_head"
+                        groups="purchase_two_level_approval.group_po_pm_user"/>
+                
+                <!-- PM1 Approve button -->
+                <button name="action_approve_as_pm1" 
+                        string="Approve as PM1" 
+                        type="object" 
+                        class="btn-success"
+                        invisible="not can_approve_as_pm1"
+                        groups="purchase_two_level_approval.group_po_pm_user"/>
+                
+                <!-- PM2 Approve button -->
+                <button name="action_approve_as_pm2" 
+                        string="Approve as PM2" 
+                        type="object" 
+                        class="btn-success"
+                        invisible="not can_approve_as_pm2"
+                        groups="purchase_two_level_approval.group_po_pm_user"/>
+                
+                <!-- Reject button - visible to PM/A/C Head when pending approval -->
+                <button name="action_reject_approval" 
+                        string="Reject" 
+                        type="object" 
+                        class="btn-danger"
+                        invisible="state != 'pending_pm_approval' or not is_pm_or_ac_head"
+                        groups="purchase_two_level_approval.group_po_pm_user"
+                        confirm="Are you sure you want to reject this Purchase Order? It will be sent back to draft state."/>
+            </xpath>
+
+            <!-- Add PM Approval Tab -->
+            <xpath expr="//page[@name='purchase_delivery_invoice']" position="after">
+                <page string="PM Approval" name="pm_approval">
+                    <group>
+                        <group string="PM Approvers Assignment">
+                            <!-- Domain to filter PM users is handled via fields_get override in Python -->
+                            <field name="pm1_id" 
+                                   options="{'no_create': True, 'no_open': True}"
+                                   placeholder="Select PM1..."
+                                   readonly="state not in ['draft', 'sent'] and not is_pm_or_ac_head"/>
+                            <field name="pm2_id" 
+                                   options="{'no_create': True, 'no_open': True}"
+                                   placeholder="Select PM2..."
+                                   readonly="state not in ['draft', 'sent'] and not is_pm_or_ac_head"/>
+                        </group>
+                        <group string="Approval Status">
+                            <field name="approval_status" readonly="1" widget="badge" 
+                                   decoration-info="approval_status == 'pending'"
+                                   decoration-warning="approval_status == 'partial'"
+                                   decoration-success="approval_status == 'approved'"
+                                   decoration-muted="approval_status == 'not_submitted'"/>
+                        </group>
+                    </group>
+                    
+                    <group>
+                        <group string="PM1 Approval Details" invisible="not pm1_id">
+                            <field name="pm1_approved" readonly="1" widget="boolean_toggle"/>
+                            <field name="pm1_approved_date" readonly="1" invisible="not pm1_approved"/>
+                            <div class="text-muted" invisible="pm1_approved">
+                                <i class="fa fa-clock-o"/> Waiting for PM1 approval
+                            </div>
+                            <div class="text-success" invisible="not pm1_approved">
+                                <i class="fa fa-check-circle"/> Approved by PM1
+                            </div>
+                        </group>
+                        <group string="PM2 Approval Details" invisible="not pm2_id">
+                            <field name="pm2_approved" readonly="1" widget="boolean_toggle"/>
+                            <field name="pm2_approved_date" readonly="1" invisible="not pm2_approved"/>
+                            <div class="text-muted" invisible="pm2_approved">
+                                <i class="fa fa-clock-o"/> Waiting for PM2 approval
+                            </div>
+                            <div class="text-success" invisible="not pm2_approved">
+                                <i class="fa fa-check-circle"/> Approved by PM2
+                            </div>
+                        </group>
+                    </group>
+
+                    <!-- Approval Action Buttons within the tab -->
+                    <group invisible="state != 'pending_pm_approval'">
+                        <div class="oe_button_box" name="pm_approval_buttons">
+                            <button name="action_approve_as_pm1" 
+                                    string="Approve as PM1" 
+                                    type="object" 
+                                    class="btn btn-success oe_stat_button"
+                                    icon="fa-check"
+                                    invisible="not can_approve_as_pm1"
+                                    groups="purchase_two_level_approval.group_po_pm_user"/>
+                            <button name="action_approve_as_pm2" 
+                                    string="Approve as PM2" 
+                                    type="object" 
+                                    class="btn btn-success oe_stat_button"
+                                    icon="fa-check"
+                                    invisible="not can_approve_as_pm2"
+                                    groups="purchase_two_level_approval.group_po_pm_user"/>
+                        </div>
+                    </group>
+
+                    <!-- Instructions for users -->
+                    <group string="Instructions" class="oe_edit_only">
+                        <div class="alert alert-info" role="alert">
+                            <h5><i class="fa fa-info-circle"/> Two-Level Approval Workflow</h5>
+                            <ol class="mb-0">
+                                <li><strong>Assign PMs:</strong> Select PM1 and/or PM2 who will approve this PO.</li>
+                                <li><strong>Submit for Approval:</strong> Click "Confirm" to submit the PO for PM approval.</li>
+                                <li><strong>PM Approval:</strong> Each assigned PM must approve separately.</li>
+                                <li><strong>Auto-Confirm:</strong> PO is automatically confirmed when all PMs approve.</li>
+                            </ol>
+                            <hr/>
+                            <p class="mb-0"><strong>Note:</strong> PM users and A/C Head can use "Confirm as PM" to directly confirm without waiting for all approvals.</p>
+                        </div>
+                    </group>
+                </page>
+            </xpath>
+
+            <!-- Make form read-only for locked state (normal users in pending_pm_approval) -->
+            <xpath expr="//field[@name='partner_id']" position="attributes">
+                <attribute name="readonly">is_locked_for_user or state in ['purchase', 'done', 'cancel']</attribute>
+            </xpath>
+            <xpath expr="//field[@name='partner_ref']" position="attributes">
+                <attribute name="readonly">is_locked_for_user or state in ['done', 'cancel']</attribute>
+            </xpath>
+            <xpath expr="//field[@name='currency_id']" position="attributes">
+                <attribute name="readonly">is_locked_for_user or state != 'draft'</attribute>
+            </xpath>
+            <xpath expr="//field[@name='date_order']" position="attributes">
+                <attribute name="readonly">is_locked_for_user or state in ['purchase', 'done', 'cancel']</attribute>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- 
+    =============================================
+    PURCHASE ORDER TREE VIEW EXTENSION
+    =============================================
+    
+    Add approval status column to the list view
+    -->
+    <record id="purchase_order_tree_inherit_two_level_approval" model="ir.ui.view">
+        <field name="name">purchase.order.tree.inherit.two.level.approval</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_kpis_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='state']" position="before">
+                <field name="approval_status" widget="badge" optional="show"
+                       decoration-info="approval_status == 'pending'"
+                       decoration-warning="approval_status == 'partial'"
+                       decoration-success="approval_status == 'approved'"
+                       decoration-muted="approval_status == 'not_submitted'"/>
+                <field name="pm1_id" optional="hide"/>
+                <field name="pm2_id" optional="hide"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- 
+    =============================================
+    PURCHASE ORDER SEARCH VIEW EXTENSION
+    =============================================
+    
+    Add filter for pending PM approval
+    -->
+    <record id="purchase_order_search_inherit_two_level_approval" model="ir.ui.view">
+        <field name="name">purchase.order.search.inherit.two.level.approval</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.view_purchase_order_filter"/>
+        <field name="arch" type="xml">
+            <xpath expr="//filter[@name='approved']" position="after">
+                <filter string="Pending PM Approval" name="pending_pm_approval" domain="[('state', '=', 'pending_pm_approval')]"/>
+                <filter string="My Approval Pending" name="my_approval_pending" 
+                        domain="['&amp;', ('state', '=', 'pending_pm_approval'), '|', 
+                                 '&amp;', ('pm1_id', '=', uid), ('pm1_approved', '=', False),
+                                 '&amp;', ('pm2_id', '=', uid), ('pm2_approved', '=', False)]"/>
+                <separator/>
+            </xpath>
+            <xpath expr="//group" position="inside">
+                <filter string="PM1" name="group_pm1" context="{'group_by': 'pm1_id'}"/>
+                <filter string="PM2" name="group_pm2" context="{'group_by': 'pm2_id'}"/>
+                <filter string="Approval Status" name="group_approval_status" context="{'group_by': 'approval_status'}"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- 
+    =============================================
+    SERVER ACTION FOR BULK APPROVAL
+    =============================================
+    
+    Allow PMs to approve multiple POs at once
+    -->
+    <record id="action_po_bulk_approve_pm1" model="ir.actions.server">
+        <field name="name">Bulk Approve as PM1</field>
+        <field name="model_id" ref="purchase.model_purchase_order"/>
+        <field name="binding_model_id" ref="purchase.model_purchase_order"/>
+        <field name="binding_view_types">list</field>
+        <field name="groups_id" eval="[(4, ref('purchase_two_level_approval.group_po_pm_user'))]"/>
+        <field name="state">code</field>
+        <field name="code">
+for record in records:
+    if record.state == 'pending_pm_approval' and not record.pm1_approved:
+        if record.pm1_id == env.user or env.user.has_group('purchase_two_level_approval.group_po_ac_head'):
+            record.action_approve_as_pm1()
+        </field>
+    </record>
+
+    <record id="action_po_bulk_approve_pm2" model="ir.actions.server">
+        <field name="name">Bulk Approve as PM2</field>
+        <field name="model_id" ref="purchase.model_purchase_order"/>
+        <field name="binding_model_id" ref="purchase.model_purchase_order"/>
+        <field name="binding_view_types">list</field>
+        <field name="groups_id" eval="[(4, ref('purchase_two_level_approval.group_po_pm_user'))]"/>
+        <field name="state">code</field>
+        <field name="code">
+for record in records:
+    if record.state == 'pending_pm_approval' and not record.pm2_approved:
+        if record.pm2_id == env.user or env.user.has_group('purchase_two_level_approval.group_po_ac_head'):
+            record.action_approve_as_pm2()
+        </field>
+    </record>
+
+</odoo>
+

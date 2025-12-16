@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="ks_approval_confirmation_wizard_form_view" model="ir.ui.view">
+        <field name="name">ks.approval.confirmation.wizard.form</field>
+        <field name="model">ks.approval.confirmation.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Send for Approval">
+                <group>
+                    <field name="ks_purchase_order_id" invisible="1"/>
+                </group>
+                <div class="alert alert-info" role="alert" style="margin: 16px;">
+                    <p><strong>Approval request will be sent to:</strong></p>
+                    <p style="font-size: 14px; margin-left: 20px;"><field name="ks_approver_names" readonly="1" nolabel="1"/></p>
+                    <p><strong>Do you want to continue?</strong></p>
+                </div>
+                <footer>
+                    <button name="action_confirm_send" 
+                            string="OK" 
+                            type="object" 
+                            class="btn-primary"/>
+                    <button string="Cancel" 
+                            class="btn-secondary" 
+                            special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>
+

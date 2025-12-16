@@ -1,0 +1,136 @@
+<odoo>
+    <data noupdate="1">
+
+        <record id="qc_notification_dynamic_template" model="mail.template">
+            <field name="name">QC Notification Dynamic Template</field>
+            <field name="email_from">${(user.email_formatted or 'noreply@example.com')|safe}</field>
+            <field name="email_to">logistics@example.com</field>
+            <field name="subject">QC Result Notification</field>
+            <field name="model_id" ref="quality.model_quality_check"/>
+            <field name="body_html" type="html">
+
+                <p>Hello Logistics Team,</p>
+
+                <p>This is a <strong>Quality Check notification</strong>.</p>
+
+                <table style="border-collapse: collapse; width: 100%;">
+                    <tr>
+                        <th style="border: 1px solid #000; padding: 5px;">Check</th>
+                        <th style="border: 1px solid #000; padding: 5px;">Status</th>
+                    </tr>
+
+                    <!-- SKU mismatch -->
+                    <tr>
+                        <td style="border: 1px solid #000; padding: 5px;">SKU Mismatch</td>
+                        <td style="border: 1px solid #000; padding: 5px;">
+                            <t t-if="object.qc_sku_mismatch" style="color:green;">OK</t>
+                            <t t-if="not object.qc_sku_mismatch" style="color:red;">Mismatch</t>
+                        </td>
+                    </tr>
+
+                    <!-- Quantity mismatch -->
+                    <tr>
+                        <td style="border: 1px solid #000; padding: 5px;">Quantity Mismatch</td>
+                        <td style="border: 1px solid #000; padding: 5px;">
+                            <span t-if="object.qc_qty_mismatch" style="color:green;">OK</span>
+                            <span t-if="not object.qc_qty_mismatch" style="color:red;">Mismatch</span>
+                        </td>
+                    </tr>
+
+                    <!-- Color / Model mismatch -->
+                    <tr>
+                        <td style="border: 1px solid #000; padding: 5px;">Color / Model Mismatch</td>
+                        <td style="border: 1px solid #000; padding: 5px;">
+                            <span t-if="object.qc_color_mismatch" style="color:green;">OK</span>
+                            <span t-if="not object.qc_color_mismatch" style="color:red;">Mismatch</span>
+                        </td>
+                    </tr>
+
+                    <!-- Device Type Issue -->
+                    <tr>
+                        <td style="border: 1px solid #000; padding: 5px;">Device Type Issue</td>
+                        <td style="border: 1px solid #000; padding: 5px;">
+                            <span t-if="object.qc_wrong_device_type" style="color:green;">OK</span>
+                            <span t-if="not object.qc_wrong_device_type" style="color:red;">Issue</span>
+                        </td>
+                    </tr>
+
+                    <!-- Damage -->
+                    <tr>
+                        <td style="border: 1px solid #000; padding: 5px;">Damage</td>
+                        <td style="border: 1px solid #000; padding: 5px;">
+                            <span t-if="object.qc_damage" style="color:red;">YES</span>
+                            <span t-if="not object.qc_damage" style="color:green;">NO</span>
+                        </td>
+                    </tr>
+
+                </table>
+
+                <p>Regards,<br/>QC System</p>
+
+            </field>
+        </record>
+
+    </data>
+</odoo>
+
+<!--<odoo>-->
+<!--    <data noupdate="1">-->
+
+<!--        <record id="qc_notification_dynamic_template" model="mail.template">-->
+<!--            <field name="name">QC Notification Dynamic Template</field>-->
+<!--            <field name="email_from">${(user.email_formatted or 'noreply@example.com')|safe}</field>-->
+<!--            <field name="email_to">logistics@example.com</field>-->
+<!--            <field name="subject">QC Result Notification</field>-->
+<!--            <field name="model_id" ref="quality.model_quality_check"/>-->
+<!--            <field name="body_html">-->
+<!--                <![CDATA[-->
+<!--                    <p>Hello Logistics Team,</p>-->
+
+<!--                    <p>This is a <strong>Quality Check notification</strong>.</p>-->
+
+<!--                    <table style="border-collapse: collapse; width: 100%;">-->
+<!--                        <tr>-->
+<!--                            <th style="border: 1px solid #000; padding: 5px;">Check</th>-->
+<!--                            <th style="border: 1px solid #000; padding: 5px;">Status</th>-->
+<!--                        </tr>-->
+<!--                        <tr>-->
+<!--<td style="border: 1px solid #000; padding: 5px;">SKU Mismatch</td>-->
+<!--        <td style="border: 1px solid #000; padding: 5px;">-->
+<!--&lt;!&ndash;            ${'Mismatch' if object.qc_sku_mismatch else 'OK'}&ndash;&gt;-->
+
+<!--        <span t-field="object.qc_sku_mismatch"/></td>-->
+<!--                        </tr>-->
+<!--                        <tr>-->
+<!--                            <td style="border: 1px solid #000; padding: 5px;">Quantity Mismatch</td>-->
+<!--                            <td style="border: 1px solid #000; padding: 5px; color: {% if object.quantity_mismatch %}red{% else %}green{% endif %};">-->
+<!--                                {% if object.quantity_mismatch %}Mismatch{% else %}OK{% endif %}-->
+<!--                            </td>-->
+<!--                        </tr>-->
+<!--                        <tr>-->
+<!--                            <td style="border: 1px solid #000; padding: 5px;">Color / Model Mismatch</td>-->
+<!--                            <td style="border: 1px solid #000; padding: 5px; color: {% if object.color_model_mismatch %}red{% else %}green{% endif %};">-->
+<!--                                {% if object.color_model_mismatch %}Mismatch{% else %}OK{% endif %}-->
+<!--                            </td>-->
+<!--                        </tr>-->
+<!--                        <tr>-->
+<!--                            <td style="border: 1px solid #000; padding: 5px;">Device Type Issue</td>-->
+<!--                            <td style="border: 1px solid #000; padding: 5px; color: {% if object.device_type_issue %}red{% else %}green{% endif %};">-->
+<!--                                {% if object.device_type_issue %}Issue{% else %}OK{% endif %}-->
+<!--                            </td>-->
+<!--                        </tr>-->
+<!--                        <tr>-->
+<!--                            <td style="border: 1px solid #000; padding: 5px;">Damage</td>-->
+<!--                            <td style="border: 1px solid #000; padding: 5px; color: {% if object.damage %}red{% else %}green{% endif %};">-->
+<!--                                {% if object.damage %}Yes{% else %}No{% endif %}-->
+<!--                            </td>-->
+<!--                        </tr>-->
+<!--                    </table>-->
+
+<!--                    <p>Regards,<br/>QC System</p>-->
+<!--                ]]>-->
+<!--            </field>-->
+<!--        </record>-->
+
+<!--    </data>-->
+<!--</odoo>-->

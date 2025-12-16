@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="view_sale_order_form_inherit_ks" model="ir.ui.view">
+            <field name="name">sale.order.form.inherit.ks</field>
+            <field name="model">sale.order</field>
+            <field name="inherit_id" ref="sale.view_order_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='payment_term_id']" position="after">
+                    <field name="stock_decifient"/>
+                </xpath>
+                <xpath expr="//button[@name='action_confirm']" position="after">
+                    <button
+                        name="mail_to_3pl"
+                        string="Mail to 3PL"
+                        invisible="mail_count != 0 or not stock_decifient"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-envelope">
+                    </button>
+                    <button
+                        name="mail_to_3pl"
+                        string="Mail to Account Manager"
+                        invisible="mail_count != 1 or not stock_decifient"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-envelope">
+                    </button>
+                </xpath>
+           </field>
+        </record>
+    </data>
+</odoo>

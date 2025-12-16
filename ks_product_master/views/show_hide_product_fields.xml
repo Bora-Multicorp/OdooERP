@@ -1,0 +1,29 @@
+<odoo>
+    <data>
+        <record id="view_show_hide_category_fields" model="ir.ui.view">
+            <field name="name">product.show.hide.category.fields</field>
+            <field name="model">product.template</field>
+            <field name="inherit_id" ref="product.product_template_only_form_view"/>
+            <field name="arch" type="xml">
+                <xpath expr="//group[@name='group_standard_price']" position="inside">
+                    <field name="part_number"
+                           invisible="categ_id != %(ks_product_master.product_category_type_printers)d"/>
+                </xpath>
+                <xpath expr="//group[@name='group_standard_price']" position="inside">
+                    <field name="model_number_id" context="{'no_create_edit': True}"
+                           invisible="categ_id not in (%(ks_product_master.product_category_type_toner_inks)d, %(ks_product_master.product_category_type_laptop)d)"/>
+                </xpath>
+                <xpath expr="//group[@name='group_standard_price']" position="inside">
+                    <field name="part_code"
+                           invisible="categ_id not in (%(ks_product_master.product_category_type_apple_laptops)d, %(ks_product_master.product_category_type_tablet)d, %(ks_product_master.product_category_type_apple_imac)d, %(ks_product_master.product_category_type_harddisk)d, %(ks_product_master.product_category_type_mobile)d, %(ks_product_master.product_category_type_accessory)d)"/>
+                    <field name="accessory_group" context="{'no_create_edit': True}"
+                           invisible="categ_id != %(ks_product_master.product_category_type_accessory)d"/>
+                    <field name="specs_made" context="{'no_create_edit': True}"
+                           invisible="categ_id not in (%(ks_product_master.product_category_type_mobile)d, %(ks_product_master.product_category_type_tablet)d)"/>
+                    <field name="made_country" context="{'no_create_edit': True}"
+                           invisible="categ_id not in (%(ks_product_master.product_category_type_mobile)d, %(ks_product_master.product_category_type_tablet)d, %(ks_product_master.product_category_type_accessory)d)"/>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>

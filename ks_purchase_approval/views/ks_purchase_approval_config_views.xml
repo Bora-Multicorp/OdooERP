@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Configuration Form View -->
+    <record id="ks_purchase_approval_config_form_view" model="ir.ui.view">
+        <field name="name">ks.purchase.approval.config.form</field>
+        <field name="model">ks.purchase.approval.config</field>
+        <field name="arch" type="xml">
+            <form string="Purchase Approval Configuration">
+                <sheet>
+                    <div class="oe_title">
+                        <h1>Purchase Order Approval Configuration</h1>
+                    </div>
+                    <group>
+                        <field name="company_id" groups="base.group_multi_company"/>
+                        <field name="active"/>
+                    </group>
+                    <notebook>
+                        <page string="Confirmation Approvers" name="confirm_approvers">
+                            <group string="Approvers for PO Confirmation">
+                                <group>
+                                    <field name="ks_confirm_pm1_id" 
+                                           options="{'no_create': True}"
+                                           domain="[('share', '=', False)]"/>
+                                </group>
+                                <group>
+                                    <field name="ks_confirm_pm2_id" 
+                                           options="{'no_create': True}"
+                                           domain="[('share', '=', False)]"/>
+                                </group>
+                            </group>
+                            <div class="alert alert-info" role="alert">
+                                <strong>Note:</strong> Both PM1 and PM2 must approve for a Purchase Order to be confirmed.
+                            </div>
+                        </page>
+                        <page string="Update Approvers" name="update_approvers">
+                            <group string="Approvers for PO Update Requests">
+                                <group>
+                                    <field name="ks_update_pm1_id" 
+                                           options="{'no_create': True}"
+                                           domain="[('share', '=', False)]"/>
+                                </group>
+                                <group>
+                                    <field name="ks_update_pm2_id" 
+                                           options="{'no_create': True}"
+                                           domain="[('share', '=', False)]"/>
+                                </group>
+                            </group>
+                            <div class="alert alert-info" role="alert">
+                                <strong>Note:</strong> Both PM1 and PM2 must approve for a user to edit a confirmed PO.
+                            </div>
+                        </page>
+                        <page string="Cancel Approvers" name="cancel_approvers">
+                            <group string="Approvers for PO Cancellation Requests">
+                                <group>
+                                    <field name="ks_cancel_pm1_id" 
+                                           options="{'no_create': True}"
+                                           domain="[('share', '=', False)]"/>
+                                </group>
+                                <group>
+                                    <field name="ks_cancel_pm2_id" 
+                                           options="{'no_create': True}"
+                                           domain="[('share', '=', False)]"/>
+                                </group>
+                            </group>
+                            <div class="alert alert-info" role="alert">
+                                <strong>Note:</strong> Both PM1 and PM2 must approve for a Purchase Order to be cancelled.
+                            </div>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Configuration Tree View -->
+    <record id="ks_purchase_approval_config_tree_view" model="ir.ui.view">
+        <field name="name">ks.purchase.approval.config.tree</field>
+        <field name="model">ks.purchase.approval.config</field>
+        <field name="arch" type="xml">
+            <list string="Purchase Approval Configurations">
+                <field name="company_id" groups="base.group_multi_company"/>
+                <field name="ks_confirm_pm1_id"/>
+                <field name="ks_confirm_pm2_id"/>
+                <field name="ks_update_pm1_id"/>
+                <field name="ks_update_pm2_id"/>
+                <field name="ks_cancel_pm1_id"/>
+                <field name="ks_cancel_pm2_id"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Configuration Action -->
+    <record id="ks_purchase_approval_config_action" model="ir.actions.act_window">
+        <field name="name">Approval Configuration</field>
+        <field name="res_model">ks.purchase.approval.config</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Configure Purchase Order Approval Workflow
+            </p>
+            <p>
+                Set up PM1 and PM2 approvers for:
+                <ul>
+                    <li>PO Confirmation</li>
+                    <li>PO Update Requests</li>
+                    <li>PO Cancellation Requests</li>
+                </ul>
+            </p>
+        </field>
+    </record>
+
+    <!-- Menu Items -->
+    <menuitem id="menu_ks_purchase_approval_config"
+              name="Approval Configuration"
+              parent="purchase.menu_purchase_config"
+              action="ks_purchase_approval_config_action"
+              sequence="5"
+              groups="purchase.group_purchase_manager"/>
+</odoo>
+

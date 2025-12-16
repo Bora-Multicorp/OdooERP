@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="ks_approve_confirmation_reason_wizard_form_view" model="ir.ui.view">
+        <field name="name">ks.approve.confirmation.reason.wizard.form</field>
+        <field name="model">ks.approve.confirmation.reason.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Approve Confirmation">
+                <group>
+                    <field name="ks_purchase_order_id" readonly="1"/>
+                    <field name="ks_reason" 
+                           placeholder="Please enter a reason for confirmation (required)..."
+                           required="1"/>
+                </group>
+                <footer>
+                    <button name="action_submit_approval" 
+                            string="Approve" 
+                            type="object" 
+                            class="btn-primary"/>
+                    <button string="Cancel" 
+                            class="btn-secondary" 
+                            special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>
+

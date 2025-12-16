@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Combined RFQ/PO Send Wizard (Email + WhatsApp) -->
+    <record id="ks_rfq_send_wizard_form_view" model="ir.ui.view">
+        <field name="name">ks.rfq.send.wizard.form</field>
+        <field name="model">ks.rfq.send.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Send RFQ/PO">
+                <sheet>
+                    <group>
+                        <field name="purchase_order_id" readonly="1"/>
+                        <field name="partner_id" readonly="1"/>
+                        <field name="is_rfq" invisible="1"/>
+                        <field name="template_id" invisible="1"/>
+                    </group>
+                    
+                    <notebook>
+                        <!-- Email Tab -->
+                        <page string="Email" name="email_tab">
+                            <group>
+                                <field name="email_to" placeholder="vendor@example.com"/>
+                                <field name="email_subject"/>
+                            </group>
+                            <group>
+                                <field name="email_body" widget="html"/>
+                            </group>
+                            <group>
+                                <field name="attachment_ids" widget="many2many_binary" string="PDF Attachment"/>
+                            </group>
+                        </page>
+                        
+                        <!-- WhatsApp Tab -->
+                        <page string="WhatsApp" name="whatsapp_tab">
+                            <div class="alert alert-warning" role="alert" invisible="has_mobile">
+                                <strong>⚠️ Warning:</strong> No mobile number found for this vendor. 
+                                WhatsApp message cannot be sent. Please add a mobile number to the vendor's contact.
+                            </div>
+                            <div class="alert alert-success" role="alert" invisible="not has_mobile">
+                                <strong>✓ Ready:</strong> WhatsApp message will be sent to <field name="mobile" readonly="1" class="oe_inline"/>
+                            </div>
+                            <group>
+                                <field name="has_mobile" invisible="1"/>
+                                <field name="mobile" placeholder="+1234567890" invisible="not has_mobile"/>
+                                <field name="send_whatsapp" invisible="not has_mobile"/>
+                            </group>
+                            <group invisible="not has_mobile">
+                                <field name="whatsapp_message" 
+                                       placeholder="WhatsApp message content..."
+                                       widget="text"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                <footer>
+                    <button name="action_send_email_and_whatsapp" 
+                            string="Send Email &amp; WhatsApp" 
+                            type="object" 
+                            class="btn-primary"
+                            invisible="not has_mobile or not send_whatsapp"/>
+                    <button name="action_send_email_only" 
+                            string="Send Email Only" 
+                            type="object" 
+                            class="btn-primary"
+                            invisible="has_mobile and send_whatsapp"/>
+                    <button name="action_send_whatsapp_only" 
+                            string="Send WhatsApp Only" 
+                            type="object" 
+                            class="btn-success"
+                            invisible="not has_mobile"/>
+                    <button string="Cancel" 
+                            class="btn-secondary" 
+                            special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action to open the combined wizard -->
+    <record id="action_ks_rfq_send_wizard" model="ir.actions.act_window">
+        <field name="name">Send RFQ/PO</field>
+        <field name="res_model">ks.rfq.send.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="ks_rfq_send_wizard_form_view"/>
+        <field name="target">new</field>
+    </record>
+</odoo>
