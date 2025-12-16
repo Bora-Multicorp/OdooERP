@@ -5,7 +5,7 @@
     'category': 'Uncategorized',
     'version': '0.1',
     # any module necessary for this one to work correctly
-    'depends': ['base', 'product', 'stock', 'bus', 'ks_product_dimension', 'ks_product_master', 'ks_product_multi_company'],
+    'depends': ['base', 'product', 'stock', 'bus', 'product_dimension', 'ks_product_master', 'product_multi_company'],
     # always loaded
     'data': [
         'security/ir.model.access.csv',
