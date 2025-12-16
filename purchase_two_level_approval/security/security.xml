@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Module Category for PO Two Level Approval -->
+        <record id="module_category_po_approval" model="ir.module.category">
+            <field name="name">PO Approval</field>
+            <field name="description">Helps manage two-level purchase order approval workflow</field>
+            <field name="sequence">50</field>
+        </record>
+
+        <!-- 
+        =============================================
+        SECURITY GROUPS FOR PO TWO LEVEL APPROVAL
+        =============================================
+        
+        Group Hierarchy:
+        1. Normal User - Can create PO, cannot confirm when pending approval
+        2. PM User (Project Manager/Approver) - Can approve, edit pending POs, direct confirm
+        3. A/C Head - Has all PM permissions + full confirmation rights
+        -->
+
+        <!-- Normal User Group - Basic PO access -->
+        <record id="group_po_normal_user" model="res.groups">
+            <field name="name">Normal User</field>
+            <field name="category_id" ref="module_category_po_approval"/>
+            <field name="implied_ids" eval="[(4, ref('purchase.group_purchase_user'))]"/>
+            <field name="comment">Normal users can create Purchase Orders but cannot edit or confirm when approval is pending.</field>
+        </record>
+
+        <!-- PM User Group - Project Manager / Approver -->
+        <record id="group_po_pm_user" model="res.groups">
+            <field name="name">PM User (Approver)</field>
+            <field name="category_id" ref="module_category_po_approval"/>
+            <field name="implied_ids" eval="[(4, ref('group_po_normal_user'))]"/>
+            <field name="comment">PM users can approve POs, directly confirm POs, and edit POs when approval is pending.</field>
+        </record>
+
+        <!-- A/C Head Group - Full approval rights -->
+        <record id="group_po_ac_head" model="res.groups">
+            <field name="name">A/C Head</field>
+            <field name="category_id" ref="module_category_po_approval"/>
+            <field name="implied_ids" eval="[(4, ref('group_po_pm_user'))]"/>
+            <field name="comment">A/C Head has all PM permissions plus full confirmation rights.</field>
+        </record>
+    </data>
+
+    <data noupdate="1">
+        <!-- 
+        =============================================
+        RECORD RULES FOR PO LOCKING
+        =============================================
+        
+        These rules control who can edit POs in different states:
+        - Normal users cannot edit POs in 'pending_pm_approval' state
+        - PM users and A/C Head can edit POs in any state
+        -->
+
+        <!-- Rule: Normal users cannot write to POs pending PM approval -->
+        <record id="po_normal_user_write_rule" model="ir.rule">
+            <field name="name">Normal User: Cannot edit PO pending approval</field>
+            <field name="model_id" ref="purchase.model_purchase_order"/>
+            <field name="domain_force">[('state', '!=', 'pending_pm_approval')]</field>
+            <field name="groups" eval="[(4, ref('group_po_normal_user'))]"/>
+            <field name="perm_read" eval="1"/>
+            <field name="perm_write" eval="1"/>
+            <field name="perm_create" eval="1"/>
+            <field name="perm_unlink" eval="0"/>
+        </record>
+
+        <!-- Rule: PM users can edit POs in any state -->
+        <record id="po_pm_user_full_access_rule" model="ir.rule">
+            <field name="name">PM User: Full edit access to POs</field>
+            <field name="model_id" ref="purchase.model_purchase_order"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('group_po_pm_user'))]"/>
+            <field name="perm_read" eval="1"/>
+            <field name="perm_write" eval="1"/>
+            <field name="perm_create" eval="1"/>
+            <field name="perm_unlink" eval="1"/>
+        </record>
+
+        <!-- Rule: A/C Head full access -->
+        <record id="po_ac_head_full_access_rule" model="ir.rule">
+            <field name="name">A/C Head: Full access to POs</field>
+            <field name="model_id" ref="purchase.model_purchase_order"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('group_po_ac_head'))]"/>
+            <field name="perm_read" eval="1"/>
+            <field name="perm_write" eval="1"/>
+            <field name="perm_create" eval="1"/>
+            <field name="perm_unlink" eval="1"/>
+        </record>
+
+        <!-- Rule: Normal users cannot write to PO lines when PO is pending approval -->
+        <record id="po_line_normal_user_write_rule" model="ir.rule">
+            <field name="name">Normal User: Cannot edit PO lines pending approval</field>
+            <field name="model_id" ref="purchase.model_purchase_order_line"/>
+            <field name="domain_force">[('order_id.state', '!=', 'pending_pm_approval')]</field>
+            <field name="groups" eval="[(4, ref('group_po_normal_user'))]"/>
+            <field name="perm_read" eval="1"/>
+            <field name="perm_write" eval="1"/>
+            <field name="perm_create" eval="1"/>
+            <field name="perm_unlink" eval="0"/>
+        </record>
+
+        <!-- Rule: PM users can edit PO lines in any state -->
+        <record id="po_line_pm_user_full_access_rule" model="ir.rule">
+            <field name="name">PM User: Full edit access to PO lines</field>
+            <field name="model_id" ref="purchase.model_purchase_order_line"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('group_po_pm_user'))]"/>
+            <field name="perm_read" eval="1"/>
+            <field name="perm_write" eval="1"/>
+            <field name="perm_create" eval="1"/>
+            <field name="perm_unlink" eval="1"/>
+        </record>
+    </data>
+</odoo>
+

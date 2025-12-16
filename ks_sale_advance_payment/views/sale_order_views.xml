@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_order_form_inherit_advance_payment" model="ir.ui.view">
+        <field name="name">sale.order.form.advance.payment</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+            <button id="create_invoice" position="after">
+                <button name="action_create_advance_payment"
+                        type="object"
+                        string="Create Advance Payment"
+                        class="btn-secondary"
+                        invisible="state not in ('sale', 'sent')"
+                        help="Create a payment directly from this sale order without creating an invoice"/>
+            </button>
+        </field>
+    </record>
+</odoo>
+

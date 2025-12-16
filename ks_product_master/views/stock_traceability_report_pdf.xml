@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Extend the PDF report template to add IMEI column headers -->
+    <template id="report_stock_body_print_imei" inherit_id="stock.report_stock_body_print">
+        <!-- Add IMEI 1 and IMEI 2 headers after Quantity column -->
+        <xpath expr="//th[text()='Quantity']" position="after">
+            <th class="o_report_line_header">IMEI 1</th>
+            <th class="o_report_line_header">IMEI 2</th>
+        </xpath>
+
+        <!-- Add IMEI data cells after the columns loop -->
+
+        <xpath expr="//tr[hasclass('o_report_header')]" position="inside">
+            <th class="o_report_line_header">IMEI</th>
+        </xpath>
+    </template>
+
+</odoo>

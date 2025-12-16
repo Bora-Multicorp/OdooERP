@@ -1,0 +1,13 @@
+<odoo>
+    <!-- Operational Team Group -->
+    <record id="group_operational_team" model="res.groups">
+        <field name="name">Operational Team</field>
+        <field name="category_id" ref="base.module_category_usability"/>
+    </record>
+
+    <!-- Accounts Team Group -->
+    <record id="group_accounts_team" model="res.groups">
+        <field name="name">Accounts Team</field>
+        <field name="category_id" ref="base.module_category_usability"/>
+    </record>
+</odoo>
