@@ -149,11 +149,11 @@
                 <xpath expr="//div[@name='button_box']" position="before">
                     <!--                <xpath expr="//widget[@name='web_ribbon']" position="replace">-->
                     <widget name="web_ribbon"
-                            title="Non Activated"
+                            title="Non Approved"
                             bg_color="text-bg-danger"
                             invisible="active"/>
                     <widget name="web_ribbon"
-                            title="Activated"
+                            title="Approved"
                             bg_color="text-bg-success"
                             invisible="not active"/>
                 </xpath>
