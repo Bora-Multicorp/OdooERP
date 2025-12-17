@@ -206,6 +206,20 @@ class StockMoveLine(models.Model):
 class StockPickingInherit(models.Model):
     _inherit = 'stock.picking'
 
+    specs_made = fields.Many2one(
+        'res.country',
+        string='Spec Made For',
+        help='Specification made for a specific country.',
+        tracking=True
+    )
+
+    made_country = fields.Many2one(
+        'res.country',
+        string='Made In',
+        help='Country where the product is manufactured',
+        tracking=True
+    )
+
     def button_validate(self):
         packaging_category = self.env.ref('ks_product_master.product_category_type_packaging_material',
                                           raise_if_not_found=False)
