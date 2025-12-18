@@ -6,3 +6,4 @@ access_ks_reject_reason_wizard_user,ks.reject.reason.wizard.user,model_ks_reject
 access_ks_rfq_send_wizard_user,ks.rfq.send.wizard.user,model_ks_rfq_send_wizard,purchase.group_purchase_user,1,1,1,1
 access_ks_approval_confirmation_wizard_user,ks.approval.confirmation.wizard.user,model_ks_approval_confirmation_wizard,purchase.group_purchase_user,1,1,1,1
 access_ks_approve_confirmation_reason_wizard_user,ks.approve.confirmation.reason.wizard.user,model_ks_approve_confirmation_reason_wizard,purchase.group_purchase_user,1,1,1,1
+access_ks_approve_update_reason_wizard_user,ks.approve.update.reason.wizard.user,model_ks_approve_update_reason_wizard,purchase.group_purchase_user,1,1,1,1
