@@ -420,7 +420,7 @@ class PurchaseOrder(models.Model):
         
         # Log in chatter with actual PM names
         self.message_post(
-            body=_("Confirmation request submitted by %s. Waiting for approval from: %s, %s.") % (
+            body=_("Confirmation request submitted by %s. Waiting for approval from: PM1 - %s,  PM2 - %s.") % (
                 self.env.user.name,
                 pm1_name,
                 pm2_name,
@@ -562,7 +562,7 @@ class PurchaseOrder(models.Model):
         })
         
         self.message_post(
-            body=_("Confirmation rejected by %s.<br/><b>Reason:</b> %s") % (current_user.name, reason),
+            body=_("Confirmation rejected by %s. Reason: %s") % (current_user.name, reason),
             message_type='notification',
             subtype_xmlid='mail.mt_note',
         )
@@ -585,7 +585,11 @@ class PurchaseOrder(models.Model):
         self.ensure_one()
         if not reason:
             raise UserError(_("Update request reason is required."))
-        
+
+        config = self._get_approval_config()
+        pm1_name = config.ks_update_pm1_id.name if config.ks_update_pm1_id else 'PM1'
+        pm2_name = config.ks_update_pm2_id.name if config.ks_update_pm2_id else 'PM2'
+
         self.write({
             'state': 'update_requested',
             'ks_update_request_reason': reason,
@@ -597,15 +601,17 @@ class PurchaseOrder(models.Model):
         })
         
         self.message_post(
-            body=_("Update request submitted by %s.<br/><b>Reason:</b> %s") % (
-                self.env.user.name, reason
+            body=_("Update request submitted by %s. Waiting for approval from: PM1 - %s, PM2 - %s. Reason: %s") % (
+                self.env.user.name,
+                pm1_name,
+                pm2_name,
+                reason,
             ),
             message_type='notification',
             subtype_xmlid='mail.mt_note',
         )
         
         # Subscribe PM users
-        config = self._get_approval_config()
         self.message_subscribe(partner_ids=[
             config.ks_update_pm1_id.partner_id.id,
             config.ks_update_pm2_id.partner_id.id,
@@ -618,16 +624,51 @@ class PurchaseOrder(models.Model):
         self.ensure_one()
         if self.state != 'update_requested':
             raise UserError(_("Can only approve update requests in 'Update Requested' state."))
-        
         config = self._get_approval_config()
         current_user = self.env.user
-        
+
+        # Authorization / duplicate checks remain the same
+        if current_user == config.ks_update_pm1_id and self.ks_update_pm1_approved:
+            raise UserError(_("You have already approved this update request."))
+        if current_user == config.ks_update_pm2_id and self.ks_update_pm2_approved:
+            raise UserError(_("You have already approved this update request."))
+        if current_user not in (config.ks_update_pm1_id | config.ks_update_pm2_id):
+            raise UserError(_("You are not authorized to approve this update request."))
+
+        # Open reason popup (wizard)
+        try:
+            view_id = self.env.ref('ks_purchase_approval.ks_approve_update_reason_wizard_form_view').id
+        except ValueError:
+            view_id = False
+        return {
+            'name': _('Approve Update'),
+            'type': 'ir.actions.act_window',
+            'res_model': 'ks.approve.update.reason.wizard',
+            'view_mode': 'form',
+            'view_id': view_id,
+            'target': 'new',
+            'context': {
+                'default_ks_purchase_order_id': self.id,
+            },
+        }
+
+    def ks_do_approve_update(self, reason):
+        """Execute update approval with reason (called from wizard)"""
+        self.ensure_one()
+        if not reason:
+            raise UserError(_("Reason for approval is required."))
+        if self.state != 'update_requested':
+            raise UserError(_("Can only approve update requests in 'Update Requested' state."))
+
+        config = self._get_approval_config()
+        current_user = self.env.user
+
         if current_user == config.ks_update_pm1_id:
             if self.ks_update_pm1_approved:
                 raise UserError(_("You have already approved this update request."))
             self.ks_update_pm1_approved = True
             self.message_post(
-                body=_("Update approved by PM1: %s") % current_user.name,
+                body=_("Update approved by PM1: %s. Reason: %s") % (current_user.name, reason),
                 message_type='notification',
                 subtype_xmlid='mail.mt_note',
             )
@@ -636,7 +677,7 @@ class PurchaseOrder(models.Model):
                 raise UserError(_("You have already approved this update request."))
             self.ks_update_pm2_approved = True
             self.message_post(
-                body=_("Update approved by PM2: %s") % current_user.name,
+                body=_("Update approved by PM2: %s. Reason: %s") % (current_user.name, reason),
                 message_type='notification',
                 subtype_xmlid='mail.mt_note',
             )
@@ -692,7 +733,7 @@ class PurchaseOrder(models.Model):
         })
         
         self.message_post(
-            body=_("Update request rejected by %s.<br/><b>Reason:</b> %s") % (current_user.name, reason),
+            body=_("Update request rejected by %s. Reason: %s") % (current_user.name, reason),
             message_type='notification',
             subtype_xmlid='mail.mt_note',
         )
@@ -775,7 +816,7 @@ class PurchaseOrder(models.Model):
         })
         
         self.message_post(
-            body=_("Cancellation request submitted by %s.<br/><b>Reason:</b> %s") % (
+            body=_("Cancellation request submitted by %s. \n\n Reason: %s") % (
                 self.env.user.name, reason
             ),
             message_type='notification',
@@ -867,7 +908,7 @@ class PurchaseOrder(models.Model):
         })
         
         self.message_post(
-            body=_("Cancellation request rejected by %s.<br/><b>Reason:</b> %s") % (current_user.name, reason),
+            body=_("Cancellation request rejected by %s. Reason: %s") % (current_user.name, reason),
             message_type='notification',
             subtype_xmlid='mail.mt_note',
         )

@@ -33,6 +33,7 @@
         'wizard/ks_whatsapp_rfq_wizard_views.xml',
         'wizard/ks_approval_confirmation_wizard_views.xml',
         'wizard/ks_approve_confirmation_reason_wizard_views.xml',
+        'wizard/ks_approve_update_reason_wizard_views.xml',
         'views/ks_purchase_approval_config_views.xml',
         'views/purchase_order_views.xml',
     ],
