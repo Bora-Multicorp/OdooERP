@@ -13,9 +13,11 @@
                         <field name="user_ids_according_to_user_selection" invisible="1"/>
                         <field name="approver1_users" widget="many2many_tags"
                                domain="[('id', 'not in', approver2_users)]"
+                               readonly="1"
                                options="{'color_field': 'color', 'no_edit': True, 'no_create': True, 'no_open': True}"/>
                         <field name="approver2_users" widget="many2many_tags"
                                domain="[('id', 'not in', approver1_users)]"
+                               readonly="1"
                                options="{'color_field': 'color', 'no_edit': True, 'no_create': True, 'no_open': True}"/>
                     </group>
                 </sheet>
