@@ -135,7 +135,6 @@ class CustomContact(models.Model):
 
     @api.constrains('is_customer', 'is_vendor')
     def _check_customer_vendor_exclusive(self):
-        """To check is vendor or customer"""
         for rec in self:
             if rec.is_customer and rec.is_vendor:
                 raise ValidationError(

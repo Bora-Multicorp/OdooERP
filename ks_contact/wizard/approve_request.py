@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from odoo import api, fields, models
+from odoo import api, fields, models, _
 
 class ApproveRequestWizard(models.TransientModel):
     _name = 'approve.request.wizard'
@@ -14,18 +14,33 @@ class ApproveRequestWizard(models.TransientModel):
         approval = self.kyc_approval_id
         current_user = self.env.user
 
-        # Find the matching approval line for the currently assigned user
+        # Find the matching approval line for the current user (parallel approval - any pending approver can act)
         approval_line = approval.approval_users_ids.filtered(
             lambda l: l.user_id == current_user and not l.state
         )
 
         if approval_line:
+            # Determine approval level based on sequence
+            approval_level = "Approval Level 1" if approval_line.sequence == 1 else "Approval Level 2"
+            
             approval_line.sudo().write({
                 'state': 'approve',
                 'remark': self.remark,
                 'action_date': fields.Datetime.now(),
             })
-            # Recompute the next approver
+            
+            # Post chatter message with approval level information
+            approval.message_post(
+                body=_("%s approved by %s -Remark:- %s") % (
+                    approval_level,
+                    current_user.name,
+                    self.remark
+                ),
+                message_type='notification',
+                subtype_xmlid='mail.mt_note',
+            )
+            
+            # Update assigned_to for backward compatibility (next pending approver)
             approval.sudo()._update_assigned_to()
 
         return {'type': 'ir.actions.act_window_close'}

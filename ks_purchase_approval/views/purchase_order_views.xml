@@ -41,9 +41,11 @@
                 to open our combined Email + WhatsApp wizard instead.
             -->
 
-            <!-- Hide original Cancel button for normal users when PO is confirmed -->
+            <!-- Hide original Cancel button based on state and user type -->
             <xpath expr="//button[@name='button_cancel']" position="attributes">
-                <attribute name="invisible">state == 'purchase' and ks_is_normal_user</attribute>
+                <attribute name="invisible">
+                    state in ('cancel', 'draft') or (ks_is_normal_user and state in ('pending_approval', 'update_requested', 'cancel_requested'))
+                </attribute>
             </xpath>
 
             <!-- Hide original Unlock button - we have our own controlled version -->
@@ -143,42 +145,42 @@
             </xpath>
 
             <!-- Add Approval Info Section in Other Information tab -->
-            <xpath expr="//page[@name='purchase_delivery_invoice']//group[@name='other_info']" position="after">
-                <group name="ks_approval_info" string="Approval Information" 
-                       invisible="state not in ('pending_approval', 'update_requested', 'cancel_requested', 'purchase')">
-                    <!-- Confirmation Request Info -->
-                    <group string="Confirmation Request" 
-                           invisible="state != 'pending_approval'">
-                        <field name="ks_confirm_request_user_id" readonly="1"/>
-                        <field name="ks_confirm_request_date" readonly="1"/>
-                        <field name="ks_confirm_pm1_approved" readonly="1" widget="boolean" string="PM1 Approved"/>
-                        <field name="ks_confirm_pm2_approved" readonly="1" widget="boolean" string="PM2 Approved"/>
-                    </group>
-                    
-                    <!-- Update Request Info -->
-                    <group string="Update Request" 
-                           invisible="state != 'update_requested' and not ks_update_approved">
-                        <field name="ks_update_request_user_id" readonly="1"/>
-                        <field name="ks_update_request_date" readonly="1"/>
-                        <field name="ks_update_request_reason" readonly="1"/>
-                        <field name="ks_update_pm1_approved" readonly="1" widget="boolean" string="PM1 Approved"/>
-                        <field name="ks_update_pm2_approved" readonly="1" widget="boolean" string="PM2 Approved"/>
-                        <field name="ks_update_approved" readonly="1" widget="boolean" 
-                               invisible="state != 'purchase'"
-                               string="Currently Editable"/>
-                    </group>
-                    
-                    <!-- Cancel Request Info -->
-                    <group string="Cancel Request" 
-                           invisible="state != 'cancel_requested'">
-                        <field name="ks_cancel_request_user_id" readonly="1"/>
-                        <field name="ks_cancel_request_date" readonly="1"/>
-                        <field name="ks_cancel_request_reason" readonly="1"/>
-                        <field name="ks_cancel_pm1_approved" readonly="1" widget="boolean" string="PM1 Approved"/>
-                        <field name="ks_cancel_pm2_approved" readonly="1" widget="boolean" string="PM2 Approved"/>
-                    </group>
-                </group>
-            </xpath>
+<!--            <xpath expr="//page[@name='purchase_delivery_invoice']//group[@name='other_info']" position="after">-->
+<!--                <group name="ks_approval_info" string="Approval Information" -->
+<!--                       invisible="state not in ('pending_approval', 'update_requested', 'cancel_requested', 'purchase')">-->
+<!--                    &lt;!&ndash; Confirmation Request Info &ndash;&gt;-->
+<!--                    <group string="Confirmation Request" -->
+<!--                           invisible="state != 'pending_approval'">-->
+<!--                        <field name="ks_confirm_request_user_id" readonly="1"/>-->
+<!--                        <field name="ks_confirm_request_date" readonly="1"/>-->
+<!--                        <field name="ks_confirm_pm1_approved" readonly="1" widget="boolean" string="PM1 Approved"/>-->
+<!--                        <field name="ks_confirm_pm2_approved" readonly="1" widget="boolean" string="PM2 Approved"/>-->
+<!--                    </group>-->
+<!--                    -->
+<!--                    &lt;!&ndash; Update Request Info &ndash;&gt;-->
+<!--                    <group string="Update Request" -->
+<!--                           invisible="state != 'update_requested' and not ks_update_approved">-->
+<!--                        <field name="ks_update_request_user_id" readonly="1"/>-->
+<!--                        <field name="ks_update_request_date" readonly="1"/>-->
+<!--                        <field name="ks_update_request_reason" readonly="1"/>-->
+<!--                        <field name="ks_update_pm1_approved" readonly="1" widget="boolean" string="PM1 Approved"/>-->
+<!--                        <field name="ks_update_pm2_approved" readonly="1" widget="boolean" string="PM2 Approved"/>-->
+<!--                        <field name="ks_update_approved" readonly="1" widget="boolean" -->
+<!--                               invisible="state != 'purchase'"-->
+<!--                               string="Currently Editable"/>-->
+<!--                    </group>-->
+<!--                    -->
+<!--                    &lt;!&ndash; Cancel Request Info &ndash;&gt;-->
+<!--                    <group string="Cancel Request" -->
+<!--                           invisible="state != 'cancel_requested'">-->
+<!--                        <field name="ks_cancel_request_user_id" readonly="1"/>-->
+<!--                        <field name="ks_cancel_request_date" readonly="1"/>-->
+<!--                        <field name="ks_cancel_request_reason" readonly="1"/>-->
+<!--                        <field name="ks_cancel_pm1_approved" readonly="1" widget="boolean" string="PM1 Approved"/>-->
+<!--                        <field name="ks_cancel_pm2_approved" readonly="1" widget="boolean" string="PM2 Approved"/>-->
+<!--                    </group>-->
+<!--                </group>-->
+<!--            </xpath>-->
 
             <!-- Make order lines readonly based on ks_can_edit -->
             <xpath expr="//field[@name='order_line']" position="attributes">

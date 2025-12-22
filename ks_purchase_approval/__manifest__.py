@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 {
-    'name': 'KS Purchase Order Multi-Level Approval newss',
+    'name': 'KS Purchase Order Multi-Level Approval',
     'version': '18.0.1.0.0',
     'summary': 'Multi-level approval workflow for Purchase Orders with PM1 & PM2 approvers',
     'description': """

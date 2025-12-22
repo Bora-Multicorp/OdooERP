@@ -11,10 +11,11 @@
                         <button name="confirm_submit_form" string="Submit for Approval" type="object"
                                 class="oe_highlight"
                                 invisible="state != 'draft' or is_approved"/>
+                        <field name="has_pending_approval" invisible="1"/>
                         <button name="%(approve_request_wizard_action)d" string="Approve" type="action"
-                                invisible="state in ('draft', 'confirmed', 'rejected', 'expired') or assigned_to != uid or is_approved"/>
+                                invisible="state in ('draft', 'confirmed', 'rejected', 'expired') or not has_pending_approval or is_approved"/>
                         <button name="%(reject_request_wizard_action)d" string="Reject" type="action"
-                                invisible="state in ('draft', 'confirmed', 'rejected', 'expired') or assigned_to != uid or is_approved"/>
+                                invisible="state in ('draft', 'confirmed', 'rejected', 'expired') or not has_pending_approval or is_approved"/>
                         <button name="approve_by_manager" string="Approval By Manager" type="object"
                                 class="oe_highlight"
                                 confirm="Do you want to Approve the request?" invisible="1"/>

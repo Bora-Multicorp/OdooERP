@@ -5,47 +5,76 @@
         <field name="name">vendor.approval.config.view.form</field>
         <field name="model">vendor.approval.config</field>
         <field name="arch" type="xml">
-            <form string="Vendor Approval Settings" class="oe_form_configuration o_base_settings" create="false">
+            <form string="Vendor Approval Settings">
                 <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="company_id" options="{'no_create': True, 'no_open': True}"/>
+                        </h1>
+                    </div>
                     <group>
-                        <field name="existing_user_ids" invisible="1"/>
-                        <field name="user_id" options="{'no_create': True, 'no_create_edit': True}" domain="[('id', 'not in', existing_user_ids)]"/>
-                        <field name="default_approver"/>
+                        <group string="Approval Level 1">
+                            <field name="approval_level_1_user_id" 
+                                   options="{'no_create': True}"
+                                   required="1"
+                                   domain="[('id', '!=', approval_level_2_user_id), ('share', '=', False)]"/>
+                            <div class="alert alert-info" role="alert">
+                                <strong>Approval Level 1:</strong> First level approver for vendor KYC requests.
+                                This user cannot be assigned to Approval Level 2.
+                            </div>
+                        </group>
+                        <group string="Approval Level 2">
+                            <field name="approval_level_2_user_id" 
+                                   options="{'no_create': True}"
+                                   required="1"
+                                   domain="[('id', '!=', approval_level_1_user_id), ('share', '=', False)]"/>
+                            <div class="alert alert-info" role="alert">
+                                <strong>Approval Level 2:</strong> Second level approver for vendor KYC requests.
+                                This user cannot be assigned to Approval Level 1.
+                            </div>
+                        </group>
                     </group>
                 </sheet>
             </form>
         </field>
     </record>
+    
+    <!-- List View -->
     <record id="vendor_approval_config_view_list" model="ir.ui.view">
         <field name="name">vendor.approval.config.view.list</field>
         <field name="model">vendor.approval.config</field>
         <field name="arch" type="xml">
             <list string="Vendor Approval Settings">
-                <field name="sequence" widget="handle" class="o_data_cell_sequence"/>
-                   <field name="default_user" column_invisible="1"/>
-                <field name="user_id"   options="{'no_edit': True, 'no_create': True, 'no_open': True}"/>
-                <field name="default_approver"/>
+                <field name="company_id"/>
+                <field name="approval_level_1_user_id" 
+                       options="{'no_edit': True, 'no_create': True, 'no_open': True}"/>
+                <field name="approval_level_2_user_id" 
+                       options="{'no_edit': True, 'no_create': True, 'no_open': True}"/>
             </list>
         </field>
     </record>
 
-    <!-- Action -->
+    <!-- Action (Admin only) -->
     <record id="action_vendor_approval_config" model="ir.actions.act_window">
         <field name="name">Vendor Approval Settings</field>
         <field name="res_model">vendor.approval.config</field>
-        <!--<field name="view_id" ref="vendor_approval_config_view_form"/>-->
         <field name="view_mode">list,form</field>
+        <field name="groups_id" eval="[(4, ref('base.group_system'))]"/>
         <field name="target">current</field>
         <field name="help" type="html">
-            <p class="o_view_nocontent_smiling_face">Define your vendor approvers here.</p>
+            <p class="o_view_nocontent_smiling_face">Configure Vendor Approval Settings</p>
+            <p>
+                Set up Approval Level 1 and Approval Level 2 users for vendor KYC approval workflow.
+                Each level must have a different user assigned.
+            </p>
         </field>
     </record>
 
-    <!-- Menu item under Contacts > Configuration -->
+    <!-- Menu item under Contacts > Configuration (Admin only) -->
     <menuitem id="menu_vendor_approval_config"
-              name="Vendor Approval Users"
+              name="Vendor Approval Settings"
               parent="contacts.res_partner_menu_config"
               action="action_vendor_approval_config"
-              groups="base.user_admin"
+              groups="base.group_system"
               sequence="100"/>
 </odoo>
