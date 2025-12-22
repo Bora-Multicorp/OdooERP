@@ -44,7 +44,8 @@
             <!-- Hide original Cancel button based on state and user type -->
             <xpath expr="//button[@name='button_cancel']" position="attributes">
                 <attribute name="invisible">
-                    state in ('cancel', 'draft') or (ks_is_normal_user and state in ('pending_approval', 'update_requested', 'cancel_requested'))
+                    state in ('cancel', 'draft') or (ks_is_normal_user and state in ('pending_approval',
+                    'update_requested', 'cancel_requested', 'purchase', 'done'))
                 </attribute>
             </xpath>
 
@@ -52,21 +53,25 @@
             <xpath expr="//button[@name='button_unlock']" position="attributes">
                 <attribute name="invisible">1</attribute>
             </xpath>
+            <xpath expr="//button[@name='button_done']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+
 
             <!-- Add PM Approval Buttons and Custom Buttons -->
             <xpath expr="//button[@name='button_done']" position="before">
                 <!-- ====== PM USER BUTTONS ====== -->
-                
+
                 <!-- Approve Confirmation Button (PM Users only) -->
-                <button name="ks_action_approve_confirmation" 
+                <button name="ks_action_approve_confirmation"
                         type="object"
                         string="Approve Confirmation"
                         class="btn-success"
                         invisible="not ks_show_approve_confirm_button"
                         data-hotkey="v"/>
-                
+
                 <!-- Reject Confirmation Button (PM Users only) -->
-                <button name="ks_action_reject_confirmation" 
+                <button name="ks_action_reject_confirmation"
                         type="object"
                         string="Reject Confirmation"
                         class="btn-danger"
@@ -74,15 +79,15 @@
                         data-hotkey="r"/>
 
                 <!-- Approve Update Button (PM Users only) -->
-                <button name="ks_action_approve_update" 
+                <button name="ks_action_approve_update"
                         type="object"
                         string="Approve Update"
                         class="btn-success"
                         invisible="not ks_show_approve_update_button"
                         data-hotkey="v"/>
-                
+
                 <!-- Reject Update Button (PM Users only) -->
-                <button name="ks_action_reject_update" 
+                <button name="ks_action_reject_update"
                         type="object"
                         string="Reject Update"
                         class="btn-danger"
@@ -90,15 +95,15 @@
                         data-hotkey="r"/>
 
                 <!-- Approve Cancel Button (PM Users only) -->
-                <button name="ks_action_approve_cancel" 
+                <button name="ks_action_approve_cancel"
                         type="object"
                         string="Approve Cancel"
                         class="btn-success"
                         invisible="not ks_show_approve_cancel_button"
                         data-hotkey="v"/>
-                
+
                 <!-- Reject Cancel Button (PM Users only) -->
-                <button name="ks_action_reject_cancel" 
+                <button name="ks_action_reject_cancel"
                         type="object"
                         string="Reject Cancel"
                         class="btn-danger"
@@ -106,16 +111,16 @@
                         data-hotkey="r"/>
 
                 <!-- Unlock Button (PM Users only, when PO is locked/done) -->
-                <button name="button_unlock" 
-                        type="object" 
-                        string="Unlock" 
+                <button name="button_unlock"
+                        type="object"
+                        string="Unlock"
                         invisible="not ks_show_unlock_button"
                         data-hotkey="l"/>
 
                 <!-- ====== NORMAL USER BUTTONS ====== -->
 
                 <!-- Request Update Button (Normal Users only, when PO is confirmed) -->
-                <button name="ks_action_request_update" 
+                <button name="ks_action_request_update"
                         type="object"
                         string="Request Update"
                         class="btn-warning"
@@ -123,7 +128,7 @@
                         data-hotkey="u"/>
 
                 <!-- Request Cancel Button (Normal Users only, when PO is confirmed) -->
-                <button name="ks_action_request_cancel" 
+                <button name="ks_action_request_cancel"
                         type="object"
                         string="Request Cancel"
                         class="btn-danger"
@@ -131,7 +136,7 @@
                         data-hotkey="c"/>
 
                 <!-- Complete Update Button (Normal user who requested update, after approval) -->
-                <button name="ks_action_complete_update" 
+                <button name="ks_action_complete_update"
                         type="object"
                         string="Complete Update"
                         class="btn-primary"
@@ -145,42 +150,42 @@
             </xpath>
 
             <!-- Add Approval Info Section in Other Information tab -->
-<!--            <xpath expr="//page[@name='purchase_delivery_invoice']//group[@name='other_info']" position="after">-->
-<!--                <group name="ks_approval_info" string="Approval Information" -->
-<!--                       invisible="state not in ('pending_approval', 'update_requested', 'cancel_requested', 'purchase')">-->
-<!--                    &lt;!&ndash; Confirmation Request Info &ndash;&gt;-->
-<!--                    <group string="Confirmation Request" -->
-<!--                           invisible="state != 'pending_approval'">-->
-<!--                        <field name="ks_confirm_request_user_id" readonly="1"/>-->
-<!--                        <field name="ks_confirm_request_date" readonly="1"/>-->
-<!--                        <field name="ks_confirm_pm1_approved" readonly="1" widget="boolean" string="PM1 Approved"/>-->
-<!--                        <field name="ks_confirm_pm2_approved" readonly="1" widget="boolean" string="PM2 Approved"/>-->
-<!--                    </group>-->
-<!--                    -->
-<!--                    &lt;!&ndash; Update Request Info &ndash;&gt;-->
-<!--                    <group string="Update Request" -->
-<!--                           invisible="state != 'update_requested' and not ks_update_approved">-->
-<!--                        <field name="ks_update_request_user_id" readonly="1"/>-->
-<!--                        <field name="ks_update_request_date" readonly="1"/>-->
-<!--                        <field name="ks_update_request_reason" readonly="1"/>-->
-<!--                        <field name="ks_update_pm1_approved" readonly="1" widget="boolean" string="PM1 Approved"/>-->
-<!--                        <field name="ks_update_pm2_approved" readonly="1" widget="boolean" string="PM2 Approved"/>-->
-<!--                        <field name="ks_update_approved" readonly="1" widget="boolean" -->
-<!--                               invisible="state != 'purchase'"-->
-<!--                               string="Currently Editable"/>-->
-<!--                    </group>-->
-<!--                    -->
-<!--                    &lt;!&ndash; Cancel Request Info &ndash;&gt;-->
-<!--                    <group string="Cancel Request" -->
-<!--                           invisible="state != 'cancel_requested'">-->
-<!--                        <field name="ks_cancel_request_user_id" readonly="1"/>-->
-<!--                        <field name="ks_cancel_request_date" readonly="1"/>-->
-<!--                        <field name="ks_cancel_request_reason" readonly="1"/>-->
-<!--                        <field name="ks_cancel_pm1_approved" readonly="1" widget="boolean" string="PM1 Approved"/>-->
-<!--                        <field name="ks_cancel_pm2_approved" readonly="1" widget="boolean" string="PM2 Approved"/>-->
-<!--                    </group>-->
-<!--                </group>-->
-<!--            </xpath>-->
+            <!--            <xpath expr="//page[@name='purchase_delivery_invoice']//group[@name='other_info']" position="after">-->
+            <!--                <group name="ks_approval_info" string="Approval Information" -->
+            <!--                       invisible="state not in ('pending_approval', 'update_requested', 'cancel_requested', 'purchase')">-->
+            <!--                    &lt;!&ndash; Confirmation Request Info &ndash;&gt;-->
+            <!--                    <group string="Confirmation Request" -->
+            <!--                           invisible="state != 'pending_approval'">-->
+            <!--                        <field name="ks_confirm_request_user_id" readonly="1"/>-->
+            <!--                        <field name="ks_confirm_request_date" readonly="1"/>-->
+            <!--                        <field name="ks_confirm_pm1_approved" readonly="1" widget="boolean" string="PM1 Approved"/>-->
+            <!--                        <field name="ks_confirm_pm2_approved" readonly="1" widget="boolean" string="PM2 Approved"/>-->
+            <!--                    </group>-->
+            <!--                    -->
+            <!--                    &lt;!&ndash; Update Request Info &ndash;&gt;-->
+            <!--                    <group string="Update Request" -->
+            <!--                           invisible="state != 'update_requested' and not ks_update_approved">-->
+            <!--                        <field name="ks_update_request_user_id" readonly="1"/>-->
+            <!--                        <field name="ks_update_request_date" readonly="1"/>-->
+            <!--                        <field name="ks_update_request_reason" readonly="1"/>-->
+            <!--                        <field name="ks_update_pm1_approved" readonly="1" widget="boolean" string="PM1 Approved"/>-->
+            <!--                        <field name="ks_update_pm2_approved" readonly="1" widget="boolean" string="PM2 Approved"/>-->
+            <!--                        <field name="ks_update_approved" readonly="1" widget="boolean" -->
+            <!--                               invisible="state != 'purchase'"-->
+            <!--                               string="Currently Editable"/>-->
+            <!--                    </group>-->
+            <!--                    -->
+            <!--                    &lt;!&ndash; Cancel Request Info &ndash;&gt;-->
+            <!--                    <group string="Cancel Request" -->
+            <!--                           invisible="state != 'cancel_requested'">-->
+            <!--                        <field name="ks_cancel_request_user_id" readonly="1"/>-->
+            <!--                        <field name="ks_cancel_request_date" readonly="1"/>-->
+            <!--                        <field name="ks_cancel_request_reason" readonly="1"/>-->
+            <!--                        <field name="ks_cancel_pm1_approved" readonly="1" widget="boolean" string="PM1 Approved"/>-->
+            <!--                        <field name="ks_cancel_pm2_approved" readonly="1" widget="boolean" string="PM2 Approved"/>-->
+            <!--                    </group>-->
+            <!--                </group>-->
+            <!--            </xpath>-->
 
             <!-- Make order lines readonly based on ks_can_edit -->
             <xpath expr="//field[@name='order_line']" position="attributes">
@@ -189,17 +194,23 @@
 
             <!-- Make partner_id readonly when not in edit mode -->
             <xpath expr="//field[@name='partner_id']" position="attributes">
-                <attribute name="readonly">not ks_can_edit or state in ('cancel', 'done', 'purchase', 'pending_approval', 'update_requested', 'cancel_requested')</attribute>
+                <attribute name="readonly">not ks_can_edit or state in ('cancel', 'done', 'purchase',
+                    'pending_approval', 'update_requested', 'cancel_requested')
+                </attribute>
             </xpath>
 
             <!-- Make currency_id readonly when not in edit mode -->
             <xpath expr="//field[@name='currency_id'][@groups='base.group_multi_currency']" position="attributes">
-                <attribute name="readonly">not ks_can_edit or state in ('cancel', 'done', 'purchase', 'pending_approval', 'update_requested', 'cancel_requested')</attribute>
+                <attribute name="readonly">not ks_can_edit or state in ('cancel', 'done', 'purchase',
+                    'pending_approval', 'update_requested', 'cancel_requested')
+                </attribute>
             </xpath>
 
             <!-- Make date_order readonly when not in edit mode -->
             <xpath expr="//field[@name='date_order']" position="attributes">
-                <attribute name="readonly">not ks_can_edit or state in ('cancel', 'done', 'purchase', 'pending_approval', 'update_requested', 'cancel_requested')</attribute>
+                <attribute name="readonly">not ks_can_edit or state in ('cancel', 'done', 'purchase',
+                    'pending_approval', 'update_requested', 'cancel_requested')
+                </attribute>
             </xpath>
 
         </field>
@@ -212,7 +223,9 @@
         <field name="inherit_id" ref="purchase.purchase_order_kpis_tree"/>
         <field name="arch" type="xml">
             <xpath expr="//field[@name='state']" position="attributes">
-                <attribute name="decoration-danger">state in ('pending_approval', 'update_requested', 'cancel_requested')</attribute>
+                <attribute name="decoration-danger">state in ('pending_approval', 'update_requested',
+                    'cancel_requested')
+                </attribute>
             </xpath>
         </field>
     </record>
@@ -224,11 +237,11 @@
         <field name="inherit_id" ref="purchase.view_purchase_order_filter"/>
         <field name="arch" type="xml">
             <xpath expr="//filter[@name='to_approve']" position="after">
-                <filter name="pending_approval" string="Pending Approval" 
+                <filter name="pending_approval" string="Pending Approval"
                         domain="[('state', '=', 'pending_approval')]"/>
-                <filter name="update_requested" string="Update Requested" 
+                <filter name="update_requested" string="Update Requested"
                         domain="[('state', '=', 'update_requested')]"/>
-                <filter name="cancel_requested" string="Cancel Requested" 
+                <filter name="cancel_requested" string="Cancel Requested"
                         domain="[('state', '=', 'cancel_requested')]"/>
             </xpath>
         </field>
@@ -245,7 +258,8 @@
                 <!-- Pending Approval Banner -->
                 <div class="alert alert-warning mb-0" role="alert"
                      invisible="state != 'pending_approval'">
-                    <strong>⏳ Pending Approval:</strong> This Purchase Order is waiting for confirmation approval from PM1 and PM2.
+                    <strong>⏳ Pending Approval:</strong>
+                    This Purchase Order is waiting for confirmation approval from PM1 and PM2.
                     <br/>
                     <span class="badge bg-success" invisible="not ks_confirm_pm1_approved">✓ PM1 Approved</span>
                     <span class="badge bg-secondary" invisible="ks_confirm_pm1_approved">⏳ PM1 Pending</span>
@@ -257,7 +271,8 @@
                 <!-- Update Requested Banner -->
                 <div class="alert alert-info mb-0" role="alert"
                      invisible="state != 'update_requested'">
-                    <strong>📝 Update Requested:</strong> This Purchase Order is waiting for update approval from PM1 and PM2.
+                    <strong>📝 Update Requested:</strong>
+                    This Purchase Order is waiting for update approval from PM1 and PM2.
                     <br/>
                     <span class="badge bg-success" invisible="not ks_update_pm1_approved">✓ PM1 Approved</span>
                     <span class="badge bg-secondary" invisible="ks_update_pm1_approved">⏳ PM1 Pending</span>
@@ -269,7 +284,8 @@
                 <!-- Cancel Requested Banner -->
                 <div class="alert alert-danger mb-0" role="alert"
                      invisible="state != 'cancel_requested'">
-                    <strong>🚫 Cancellation Requested:</strong> This Purchase Order is waiting for cancel approval from PM1 and PM2.
+                    <strong>🚫 Cancellation Requested:</strong>
+                    This Purchase Order is waiting for cancel approval from PM1 and PM2.
                     <br/>
                     <span class="badge bg-success" invisible="not ks_cancel_pm1_approved">✓ PM1 Approved</span>
                     <span class="badge bg-secondary" invisible="ks_cancel_pm1_approved">⏳ PM1 Pending</span>
@@ -281,15 +297,18 @@
                 <!-- Update Approved Banner (Editable Mode for the requester) -->
                 <div class="alert alert-success mb-0" role="alert"
                      invisible="not ks_show_complete_update_button">
-                    <strong>✏️ Edit Mode:</strong> Update has been approved. You can now edit this Purchase Order. 
+                    <strong>✏️ Edit Mode:</strong>
+                    Update has been approved. You can now edit this Purchase Order.
                     Click <strong>"Complete Update"</strong> when done to lock the PO again.
                 </div>
 
                 <!-- Locked PO Banner for Normal Users -->
                 <div class="alert alert-secondary mb-0" role="alert"
                      invisible="state != 'purchase' or ks_is_pm_user or ks_update_approved">
-                    <strong>🔒 Locked:</strong> This Purchase Order is confirmed and locked. 
-                    Use <strong>"Request Update"</strong> to request edit permission or <strong>"Request Cancel"</strong> to request cancellation.
+                    <strong>🔒 Locked:</strong>
+                    This Purchase Order is confirmed and locked.
+                    Use <strong>"Request Update"</strong> to request edit permission or <strong>"Request Cancel"
+                </strong> to request cancellation.
                 </div>
             </xpath>
         </field>
