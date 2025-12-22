@@ -23,11 +23,9 @@
                                 <field name="business_pincode" placeholder="Your Answer"/>
                                 <field name="business_phone" placeholder="Your Answer"/>
                                 <field name="business_email" placeholder="Your Answer" widget="upper_case"/>
-                                <field name="business_state_id" options="{'no_create': True, 'no_create_edit': True}"
-                                       domain="[('country_id', '=', 'India')]"/>
+                                <field name="business_state_id" options="{'no_create': True, 'no_create_edit': True}"  domain="[('country_id', '=', 'India')]"/>
                                 <field name="business_country_id"
-                                       options="{'no_create': True, 'no_create_edit': True}"
-                                       domain="[('code', '=', 'IN')]"/>
+                                       options="{'no_create': True, 'no_create_edit': True}" domain="[('code', '=', 'IN')]"/>
                             </list>
                             <form>
                                 <field name="business_street" placeholder="Your Answer" widget="upper_case"/>
@@ -35,17 +33,20 @@
                                 <field name="business_pincode" placeholder="Your Answer"/>
                                 <field name="business_phone" placeholder="Your Answer"/>
                                 <field name="business_email" placeholder="Your Answer" widget="upper_case"/>
-                                <field name="business_state_id" options="{'no_create': True, 'no_create_edit': True}"
-                                       domain="[('country_id', '=', 'India')]"/>
+                                <field name="business_state_id" options="{'no_create': True, 'no_create_edit': True}"  domain="[('country_id', '=', 'India')]"/>
                                 <field name="business_country_id"
-                                       options="{'no_create': True, 'no_create_edit': True}"
-                                       domain="[('code', '=', 'IN')]"/>
+                                       options="{'no_create': True, 'no_create_edit': True}" domain="[('code', '=', 'IN')]"/>
                             </form>
                         </field>
                         <field name="const_business" widget="radio"/>
                         <field name="other_business" string="Please Specify"
                                invisible="const_business != 'Other'"
                                required="const_business == 'Other'"/>
+                        <!--<field name="other_business" string="Please Specify"
+                               placeholder="If Other Please Specify"
+                               invisible="const_business != %(ks_contact.constitution_business_other)d"
+                               required="const_business == %(ks_contact.constitution_business_other)d"/>-->
+                        <!--<field name="no_partner_director" widget="radio"/>-->
                     </group>
                     <group string="Director/Owner Details" name="kyc_sole_proprietor">
                         <field name="no_partner_director" widget="radio" options="{'horizontal': true}"/>
@@ -56,16 +57,14 @@
                                 <field name="contact_no"/>
                                 <field name="email" widget="upper_case"/>
                                 <field name="aadhaar_card_filename" column_invisible="1"/>
-                                <field name="aadhaar_card" filename="aadhaar_card_filename"
-                                       options="{'accepted_file_extensions': 'image/*, .pdf'}"
-                                       column_invisible="1"/>
+                                <field name="aadhaar_card"  filename="aadhaar_card_filename" options="{'accepted_file_extensions': 'image/*, .pdf'}"
+                                      column_invisible="1"/>
                                 <field name="pan_card_filename" column_invisible="1"/>
-                                <field name="pan_card" filename="pan_card_filename"
-                                       options="{'accepted_file_extensions': 'image/*, .pdf'}"
-                                       column_invisible="1"/>
-                                <field name="aadhaar_card_attachments" widget="many2many_attachment_preview"
+                                <field name="pan_card" filename="pan_card_filename" options="{'accepted_file_extensions': 'image/*, .pdf'}"
+                                        column_invisible="1"/>
+                                  <field name="aadhaar_card_attachments" widget="many2many_attachment_preview"
                                        options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 1}"/>
-                                <field name="pan_card_attachments" widget="many2many_attachment_preview"
+                                  <field name="pan_card_attachments" widget="many2many_attachment_preview"
                                        options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 1}"/>
                             </list>
                             <form>
@@ -79,38 +78,55 @@
                                 <field name="pan_card_filename" invisible="1"/>
                                 <field name="pan_card" options="{'accepted_file_extensions': 'image/*, .pdf'}"
                                        filename="pan_card_filename" column_invisible="1"/>
-                                <field name="aadhaar_card_attachments" widget="many2many_attachment_preview"
+                                 <field name="aadhaar_card_attachments" widget="many2many_attachment_preview"
                                        options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 1}"/>
-                                <field name="pan_card_attachments" widget="many2many_attachment_preview"
+                                  <field name="pan_card_attachments" widget="many2many_attachment_preview"
                                        options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 1}"/>
                             </form>
                         </field>
+                        <!--                        <field name="director_name" placeholder="Your Answer"-->
+                        <!--                               required="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"-->
+                        <!--                               invisible="const_business in ['Partnership', 'Pvt Ltd Co.', 'LLP']" widget="upper_case"/>-->
+                        <!--                        <field name="director_phone" placeholder="Your Answer"-->
+                        <!--                               required="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"-->
+                        <!--                               invisible="const_business in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>-->
+                        <!--                        <field name="director_email" placeholder="Your Answer"-->
+                        <!--                               required="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"-->
+                        <!--                               invisible="const_business in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>-->
+                        <!--                        <field name="aadhaar_card_filename" invisible="1"/>-->
+                        <!--                        <field name="aadhaar_card" options="{'accepted_file_extensions': 'image/*, .pdf'}"-->
+                        <!--                               filename="aadhaar_card_filename"-->
+                        <!--                               required="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"-->
+                        <!--                               invisible="const_business in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>-->
+                        <!--                        <field name="pan_card_filename" readonly="1" invisible="1"/>-->
+                        <!--                        <field name="pan_card" options="{'accepted_file_extensions': 'image/*, .pdf'}"-->
+                        <!--                               filename="pan_card_filename"-->
+                        <!--                               required="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"-->
+                        <!--                               invisible="const_business in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>-->
                         <field name="pan_no" placeholder="Your Answer" widget="upper_case"/>
                         <field name="pan_card_document" widget="many2many_attachment_preview"
-                               options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 1}"
+                               options="{'accepted_file_extensions': 'image/*, .pdf'}"
                                required="const_business in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
                         <field name="aadhaar_pan_link" widget="radio" options="{'horizontal': true}"/>
                         <field name="gst_no" placeholder="Your Answer" widget="upper_case"/>
-                        <field name="license_registered" placeholder="Your Answer" widget="upper_case"
-                               invisible="const_business in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
+                        <field name="license_registered" placeholder="Your Answer" widget="upper_case" invisible="const_business in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
                         <field name="udyam_number" placeholder="Your Answer" widget="upper_case"/>
                         <field name="gst_certificate" widget="many2many_attachment_preview"
-                               options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 1}"/>
+                               options="{'accepted_file_extensions': 'image/*, .pdf'}"/>
                         <field name="incorporation_certificate" widget="many2many_attachment_preview"
                                options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 5}"
-                               required="const_business in ['Pvt Ltd Co.', 'LLP']"
-                               invisible="const_business not in ['Pvt Ltd Co.', 'LLP']"/>
+                               required="const_business in ['Pvt Ltd Co.', 'LLP']"  invisible="const_business not in ['Pvt Ltd Co.', 'LLP']"/>
                         <field name="udyam_document" widget="many2many_attachment_preview"
-                               options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 1}"
+                               options="{'accepted_file_extensions': 'image/*, .pdf'}"
                                required="const_business in ['Sole Proprietor', 'HUF(Karta)']"/>
                         <field name="shop_act_document" widget="many2many_attachment_preview"
-                               options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 1}"
+                               options="{'accepted_file_extensions': 'image/*, .pdf'}"
                                required="const_business in ['Sole Proprietor', 'HUF(Karta)']"/>
                         <field name="gst_return_duration" placeholder="Your Answer"/>
                         <field name="shop_photos" widget="many2many_attachment_preview"
-                               options="{'accepted_file_extensions': 'image/*', 'number_of_files': 10}"/>
+                               options="{'accepted_file_extensions': 'image/*'}"/>
                         <field name="shop_videos" widget="many2many_attachment_preview"
-                               options="{'accepted_file_extensions': 'video/*', 'number_of_files': 10}"/>
+                               options="{'accepted_file_extensions': 'video/*'}"/>
                         <p style="margin-left: 110px; font-weight: bold;">You can upload each video upto 64MB</p>
                         <field name="comp_google_loc" placeholder="eg. Lat : 22.3511148 Long: 78.6677428"
                                widget="upper_case"/>
@@ -125,7 +141,7 @@
                         <field name="cin_no" placeholder="Your Answer" widget="upper_case"
                                invisible="const_business not in ['Pvt Ltd Co.']"/>
                         <field name="electricity_bill" widget="many2many_attachment_preview"
-                               options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 5}"/>
+                               options="{'accepted_file_extensions': 'image/*, .pdf'}"/>
                     </group>
                     <group string="Bank Details(Please provide all required bank Details Carefully)"
                            name="bank_details">
@@ -163,7 +179,6 @@
         <field name="view_mode">form</field>
         <field name="view_id" ref="vendor_kyc_wizard_view_form"/>
         <field name="target">new</field>
-        <field name="binding_model_id" ref="base.model_res_partner"/>
         <field name="context">{
             'default_partner_id': active_id,
             }

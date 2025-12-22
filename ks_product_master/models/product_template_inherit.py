@@ -10,11 +10,11 @@ class ProductTemplateInherit(models.Model):
     is_mobile_category_selected = fields.Boolean(compute="_compute_category_change", tracking=True)
     is_packaging_material = fields.Boolean(compute="_compute_category_change")
 
-    loose_or_master_carton = fields.Selection(
-        [('master_carton', 'Master Carton'), ('loose', 'Loose')],
-        string="Master Carton / Loose",
-        help="Specify if the product is a master carton or loose"
-    )
+    # loose_or_master_carton = fields.Selection(
+    #     [('master_carton', 'Master Carton'), ('loose', 'Loose')],
+    #     string="Master Carton / Loose",
+    #     help="Specify if the product is a master carton or loose"
+    # )
 
     brand_id = fields.Many2one('product.brand', string="Brand", help="Brand of the product", tracking=True)
 
@@ -83,12 +83,12 @@ class ProductTemplateInherit(models.Model):
         self.ensure_one()
 
         # Prefix
-        if self.loose_or_master_carton == 'master_carton':
-            prefix = 'MC'
-        elif self.loose_or_master_carton == 'loose':
-            prefix = 'L'
-        else:
-            prefix = 'GEN'
+        # if self.loose_or_master_carton == 'master_carton':
+        #     prefix = 'MC'
+        # elif self.loose_or_master_carton == 'loose':
+        #     prefix = 'L'
+        # else:
+        prefix = 'GEN'
 
         # Name
         name_part = (self.name or "").upper().replace(" ", "")
@@ -186,7 +186,7 @@ class ProductTemplateInherit(models.Model):
         res = super().write(vals)
 
         # 2. Trigger SKU generation if relevant fields are updated
-        if any(field in vals for field in ['name', 'attribute_line_ids', 'loose_or_master_carton']):
+        if any(field in vals for field in ['name', 'attribute_line_ids']):
             for rec in self:
                 rec._generate_and_assign_sku()
 
