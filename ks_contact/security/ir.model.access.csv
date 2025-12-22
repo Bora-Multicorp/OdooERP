@@ -16,8 +16,7 @@ access_approval_users,approval_users,model_approval_users,base.group_user,1,1,1,
 access_approve_request_wizard,approve.request.wizard,model_approve_request_wizard,base.group_user,1,1,1,1
 access_reject_request_wizard,reject.request.wizard,model_reject_request_wizard,base.group_user,1,1,1,1
 access_rekyc_request_wizard,rekyc.request.wizard,model_rekyc_request_wizard,base.group_user,1,1,1,1
-access_vendor_approval_config,vendor.approval.config,model_vendor_approval_config,base.group_user,1,1,0,0
-access_vendor_approval_config_manager,vendor.approval.config,model_vendor_approval_config,base.group_system,1,1,1,1
+access_vendor_approval_config_admin,vendor.approval.config,model_vendor_approval_config,base.group_system,1,1,1,1
 access_sms_history,sms.history,model_sms_history,base.group_user,1,1,1,0
 access_kyc_user_picker,vendor.kyc.approval.users,model_vendor_kyc_approval_user_picker_wizard,base.group_user,1,1,1,1
 vendor.suspended.user,vendor.kyc.suspended.users,model_suspend_vendor_confirm_wizard,base.group_user,1,1,1,1

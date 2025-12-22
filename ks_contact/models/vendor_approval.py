@@ -2,6 +2,7 @@
 
 from datetime import date
 from dateutil.relativedelta import relativedelta
+from markupsafe import Markup
 from odoo import api, fields, models, _
 from odoo.exceptions import ValidationError
 
@@ -60,6 +61,17 @@ class ContactKYCApproval(models.Model):
         """
         for record in self:
             record.existing_user_ids = [(6, 0, record.approval_users_ids.mapped('user_id').ids)]
+
+    @api.depends('approval_users_ids.user_id', 'approval_users_ids.state')
+    @api.depends_context('uid')
+    def _compute_has_pending_approval(self):
+        """Check if current user has a pending approval request"""
+        current_user = self.env.user
+        for record in self:
+            pending_line = record.approval_users_ids.filtered(
+                lambda l: l.user_id == current_user and not l.state
+            )
+            record.has_pending_approval = bool(pending_line)
 
 
     # -------------------------------------------------------------------------
@@ -165,6 +177,13 @@ class ContactKYCApproval(models.Model):
 
     assigned_to = fields.Many2one('res.users', string='Assigned To', tracking=True)
     existing_user_ids = fields.Many2many('res.users', compute='_compute_existing_users', store=True)
+    
+    # Computed field to check if current user has pending approval
+    has_pending_approval = fields.Boolean(
+        compute='_compute_has_pending_approval',
+        string='Has Pending Approval',
+        help='True if current user has a pending approval request'
+    )
 
     is_approved = fields.Boolean(related='partner_id.is_approved', store=True)
 
@@ -194,6 +213,7 @@ class ContactKYCApproval(models.Model):
     def add_user(self, approvers):
         """
         Add approval users to workflow and move state → pending.
+        Creates activities for ALL approvers simultaneously (parallel approval).
         """
         vals = [(0, 0, {
             'sequence': idx + 1,
@@ -201,19 +221,31 @@ class ContactKYCApproval(models.Model):
         }) for idx, approval in enumerate(approvers)]
 
         self.write({'approval_users_ids': vals, 'state': 'pending'})
-        self._update_assigned_to()
+        
+        # Create activities for ALL approvers simultaneously (parallel approval)
+        self._schedule_parallel_approval_activities()
 
     # -------------------------------------------------------------------------
     # Submit KYC Approval
     # -------------------------------------------------------------------------
     def confirm_submit_form(self):
-        approvers = self.env['vendor.approval.config'].sudo().search([])
-        if not approvers:
-            raise ValidationError(_("Please Add Approval Authority before Submit Request"))
+        """Submit KYC for approval - accessible to all users"""
+        # Check if approval config exists (read-only check, no sudo needed for read)
+        config = self.env['vendor.approval.config'].get_config()
+        if not config:
+            raise ValidationError(_("Please configure Approval Authority in Vendor Approval Settings before Submit Request"))
 
-        return self.env.ref(
-            "ks_contact.action_kyc_vendor_approval_user_picker_wizard"
-        ).sudo().read()[0]
+        # Return action without sudo() to maintain proper access control
+        return {
+            'name': _('Select Approval Users'),
+            'type': 'ir.actions.act_window',
+            'res_model': 'vendor.kyc.approval.user.picker.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'default_kyc_id': self.id,
+            },
+        }
 
 
     # -------------------------------------------------------------------------
@@ -321,11 +353,51 @@ class ContactKYCApproval(models.Model):
 
 
     # -------------------------------------------------------------------------
-    # Assign next approver
+    # Parallel Approval Activities
+    # -------------------------------------------------------------------------
+    def _schedule_parallel_approval_activities(self):
+        """
+        Create activities for ALL pending approvers simultaneously (parallel approval).
+        Each approver receives their own activity and can act independently.
+        """
+        for rec in self:
+            pending_approvers = rec.approval_users_ids.filtered(lambda l: not l.state)
+            
+            for approver_line in pending_approvers:
+                # Create activity for each approver
+                rec.activity_schedule(
+                    act_type_xmlid='mail.mail_activity_data_todo',
+                    summary=f"KYC Approval for: {rec.partner_id.name}",
+                    note=_("Please review this KYC approval request."),
+                    user_id=approver_line.user_id.id,
+                    date_deadline=fields.Date.context_today(rec),
+                )
+
+                # Send real-time notification to each approver
+                rec.env['bus.bus']._sendone(
+                    approver_line.user_id.partner_id,
+                    'simple_notification',
+                    {
+                        'type': 'success',
+                        'title': _("KYC Approval for: %s") % rec.partner_id.name,
+                        'message': _("A new approval task has been assigned to you."),
+                        'sticky': True,
+                    }
+                )
+            
+            # Set assigned_to to first pending approver for backward compatibility
+            # (but all approvers can see buttons via has_pending_approval)
+            if pending_approvers:
+                rec.assigned_to = pending_approvers[0].user_id
+
+    # -------------------------------------------------------------------------
+    # Assign next approver (kept for backward compatibility, but not used in parallel flow)
     # -------------------------------------------------------------------------
     def _update_assigned_to(self):
         """
         Determine the next approver based on sequence.
+        Note: In parallel approval flow, this is mainly for backward compatibility.
+        All pending approvers can act independently via has_pending_approval.
         """
         for rec in self:
             next_user = next(
@@ -336,41 +408,13 @@ class ContactKYCApproval(models.Model):
 
             rec.assigned_to = next_user
 
-            if next_user:
-                rec._schedule_kyc_assignment_activity()
-
-
-    def _schedule_kyc_assignment_activity(self):
-        """
-        Create activity + real-time notification for approver.
-        """
-        for rec in self:
-            rec.activity_schedule(
-                act_type_xmlid='mail.mail_activity_data_todo',
-                summary=f"KYC Approval for: {rec.partner_id.name}",
-                note=_("Please review this KYC approval."),
-                user_id=rec.assigned_to.id,
-                date_deadline=fields.Date.context_today(rec),
-            )
-
-            rec.env['bus.bus']._sendone(
-                rec.assigned_to.partner_id,
-                'simple_notification',
-                {
-                    'type': 'success',
-                    'title': _("KYC Approval for: %s") % rec.partner_id.name,
-                    'message': _("A new approval task has been assigned."),
-                    'sticky': True,
-                }
-            )
-
 
     # -------------------------------------------------------------------------
     # Approval Workflow State Checker
     # -------------------------------------------------------------------------
     def _update_state_based_on_approvals(self):
         """
-        Recalculate KYC state based on all approval users:
+        Recalculate KYC state based on all approval users (parallel approval):
             - Any reject → rejected
             - All approve → confirmed
         """
@@ -379,9 +423,27 @@ class ContactKYCApproval(models.Model):
             states = active_lines.mapped('state')
 
             if any(s == 'reject' for s in states):
-                rec.state = 'rejected'
+                # Use write() to trigger proper state change logic
+                rec.write({'state': 'rejected'})
             elif states and all(s == 'approve' for s in states):
-                rec.state = 'confirmed'
+                # All approvers have approved - confirm the KYC
+                # Use write() to trigger proper state change logic and activity updates
+                # The write() method will handle partner updates, activity removal, and notifications
+                rec.write({'state': 'confirmed'})
+                
+                # Post chatter message indicating both levels approved
+                approvers_info = []
+                for line in sorted(active_lines, key=lambda l: l.sequence):
+                    level = "Approval Level 1" if line.sequence == 1 else "Approval Level 2"
+                    approvers_info.append(f"{level}: {line.user_id.name}")
+                
+                rec.message_post(
+                    body=Markup(_("KYC Approved - All approval levels have been completed: %s ") % (
+                        "</p>".join(approvers_info)
+                    )),
+                    message_type='notification',
+                    subtype_xmlid='mail.mt_comment',
+                )
 
 
     # -------------------------------------------------------------------------
