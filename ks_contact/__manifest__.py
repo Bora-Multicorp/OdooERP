@@ -22,6 +22,7 @@
         'wizard/survey_invite_inherit.xml',
         'wizard/vendor_kyc_approval_users_picker_wizard.xml',
         'wizard/vendor_suspended_by_admin_wizard.xml',
+        'views/stock_picking_view.xml',
         'views/vendor_approval_res_config.xml',
         'views/custom_partner.xml',
         'views/master_view.xml',
