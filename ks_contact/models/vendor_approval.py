@@ -192,7 +192,6 @@ class ContactKYCApproval(models.Model):
         ('pending', 'Pending Approval'),
         ('confirmed', 'Confirmed'),
         ('rejected', 'Rejected'),
-        ('expired', 'Expired')
     ], default='draft', tracking=True)
 
     approval_users_ids = fields.One2many(
