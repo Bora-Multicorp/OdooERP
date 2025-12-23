@@ -19,6 +19,7 @@
         'views/action_product_approval_view.xml',
         'views/search_view_for_activity.xml',
         'views/bulk_approval_and_rejection_menu.xml',
+        'views/res_users_views.xml',
         'data/product_mail_templates.xml',
     ],
     'assets': {

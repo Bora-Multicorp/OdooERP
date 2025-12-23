@@ -1,0 +1,17 @@
+<odoo>
+    <data>
+
+        <record id="view_users_form_inherit_custom_admin" model="ir.ui.view">
+            <field name="name">res.users.form.inherit.custom.admin</field>
+            <field name="model">res.users</field>
+            <field name="inherit_id" ref="base.view_users_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='company_ids']" position="after">
+<!--                    <group string="Bora Special Access" priority="10">-->
+                        <field name="is_custom_admin" string="Admin"/>
+<!--                    </group>-->
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>

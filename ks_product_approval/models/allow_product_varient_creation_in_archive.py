@@ -1,12 +1,20 @@
 import itertools
 from odoo.exceptions import UserError
 
-from odoo import models, _
+from odoo import models, _, fields
 
 
 class AllowProductVarientInArchive(models.Model):
     _inherit = "product.template"
     _description = 'Product Approval'
+
+    is_admin = fields.Boolean(compute='_compute_is_admin')
+
+    def _compute_is_admin(self):
+        # Check the custom boolean on the current user's record
+        current_user_is_admin = self.env.user.is_custom_admin
+        for rec in self:
+            rec.is_admin = current_user_is_admin
 
     def _create_variant_ids(self):
         if not self:
