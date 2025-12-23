@@ -25,7 +25,7 @@
         <field name="view_mode">form</field>
         <field name="view_id" ref="rekyc_request_wizard_view_form"/>
         <field name="target">new</field>
-<!--        <field name="binding_model_id" ref="base.model_res_partner"/>-->
+        <field name="binding_model_id" ref="base.model_res_partner"/>
         <field name="context">{
             'default_partner_id': active_id,
             }

@@ -73,6 +73,30 @@ class ContactKYCApproval(models.Model):
             )
             record.has_pending_approval = bool(pending_line)
 
+    @api.depends('partner_id.user_ids')
+    @api.depends_context('uid')
+    def _compute_is_partner_user(self):
+        """Check if current user is the partner's user"""
+        current_user = self.env.user
+        for record in self:
+            record.is_partner_user = bool(record.partner_id and current_user in record.partner_id.user_ids)
+
+    @api.depends_context('uid')
+    def _compute_is_admin_user(self):
+        """Check if current user is an admin (has base.group_system)"""
+        current_user = self.env.user
+        is_admin = current_user.has_group('base.group_system')
+        for record in self:
+            record.is_admin_user = is_admin
+
+    @api.depends('create_uid')
+    @api.depends_context('uid')
+    def _compute_is_form_owner(self):
+        """Check if current user is the creator/owner of the form"""
+        current_user = self.env.user
+        for record in self:
+            record.is_form_owner = bool(record.create_uid and record.create_uid == current_user)
+
 
     # -------------------------------------------------------------------------
     # KYC Fields
@@ -167,7 +191,8 @@ class ContactKYCApproval(models.Model):
         ('draft', 'Draft'),
         ('pending', 'Pending Approval'),
         ('confirmed', 'Confirmed'),
-        ('rejected', 'Rejected')
+        ('rejected', 'Rejected'),
+        ('expired', 'Expired')
     ], default='draft', tracking=True)
 
     approval_users_ids = fields.One2many(
@@ -182,6 +207,24 @@ class ContactKYCApproval(models.Model):
         compute='_compute_has_pending_approval',
         string='Has Pending Approval',
         help='True if current user has a pending approval request'
+    )
+    
+    # Computed field to check if current user is the partner's user
+    is_partner_user = fields.Boolean(
+        compute='_compute_is_partner_user',
+        string='Is Partner User',
+    )
+    
+    # Computed field to check if current user is an admin
+    is_admin_user = fields.Boolean(
+        compute='_compute_is_admin_user',
+        string='Is Admin User',
+    )
+    
+    # Computed field to check if current user is the form creator/owner
+    is_form_owner = fields.Boolean(
+        compute='_compute_is_form_owner',
+        string='Is Form Owner',
     )
 
     is_approved = fields.Boolean(related='partner_id.is_approved', store=True)
@@ -228,7 +271,20 @@ class ContactKYCApproval(models.Model):
     # Submit KYC Approval
     # -------------------------------------------------------------------------
     def confirm_submit_form(self):
-        """Submit KYC for approval - accessible to all users"""
+        """
+        Submit KYC for approval - accessible only to admin or form owner.
+        Security check: Only admin users or the form creator can submit.
+        """
+        self.ensure_one()
+        current_user = self.env.user
+        
+        # Security check: Only admin or form owner can submit
+        is_admin = current_user.has_group('base.group_system')
+        is_owner = self.create_uid and self.create_uid == current_user
+        
+        if not (is_admin or is_owner):
+            raise ValidationError(_("Access Denied: Only administrators or the form creator can submit for approval."))
+        
         # Check if approval config exists (read-only check, no sudo needed for read)
         config = self.env['vendor.approval.config'].get_config()
         if not config:
