@@ -14,12 +14,12 @@
         'wizard/bulk_submit_for_approval.xml',
         'wizard/approval_users_picker_wizard.xml',
         'wizard/suspended_by_admin_wizard.xml',
+        'views/res_users_views.xml',
         'views/product_approval_res_config.xml',
         'views/product_approval_views.xml',
         'views/action_product_approval_view.xml',
         'views/search_view_for_activity.xml',
         'views/bulk_approval_and_rejection_menu.xml',
-        'views/res_users_views.xml',
         'data/product_mail_templates.xml',
     ],
     'assets': {
