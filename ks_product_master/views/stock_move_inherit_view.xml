@@ -21,6 +21,10 @@
                      position="attributes">
                   <attribute name="options">{'no_create': True, 'no_create_edit': True, 'no_open': True}</attribute>
               </xpath>
+              <xpath expr="//field[@name='partner_id']"
+                     position="attributes">
+                  <attribute name="options">{'no_create': True, 'no_create_edit': True, 'no_open': True}</attribute>
+              </xpath>
           </field>
       </record>
         <record id="view_stock_move_line_operation_tree_inherit" model="ir.ui.view">

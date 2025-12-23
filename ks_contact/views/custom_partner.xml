@@ -318,7 +318,6 @@
                        context="{'res_partner_search_mode': 'customer', 'show_vat': True}"
                        options="{'no_create': True, 'no_create_edit': True}"
                        placeholder="Name, Email, Phone, GST/VAT"
-                       domain="[('is_customer', '=', True)]"
                        readonly="state in ['sale', 'done', 'cancel']"/>
             </xpath>
         </field>
@@ -335,7 +334,6 @@
                    widget="res_partner_many2one"
                    context="{'res_partner_search_mode': 'customer', 'show_vat': True}"
                    options="{'no_create': True, 'no_create_edit': True}"
-                   domain="move_type in ('out_invoice', 'out_refund') and [('is_customer', '=', True)] or [('is_vendor', '=', True),('is_kyc', '=', True),('is_approved', '=', True)]"
                    placeholder="Customer Name, VAT, Email"
                    readonly="state in ['cancel', 'posted']"/>
         </xpath>
