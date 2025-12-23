@@ -34,12 +34,14 @@ class KsPurchaseApprovalConfig(models.Model):
     ks_update_pm1_id = fields.Many2one(
         'res.users',
         string='Update Approver PM1',
+        related="ks_confirm_pm1_id",
         required=True,
         help='First approval manager for PO update requests',
     )
     ks_update_pm2_id = fields.Many2one(
         'res.users',
         string='Update Approver PM2',
+        related="ks_confirm_pm2_id",
         required=True,
         help='Second approval manager for PO update requests',
     )
@@ -48,12 +50,14 @@ class KsPurchaseApprovalConfig(models.Model):
     ks_cancel_pm1_id = fields.Many2one(
         'res.users',
         string='Cancel Approver PM1',
+        related="ks_confirm_pm1_id",
         required=True,
         help='First approval manager for PO cancel requests',
     )
     ks_cancel_pm2_id = fields.Many2one(
         'res.users',
         string='Cancel Approver PM2',
+        related="ks_confirm_pm2_id",
         required=True,
         help='Second approval manager for PO cancel requests',
     )
