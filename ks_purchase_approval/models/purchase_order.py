@@ -514,11 +514,23 @@ class PurchaseOrder(models.Model):
         
         # Check if both PMs have approved
         if self.ks_confirm_pm1_approved and self.ks_confirm_pm2_approved:
-            # Both approved - confirm the PO
+            # Both approved - confirm the PO using standard flow to ensure receipt creation
+            # Ensure validation is done (should already be done, but ensure it)
+            self.order_line._validate_analytic_distribution()
+            self._add_supplier_to_product()
+            
+            # Set state to 'purchase' and date_approve (standard confirmation)
             self.write({
                 'state': 'purchase',
                 'date_approve': fields.Datetime.now(),
             })
+            
+            # Create stock pickings (receipts) if purchase_stock module is installed
+            # This ensures receipts are created just like in standard Odoo flow
+            if hasattr(self, '_create_picking'):
+                self._create_picking()
+            
+            # Handle PO lock if configured
             if self.company_id.po_lock == 'lock':
                 self.write({'state': 'done'})
             
