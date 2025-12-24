@@ -9,6 +9,7 @@
                 <sheet>
                     <group>
                         <field name="existing_user_ids" invisible="1"/>
+                        <field name="company_id"/>
                         <field name="user_id" options="{'no_create': True, 'no_create_edit': True}"
                                domain="[('id', 'not in', existing_user_ids)]"/>
                         <field name="default_approver"/>
@@ -26,6 +27,7 @@
                 <field name="sequence" widget="handle" class="o_data_cell_sequence"/>
                 <field name="user_id" options="{'no_edit': True, 'no_create': True, 'no_open': True}"/>
                 <field name="default_approver"/>
+                <field name="company_id"/>
             </list>
         </field>
     </record>
