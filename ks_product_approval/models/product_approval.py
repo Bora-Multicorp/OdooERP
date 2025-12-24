@@ -128,9 +128,19 @@ class ProductApproval(models.Model):
         if not approval_users:
             raise ValidationError("Please add confirmation approval authority before submit request.")
 
-        return self.env.ref(
-            "ks_product_approval.action_ks_product_approval_user_picker_wizard"
-        ).sudo().read()[0]
+        view_id = self.env.ref(
+            "ks_product_approval.view_ks_product_approval_user_picker_wizard"
+        )
+
+        return {'type': 'ir.actions.act_window',
+                'name': _('Product Approval Picker'),
+                'res_model': 'product.approval.user.picker.wizard',
+                'target': 'new',
+                'view_mode': 'form',
+                'view_type': 'form',
+                'view_id': view_id.id,
+                'context': {'default_product_id': self.id,'default_company_id': self.env.company.id},
+                }
 
     def approve_by_manager(self):
         self.write({'state': 'confirmed'})

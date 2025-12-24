@@ -9,6 +9,7 @@ class ApprovalUsersPicker(models.TransientModel):
     user_ids_according_to_user_selection = fields.Char(store=True)
 
     product_id = fields.Many2one('product.template', string="Approval for Product Confirmation")
+    company_id = fields.Many2one('res.company', string="Company")
 
     approver1_users = fields.Many2many(
         comodel_name='product.approval.config',
@@ -55,13 +56,13 @@ class ApprovalUsersPicker(models.TransientModel):
 
         # Prefill Approver 1 with only the default approvers
         approver1_ids = Approver.search([
-            ('default_approver', '=', 'approver1')
+            ('default_approver', '=', 'approver1'),('company_id', '=', res.get('company_id'))
         ]).ids
         res['approver1_users'] = [(6, 0, approver1_ids)]
 
         # Prefill Approver 2 with only the default approvers
         approver2_ids = Approver.search([
-            ('default_approver', '=', 'approver2')
+            ('default_approver', '=', 'approver2'),('company_id', '=', res.get('company_id'))
         ]).ids
         res['approver2_users'] = [(6, 0, approver2_ids)]
 

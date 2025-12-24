@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 import random
 
-from odoo import models, fields, api , _
+from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError
 import random
+
 
 class ProductApprovalConfig(models.Model):
     _name = "product.approval.config"
@@ -18,12 +19,33 @@ class ProductApprovalConfig(models.Model):
         ('approver2', 'Approver 2'),
     ], string="Default")
     color = fields.Integer(string="Color Index", readonly=True)
+    company_id = fields.Many2one('res.company', string='Company', required=True)
 
     _sql_constraints = [
-        ('unique_user_id', 'unique(user_id)', 'Each approver member must be unique.')
+        (
+            'unique_company_user',
+            'unique(company_id, user_id)',
+            'This user is already an approver for this company.'
+        ),
+        # (
+        #     'unique_company_default_approver',
+        #     'unique(company_id, default_approver)',
+        #     'Each company can have only one Approver 1 and one Approver 2.'
+        # ),
     ]
 
     existing_user_ids = fields.Many2many('res.users', compute='_compute_existing_user_ids')
+
+    @api.constrains('company_id')
+    def _check_max_two_approvers_per_company(self):
+        for record in self:
+            count = self.search_count([
+                ('company_id', '=', record.company_id.id)
+            ])
+            if count > 2:
+                raise ValidationError(
+                    _('Only two approvers (Approver 1 and Approver 2) are allowed per company.')
+                )
 
     @api.depends('user_id')
     def _compute_existing_user_ids(self):
@@ -69,15 +91,15 @@ class ProductApprovalConfig(models.Model):
 
         # 2. Logic for removing an Approver 1 (by changing it to something else or False)
         # If the record WAS Approver 1 and is being changed, check if an Approver 2 is left stranded
-        for record in self:
-            if record.default_approver == 'approver1' and target_type != 'approver1':
-                # Check if an Approver 2 exists that isn't the current record
-                a2_domain = [('default_approver', '=', 'approver2'), ('id', 'not in', self.ids)]
-                if self.env['product.approval.config'].search_count(a2_domain):
-                    raise ValidationError(_(
-                        "Action Denied: You cannot remove or change the only 'Approver 1' "
-                        "while an 'Approver 2' still exists in the system."
-                    ))
+        # for record in self:
+        #     if record.default_approver == 'approver1' and target_type != 'approver1':
+        #         # Check if an Approver 2 exists that isn't the current record
+        #         a2_domain = [('default_approver', '=', 'approver2'), ('id', 'not in', self.ids)]
+        #         if self.env['product.approval.config'].search_count(a2_domain):
+        #             raise ValidationError(_(
+        #                 "Action Denied: You cannot remove or change the only 'Approver 1' "
+        #                 "while an 'Approver 2' still exists in the system."
+        #             ))
 
     # Override create to handle the single approver rule
     @api.model_create_multi
@@ -86,12 +108,12 @@ class ProductApprovalConfig(models.Model):
         for vals in vals_list:
 
             # 1. to make sure there will be only one approver and only one approver2
-            if vals.get('default_approver'):
-                self._check_approver_order(vals)
-                # Find the old approver of the same type and reset them
-                self.search([
-                    ('default_approver', '=', vals['default_approver'])
-                ]).write({'default_approver': False})
+            # if vals.get('default_approver'):
+            #     self._check_approver_order(vals)
+            #     # Find the old approver of the same type and reset them
+            #     self.search([
+            #         ('default_approver', '=', vals['default_approver'])
+            #     ]).write({'default_approver': False})
 
             # 1. select colors
             if not vals.get('color'):
@@ -118,12 +140,12 @@ class ProductApprovalConfig(models.Model):
         if 'default_approver' in vals:
             self._check_approver_order(vals)
         # To make sure there will be only one approver and only one approver2
-        if vals.get('default_approver'):
-            # Find the old approver of the same type and reset them
-            self.search([
-                ('id', '!=', self.id),
-                ('default_approver', '=', vals['default_approver'])
-            ]).write({'default_approver': False})
+        # if vals.get('default_approver'):
+        #     # Find the old approver of the same type and reset them
+        #     self.search([
+        #         ('id', '!=', self.id),
+        #         ('default_approver', '=', vals['default_approver'])
+        #     ]).write({'default_approver': False})
 
         res = super().write(vals)
         self._update_draft_ks_product_approvals()

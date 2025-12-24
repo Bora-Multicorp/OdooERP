@@ -11,6 +11,8 @@
                             authorities.
                         </div>
                         <field name="user_ids_according_to_user_selection" invisible="1"/>
+                        <field name="product_id" invisible="1"/>
+                        <field name="company_id" invisible="1"/>
                         <field name="approver1_users" widget="many2many_tags"
                                domain="[('id', 'not in', approver2_users)]"
                                readonly="1"
