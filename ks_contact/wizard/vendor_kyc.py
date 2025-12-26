@@ -533,15 +533,15 @@ class DirectorDetail(models.TransientModel):
         max_size = 10 * 1024 * 1024  # 10 MB
         for rec in self:
             # Aadhaar
-            if len(rec.aadhaar_card_attachments) > max_count:
-                raise ValidationError("Only 1 Aadhaar Card file is allowed.")
+            # if len(rec.aadhaar_card_attachments) > max_count:
+            #     raise ValidationError("Only 1 Aadhaar Card file is allowed.")
             for att in rec.aadhaar_card_attachments:
                 if att.file_size and att.file_size > max_size:
                     raise ValidationError("Aadhaar Card must be ≤ 10 MB.")
 
             # PAN
-            if len(rec.pan_card_attachments) > max_count:
-                raise ValidationError("Only 1 PAN Card file is allowed.")
+            # if len(rec.pan_card_attachments) > max_count:
+            #     raise ValidationError("Only 1 PAN Card file is allowed.")
             for att in rec.pan_card_attachments:
                 if att.file_size and att.file_size > max_size:
                     raise ValidationError("PAN Card must be ≤ 10 MB.")
@@ -600,8 +600,8 @@ class BankDetail(models.TransientModel):
         max_count = 1
         max_size = 10 * 1024 * 1024
         for rec in self:
-            if len(rec.bank_cheque_attachments) > max_count:
-                raise ValidationError("Only 1 Cancelled Cheque file is allowed.")
+            # if len(rec.bank_cheque_attachments) > max_count:
+            #     raise ValidationError("Only 1 Cancelled Cheque file is allowed.")
             for att in rec.bank_cheque_attachments:
                 if att.file_size and att.file_size > max_size:
                     raise ValidationError("Cancelled Cheque must be ≤ 10 MB.")
