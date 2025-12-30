@@ -133,13 +133,13 @@ class CustomContact(models.Model):
                     _("PAN number '%s' is already assigned to another contact.") % rec.l10n_in_pan
                 )
 
-    @api.constrains('is_customer', 'is_vendor')
-    def _check_customer_vendor_exclusive(self):
-        for rec in self:
-            if rec.is_customer and rec.is_vendor:
-                raise ValidationError(
-                    "A partner cannot be both a Customer and a Vendor. Please uncheck one."
-                )
+    # @api.constrains('is_customer', 'is_vendor')
+    # def _check_customer_vendor_exclusive(self):
+    #     for rec in self:
+    #         if rec.is_customer and rec.is_vendor:
+    #             raise ValidationError(
+    #                 "A partner cannot be both a Customer and a Vendor. Please uncheck one."
+    #             )
 
     @api.constrains('vat')
     def _check_gst_no_format(self):
@@ -287,58 +287,44 @@ class CustomContact(models.Model):
         action['domain'] = ['|', ('partner_id', '=', self.id), ('email', '=', self.email)]
         return action
 
-
+    @api.model
     def trigger_schedule_activity_kyc_expiry_follow_up(self):
-        today = fields.Date.today()
-        approval_users = self.env['vendor.approval.config'].search([]).mapped('user_id')
-        def schedule_kyc_activity(partner):
-            for user in approval_users:
-                # Schedule activity
-                partner.activity_schedule(
-                    act_type_xmlid='mail.mail_activity_data_todo',
-                    summary=_('KYC Expiry Reminder for %s - Deadline: %s') % (partner.name, partner.deadline),
-                    note=_('You have been assigned to review this KYC approval.'),
-                    user_id=user.id,
-                    date_deadline=fields.Date.context_today(partner),
-                )
-                # Push browser notification
-                self.env['bus.bus']._sendone(
-                    user.partner_id,
-                    'simple_notification',
-                    {
-                        'type': 'warning',
-                        'title': _('KYC Expiry Reminder for %s - Deadline: %s') % (partner.name, partner.deadline),
-                        'message': _('KYC Expiry Reminder for %s - Deadline: %s') % (partner.name, partner.deadline),
-                        'sticky': True,
-                    },
-                )
+        today = fields.Date.context_today(self)
 
-        # Day 0: Expired Partners — Reset KYC + Notify
-        expired_partners = self.search([('deadline', '=', today)])
-        for partner in expired_partners:
-            schedule_kyc_activity(partner)
+        # 1. Search for all partners that have at least one KYC record
+        # Use read_group to efficiently find the latest ID for each partner
+        # Or search the KYC model directly
+        kyc_model = self.env['res.partner.kyc.approval']
 
-            vals = {
-                'deadline': False,
-                'is_kyc': False,
-                'is_approved': False,
-            }
-            if partner.is_vendor:
-                vals['supplier_rank'] = 0
-            # if partner.is_customer:
-            #     vals['customer_rank'] = 0
+        # 2. Get all partners who have a KYC record
+        all_partners = self.search([('kyc_details', '!=', False)])
 
-            partner.write(vals)
+        activity_type = self.env.ref('mail.mail_activity_data_todo')
 
-            partner.message_post(
-                body=_("KYC Expired: Deadline reached. Status reset."),
-                message_type="comment",
-                subtype_xmlid="mail.mt_note",
-            )
+        for partner in all_partners:
+            # 3. Get the latest record for THIS partner specifically (Sorted by id or date)
+            # We use [-1] logic by ordering descending and taking the first one
+            latest_kyc = kyc_model.search([
+                ('partner_id', '=', partner.id)
+            ], order='id desc', limit=1)
 
-        # Day 1-3: Reminder Partners — Only Notify
-        for days_ahead in [1, 2, 3]:
-            future_date = today + timedelta(days=days_ahead)
-            future_partners = self.search([('deadline', '=', future_date)])
-            for partner in future_partners:
-                schedule_kyc_activity(partner)
+            # 4. Check if this LATEST record's deadline is today
+            if latest_kyc and latest_kyc.deadline == today:
+
+                # Check for existing activity to prevent duplicates
+                existing_activity = self.env['mail.activity'].search([
+                    ('res_id', '=', partner.id),
+                    ('res_model_id', '=', self.env.ref('base.model_res_partner').id),
+                    ('summary', '=', 'KYC Expiry Follow-up')
+                ], limit=1)
+
+                if not existing_activity:
+                    self.env['mail.activity'].create({
+                        'activity_type_id': activity_type.id,
+                        'note': f'LATEST KYC for {partner.name} expires today. Please re-verify.',
+                        'summary': 'KYC Expiry Follow-up',
+                        'date_deadline': today,
+                        'user_id': partner.user_id.id or self.env.user.id,
+                        'res_id': partner.id,
+                        'res_model_id': self.env.ref('base.model_res_partner').id,
+                    })
