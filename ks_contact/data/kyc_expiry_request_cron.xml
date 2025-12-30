@@ -3,7 +3,7 @@
     <data>
         <!-- Scheduler for Pending Request Follow Up-->
         <record id="ir_cron_scheduler_kyc_expiry_followup" model="ir.cron">
-            <field name="name">KYC Expiry: Follow Up</field>
+            <field name="name">RE-KYC: Follow Up</field>
             <field name="interval_number">1</field>
             <field name="interval_type">days</field>
             <field name="nextcall"

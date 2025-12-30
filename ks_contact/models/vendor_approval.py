@@ -27,6 +27,12 @@ class ContactKYCApproval(models.Model):
     # -------------------------------------------------------------------------
     # CREATE OVERRIDE → ensure attachments link to this record
     # -------------------------------------------------------------------------
+
+    _sql_constraints = [
+        ('unique_udyam_number', 'unique(udyam_number)',
+         'The Udyam Certificate Number must be unique! This number is already registered.')
+    ]
+
     @api.model_create_multi
     def create(self, vals_list):
         """
@@ -484,6 +490,12 @@ class ContactKYCApproval(models.Model):
                 # Use write() to trigger proper state change logic and activity updates
                 # The write() method will handle partner updates, activity removal, and notifications
                 rec.write({'state': 'confirmed'})
+                today = fields.Date.context_today(self)
+                # Add exactly 1 year
+                rec.deadline = today + relativedelta(years=1)
+
+                rec.unlink_expiry_activities()
+
                 
                 # Post chatter message indicating both levels approved
                 approvers_info = []
@@ -499,6 +511,18 @@ class ContactKYCApproval(models.Model):
                     subtype_xmlid='mail.mt_comment',
                 )
 
+    def unlink_expiry_activities(self):
+        for rec in self:
+            # 1. Find the activity on the Partner record
+            activities = self.env['mail.activity'].search([
+                ('res_model', '=', 'res.partner'),
+                ('res_id', '=', rec.partner_id.id),
+                ('summary', '=', 'KYC Expiry Follow-up')
+            ])
+
+            # 2. Delete them so they vanish from the list view
+            if activities:
+                activities.unlink()
 
     # -------------------------------------------------------------------------
     # Notification on rejection
