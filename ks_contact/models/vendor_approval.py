@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from datetime import date
+import datetime
 from dateutil.relativedelta import relativedelta
 from markupsafe import Markup
 from odoo import api, fields, models, _
@@ -490,12 +491,11 @@ class ContactKYCApproval(models.Model):
                 # Use write() to trigger proper state change logic and activity updates
                 # The write() method will handle partner updates, activity removal, and notifications
                 rec.write({'state': 'confirmed'})
-                today = fields.Date.context_today(self)
+                today = datetime.date.today()
                 # Add exactly 1 year
                 rec.deadline = today + relativedelta(years=1)
 
                 rec.unlink_expiry_activities()
-
                 
                 # Post chatter message indicating both levels approved
                 approvers_info = []

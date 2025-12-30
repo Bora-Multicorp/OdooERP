@@ -15,6 +15,15 @@ class CustomContact(models.Model):
         ('unique_email', 'UNIQUE(email)', 'Email address must be unique.')
     ]
 
+    is_expired = fields.Boolean(compute='_compute_is_expired')
+
+    @api.depends('deadline')
+    def _compute_is_expired(self):
+        today = fields.Date.context_today(self)
+        for rec in self:
+            # Check if deadline is in the past
+            rec.is_expired = rec.deadline and rec.deadline <= today
+
     @api.constrains('city', 'zip')
     def _check_city_zip_format(self):
         """
