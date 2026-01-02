@@ -5,7 +5,7 @@ class ProductTemplateInherit(models.Model):
     _inherit = 'product.template'
 
     is_dual_sim = fields.Boolean(string="Is dual SIM phone", help="Check if the product is a dual SIM phone",
-                                 tracking=True)
+                                 tracking=True,default=True)
 
     is_mobile_category_selected = fields.Boolean(compute="_compute_category_change", tracking=True)
     is_packaging_material = fields.Boolean(compute="_compute_category_change")
@@ -37,6 +37,9 @@ class ProductTemplateInherit(models.Model):
         # Not having a default value here causes issues when migrating.
         compute='_compute_tracking', store=True, readonly=False, precompute=True,
         help="Ensure the traceability of a storable product in your warehouse.")
+
+    active = fields.Boolean('Active', default=False,
+                            help="If unchecked, it will allow you to hide the product without removing it.")
 
     @api.depends('is_storable')
     def _compute_tracking(self):
