@@ -17,14 +17,21 @@ class RejectRequestWizard(models.TransientModel):
         approval = self.kyc_approval_id
         current_user = self.env.user
 
-        # Find the matching approval line for the current user (parallel approval - any pending approver can act)
-        approval_line = approval.approval_users_ids.filtered(
-            lambda l: l.user_id == current_user and not l.state
+        # Find the matching approval line for the current user (sequential approval - only current approver can act)
+        # Get the first pending approver in sequence
+        pending_approvers = sorted(
+            approval.approval_users_ids.filtered(lambda l: not l.state),
+            key=lambda l: l.sequence
         )
+        
+        # Only allow rejection if current user is the first pending approver
+        approval_line = None
+        if pending_approvers and pending_approvers[0].user_id == current_user:
+            approval_line = pending_approvers[0]
 
         if approval_line:
             # Determine approval level based on sequence
-            approval_level = "Approval Level 1" if approval_line.sequence == 1 else "Approval Level 2"
+            approval_level = "Approver 1" if approval_line.sequence == 1 else "Approver 2"
             
             approval_line.write({
                 'state': 'reject',

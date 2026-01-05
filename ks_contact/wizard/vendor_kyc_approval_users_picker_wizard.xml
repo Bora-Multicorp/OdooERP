@@ -3,16 +3,22 @@
         <field name="name">view.kyc.vendor.approval.user.picker.wizard</field>
         <field name="model">vendor.kyc.approval.user.picker.wizard</field>
         <field name="arch" type="xml">
-            <form string="Approval Users">
+            <form string="Select Approval Users">
                 <sheet>
                     <group>
                         <div class="o_form_label o_text_warning" style="margin-bottom: 10px;">
-                            Kyc submission requires approval, an approval request will be generated for the selected
-                            authorities.
+                            KYC submission requires approval. Please select Approver 1 and Approver 2.
+                            Approval will be sequential (Approver 1 first, then Approver 2).
                         </div>
-                        <field name="user_ids_according_to_user_selection" invisible="1"/>
-                        <field name="approval_level_1_user_id" readonly="1"/>
-                        <field name="approval_level_2_user_id" readonly="1"/>
+                        <field name="kyc_id" invisible="1"/>
+                        <field name="approver1_user_ids" invisible="1"/>
+                        <field name="approver2_user_ids" invisible="1"/>
+                        <field name="approver1_user" 
+                               options="{'no_create': True}"
+                               required="1"/>
+                        <field name="approver2_user" 
+                               options="{'no_create': True}"
+                               required="1"/>
                     </group>
                 </sheet>
                 <footer>
@@ -35,4 +41,3 @@
         </field>
     </record>
 </odoo>
-
