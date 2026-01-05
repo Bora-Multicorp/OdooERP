@@ -6,25 +6,32 @@ from odoo import api, fields, models
 class ApprovalUsersPicker(models.TransientModel):
     _name = 'product.approval.user.picker.wizard'
     _description = 'Product approval users picker'
-    user_ids_according_to_user_selection = fields.Char(store=True)
 
     product_id = fields.Many2one('product.template', string="Approval for Product Confirmation")
-    company_id = fields.Many2one('res.company', string="Company")
-
-    approver1_users = fields.Many2many(
-        comodel_name='product.approval.config',
-        relation='picker_wizard_product_approver1_rel',  # custom relation table
-        column1='wizard_id',  # FK to wizard
-        column2='approver_id',  # FK to approver
-        string="Approver 1"
+    approver1_user_ids = fields.Many2many(
+        comodel_name='res.users',
+        compute='compute_approver_user_ids',
+        string="Available Approver 1 Users",
+        store=False
+    )
+    
+    approver2_user_ids = fields.Many2many(
+        comodel_name='res.users',
+        compute='compute_approver_user_ids',
+        string="Available Approver 2 Users",
+        store=False
     )
 
-    approver2_users = fields.Many2many(
-        comodel_name='product.approval.config',
-        relation='picker_wizard_product_approver2_rel',  # DIFFERENT relation table
-        column1='wizard_id',
-        column2='approver_id',
-        string="Approver 2"
+    approver1_user = fields.Many2one(
+        comodel_name='res.users',
+        string="Approver 1",
+        required=True
+    )
+
+    approver2_user = fields.Many2one(
+        comodel_name='res.users',
+        string="Approver 2",
+        required=True
     )
 
     add_button_disabled = fields.Boolean(
@@ -32,38 +39,79 @@ class ApprovalUsersPicker(models.TransientModel):
         compute='_compute_add_button_disabled'
     )
 
-    @api.depends('approver1_users', 'approver2_users')
+    @api.depends('product_id')
+    def compute_approver_user_ids(self):
+        for rec in self:
+            approver1_configs = self.env['product.approval.config'].search([
+                ('approver_type', '=', 'approver1'),
+            ])
+            rec.approver1_user_ids = approver1_configs.mapped('user_id')
+
+            # Get users configured as Approver 2
+            approver2_configs = self.env['product.approval.config'].search([
+                ('approver_type', '=', 'approver2'),
+            ])
+            rec.approver2_user_ids = approver2_configs.mapped('user_id')
+
+    @api.depends('approver1_user', 'approver2_user')
     def _compute_add_button_disabled(self):
         for rec in self:
-            rec.add_button_disabled = not (rec.approver1_users or rec.approver2_users)
+            rec.add_button_disabled = not (rec.approver1_user or rec.approver2_user)
+
+    @api.onchange('approver1_user')
+    def _onchange_approver1_user(self):
+        if self.approver1_user and self.approver2_user == self.approver1_user:
+            self.approver2_user = False
+        # Validate that selected user is in the approver1 list
+        if self.approver1_user:
+            approver1_configs = self.env['product.approval.config'].search([
+                ('approver_type', '=', 'approver1'),
+                ('user_id', '=', self.approver1_user.id)
+            ])
+            # if not approver1_configs:
+            #     return {
+            #         'warning': {
+            #             'title': 'Invalid Selection',
+            #             'message': 'Selected user is not configured as Approver 1 for this company.'
+            #         }
+            #     }
+
+    @api.onchange('approver2_user')
+    def _onchange_approver2_user(self):
+        if self.approver2_user and self.approver1_user == self.approver2_user:
+            self.approver1_user = False
+        # Validate that selected user is in the approver2 list
+        if self.approver2_user:
+            approver2_configs = self.env['product.approval.config'].search([
+                ('approver_type', '=', 'approver2'),
+                ('user_id', '=', self.approver2_user.id)
+            ])
+            # if not approver2_configs:
+            #     return {
+            #         'warning': {
+            #             'title': 'Invalid Selection',
+            #             'message': 'Selected user is not configured as Approver 2 for this company.'
+            #         }
+            #     }
 
     def add_users_for_approval(self):
-        user_id_strings = self.user_ids_according_to_user_selection.split(',')
-        id_list = [int(id_str.strip()) for id_str in user_id_strings]
-        approvers = self.env['product.approval.config'].browse(id_list)
-        self.product_id.assign_users(approvers)
+        approvers = []
+        if self.approver1_user:
+            approvers.append({
+                'user_id': self.approver1_user.id,
+                'approval_type': 'approver1'
+            })
+        if self.approver2_user:
+            approvers.append({
+                'user_id': self.approver2_user.id,
+                'approval_type': 'approver2'
+            })
+        
+        if approvers:
+            self.product_id.assign_users(approvers)
 
-    @api.onchange('approver1_users', 'approver2_users')
-    def _user_change(self):
-        approvers = self.approver1_users | self.approver2_users
-        self.user_ids_according_to_user_selection = ','.join(str(u.id) for u in approvers)
-        self.user_ids_according_to_user_selection = self.user_ids_according_to_user_selection.replace("NewId_", "")
-
-    @api.model
-    def default_get(self, fields):
-        res = super().default_get(fields)
-        Approver = self.env['product.approval.config']
-
-        # Prefill Approver 1 with only the default approvers
-        approver1_ids = Approver.search([
-            ('default_approver', '=', 'approver1'),('company_id', '=', res.get('company_id'))
-        ]).ids
-        res['approver1_users'] = [(6, 0, approver1_ids)]
-
-        # Prefill Approver 2 with only the default approvers
-        approver2_ids = Approver.search([
-            ('default_approver', '=', 'approver2'),('company_id', '=', res.get('company_id'))
-        ]).ids
-        res['approver2_users'] = [(6, 0, approver2_ids)]
-
-        return res
+    # @api.model
+    # def default_get(self, fields):
+    #     res = super().default_get(fields)
+    #     # No prefill needed - user will select from the filtered list
+    #     return res

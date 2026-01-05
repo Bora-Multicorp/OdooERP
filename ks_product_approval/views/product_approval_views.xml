@@ -50,6 +50,7 @@
                                 <field name="sequence"/>
                                 <field name="user_id" widget="many2one_avatar_user"
                                        options="{'no_edit': True, 'no_create': True, 'no_open': True}"/>
+                                <field name="approval_type"/>
                                 <field name="remark"/>
                                 <field name="state" readonly="1"/>
                                 <field name="action_date" readonly="1"/>

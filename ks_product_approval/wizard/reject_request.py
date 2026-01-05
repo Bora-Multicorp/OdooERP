@@ -48,6 +48,15 @@ class RejectProductWizard(models.TransientModel):
                     'action_date': fields.Datetime.now(),
                 })
 
+            previous_approved_line = product.approval_users_ids.filtered(
+                lambda l: l.state == 'approve'
+            )
+
+            if previous_approved_line:
+                previous_approved_line.write({
+                    'is_active_line': False
+                })
+
             number_of_product_for_rejction += 1
 
         first_product = products[0]
