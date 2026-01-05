@@ -4,18 +4,29 @@
         <field name="name">ks.approval.confirmation.wizard.form</field>
         <field name="model">ks.approval.confirmation.wizard</field>
         <field name="arch" type="xml">
-            <form string="Send for Approval">
+            <form string="Select Approvers for Confirmation">
                 <group>
                     <field name="ks_purchase_order_id" invisible="1"/>
+                    <field name="ks_available_approver_1_ids" invisible="1"/>
+                    <field name="ks_available_approver_2_ids" invisible="1"/>
                 </group>
                 <div class="alert alert-info" role="alert" style="margin: 16px;">
-                    <p><strong>Approval request will be sent to:</strong></p>
-                    <p style="font-size: 14px; margin-left: 20px;"><field name="ks_approver_names" readonly="1" nolabel="1"/></p>
-                    <p><strong>Do you want to continue?</strong></p>
+                    <p><strong>Please select approvers for confirmation approval:</strong></p>
+                    <p>Both approvers are mandatory. Approval process is sequential (Approver 1 must approve before Approver 2).</p>
                 </div>
+                <group>
+                    <field name="ks_approver_1_id" 
+                           options="{'no_create': True}"
+                           domain="[('id', 'in', ks_available_approver_1_ids), ('share', '=', False), ('id', '!=', ks_approver_2_id)]"
+                           required="1"/>
+                    <field name="ks_approver_2_id" 
+                           options="{'no_create': True}"
+                           domain="[('id', 'in', ks_available_approver_2_ids), ('share', '=', False), ('id', '!=', ks_approver_1_id)]"
+                           required="1"/>
+                </group>
                 <footer>
                     <button name="action_confirm_send" 
-                            string="OK" 
+                            string="Submit for Approval" 
                             type="object" 
                             class="btn-primary"/>
                     <button string="Cancel" 

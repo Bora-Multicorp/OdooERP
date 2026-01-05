@@ -6,107 +6,117 @@ from odoo.exceptions import ValidationError
 class KsPurchaseApprovalConfig(models.Model):
     _name = 'ks.purchase.approval.config'
     _description = 'KS Purchase Approval Configuration'
-    _rec_name = 'company_id'
+    _rec_name = 'user_id'
+    _check_company_auto = False
 
-    company_id = fields.Many2one(
-        'res.company',
-        string='Company',
+    user_id = fields.Many2one(
+        'res.users',
+        string='User',
         required=True,
-        default=lambda self: self.env.company,
         index=True,
+        help='User for whom this approval configuration applies',
     )
     
-    # PM Users for Confirmation Approval
-    ks_confirm_pm1_id = fields.Many2one(
-        'res.users',
-        string='Confirmation Approver PM1',
-        required=True,
-        help='First approval manager for PO confirmation requests',
-    )
-    ks_confirm_pm2_id = fields.Many2one(
-        'res.users',
-        string='Confirmation Approver PM2',
-        required=True,
-        help='Second approval manager for PO confirmation requests',
-    )
+    # Approver Types
+    ks_confirm_approver_type = fields.Selection([
+        ('approver_1', 'Approver 1'),
+        ('approver_2', 'Approver 2'),
+    ], string='Confirmation Approver Type', required=True,
+        help='Approver type for PO confirmation requests')
     
-    # PM Users for Update Approval
-    ks_update_pm1_id = fields.Many2one(
-        'res.users',
-        string='Update Approver PM1',
-        related="ks_confirm_pm1_id",
-        required=True,
-        help='First approval manager for PO update requests',
-    )
-    ks_update_pm2_id = fields.Many2one(
-        'res.users',
-        string='Update Approver PM2',
-        related="ks_confirm_pm2_id",
-        required=True,
-        help='Second approval manager for PO update requests',
-    )
+    ks_update_approver_type = fields.Selection([
+        ('approver_1', 'Approver 1'),
+        ('approver_2', 'Approver 2'),
+    ], string='Update Approver Type', required=True,
+        help='Approver type for PO update requests')
     
-    # PM Users for Cancel Approval
-    ks_cancel_pm1_id = fields.Many2one(
-        'res.users',
-        string='Cancel Approver PM1',
-        related="ks_confirm_pm1_id",
-        required=True,
-        help='First approval manager for PO cancel requests',
-    )
-    ks_cancel_pm2_id = fields.Many2one(
-        'res.users',
-        string='Cancel Approver PM2',
-        related="ks_confirm_pm2_id",
-        required=True,
-        help='Second approval manager for PO cancel requests',
-    )
+    ks_cancel_approver_type = fields.Selection([
+        ('approver_1', 'Approver 1'),
+        ('approver_2', 'Approver 2'),
+    ], string='Cancel Approver Type', required=True,
+        help='Approver type for PO cancel requests')
     
     active = fields.Boolean(default=True)
 
-    _sql_constraints = [
-        ('company_uniq', 'unique(company_id)', 
-         'Only one approval configuration per company is allowed!'),
-    ]
-
-    @api.constrains('ks_confirm_pm1_id', 'ks_confirm_pm2_id')
-    def _check_confirm_pms_different(self):
+    @api.constrains('user_id', 'ks_confirm_approver_type')
+    def _check_confirm_approver_duplicate(self):
+        """Check individually for Confirmation approver type duplicates"""
         for record in self:
-            if record.ks_confirm_pm1_id == record.ks_confirm_pm2_id:
+            duplicates = self.search([
+                ('id', '!=', record.id),
+                ('user_id', '=', record.user_id.id),
+                ('ks_confirm_approver_type', '=', record.ks_confirm_approver_type),
+            ])
+            if duplicates:
                 raise ValidationError(_(
-                    "Confirmation Approver PM1 and PM2 must be different users!"
-                ))
+                    "User '%s' already has a configuration as Confirmation %s. "
+                    "A user can have both Approver 1 and Approver 2, but not duplicate records for the same approver type."
+                ) % (record.user_id.name, dict(record._fields['ks_confirm_approver_type'].selection)[record.ks_confirm_approver_type]))
 
-    @api.constrains('ks_update_pm1_id', 'ks_update_pm2_id')
-    def _check_update_pms_different(self):
+    @api.constrains('user_id', 'ks_update_approver_type')
+    def _check_update_approver_duplicate(self):
+        """Check individually for Update approver type duplicates"""
         for record in self:
-            if record.ks_update_pm1_id == record.ks_update_pm2_id:
+            duplicates = self.search([
+                ('id', '!=', record.id),
+                ('user_id', '=', record.user_id.id),
+                ('ks_update_approver_type', '=', record.ks_update_approver_type),
+            ])
+            if duplicates:
                 raise ValidationError(_(
-                    "Update Approver PM1 and PM2 must be different users!"
-                ))
+                    "User '%s' already has a configuration as Update %s. "
+                    "A user can have both Approver 1 and Approver 2, but not duplicate records for the same approver type."
+                ) % (record.user_id.name, dict(record._fields['ks_update_approver_type'].selection)[record.ks_update_approver_type]))
 
-    @api.constrains('ks_cancel_pm1_id', 'ks_cancel_pm2_id')
-    def _check_cancel_pms_different(self):
+    @api.constrains('user_id', 'ks_cancel_approver_type')
+    def _check_cancel_approver_duplicate(self):
+        """Check individually for Cancel approver type duplicates"""
         for record in self:
-            if record.ks_cancel_pm1_id == record.ks_cancel_pm2_id:
+            duplicates = self.search([
+                ('id', '!=', record.id),
+                ('user_id', '=', record.user_id.id),
+                ('ks_cancel_approver_type', '=', record.ks_cancel_approver_type),
+            ])
+            if duplicates:
                 raise ValidationError(_(
-                    "Cancel Approver PM1 and PM2 must be different users!"
-                ))
+                    "User '%s' already has a configuration as Cancel %s. "
+                    "A user can have both Approver 1 and Approver 2, but not duplicate records for the same approver type."
+                ) % (record.user_id.name, dict(record._fields['ks_cancel_approver_type'].selection)[record.ks_cancel_approver_type]))
 
     @api.model
-    def get_config(self, company_id=None):
-        """Get approval configuration for the specified or current company"""
-        if not company_id:
-            company_id = self.env.company.id
-        config = self.search([('company_id', '=', company_id)], limit=1)
+    def get_config_for_user(self, user_id=None):
+        """Get approval configuration for the specified or current user"""
+        if not user_id:
+            user_id = self.env.user.id
+        config = self.search([('user_id', '=', user_id), ('active', '=', True)], limit=1)
         return config
 
-    def get_all_pm_users(self):
-        """Return all PM users configured in the system for this config"""
+    def get_approvers_by_type(self, approval_type):
+        """
+        Get approvers based on approval type (confirm, update, cancel)
+        Returns list of user_ids who are configured as Approver 1 or Approver 2 for this type
+        """
         self.ensure_one()
-        return (
-            self.ks_confirm_pm1_id | self.ks_confirm_pm2_id |
-            self.ks_update_pm1_id | self.ks_update_pm2_id |
-            self.ks_cancel_pm1_id | self.ks_cancel_pm2_id
-        )
+        approver_type_field = {
+            'confirm': 'ks_confirm_approver_type',
+            'update': 'ks_update_approver_type',
+            'cancel': 'ks_cancel_approver_type',
+        }.get(approval_type)
+        
+        if not approver_type_field:
+            return self.env['res.users']
+        
+        approver_type = getattr(self, approver_type_field)
+        # Return users who have this approver type configured
+        domain = [
+            ('active', '=', True),
+            (approver_type_field, '=', approver_type),
+        ]
+        configs = self.search(domain)
+        return configs.mapped('user_id')
+
+    def get_all_approvers(self):
+        """Return all users configured as approvers in the system"""
+        configs = self.search([('active', '=', True)])
+        return configs.mapped('user_id')
 

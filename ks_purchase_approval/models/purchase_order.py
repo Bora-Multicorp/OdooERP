@@ -22,14 +22,26 @@ class PurchaseOrder(models.Model):
     )
 
     # ===== Confirmation Approval Fields =====
+    ks_confirm_approver_1_id = fields.Many2one(
+        'res.users',
+        string='Confirmation Approver 1',
+        copy=False,
+        help='First approver selected for confirmation approval',
+    )
+    ks_confirm_approver_2_id = fields.Many2one(
+        'res.users',
+        string='Confirmation Approver 2',
+        copy=False,
+        help='Second approver selected for confirmation approval',
+    )
     ks_confirm_pm1_approved = fields.Boolean(
-        string='PM1 Confirmation Approved',
+        string='Approver 1 Confirmation Approved',
         default=False,
         copy=False,
         tracking=True,
     )
     ks_confirm_pm2_approved = fields.Boolean(
-        string='PM2 Confirmation Approved',
+        string='Approver 2 Confirmation Approved',
         default=False,
         copy=False,
         tracking=True,
@@ -44,23 +56,35 @@ class PurchaseOrder(models.Model):
         copy=False,
     )
     ks_confirm_pm1_reason = fields.Text(
-        string='PM1 Confirmation Reason',
+        string='Approver 1 Confirmation Reason',
         copy=False,
     )
     ks_confirm_pm2_reason = fields.Text(
-        string='PM2 Confirmation Reason',
+        string='Approver 2 Confirmation Reason',
         copy=False,
     )
 
     # ===== Update Approval Fields =====
+    ks_update_approver_1_id = fields.Many2one(
+        'res.users',
+        string='Update Approver 1',
+        copy=False,
+        help='First approver selected for update approval',
+    )
+    ks_update_approver_2_id = fields.Many2one(
+        'res.users',
+        string='Update Approver 2',
+        copy=False,
+        help='Second approver selected for update approval',
+    )
     ks_update_pm1_approved = fields.Boolean(
-        string='PM1 Update Approved',
+        string='Approver 1 Update Approved',
         default=False,
         copy=False,
         tracking=True,
     )
     ks_update_pm2_approved = fields.Boolean(
-        string='PM2 Update Approved',
+        string='Approver 2 Update Approved',
         default=False,
         copy=False,
         tracking=True,
@@ -86,14 +110,26 @@ class PurchaseOrder(models.Model):
     )
 
     # ===== Cancel Approval Fields =====
+    ks_cancel_approver_1_id = fields.Many2one(
+        'res.users',
+        string='Cancel Approver 1',
+        copy=False,
+        help='First approver selected for cancel approval',
+    )
+    ks_cancel_approver_2_id = fields.Many2one(
+        'res.users',
+        string='Cancel Approver 2',
+        copy=False,
+        help='Second approver selected for cancel approval',
+    )
     ks_cancel_pm1_approved = fields.Boolean(
-        string='PM1 Cancel Approved',
+        string='Approver 1 Cancel Approved',
         default=False,
         copy=False,
         tracking=True,
     )
     ks_cancel_pm2_approved = fields.Boolean(
-        string='PM2 Cancel Approved',
+        string='Approver 2 Cancel Approved',
         default=False,
         copy=False,
         tracking=True,
@@ -169,30 +205,43 @@ class PurchaseOrder(models.Model):
     )
 
     # ===== Helper Methods =====
-    def _get_approval_config(self):
-        """Get approval configuration for current company"""
-        config = self.env['ks.purchase.approval.config'].get_config(self.company_id.id)
-        if not config:
-            raise UserError(_(
-                "No approval configuration found for company '%s'. "
-                "Please configure PM approvers in Purchase > Configuration > Approval Configuration."
-            ) % self.company_id.name)
-        return config
+    def _get_approval_configs(self):
+        """Get all approval configurations"""
+        return self.env['ks.purchase.approval.config'].search([('active', '=', True)])
 
     def _has_approval_config(self):
-        """Check if approval config exists without raising error"""
-        config = self.env['ks.purchase.approval.config'].get_config(self.company_id.id)
-        return bool(config)
+        """Check if any approval config exists without raising error"""
+        configs = self._get_approval_configs()
+        return bool(configs)
+
+    def _get_available_approvers(self, approval_type):
+        """
+        Get available approvers for a given approval type (confirm, update, cancel)
+        Returns list of user_ids who are configured as Approver 1 or Approver 2 for this type
+        """
+        configs = self._get_approval_configs()
+        approver_type_field = {
+            'confirm': 'ks_confirm_approver_type',
+            'update': 'ks_update_approver_type',
+            'cancel': 'ks_cancel_approver_type',
+        }.get(approval_type)
+        
+        if not approver_type_field:
+            return self.env['res.users']
+        
+        approver_1_users = configs.filtered(lambda c: getattr(c, approver_type_field) == 'approver_1').mapped('user_id')
+        approver_2_users = configs.filtered(lambda c: getattr(c, approver_type_field) == 'approver_2').mapped('user_id')
+        
+        return approver_1_users | approver_2_users
 
     @api.depends_context('uid')
     def _compute_ks_is_pm_user(self):
-        """Check if current user is any of the PM users"""
+        """Check if current user is any of the approvers"""
         for order in self:
             if order._has_approval_config():
-                config = order._get_approval_config()
-                all_pms = config.get_all_pm_users()
-                order.ks_is_pm_user = self.env.user in all_pms
-                order.ks_is_normal_user = self.env.user not in all_pms
+                all_approvers = self.env['ks.purchase.approval.config'].search([('active', '=', True)]).mapped('user_id')
+                order.ks_is_pm_user = self.env.user in all_approvers
+                order.ks_is_normal_user = self.env.user not in all_approvers
             else:
                 order.ks_is_pm_user = False
                 order.ks_is_normal_user = True
@@ -263,7 +312,6 @@ class PurchaseOrder(models.Model):
             if not order._has_approval_config():
                 continue
 
-            config = order._get_approval_config()
             current_user = self.env.user
             is_pm = order.ks_is_pm_user
             is_normal = order.ks_is_normal_user
@@ -284,46 +332,52 @@ class PurchaseOrder(models.Model):
                     order.ks_update_request_user_id == current_user):
                     order.ks_show_complete_update_button = True
 
-            # === PM USER BUTTONS ===
+            # === APPROVER BUTTONS ===
             if is_pm:
                 # Confirmation approval buttons
-                if order.state == 'pending_approval':
-                    # Check if this PM can still approve (hasn't approved yet)
+                if order.state == 'pending_approval' and order.ks_confirm_approver_1_id and order.ks_confirm_approver_2_id:
+                    # Check if this approver can still approve (hasn't approved yet)
                     can_approve = False
-                    if current_user == config.ks_confirm_pm1_id and not order.ks_confirm_pm1_approved:
+                    if current_user == order.ks_confirm_approver_1_id and not order.ks_confirm_pm1_approved:
                         can_approve = True
-                    elif current_user == config.ks_confirm_pm2_id and not order.ks_confirm_pm2_approved:
-                        can_approve = True
+                    elif current_user == order.ks_confirm_approver_2_id and not order.ks_confirm_pm2_approved:
+                        # Sequential: Approver 2 can only approve if Approver 1 has approved
+                        if order.ks_confirm_pm1_approved:
+                            can_approve = True
                     
                     if can_approve:
                         order.ks_show_approve_confirm_button = True
                         order.ks_show_reject_confirm_button = True
 
                 # Update approval buttons
-                if order.state == 'update_requested':
+                if order.state == 'update_requested' and order.ks_update_approver_1_id and order.ks_update_approver_2_id:
                     can_approve = False
-                    if current_user == config.ks_update_pm1_id and not order.ks_update_pm1_approved:
+                    if current_user == order.ks_update_approver_1_id and not order.ks_update_pm1_approved:
                         can_approve = True
-                    elif current_user == config.ks_update_pm2_id and not order.ks_update_pm2_approved:
-                        can_approve = True
+                    elif current_user == order.ks_update_approver_2_id and not order.ks_update_pm2_approved:
+                        # Sequential: Approver 2 can only approve if Approver 1 has approved
+                        if order.ks_update_pm1_approved:
+                            can_approve = True
                     
                     if can_approve:
                         order.ks_show_approve_update_button = True
                         order.ks_show_reject_update_button = True
 
                 # Cancel approval buttons
-                if order.state == 'cancel_requested':
+                if order.state == 'cancel_requested' and order.ks_cancel_approver_1_id and order.ks_cancel_approver_2_id:
                     can_approve = False
-                    if current_user == config.ks_cancel_pm1_id and not order.ks_cancel_pm1_approved:
+                    if current_user == order.ks_cancel_approver_1_id and not order.ks_cancel_pm1_approved:
                         can_approve = True
-                    elif current_user == config.ks_cancel_pm2_id and not order.ks_cancel_pm2_approved:
-                        can_approve = True
+                    elif current_user == order.ks_cancel_approver_2_id and not order.ks_cancel_pm2_approved:
+                        # Sequential: Approver 2 can only approve if Approver 1 has approved
+                        if order.ks_cancel_pm1_approved:
+                            can_approve = True
                     
                     if can_approve:
                         order.ks_show_approve_cancel_button = True
                         order.ks_show_reject_cancel_button = True
 
-                # Unlock button - ONLY for PM users when PO is in 'done' (locked) state
+                # Unlock button - ONLY for approver users when PO is in 'done' (locked) state
                 if order.state == 'done':
                     order.ks_show_unlock_button = True
 
@@ -350,8 +404,9 @@ class PurchaseOrder(models.Model):
                 # No config, use standard behavior
                 return super().button_confirm()
             
-            config = order._get_approval_config()
-            is_pm = self.env.user in config.get_all_pm_users()
+            configs = order._get_approval_configs()
+            all_approvers = configs.mapped('user_id')
+            is_pm = self.env.user in all_approvers
             
             if is_pm:
                 # PM users can directly confirm - call original method
@@ -380,8 +435,9 @@ class PurchaseOrder(models.Model):
                 # No config, use standard behavior
                 continue
             
-            config = order._get_approval_config()
-            is_pm = self.env.user in config.get_all_pm_users()
+            configs = order._get_approval_configs()
+            all_approvers = configs.mapped('user_id')
+            is_pm = self.env.user in all_approvers
             
             if is_pm:
                 # PM users can directly confirm
@@ -394,66 +450,77 @@ class PurchaseOrder(models.Model):
             else:
                 # For multiple records, normal users need to process one at a time
                 # This is a limitation - popup only works for single record
-                order._ks_send_to_pending_approval()
+                # Skip for now - user needs to process individually
+                pass
         
         return True
 
-    def _ks_send_to_pending_approval(self):
-        """Normal user sends PO to pending approval - called after popup confirmation"""
+    def _ks_send_to_pending_approval(self, approver_1_id, approver_2_id):
+        """Normal user sends PO to pending approval - called after popup confirmation with selected approvers"""
         self.ensure_one()
         if self.state not in ['draft', 'sent']:
             raise UserError(_("Can only request confirmation for Draft or Sent orders."))
         
-        config = self._get_approval_config()
-        pm1_name = config.ks_confirm_pm1_id.name if config.ks_confirm_pm1_id else 'PM1'
-        pm2_name = config.ks_confirm_pm2_id.name if config.ks_confirm_pm2_id else 'PM2'
+        if not approver_1_id or not approver_2_id:
+            raise UserError(_("Both Approver 1 and Approver 2 are required."))
+        
+        approver_1 = self.env['res.users'].browse(approver_1_id)
+        approver_2 = self.env['res.users'].browse(approver_2_id)
         
         self.write({
             'state': 'pending_approval',
             'ks_confirm_request_user_id': self.env.user.id,
             'ks_confirm_request_date': fields.Datetime.now(),
+            'ks_confirm_approver_1_id': approver_1_id,
+            'ks_confirm_approver_2_id': approver_2_id,
             'ks_confirm_pm1_approved': False,
             'ks_confirm_pm2_approved': False,
             'ks_confirm_pm1_reason': False,
             'ks_confirm_pm2_reason': False,
         })
         
-        # Log in chatter with actual PM names
+        # Log in chatter with actual approver names
         self.message_post(
-            body=_("Confirmation request submitted by %s. Waiting for approval from: PM1 - %s,  PM2 - %s.") % (
+            body=_("Confirmation request submitted by %s. Waiting for sequential approval from: Approver 1 - %s, Approver 2 - %s.") % (
                 self.env.user.name,
-                pm1_name,
-                pm2_name,
+                approver_1.name,
+                approver_2.name,
             ),
             message_type='notification',
             subtype_xmlid='mail.mt_note',
         )
         
-        # Subscribe PM users
+        # Subscribe approver users
         self.message_subscribe(partner_ids=[
-            config.ks_confirm_pm1_id.partner_id.id,
-            config.ks_confirm_pm2_id.partner_id.id,
+            approver_1.partner_id.id,
+            approver_2.partner_id.id,
         ])
         
         return True
 
     def ks_action_approve_confirmation(self):
-        """PM approves confirmation request - opens wizard for reason"""
+        """Approver approves confirmation request - opens wizard for reason"""
         self.ensure_one()
         if self.state != 'pending_approval':
             raise UserError(_("Can only approve orders in 'Pending Approval' state."))
         
-        config = self._get_approval_config()
+        if not self.ks_confirm_approver_1_id or not self.ks_confirm_approver_2_id:
+            raise UserError(_("Approvers not selected for this confirmation request."))
+        
         current_user = self.env.user
         
-        # Check authorization
-        if current_user not in (config.ks_confirm_pm1_id | config.ks_confirm_pm2_id):
+        # Check authorization - user must be one of the selected approvers
+        if current_user not in (self.ks_confirm_approver_1_id | self.ks_confirm_approver_2_id):
             raise UserError(_("You are not authorized to approve this confirmation request."))
         
+        # Sequential approval: Approver 1 must approve before Approver 2
+        if current_user == self.ks_confirm_approver_2_id and not self.ks_confirm_pm1_approved:
+            raise UserError(_("Approver 1 must approve before Approver 2 can approve."))
+        
         # Check if already approved
-        if current_user == config.ks_confirm_pm1_id and self.ks_confirm_pm1_approved:
+        if current_user == self.ks_confirm_approver_1_id and self.ks_confirm_pm1_approved:
             raise UserError(_("You have already approved this confirmation request."))
-        if current_user == config.ks_confirm_pm2_id and self.ks_confirm_pm2_approved:
+        if current_user == self.ks_confirm_approver_2_id and self.ks_confirm_pm2_approved:
             raise UserError(_("You have already approved this confirmation request."))
         
         # Open wizard for reason
@@ -482,10 +549,12 @@ class PurchaseOrder(models.Model):
         if self.state != 'pending_approval':
             raise UserError(_("Can only approve orders in 'Pending Approval' state."))
         
-        config = self._get_approval_config()
+        if not self.ks_confirm_approver_1_id or not self.ks_confirm_approver_2_id:
+            raise UserError(_("Approvers not selected for this confirmation request."))
+        
         current_user = self.env.user
         
-        if current_user == config.ks_confirm_pm1_id:
+        if current_user == self.ks_confirm_approver_1_id:
             if self.ks_confirm_pm1_approved:
                 raise UserError(_("You have already approved this confirmation request."))
             self.write({
@@ -493,11 +562,14 @@ class PurchaseOrder(models.Model):
                 'ks_confirm_pm1_reason': reason,
             })
             self.message_post(
-                body=_("%s approved the PO. Reason: %s") % (current_user.name, reason),
+                body=_("Approver 1 (%s) approved the PO. Reason: %s") % (current_user.name, reason),
                 message_type='notification',
                 subtype_xmlid='mail.mt_note',
             )
-        elif current_user == config.ks_confirm_pm2_id:
+        elif current_user == self.ks_confirm_approver_2_id:
+            # Sequential: Check if Approver 1 has approved
+            if not self.ks_confirm_pm1_approved:
+                raise UserError(_("Approver 1 must approve before Approver 2 can approve."))
             if self.ks_confirm_pm2_approved:
                 raise UserError(_("You have already approved this confirmation request."))
             self.write({
@@ -505,14 +577,14 @@ class PurchaseOrder(models.Model):
                 'ks_confirm_pm2_reason': reason,
             })
             self.message_post(
-                body=_("%s approved the PO. Reason: %s") % (current_user.name, reason),
+                body=_("Approver 2 (%s) approved the PO. Reason: %s") % (current_user.name, reason),
                 message_type='notification',
                 subtype_xmlid='mail.mt_note',
             )
         else:
             raise UserError(_("You are not authorized to approve this confirmation request."))
         
-        # Check if both PMs have approved
+        # Check if both approvers have approved
         if self.ks_confirm_pm1_approved and self.ks_confirm_pm2_approved:
             # Both approved - confirm the PO using standard flow to ensure receipt creation
             # Ensure validation is done (should already be done, but ensure it)
@@ -535,7 +607,7 @@ class PurchaseOrder(models.Model):
                 self.write({'state': 'done'})
             
             self.message_post(
-                body=_("Purchase Order confirmed after both PM1 and PM2 approval."),
+                body=_("Purchase Order confirmed after both Approver 1 and Approver 2 approval."),
                 message_type='notification',
                 subtype_xmlid='mail.mt_comment',
             )
@@ -558,10 +630,12 @@ class PurchaseOrder(models.Model):
         if not reason:
             raise UserError(_("Rejection reason is required."))
         
-        config = self._get_approval_config()
+        if not self.ks_confirm_approver_1_id or not self.ks_confirm_approver_2_id:
+            raise UserError(_("Approvers not selected for this confirmation request."))
+        
         current_user = self.env.user
         
-        if current_user not in (config.ks_confirm_pm1_id | config.ks_confirm_pm2_id):
+        if current_user not in (self.ks_confirm_approver_1_id | self.ks_confirm_approver_2_id):
             raise UserError(_("You are not authorized to reject this confirmation request."))
         
         # Reset to draft state
@@ -571,6 +645,8 @@ class PurchaseOrder(models.Model):
             'ks_confirm_pm2_approved': False,
             'ks_confirm_request_user_id': False,
             'ks_confirm_request_date': False,
+            'ks_confirm_approver_1_id': False,
+            'ks_confirm_approver_2_id': False,
         })
         
         self.message_post(
@@ -592,60 +668,73 @@ class PurchaseOrder(models.Model):
             raise UserError(_("Update is already approved. Please complete your edits first."))
         return self._action_open_request_reason_wizard('update')
 
-    def ks_do_request_update(self, reason):
-        """Execute update request"""
+    def ks_do_request_update(self, reason, approver_1_id, approver_2_id):
+        """Execute update request with selected approvers"""
         self.ensure_one()
         if not reason:
             raise UserError(_("Update request reason is required."))
-
-        config = self._get_approval_config()
-        pm1_name = config.ks_update_pm1_id.name if config.ks_update_pm1_id else 'PM1'
-        pm2_name = config.ks_update_pm2_id.name if config.ks_update_pm2_id else 'PM2'
-
+        
+        if not approver_1_id or not approver_2_id:
+            raise UserError(_("Both Approver 1 and Approver 2 are required."))
+        
+        approver_1 = self.env['res.users'].browse(approver_1_id)
+        approver_2 = self.env['res.users'].browse(approver_2_id)
+        
         self.write({
             'state': 'update_requested',
             'ks_update_request_reason': reason,
             'ks_update_request_user_id': self.env.user.id,
             'ks_update_request_date': fields.Datetime.now(),
+            'ks_update_approver_1_id': approver_1_id,
+            'ks_update_approver_2_id': approver_2_id,
             'ks_update_pm1_approved': False,
             'ks_update_pm2_approved': False,
             'ks_update_approved': False,
         })
         
         self.message_post(
-            body=_("Update request submitted by %s. Waiting for approval from: PM1 - %s, PM2 - %s. Reason: %s") % (
+            body=_("Update request submitted by %s. Waiting for sequential approval from: Approver 1 - %s, Approver 2 - %s. Reason: %s") % (
                 self.env.user.name,
-                pm1_name,
-                pm2_name,
+                approver_1.name,
+                approver_2.name,
                 reason,
             ),
             message_type='notification',
             subtype_xmlid='mail.mt_note',
         )
         
-        # Subscribe PM users
+        # Subscribe approver users
         self.message_subscribe(partner_ids=[
-            config.ks_update_pm1_id.partner_id.id,
-            config.ks_update_pm2_id.partner_id.id,
+            approver_1.partner_id.id,
+            approver_2.partner_id.id,
         ])
         
         return True
 
     def ks_action_approve_update(self):
-        """PM approves update request"""
+        """Approver approves update request"""
         self.ensure_one()
         if self.state != 'update_requested':
             raise UserError(_("Can only approve update requests in 'Update Requested' state."))
-        config = self._get_approval_config()
+        
+        if not self.ks_update_approver_1_id or not self.ks_update_approver_2_id:
+            raise UserError(_("Approvers not selected for this update request."))
+        
         current_user = self.env.user
-
-        # Authorization / duplicate checks remain the same
-        if current_user == config.ks_update_pm1_id and self.ks_update_pm1_approved:
-            raise UserError(_("You have already approved this update request."))
-        if current_user == config.ks_update_pm2_id and self.ks_update_pm2_approved:
-            raise UserError(_("You have already approved this update request."))
-        if current_user not in (config.ks_update_pm1_id | config.ks_update_pm2_id):
+        
+        # Check authorization - user must be one of the selected approvers
+        if current_user not in (self.ks_update_approver_1_id | self.ks_update_approver_2_id):
             raise UserError(_("You are not authorized to approve this update request."))
+        
+        # Sequential approval: Approver 1 must approve before Approver 2
+        if current_user == self.ks_update_approver_2_id and not self.ks_update_pm1_approved:
+            raise UserError(_("Approver 1 must approve before Approver 2 can approve."))
+        
+        # Check if already approved
+        if current_user == self.ks_update_approver_1_id and self.ks_update_pm1_approved:
+            raise UserError(_("You have already approved this update request."))
+        if current_user == self.ks_update_approver_2_id and self.ks_update_pm2_approved:
+            raise UserError(_("You have already approved this update request."))
 
         # Open reason popup (wizard)
         try:
@@ -672,31 +761,36 @@ class PurchaseOrder(models.Model):
         if self.state != 'update_requested':
             raise UserError(_("Can only approve update requests in 'Update Requested' state."))
 
-        config = self._get_approval_config()
+        if not self.ks_update_approver_1_id or not self.ks_update_approver_2_id:
+            raise UserError(_("Approvers not selected for this update request."))
+        
         current_user = self.env.user
 
-        if current_user == config.ks_update_pm1_id:
+        if current_user == self.ks_update_approver_1_id:
             if self.ks_update_pm1_approved:
                 raise UserError(_("You have already approved this update request."))
             self.ks_update_pm1_approved = True
             self.message_post(
-                body=_("Update approved by PM1: %s. Reason: %s") % (current_user.name, reason),
+                body=_("Update approved by Approver 1 (%s). Reason: %s") % (current_user.name, reason),
                 message_type='notification',
                 subtype_xmlid='mail.mt_note',
             )
-        elif current_user == config.ks_update_pm2_id:
+        elif current_user == self.ks_update_approver_2_id:
+            # Sequential: Check if Approver 1 has approved
+            if not self.ks_update_pm1_approved:
+                raise UserError(_("Approver 1 must approve before Approver 2 can approve."))
             if self.ks_update_pm2_approved:
                 raise UserError(_("You have already approved this update request."))
             self.ks_update_pm2_approved = True
             self.message_post(
-                body=_("Update approved by PM2: %s. Reason: %s") % (current_user.name, reason),
+                body=_("Update approved by Approver 2 (%s). Reason: %s") % (current_user.name, reason),
                 message_type='notification',
                 subtype_xmlid='mail.mt_note',
             )
         else:
             raise UserError(_("You are not authorized to approve this update request."))
         
-        # Check if both PMs have approved
+        # Check if both approvers have approved
         if self.ks_update_pm1_approved and self.ks_update_pm2_approved:
             # Both approved - allow editing
             self.write({
@@ -705,7 +799,7 @@ class PurchaseOrder(models.Model):
             })
             
             self.message_post(
-                body=_("Update approved by both PM1 and PM2. %s can now edit this PO.") % (
+                body=_("Update approved by both Approver 1 and Approver 2. %s can now edit this PO.") % (
                     self.ks_update_request_user_id.name
                 ),
                 message_type='notification',
@@ -727,10 +821,12 @@ class PurchaseOrder(models.Model):
         if not reason:
             raise UserError(_("Rejection reason is required."))
         
-        config = self._get_approval_config()
+        if not self.ks_update_approver_1_id or not self.ks_update_approver_2_id:
+            raise UserError(_("Approvers not selected for this update request."))
+        
         current_user = self.env.user
         
-        if current_user not in (config.ks_update_pm1_id | config.ks_update_pm2_id):
+        if current_user not in (self.ks_update_approver_1_id | self.ks_update_approver_2_id):
             raise UserError(_("You are not authorized to reject this update request."))
         
         # Return to purchase state
@@ -742,6 +838,8 @@ class PurchaseOrder(models.Model):
             'ks_update_request_user_id': False,
             'ks_update_request_date': False,
             'ks_update_approved': False,
+            'ks_update_approver_1_id': False,
+            'ks_update_approver_2_id': False,
         })
         
         self.message_post(
@@ -767,6 +865,8 @@ class PurchaseOrder(models.Model):
             'ks_update_request_date': False,
             'ks_update_pm1_approved': False,
             'ks_update_pm2_approved': False,
+            'ks_update_approver_1_id': False,
+            'ks_update_approver_2_id': False,
         })
         
         self.message_post(
@@ -787,8 +887,9 @@ class PurchaseOrder(models.Model):
                 # No config, use standard behavior
                 return super().button_cancel()
             
-            config = order._get_approval_config()
-            is_pm = self.env.user in config.get_all_pm_users()
+            configs = order._get_approval_configs()
+            all_approvers = configs.mapped('user_id')
+            is_pm = self.env.user in all_approvers
             
             if is_pm:
                 # PM users can directly cancel
@@ -812,69 +913,90 @@ class PurchaseOrder(models.Model):
             raise UserError(_("Can only request cancellation for confirmed Purchase Orders."))
         return self._action_open_request_reason_wizard('cancel')
 
-    def ks_do_request_cancel(self, reason):
-        """Execute cancel request"""
+    def ks_do_request_cancel(self, reason, approver_1_id, approver_2_id):
+        """Execute cancel request with selected approvers"""
         self.ensure_one()
         if not reason:
             raise UserError(_("Cancel request reason is required."))
+        
+        if not approver_1_id or not approver_2_id:
+            raise UserError(_("Both Approver 1 and Approver 2 are required."))
+        
+        approver_1 = self.env['res.users'].browse(approver_1_id)
+        approver_2 = self.env['res.users'].browse(approver_2_id)
         
         self.write({
             'state': 'cancel_requested',
             'ks_cancel_request_reason': reason,
             'ks_cancel_request_user_id': self.env.user.id,
             'ks_cancel_request_date': fields.Datetime.now(),
+            'ks_cancel_approver_1_id': approver_1_id,
+            'ks_cancel_approver_2_id': approver_2_id,
             'ks_cancel_pm1_approved': False,
             'ks_cancel_pm2_approved': False,
         })
         
         self.message_post(
-            body=_("Cancellation request submitted by %s. \n\n Reason: %s") % (
-                self.env.user.name, reason
+            body=_("Cancellation request submitted by %s. Waiting for sequential approval from: Approver 1 - %s, Approver 2 - %s. \n\n Reason: %s") % (
+                self.env.user.name,
+                approver_1.name,
+                approver_2.name,
+                reason
             ),
             message_type='notification',
             subtype_xmlid='mail.mt_note',
         )
         
-        # Subscribe PM users
-        config = self._get_approval_config()
+        # Subscribe approver users
         self.message_subscribe(partner_ids=[
-            config.ks_cancel_pm1_id.partner_id.id,
-            config.ks_cancel_pm2_id.partner_id.id,
+            approver_1.partner_id.id,
+            approver_2.partner_id.id,
         ])
         
         return True
 
     def ks_action_approve_cancel(self):
-        """PM approves cancel request"""
+        """Approver approves cancel request"""
         self.ensure_one()
         if self.state != 'cancel_requested':
             raise UserError(_("Can only approve cancel requests in 'Cancel Requested' state."))
         
-        config = self._get_approval_config()
+        if not self.ks_cancel_approver_1_id or not self.ks_cancel_approver_2_id:
+            raise UserError(_("Approvers not selected for this cancel request."))
+        
         current_user = self.env.user
         
-        if current_user == config.ks_cancel_pm1_id:
+        # Check authorization - user must be one of the selected approvers
+        if current_user not in (self.ks_cancel_approver_1_id | self.ks_cancel_approver_2_id):
+            raise UserError(_("You are not authorized to approve this cancel request."))
+        
+        # Sequential approval: Approver 1 must approve before Approver 2
+        if current_user == self.ks_cancel_approver_2_id and not self.ks_cancel_pm1_approved:
+            raise UserError(_("Approver 1 must approve before Approver 2 can approve."))
+        
+        # Check if already approved
+        if current_user == self.ks_cancel_approver_1_id:
             if self.ks_cancel_pm1_approved:
                 raise UserError(_("You have already approved this cancel request."))
             self.ks_cancel_pm1_approved = True
             self.message_post(
-                body=_("Cancellation approved by PM1: %s") % current_user.name,
+                body=_("Cancellation approved by Approver 1: %s") % current_user.name,
                 message_type='notification',
                 subtype_xmlid='mail.mt_note',
             )
-        elif current_user == config.ks_cancel_pm2_id:
+        elif current_user == self.ks_cancel_approver_2_id:
             if self.ks_cancel_pm2_approved:
                 raise UserError(_("You have already approved this cancel request."))
             self.ks_cancel_pm2_approved = True
             self.message_post(
-                body=_("Cancellation approved by PM2: %s") % current_user.name,
+                body=_("Cancellation approved by Approver 2: %s") % current_user.name,
                 message_type='notification',
                 subtype_xmlid='mail.mt_note',
             )
         else:
             raise UserError(_("You are not authorized to approve this cancel request."))
         
-        # Check if both PMs have approved
+        # Check if both approvers have approved
         if self.ks_cancel_pm1_approved and self.ks_cancel_pm2_approved:
             # Both approved - cancel the PO
             self.write({
@@ -883,7 +1005,7 @@ class PurchaseOrder(models.Model):
             })
             
             self.message_post(
-                body=_("Purchase Order cancelled after both PM1 and PM2 approval."),
+                body=_("Purchase Order cancelled after both Approver 1 and Approver 2 approval."),
                 message_type='notification',
                 subtype_xmlid='mail.mt_comment',
             )
@@ -903,10 +1025,12 @@ class PurchaseOrder(models.Model):
         if not reason:
             raise UserError(_("Rejection reason is required."))
         
-        config = self._get_approval_config()
+        if not self.ks_cancel_approver_1_id or not self.ks_cancel_approver_2_id:
+            raise UserError(_("Approvers not selected for this cancel request."))
+        
         current_user = self.env.user
         
-        if current_user not in (config.ks_cancel_pm1_id | config.ks_cancel_pm2_id):
+        if current_user not in (self.ks_cancel_approver_1_id | self.ks_cancel_approver_2_id):
             raise UserError(_("You are not authorized to reject this cancel request."))
         
         # Return to purchase state
@@ -917,6 +1041,8 @@ class PurchaseOrder(models.Model):
             'ks_cancel_request_reason': False,
             'ks_cancel_request_user_id': False,
             'ks_cancel_request_date': False,
+            'ks_cancel_approver_1_id': False,
+            'ks_cancel_approver_2_id': False,
         })
         
         self.message_post(
@@ -930,12 +1056,12 @@ class PurchaseOrder(models.Model):
     # ===== Override Unlock (Only for PMs) =====
     
     def button_unlock(self):
-        """Override: Only PM users can unlock, and reset update approval"""
+        """Override: Only approver users can unlock, and reset update approval"""
         for order in self:
             if order._has_approval_config():
-                config = order._get_approval_config()
-                if self.env.user not in config.get_all_pm_users():
-                    raise UserError(_("Only PM users can unlock Purchase Orders."))
+                all_approvers = self.env['ks.purchase.approval.config'].search([('active', '=', True)]).mapped('user_id')
+                if self.env.user not in all_approvers:
+                    raise UserError(_("Only approver users can unlock Purchase Orders."))
             
             # Reset any pending update approval flags
             if order.ks_update_approved:
