@@ -300,40 +300,31 @@ class CustomContact(models.Model):
     def trigger_schedule_activity_kyc_expiry_follow_up(self):
         today = fields.Date.context_today(self)
 
-        # 1. Search for all partners that have at least one KYC record
-        # Use read_group to efficiently find the latest ID for each partner
-        # Or search the KYC model directly
-        kyc_model = self.env['res.partner.kyc.approval']
-
-        # 2. Get all partners who have a KYC record
-        all_partners = self.search([('kyc_details', '!=', False)])
-
         activity_type = self.env.ref('mail.mail_activity_data_todo')
+        partner_model = self.env['res.partner']
+        activity_model = self.env['mail.activity']
+        partner_model_id = self.env.ref('base.model_res_partner').id
 
-        for partner in all_partners:
-            # 3. Get the latest record for THIS partner specifically (Sorted by id or date)
-            # We use [-1] logic by ordering descending and taking the first one
-            latest_kyc = kyc_model.search([
-                ('partner_id', '=', partner.id)
-            ], order='id desc', limit=1)
+        # 1️⃣ Find partners whose latest KYC expires today
+        partners = partner_model.search([
+            ('deadline', '=', today)
+        ])
 
-            # 4. Check if this LATEST record's deadline is today
-            if latest_kyc and latest_kyc.deadline == today:
+        for partner in partners:
+            # 2️⃣ Prevent duplicate activity
+            existing_activity = activity_model.search([
+                ('res_model_id', '=', partner_model_id),
+                ('res_id', '=', partner.id),
+                ('summary', '=', 'KYC Expiry Follow-up'),
+            ], limit=1)
 
-                # Check for existing activity to prevent duplicates
-                existing_activity = self.env['mail.activity'].search([
-                    ('res_id', '=', partner.id),
-                    ('res_model_id', '=', self.env.ref('base.model_res_partner').id),
-                    ('summary', '=', 'KYC Expiry Follow-up')
-                ], limit=1)
-
-                if not existing_activity:
-                    self.env['mail.activity'].create({
-                        'activity_type_id': activity_type.id,
-                        'note': f'LATEST KYC for {partner.name} expires today. Please re-verify.',
-                        'summary': 'KYC Expiry Follow-up',
-                        'date_deadline': today,
-                        'user_id': partner.user_id.id or self.env.user.id,
-                        'res_id': partner.id,
-                        'res_model_id': self.env.ref('base.model_res_partner').id,
-                    })
+            if not existing_activity:
+                activity_model.create({
+                    'activity_type_id': activity_type.id,
+                    'summary': 'KYC Expiry Follow-up',
+                    'note': f'KYC for {partner.name} expires today. Please re-verify.',
+                    'date_deadline': today,
+                    'user_id': partner.user_id.id or self.env.user.id,
+                    'res_model_id': partner_model_id,
+                    'res_id': partner.id,
+                })
