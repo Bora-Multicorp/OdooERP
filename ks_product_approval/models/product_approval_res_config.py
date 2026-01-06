@@ -13,39 +13,14 @@ class ProductApprovalConfig(models.Model):
     _order = 'sequence'
 
     sequence = fields.Integer(string='Sequence', readonly=True)
-    user_id = fields.Many2one('res.users', string='Approval User', required=True)
-    default_approver = fields.Selection([
+    user_id = fields.Many2one('res.users', string='User Name', required=True)
+    approver_type = fields.Selection([
         ('approver1', 'Approver 1'),
         ('approver2', 'Approver 2'),
-    ], string="Default")
+    ], string="Approver Type", required=True)
     color = fields.Integer(string="Color Index", readonly=True)
-    company_id = fields.Many2one('res.company', string='Company', required=True)
-
-    _sql_constraints = [
-        (
-            'unique_company_user',
-            'unique(company_id, user_id)',
-            'This user is already an approver for this company.'
-        ),
-        # (
-        #     'unique_company_default_approver',
-        #     'unique(company_id, default_approver)',
-        #     'Each company can have only one Approver 1 and one Approver 2.'
-        # ),
-    ]
 
     existing_user_ids = fields.Many2many('res.users', compute='_compute_existing_user_ids')
-
-    @api.constrains('company_id')
-    def _check_max_two_approvers_per_company(self):
-        for record in self:
-            count = self.search_count([
-                ('company_id', '=', record.company_id.id)
-            ])
-            if count > 2:
-                raise ValidationError(
-                    _('Only two approvers (Approver 1 and Approver 2) are allowed per company.')
-                )
 
     @api.depends('user_id')
     def _compute_existing_user_ids(self):
@@ -73,47 +48,12 @@ class ProductApprovalConfig(models.Model):
             defaults['sequence'] = max_sequence + 1
         return defaults
 
-    def _check_approver_order(self, vals):
-        """ Enforce strict hierarchy: Approver 1 must exist before/with Approver 2. """
-        target_type = vals.get('default_approver')
-
-        # 1. Logic for setting an Approver 2
-        if target_type == 'approver2':
-            domain = [('default_approver', '=', 'approver1')]
-            if self.ids:
-                domain.append(('id', 'not in', self.ids))
-
-            if not self.env['product.approval.config'].search_count(domain):
-                raise ValidationError(_(
-                    "Hierarchy Error: You cannot have an 'Approver 2' without an 'Approver 1'. "
-                    "Please configure 'Approver 1' first."
-                ))
-
-        # 2. Logic for removing an Approver 1 (by changing it to something else or False)
-        # If the record WAS Approver 1 and is being changed, check if an Approver 2 is left stranded
-        # for record in self:
-        #     if record.default_approver == 'approver1' and target_type != 'approver1':
-        #         # Check if an Approver 2 exists that isn't the current record
-        #         a2_domain = [('default_approver', '=', 'approver2'), ('id', 'not in', self.ids)]
-        #         if self.env['product.approval.config'].search_count(a2_domain):
-        #             raise ValidationError(_(
-        #                 "Action Denied: You cannot remove or change the only 'Approver 1' "
-        #                 "while an 'Approver 2' still exists in the system."
-        #             ))
 
     # Override create to handle the single approver rule
     @api.model_create_multi
     def create(self, vals_list):
 
         for vals in vals_list:
-
-            # 1. to make sure there will be only one approver and only one approver2
-            # if vals.get('default_approver'):
-            #     self._check_approver_order(vals)
-            #     # Find the old approver of the same type and reset them
-            #     self.search([
-            #         ('default_approver', '=', vals['default_approver'])
-            #     ]).write({'default_approver': False})
 
             # 1. select colors
             if not vals.get('color'):
@@ -135,45 +75,35 @@ class ProductApprovalConfig(models.Model):
             res._update_draft_ks_product_approvals()
         return res_list
 
-    # Override write to handle the single approver rule
+    # Override write
     def write(self, vals):
-        if 'default_approver' in vals:
-            self._check_approver_order(vals)
-        # To make sure there will be only one approver and only one approver2
-        # if vals.get('default_approver'):
-        #     # Find the old approver of the same type and reset them
-        #     self.search([
-        #         ('id', '!=', self.id),
-        #         ('default_approver', '=', vals['default_approver'])
-        #     ]).write({'default_approver': False})
-
         res = super().write(vals)
         self._update_draft_ks_product_approvals()
         return res
 
-    @api.constrains('default_user', 'group')
-    def _check_unique_default_user_per_group(self):
-        for record in self:
-            if record.default_user:
-                existing_default_users = self.search([
-                    ('id', '!=', record.id),
-                    ('group', '=', record.group),
-                    ('default_user', '=', True)
-                ])
-                if existing_default_users:
-                    # Reset the previous default user to False
-                    existing_default_users.write({'default_user': False})
+    # @api.constrains('default_user', 'group')
+    # def _check_unique_default_user_per_group(self):
+    #     for record in self:
+    #         if record.default_user:
+    #             existing_default_users = self.search([
+    #                 ('id', '!=', record.id),
+    #                 ('group', '=', record.group),
+    #                 ('default_user', '=', True)
+    #             ])
+    #             if existing_default_users:
+    #                 # Reset the previous default user to False
+    #                 existing_default_users.write({'default_user': False})
 
-    @api.onchange('default_user', 'group')
-    def _onchange_default_user(self):
-        if self.default_user:
-            existing_default_users = self.search([
-                ('id', '!=', self._origin.id if self._origin else False),
-                ('group', '=', self.group),
-                ('default_user', '=', True)
-            ])
-            if existing_default_users:
-                pass
+    # @api.onchange('default_user', 'group')
+    # def _onchange_default_user(self):
+    #     if self.default_user:
+    #         existing_default_users = self.search([
+    #             ('id', '!=', self._origin.id if self._origin else False),
+    #             ('group', '=', self.group),
+    #             ('default_user', '=', True)
+    #         ])
+    #         if existing_default_users:
+    #             pass
 
     def unlink(self):
         # Step 1: Collect all affected product template
@@ -221,8 +151,10 @@ class ProductApprovalConfig(models.Model):
         for product in ks_product_approvals:
             approval_lines = [(5, 0, 0)]  # Clear existing first
             for config in config_users:
+                approval_type = config.approver_type or 'approver1'
                 approval_lines.append((0, 0, {
                     'sequence': config.sequence,
                     'user_id': config.user_id.id,
+                    'approval_type': approval_type,
                 }))
             product.write({'approval_users_ids': approval_lines})

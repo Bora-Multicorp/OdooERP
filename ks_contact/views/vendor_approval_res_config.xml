@@ -7,33 +7,21 @@
         <field name="arch" type="xml">
             <form string="Vendor Approval Settings">
                 <sheet>
-                    <div class="oe_title">
-                        <h1>
-                            <field name="company_id" options="{'no_create': True, 'no_open': True}"/>
-                        </h1>
-                    </div>
                     <group>
-                        <group string="Approval Level 1">
-                            <field name="approval_level_1_user_id" 
+                        <group>
+                            <field name="user_id" 
                                    options="{'no_create': True}"
-                                   required="1"
-                                   domain="[('id', '!=', approval_level_2_user_id), ('share', '=', False)]"/>
-                            <div class="alert alert-info" role="alert">
-                                <strong>Approval Level 1:</strong> First level approver for vendor KYC requests.
-                                This user cannot be assigned to Approval Level 2.
-                            </div>
+                                   required="1"/>
                         </group>
-                        <group string="Approval Level 2">
-                            <field name="approval_level_2_user_id" 
-                                   options="{'no_create': True}"
-                                   required="1"
-                                   domain="[('id', '!=', approval_level_1_user_id), ('share', '=', False)]"/>
-                            <div class="alert alert-info" role="alert">
-                                <strong>Approval Level 2:</strong> Second level approver for vendor KYC requests.
-                                This user cannot be assigned to Approval Level 1.
-                            </div>
+                        <group>
+                            <field name="approver_type" required="1"/>
                         </group>
                     </group>
+                    <div class="alert alert-info" role="alert" style="margin-top: 10px;">
+                        <strong>Note:</strong> Configure approvers for vendor approval process. 
+                        A user can be configured as both Approver 1 and Approver 2 (separate records).
+                        This configuration is global and not company-specific.
+                    </div>
                 </sheet>
             </form>
         </field>
@@ -45,11 +33,9 @@
         <field name="model">vendor.approval.config</field>
         <field name="arch" type="xml">
             <list string="Vendor Approval Settings">
-                <field name="company_id"/>
-                <field name="approval_level_1_user_id" 
+                <field name="user_id" 
                        options="{'no_edit': True, 'no_create': True, 'no_open': True}"/>
-                <field name="approval_level_2_user_id" 
-                       options="{'no_edit': True, 'no_create': True, 'no_open': True}"/>
+                <field name="approver_type"/>
             </list>
         </field>
     </record>
@@ -64,8 +50,8 @@
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">Configure Vendor Approval Settings</p>
             <p>
-                Set up Approval Level 1 and Approval Level 2 users for vendor KYC approval workflow.
-                Each level must have a different user assigned.
+                Set up Approver 1 and Approver 2 users for vendor KYC approval workflow.
+                A user can be configured for both approver types (create separate records).
             </p>
         </field>
     </record>

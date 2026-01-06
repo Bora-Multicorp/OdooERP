@@ -28,6 +28,18 @@ class ApproveProductWizard(models.TransientModel):
             )
 
             if approval_line:
+                # Check if this is Approver 2, and if so, verify Approver 1 has approved
+                if approval_line.approval_type == 'approver2':
+                    approver1_line = product.approval_users_ids.filtered(
+                        lambda l: l.approval_type == 'approver1' and l.state =='approve' and l.is_active_line == True
+                    )
+                    if approver1_line:
+                        # Check if Approver 1 has approved
+                        if approver1_line.state != 'approve':
+                            raise UserError(
+                                f"Cannot approve: Approver 1 must approve the product '{product.name}' before Approver 2 can approve."
+                            )
+                
                 approval_line.write({
                     'state': 'approve',
                     'remark': self.remark,

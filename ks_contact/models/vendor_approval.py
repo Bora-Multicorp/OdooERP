@@ -72,13 +72,19 @@ class ContactKYCApproval(models.Model):
     @api.depends('approval_users_ids.user_id', 'approval_users_ids.state')
     @api.depends_context('uid')
     def _compute_has_pending_approval(self):
-        """Check if current user has a pending approval request"""
+        """Check if current user has a pending approval request (sequential - only current approver)"""
         current_user = self.env.user
         for record in self:
-            pending_line = record.approval_users_ids.filtered(
-                lambda l: l.user_id == current_user and not l.state
+            # Get the first pending approver in sequence (sequential approval)
+            pending_approvers = sorted(
+                record.approval_users_ids.filtered(lambda l: not l.state),
+                key=lambda l: l.sequence
             )
-            record.has_pending_approval = bool(pending_line)
+            # Only show approval button if current user is the first pending approver
+            if pending_approvers and pending_approvers[0].user_id == current_user:
+                record.has_pending_approval = True
+            else:
+                record.has_pending_approval = False
 
     @api.depends('partner_id.user_ids')
     @api.depends_context('uid')
@@ -239,6 +245,7 @@ class ContactKYCApproval(models.Model):
     is_rejected = fields.Boolean(tracking=True)
     rejection_date = fields.Datetime("Rejection Date", tracking=True)
     rejection_reason = fields.Text('Rejection Reason', tracking=True)
+    kyc_approval_creator = fields.Many2one('res.users',string='KYC Approval Creator')
 
     can_set_draft = fields.Boolean(
         compute="_compute_can_set_draft", string="Can Set Draft"
@@ -253,7 +260,10 @@ class ContactKYCApproval(models.Model):
         Approvers should not edit their own approval workflow.
         """
         for rec in self:
-            rec.can_set_draft = not (self.env.user in rec.approval_users_ids.mapped('user_id'))
+            if rec.kyc_approval_creator:
+                rec.can_set_draft = rec.kyc_approval_creator == self.env.user
+            else:
+                rec.can_set_draft = False
 
     # -------------------------------------------------------------------------
     # Approval assignment logic
@@ -268,10 +278,10 @@ class ContactKYCApproval(models.Model):
             'user_id': approval.user_id.id
         }) for idx, approval in enumerate(approvers)]
 
-        self.write({'approval_users_ids': vals, 'state': 'pending'})
+        self.write({'approval_users_ids': vals, 'state': 'pending','kyc_approval_creator': self.env.user.id})
         
-        # Create activities for ALL approvers simultaneously (parallel approval)
-        self._schedule_parallel_approval_activities()
+        # Create activity only for first approver (sequential approval)
+        self._schedule_sequential_approval_activities()
 
     # -------------------------------------------------------------------------
     # Submit KYC Approval
@@ -291,10 +301,12 @@ class ContactKYCApproval(models.Model):
         if not (is_admin or is_owner):
             raise ValidationError(_("Access Denied: Only administrators or the form creator can submit for approval."))
         
-        # Check if approval config exists (read-only check, no sudo needed for read)
-        config = self.env['vendor.approval.config'].get_config()
-        if not config:
-            raise ValidationError(_("Please configure Approval Authority in Vendor Approval Settings before Submit Request"))
+        # Check if approval config exists with both approver types
+        approver1_configs = self.env['vendor.approval.config'].search([('approver_type', '=', 'approver1')])
+        approver2_configs = self.env['vendor.approval.config'].search([('approver_type', '=', 'approver2')])
+        
+        if not approver1_configs or not approver2_configs:
+            raise ValidationError(_("Please configure both Approver 1 and Approver 2 in Vendor Approval Settings before Submit Request"))
 
         # Return action without sudo() to maintain proper access control
         return {
@@ -414,29 +426,35 @@ class ContactKYCApproval(models.Model):
 
 
     # -------------------------------------------------------------------------
-    # Parallel Approval Activities
+    # Sequential Approval Activities
     # -------------------------------------------------------------------------
-    def _schedule_parallel_approval_activities(self):
+    def _schedule_sequential_approval_activities(self):
         """
-        Create activities for ALL pending approvers simultaneously (parallel approval).
-        Each approver receives their own activity and can act independently.
+        Create activity only for the first pending approver (sequential approval).
+        After first approver approves, activity will be created for the next approver.
         """
         for rec in self:
-            pending_approvers = rec.approval_users_ids.filtered(lambda l: not l.state)
+            # Get the first pending approver in sequence
+            pending_approvers = sorted(
+                rec.approval_users_ids.filtered(lambda l: not l.state),
+                key=lambda l: l.sequence
+            )
             
-            for approver_line in pending_approvers:
-                # Create activity for each approver
+            if pending_approvers:
+                first_approver = pending_approvers[0]
+                
+                # Create activity only for the first approver
                 rec.activity_schedule(
                     act_type_xmlid='mail.mail_activity_data_todo',
                     summary=f"KYC Approval for: {rec.partner_id.name}",
                     note=_("Please review this KYC approval request."),
-                    user_id=approver_line.user_id.id,
+                    user_id=first_approver.user_id.id,
                     date_deadline=fields.Date.context_today(rec),
                 )
 
-                # Send real-time notification to each approver
+                # Send real-time notification to first approver
                 rec.env['bus.bus']._sendone(
-                    approver_line.user_id.partner_id,
+                    first_approver.user_id.partner_id,
                     'simple_notification',
                     {
                         'type': 'success',
@@ -445,29 +463,60 @@ class ContactKYCApproval(models.Model):
                         'sticky': True,
                     }
                 )
-            
-            # Set assigned_to to first pending approver for backward compatibility
-            # (but all approvers can see buttons via has_pending_approval)
-            if pending_approvers:
-                rec.assigned_to = pending_approvers[0].user_id
+                
+                # Set assigned_to to first pending approver
+                rec.assigned_to = first_approver.user_id
 
     # -------------------------------------------------------------------------
-    # Assign next approver (kept for backward compatibility, but not used in parallel flow)
+    # Assign next approver (sequential approval)
     # -------------------------------------------------------------------------
     def _update_assigned_to(self):
         """
-        Determine the next approver based on sequence.
-        Note: In parallel approval flow, this is mainly for backward compatibility.
-        All pending approvers can act independently via has_pending_approval.
+        Determine the next approver based on sequence (sequential approval).
+        After an approver approves, trigger activity for the next approver.
         """
         for rec in self:
-            next_user = next(
-                (line.user_id for line in sorted(rec.approval_users_ids, key=lambda l: l.sequence)
-                 if not line.state),
-                None
+            # Get the first pending approver in sequence
+            pending_approvers = sorted(
+                rec.approval_users_ids.filtered(lambda l: not l.state),
+                key=lambda l: l.sequence
             )
-
-            rec.assigned_to = next_user
+            
+            if pending_approvers:
+                next_approver = pending_approvers[0]
+                rec.assigned_to = next_approver.user_id
+                
+                # Create activity for the next approver if not already exists
+                existing_activity = self.env['mail.activity'].search([
+                    ('res_model', '=', 'res.partner.kyc.approval'),
+                    ('res_id', '=', rec.id),
+                    ('user_id', '=', next_approver.user_id.id),
+                    ('activity_type_id', '=', self.env.ref('mail.mail_activity_data_todo').id),
+                ], limit=1)
+                
+                if not existing_activity:
+                    # Create activity for next approver
+                    rec.activity_schedule(
+                        act_type_xmlid='mail.mail_activity_data_todo',
+                        summary=f"KYC Approval for: {rec.partner_id.name}",
+                        note=_("Please review this KYC approval request."),
+                        user_id=next_approver.user_id.id,
+                        date_deadline=fields.Date.context_today(rec),
+                    )
+                    
+                    # Send real-time notification to next approver
+                    rec.env['bus.bus']._sendone(
+                        next_approver.user_id.partner_id,
+                        'simple_notification',
+                        {
+                            'type': 'success',
+                            'title': _("KYC Approval for: %s") % rec.partner_id.name,
+                            'message': _("A new approval task has been assigned to you."),
+                            'sticky': True,
+                        }
+                    )
+            else:
+                rec.assigned_to = False
 
 
     # -------------------------------------------------------------------------
@@ -475,7 +524,7 @@ class ContactKYCApproval(models.Model):
     # -------------------------------------------------------------------------
     def _update_state_based_on_approvals(self):
         """
-        Recalculate KYC state based on all approval users (parallel approval):
+        Recalculate KYC state based on all approval users (sequential approval):
             - Any reject → rejected
             - All approve → confirmed
         """
@@ -500,7 +549,7 @@ class ContactKYCApproval(models.Model):
                 # Post chatter message indicating both levels approved
                 approvers_info = []
                 for line in sorted(active_lines, key=lambda l: l.sequence):
-                    level = "Approval Level 1" if line.sequence == 1 else "Approval Level 2"
+                    level = "Approver 1" if line.sequence == 1 else "Approver 2"
                     approvers_info.append(f"{level}: {line.user_id.name}")
                 
                 rec.message_post(

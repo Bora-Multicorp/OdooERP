@@ -105,11 +105,28 @@ class ProductApproval(models.Model):
 
     def assign_users(self, approvers):
         approval_user_vals = []
-        for index, approval in enumerate(approvers):
+        sequence = 1
+        
+        # First add Approver 1, then Approver 2
+        approver1_list = [a for a in approvers if a.get('approval_type') == 'approver1']
+        approver2_list = [a for a in approvers if a.get('approval_type') == 'approver2']
+        
+        for approval in approver1_list:
             approval_user_vals.append((0, 0, {
-                'sequence': index + 1,
-                'user_id': approval.user_id.id,
+                'sequence': sequence,
+                'user_id': approval.get('user_id'),
+                'approval_type': 'approver1',
             }))
+            sequence += 1
+        
+        for approval in approver2_list:
+            approval_user_vals.append((0, 0, {
+                'sequence': sequence,
+                'user_id': approval.get('user_id'),
+                'approval_type': 'approver2',
+            }))
+            sequence += 1
+        
         self.write({
             'approval_users_ids': approval_user_vals,
             'state': 'pending'
@@ -139,7 +156,7 @@ class ProductApproval(models.Model):
                 'view_mode': 'form',
                 'view_type': 'form',
                 'view_id': view_id.id,
-                'context': {'default_product_id': self.id,'default_company_id': self.env.company.id},
+                'context': {'default_product_id': self.id},
                 }
 
     def approve_by_manager(self):
@@ -150,6 +167,14 @@ class ProductApproval(models.Model):
             next_user = None
             for line in sorted(rec.approval_users_ids, key=lambda x: x.sequence):
                 if not line.state:
+                    # If this is Approver 2, check if Approver 1 has approved
+                    if line.approval_type == 'approver2':
+                        approver1_line = rec.approval_users_ids.filtered(
+                            lambda l: l.approval_type == 'approver1' and l.state == False
+                        )
+                        if approver1_line and approver1_line.state != 'approve':
+                            # Approver 1 hasn't approved yet, so don't assign Approver 2
+                            continue
                     next_user = line.user_id
                     break
             rec.assigned_to = next_user
@@ -355,8 +380,13 @@ class ProductApprovalUsers(models.Model):
     ks_product_approval_id = fields.Many2one('product.template', string="Product Approval")
     job_id = fields.Char(string="Designation", readonly=True)
     user_id = fields.Many2one('res.users', string='User', required=True)
+    approval_type = fields.Selection([
+        ('approver1', 'Approver 1'),
+        ('approver2', 'Approver 2')
+    ], string='Approval Type', required=True, default='approver1')
     state = fields.Selection([('approve', 'Approved'), ('reject', 'Rejected'), ('suspended', 'Suspended')],
                              string="Action")
+    is_active_line = fields.Boolean(string="Is Active",default=True)
     remark = fields.Char('Remarks', tracking=True)
     action_date = fields.Datetime(string="Action Date")
 
