@@ -7,8 +7,7 @@
             <field name="arch" type="xml">
                 <xpath expr="//field[@name='partner_id']" position="attributes">
                     <attribute name="domain">
-                        [('is_vendor', '=', True), ('is_kyc', '=', True)] if picking_type_code == 'incoming' else
-                        [('is_customer', '=', True)] if picking_type_code == 'outgoing' else []
+                        [('is_vendor', '=', True), ('is_kyc', '=', True)] if picking_type_code == 'incoming' else [('is_customer', '=', True)] if picking_type_code == 'outgoing' else []
                     </attribute>
                     <attribute name="options">{'no_create': True, 'no_create_edit': True}</attribute>
                 </xpath>
