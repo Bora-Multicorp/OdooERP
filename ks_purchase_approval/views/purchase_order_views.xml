@@ -37,8 +37,7 @@
                 PM users: Will confirm directly
                 Normal users: Will go to Pending Approval (no popup)
                 
-                The "Send by Email" buttons (action_rfq_send) are overridden in Python
-                to open our combined Email + WhatsApp wizard instead.
+                The "Send by Email" buttons (action_rfq_send) use the base Odoo email functionality.
             -->
 
             <!-- Hide original Cancel button based on state and user type -->

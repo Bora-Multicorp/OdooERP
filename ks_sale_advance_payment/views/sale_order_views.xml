@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Sale Order Form - Add Advance Payment Button and Smart Button -->
+    <record id="view_order_form_inherit_advance_payment" model="ir.ui.view">
+        <field name="name">sale.order.form.advance.payment</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+            <!-- Add Smart Button for Advance Payments -->
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_view_advance_payments"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-money"
+                        invisible="ks_advance_payment_count == 0">
+                    <field name="ks_advance_payment_count" widget="statinfo" string="Advance Payments"/>
+                </button>
+            </xpath>
+
+            <!-- Add hidden fields for visibility logic -->
+            <xpath expr="//field[@name='partner_id']" position="before">
+                <field name="ks_advance_payment_amount" invisible="1"/>
+                <field name="ks_advance_payment_balance" invisible="1"/>
+            </xpath>
+
+            <!-- Add Advance Payment button in header -->
+            <button id="create_invoice" position="after">
+                <button name="action_create_advance_payment"
+                        type="object"
+                        string="Create Advance Payment"
+                        class="btn-secondary"
+                        invisible="state not in ('sale', 'sent')"
+                        help="Create a payment directly from this sale order without creating an invoice"/>
+            </button>
+
+            <!-- Add Advance Payment Summary in the Other Info tab -->
+            <xpath expr="//page[@name='other_information']//group" position="after">
+                <group string="Advance Payment Summary" 
+                       name="advance_payment_summary"
+                       invisible="ks_advance_payment_count == 0">
+                    <group>
+                        <field name="ks_advance_payment_amount" string="Total Advance Received"/>
+                        <field name="ks_advance_payment_balance" string="Balance Due"/>
+                    </group>
+                </group>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Add Sale Order reference field to Payment Form View -->
+    <record id="view_account_payment_form_inherit_sale_order" model="ir.ui.view">
+        <field name="name">account.payment.form.sale.order</field>
+        <field name="model">account.payment</field>
+        <field name="inherit_id" ref="account.view_account_payment_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='partner_id']" position="after">
+                <field name="ks_sale_order_id" 
+                       string="Sale Order" 
+                       readonly="state != 'draft'"
+                       invisible="not ks_sale_order_id and state != 'draft'"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Add Sale Order column to Payment List View -->
+    <record id="view_account_payment_list_inherit_sale_order" model="ir.ui.view">
+        <field name="name">account.payment.list.sale.order</field>
+        <field name="model">account.payment</field>
+        <field name="inherit_id" ref="account.view_account_payment_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='partner_id']" position="after">
+                <field name="ks_sale_order_id" string="Sale Order" optional="show"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>
+

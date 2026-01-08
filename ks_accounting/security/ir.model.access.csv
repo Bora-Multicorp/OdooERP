@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_ks_warehouse_insurance_user,ks.warehouse.insurance.user,ks_accounting.model_ks_warehouse_insurance,base.group_user,1,1,1,1
+access_ks_warehouse_insurance_manager,ks.warehouse.insurance.manager,ks_accounting.model_ks_warehouse_insurance,base.group_system,1,1,1,1
+

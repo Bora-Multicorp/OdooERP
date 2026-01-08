@@ -1,0 +1,7 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_ks_sale_approval_config_user,ks.sale.approval.config.user,model_ks_sale_approval_config,sales_team.group_sale_salesman,1,0,0,0
+access_ks_sale_approval_config_admin,ks.sale.approval.config.admin,model_ks_sale_approval_config,base.group_system,1,1,1,1
+access_ks_sale_reject_reason_wizard_user,ks.sale.reject.reason.wizard.user,model_ks_sale_reject_reason_wizard,sales_team.group_sale_salesman,1,1,1,1
+access_ks_sale_approval_request_wizard_user,ks.sale.approval.request.wizard.user,model_ks_sale_approval_request_wizard,base.group_user,1,1,1,1
+access_ks_sale_approval_reason_wizard_user,ks.sale.approval.reason.wizard.user,model_ks_sale_approval_reason_wizard,base.group_user,1,1,1,1
+

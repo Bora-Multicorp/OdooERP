@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        
+        <!-- Email Template: Sale Order Confirmation -->
+        <record id="email_template_sale_confirmation" model="mail.template">
+            <field name="name">Sale Order: Confirmation Email</field>
+            <field name="model_id" ref="sale.model_sale_order"/>
+            <field name="subject">Order Confirmation - {{ object.name }} - {{ object.company_id.name }}</field>
+            <field name="email_from">{{ (object.user_id.email_formatted or object.company_id.email_formatted or user.email_formatted) }}</field>
+            <field name="email_to">{{ object.partner_id.email or '' }}</field>
+            <field name="partner_to">{{ object.partner_id.id }}</field>
+            <field name="body_html" type="html">
+<div style="margin: 0px; padding: 0px; font-size: 13px;">
+    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+        Dear <t t-out="object.partner_id.name or 'Valued Customer'">Customer</t>,
+    </p>
+    <br/>
+    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+        Thank you for your order! We are pleased to confirm that your order <strong><t t-out="object.name">SO/001</t></strong> has been confirmed.
+    </p>
+    <br/>
+    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+        <strong>Order Details:</strong>
+    </p>
+    <table style="border-collapse: collapse; margin: 10px 0; width: 100%;">
+        <tr>
+            <td style="padding: 5px 15px 5px 0; color: #666; border-bottom: 1px solid #eee;">Order Reference:</td>
+            <td style="padding: 5px 0; border-bottom: 1px solid #eee;"><strong><t t-out="object.name">SO/001</t></strong></td>
+        </tr>
+        <tr>
+            <td style="padding: 5px 15px 5px 0; color: #666; border-bottom: 1px solid #eee;">Order Date:</td>
+            <td style="padding: 5px 0; border-bottom: 1px solid #eee;"><t t-out="object.date_order.strftime('%B %d, %Y') if object.date_order else ''">January 01, 2024</t></td>
+        </tr>
+        <tr>
+            <td style="padding: 5px 15px 5px 0; color: #666; border-bottom: 1px solid #eee;">Total Amount:</td>
+            <td style="padding: 5px 0; border-bottom: 1px solid #eee;"><strong><t t-out="format_amount(object.amount_total, object.currency_id)">$ 0.00</t></strong></td>
+        </tr>
+    </table>
+    <br/>
+    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+        We are processing your order and will keep you updated on its status. You will receive another email when your order is packed and ready for shipment.
+    </p>
+    <br/>
+    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+        If you have any questions, please don't hesitate to contact us.
+    </p>
+    <br/>
+    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+        Best regards,<br/>
+        <t t-if="object.user_id">
+            <strong><t t-out="object.user_id.name">Salesperson</t></strong><br/>
+            <t t-if="object.user_id.email"><t t-out="object.user_id.email">Email</t><br/></t>
+        </t>
+        <t t-else="">
+            <strong><t t-out="object.company_id.name">Company</t></strong>
+        </t>
+    </p>
+    <br/>
+    <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;"/>
+    <p style="margin: 0px; padding: 0px; font-size: 11px; color: #666;">
+        <t t-out="object.company_id.name">Company Name</t><br/>
+        <t t-if="object.company_id.street"><t t-out="object.company_id.street">Street</t><br/></t>
+        <t t-if="object.company_id.city or object.company_id.zip">
+            <t t-out="object.company_id.zip or ''">ZIP</t> <t t-out="object.company_id.city or ''">City</t><br/>
+        </t>
+        <t t-if="object.company_id.country_id"><t t-out="object.company_id.country_id.name">Country</t></t>
+    </p>
+</div>
+            </field>
+            <field name="lang">{{ object.partner_id.lang }}</field>
+            <field name="auto_delete" eval="False"/>
+        </record>
+        
+        <!-- Email Template: Sale Order Packed -->
+        <record id="email_template_sale_packed" model="mail.template">
+            <field name="name">Sale Order: Packed Email</field>
+            <field name="model_id" ref="sale.model_sale_order"/>
+            <field name="subject">Your Order is Packed - {{ object.name }} - {{ object.company_id.name }}</field>
+            <field name="email_from">{{ (object.user_id.email_formatted or object.company_id.email_formatted or user.email_formatted) }}</field>
+            <field name="email_to">{{ object.partner_id.email or '' }}</field>
+            <field name="partner_to">{{ object.partner_id.id }}</field>
+            <field name="body_html" type="html">
+<div style="margin: 0px; padding: 0px; font-size: 13px;">
+    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+        Dear <t t-out="object.partner_id.name or 'Valued Customer'">Customer</t>,
+    </p>
+    <br/>
+    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+        Great news! Your order <strong><t t-out="object.name">SO/001</t></strong> has been packed and is ready for shipment.
+    </p>
+    <br/>
+    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+        <strong>Order Details:</strong>
+    </p>
+    <table style="border-collapse: collapse; margin: 10px 0; width: 100%;">
+        <tr>
+            <td style="padding: 5px 15px 5px 0; color: #666; border-bottom: 1px solid #eee;">Order Reference:</td>
+            <td style="padding: 5px 0; border-bottom: 1px solid #eee;"><strong><t t-out="object.name">SO/001</t></strong></td>
+        </tr>
+        <tr>
+            <td style="padding: 5px 15px 5px 0; color: #666; border-bottom: 1px solid #eee;">Total Amount:</td>
+            <td style="padding: 5px 0; border-bottom: 1px solid #eee;"><strong><t t-out="format_amount(object.amount_total, object.currency_id)">$ 0.00</t></strong></td>
+        </tr>
+    </table>
+    <br/>
+    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+        Your order is now being prepared for dispatch. You will receive another notification once your order has been shipped.
+    </p>
+    <br/>
+    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+        Thank you for your patience!
+    </p>
+    <br/>
+    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+        Best regards,<br/>
+        <t t-if="object.user_id">
+            <strong><t t-out="object.user_id.name">Salesperson</t></strong><br/>
+        </t>
+        <t t-else="">
+            <strong><t t-out="object.company_id.name">Company</t></strong>
+        </t>
+    </p>
+    <br/>
+    <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;"/>
+    <p style="margin: 0px; padding: 0px; font-size: 11px; color: #666;">
+        <t t-out="object.company_id.name">Company Name</t>
+    </p>
+</div>
+            </field>
+            <field name="lang">{{ object.partner_id.lang }}</field>
+            <field name="auto_delete" eval="False"/>
+        </record>
+        
+        <!-- Email Template: Sale Order Shipped -->
+        <record id="email_template_sale_shipped" model="mail.template">
+            <field name="name">Sale Order: Shipped Email</field>
+            <field name="model_id" ref="sale.model_sale_order"/>
+            <field name="subject">Your Order Has Been Shipped - {{ object.name }} - {{ object.company_id.name }}</field>
+            <field name="email_from">{{ (object.user_id.email_formatted or object.company_id.email_formatted or user.email_formatted) }}</field>
+            <field name="email_to">{{ object.partner_id.email or '' }}</field>
+            <field name="partner_to">{{ object.partner_id.id }}</field>
+            <field name="body_html" type="html">
+<div style="margin: 0px; padding: 0px; font-size: 13px;">
+    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+        Dear <t t-out="object.partner_id.name or 'Valued Customer'">Customer</t>,
+    </p>
+    <br/>
+    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+        Excellent news! Your order <strong><t t-out="object.name">SO/001</t></strong> has been shipped and is on its way to you.
+    </p>
+    <br/>
+    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+        <strong>Order Details:</strong>
+    </p>
+    <table style="border-collapse: collapse; margin: 10px 0; width: 100%;">
+        <tr>
+            <td style="padding: 5px 15px 5px 0; color: #666; border-bottom: 1px solid #eee;">Order Reference:</td>
+            <td style="padding: 5px 0; border-bottom: 1px solid #eee;"><strong><t t-out="object.name">SO/001</t></strong></td>
+        </tr>
+        <tr>
+            <td style="padding: 5px 15px 5px 0; color: #666; border-bottom: 1px solid #eee;">Shipping Address:</td>
+            <td style="padding: 5px 0; border-bottom: 1px solid #eee;">
+                <t t-out="object.partner_shipping_id.street or ''">Street</t><br/>
+                <t t-if="object.partner_shipping_id.city or object.partner_shipping_id.zip">
+                    <t t-out="object.partner_shipping_id.zip or ''">ZIP</t> <t t-out="object.partner_shipping_id.city or ''">City</t><br/>
+                </t>
+                <t t-if="object.partner_shipping_id.country_id">
+                    <t t-out="object.partner_shipping_id.country_id.name">Country</t>
+                </t>
+            </td>
+        </tr>
+    </table>
+    <br/>
+    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+        Your order is now in transit. You should receive it soon according to the shipping method selected.
+    </p>
+    <br/>
+    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+        If you have any questions or concerns, please feel free to contact us.
+    </p>
+    <br/>
+    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+        Thank you for your business!
+    </p>
+    <br/>
+    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+        Best regards,<br/>
+        <t t-if="object.user_id">
+            <strong><t t-out="object.user_id.name">Salesperson</t></strong><br/>
+        </t>
+        <t t-else="">
+            <strong><t t-out="object.company_id.name">Company</t></strong>
+        </t>
+    </p>
+    <br/>
+    <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;"/>
+    <p style="margin: 0px; padding: 0px; font-size: 11px; color: #666;">
+        <t t-out="object.company_id.name">Company Name</t>
+    </p>
+</div>
+            </field>
+            <field name="lang">{{ object.partner_id.lang }}</field>
+            <field name="auto_delete" eval="False"/>
+        </record>
+        
+    </data>
+</odoo>
+

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Security Group: KS Payment Access -->
+        <record id="group_ks_payment_access" model="res.groups">
+            <field name="name">KS Payment Access</field>
+            <field name="category_id" ref="base.module_category_hidden"/>
+            <field name="comment">Users in this group can view, create, edit, and delete account.payment records. This restriction applies ONLY to payments and does NOT affect Sale Orders or any Sales module functionality. Sales Team users can continue to access Sale Orders normally.</field>
+        </record>
+    </data>
+</odoo>
+

@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_ks_automail_sale_order,ks.automail.sale.order,sale.model_sale_order,base.group_user,1,1,1,1
+access_ks_automail_config_user,ks.automail.config.user,ks_automail.model_ks_automail_config,base.group_user,1,1,1,1
+access_ks_automail_config_manager,ks.automail.config.manager,ks_automail.model_ks_automail_config,base.group_system,1,1,1,1
+

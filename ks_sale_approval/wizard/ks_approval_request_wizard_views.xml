@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Approval Request Wizard Form View -->
+    <record id="ks_sale_approval_request_wizard_form" model="ir.ui.view">
+        <field name="name">ks.sale.approval.request.wizard.form</field>
+        <field name="model">ks.sale.approval.request.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Request for Approval">
+                <sheet>
+                    <group>
+                        <field name="ks_sale_order_id" invisible="1"/>
+                        <div class="alert alert-info" role="alert">
+                            <h5><strong>Confirmation Request</strong></h5>
+                            <p>You are about to send a confirmation request for this Sale Order.</p>
+                        </div>
+                    </group>
+                    <group>
+                        <field name="ks_approval_recipients" nolabel="1" readonly="1"/>
+                    </group>
+                </sheet>
+                <footer>
+                    <button name="action_confirm_request" 
+                            type="object" 
+                            string="OK" 
+                            class="btn-primary"/>
+                    <button name="action_cancel" 
+                            type="object" 
+                            string="Cancel" 
+                            class="btn-secondary"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>
+
