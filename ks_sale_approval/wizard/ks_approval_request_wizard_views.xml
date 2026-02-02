@@ -5,17 +5,27 @@
         <field name="name">ks.sale.approval.request.wizard.form</field>
         <field name="model">ks.sale.approval.request.wizard</field>
         <field name="arch" type="xml">
-            <form string="Request for Approval">
+            <form string="Product Approval Picker">
                 <sheet>
                     <group>
                         <field name="ks_sale_order_id" invisible="1"/>
-                        <div class="alert alert-info" role="alert">
-                            <h5><strong>Confirmation Request</strong></h5>
-                            <p>You are about to send a confirmation request for this Sale Order.</p>
-                        </div>
+                        <field name="ks_approver1_user_ids" invisible="1"/>
+                        <field name="ks_approver2_user_ids" invisible="1"/>
+                        <field name="ks_approver1_filtered_ids" invisible="1"/>
+                        <field name="ks_approver2_filtered_ids" invisible="1"/>
+                        <field name="ks_approval_info" nolabel="1" readonly="1"/>
                     </group>
                     <group>
-                        <field name="ks_approval_recipients" nolabel="1" readonly="1"/>
+                        <field name="ks_approver1_user" 
+                               options="{'no_create': True, 'no_create_edit': True}"
+                               placeholder="Select Approver 1"
+                               widget="many2one"/>
+                        <field name="ks_show_approver2" invisible="1"/>
+                        <field name="ks_approver2_user" 
+                               options="{'no_create': True, 'no_create_edit': True}"
+                               placeholder="Select Approver 2"
+                               widget="many2one"
+                               invisible="not ks_show_approver2"/>
                     </group>
                 </sheet>
                 <footer>

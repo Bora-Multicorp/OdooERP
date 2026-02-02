@@ -148,6 +148,17 @@ class PurchaseOrder(models.Model):
         copy=False,
     )
 
+    # ===== Sale Order Link Fields =====
+    ks_linked_sale_order_ids = fields.Many2many(
+        'sale.order',
+        'purchase_sale_order_rel',
+        'purchase_order_id',
+        'sale_order_id',
+        string='Linked Sale Orders',
+        copy=False,
+        help='Sale Orders linked to this Purchase Order',
+    )
+
     # ===== Computed Fields for UI =====
     ks_is_pm_user = fields.Boolean(
         string='Is PM User',
@@ -389,6 +400,11 @@ class PurchaseOrder(models.Model):
         - PM users: Confirm immediately (standard flow)
         - Normal users: Show popup before sending to Pending Approval
         """
+        # Update linked sale orders before confirmation
+        for po in self:
+            if po.ks_linked_sale_order_ids:
+                po._update_linked_sale_orders()
+        
         # Handle single record for popup
         if len(self) == 1:
             order = self
@@ -1268,6 +1284,66 @@ class PurchaseOrder(models.Model):
                     'ks_update_pm2_approved': False,
                 })
         return super().button_unlock()
+
+    # ===== Sale Order Link Methods =====
+    
+    @api.model_create_multi
+    def create(self, vals_list):
+        """Override create to automatically update linked Sale Orders"""
+        pos = super().create(vals_list)
+        
+        # Update linked sale orders for each PO that has linked_sale_order_ids
+        for po in pos:
+            if po.ks_linked_sale_order_ids:
+                po._update_linked_sale_orders()
+        
+        return pos
+    
+    def write(self, vals):
+        """Override write to automatically update linked Sale Orders"""
+        result = super().write(vals)
+        
+        # If linked_sale_order_ids is being updated, update the reverse relation
+        if 'ks_linked_sale_order_ids' in vals:
+            self._update_linked_sale_orders()
+        
+        return result
+    
+    def _update_linked_sale_orders(self):
+        """Update the reverse Many2one field in linked Sale Orders"""
+        for po in self:
+            # Get current linked sale orders
+            current_linked_sos = po.ks_linked_sale_order_ids
+            
+            # Find sale orders that were previously linked to this PO but are no longer linked
+            previously_linked_sos = self.env['sale.order'].search([
+                ('ks_linked_purchase_order_id', '=', po.id),
+                ('id', 'not in', current_linked_sos.ids)
+            ])
+            
+            # Remove link from sale orders that are no longer in the Many2many
+            previously_linked_sos.write({'ks_linked_purchase_order_id': False})
+            
+            # Update link in current sale orders
+            # Only update if they don't already have a different PO linked
+            for so in current_linked_sos:
+                if not so.ks_linked_purchase_order_id or so.ks_linked_purchase_order_id.id == po.id:
+                    so.write({'ks_linked_purchase_order_id': po.id})
+                else:
+                    # If SO already has a different PO linked, show warning
+                    raise ValidationError(_(
+                        "Sale Order %s is already linked to Purchase Order %s. "
+                        "Please unlink it first before linking to this PO."
+                    ) % (so.name, so.ks_linked_purchase_order_id.name))
+    
+    def action_confirm(self):
+        """Override action_confirm to ensure links are saved on confirmation"""
+        # Update linked sale orders before confirmation
+        for po in self:
+            if po.ks_linked_sale_order_ids:
+                po._update_linked_sale_orders()
+        
+        return super().action_confirm()
 
     # ===== Mail Activity Helpers =====
     

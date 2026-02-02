@@ -19,10 +19,16 @@ class SaleOrderLine(models.Model):
     def _compute_ks_can_edit_price(self):
         """
         Check if current user can edit the price.
+        - Admin users can always edit prices (bypass all restrictions)
         - PM users can always edit prices
         - Normal users can edit prices if edit request was approved for them
         """
         for line in self:
+            # Admin users can always edit prices - bypass all restrictions
+            if line.order_id and line.order_id._is_admin_user():
+                line.ks_can_edit_price = True
+                continue
+            
             if line.order_id and line.order_id._has_approval_config():
                 config = line.order_id._get_approval_config()
                 all_pms = config.get_all_pm_users()
@@ -45,8 +51,15 @@ class SaleOrderLine(models.Model):
 
     @api.model
     def create(self, vals):
-        """Override create to check price permissions"""
+        """Override create to check price permissions
+        
+        Admin users can always set custom prices (bypass all restrictions).
+        """
         line = super().create(vals)
+        
+        # Admin users can always set custom prices - bypass all restrictions
+        if line.order_id and line.order_id._is_admin_user():
+            return line
         
         # Check if user tried to set a custom price and is not a PM
         if line.order_id and line.order_id._has_approval_config():
@@ -78,13 +91,20 @@ class SaleOrderLine(models.Model):
         return line
 
     def write(self, values):
-        """Override write to prevent normal users from changing prices or discounts"""
+        """Override write to prevent normal users from changing prices or discounts
+        
+        Admin users can always edit prices (bypass all restrictions).
+        """
         # Check if price_unit or discount is being changed
         price_fields = ['price_unit', 'discount']
         changing_price = any(field in values for field in price_fields)
         
         if changing_price:
             for line in self:
+                # Admin users can always edit prices - bypass all restrictions
+                if line.order_id and line.order_id._is_admin_user():
+                    continue  # Allow admin to edit
+                
                 if line.order_id and line.order_id._has_approval_config():
                     config = line.order_id._get_approval_config()
                     all_pms = config.get_all_pm_users()

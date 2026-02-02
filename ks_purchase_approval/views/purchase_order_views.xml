@@ -212,6 +212,16 @@
                 </attribute>
             </xpath>
 
+            <!-- Add Linked Sale Orders field -->
+            <xpath expr="//field[@name='date_order']" position="after">
+                <field name="ks_linked_sale_order_ids" 
+                       widget="many2many_tags"
+                       options="{'no_create': True, 'no_create_edit': True}"
+                       readonly="state in ('done', 'cancel')"
+                       domain="[('state', 'in', ('sale', 'done'))]"
+                       placeholder="Select Sale Orders..."/>
+            </xpath>
+
         </field>
     </record>
 

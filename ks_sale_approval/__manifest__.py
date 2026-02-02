@@ -43,6 +43,8 @@
         'data/ks_approval_data.xml',
         'wizard/ks_reject_reason_wizard_views.xml',
         'wizard/ks_approval_request_wizard_views.xml',
+        'wizard/ks_cancel_approval_request_wizard_views.xml',
+        'wizard/ks_edit_approval_request_wizard_views.xml',
         'wizard/ks_approval_reason_wizard_views.xml',
         'views/ks_sale_approval_config_views.xml',
         'views/sale_order_views.xml',

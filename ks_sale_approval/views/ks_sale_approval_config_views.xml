@@ -20,62 +20,75 @@
                     <notebook>
                         <page string="Confirmation Approvers" name="confirm_approvers">
                             <group>
-                                <group string="Primary Approver">
-                                    <field name="ks_confirm_pm1_id" 
-                                           options="{'no_create': True}"
-                                           context="{'show_email': True}"/>
-                                </group>
-                                <group string="Secondary Approver" 
-                                       invisible="ks_approval_mode == 'single'">
-                                    <field name="ks_confirm_pm2_id" 
+                                <group string="Approver 1 Users">
+                                    <field name="ks_confirm_pm1_ids" 
+                                           widget="many2many_tags"
                                            options="{'no_create': True}"
                                            context="{'show_email': True}"
-                                           required="ks_approval_mode == 'dual'"/>
+                                           placeholder="Select users for Approval 1"/>
+                                </group>
+                                <group string="Approver 2 Users" 
+                                       invisible="ks_approval_mode == 'single'">
+                                    <field name="ks_confirm_pm2_ids" 
+                                           widget="many2many_tags"
+                                           options="{'no_create': True}"
+                                           context="{'show_email': True}"
+                                           placeholder="Select users for Approval 2"/>
                                 </group>
                             </group>
                             <div class="alert alert-info" role="alert" 
                                  invisible="ks_approval_mode != 'single'">
-                                <strong>Single PM Approval:</strong> Only PM1 approval is required to confirm Sale Orders.
+                                <strong>Single PM Approval:</strong> Only one approver from Approval 1 list is required to confirm Sale Orders.
+                                Users will select an approver when requesting confirmation.
                             </div>
                             <div class="alert alert-info" role="alert" 
                                  invisible="ks_approval_mode != 'dual'">
-                                <strong>Two PM Approval:</strong> Both PM1 and PM2 must approve before Sale Orders are confirmed.
+                                <strong>Two PM Approval:</strong> Both Approver 1 and Approver 2 must approve before Sale Orders are confirmed.
+                                Users will select approvers from each list when requesting confirmation.
+                                Approver 2 cannot approve until Approver 1 has approved.
                             </div>
                         </page>
                         <page string="Cancellation Approvers" name="cancel_approvers">
                             <group>
-                                <group string="Primary Approver">
-                                    <field name="ks_cancel_pm1_id" 
-                                           options="{'no_create': True}"
-                                           context="{'show_email': True}"/>
-                                </group>
-                                <group string="Secondary Approver" 
-                                       invisible="ks_approval_mode == 'single'">
-                                    <field name="ks_cancel_pm2_id" 
+                                <group string="Approver 1 Users">
+                                    <field name="ks_cancel_pm1_ids" 
+                                           widget="many2many_tags"
                                            options="{'no_create': True}"
                                            context="{'show_email': True}"
-                                           required="ks_approval_mode == 'dual'"/>
+                                           placeholder="Select users for Approval 1"/>
+                                </group>
+                                <group string="Approver 2 Users" 
+                                       invisible="ks_approval_mode == 'single'">
+                                    <field name="ks_cancel_pm2_ids" 
+                                           widget="many2many_tags"
+                                           options="{'no_create': True}"
+                                           context="{'show_email': True}"
+                                           placeholder="Select users for Approval 2"/>
                                 </group>
                             </group>
                         </page>
                         <page string="Edit Approvers" name="edit_approvers">
                             <group>
-                                <group string="Primary Approver">
-                                    <field name="ks_edit_pm1_id" 
-                                           options="{'no_create': True}"
-                                           context="{'show_email': True}"/>
-                                </group>
-                                <group string="Secondary Approver" 
-                                       invisible="ks_approval_mode == 'single'">
-                                    <field name="ks_edit_pm2_id" 
+                                <group string="Approver 1 Users">
+                                    <field name="ks_edit_pm1_ids" 
+                                           widget="many2many_tags"
                                            options="{'no_create': True}"
                                            context="{'show_email': True}"
-                                           required="ks_approval_mode == 'dual'"/>
+                                           placeholder="Select users for Approval 1"/>
+                                </group>
+                                <group string="Approver 2 Users" 
+                                       invisible="ks_approval_mode == 'single'">
+                                    <field name="ks_edit_pm2_ids" 
+                                           widget="many2many_tags"
+                                           options="{'no_create': True}"
+                                           context="{'show_email': True}"
+                                           placeholder="Select users for Approval 2"/>
                                 </group>
                             </group>
                             <div class="alert alert-info" role="alert">
                                 <strong>Edit Approval:</strong> Normal users must request edit permission for confirmed Sale Orders.
                                 Once approved, they can edit the SO and then click "Complete Edit" to lock it again.
+                                Users will select approvers from the configured lists when requesting edit access.
                             </div>
                         </page>
                     </notebook>
@@ -93,12 +106,12 @@
             <list string="Sale Approval Configurations">
                 <field name="company_id"/>
                 <field name="ks_approval_mode"/>
-                <field name="ks_confirm_pm1_id"/>
-                <field name="ks_confirm_pm2_id" optional="show"/>
-                <field name="ks_cancel_pm1_id"/>
-                <field name="ks_cancel_pm2_id" optional="show"/>
-                <field name="ks_edit_pm1_id"/>
-                <field name="ks_edit_pm2_id" optional="show"/>
+                <field name="ks_confirm_pm1_ids" widget="many2many_tags"/>
+                <field name="ks_confirm_pm2_ids" widget="many2many_tags" optional="show"/>
+                <field name="ks_cancel_pm1_ids" widget="many2many_tags"/>
+                <field name="ks_cancel_pm2_ids" widget="many2many_tags" optional="show"/>
+                <field name="ks_edit_pm1_ids" widget="many2many_tags"/>
+                <field name="ks_edit_pm2_ids" widget="many2many_tags" optional="show"/>
             </list>
         </field>
     </record>

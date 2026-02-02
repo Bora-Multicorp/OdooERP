@@ -34,7 +34,7 @@ Configuration:
     'website': "https://www.ksolves.com",
     'category': 'Sales/Sales',
     'version': '18.0.1.0.0',
-    'depends': ['sale_stock', 'mail', 'ks_sale_approval', 'purchase'],
+    'depends': ['sale_stock', 'mail', 'ks_sale_approval', 'purchase','ks_automail', 'ks_payment_access_control','ks_sale_advance_payment', 'ks_doc' ],
     'data': [
         'security/ir.model.access.csv',
         'data/mail_template_data.xml',

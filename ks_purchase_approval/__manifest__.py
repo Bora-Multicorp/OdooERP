@@ -22,7 +22,7 @@
     'category': 'Inventory/Purchase',
     'author': 'Ksolves',
     'website': '',
-    'depends': ['purchase', 'mail'],
+    'depends': ['purchase', 'mail', 'sale'],
     'data': [
         'security/security.xml',
         'security/ir.model.access.csv',
@@ -34,6 +34,7 @@
         'wizard/ks_approve_update_reason_wizard_views.xml',
         'views/ks_purchase_approval_config_views.xml',
         'views/purchase_order_views.xml',
+        'views/sale_order_views.xml',
     ],
     'installable': True,
     'application': False,

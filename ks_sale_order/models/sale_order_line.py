@@ -9,34 +9,64 @@ _logger = logging.getLogger(__name__)
 class SaleOrderLine(models.Model):
     _inherit = 'sale.order.line'
 
-    def _ks_get_stock_location_for_company(self, company):
-        """Get the main stock location for a company.
+    def _ks_get_stock_location_for_company(self, company, warehouse=None):
+        """Get the stock location for a company.
         
-        Returns the stock location of the main warehouse for the given company.
+        Returns the stock location of the specified warehouse or the main warehouse 
+        for the given company. Ensures the location belongs to the specified company.
         
         Args:
             company: res.company record
+            warehouse: stock.warehouse record (optional) - if provided, uses this warehouse
             
         Returns:
             stock.location record or False
         """
+        if not company:
+            return False
+        
+        # If warehouse is provided and belongs to the company, use it
+        if warehouse and warehouse.company_id.id == company.id:
+            location = warehouse.lot_stock_id
+            if location:
+                return location
+        
+        # Otherwise, search for warehouse with explicit company filter
         warehouse = self.env['stock.warehouse'].search([
             ('company_id', '=', company.id)
         ], limit=1, order='id')
-        if warehouse:
-            return warehouse.lot_stock_id
-        return False
+        
+        if not warehouse:
+            return False
+        
+        location = warehouse.lot_stock_id
+        
+        # Double-check: Ensure location belongs to the same company
+        # Locations should have company_id directly or inherit from warehouse
+        location_company = location.company_id or (location.warehouse_id and location.warehouse_id.company_id)
+        if location_company and location_company.id != company.id:
+            # Location company doesn't match - this shouldn't happen but safeguard
+            _logger.warning(
+                "KS Sale Order: Location %s (ID: %s) company (%s) doesn't match requested company %s (ID: %s). "
+                "Skipping stock check.",
+                location.name, location.id, location_company.name, company.name, company.id
+            )
+            return False
+        
+        return location
 
-    def _ks_check_product_availability(self, product, quantity, company):
+    def _ks_check_product_availability(self, product, quantity, company, warehouse=None):
         """Check if the requested quantity is available in stock.
         
         Checks the physically available quantity for the product in the 
-        company's main warehouse stock location.
+        company's warehouse stock location. This check is STRICTLY 
+        company-specific and only considers stock in the specified company.
         
         Args:
             product: product.product record
             quantity: float, requested quantity
-            company: res.company record
+            company: res.company record (must match Sale Order's company)
+            warehouse: stock.warehouse record (optional) - if provided, uses this warehouse's location
             
         Returns:
             tuple: (is_available, available_qty) - bool and float
@@ -45,17 +75,72 @@ class SaleOrderLine(models.Model):
             # Non-storable products (services, etc.) don't need stock check
             return True, 0.0
         
-        location = self._ks_get_stock_location_for_company(company)
-        if not location:
-            # If no warehouse/location found, don't block
+        if not company:
+            # No company specified - cannot check stock
+            _logger.warning(
+                "KS Sale Order: No company specified for stock check. Product: %s, Quantity: %s",
+                product.display_name if product else 'Unknown', quantity
+            )
             return True, 0.0
         
-        # Get the available quantity using stock.quant's method
-        available_qty = self.env['stock.quant']._get_available_quantity(
-            product, location, allow_negative=False
-        )
+        # Get location for the SPECIFIC company only (use warehouse if provided)
+        location = self._ks_get_stock_location_for_company(company, warehouse=warehouse)
+        if not location:
+            # If no warehouse/location found for this company, log and don't trigger alert
+            _logger.info(
+                "KS Sale Order: No warehouse/location found for company '%s' (ID: %s). "
+                "Product: %s. Skipping stock check.",
+                company.name, company.id, product.display_name if product else 'Unknown'
+            )
+            return True, 0.0
+        
+        # Get the available quantity using product's qty_available with warehouse context
+        # This matches what the user sees in the UI ("On Hand") and includes child locations
+        # The location is already company-specific (from warehouse with company_id filter)
+        try:
+            # Use with_company to ensure we're in the correct company context
+            product_with_company = product.with_company(company.id)
+            
+            # Use warehouse context to get qty_available for the specific warehouse
+            # This ensures we get stock in the warehouse's location and all its child locations
+            # This matches what users see in the product form ("On Hand")
+            if warehouse:
+                # Use warehouse context to get stock for this specific warehouse
+                product_with_warehouse = product_with_company.with_context(warehouse_id=warehouse.id)
+            else:
+                # No warehouse specified, use location context
+                product_with_warehouse = product_with_company.with_context(location=location.id)
+            
+            # Get qty_available which includes child locations (matches UI "On Hand")
+            # This is company-specific because we used with_company(company.id)
+            # Force recomputation to ensure we get the latest stock value
+            product_with_warehouse.invalidate_recordset(['qty_available'])
+            available_qty = product_with_warehouse.qty_available
+            
+            _logger.info(
+                "KS Sale Order: Stock check - Product: %s (ID: %s), Company: %s (ID: %s), "
+                "Location: %s (ID: %s), Warehouse: %s, Requested: %s, Available (qty_available): %s",
+                product.display_name, product.id, company.name, company.id,
+                location.name, location.id,
+                warehouse.name if warehouse else 'Default',
+                quantity, available_qty
+            )
+        except Exception as e:
+            _logger.error(
+                "KS Sale Order: Error checking stock availability for product %s (ID: %s) "
+                "in company %s (ID: %s), location %s (ID: %s): %s",
+                product.display_name if product else 'Unknown',
+                product.id if product else 'N/A',
+                company.name, company.id,
+                location.name if location else 'N/A',
+                location.id if location else 'N/A',
+                str(e)
+            )
+            # On error, don't trigger alert - assume available
+            return True, 0.0
         
         # Check if available quantity is sufficient
+        # Only consider it insufficient if available_qty is actually less than requested
         is_available = available_qty >= quantity
         
         return is_available, available_qty
@@ -204,106 +289,23 @@ class SaleOrderLine(models.Model):
                 order.name or 'Draft', str(e)
             )
 
-    def _ks_check_and_notify_stock_availability(self, product_id, quantity, order):
-        """Check stock availability and send notification if insufficient.
-        
-        This method does NOT block the operation, it only sends notification.
-        
-        Args:
-            product_id: int, product.product id
-            quantity: float, requested quantity
-            order: sale.order record
-        """
-        if not product_id or not quantity or quantity <= 0:
-            return
-        
-        product = self.env['product.product'].browse(product_id)
-        company = order.company_id
-        
-        is_available, available_qty = self._ks_check_product_availability(
-            product, quantity, company
-        )
-        
-        if not is_available:
-            # Send notification to procurement team (non-blocking)
-            self._ks_send_procurement_notification(product, quantity, order, available_qty)
-            
-            # Check if available in other companies and post message
-            if order and order.id:
-                other_companies = self._ks_check_product_availability_other_companies(
-                    product, quantity, company
-                )
-                
-                if other_companies:
-                    company_names = ', '.join([c['company'] for c in other_companies])
-                    other_companies_msg = _(
-                        "Note: %(product)s is available in other company(ies): %(companies)s\n"
-                        "However, stock must be available in %(current_company)s to confirm this order.",
-                        product=product.display_name,
-                        companies=company_names,
-                        current_company=company.name
-                    )
-                    
-                    # Post message in order history (chatter)
-                    # Use sudo to ensure message can be posted even if order is not fully saved
-                    try:
-                        order.sudo().message_post(
-                            body=other_companies_msg,
-                            message_type='notification',
-                            subtype_xmlid='mail.mt_note',
-                        )
-                    except Exception as e:
-                        _logger.warning(
-                            "KS Sale Order: Failed to post other companies message for order %s: %s",
-                            order.name or 'Draft', str(e)
-                        )
+    # NOTE: _ks_check_and_notify_stock_availability() method has been removed.
+    # Stock shortage email notifications are now only sent during Sale Order confirmation
+    # via sale_order.action_confirm() -> _ks_check_and_notify_stock_shortage_on_confirm()
 
     @api.model_create_multi
     def create(self, vals_list):
-        """Override create to check stock and send notification if insufficient.
+        """Override create - stock check removed.
         
-        This does NOT block creation - it only sends email notification to procurement team.
+        Stock validation has been moved to Sale Order confirmation step.
+        Users can now freely add products without stock availability checks.
         """
-        lines = super().create(vals_list)
-        
-        # Check stock availability and send notifications for each line
-        for line in lines:
-            # Skip display type lines (sections, notes)
-            if line.display_type:
-                continue
-            
-            if line.product_id and line.product_uom_qty and line.order_id:
-                line._ks_check_and_notify_stock_availability(
-                    line.product_id.id,
-                    line.product_uom_qty,
-                    line.order_id
-                )
-        
-        return lines
+        return super().create(vals_list)
 
     def write(self, values):
-        """Override write to check stock and send notification when product/quantity changes.
+        """Override write - stock check removed.
         
-        This does NOT block the update - it only sends email notification to procurement team.
+        Stock validation has been moved to Sale Order confirmation step.
+        Users can now freely modify products/quantities without stock availability checks.
         """
-        result = super().write(values)
-        
-        product_id = values.get('product_id')
-        quantity = values.get('product_uom_qty')
-        
-        # Only check if product or quantity was updated
-        if product_id or quantity is not None:
-            for line in self:
-                # Skip display type lines (sections, notes)
-                if line.display_type:
-                    continue
-                
-                # Check if we need to send notification
-                if line.product_id and line.product_uom_qty and line.order_id:
-                    line._ks_check_and_notify_stock_availability(
-                        line.product_id.id,
-                        line.product_uom_qty,
-                        line.order_id
-                    )
-        
-        return result
+        return super().write(values)

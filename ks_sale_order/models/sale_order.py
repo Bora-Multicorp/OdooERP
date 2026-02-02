@@ -96,11 +96,12 @@ class SaleOrder(models.Model):
             if not line.product_id or not line.product_id.is_storable:
                 continue
             
-            # Check availability in same company
+            # Check availability in same company - use Sale Order's warehouse if available
             is_available, available_qty = line._ks_check_product_availability(
                 line.product_id, 
                 line.product_uom_qty, 
-                self.company_id
+                self.company_id,
+                warehouse=self.warehouse_id if hasattr(self, 'warehouse_id') and self.warehouse_id else None
             )
             
             if not is_available:
@@ -178,14 +179,160 @@ class SaleOrder(models.Model):
         raise UserError(error_msg)
 
     def action_confirm(self):
-        """Override action_confirm to allow confirmation regardless of stock availability.
+        """Override action_confirm to check stock availability and trigger alerts.
         
-        Stock validation has been removed - Sale Orders can now be confirmed
-        even if products have insufficient stock. All other workflows (delivery,
-        invoicing, backorder, etc.) remain unchanged.
+        Stock validation is performed at confirmation time:
+        - Checks all order lines for insufficient stock
+        - Sends email notifications to procurement team for all insufficient products
+        - Shows alert message if any products have insufficient stock
+        - Does NOT block confirmation (allows order to be confirmed)
+        - Emails are ONLY sent when order is being confirmed (state transitions to 'sale')
         """
-        # Stock validation removed - allow confirmation regardless of stock
+        # Only send stock shortage emails for orders that are not already confirmed
+        # This prevents duplicate emails if action_confirm is called multiple times
+        orders_to_check = self.filtered(lambda o: o.state not in ('sale', 'done'))
+        
+        # Check stock availability for all lines and send notifications
+        for order in orders_to_check:
+            order._ks_check_and_notify_stock_shortage_on_confirm()
+        
+        # Proceed with normal confirmation
         return super().action_confirm()
+    
+    def _ks_check_and_notify_stock_shortage_on_confirm(self):
+        """Check stock availability for all order lines and send notifications.
+        
+        This method is called during Sale Order confirmation to:
+        - Check all order lines for insufficient stock
+        - Send email notifications to procurement team for each insufficient product
+        - Post messages in chatter about stock shortages
+        - Ensure no duplicate notifications are sent
+        
+        IMPORTANT: This method is ONLY called from action_confirm() when the order
+        is being confirmed. Emails are NOT sent during draft/edit stages.
+        """
+        self.ensure_one()
+        
+        # Safety check: Only process draft/sent orders (not already confirmed)
+        if self.state in ('sale', 'done', 'cancel'):
+            return
+        
+        # Track which products we've already notified about to prevent duplicates
+        notified_products = set()
+        insufficient_products = []
+        
+        # Check all order lines
+        for line in self.order_line:
+            # Skip display type lines (sections, notes)
+            if line.display_type:
+                continue
+            
+            # Skip non-storable products
+            if not line.product_id or not line.product_id.is_storable:
+                continue
+            
+            # Skip if we've already notified for this product
+            if line.product_id.id in notified_products:
+                continue
+            
+            # CRITICAL: Only send email if delivery is actually blocked (red indicator in Delivered column)
+            # The red indicator appears when stock moves cannot be assigned due to insufficient stock
+            delivery_blocked = False
+            available_qty = 0.0
+            
+            # Check if stock moves exist and are blocked
+            if line.move_ids:
+                # Check if any stock moves cannot be fully assigned due to insufficient stock
+                for move in line.move_ids:
+                    if move.state in ('confirmed', 'waiting', 'partially_available'):
+                        # Move cannot be fully assigned - delivery is blocked
+                        # Check if reserved quantity is less than required quantity
+                        if move.product_uom_qty > move.reserved_availability:
+                            delivery_blocked = True
+                            # Get available quantity for the move's source location
+                            available_qty = self.env['stock.quant'].with_company(self.company_id.id)._get_available_quantity(
+                                move.product_id, move.location_id, allow_negative=False
+                            )
+                            break
+            else:
+                # No stock moves created yet - check if stock is insufficient
+                # This handles the case where moves haven't been created yet
+                is_available, available_qty = line._ks_check_product_availability(
+                    line.product_id,
+                    line.product_uom_qty,
+                    self.company_id,
+                    warehouse=self.warehouse_id if hasattr(self, 'warehouse_id') and self.warehouse_id else None
+                )
+                if not is_available and available_qty < line.product_uom_qty:
+                    delivery_blocked = True
+            
+            # Only send email if delivery is actually blocked (red indicator condition)
+            if delivery_blocked:
+                # Track this product to avoid duplicate notifications
+                notified_products.add(line.product_id.id)
+                
+                # Collect product info for summary message
+                insufficient_products.append({
+                    'product': line.product_id.display_name,
+                    'requested': line.product_uom_qty,
+                    'available': available_qty,
+                })
+                
+                # Send email notification to procurement team ONLY if stock is actually insufficient
+                line._ks_send_procurement_notification(
+                    line.product_id,
+                    line.product_uom_qty,
+                    self,
+                    available_qty
+                )
+                
+                # Check if available in other companies and post message
+                other_companies = line._ks_check_product_availability_other_companies(
+                    line.product_id,
+                    line.product_uom_qty,
+                    self.company_id
+                )
+                
+                if other_companies:
+                    company_names = ', '.join([c['company'] for c in other_companies])
+                    other_companies_msg = _(
+                        "Note: %(product)s is available in other company(ies): %(companies)s\n"
+                        "However, stock must be available in %(current_company)s to fulfill this order.",
+                        product=line.product_id.display_name,
+                        companies=company_names,
+                        current_company=self.company_id.name
+                    )
+                    
+                    # Post message in order history (chatter)
+                    self.message_post(
+                        body=other_companies_msg,
+                        message_type='notification',
+                        subtype_xmlid='mail.mt_note',
+                    )
+        
+        # Post summary message in chatter if any products have insufficient stock
+        if insufficient_products:
+            summary_lines = []
+            for item in insufficient_products:
+                summary_lines.append(
+                    _("• %(product)s: Requested %(requested)s, Available %(available)s",
+                      product=item['product'],
+                      requested=item['requested'],
+                      available=item['available'])
+                )
+            
+            summary_msg = _(
+                "⚠️ Stock Shortage Alert: The following products have insufficient stock:\n\n"
+                "%(products)s\n\n"
+                "Email notifications have been sent to the Procurement Team.",
+                products='\n'.join(summary_lines)
+            )
+            
+            self.message_post(
+                body=summary_msg,
+                message_type='notification',
+                subtype_xmlid='mail.mt_note',
+            )
     
     @api.depends('order_line.product_id', 'order_line.product_uom_qty', 'state')
     def _compute_has_insufficient_stock(self):
@@ -205,11 +352,12 @@ class SaleOrder(models.Model):
                 if not line.product_id or not line.product_id.is_storable:
                     continue
                 
-                # Check availability
+                # Check availability - use Sale Order's warehouse if available
                 is_available, available_qty = line._ks_check_product_availability(
                     line.product_id,
                     line.product_uom_qty,
-                    order.company_id
+                    order.company_id,
+                    warehouse=order.warehouse_id if hasattr(order, 'warehouse_id') and order.warehouse_id else None
                 )
                 
                 if not is_available:
@@ -236,11 +384,14 @@ class SaleOrder(models.Model):
             if not line.product_id or not line.product_id.is_storable:
                 continue
             
-            # Check availability
+            # Check availability - STRICTLY for this Sale Order's company only
+            # This ensures we only check stock in the same company as the Sale Order
+            # Use the Sale Order's warehouse if available
             is_available, available_qty = line._ks_check_product_availability(
                 line.product_id,
                 line.product_uom_qty,
-                self.company_id
+                self.company_id,  # Explicitly use Sale Order's company_id
+                warehouse=self.warehouse_id if hasattr(self, 'warehouse_id') and self.warehouse_id else None
             )
             
             if not is_available:
@@ -286,11 +437,14 @@ class SaleOrder(models.Model):
             if not line.product_id or not line.product_id.is_storable:
                 continue
             
-            # Check availability
+            # Check availability - STRICTLY for this Sale Order's company only
+            # This ensures we only check stock in the same company as the Sale Order
+            # Use the Sale Order's warehouse if available
             is_available, available_qty = line._ks_check_product_availability(
                 line.product_id,
                 line.product_uom_qty,
-                self.company_id
+                self.company_id,  # Explicitly use Sale Order's company_id
+                warehouse=self.warehouse_id if hasattr(self, 'warehouse_id') and self.warehouse_id else None
             )
             
             if not is_available:
