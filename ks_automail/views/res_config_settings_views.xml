@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Inherit Settings View -->
+    <record id="res_config_settings_view_form_inherit_ks_automail" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.inherit.ks.automail</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="base.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="inside">
+                <app data-string="KS Auto Mail" string="KS Auto Mail" name="ks_automail">
+                    <block title="Email Configuration" name="ks_automail_setting_container">
+                        <setting string="Email Configuration" help="Configure global email settings for automatic Sale Order notifications">
+                            <div class="content-group">
+                                <div class="text-muted">
+                                    <p>
+                                        <i class="fa fa-info-circle me-1"/>
+                                        Go to <strong>Sales > Email Configurations</strong> to manage zone-specific email settings.
+                                    </p>
+                                </div>
+                                <div class="mt-3">
+                                    <a name="action_ks_automail_config" 
+                                       type="action" 
+                                       class="btn btn-primary"
+                                       context="{'search_default_active': 1}">
+                                        <i class="fa fa-cog me-2"/>
+                                        Manage Email Configurations
+                                    </a>
+                                </div>
+                                <div class="alert alert-info mt-3" role="alert">
+                                    <h5><i class="fa fa-lightbulb-o me-2"/>How It Works</h5>
+                                    <ul class="mb-0">
+                                        <li>Create configurations for <strong>India</strong> and <strong>Dubai</strong> zones</li>
+                                        <li>Each configuration defines email templates, recipients, and auto-send behavior</li>
+                                        <li>Configurations can be <strong>global</strong> (all companies) or <strong>company-specific</strong></li>
+                                        <li>Sale Orders automatically pick the appropriate configuration based on zone and company</li>
+                                        <li>Users can override settings on individual Sale Orders if needed</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </setting>
+                    </block>
+                </app>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>
+

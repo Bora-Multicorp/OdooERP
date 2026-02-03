@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Sale Document Form View -->
+    <record id="ks_sale_document_form" model="ir.ui.view">
+        <field name="name">ks.sale.document.form</field>
+        <field name="model">ks.sale.document</field>
+        <field name="arch" type="xml">
+            <form string="Sale Document">
+                <sheet>
+                    <group>
+                        <group string="Document Information">
+                            <field name="name" placeholder="Enter document name..."/>
+                            <field name="document_type"/>
+                            <field name="sale_order_id" invisible="context.get('default_sale_order_id')"/>
+                        </group>
+                        <group string="File">
+                            <field name="file" filename="file_name"/>
+                            <field name="file_name" invisible="1"/>
+                            <field name="file_size" widget="integer" readonly="1" 
+                                   invisible="not file_size"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="Additional Info">
+                            <field name="partner_id" readonly="1"/>
+                            <field name="upload_date" readonly="1"/>
+                            <field name="uploaded_by" readonly="1"/>
+                        </group>
+                        <group string="Notes">
+                            <field name="notes" placeholder="Additional notes about this document..." nolabel="1"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Sale Document List View -->
+    <record id="ks_sale_document_list" model="ir.ui.view">
+        <field name="name">ks.sale.document.list</field>
+        <field name="model">ks.sale.document</field>
+        <field name="arch" type="xml">
+            <list string="Sale Documents" editable="bottom">
+                <field name="sequence" widget="handle"/>
+                <field name="document_type"/>
+                <field name="name"/>
+                <field name="file" filename="file_name"/>
+                <field name="file_name" column_invisible="1"/>
+                <field name="upload_date" readonly="1" optional="show"/>
+                <field name="uploaded_by" readonly="1" optional="hide"/>
+                <field name="notes" optional="hide"/>
+                <field name="sale_order_id" column_invisible="context.get('default_sale_order_id')"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Sale Document Kanban View -->
+    <record id="ks_sale_document_kanban" model="ir.ui.view">
+        <field name="name">ks.sale.document.kanban</field>
+        <field name="model">ks.sale.document</field>
+        <field name="arch" type="xml">
+            <kanban class="o_kanban_mobile">
+                <field name="name"/>
+                <field name="document_type"/>
+                <field name="file_name"/>
+                <field name="upload_date"/>
+                <templates>
+                    <t t-name="card">
+                        <div class="row mb-2">
+                            <div class="col-8">
+                                <strong><field name="name"/></strong>
+                            </div>
+                            <div class="col-4 text-end text-muted">
+                                <field name="document_type"/>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-8 text-muted">
+                                <i class="fa fa-file-o me-1"/><field name="file_name"/>
+                            </div>
+                            <div class="col-4 text-end text-muted">
+                                <field name="upload_date"/>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- Sale Document Search View -->
+    <record id="ks_sale_document_search" model="ir.ui.view">
+        <field name="name">ks.sale.document.search</field>
+        <field name="model">ks.sale.document</field>
+        <field name="arch" type="xml">
+            <search string="Search Documents">
+                <field name="name"/>
+                <field name="sale_order_id"/>
+                <field name="partner_id"/>
+                <field name="document_type"/>
+                <separator/>
+                <filter name="airways_bill" string="Airways Bill" domain="[('document_type', '=', 'airways_bill')]"/>
+                <filter name="packing_list" string="Packing List" domain="[('document_type', '=', 'packing_list')]"/>
+                <filter name="transport_bill" string="Transport Bill" domain="[('document_type', '=', 'transport_bill')]"/>
+                <filter name="evr" string="EVR" domain="[('document_type', '=', 'evr')]"/>
+                <filter name="export_bill" string="Export Bill" domain="[('document_type', '=', 'export_bill')]"/>
+                <separator/>
+                <group expand="0" string="Group By">
+                    <filter name="group_type" string="Document Type" context="{'group_by': 'document_type'}"/>
+                    <filter name="group_order" string="Sale Order" context="{'group_by': 'sale_order_id'}"/>
+                    <filter name="group_customer" string="Customer" context="{'group_by': 'partner_id'}"/>
+                    <filter name="group_upload_date" string="Upload Date" context="{'group_by': 'upload_date:day'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Sale Document Action -->
+    <record id="action_ks_sale_document" model="ir.actions.act_window">
+        <field name="name">Sale Documents</field>
+        <field name="res_model">ks.sale.document</field>
+        <field name="view_mode">list,kanban,form</field>
+        <field name="search_view_id" ref="ks_sale_document_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No documents found
+            </p>
+            <p>
+                Upload documents to sale orders using the Documents tab on each order.
+            </p>
+        </field>
+    </record>
+
+    <!-- Menu Item (optional - under Sales > Documents) -->
+    <menuitem id="menu_ks_sale_documents"
+              name="Sale Documents"
+              parent="sale.sale_order_menu"
+              action="action_ks_sale_document"
+              sequence="50"
+              groups="sales_team.group_sale_salesman"/>
+</odoo>
+

@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Email template for insufficient stock notification to Procurement Team -->
+        <record id="email_template_ks_stock_insufficient_notification" model="mail.template">
+            <field name="name">KS Sale Order: Insufficient Stock Notification</field>
+            <field name="model_id" ref="sale.model_sale_order"/>
+            <field name="subject">⚠️ Stock Alert: Insufficient Stock for {{ ctx.get('product_name', 'Product') }} - {{ ctx.get('order_name', 'Order') }}</field>
+            <field name="email_from">{{ (object.company_id.email_formatted or user.email_formatted) }}</field>
+            <field name="description">Automatically sent to Procurement Team when a product with insufficient stock is added to a sales order.</field>
+            <field name="body_html" type="html">
+<table border="0" cellpadding="0" cellspacing="0" style="padding-top: 16px; background-color: #F1F1F1; font-family: 'Verdana Regular', Verdana, Arial, sans-serif; color: #454748; width: 100%; border-collapse: separate;">
+    <tr>
+        <td align="center">
+            <table border="0" cellpadding="0" cellspacing="0" width="590" style="padding: 16px; background-color: #FFFFFF; color: #454748; border-collapse: separate;">
+                <tbody>
+                    <!-- HEADER -->
+                    <tr>
+                        <td align="center" style="min-width: 590px;">
+                            <table border="0" cellpadding="0" cellspacing="0" width="590" style="min-width: 590px; background-color: #DC3545; padding: 20px 8px 10px 8px; border-radius: 3px 3px 0 0;">
+                                <tr>
+                                    <td valign="middle">
+                                        <span style="font-size: 20px; color: #FFFFFF; font-weight: bold;">
+                                            ⚠️ Stock Shortage Alert
+                                        </span>
+                                    </td>
+                                    <td valign="middle" align="right">
+                                        <img t-attf-src="/logo.png?company={{ object.company_id.id }}" style="padding: 0px; margin: 0px; height: auto; width: 80px;" t-att-alt="object.company_id.name"/>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    <!-- CONTENT -->
+                    <tr>
+                        <td align="center" style="min-width: 590px;">
+                            <table border="0" cellpadding="0" cellspacing="0" width="590" style="min-width: 590px; padding: 16px;">
+                                <tr>
+                                    <td>
+                                        <p style="margin: 0 0 16px 0; font-size: 14px;">
+                                            Dear Procurement Team,
+                                        </p>
+                                        <p style="margin: 0 0 16px 0; font-size: 14px;">
+                                            A <strong>stock shortage</strong> has been detected. A user has added a product to a sales order but there is <strong>insufficient stock available</strong>.
+                                        </p>
+                                        <p style="margin: 0 0 16px 0; font-size: 14px; color: #DC3545;">
+                                            <strong>Note:</strong> The sales order cannot be confirmed until stock is replenished.
+                                        </p>
+                                        
+                                        <!-- Alternate Company Availability Message -->
+                                        <t t-if="ctx.get('has_alternate_company', False)">
+                                            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #D1ECF1; border: 1px solid #BEE5EB; border-radius: 4px; margin: 16px 0;">
+                                                <tr>
+                                                    <td style="padding: 15px;">
+                                                        <p style="margin: 0; font-size: 14px; color: #0C5460;">
+                                                            <strong>💡 Additional Information:</strong> This product is also available at <strong><t t-out="ctx.get('alternate_company_name', 'another company')">Alternate Company</t></strong>. You can purchase it there.
+                                                        </p>
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </t>
+                                        
+                                        <!-- Alert Box -->
+                                        <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #F8D7DA; border: 1px solid #F5C6CB; border-radius: 4px; margin: 16px 0;">
+                                            <tr>
+                                                <td style="padding: 15px;">
+                                                    <p style="margin: 0 0 10px 0; font-size: 16px; font-weight: bold; color: #721C24;">
+                                                        📦 Stock Shortage Details
+                                                    </p>
+                                                    <table style="width: 100%; font-size: 14px;">
+                                                        <tr>
+                                                            <td style="padding: 5px 0; color: #721C24; width: 40%;"><strong>Product:</strong></td>
+                                                            <td style="padding: 5px 0; color: #721C24;"><t t-out="ctx.get('product_name', 'N/A')">Product Name</t></td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td style="padding: 5px 0; color: #721C24;"><strong>Requested Quantity:</strong></td>
+                                                            <td style="padding: 5px 0; color: #721C24;"><t t-out="ctx.get('requested_qty', 'N/A')">10</t></td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td style="padding: 5px 0; color: #721C24;"><strong>Available Quantity:</strong></td>
+                                                            <td style="padding: 5px 0; color: #721C24;"><t t-out="ctx.get('available_qty', 'N/A')">0</t></td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td style="padding: 5px 0; color: #721C24;"><strong>Sales Order:</strong></td>
+                                                            <td style="padding: 5px 0; color: #721C24;"><t t-out="ctx.get('order_name', 'N/A')">SO001</t></td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td style="padding: 5px 0; color: #721C24;"><strong>Company:</strong></td>
+                                                            <td style="padding: 5px 0; color: #721C24;"><t t-out="ctx.get('company_name', 'N/A')">Company Name</t></td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                        
+                                        <p style="margin: 16px 0; font-size: 14px;">
+                                            <strong>Action Required:</strong> Please review the stock levels and take appropriate action to replenish inventory for this product so the sales order can be confirmed.
+                                        </p>
+                                        
+                                        <!-- Button -->
+                                        <table border="0" cellpadding="0" cellspacing="0" style="margin: 16px 0;">
+                                            <tr>
+                                                <td style="border-radius: 3px; background-color: #007BFF;" align="center">
+                                                    <a t-attf-href="{{ ctx.get('order_url', '#') }}" style="padding: 12px 18px; border-radius: 3px; background-color: #007BFF; text-decoration: none; color: #FFFFFF; font-size: 14px; font-weight: bold; display: inline-block;">
+                                                        View Sales Order
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                        
+                                        <p style="margin: 16px 0 0 0; font-size: 12px; color: #999999;">
+                                            This is an automated notification from your Odoo system.
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    <!-- FOOTER -->
+                    <tr>
+                        <td align="center" style="min-width: 590px;">
+                            <table border="0" cellpadding="0" cellspacing="0" width="590" style="min-width: 590px; padding: 16px; text-align: center; font-size: 12px; color: #999999;">
+                                <tr>
+                                    <td>
+                                        <p style="margin: 0;">
+                                            Sent by <t t-out="object.company_id.name">Company</t>
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </td>
+    </tr>
+</table>
+            </field>
+            <field name="auto_delete" eval="False"/>
+        </record>
+    </data>
+</odoo>
