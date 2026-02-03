@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Mail Activity Type for Approval Requests -->
+        <record id="mail_activity_data_sale_approval" model="mail.activity.type">
+            <field name="name">Sale Order Approval Request</field>
+            <field name="summary">Approval needed for Sale Order</field>
+            <field name="res_model">sale.order</field>
+            <field name="icon">fa-check-circle</field>
+            <field name="delay_count">1</field>
+            <field name="delay_unit">days</field>
+        </record>
+    </data>
+</odoo>

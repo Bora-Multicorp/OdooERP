@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Settings view to configure Procurement Team -->
+    <record id="res_config_settings_view_form_inherit_ks_sale_order" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.inherit.ks.sale.order</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="sale.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//block[@name='quotation_order_setting_container']" position="after">
+                <block title="Stock Availability Validation" name="ks_sale_order_stock_validation_container">
+                    <setting id="ks_sale_order_procurement_team_setting" 
+                             company_dependent="1"
+                             string="Procurement Team Notification"
+                             help="Configure the team that receives notifications when products with insufficient stock are added to sales orders">
+                        <div class="content-group">
+                            <div class="mt16">
+                                <label for="ks_sale_procurement_team_user_ids" class="o_light_label"/>
+                                <field name="ks_sale_procurement_team_user_ids" 
+                                       widget="many2many_tags"
+                                       options="{'no_create': True}"
+                                       placeholder="Select users to notify..."/>
+                            </div>
+                            <div class="mt8 text-muted">
+                                <i class="fa fa-info-circle me-1"/>
+                                These users will receive automatic email notifications when someone adds a product with insufficient stock to a sales order.
+                            </div>
+                            <div class="mt8 alert alert-info" role="alert" style="margin-bottom: 0;">
+                                <i class="fa fa-lightbulb-o me-1"/>
+                                <strong>How it works:</strong>
+                                <ul class="mb-0 ps-3">
+                                    <li>Users can <strong>create</strong> sales order lines even with insufficient stock</li>
+                                    <li>An <strong>automatic email notification</strong> is sent to the Procurement Team when this happens</li>
+                                    <li>Users <strong>cannot confirm</strong> the sales order until stock is replenished</li>
+                                    <li>The email includes product details, quantities, order information, and a direct link</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </setting>
+                </block>
+            </xpath>
+        </field>
+    </record>
+</odoo>

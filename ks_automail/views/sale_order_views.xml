@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Inherit Sale Order Form View -->
+    <record id="view_order_form_inherit_ks_automail" model="ir.ui.view">
+        <field name="name">sale.order.form.inherit.ks.automail</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="priority">50</field>
+        <field name="arch" type="xml">
+            
+            <!-- Add Zone Field -->
+            <xpath expr="//field[@name='partner_id']" position="after">
+                <field name="ks_zone" 
+                       widget="radio" 
+                       options="{'horizontal': true}"
+                       help="Select the zone. Automatic emails will only be sent for India and Dubai zones."/>
+            </xpath>
+            
+            <!-- Email Settings Tab Removed - Configuration is now global -->
+            <!-- All email settings are managed in Sales > Email Configurations -->
+            <!-- No manual configuration needed per Sale Order -->
+            
+        </field>
+    </record>
+    
+    <!-- Inherit Sale Order List View - Add Zone Column -->
+    <record id="view_order_tree_inherit_ks_automail" model="ir.ui.view">
+        <field name="name">sale.order.tree.inherit.ks.automail</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='partner_id']" position="after">
+                <field name="ks_zone" optional="show"/>
+            </xpath>
+        </field>
+    </record>
+    
+</odoo>
+

@@ -148,6 +148,17 @@ class PurchaseOrder(models.Model):
         copy=False,
     )
 
+    # ===== Sale Order Link Fields =====
+    ks_linked_sale_order_ids = fields.Many2many(
+        'sale.order',
+        'purchase_sale_order_rel',
+        'purchase_order_id',
+        'sale_order_id',
+        string='Linked Sale Orders',
+        copy=False,
+        help='Sale Orders linked to this Purchase Order',
+    )
+
     # ===== Computed Fields for UI =====
     ks_is_pm_user = fields.Boolean(
         string='Is PM User',
@@ -389,6 +400,11 @@ class PurchaseOrder(models.Model):
         - PM users: Confirm immediately (standard flow)
         - Normal users: Show popup before sending to Pending Approval
         """
+        # Update linked sale orders before confirmation
+        for po in self:
+            if po.ks_linked_sale_order_ids:
+                po._update_linked_sale_orders()
+        
         # Handle single record for popup
         if len(self) == 1:
             order = self
@@ -496,6 +512,16 @@ class PurchaseOrder(models.Model):
             approver_2.partner_id.id,
         ])
         
+        # Create activity for Approver 1 (PM1) to review confirmation request
+        # This will trigger a notification popup: "A new approval task has been assigned to you."
+        self._create_approval_activity(
+            user_id=approver_1_id,
+            summary=_('PO Confirmation Approval for: %s') % self.name,
+            note=_('Purchase Order %s has been submitted for confirmation approval by %s. Please review and approve or reject.') % (
+                self.name, self.env.user.name
+            ),
+        )
+        
         return True
 
     def ks_action_approve_confirmation(self):
@@ -566,6 +592,24 @@ class PurchaseOrder(models.Model):
                 message_type='notification',
                 subtype_xmlid='mail.mt_note',
             )
+            
+            # Mark PM1 activity as done and create activity for PM2
+            self.env['mail.activity'].search([
+                ('res_model', '=', self._name),
+                ('res_id', '=', self.id),
+                ('user_id', '=', self.ks_confirm_approver_1_id.id),
+                ('summary', 'ilike', 'PO Confirmation Approval'),
+            ]).action_done()
+            
+            # Create activity for Approver 2 (PM2) to review confirmation request
+            # This will trigger a notification popup: "A new approval task has been assigned to you."
+            self._create_approval_activity(
+                user_id=self.ks_confirm_approver_2_id.id,
+                summary=_('PO Confirmation Approval for: %s - PM1 Approved') % self.name,
+                note=_('Purchase Order %s confirmation has been approved by PM1 (%s). Please review and approve or reject. Reason: %s') % (
+                    self.name, current_user.name, reason
+                ),
+            )
         elif current_user == self.ks_confirm_approver_2_id:
             # Sequential: Check if Approver 1 has approved
             if not self.ks_confirm_pm1_approved:
@@ -581,6 +625,14 @@ class PurchaseOrder(models.Model):
                 message_type='notification',
                 subtype_xmlid='mail.mt_note',
             )
+            
+            # Mark PM2 activity as done
+            self.env['mail.activity'].search([
+                ('res_model', '=', self._name),
+                ('res_id', '=', self.id),
+                ('user_id', '=', self.ks_confirm_approver_2_id.id),
+                ('summary', 'ilike', 'PO Confirmation Approval'),
+            ]).action_done()
         else:
             raise UserError(_("You are not authorized to approve this confirmation request."))
         
@@ -614,6 +666,14 @@ class PurchaseOrder(models.Model):
             
             if self.partner_id not in self.message_partner_ids:
                 self.message_subscribe([self.partner_id.id])
+            
+            # Create activity for requester to notify confirmation is complete
+            if self.ks_confirm_request_user_id:
+                self._create_approval_activity(
+                    user_id=self.ks_confirm_request_user_id.id,
+                    summary=_('PO Confirmed: %s') % self.name,
+                    note=_('Purchase Order %s has been confirmed after approval from both Approver 1 and Approver 2.') % self.name,
+                )
         
         return True
 
@@ -654,6 +714,24 @@ class PurchaseOrder(models.Model):
             message_type='notification',
             subtype_xmlid='mail.mt_note',
         )
+        
+        # Mark approver activities as done
+        self.env['mail.activity'].search([
+            ('res_model', '=', self._name),
+            ('res_id', '=', self.id),
+            ('user_id', 'in', [self.ks_confirm_approver_1_id.id, self.ks_confirm_approver_2_id.id]),
+            ('summary', 'ilike', 'PO Confirmation Approval'),
+        ]).action_done()
+        
+        # Create activity for requester to notify rejection
+        if self.ks_confirm_request_user_id:
+            self._create_approval_activity(
+                user_id=self.ks_confirm_request_user_id.id,
+                summary=_('PO Confirmation Rejected: %s') % self.name,
+                note=_('Purchase Order %s confirmation request has been rejected by %s. Reason: %s') % (
+                    self.name, current_user.name, reason
+                ),
+            )
         
         return True
 
@@ -708,6 +786,16 @@ class PurchaseOrder(models.Model):
             approver_1.partner_id.id,
             approver_2.partner_id.id,
         ])
+        
+        # Create activity for Approver 1 (PM1) to review update request
+        # This will trigger a notification popup: "A new approval task has been assigned to you."
+        self._create_approval_activity(
+            user_id=approver_1_id,
+            summary=_('PO Update Approval for: %s') % self.name,
+            note=_('Purchase Order %s has been submitted for update approval by %s. Reason: %s') % (
+                self.name, self.env.user.name, reason
+            ),
+        )
         
         return True
 
@@ -775,6 +863,24 @@ class PurchaseOrder(models.Model):
                 message_type='notification',
                 subtype_xmlid='mail.mt_note',
             )
+            
+            # Mark PM1 activity as done and create activity for PM2
+            self.env['mail.activity'].search([
+                ('res_model', '=', self._name),
+                ('res_id', '=', self.id),
+                ('user_id', '=', self.ks_update_approver_1_id.id),
+                ('summary', 'ilike', 'PO Update Approval'),
+            ]).action_done()
+            
+            # Create activity for Approver 2 (PM2) to review update request
+            # This will trigger a notification popup: "A new approval task has been assigned to you."
+            self._create_approval_activity(
+                user_id=self.ks_update_approver_2_id.id,
+                summary=_('PO Update Approval for: %s - PM1 Approved') % self.name,
+                note=_('Purchase Order %s update request has been approved by PM1 (%s). Please review and approve or reject. Reason: %s') % (
+                    self.name, current_user.name, reason
+                ),
+            )
         elif current_user == self.ks_update_approver_2_id:
             # Sequential: Check if Approver 1 has approved
             if not self.ks_update_pm1_approved:
@@ -787,6 +893,14 @@ class PurchaseOrder(models.Model):
                 message_type='notification',
                 subtype_xmlid='mail.mt_note',
             )
+            
+            # Mark PM2 activity as done
+            self.env['mail.activity'].search([
+                ('res_model', '=', self._name),
+                ('res_id', '=', self.id),
+                ('user_id', '=', self.ks_update_approver_2_id.id),
+                ('summary', 'ilike', 'PO Update Approval'),
+            ]).action_done()
         else:
             raise UserError(_("You are not authorized to approve this update request."))
         
@@ -805,6 +919,14 @@ class PurchaseOrder(models.Model):
                 message_type='notification',
                 subtype_xmlid='mail.mt_comment',
             )
+            
+            # Create activity for requester to notify update is approved and they can edit
+            if self.ks_update_request_user_id:
+                self._create_approval_activity(
+                    user_id=self.ks_update_request_user_id.id,
+                    summary=_('PO Update Approved: %s - Ready to Edit') % self.name,
+                    note=_('Purchase Order %s update request has been approved by both Approver 1 and Approver 2. You can now edit this PO.') % self.name,
+                )
         
         return True
 
@@ -848,6 +970,24 @@ class PurchaseOrder(models.Model):
             subtype_xmlid='mail.mt_note',
         )
         
+        # Mark approver activities as done
+        self.env['mail.activity'].search([
+            ('res_model', '=', self._name),
+            ('res_id', '=', self.id),
+            ('user_id', 'in', [self.ks_update_approver_1_id.id, self.ks_update_approver_2_id.id]),
+            ('summary', 'ilike', 'PO Update Approval'),
+        ]).action_done()
+        
+        # Create activity for requester to notify rejection
+        if self.ks_update_request_user_id:
+            self._create_approval_activity(
+                user_id=self.ks_update_request_user_id.id,
+                summary=_('PO Update Request Rejected: %s') % self.name,
+                note=_('Purchase Order %s update request has been rejected by %s. Reason: %s') % (
+                    self.name, current_user.name, reason
+                ),
+            )
+        
         return True
 
     def ks_action_complete_update(self):
@@ -874,6 +1014,14 @@ class PurchaseOrder(models.Model):
             message_type='notification',
             subtype_xmlid='mail.mt_note',
         )
+        
+        # Mark update completion activity as done
+        self.env['mail.activity'].search([
+            ('res_model', '=', self._name),
+            ('res_id', '=', self.id),
+            ('user_id', '=', self.env.user.id),
+            ('summary', 'ilike', 'PO Update Approved'),
+        ]).action_done()
         
         return True
 
@@ -953,6 +1101,16 @@ class PurchaseOrder(models.Model):
             approver_2.partner_id.id,
         ])
         
+        # Create activity for Approver 1 (PM1) to review cancel request
+        # This will trigger a notification popup: "A new approval task has been assigned to you."
+        self._create_approval_activity(
+            user_id=approver_1_id,
+            summary=_('PO Cancellation Approval for: %s') % self.name,
+            note=_('Purchase Order %s has been submitted for cancellation approval by %s. Reason: %s') % (
+                self.name, self.env.user.name, reason
+            ),
+        )
+        
         return True
 
     def ks_action_approve_cancel(self):
@@ -984,6 +1142,24 @@ class PurchaseOrder(models.Model):
                 message_type='notification',
                 subtype_xmlid='mail.mt_note',
             )
+            
+            # Mark PM1 activity as done and create activity for PM2
+            self.env['mail.activity'].search([
+                ('res_model', '=', self._name),
+                ('res_id', '=', self.id),
+                ('user_id', '=', self.ks_cancel_approver_1_id.id),
+                ('summary', 'ilike', 'PO Cancellation Approval'),
+            ]).action_done()
+            
+            # Create activity for Approver 2 (PM2) to review cancel request
+            # This will trigger a notification popup: "A new approval task has been assigned to you."
+            self._create_approval_activity(
+                user_id=self.ks_cancel_approver_2_id.id,
+                summary=_('PO Cancellation Approval for: %s - PM1 Approved') % self.name,
+                note=_('Purchase Order %s cancellation request has been approved by PM1 (%s). Please review and approve or reject.') % (
+                    self.name, current_user.name
+                ),
+            )
         elif current_user == self.ks_cancel_approver_2_id:
             if self.ks_cancel_pm2_approved:
                 raise UserError(_("You have already approved this cancel request."))
@@ -993,6 +1169,14 @@ class PurchaseOrder(models.Model):
                 message_type='notification',
                 subtype_xmlid='mail.mt_note',
             )
+            
+            # Mark PM2 activity as done
+            self.env['mail.activity'].search([
+                ('res_model', '=', self._name),
+                ('res_id', '=', self.id),
+                ('user_id', '=', self.ks_cancel_approver_2_id.id),
+                ('summary', 'ilike', 'PO Cancellation Approval'),
+            ]).action_done()
         else:
             raise UserError(_("You are not authorized to approve this cancel request."))
         
@@ -1009,6 +1193,14 @@ class PurchaseOrder(models.Model):
                 message_type='notification',
                 subtype_xmlid='mail.mt_comment',
             )
+            
+            # Create activity for requester to notify cancellation is complete
+            if self.ks_cancel_request_user_id:
+                self._create_approval_activity(
+                    user_id=self.ks_cancel_request_user_id.id,
+                    summary=_('PO Cancelled: %s') % self.name,
+                    note=_('Purchase Order %s has been cancelled after approval from both Approver 1 and Approver 2.') % self.name,
+                )
         
         return True
 
@@ -1051,6 +1243,24 @@ class PurchaseOrder(models.Model):
             subtype_xmlid='mail.mt_note',
         )
         
+        # Mark approver activities as done
+        self.env['mail.activity'].search([
+            ('res_model', '=', self._name),
+            ('res_id', '=', self.id),
+            ('user_id', 'in', [self.ks_cancel_approver_1_id.id, self.ks_cancel_approver_2_id.id]),
+            ('summary', 'ilike', 'PO Cancellation Approval'),
+        ]).action_done()
+        
+        # Create activity for requester to notify rejection
+        if self.ks_cancel_request_user_id:
+            self._create_approval_activity(
+                user_id=self.ks_cancel_request_user_id.id,
+                summary=_('PO Cancellation Request Rejected: %s') % self.name,
+                note=_('Purchase Order %s cancellation request has been rejected by %s. Reason: %s') % (
+                    self.name, current_user.name, reason
+                ),
+            )
+        
         return True
 
     # ===== Override Unlock (Only for PMs) =====
@@ -1075,6 +1285,114 @@ class PurchaseOrder(models.Model):
                 })
         return super().button_unlock()
 
+    # ===== Sale Order Link Methods =====
+    
+    @api.model_create_multi
+    def create(self, vals_list):
+        """Override create to automatically update linked Sale Orders"""
+        pos = super().create(vals_list)
+        
+        # Update linked sale orders for each PO that has linked_sale_order_ids
+        for po in pos:
+            if po.ks_linked_sale_order_ids:
+                po._update_linked_sale_orders()
+        
+        return pos
+    
+    def write(self, vals):
+        """Override write to automatically update linked Sale Orders"""
+        result = super().write(vals)
+        
+        # If linked_sale_order_ids is being updated, update the reverse relation
+        if 'ks_linked_sale_order_ids' in vals:
+            self._update_linked_sale_orders()
+        
+        return result
+    
+    def _update_linked_sale_orders(self):
+        """Update the reverse Many2one field in linked Sale Orders"""
+        for po in self:
+            # Get current linked sale orders
+            current_linked_sos = po.ks_linked_sale_order_ids
+            
+            # Find sale orders that were previously linked to this PO but are no longer linked
+            previously_linked_sos = self.env['sale.order'].search([
+                ('ks_linked_purchase_order_id', '=', po.id),
+                ('id', 'not in', current_linked_sos.ids)
+            ])
+            
+            # Remove link from sale orders that are no longer in the Many2many
+            previously_linked_sos.write({'ks_linked_purchase_order_id': False})
+            
+            # Update link in current sale orders
+            # Only update if they don't already have a different PO linked
+            for so in current_linked_sos:
+                if not so.ks_linked_purchase_order_id or so.ks_linked_purchase_order_id.id == po.id:
+                    so.write({'ks_linked_purchase_order_id': po.id})
+                else:
+                    # If SO already has a different PO linked, show warning
+                    raise ValidationError(_(
+                        "Sale Order %s is already linked to Purchase Order %s. "
+                        "Please unlink it first before linking to this PO."
+                    ) % (so.name, so.ks_linked_purchase_order_id.name))
+    
+    def action_confirm(self):
+        """Override action_confirm to ensure links are saved on confirmation"""
+        # Update linked sale orders before confirmation
+        for po in self:
+            if po.ks_linked_sale_order_ids:
+                po._update_linked_sale_orders()
+        
+        return super().action_confirm()
+
+    # ===== Mail Activity Helpers =====
+    
+    def _create_approval_activity(self, user_id, summary, note='', date_deadline=None, activity_type_xmlid='mail.mail_activity_data_todo'):
+        """
+        Helper method to create mail.activity records for approval workflow operations.
+        Uses activity_schedule to ensure proper notification handling.
+        Prevents duplicate activities by checking existing activities first.
+        
+        :param user_id: User ID to assign the activity to
+        :param summary: Activity summary text
+        :param note: Activity note (HTML content)
+        :param date_deadline: Due date for the activity (defaults to today)
+        :param activity_type_xmlid: XML ID of activity type (defaults to 'To Do')
+        :return: Created activity record or False if duplicate found
+        """
+        self.ensure_one()
+        
+        # Prevent duplicate activities - check if similar activity already exists
+        if not date_deadline:
+            date_deadline = fields.Date.today()
+        
+        existing_activity = self.env['mail.activity'].search([
+            ('res_model', '=', self._name),
+            ('res_id', '=', self.id),
+            ('user_id', '=', user_id),
+            ('summary', '=', summary),
+            ('date_deadline', '=', date_deadline),
+        ], limit=1)
+        
+        if existing_activity:
+            # Activity already exists, don't create duplicate
+            return existing_activity
+        
+        # Use activity_schedule which automatically handles notifications
+        # This ensures the popup notification appears like "A new approval task has been assigned to you."
+        try:
+            activity = self.activity_schedule(
+                act_type_xmlid=activity_type_xmlid,
+                summary=summary,
+                note=note or '',
+                user_id=user_id,
+                date_deadline=date_deadline,
+            )
+            return activity
+        except Exception:
+            # Fallback if activity_schedule fails
+            return False
+    
     # ===== Wizard Helpers =====
     
     def _action_open_request_reason_wizard(self, request_type):
@@ -1123,43 +1441,6 @@ class PurchaseOrder(models.Model):
             'target': 'new',
             'context': {
                 'default_ks_purchase_order_id': self.id,
-            },
-        }
-
-    # ===== WhatsApp Integration =====
-    
-    def action_rfq_send(self):
-        """
-        Override: Opens combined Email + WhatsApp wizard instead of just email compose.
-        This allows sending both email and WhatsApp message together.
-        """
-        self.ensure_one()
-        
-        # Get the appropriate email template
-        ir_model_data = self.env['ir.model.data']
-        try:
-            if self.env.context.get('send_rfq', False):
-                template_id = ir_model_data._xmlid_lookup('purchase.email_template_edi_purchase')[1]
-            else:
-                template_id = ir_model_data._xmlid_lookup('purchase.email_template_edi_purchase_done')[1]
-        except ValueError:
-            template_id = False
-        
-        # Determine document type for window title
-        if self.state in ['draft', 'sent']:
-            title = _('Send Request for Quotation')
-        else:
-            title = _('Send Purchase Order')
-        
-        return {
-            'name': title,
-            'type': 'ir.actions.act_window',
-            'res_model': 'ks.rfq.send.wizard',
-            'view_mode': 'form',
-            'target': 'new',
-            'context': {
-                'default_purchase_order_id': self.id,
-                'default_template_id': template_id,
             },
         }
 

@@ -18,24 +18,23 @@
         - PM users can approve or reject requests with reasons
         - Complete audit trail in chatter
         - PO locked during approval states
-        - WhatsApp integration for sending RFQ/PO to vendors
     """,
     'category': 'Inventory/Purchase',
     'author': 'Ksolves',
     'website': '',
-    'depends': ['purchase', 'mail', 'whatsapp_redirect'],
+    'depends': ['purchase', 'mail', 'sale'],
     'data': [
         'security/security.xml',
         'security/ir.model.access.csv',
         'data/ks_approval_data.xml',
         'wizard/ks_request_reason_wizard_views.xml',
         'wizard/ks_reject_reason_wizard_views.xml',
-        'wizard/ks_whatsapp_rfq_wizard_views.xml',
         'wizard/ks_approval_confirmation_wizard_views.xml',
         'wizard/ks_approve_confirmation_reason_wizard_views.xml',
         'wizard/ks_approve_update_reason_wizard_views.xml',
         'views/ks_purchase_approval_config_views.xml',
         'views/purchase_order_views.xml',
+        'views/sale_order_views.xml',
     ],
     'installable': True,
     'application': False,

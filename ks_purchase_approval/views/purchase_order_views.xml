@@ -37,8 +37,7 @@
                 PM users: Will confirm directly
                 Normal users: Will go to Pending Approval (no popup)
                 
-                The "Send by Email" buttons (action_rfq_send) are overridden in Python
-                to open our combined Email + WhatsApp wizard instead.
+                The "Send by Email" buttons (action_rfq_send) use the base Odoo email functionality.
             -->
 
             <!-- Hide original Cancel button based on state and user type -->
@@ -211,6 +210,16 @@
                 <attribute name="readonly">not ks_can_edit or state in ('cancel', 'done', 'purchase',
                     'pending_approval', 'update_requested', 'cancel_requested')
                 </attribute>
+            </xpath>
+
+            <!-- Add Linked Sale Orders field -->
+            <xpath expr="//field[@name='date_order']" position="after">
+                <field name="ks_linked_sale_order_ids" 
+                       widget="many2many_tags"
+                       options="{'no_create': True, 'no_create_edit': True}"
+                       readonly="state in ('done', 'cancel')"
+                       domain="[('state', 'in', ('sale', 'done'))]"
+                       placeholder="Select Sale Orders..."/>
             </xpath>
 
         </field>

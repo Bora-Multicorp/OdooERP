@@ -1,0 +1,303 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Inherit Sale Order Form View - Add Approval Buttons and Fields -->
+    <record id="ks_sale_order_form_inherit" model="ir.ui.view">
+        <field name="name">sale.order.form.ks.approval.inherit</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="priority">100</field>
+        <field name="arch" type="xml">
+            <!-- Add computed fields for button visibility (invisible) -->
+            <xpath expr="//field[@name='state']" position="before">
+                <field name="ks_is_pm_user" invisible="1"/>
+                <field name="ks_is_normal_user" invisible="1"/>
+                <field name="ks_is_admin_user" invisible="1"/>
+                <field name="ks_can_edit" invisible="1"/>
+                <field name="ks_show_approve_confirm_button" invisible="1"/>
+                <field name="ks_show_reject_confirm_button" invisible="1"/>
+                <field name="ks_show_approve_cancel_button" invisible="1"/>
+                <field name="ks_show_reject_cancel_button" invisible="1"/>
+                <field name="ks_show_approve_edit_button" invisible="1"/>
+                <field name="ks_show_reject_edit_button" invisible="1"/>
+                <field name="ks_show_request_edit_button" invisible="1"/>
+                <field name="ks_show_complete_edit_button" invisible="1"/>
+                <field name="ks_confirm_pm1_approved" invisible="1"/>
+                <field name="ks_confirm_pm2_approved" invisible="1"/>
+                <field name="ks_cancel_pm1_approved" invisible="1"/>
+                <field name="ks_cancel_pm2_approved" invisible="1"/>
+                <field name="ks_edit_pm1_approved" invisible="1"/>
+                <field name="ks_edit_pm2_approved" invisible="1"/>
+                <field name="ks_edit_approved" invisible="1"/>
+                <field name="ks_edit_request_user_id" invisible="1"/>
+                <field name="ks_is_dual_approval" invisible="1"/>
+            </xpath>
+
+            <!-- Hide original Cancel button for normal users when SO is confirmed -->
+            <!-- Admin users should see the standard Cancel button (not hidden) -->
+            <xpath expr="//button[@name='action_cancel']" position="attributes">
+                <attribute name="invisible">state not in ['draft', 'sent', 'sale'] or not id or locked or (state == 'sale' and ks_is_normal_user and not ks_is_admin_user)</attribute>
+            </xpath>
+
+            <!-- Add PM Approval Buttons -->
+            <xpath expr="//button[@name='action_cancel']" position="after">
+                <!-- ====== PM USER BUTTONS ====== -->
+                
+                <!-- Approve Confirmation Button (PM Users only) -->
+                <button name="ks_action_approve_confirmation" 
+                        type="object"
+                        string="Approve"
+                        class="btn-success"
+                        invisible="not ks_show_approve_confirm_button"
+                        data-hotkey="v"/>
+                
+                <!-- Reject Confirmation Button (PM Users only) -->
+                <button name="ks_action_reject_confirmation" 
+                        type="object"
+                        string="Reject"
+                        class="btn-danger"
+                        invisible="not ks_show_reject_confirm_button"
+                        data-hotkey="r"/>
+
+                <!-- Approve Cancel Button (PM Users only) -->
+                <button name="ks_action_approve_cancel" 
+                        type="object"
+                        string="Approve Cancel"
+                        class="btn-success"
+                        invisible="not ks_show_approve_cancel_button"
+                        data-hotkey="v"/>
+                
+                <!-- Reject Cancel Button (PM Users only) -->
+                <button name="ks_action_reject_cancel" 
+                        type="object"
+                        string="Reject Cancel"
+                        class="btn-danger"
+                        invisible="not ks_show_reject_cancel_button"
+                        data-hotkey="r"/>
+
+                <!-- Approve Edit Button (PM Users only) -->
+                <button name="ks_action_approve_edit" 
+                        type="object"
+                        string="Approve Edit"
+                        class="btn-success"
+                        invisible="not ks_show_approve_edit_button"
+                        data-hotkey="e"/>
+                
+                <!-- Reject Edit Button (PM Users only) -->
+                <button name="ks_action_reject_edit" 
+                        type="object"
+                        string="Reject Edit"
+                        class="btn-danger"
+                        invisible="not ks_show_reject_edit_button"
+                        data-hotkey="r"/>
+
+                <!-- ====== NORMAL USER BUTTONS ====== -->
+                
+                <!-- Request Cancel Button (Normal Users only, when SO is confirmed) -->
+                <!-- Admin users should NOT see this - they use standard Cancel button -->
+                <button name="action_cancel" 
+                        type="object"
+                        string="Request Cancel"
+                        class="btn-warning"
+                        invisible="state != 'sale' or ks_is_pm_user or locked or ks_edit_approved or ks_is_admin_user"
+                        data-hotkey="c"/>
+
+                <!-- Request Edit Button (Normal Users only, when SO is confirmed) -->
+                <!-- Admin users should NOT see this - they can edit directly -->
+                <button name="ks_action_request_edit" 
+                        type="object"
+                        string="Request Edit"
+                        class="btn-info"
+                        invisible="not ks_show_request_edit_button or ks_is_admin_user"
+                        data-hotkey="e"/>
+
+                <!-- Complete Edit Button (Normal user who requested edit, after approval) -->
+                <button name="ks_action_complete_edit" 
+                        type="object"
+                        string="Complete Edit"
+                        class="btn-primary"
+                        invisible="not ks_show_complete_edit_button"
+                        data-hotkey="d"/>
+            </xpath>
+
+            <!-- Update statusbar to show new states -->
+            <xpath expr="//field[@name='state'][@widget='statusbar']" position="attributes">
+                <attribute name="statusbar_visible">draft,sent,approval_pending,sale</attribute>
+            </xpath>
+
+            <!-- Add Approval Info Section in Other Information page -->
+            <xpath expr="//page[@name='other_information']//group" position="after">
+                <group name="ks_approval_info" string="Approval Information" 
+                       invisible="state not in ('approval_pending', 'cancel_pending', 'edit_pending') and not ks_edit_approved">
+                    <!-- Confirmation Request Info -->
+                    <group string="Confirmation Request" 
+                           invisible="state != 'approval_pending'" col="4">
+                        <field name="ks_confirm_request_user_id" readonly="1"/>
+                        <field name="ks_confirm_request_date" readonly="1"/>
+                        <field name="ks_confirm_pm1_approved" readonly="1" widget="boolean" string="PM1 Approved"/>
+                        <field name="ks_confirm_pm2_approved" readonly="1" widget="boolean" string="PM2 Approved"
+                               invisible="not ks_is_dual_approval"/>
+                    </group>
+                    
+                    <!-- Cancel Request Info -->
+                    <group string="Cancel Request" 
+                           invisible="state != 'cancel_pending'" col="4">
+                        <field name="ks_cancel_request_user_id" readonly="1"/>
+                        <field name="ks_cancel_request_date" readonly="1"/>
+                        <field name="ks_cancel_request_reason" readonly="1"/>
+                        <newline/>
+                        <field name="ks_cancel_pm1_approved" readonly="1" widget="boolean" string="PM1 Approved"/>
+                        <field name="ks_cancel_pm2_approved" readonly="1" widget="boolean" string="PM2 Approved"
+                               invisible="not ks_is_dual_approval"/>
+                    </group>
+
+                    <!-- Edit Request Info -->
+                    <group string="Edit Request" 
+                           invisible="state != 'edit_pending' and not ks_edit_approved" col="4">
+                        <field name="ks_edit_request_user_id" readonly="1"/>
+                        <field name="ks_edit_request_date" readonly="1"/>
+                        <field name="ks_edit_request_reason" readonly="1"/>
+                        <newline/>
+                        <field name="ks_edit_pm1_approved" readonly="1" widget="boolean" string="PM1 Approved"/>
+                        <field name="ks_edit_pm2_approved" readonly="1" widget="boolean" string="PM2 Approved"
+                               invisible="not ks_is_dual_approval"/>
+                        <field name="ks_edit_approved" readonly="1" widget="boolean" 
+                               invisible="state != 'sale'"
+                               string="Currently Editable"/>
+                    </group>
+                </group>
+            </xpath>
+
+            <!-- Make order lines readonly based on ks_can_edit (admin users can always edit) -->
+            <xpath expr="//field[@name='order_line']" position="attributes">
+                <attribute name="readonly">(not ks_can_edit or state in ('cancel', 'approval_pending', 'cancel_pending', 'edit_pending')) and not ks_is_admin_user</attribute>
+            </xpath>
+
+            <!-- Make partner_id readonly when in approval states (admin users can always edit) -->
+            <xpath expr="//field[@name='partner_id'][not(ancestor::field)]" position="attributes">
+                <attribute name="readonly">(state in ('cancel', 'sale', 'approval_pending', 'cancel_pending', 'edit_pending') or (state == 'sale' and ks_is_normal_user and not ks_edit_approved)) and not ks_is_admin_user</attribute>
+            </xpath>
+
+        </field>
+    </record>
+
+    <!-- Add banner for approval states -->
+    <record id="ks_sale_order_form_banner" model="ir.ui.view">
+        <field name="name">sale.order.form.ks.approval.banner</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="priority">110</field>
+        <field name="arch" type="xml">
+            <xpath expr="//sheet" position="before">
+                <!-- Approval Pending Banner -->
+                <div class="alert alert-warning mb-0" role="alert"
+                     invisible="state != 'approval_pending'">
+                    <strong>⏳ Approval Pending:</strong> This Sale Order is waiting for confirmation approval.
+                    <br/>
+                    <span class="badge bg-success" invisible="not ks_confirm_pm1_approved">✓ PM1 Approved</span>
+                    <span class="badge bg-secondary" invisible="ks_confirm_pm1_approved">⏳ PM1 Pending</span>
+                    <span invisible="not ks_is_dual_approval">&amp;nbsp;</span>
+                    <span class="badge bg-success" invisible="not ks_confirm_pm2_approved or not ks_is_dual_approval">✓ PM2 Approved</span>
+                    <span class="badge bg-secondary" invisible="ks_confirm_pm2_approved or not ks_is_dual_approval">⏳ PM2 Pending</span>
+                </div>
+
+                <!-- Cancel Pending Banner -->
+                <div class="alert alert-danger mb-0" role="alert"
+                     invisible="state != 'cancel_pending'">
+                    <strong>🚫 Cancel Pending:</strong> This Sale Order is waiting for cancellation approval.
+                    <br/>
+                    <span class="badge bg-success" invisible="not ks_cancel_pm1_approved">✓ PM1 Approved</span>
+                    <span class="badge bg-secondary" invisible="ks_cancel_pm1_approved">⏳ PM1 Pending</span>
+                    <span invisible="not ks_is_dual_approval">&amp;nbsp;</span>
+                    <span class="badge bg-success" invisible="not ks_cancel_pm2_approved or not ks_is_dual_approval">✓ PM2 Approved</span>
+                    <span class="badge bg-secondary" invisible="ks_cancel_pm2_approved or not ks_is_dual_approval">⏳ PM2 Pending</span>
+                </div>
+
+                <!-- Edit Pending Banner -->
+                <div class="alert alert-info mb-0" role="alert"
+                     invisible="state != 'edit_pending'">
+                    <strong>📝 Edit Pending:</strong> This Sale Order is waiting for edit approval.
+                    <br/>
+                    <span class="badge bg-success" invisible="not ks_edit_pm1_approved">✓ PM1 Approved</span>
+                    <span class="badge bg-secondary" invisible="ks_edit_pm1_approved">⏳ PM1 Pending</span>
+                    <span invisible="not ks_is_dual_approval">&amp;nbsp;</span>
+                    <span class="badge bg-success" invisible="not ks_edit_pm2_approved or not ks_is_dual_approval">✓ PM2 Approved</span>
+                    <span class="badge bg-secondary" invisible="ks_edit_pm2_approved or not ks_is_dual_approval">⏳ PM2 Pending</span>
+                </div>
+
+                <!-- Edit Approved Banner (Editable Mode for the requester) -->
+                <div class="alert alert-success mb-0" role="alert"
+                     invisible="not ks_show_complete_edit_button">
+                    <strong>✏️ Edit Mode:</strong> Edit has been approved. You can now edit this Sale Order. 
+                    Click <strong>"Complete Edit"</strong> when done to lock the SO again.
+                </div>
+
+                <!-- Locked SO Banner for Normal Users -->
+                <div class="alert alert-secondary mb-0" role="alert"
+                     invisible="state != 'sale' or ks_is_pm_user or ks_edit_approved">
+                    <strong>🔒 Confirmed:</strong> This Sale Order is confirmed. 
+                    Use <strong>"Request Edit"</strong> to request edit permission or <strong>"Request Cancel"</strong> to request cancellation.
+                </div>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Sale Order Line - Price field restriction for normal users (inline list) -->
+    <record id="ks_sale_order_line_price_inherit" model="ir.ui.view">
+        <field name="name">sale.order.form.ks.price.inherit</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="priority">120</field>
+        <field name="arch" type="xml">
+            <!-- Add computed field to inline list view -->
+            <xpath expr="//field[@name='order_line']//list//field[@name='price_unit']" position="before">
+                <field name="ks_can_edit_price" column_invisible="1"/>
+            </xpath>
+            <!-- Make price_unit readonly for normal users in inline list -->
+            <xpath expr="//field[@name='order_line']//list//field[@name='price_unit']" position="attributes">
+                <attribute name="readonly">not ks_can_edit_price or qty_invoiced &gt; 0</attribute>
+            </xpath>
+            <!-- Make discount readonly for normal users in inline list -->
+            <xpath expr="//field[@name='order_line']//list//field[@name='discount']" position="attributes">
+                <attribute name="readonly">not ks_can_edit_price</attribute>
+            </xpath>
+            <!-- Add computed field to inline form view -->
+            <xpath expr="//field[@name='order_line']//form//field[@name='price_unit']" position="before">
+                <field name="ks_can_edit_price" invisible="1"/>
+            </xpath>
+            <!-- Make price_unit readonly for normal users in inline form -->
+            <xpath expr="//field[@name='order_line']//form//field[@name='price_unit']" position="attributes">
+                <attribute name="readonly">not ks_can_edit_price</attribute>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Inherit List View to show new states with decoration -->
+    <record id="ks_sale_order_list_inherit" model="ir.ui.view">
+        <field name="name">sale.order.list.ks.approval.inherit</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='state']" position="attributes">
+                <attribute name="decoration-warning">state == 'approval_pending'</attribute>
+                <attribute name="decoration-danger">state == 'cancel_pending'</attribute>
+                <attribute name="decoration-info">state == 'edit_pending'</attribute>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Inherit Search View to add filters for new states -->
+<!--    <record id="ks_sale_order_search_inherit" model="ir.ui.view">-->
+<!--        <field name="name">sale.order.search.ks.approval.inherit</field>-->
+<!--        <field name="model">sale.order</field>-->
+<!--        <field name="inherit_id" ref="sale.view_sales_order_filter"/>-->
+<!--        <field name="arch" type="xml">-->
+<!--            <xpath expr="//filter[@name='sale']" position="after">-->
+<!--                <filter name="approval_pending" string="Approval Pending" -->
+<!--                        domain="[('state', '=', 'approval_pending')]"/>-->
+<!--                <filter name="cancel_pending" string="Cancel Pending" -->
+<!--                        domain="[('state', '=', 'cancel_pending')]"/>-->
+<!--            </xpath>-->
+<!--        </field>-->
+<!--    </record>-->
+</odoo>
+
