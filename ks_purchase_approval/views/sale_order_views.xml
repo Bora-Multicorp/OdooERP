@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Inherit Sale Order Form View - Add Linked Purchase Order Smart Button -->
+    <record id="view_sale_order_form_inherit_purchase_link" model="ir.ui.view">
+        <field name="name">sale.order.form.purchase.link</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="priority">50</field>
+        <field name="arch" type="xml">
+            <!-- Add Smart Button for Linked Purchase Order -->
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_view_linked_purchase_order"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-shopping-cart"
+                        invisible="not ks_linked_purchase_order_id">
+                    <div class="o_field_widget o_stat_info">
+                        <span class="o_stat_text">Linked</span>
+                        <span class="o_stat_text">Purchase Order</span>
+                    </div>
+                </button>
+            </xpath>
+        </field>
+    </record>
+</odoo>
+
