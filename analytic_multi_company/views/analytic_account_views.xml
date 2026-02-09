@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Override the form view to make company_id optional and clearly indicate company-independent accounts -->
+        <record id="view_account_analytic_account_form_multi_company" model="ir.ui.view">
+            <field name="name">account.analytic.account.form.multi.company</field>
+            <field name="model">account.analytic.account</field>
+            <field name="inherit_id" ref="analytic.view_account_analytic_account_form"/>
+            <field name="arch" type="xml">
+                <field name="company_id" position="attributes">
+                    <attribute name="options">{'no_create': True, 'no_quick_create': True}</attribute>
+                    <attribute name="placeholder">Leave empty for company-independent account</attribute>
+                </field>
+            </field>
+        </record>
+
+        <!-- Override the list view to show company_id column by default for multi-company users -->
+        <record id="view_account_analytic_account_list_multi_company" model="ir.ui.view">
+            <field name="name">account.analytic.account.list.multi.company</field>
+            <field name="model">account.analytic.account</field>
+            <field name="inherit_id" ref="analytic.view_account_analytic_account_list"/>
+            <field name="arch" type="xml">
+                <field name="company_id" position="attributes">
+                    <attribute name="column_invisible">False</attribute>
+                </field>
+            </field>
+        </record>
+    </data>
+</odoo>
+
+
