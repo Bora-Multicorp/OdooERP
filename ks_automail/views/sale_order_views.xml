@@ -13,7 +13,8 @@
                 <field name="ks_zone" 
                        widget="radio" 
                        options="{'horizontal': true}"
-                       help="Select the zone. Automatic emails will only be sent for India and Dubai zones."/>
+                       readonly="state in ('sale', 'done', 'cancel')"
+                       help="Select the zone. Automatic emails will only be sent for India and Dubai zones. This field cannot be changed once the order is confirmed."/>
             </xpath>
             
             <!-- Email Settings Tab Removed - Configuration is now global -->

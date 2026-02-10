@@ -29,6 +29,7 @@
                         type="object"
                         string="Create Advance Payment"
                         class="btn-secondary"
+                        groups="ks_payment_access_control.group_ks_payment_access"
                         invisible="state not in ('sale', 'sent')"
                         help="Create a payment directly from this sale order without creating an invoice"/>
             </button>

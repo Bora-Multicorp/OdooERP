@@ -13,8 +13,16 @@ class SaleOrder(models.Model):
         ('india', 'India'),
         ('dubai', 'Dubai'),
     ], string='Zone', required=True, default='india',
-       help='Select the zone for this sale order. Automatic emails will only be sent for India and Dubai zones.',
+       help='Select the zone for this sale order. Automatic emails will only be sent for India and Dubai zones. This field cannot be changed once the order is confirmed.',
        tracking=True)
+    
+    def write(self, vals):
+        """Override write to prevent updating ks_zone when order is confirmed"""
+        if 'ks_zone' in vals:
+            for order in self:
+                if order.state in ('sale', 'done'):
+                    raise UserError(_('Zone cannot be changed once the sale order is confirmed.'))
+        return super().write(vals)
 
     # Email Recipient Fields
     ks_email_recipient_ids = fields.Many2many(

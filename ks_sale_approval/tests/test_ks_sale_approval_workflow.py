@@ -199,3 +199,4 @@ class TestKsSaleApprovalWorkflow(KsSaleApprovalCommon):
         
         self.assertFalse(wizard.ks_show_approver2, "PM2 should be hidden in single approval mode")
 
+
