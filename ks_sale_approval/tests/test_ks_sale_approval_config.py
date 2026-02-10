@@ -205,3 +205,4 @@ class TestKsSaleApprovalConfig(TransactionCase):
                 'ks_edit_pm1_ids': [(6, 0, [self.user_2.id])],
             })
 
+

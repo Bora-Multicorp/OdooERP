@@ -6,14 +6,21 @@ from odoo.exceptions import ValidationError
 class KsSaleApprovalConfig(models.Model):
     _name = 'ks.sale.approval.config'
     _description = 'KS Sale Approval Configuration'
-    _rec_name = 'company_id'
+    _rec_name = 'name'
+
+    name = fields.Char(
+        string='Configuration Name',
+        default='Global Sale Approval Configuration',
+        required=True,
+        help='Name for this approval configuration. Only one global configuration is allowed.',
+    )
 
     company_id = fields.Many2one(
         'res.company',
         string='Company',
-        required=True,
-        default=lambda self: self.env.company,
-        index=True,
+        required=False,
+        readonly=True,
+        help='This field is kept for backward compatibility but is not used. Configuration is global for all companies.',
     )
     
     # Approval Mode - Single or Two PM approval
@@ -83,10 +90,21 @@ class KsSaleApprovalConfig(models.Model):
     
     active = fields.Boolean(default=True)
 
-    _sql_constraints = [
-        ('company_uniq', 'unique(company_id)', 
-         'Only one approval configuration per company is allowed!'),
-    ]
+    @api.constrains('active')
+    def _check_single_active_config(self):
+        """Ensure only one active configuration exists globally"""
+        for record in self:
+            if record.active:
+                # Check for other active configs
+                other_active = self.search([
+                    ('active', '=', True),
+                    ('id', '!=', record.id),
+                ], limit=1)
+                if other_active:
+                    raise ValidationError(_(
+                        'Only one active global approval configuration is allowed! '
+                        'Please deactivate the existing configuration "%s" (ID: %s) before activating this one.'
+                    ) % (other_active.name or 'Unnamed', other_active.id))
 
     @api.constrains('ks_approval_mode', 'ks_confirm_pm2_ids', 'ks_cancel_pm2_ids', 'ks_edit_pm2_ids')
     def _check_dual_approval_pms(self):
@@ -109,10 +127,9 @@ class KsSaleApprovalConfig(models.Model):
 
     @api.model
     def get_config(self, company_id=None):
-        """Get approval configuration for the specified or current company"""
-        if not company_id:
-            company_id = self.env.company.id
-        config = self.search([('company_id', '=', company_id)], limit=1)
+        """Get the global approval configuration (applies to all companies)"""
+        # Return the active global configuration regardless of company
+        config = self.search([('active', '=', True)], limit=1)
         return config
 
     def get_all_pm_users(self):

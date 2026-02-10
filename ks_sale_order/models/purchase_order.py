@@ -11,7 +11,6 @@ class PurchaseOrder(models.Model):
         'sale.order',
         string='Source Sale Order',
         copy=False,
-        readonly=True,
         help='Sale Order that triggered the creation of this Purchase Order due to insufficient stock'
     )
     

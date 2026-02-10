@@ -209,18 +209,18 @@ class SaleOrder(models.Model):
 
     # ===== Helper Methods =====
     def _get_approval_config(self):
-        """Get approval configuration for current company"""
-        config = self.env['ks.sale.approval.config'].get_config(self.company_id.id)
+        """Get global approval configuration (applies to all companies)"""
+        config = self.env['ks.sale.approval.config'].get_config()
         if not config:
             raise UserError(_(
-                "No approval configuration found for company '%s'. "
+                "No active approval configuration found. "
                 "Please configure PM approvers in Sales > Configuration > Sale Approval Configuration."
-            ) % self.company_id.name)
+            ))
         return config
 
     def _has_approval_config(self):
         """Check if approval config exists without raising error"""
-        config = self.env['ks.sale.approval.config'].get_config(self.company_id.id)
+        config = self.env['ks.sale.approval.config'].get_config()
         return bool(config)
 
     @api.depends_context('uid')
@@ -405,7 +405,7 @@ class SaleOrder(models.Model):
     def _is_admin_user(self):
         """Check if current user is an admin (has base.group_system)"""
         return self.env.user.has_group('base.group_system')
-    
+
     # ===== Override Confirm Action =====
     
     def action_confirm(self):
@@ -488,14 +488,14 @@ class SaleOrder(models.Model):
         
         # Determine approval message based on mode
         if config.is_dual_approval():
-            pm1_name = self.ks_confirm_pm1_id.name
+            pm1_name = self.ks_confirm_pm1_id.name if self.ks_confirm_pm1_id else ''
             pm2_name = self.ks_confirm_pm2_id.name if self.ks_confirm_pm2_id else ''
-            approval_msg = _("Confirmation request submitted by %s. Waiting for %s (PM1) and %s (PM2) approval.") % (
+            approval_msg = _("Confirmation request submitted by %s. Waiting for approval from %s (PM1) and %s (PM2).") % (
                 self.env.user.name, pm1_name, pm2_name
             )
         else:
-            pm1_name = self.ks_confirm_pm1_id.name
-            approval_msg = _("Confirmation request submitted by %s. Waiting for %s (PM1) approval.") % (
+            pm1_name = self.ks_confirm_pm1_id.name if self.ks_confirm_pm1_id else ''
+            approval_msg = _("Confirmation request submitted by %s. Waiting for approval from %s (PM1).") % (
                 self.env.user.name, pm1_name
             )
         
@@ -594,6 +594,15 @@ class SaleOrder(models.Model):
         context.pop('default_user_id', None)
         
         self.with_context(context)._action_confirm()
+        
+        # Check stock availability and send notifications after confirmation
+        # This ensures stock shortage alerts are triggered even when order is confirmed via approval process
+        # Note: State is already set to 'sale' by _prepare_confirmation_values() and write() above
+        if hasattr(self, '_ks_check_and_notify_stock_shortage_on_confirm'):
+            # Refresh to ensure state is loaded from database
+            self.invalidate_recordset(['state'])
+            # Call the stock shortage check - it will verify state == 'sale' internally
+            self._ks_check_and_notify_stock_shortage_on_confirm()
         
         # Lock if needed
         if self._should_be_locked():
@@ -783,10 +792,21 @@ class SaleOrder(models.Model):
             'ks_cancel_pm2_approved': False,
         })
         
+        # Determine approval message based on mode
+        if config.is_dual_approval():
+            pm1_name = self.ks_cancel_pm1_id.name if self.ks_cancel_pm1_id else ''
+            pm2_name = self.ks_cancel_pm2_id.name if self.ks_cancel_pm2_id else ''
+            approval_msg = _("Cancellation request submitted by %s. Waiting for approval from %s (PM1) and %s (PM2).\nReason: %s") % (
+                self.env.user.name, pm1_name, pm2_name, reason
+            )
+        else:
+            pm1_name = self.ks_cancel_pm1_id.name if self.ks_cancel_pm1_id else ''
+            approval_msg = _("Cancellation request submitted by %s. Waiting for approval from %s (PM1).\nReason: %s") % (
+                self.env.user.name, pm1_name, reason
+            )
+        
         self.message_post(
-            body=_("Cancellation request submitted by %s.\nReason: %s") % (
-                self.env.user.name, reason
-            ),
+            body=approval_msg,
             message_type='notification',
             subtype_xmlid='mail.mt_note',
         )
@@ -1012,10 +1032,21 @@ class SaleOrder(models.Model):
             'ks_edit_approved': False,
         })
         
+        # Determine approval message based on mode
+        if config.is_dual_approval():
+            pm1_name = self.ks_edit_pm1_id.name if self.ks_edit_pm1_id else ''
+            pm2_name = self.ks_edit_pm2_id.name if self.ks_edit_pm2_id else ''
+            approval_msg = _("Edit request submitted by %s. Waiting for approval from %s (PM1) and %s (PM2).\nReason: %s") % (
+                self.env.user.name, pm1_name, pm2_name, reason
+            )
+        else:
+            pm1_name = self.ks_edit_pm1_id.name if self.ks_edit_pm1_id else ''
+            approval_msg = _("Edit request submitted by %s. Waiting for approval from %s (PM1).\nReason: %s") % (
+                self.env.user.name, pm1_name, reason
+            )
+        
         self.message_post(
-            body=_("Edit request submitted by %s.\nReason: %s") % (
-                self.env.user.name, reason
-            ),
+            body=approval_msg,
             message_type='notification',
             subtype_xmlid='mail.mt_note',
         )

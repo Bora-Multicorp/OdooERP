@@ -181,40 +181,43 @@ class SaleOrder(models.Model):
     def action_confirm(self):
         """Override action_confirm to check stock availability and trigger alerts.
         
-        Stock validation is performed at confirmation time:
-        - Checks all order lines for insufficient stock
+        Stock validation is performed AFTER confirmation:
+        - First confirms the order (state changes to 'sale')
+        - Then checks all order lines for insufficient stock
         - Sends email notifications to procurement team for all insufficient products
         - Shows alert message if any products have insufficient stock
         - Does NOT block confirmation (allows order to be confirmed)
-        - Emails are ONLY sent when order is being confirmed (state transitions to 'sale')
+        - Emails are ONLY sent when order is actually confirmed (state = 'sale')
         """
-        # Only send stock shortage emails for orders that are not already confirmed
-        # This prevents duplicate emails if action_confirm is called multiple times
-        orders_to_check = self.filtered(lambda o: o.state not in ('sale', 'done'))
+        # First, confirm the order (this changes state to 'sale')
+        result = super().action_confirm()
+        
+        # After confirmation, check stock availability and send notifications
+        # Only check orders that were just confirmed (state = 'sale')
+        orders_to_check = self.filtered(lambda o: o.state == 'sale')
         
         # Check stock availability for all lines and send notifications
         for order in orders_to_check:
             order._ks_check_and_notify_stock_shortage_on_confirm()
         
-        # Proceed with normal confirmation
-        return super().action_confirm()
+        return result
     
     def _ks_check_and_notify_stock_shortage_on_confirm(self):
         """Check stock availability for all order lines and send notifications.
         
-        This method is called during Sale Order confirmation to:
+        This method is called AFTER Sale Order confirmation (state = 'sale') to:
         - Check all order lines for insufficient stock
         - Send email notifications to procurement team for each insufficient product
         - Post messages in chatter about stock shortages
         - Ensure no duplicate notifications are sent
         
-        IMPORTANT: This method is ONLY called from action_confirm() when the order
-        is being confirmed. Emails are NOT sent during draft/edit stages.
+        IMPORTANT: This method is ONLY called from action_confirm() AFTER the order
+        is confirmed (state = 'sale'). Emails are NOT sent during draft/edit stages.
         """
         self.ensure_one()
         
-        # Safety check: Only process draft/sent orders (not already confirmed)
-        if self.state in ('sale', 'done', 'cancel'):
+        # Safety check: Only process confirmed orders (state = 'sale')
+        if self.state != 'sale':
             return
         
         # Track which products we've already notified about to prevent duplicates
@@ -246,8 +249,10 @@ class SaleOrder(models.Model):
                 for move in line.move_ids:
                     if move.state in ('confirmed', 'waiting', 'partially_available'):
                         # Move cannot be fully assigned - delivery is blocked
-                        # Check if reserved quantity is less than required quantity
-                        if move.product_uom_qty > move.reserved_availability:
+                        # In Odoo 18, use move.quantity (reserved qty from move lines) instead of reserved_availability
+                        # move.quantity represents the reserved quantity from move_line_ids
+                        reserved_qty = move.quantity or 0.0
+                        if move.product_uom_qty > reserved_qty:
                             delivery_blocked = True
                             # Get available quantity for the move's source location
                             available_qty = self.env['stock.quant'].with_company(self.company_id.id)._get_available_quantity(

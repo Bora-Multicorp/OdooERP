@@ -52,9 +52,8 @@
         <field name="arch" type="xml">
             <!-- Add Source Sale Order field -->
             <xpath expr="//field[@name='origin']" position="after">
-                <field name="ks_source_sale_order_id" 
-                       readonly="1"
-                       options="{'no_create': True, 'no_create_edit': True}"/>
+                <field name="ks_source_sale_order_id"
+                       options="{'no_create': True}"/>
             </xpath>
             
             <!-- Add button to view Source Sale Order -->

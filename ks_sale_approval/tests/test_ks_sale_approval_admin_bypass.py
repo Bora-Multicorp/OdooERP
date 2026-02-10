@@ -108,3 +108,4 @@ class TestKsSaleApprovalAdminBypass(KsSaleApprovalCommon):
         
         self.assertEqual(order.state, 'approval_pending', "Normal user should still need approval")
 
+
