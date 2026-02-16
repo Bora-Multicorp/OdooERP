@@ -25,14 +25,14 @@
             <field name="product_attributes" eval="[(4, ref('ks_product_master.product_attribute_box_type'))]"/>
         </record>
 
-        <record id="product_category_type_tablet" model="product.category">
-            <field name="name">Tablet</field>
-        </record>
-        <record id="product_category_type_accessory" model="product.category">
-            <field name="name">Accessory</field>
-        </record>
+<!--        <record id="product_category_type_tablet" model="product.category">-->
+<!--            <field name="name">Tablet</field>-->
+<!--        </record>-->
+<!--        <record id="product_category_type_accessory" model="product.category">-->
+<!--            <field name="name">Accessory</field>-->
+<!--        </record>-->
         <record id="product_category_type_harddisk" model="product.category">
-            <field name="name">Harddisk</field>
+            <field name="name">Hard Disk</field>
         </record>
         <record id="product_category_type_laptop" model="product.category">
             <field name="name">Other Laptop</field>
@@ -49,9 +49,9 @@
         <record id="product_category_type_printers" model="product.category">
             <field name="name">Printer</field>
         </record>
-        <record id="product_category_type_packaging_material" model="product.category">
-            <field name="name">Packaging Material</field>
-        </record>
+<!--        <record id="product_category_type_packaging_material" model="product.category">-->
+<!--            <field name="name">Packaging Material</field>-->
+<!--        </record>-->
     </data>
 </odoo>
 

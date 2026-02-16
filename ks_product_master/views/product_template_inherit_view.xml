@@ -92,9 +92,8 @@
                     <attribute name="string">Product Specification</attribute>
                 </xpath>
                 <xpath expr="//group[@name='group_standard_price']" position="inside">
-<!--                    <field name="loose_or_master_carton" required="1"/>-->
                     <field name="brand_id"/>
-                    <field name="model"/>
+                    <field name="product_model_name"/>
                 </xpath>
                 <xpath expr="//page[@name='general_information']/group[1]" position="after">
                     <group>

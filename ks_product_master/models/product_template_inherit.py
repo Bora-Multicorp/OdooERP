@@ -18,7 +18,7 @@ class ProductTemplateInherit(models.Model):
 
     brand_id = fields.Many2one('product.brand', string="Brand", help="Brand of the product", tracking=True)
 
-    model = fields.Many2one('product.model', string='Product Model', help="Select a model", tracking=True)
+    product_model_name = fields.char(string='Product Model Name',tracking=True)
 
     company_ids = fields.Many2many('res.company', string='Companies', required=True, readonly=False,
                                    default=lambda self: self.env.company,
@@ -121,10 +121,10 @@ class ProductTemplateInherit(models.Model):
             self.tracking = 'serial'
 
     # To set the product name in ALL CAPS based on model number
-    @api.onchange('model')
+    @api.onchange('product_model_name')
     def _onchange_model(self):
-        if self.model:
-            self.name = self.model.name.upper()
+        if self.product_model_name:
+            self.name = self.product_model_name.upper()
 
     def action_update_quantity_on_hand(self):
 
@@ -202,9 +202,3 @@ class ProductBrand(models.Model):
 
     name = fields.Char(string="Brand Name", required=True)
 
-
-class ProductModel(models.Model):
-    _name = 'product.model'
-    _description = 'Product Model'
-
-    name = fields.Char(string='Product Model', required=True, index=True)

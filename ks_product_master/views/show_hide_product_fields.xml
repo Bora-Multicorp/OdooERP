@@ -10,8 +10,14 @@
                            invisible="categ_id != %(ks_product_master.product_category_type_printers)d"/>
                 </xpath>
                 <xpath expr="//group[@name='group_standard_price']" position="inside">
-                    <field name="model_number_id" context="{'no_create_edit': True}"
-                           invisible="categ_id not in (%(ks_product_master.product_category_type_toner_inks)d, %(ks_product_master.product_category_type_laptop)d)"/>
+                    <field name="model_number" invisible="categ_id not in (%(ks_product_master.product_category_type_toner_inks)d, %(ks_product_master.product_category_type_laptop)d)"/>
+                    <field name="ethernet" invisible="categ_id not in (%(ks_product_master.product_category_type_apple_imac)d)"/>
+                    <field name="mouse" invisible="categ_id not in (%(ks_product_master.product_category_type_apple_imac)d)"/>
+                    <field name="keyboard" invisible="categ_id not in (%(ks_product_master.product_category_type_apple_imac)d)"/>
+                    <field name="ports" invisible="categ_id not in (%(ks_product_master.product_category_type_apple_imac)d, %(ks_product_master.product_category_type_apple_laptops)d)"/>
+                    <field name="ports" invisible="categ_id not in (%(ks_product_master.product_category_type_apple_imac)d, %(ks_product_master.product_category_type_apple_laptops)d)"/>
+                    <field name="flipkart_serial_number"/>
+                    <field name="flipkart_listing_name"/>
                 </xpath>
                 <xpath expr="//group[@name='group_standard_price']" position="inside">
                     <field name="part_code"
