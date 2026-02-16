@@ -18,7 +18,7 @@ class ProductTemplateInherit(models.Model):
 
     brand_id = fields.Many2one('product.brand', string="Brand", help="Brand of the product", tracking=True)
 
-    product_model_name = fields.char(string='Product Model Name',tracking=True)
+    product_model_name = fields.Char(string='Product Model Name',tracking=True)
 
     company_ids = fields.Many2many('res.company', string='Companies', required=True, readonly=False,
                                    default=lambda self: self.env.company,
