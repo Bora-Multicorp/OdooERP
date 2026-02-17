@@ -15,19 +15,12 @@
                     <field name="mouse" invisible="categ_id not in (%(ks_product_master.product_category_type_apple_imac)d)"/>
                     <field name="keyboard" invisible="categ_id not in (%(ks_product_master.product_category_type_apple_imac)d)"/>
                     <field name="ports" invisible="categ_id not in (%(ks_product_master.product_category_type_apple_imac)d, %(ks_product_master.product_category_type_apple_laptops)d)"/>
-                    <field name="ports" invisible="categ_id not in (%(ks_product_master.product_category_type_apple_imac)d, %(ks_product_master.product_category_type_apple_laptops)d)"/>
                     <field name="flipkart_serial_number"/>
                     <field name="flipkart_listing_name"/>
                 </xpath>
                 <xpath expr="//group[@name='group_standard_price']" position="inside">
                     <field name="part_code"
-                           invisible="categ_id not in (%(ks_product_master.product_category_type_apple_laptops)d, %(ks_product_master.product_category_type_tablet)d, %(ks_product_master.product_category_type_apple_imac)d, %(ks_product_master.product_category_type_harddisk)d, %(ks_product_master.product_category_type_mobile)d, %(ks_product_master.product_category_type_accessory)d)"/>
-                    <field name="accessory_group" context="{'no_create_edit': True}"
-                           invisible="categ_id != %(ks_product_master.product_category_type_accessory)d"/>
-<!--                    <field name="specs_made" context="{'no_create_edit': True}"-->
-<!--                           invisible="categ_id not in (%(ks_product_master.product_category_type_mobile)d, %(ks_product_master.product_category_type_tablet)d)"/>-->
-<!--                    <field name="made_country" context="{'no_create_edit': True}"-->
-<!--                           invisible="categ_id not in (%(ks_product_master.product_category_type_mobile)d, %(ks_product_master.product_category_type_tablet)d, %(ks_product_master.product_category_type_accessory)d)"/>-->
+                           invisible="categ_id not in (%(ks_product_master.product_category_type_apple_laptops)d, %(ks_product_master.product_category_type_apple_imac)d, %(ks_product_master.product_category_type_harddisk)d, %(ks_product_master.product_category_type_mobile)d)"/>
                 </xpath>
             </field>
         </record>

@@ -154,10 +154,10 @@ class ProductTemplateInherit(models.Model):
         # if packaging item then set is_storable and tracking to False, as if this enables then it requires serial number
         for vals in vals_list:
             categ_id = vals.get('categ_id')
-            packaging_categ = self.env.ref('ks_product_master.product_category_type_packaging_material',
-                                           raise_if_not_found=False)
-            if categ_id == packaging_categ.id:
-                vals['tracking'] = 'none'
+            # packaging_categ = self.env.ref('ks_product_master.product_category_type_packaging_material',
+            #                                raise_if_not_found=False)
+            # if categ_id == packaging_categ.id:
+            #     vals['tracking'] = 'none'
 
         # 1. Capitalize product name in each dict
         for vals in vals_list:
@@ -177,10 +177,10 @@ class ProductTemplateInherit(models.Model):
 
         # if packaging item then set is_storable and tracking to False, as if this enables then it requires serial number
         categ_id = vals.get('categ_id')
-        packaging_categ = self.env.ref('ks_product_master.product_category_type_packaging_material',
-                                       raise_if_not_found=False)
-        if categ_id == packaging_categ.id:
-            vals['tracking'] = 'none'
+        # packaging_categ = self.env.ref('ks_product_master.product_category_type_packaging_material',
+        #                                raise_if_not_found=False)
+        # if categ_id == packaging_categ.id:
+        #     vals['tracking'] = 'none'
 
         # 1. capitalize product name
         if vals.get('name'):
