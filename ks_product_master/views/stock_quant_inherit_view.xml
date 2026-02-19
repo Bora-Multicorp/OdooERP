@@ -22,6 +22,8 @@
                     <field name="imei" invisible="not context.get('show_IMEI')"/>
                     <field name="imei2" invisible="not context.get('show_IMEI2')"/>
                     <field name="activation_status" invisible="not context.get('show_IMEI')"/>
+                    <field name="specs_made" readonly="1"/>
+                    <field name="made_country" readonly="1"/>
                 </xpath>
             </field>
         </record>
@@ -36,6 +38,8 @@
                     <field name="activation_status" optional="hidden"/>
                     <field name="activation_date" optional="hidden"/>
                     <field name="active_months" readonly="1" optional="hidden"/>
+                    <field name="specs_made" optional="hidden" readonly="1"/>
+                    <field name="made_country" optional="hidden" readonly="1"/>
                 </xpath>
             </field>
         </record>
