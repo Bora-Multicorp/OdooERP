@@ -15,15 +15,20 @@ class SaleOrderLine(models.Model):
     )
 
     @api.depends_context('uid')
-    @api.depends('order_id.ks_edit_approved', 'order_id.ks_edit_request_user_id')
+    @api.depends('order_id.state', 'order_id.ks_edit_approved', 'order_id.ks_edit_request_user_id')
     def _compute_ks_can_edit_price(self):
         """
         Check if current user can edit the price.
+        - In draft/sent: all users can edit unit price
         - Admin users can always edit prices (bypass all restrictions)
         - PM users can always edit prices
         - Normal users can edit prices if edit request was approved for them
         """
         for line in self:
+            # Draft (and sent): unit price editable for all users
+            if line.order_id and line.order_id.state in ('draft', 'sent'):
+                line.ks_can_edit_price = True
+                continue
             # Admin users can always edit prices - bypass all restrictions
             if line.order_id and line.order_id._is_admin_user():
                 line.ks_can_edit_price = True
@@ -59,6 +64,10 @@ class SaleOrderLine(models.Model):
         
         # Admin users can always set custom prices - bypass all restrictions
         if line.order_id and line.order_id._is_admin_user():
+            return line
+        
+        # In draft/sent, all users can set unit price
+        if line.order_id and line.order_id.state in ('draft', 'sent'):
             return line
         
         # Check if user tried to set a custom price and is not a PM
@@ -104,7 +113,9 @@ class SaleOrderLine(models.Model):
                 # Admin users can always edit prices - bypass all restrictions
                 if line.order_id and line.order_id._is_admin_user():
                     continue  # Allow admin to edit
-                
+                # In draft/sent, all users can edit unit price
+                if line.order_id and line.order_id.state in ('draft', 'sent'):
+                    continue
                 if line.order_id and line.order_id._has_approval_config():
                     config = line.order_id._get_approval_config()
                     all_pms = config.get_all_pm_users()
