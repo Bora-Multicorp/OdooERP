@@ -157,7 +157,7 @@ class SaleOrder(models.Model):
         string='Is Admin User',
         compute='_compute_ks_is_admin_user',
     )
-    
+
     # Button visibility fields
     ks_show_approve_confirm_button = fields.Boolean(
         string='Show Approve Confirmation Button',
@@ -241,14 +241,14 @@ class SaleOrder(models.Model):
     def _compute_ks_can_edit(self):
         """
         Determine if current user can edit the SO
-        
+
         Rules:
         - Admin users: Can edit ANY state (bypass all restrictions)
         - Draft/Sent: Everyone can edit
         - Approval Pending: No one can edit (locked) - except admin
         - Cancel Pending: No one can edit (locked) - except admin
         - Edit Pending: No one can edit (locked) - except admin
-        - Sale (Confirmed): 
+        - Sale (Confirmed):
             - Normal users: CANNOT edit (locked) UNLESS edit was approved for them
             - PM users: Can edit (they have full control)
             - Admin users: Can edit (bypass restrictions)
@@ -256,12 +256,12 @@ class SaleOrder(models.Model):
         """
         for order in self:
             current_user = self.env.user
-            
+
             # Admin users can edit ANY state - bypass all restrictions
             if order._is_admin_user():
                 order.ks_can_edit = True
                 continue
-            
+
             if order.state in ['draft', 'sent']:
                 # Draft and Sent - everyone can edit
                 order.ks_can_edit = True
@@ -293,7 +293,7 @@ class SaleOrder(models.Model):
     @api.depends_context('uid')
     def _compute_ks_button_visibility(self):
         """Compute visibility of all action buttons
-        
+
         Admin users can see all buttons and bypass approval restrictions.
         """
         for order in self:
@@ -339,11 +339,11 @@ class SaleOrder(models.Model):
                 # Request Edit button - only when SO is confirmed and no pending edit
                 if order.state == 'sale' and not order.ks_edit_approved:
                     order.ks_show_request_edit_button = True
-                
+
                 # Complete Edit button - when edit is approved for this user
-                if (order.state == 'sale' and 
-                    order.ks_edit_approved and 
-                    order.ks_edit_request_user_id == current_user):
+                if (order.state == 'sale' and
+                        order.ks_edit_approved and
+                        order.ks_edit_request_user_id == current_user):
                     order.ks_show_complete_edit_button = True
 
             # === PM USER BUTTONS ===
@@ -359,7 +359,7 @@ class SaleOrder(models.Model):
                     elif order.ks_confirm_pm2_id and current_user == order.ks_confirm_pm2_id:
                         if order.ks_confirm_pm1_approved and not order.ks_confirm_pm2_approved:
                             can_approve = True
-                    
+
                     if can_approve:
                         order.ks_show_approve_confirm_button = True
                         order.ks_show_reject_confirm_button = True
@@ -374,7 +374,7 @@ class SaleOrder(models.Model):
                     elif order.ks_cancel_pm2_id and current_user == order.ks_cancel_pm2_id:
                         if order.ks_cancel_pm1_approved and not order.ks_cancel_pm2_approved:
                             can_approve = True
-                    
+
                     if can_approve:
                         order.ks_show_approve_cancel_button = True
                         order.ks_show_reject_cancel_button = True
@@ -389,28 +389,28 @@ class SaleOrder(models.Model):
                     elif order.ks_edit_pm2_id and current_user == order.ks_edit_pm2_id:
                         if order.ks_edit_pm1_approved and not order.ks_edit_pm2_approved:
                             can_approve = True
-                    
+
                     if can_approve:
                         order.ks_show_approve_edit_button = True
                         order.ks_show_reject_edit_button = True
 
     # ===== Helper Methods =====
-    
+
     @api.depends_context('uid')
     def _compute_ks_is_admin_user(self):
         """Compute if current user is an admin (has base.group_system)"""
         for order in self:
             order.ks_is_admin_user = order._is_admin_user()
-    
+
     def _is_admin_user(self):
         """Check if current user is an admin (has base.group_system)"""
         return self.env.user.has_group('base.group_system')
 
     # ===== Override Confirm Action =====
-    
+
     def action_confirm(self):
         """
-        Override: 
+        Override:
         - Admin users: Confirm immediately (bypass all approval)
         - PM users: Confirm immediately (standard flow)
         - Normal users: Open approval request wizard to show recipients
@@ -418,31 +418,31 @@ class SaleOrder(models.Model):
         for order in self:
             if order.state not in ['draft', 'sent']:
                 continue
-            
+
             # Check confirmation errors
             error_msg = order._confirmation_error_message()
             if error_msg:
                 raise UserError(error_msg)
-            
+
             # Admin users bypass all approval restrictions
             if order._is_admin_user():
                 return super().action_confirm()
-            
+
             # Check if approval config exists
             if not order._has_approval_config():
                 # No config, use standard behavior
                 return super().action_confirm()
-            
+
             config = order._get_approval_config()
             is_pm = self.env.user in config.get_all_pm_users()
-            
+
             if is_pm:
                 # PM users can directly confirm - call original method
                 return super().action_confirm()
             else:
                 # Normal user - open approval request wizard
                 return order._action_open_approval_request_wizard()
-        
+
         return True
 
     def _action_open_approval_request_wizard(self):
@@ -466,18 +466,18 @@ class SaleOrder(models.Model):
         self.ensure_one()
         if self.state not in ['draft', 'sent']:
             raise UserError(_("Can only request confirmation for Draft or Sent orders."))
-        
+
         # Validate that approvers are selected
         if not self.ks_confirm_pm1_id:
             raise UserError(_("Approver 1 must be selected before sending approval request."))
-        
+
         # Validate analytic distribution
         self.order_line._validate_analytic_distribution()
-        
+
         config = self._get_approval_config()
         if config.is_dual_approval() and not self.ks_confirm_pm2_id:
             raise UserError(_("Approver 2 must be selected for dual approval mode."))
-        
+
         self.write({
             'state': 'approval_pending',
             'ks_confirm_request_user_id': self.env.user.id,
@@ -485,33 +485,43 @@ class SaleOrder(models.Model):
             'ks_confirm_pm1_approved': False,
             'ks_confirm_pm2_approved': False,
         })
-        
+
         # Determine approval message based on mode
         if config.is_dual_approval():
             pm1_name = self.ks_confirm_pm1_id.name if self.ks_confirm_pm1_id else ''
             pm2_name = self.ks_confirm_pm2_id.name if self.ks_confirm_pm2_id else ''
-            approval_msg = _("Confirmation request submitted by %s. Waiting for approval from %s (PM1) and %s (PM2).") % (
-                self.env.user.name, pm1_name, pm2_name
-            )
+            approval_msg = _(
+                "Confirmation request submitted by %s. Waiting for approval from %s (PM1) and %s (PM2).") % (
+                               self.env.user.name, pm1_name, pm2_name
+                           )
         else:
             pm1_name = self.ks_confirm_pm1_id.name if self.ks_confirm_pm1_id else ''
             approval_msg = _("Confirmation request submitted by %s. Waiting for approval from %s (PM1).") % (
                 self.env.user.name, pm1_name
             )
-        
+
         # Log in chatter
         self.message_post(
             body=approval_msg,
             message_type='notification',
             subtype_xmlid='mail.mt_note',
         )
-        
+
         # Subscribe selected PM users
         partner_ids = [self.ks_confirm_pm1_id.partner_id.id]
         if self.ks_confirm_pm2_id:
             partner_ids.append(self.ks_confirm_pm2_id.partner_id.id)
         self.message_subscribe(partner_ids=partner_ids)
-        
+
+        # Create activities for approvers
+        # Create activity for PM1
+        summary = self._get_approval_activity_summary('confirm', 'PM1')
+        note = self._get_approval_activity_note('confirm', self.name, self.env.user.name)
+        self._create_approval_activity(self.ks_confirm_pm1_id, summary, note)
+
+        # In dual approval mode, create activity for PM2 only after PM1 approves
+        # (PM2 activity will be created when PM1 approves)
+
         return True
 
     def ks_action_approve_confirmation(self):
@@ -526,16 +536,20 @@ class SaleOrder(models.Model):
         self.ensure_one()
         if not reason:
             raise UserError(_("Approval reason is required."))
-        
+
         config = self._get_approval_config()
-        
+
         # Check which PM is approving
         pm_role = None
+        is_pm1_approving = False
+        is_pm2_approving = False
+
         if self.ks_confirm_pm1_id and current_user == self.ks_confirm_pm1_id:
             if self.ks_confirm_pm1_approved:
                 raise UserError(_("You have already approved this confirmation request."))
             self.ks_confirm_pm1_approved = True
             pm_role = 'PM1 - %s' % self.ks_confirm_pm1_id.name
+            is_pm1_approving = True
         elif self.ks_confirm_pm2_id and current_user == self.ks_confirm_pm2_id:
             # Sequential approval: PM2 can only approve if PM1 has already approved
             if not self.ks_confirm_pm1_approved:
@@ -544,9 +558,21 @@ class SaleOrder(models.Model):
                 raise UserError(_("You have already approved this confirmation request."))
             self.ks_confirm_pm2_approved = True
             pm_role = 'PM2 - %s' % self.ks_confirm_pm2_id.name
+            is_pm2_approving = True
         else:
             raise UserError(_("You are not authorized to approve this confirmation request."))
-        
+
+        # Mark current user's activity as done
+        self._mark_activity_done(current_user, feedback=_("Approved: %s") % reason)
+
+        # If PM1 approved and dual mode, create activity for PM2
+        if is_pm1_approving and config.is_dual_approval() and self.ks_confirm_pm2_id:
+            summary = self._get_approval_activity_summary('confirm', 'PM2')
+            note = self._get_approval_activity_note('confirm', self.name,
+                                                    self.ks_confirm_request_user_id.name if self.ks_confirm_request_user_id else _(
+                                                        'Unknown'))
+            self._create_approval_activity(self.ks_confirm_pm2_id, summary, note)
+
         # Post message in chatter with reason
         self.message_post(
             body=_(
@@ -558,7 +584,7 @@ class SaleOrder(models.Model):
             message_type='notification',
             subtype_xmlid='mail.mt_note',
         )
-        
+
         # Check if approval is complete based on mode
         approval_complete = False
         if config.is_dual_approval():
@@ -569,32 +595,39 @@ class SaleOrder(models.Model):
             # Single PM approval - PM1 approval is enough
             if self.ks_confirm_pm1_approved:
                 approval_complete = True
-        
+
         if approval_complete:
+            # Mark all remaining activities as done (approval complete)
+            if self.ks_confirm_pm1_id:
+                self._mark_activity_done(self.ks_confirm_pm1_id,
+                                         feedback=_("Approval completed - Sale Order confirmed"))
+            if self.ks_confirm_pm2_id:
+                self._mark_activity_done(self.ks_confirm_pm2_id,
+                                         feedback=_("Approval completed - Sale Order confirmed"))
             # Approval complete - confirm the SO using standard flow
             self._ks_complete_confirmation()
-        
+
         return True
 
     def _ks_complete_confirmation(self):
         """Complete the confirmation after all required approvals"""
         self.ensure_one()
-        
+
         # Subscribe partner if not already
         if self.partner_id not in self.message_partner_ids:
             self.message_subscribe([self.partner_id.id])
-        
+
         # Prepare confirmation values
         confirmation_values = self._prepare_confirmation_values()
         self.write(confirmation_values)
-        
+
         # Context key 'default_name' is sometimes propagated up to here.
         context = self._context.copy()
         context.pop('default_name', None)
         context.pop('default_user_id', None)
-        
+
         self.with_context(context)._action_confirm()
-        
+
         # Check stock availability and send notifications after confirmation
         # This ensures stock shortage alerts are triggered even when order is confirmed via approval process
         # Note: State is already set to 'sale' by _prepare_confirmation_values() and write() above
@@ -603,11 +636,11 @@ class SaleOrder(models.Model):
             self.invalidate_recordset(['state'])
             # Call the stock shortage check - it will verify state == 'sale' internally
             self._ks_check_and_notify_stock_shortage_on_confirm()
-        
+
         # Lock if needed
         if self._should_be_locked():
             self.action_lock()
-        
+
         config = self._get_approval_config()
         if config.is_dual_approval():
             pm1_name = self.ks_confirm_pm1_id.name if self.ks_confirm_pm1_id else ''
@@ -637,27 +670,36 @@ class SaleOrder(models.Model):
         self.ensure_one()
         if not reason:
             raise UserError(_("Rejection reason is required."))
-        
+
         config = self._get_approval_config()
         current_user = self.env.user
-        
+
         # Check if user is one of the selected approvers
-        if not ((self.ks_confirm_pm1_id and current_user == self.ks_confirm_pm1_id) or 
+        if not ((self.ks_confirm_pm1_id and current_user == self.ks_confirm_pm1_id) or
                 (self.ks_confirm_pm2_id and current_user == self.ks_confirm_pm2_id)):
             raise UserError(_("You are not authorized to reject this confirmation request."))
-        
+
         # Sequential approval: PM2 can only reject if PM1 has already approved
         if self.ks_confirm_pm2_id and current_user == self.ks_confirm_pm2_id:
             if not self.ks_confirm_pm1_approved:
                 raise UserError(_("PM1 must approve first before PM2 can reject this confirmation request."))
-        
+
         # Determine PM role
         pm_role = None
         if self.ks_confirm_pm1_id and current_user == self.ks_confirm_pm1_id:
             pm_role = 'PM1 - %s' % self.ks_confirm_pm1_id.name
         elif self.ks_confirm_pm2_id and current_user == self.ks_confirm_pm2_id:
             pm_role = 'PM2 - %s' % self.ks_confirm_pm2_id.name
-        
+
+        # Mark current user's activity as done
+        self._mark_activity_done(current_user, feedback=_("Rejected: %s") % reason)
+
+        # Also mark other approver's activity as done if exists (rejection ends the process)
+        if self.ks_confirm_pm1_id and current_user != self.ks_confirm_pm1_id:
+            self._mark_activity_done(self.ks_confirm_pm1_id, feedback=_("Request rejected by %s") % current_user.name)
+        if self.ks_confirm_pm2_id and current_user != self.ks_confirm_pm2_id:
+            self._mark_activity_done(self.ks_confirm_pm2_id, feedback=_("Request rejected by %s") % current_user.name)
+
         # Reset to draft state
         self.write({
             'state': 'draft',
@@ -668,7 +710,7 @@ class SaleOrder(models.Model):
             'ks_confirm_request_user_id': False,
             'ks_confirm_request_date': False,
         })
-        
+
         # Post message in chatter with reason
         self.message_post(
             body=_(
@@ -680,21 +722,21 @@ class SaleOrder(models.Model):
             message_type='notification',
             subtype_xmlid='mail.mt_note',
         )
-        
+
         return True
 
     # ===== Cancel Request Methods =====
-    
+
     def write(self, values):
         """Override write to trigger recomputation of ks_can_edit_price on lines when ks_edit_approved changes"""
         result = super().write(values)
-        
+
         # If ks_edit_approved changed, recompute ks_can_edit_price on order lines
         if 'ks_edit_approved' in values or 'ks_edit_request_user_id' in values:
             for order in self:
                 if order.order_line:
                     order.order_line._compute_ks_can_edit_price()
-        
+
         return result
 
     def action_cancel(self):
@@ -703,19 +745,19 @@ class SaleOrder(models.Model):
             # Check if locked
             if order.locked:
                 raise UserError(_("You cannot cancel a locked order. Please unlock it first."))
-            
+
             # Admin users bypass all approval restrictions
             if order._is_admin_user():
                 return super().action_cancel()
-            
+
             # Check if approval config exists
             if not order._has_approval_config():
                 # No config, use standard behavior
                 return super().action_cancel()
-            
+
             config = order._get_approval_config()
             is_pm = self.env.user in config.get_all_pm_users()
-            
+
             if is_pm:
                 # PM users can directly cancel
                 return super().action_cancel()
@@ -737,6 +779,14 @@ class SaleOrder(models.Model):
     def _ks_cancel_approval_request(self):
         """Cancel the approval request and return to draft"""
         self.ensure_one()
+        # Mark all activities as done (request cancelled)
+        if self.ks_confirm_pm1_id:
+            self._mark_activity_done(self.ks_confirm_pm1_id,
+                                     feedback=_("Approval request cancelled by %s") % self.env.user.name)
+        if self.ks_confirm_pm2_id:
+            self._mark_activity_done(self.ks_confirm_pm2_id,
+                                     feedback=_("Approval request cancelled by %s") % self.env.user.name)
+
         self.write({
             'state': 'draft',
             'ks_confirm_pm1_id': False,
@@ -774,15 +824,15 @@ class SaleOrder(models.Model):
         self.ensure_one()
         if not reason:
             raise UserError(_("Cancel request reason is required."))
-        
+
         # Validate that approvers are selected
         if not self.ks_cancel_pm1_id:
             raise UserError(_("Approver 1 must be selected before sending cancel request."))
-        
+
         config = self._get_approval_config()
         if config.is_dual_approval() and not self.ks_cancel_pm2_id:
             raise UserError(_("Approver 2 must be selected for dual approval mode."))
-        
+
         self.write({
             'state': 'cancel_pending',
             'ks_cancel_request_reason': reason,
@@ -791,26 +841,28 @@ class SaleOrder(models.Model):
             'ks_cancel_pm1_approved': False,
             'ks_cancel_pm2_approved': False,
         })
-        
+
         # Determine approval message based on mode
         if config.is_dual_approval():
             pm1_name = self.ks_cancel_pm1_id.name if self.ks_cancel_pm1_id else ''
             pm2_name = self.ks_cancel_pm2_id.name if self.ks_cancel_pm2_id else ''
-            approval_msg = _("Cancellation request submitted by %s. Waiting for approval from %s (PM1) and %s (PM2).\nReason: %s") % (
-                self.env.user.name, pm1_name, pm2_name, reason
-            )
+            approval_msg = _(
+                "Cancellation request submitted by %s. Waiting for approval from %s (PM1) and %s (PM2).\nReason: %s") % (
+                               self.env.user.name, pm1_name, pm2_name, reason
+                           )
         else:
             pm1_name = self.ks_cancel_pm1_id.name if self.ks_cancel_pm1_id else ''
-            approval_msg = _("Cancellation request submitted by %s. Waiting for approval from %s (PM1).\nReason: %s") % (
-                self.env.user.name, pm1_name, reason
-            )
-        
+            approval_msg = _(
+                "Cancellation request submitted by %s. Waiting for approval from %s (PM1).\nReason: %s") % (
+                               self.env.user.name, pm1_name, reason
+                           )
+
         self.message_post(
             body=approval_msg,
             message_type='notification',
             subtype_xmlid='mail.mt_note',
         )
-        
+
         # Subscribe selected PM users
         partner_ids = []
         if self.ks_cancel_pm1_id:
@@ -819,7 +871,16 @@ class SaleOrder(models.Model):
             partner_ids.append(self.ks_cancel_pm2_id.partner_id.id)
         if partner_ids:
             self.message_subscribe(partner_ids=partner_ids)
-        
+
+        # Create activities for approvers
+        # Create activity for PM1
+        if self.ks_cancel_pm1_id:
+            summary = self._get_approval_activity_summary('cancel', 'PM1')
+            note = self._get_approval_activity_note('cancel', self.name, self.env.user.name, reason)
+            self._create_approval_activity(self.ks_cancel_pm1_id, summary, note)
+
+        # In dual approval mode, create activity for PM2 only after PM1 approves
+
         return True
 
     def ks_action_approve_cancel(self):
@@ -834,16 +895,20 @@ class SaleOrder(models.Model):
         self.ensure_one()
         if not reason:
             raise UserError(_("Approval reason is required."))
-        
+
         config = self._get_approval_config()
-        
+
         # Check which PM is approving
         pm_role = None
+        is_pm1_approving = False
+        is_pm2_approving = False
+
         if self.ks_cancel_pm1_id and current_user == self.ks_cancel_pm1_id:
             if self.ks_cancel_pm1_approved:
                 raise UserError(_("You have already approved this cancel request."))
             self.ks_cancel_pm1_approved = True
             pm_role = 'PM1 - %s' % self.ks_cancel_pm1_id.name
+            is_pm1_approving = True
         elif self.ks_cancel_pm2_id and current_user == self.ks_cancel_pm2_id:
             # Sequential approval: PM2 can only approve if PM1 has already approved
             if not self.ks_cancel_pm1_approved:
@@ -852,9 +917,21 @@ class SaleOrder(models.Model):
                 raise UserError(_("You have already approved this cancel request."))
             self.ks_cancel_pm2_approved = True
             pm_role = 'PM2 - %s' % self.ks_cancel_pm2_id.name
+            is_pm2_approving = True
         else:
             raise UserError(_("You are not authorized to approve this cancel request."))
-        
+
+        # Mark current user's activity as done
+        self._mark_activity_done(current_user, feedback=_("Approved: %s") % reason)
+
+        # If PM1 approved and dual mode, create activity for PM2
+        if is_pm1_approving and config.is_dual_approval() and self.ks_cancel_pm2_id:
+            summary = self._get_approval_activity_summary('cancel', 'PM2')
+            note = self._get_approval_activity_note('cancel', self.name,
+                                                    self.ks_cancel_request_user_id.name if self.ks_cancel_request_user_id else _(
+                                                        'Unknown'), self.ks_cancel_request_reason)
+            self._create_approval_activity(self.ks_cancel_pm2_id, summary, note)
+
         # Post message in chatter with reason
         self.message_post(
             body=_(
@@ -866,7 +943,7 @@ class SaleOrder(models.Model):
             message_type='notification',
             subtype_xmlid='mail.mt_note',
         )
-        
+
         # Check if approval is complete based on mode
         approval_complete = False
         if config.is_dual_approval():
@@ -877,15 +954,20 @@ class SaleOrder(models.Model):
             # Single PM approval - PM1 approval is enough
             if self.ks_cancel_pm1_approved:
                 approval_complete = True
-        
+
         if approval_complete:
+            # Mark all remaining activities as done (approval complete)
+            if self.ks_cancel_pm1_id:
+                self._mark_activity_done(self.ks_cancel_pm1_id, feedback=_("Approval completed - Sale Order cancelled"))
+            if self.ks_cancel_pm2_id:
+                self._mark_activity_done(self.ks_cancel_pm2_id, feedback=_("Approval completed - Sale Order cancelled"))
             # Cancel any draft invoices
             inv = self.invoice_ids.filtered(lambda inv: inv.state == 'draft')
             inv.button_cancel()
-            
+
             # Cancel the SO
             self.write({'state': 'cancel'})
-            
+
             if config.is_dual_approval():
                 pm1_name = self.ks_cancel_pm1_id.name if self.ks_cancel_pm1_id else ''
                 pm2_name = self.ks_cancel_pm2_id.name if self.ks_cancel_pm2_id else ''
@@ -901,7 +983,7 @@ class SaleOrder(models.Model):
                     message_type='notification',
                     subtype_xmlid='mail.mt_comment',
                 )
-        
+
         return True
 
     def ks_action_reject_cancel(self):
@@ -916,27 +998,36 @@ class SaleOrder(models.Model):
         self.ensure_one()
         if not reason:
             raise UserError(_("Rejection reason is required."))
-        
+
         config = self._get_approval_config()
         current_user = self.env.user
-        
+
         # Check if user is one of the selected approvers
-        if not ((self.ks_cancel_pm1_id and current_user == self.ks_cancel_pm1_id) or 
+        if not ((self.ks_cancel_pm1_id and current_user == self.ks_cancel_pm1_id) or
                 (self.ks_cancel_pm2_id and current_user == self.ks_cancel_pm2_id)):
             raise UserError(_("You are not authorized to reject this cancel request."))
-        
+
         # Sequential approval: PM2 can only reject if PM1 has already approved
         if self.ks_cancel_pm2_id and current_user == self.ks_cancel_pm2_id:
             if not self.ks_cancel_pm1_approved:
                 raise UserError(_("PM1 must approve first before PM2 can reject this cancel request."))
-        
+
         # Determine PM role
         pm_role = None
         if self.ks_cancel_pm1_id and current_user == self.ks_cancel_pm1_id:
             pm_role = 'PM1 - %s' % self.ks_cancel_pm1_id.name
         elif self.ks_cancel_pm2_id and current_user == self.ks_cancel_pm2_id:
             pm_role = 'PM2 - %s' % self.ks_cancel_pm2_id.name
-        
+
+        # Mark current user's activity as done
+        self._mark_activity_done(current_user, feedback=_("Rejected: %s") % reason)
+
+        # Also mark other approver's activity as done if exists (rejection ends the process)
+        if self.ks_cancel_pm1_id and current_user != self.ks_cancel_pm1_id:
+            self._mark_activity_done(self.ks_cancel_pm1_id, feedback=_("Request rejected by %s") % current_user.name)
+        if self.ks_cancel_pm2_id and current_user != self.ks_cancel_pm2_id:
+            self._mark_activity_done(self.ks_cancel_pm2_id, feedback=_("Request rejected by %s") % current_user.name)
+
         # Return to sale state
         self.write({
             'state': 'sale',
@@ -948,7 +1039,7 @@ class SaleOrder(models.Model):
             'ks_cancel_request_user_id': False,
             'ks_cancel_request_date': False,
         })
-        
+
         # Post message in chatter with reason
         self.message_post(
             body=_(
@@ -960,18 +1051,18 @@ class SaleOrder(models.Model):
             message_type='notification',
             subtype_xmlid='mail.mt_note',
         )
-        
+
         return True
 
     # ===== Edit Request Methods =====
-    
+
     def ks_action_request_edit(self):
         """Normal user requests edit permission - opens wizard for reason
-        
+
         Admin users can edit directly without approval.
         """
         self.ensure_one()
-        
+
         # Admin users bypass approval - allow direct edit
         if self._is_admin_user():
             self.write({
@@ -985,7 +1076,7 @@ class SaleOrder(models.Model):
                 subtype_xmlid='mail.mt_note',
             )
             return True
-        
+
         if self.state != 'sale':
             raise UserError(_("Can only request edit for confirmed Sale Orders."))
         if self.ks_edit_approved:
@@ -1013,15 +1104,15 @@ class SaleOrder(models.Model):
         self.ensure_one()
         if not reason:
             raise UserError(_("Edit request reason is required."))
-        
+
         # Validate that approvers are selected
         if not self.ks_edit_pm1_id:
             raise UserError(_("Approver 1 must be selected before sending edit request."))
-        
+
         config = self._get_approval_config()
         if config.is_dual_approval() and not self.ks_edit_pm2_id:
             raise UserError(_("Approver 2 must be selected for dual approval mode."))
-        
+
         self.write({
             'state': 'edit_pending',
             'ks_edit_request_reason': reason,
@@ -1031,26 +1122,27 @@ class SaleOrder(models.Model):
             'ks_edit_pm2_approved': False,
             'ks_edit_approved': False,
         })
-        
+
         # Determine approval message based on mode
         if config.is_dual_approval():
             pm1_name = self.ks_edit_pm1_id.name if self.ks_edit_pm1_id else ''
             pm2_name = self.ks_edit_pm2_id.name if self.ks_edit_pm2_id else ''
-            approval_msg = _("Edit request submitted by %s. Waiting for approval from %s (PM1) and %s (PM2).\nReason: %s") % (
-                self.env.user.name, pm1_name, pm2_name, reason
-            )
+            approval_msg = _(
+                "Edit request submitted by %s. Waiting for approval from %s (PM1) and %s (PM2).\nReason: %s") % (
+                               self.env.user.name, pm1_name, pm2_name, reason
+                           )
         else:
             pm1_name = self.ks_edit_pm1_id.name if self.ks_edit_pm1_id else ''
             approval_msg = _("Edit request submitted by %s. Waiting for approval from %s (PM1).\nReason: %s") % (
                 self.env.user.name, pm1_name, reason
             )
-        
+
         self.message_post(
             body=approval_msg,
             message_type='notification',
             subtype_xmlid='mail.mt_note',
         )
-        
+
         # Subscribe selected PM users
         partner_ids = []
         if self.ks_edit_pm1_id:
@@ -1059,7 +1151,16 @@ class SaleOrder(models.Model):
             partner_ids.append(self.ks_edit_pm2_id.partner_id.id)
         if partner_ids:
             self.message_subscribe(partner_ids=partner_ids)
-        
+
+        # Create activities for approvers
+        # Create activity for PM1
+        if self.ks_edit_pm1_id:
+            summary = self._get_approval_activity_summary('edit', 'PM1')
+            note = self._get_approval_activity_note('edit', self.name, self.env.user.name, reason)
+            self._create_approval_activity(self.ks_edit_pm1_id, summary, note)
+
+        # In dual approval mode, create activity for PM2 only after PM1 approves
+
         return True
 
     def ks_action_approve_edit(self):
@@ -1074,16 +1175,20 @@ class SaleOrder(models.Model):
         self.ensure_one()
         if not reason:
             raise UserError(_("Approval reason is required."))
-        
+
         config = self._get_approval_config()
-        
+
         # Check which PM is approving
         pm_role = None
+        is_pm1_approving = False
+        is_pm2_approving = False
+
         if self.ks_edit_pm1_id and current_user == self.ks_edit_pm1_id:
             if self.ks_edit_pm1_approved:
                 raise UserError(_("You have already approved this edit request."))
             self.ks_edit_pm1_approved = True
             pm_role = 'PM1 - %s' % self.ks_edit_pm1_id.name
+            is_pm1_approving = True
         elif self.ks_edit_pm2_id and current_user == self.ks_edit_pm2_id:
             # Sequential approval: PM2 can only approve if PM1 has already approved
             if not self.ks_edit_pm1_approved:
@@ -1092,9 +1197,21 @@ class SaleOrder(models.Model):
                 raise UserError(_("You have already approved this edit request."))
             self.ks_edit_pm2_approved = True
             pm_role = 'PM2 - %s' % self.ks_edit_pm2_id.name
+            is_pm2_approving = True
         else:
             raise UserError(_("You are not authorized to approve this edit request."))
-        
+
+        # Mark current user's activity as done
+        self._mark_activity_done(current_user, feedback=_("Approved: %s") % reason)
+
+        # If PM1 approved and dual mode, create activity for PM2
+        if is_pm1_approving and config.is_dual_approval() and self.ks_edit_pm2_id:
+            summary = self._get_approval_activity_summary('edit', 'PM2')
+            note = self._get_approval_activity_note('edit', self.name,
+                                                    self.ks_edit_request_user_id.name if self.ks_edit_request_user_id else _(
+                                                        'Unknown'), self.ks_edit_request_reason)
+            self._create_approval_activity(self.ks_edit_pm2_id, summary, note)
+
         # Post message in chatter with reason
         self.message_post(
             body=_(
@@ -1106,7 +1223,7 @@ class SaleOrder(models.Model):
             message_type='notification',
             subtype_xmlid='mail.mt_note',
         )
-        
+
         # Check if approval is complete based on mode
         approval_complete = False
         if config.is_dual_approval():
@@ -1117,18 +1234,25 @@ class SaleOrder(models.Model):
             # Single PM approval - PM1 approval is enough
             if self.ks_edit_pm1_approved:
                 approval_complete = True
-        
+
         if approval_complete:
+            # Mark all remaining activities as done (approval complete)
+            if self.ks_edit_pm1_id:
+                self._mark_activity_done(self.ks_edit_pm1_id,
+                                         feedback=_("Approval completed - Edit permission granted"))
+            if self.ks_edit_pm2_id:
+                self._mark_activity_done(self.ks_edit_pm2_id,
+                                         feedback=_("Approval completed - Edit permission granted"))
             # Both approved - allow editing
             self.write({
                 'state': 'sale',
                 'ks_edit_approved': True,
             })
-            
+
             # Trigger recomputation of ks_can_edit_price on order lines
             if self.order_line:
                 self.order_line._compute_ks_can_edit_price()
-            
+
             if config.is_dual_approval():
                 pm1_name = self.ks_edit_pm1_id.name if self.ks_edit_pm1_id else ''
                 pm2_name = self.ks_edit_pm2_id.name if self.ks_edit_pm2_id else ''
@@ -1148,7 +1272,7 @@ class SaleOrder(models.Model):
                     message_type='notification',
                     subtype_xmlid='mail.mt_comment',
                 )
-        
+
         return True
 
     def ks_action_reject_edit(self):
@@ -1163,27 +1287,36 @@ class SaleOrder(models.Model):
         self.ensure_one()
         if not reason:
             raise UserError(_("Rejection reason is required."))
-        
+
         config = self._get_approval_config()
         current_user = self.env.user
-        
+
         # Check if user is one of the selected approvers
-        if not ((self.ks_edit_pm1_id and current_user == self.ks_edit_pm1_id) or 
+        if not ((self.ks_edit_pm1_id and current_user == self.ks_edit_pm1_id) or
                 (self.ks_edit_pm2_id and current_user == self.ks_edit_pm2_id)):
             raise UserError(_("You are not authorized to reject this edit request."))
-        
+
         # Sequential approval: PM2 can only reject if PM1 has already approved
         if self.ks_edit_pm2_id and current_user == self.ks_edit_pm2_id:
             if not self.ks_edit_pm1_approved:
                 raise UserError(_("PM1 must approve first before PM2 can reject this edit request."))
-        
+
         # Determine PM role
         pm_role = None
         if self.ks_edit_pm1_id and current_user == self.ks_edit_pm1_id:
             pm_role = 'PM1 - %s' % self.ks_edit_pm1_id.name
         elif self.ks_edit_pm2_id and current_user == self.ks_edit_pm2_id:
             pm_role = 'PM2 - %s' % self.ks_edit_pm2_id.name
-        
+
+        # Mark current user's activity as done
+        self._mark_activity_done(current_user, feedback=_("Rejected: %s") % reason)
+
+        # Also mark other approver's activity as done if exists (rejection ends the process)
+        if self.ks_edit_pm1_id and current_user != self.ks_edit_pm1_id:
+            self._mark_activity_done(self.ks_edit_pm1_id, feedback=_("Request rejected by %s") % current_user.name)
+        if self.ks_edit_pm2_id and current_user != self.ks_edit_pm2_id:
+            self._mark_activity_done(self.ks_edit_pm2_id, feedback=_("Request rejected by %s") % current_user.name)
+
         # Return to sale state
         self.write({
             'state': 'sale',
@@ -1196,7 +1329,7 @@ class SaleOrder(models.Model):
             'ks_edit_request_date': False,
             'ks_edit_approved': False,
         })
-        
+
         # Post message in chatter with reason
         self.message_post(
             body=_(
@@ -1208,7 +1341,7 @@ class SaleOrder(models.Model):
             message_type='notification',
             subtype_xmlid='mail.mt_note',
         )
-        
+
         return True
 
     def ks_action_complete_edit(self):
@@ -1218,7 +1351,7 @@ class SaleOrder(models.Model):
             raise UserError(_("No pending edit to complete."))
         if self.ks_edit_request_user_id != self.env.user:
             raise UserError(_("Only the user who requested the edit can complete it."))
-        
+
         self.write({
             'ks_edit_pm1_id': False,
             'ks_edit_pm2_id': False,
@@ -1229,21 +1362,125 @@ class SaleOrder(models.Model):
             'ks_edit_pm1_approved': False,
             'ks_edit_pm2_approved': False,
         })
-        
+
         # Trigger recomputation of ks_can_edit_price on order lines
         if self.order_line:
             self.order_line._compute_ks_can_edit_price()
-        
+
         self.message_post(
             body=_("Edit completed by %s. Sale Order is now locked.") % self.env.user.name,
             message_type='notification',
             subtype_xmlid='mail.mt_note',
         )
-        
+
         return True
 
+    # ===== Activity Management Methods =====
+
+    def _create_approval_activity(self, user_id, summary, note=None, activity_type='mail.mail_activity_data_todo'):
+        """Create an activity for approval request
+
+        :param user_id: res.users record - user to assign activity to
+        :param summary: string - activity summary/title
+        :param note: string - optional note/description
+        :param activity_type: string - activity type xmlid (default: todo)
+        :return: mail.activity record
+        """
+        self.ensure_one()
+        if not user_id:
+            return False
+
+        activity_type_id = self.env.ref(activity_type, raise_if_not_found=False)
+        if not activity_type_id:
+            # Fallback to default todo activity type
+            activity_type_id = self.env.ref('mail.mail_activity_data_todo', raise_if_not_found=False)
+
+        if not activity_type_id:
+            return False
+
+        activity_vals = {
+            'res_id': self.id,
+            'res_model_id': self.env['ir.model']._get_id('sale.order'),
+            'activity_type_id': activity_type_id.id,
+            'user_id': user_id.id,
+            'summary': summary,
+            'date_deadline': fields.Date.today(),
+        }
+        if note:
+            activity_vals['note'] = note
+
+        activity = self.env['mail.activity'].create(activity_vals)
+        return activity
+
+    def _mark_activity_done(self, user_id, feedback=None):
+        """Mark all pending activities for this user as done
+
+        :param user_id: res.users record - user whose activities to mark done
+        :param feedback: string - optional feedback message
+        :return: True
+        """
+        self.ensure_one()
+        if not user_id:
+            return True
+
+        # Search for active (not done) activities
+        # Activities use 'active' field, not 'done' field
+        activities = self.env['mail.activity'].search([
+            ('res_id', '=', self.id),
+            ('res_model', '=', 'sale.order'),
+            ('user_id', '=', user_id.id),
+            ('active', '=', True),
+        ])
+
+        # Use action_feedback() instead of action_done() to pass feedback
+        # action_done() doesn't accept parameters, it's just a wrapper
+        if activities:
+            activities.action_feedback(feedback=feedback or '')
+
+        return True
+
+    def _get_approval_activity_summary(self, approval_type, pm_role=None):
+        """Get activity summary text based on approval type
+
+        :param approval_type: string - 'confirm', 'cancel', or 'edit'
+        :param pm_role: string - optional PM role (PM1/PM2)
+        :return: string - activity summary
+        """
+        summaries = {
+            'confirm': _('Sale Order Approval Required'),
+            'cancel': _('Sale Order Cancellation Approval Required'),
+            'edit': _('Sale Order Edit Approval Required'),
+        }
+        base_summary = summaries.get(approval_type, _('Sale Order Approval Required'))
+        if pm_role:
+            return f"{base_summary} ({pm_role})"
+        return base_summary
+
+    def _get_approval_activity_note(self, approval_type, order_ref, requester_name, reason=None):
+        """Get activity note/description
+
+        :param approval_type: string - 'confirm', 'cancel', or 'edit'
+        :param order_ref: string - sale order reference/name
+        :param requester_name: string - name of user who requested
+        :param reason: string - optional reason
+        :return: string - activity note
+        """
+        notes = {
+            'confirm': _('Sale Order %s requires your approval for confirmation.\nRequested by: %s') % (order_ref,
+                                                                                                        requester_name),
+            'cancel': _('Sale Order %s requires your approval for cancellation.\nRequested by: %s') % (order_ref,
+                                                                                                       requester_name),
+            'edit': _('Sale Order %s requires your approval for editing.\nRequested by: %s') % (order_ref,
+                                                                                                requester_name),
+        }
+        base_note = notes.get(approval_type, _('Sale Order %s requires your approval.\nRequested by: %s') % (order_ref,
+                                                                                                             requester_name))
+        if reason:
+            base_note += f"\n\nReason: {reason}"
+        return base_note
+
     # ===== Wizard Helpers =====
-    
+
     def _action_open_approval_reason_wizard(self, action_type):
         """Open wizard to enter reason for approval/rejection"""
         self.ensure_one()
@@ -1258,7 +1495,7 @@ class SaleOrder(models.Model):
                 'default_ks_action_type': action_type,
             },
         }
-    
+
     def _action_open_reject_reason_wizard(self, rejection_type):
         """Open wizard to enter reason for rejection (legacy - kept for backward compatibility)"""
         self.ensure_one()
