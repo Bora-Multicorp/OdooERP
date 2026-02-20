@@ -145,15 +145,19 @@ class MarginAnalysisReportWizard(models.TransientModel):
             # NLC typically includes all costs (purchase price + landing costs)
             nlc = product.standard_price or avg_purchase_rate
             
-            # Get MOP (Market Operating Price) - using list_price or custom field if exists
-            # MOP is mentioned as a separate custom view, so we try to get it from product
-            mop = product.list_price
-            # Check if there's a custom MOP field on product
-            if 'mop' in product._fields:
-                mop = product.mop or mop
-            # Also check product template
-            elif 'mop' in product.product_tmpl_id._fields:
-                mop = product.product_tmpl_id.mop or mop
+            # Get MOP (Market Operating Price) from MOP Master based on date
+            # Use date_to from wizard, or today if not available
+            mop_date = self.date_to or fields.Date.today()
+            mop = self.env['mop.master'].get_current_mop(product_id, mop_date)
+            # Fallback to list_price if no MOP Master record found
+            if mop is False:
+                mop = product.list_price
+                # Check if there's a custom MOP field on product
+                if 'mop' in product._fields:
+                    mop = product.mop or mop
+                # Also check product template
+                elif 'mop' in product.product_tmpl_id._fields:
+                    mop = product.product_tmpl_id.mop or mop
             
             report_lines.append({
                 'report_id': self.id,

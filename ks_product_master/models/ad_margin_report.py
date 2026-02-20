@@ -146,13 +146,18 @@ class AdMarginReportWizard(models.TransientModel):
             else:
                 avg_sales_rate = 0.0
             
-            # Get MOP (Market Operating Price) - using list_price or custom field if exists
-            mop = product.list_price
-            # Check if there's a custom MOP field
-            if 'mop' in product._fields:
-                mop = product.mop or mop
-            elif 'mop' in product.product_tmpl_id._fields:
-                mop = product.product_tmpl_id.mop or mop
+            # Get MOP (Market Operating Price) from MOP Master based on invoice date
+            invoice = self.env['account.move'].browse(data['invoice_id'])
+            invoice_date = invoice.invoice_date or fields.Date.today()
+            mop = self.env['mop.master'].get_current_mop(product_id, invoice_date)
+            # Fallback to list_price if no MOP Master record found
+            if mop is False:
+                mop = product.list_price
+                # Check if there's a custom MOP field
+                if 'mop' in product._fields:
+                    mop = product.mop or mop
+                elif 'mop' in product.product_tmpl_id._fields:
+                    mop = product.product_tmpl_id.mop or mop
             
             report_lines.append({
                 'report_id': self.id,

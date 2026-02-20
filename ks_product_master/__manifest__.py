@@ -36,6 +36,7 @@
         'views/stock_traceability_report_pdf.xml',
         'views/margin_analysis_report_views.xml',
         'views/ad_margin_report_views.xml',
+        'views/mop_master_views.xml',
         'security/ir_rules.xml',
         'security/ir.model.access.csv',
 
