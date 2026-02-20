@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- AD Margin Report Wizard Form View -->
+    <record id="view_ad_margin_report_wizard_form" model="ir.ui.view">
+        <field name="name">ad.margin.report.wizard.form</field>
+        <field name="model">ad.margin.report.wizard</field>
+        <field name="arch" type="xml">
+            <form string="AD Margin Report">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="date_from"/>
+                            <field name="date_to"/>
+                        </group>
+                        <group>
+                            <field name="brand_id"/>
+                            <field name="category_id"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="partner_ids" widget="many2many_tags" options="{'no_create': True}" string="Customers"/>
+                        <field name="product_ids" widget="many2many_tags" options="{'no_create': True}"/>
+                    </group>
+                </sheet>
+                <footer>
+                    <button name="action_generate_report" string="Generate Report" type="object" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- AD Margin Report Wizard Action -->
+    <record id="action_ad_margin_report_wizard" model="ir.actions.act_window">
+        <field name="name">AD Margin Report</field>
+        <field name="res_model">ad.margin.report.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <!-- AD Margin Report List View -->
+    <record id="view_ad_margin_report_list" model="ir.ui.view">
+        <field name="name">ad.margin.report.list</field>
+        <field name="model">ad.margin.report</field>
+        <field name="arch" type="xml">
+            <list string="AD Margin Report" default_order="partner_id, product_id" decoration-info="sales_quantity > 0" editable="bottom">
+                <field name="party_name" string="Party Name" readonly="1"/>
+                <field name="item_name" string="Item Name" readonly="1"/>
+                <field name="item_alias" string="Item" readonly="1"/>
+                <field name="sales_rate" string="Sales Rate" sum="Total:" readonly="1"/>
+                <field name="sales_quantity" string="Sales Quantity" sum="Total:" readonly="1"/>
+                <field name="mop" string="MOP" sum="Total:" readonly="1"/>
+                <field name="x_gst_mop" string="X GST MO" sum="Total:" readonly="1"/>
+                <field name="diff" string="Diff" sum="Total:" readonly="1"/>
+                <field name="margin" string="Margin" sum="Total:" readonly="1"/>
+                <field name="total" string="Total" sum="Total:" readonly="1"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- AD Margin Report Search View -->
+    <record id="view_ad_margin_report_search" model="ir.ui.view">
+        <field name="name">ad.margin.report.search</field>
+        <field name="model">ad.margin.report</field>
+        <field name="arch" type="xml">
+            <search string="AD Margin Report">
+                <field name="party_name"/>
+                <field name="item_name"/>
+                <field name="item_alias"/>
+                <field name="partner_id"/>
+                <field name="product_id"/>
+                <filter string="Date From" name="date_from" domain="[('invoice_date', '&lt;=', context_today().strftime('%Y-%m-%d'))]"/>
+                <filter string="Date To" name="date_to" domain="[('invoice_date', '&gt;=', context_today().strftime('%Y-%m-%d'))]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Party Name" name="group_by_partner" context="{'group_by': 'partner_id'}"/>
+                    <filter string="Product" name="group_by_product" context="{'group_by': 'product_id'}"/>
+                    <filter string="Invoice Date" name="group_by_invoice_date" context="{'group_by': 'invoice_date'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- AD Margin Report Action -->
+    <record id="action_ad_margin_report" model="ir.actions.act_window">
+        <field name="name">AD Margin Report</field>
+        <field name="res_model">ad.margin.report</field>
+        <field name="view_mode">list</field>
+        <field name="search_view_id" ref="view_ad_margin_report_search"/>
+        <field name="context">{'search_default_group_by_partner': 1}</field>
+    </record>
+
+    <!-- Menu Item -->
+    <menuitem id="menu_ad_margin_report"
+              name="AD Margin"
+              parent="stock.menu_warehouse_report"
+              action="action_ad_margin_report_wizard"
+              sequence="101"/>
+</odoo>
+

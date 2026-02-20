@@ -18,7 +18,7 @@ class StockQuantInherit(models.Model):
     activation_status = fields.Boolean(string='Active', help="Indicates if the mobile phone is activated or not.",
                                        tracking=True)
     origin_source = ''
-    
+
     specs_made = fields.Many2one(
         'res.country',
         string='Spec Made For',

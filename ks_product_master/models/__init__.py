@@ -7,3 +7,5 @@ from . import show_hide_product_fields
 from . import stock_move_inherit
 from . import stock_quant_inherit
 from . import stock_traceability_inherit
+from . import margin_analysis_report
+from . import ad_margin_report
