@@ -6,117 +6,113 @@ from odoo.exceptions import ValidationError
 class KsPurchaseApprovalConfig(models.Model):
     _name = 'ks.purchase.approval.config'
     _description = 'KS Purchase Approval Configuration'
-    _rec_name = 'user_id'
-    _check_company_auto = False
+    _rec_name = 'name'
 
-    user_id = fields.Many2one(
-        'res.users',
-        string='User',
+    name = fields.Char(
+        string='Configuration Name',
+        default='Global Purchase Approval Configuration',
         required=True,
-        index=True,
-        help='User for whom this approval configuration applies',
+        help='Name for this approval configuration. Only one active configuration is allowed.',
+    )
+
+    company_id = fields.Many2one(
+        'res.company',
+        string='Company',
+        required=False,
+        readonly=True,
+        help='This field is kept for backward compatibility but is not used. Configuration is global for all companies.',
     )
     
-    # Approver Types
-    ks_confirm_approver_type = fields.Selection([
-        ('approver_1', 'Approver 1'),
-        ('approver_2', 'Approver 2'),
-    ], string='Confirmation Approver Type', required=True,
-        help='Approver type for PO confirmation requests')
+    # Approval Mode - Single or Two Level approval
+    ks_approval_mode = fields.Selection([
+        ('single', 'Single Level Approval'),
+        ('two_way', 'Two Level Approval'),
+    ], string='Approval Mode', required=True, default='two_way',
+       help='Single Level: Only Approver 1 needs to approve.\n'
+            'Two Level: Both Approver 1 and Approver 2 must approve before PO is confirmed.')
     
-    ks_update_approver_type = fields.Selection([
-        ('approver_1', 'Approver 1'),
-        ('approver_2', 'Approver 2'),
-    ], string='Update Approver Type', required=True,
-        help='Approver type for PO update requests')
-    
-    ks_cancel_approver_type = fields.Selection([
-        ('approver_1', 'Approver 1'),
-        ('approver_2', 'Approver 2'),
-    ], string='Cancel Approver Type', required=True,
-        help='Approver type for PO cancel requests')
+    # Approver Users - Multiple users support
+    ks_approver_1_ids = fields.Many2many(
+        'res.users',
+        'ks_purchase_approval_approver_1_rel',
+        'config_id',
+        'user_id',
+        string='Approvers 1',
+        required=True,
+        help='First/Primary approvers for PO approval requests (select one when requesting approval)',
+    )
+    ks_approver_2_ids = fields.Many2many(
+        'res.users',
+        'ks_purchase_approval_approver_2_rel',
+        'config_id',
+        'user_id',
+        string='Approvers 2',
+        help='Second approvers for PO approval requests (select one when requesting approval, required for two level approval mode)',
+    )
     
     active = fields.Boolean(default=True)
 
-    @api.constrains('user_id', 'ks_confirm_approver_type')
-    def _check_confirm_approver_duplicate(self):
-        """Check individually for Confirmation approver type duplicates"""
+    @api.constrains('active')
+    def _check_single_active_config(self):
+        """Ensure only one active configuration exists globally"""
         for record in self:
-            duplicates = self.search([
-                ('id', '!=', record.id),
-                ('user_id', '=', record.user_id.id),
-                ('ks_confirm_approver_type', '=', record.ks_confirm_approver_type),
-            ])
-            if duplicates:
-                raise ValidationError(_(
-                    "User '%s' already has a configuration as Confirmation %s. "
-                    "A user can have both Approver 1 and Approver 2, but not duplicate records for the same approver type."
-                ) % (record.user_id.name, dict(record._fields['ks_confirm_approver_type'].selection)[record.ks_confirm_approver_type]))
+            if record.active:
+                # Check for other active configs
+                other_active = self.search([
+                    ('active', '=', True),
+                    ('id', '!=', record.id),
+                ], limit=1)
+                if other_active:
+                    raise ValidationError(_(
+                        'Only one active global approval configuration is allowed! '
+                        'Please deactivate the existing configuration "%s" (ID: %s) before activating this one.'
+                    ) % (other_active.name or 'Unnamed', other_active.id))
 
-    @api.constrains('user_id', 'ks_update_approver_type')
-    def _check_update_approver_duplicate(self):
-        """Check individually for Update approver type duplicates"""
+    @api.constrains('ks_approval_mode', 'ks_approver_2_ids')
+    def _check_two_way_approval_approvers(self):
+        """Validate Approver 2 is set when two level approval mode is selected"""
         for record in self:
-            duplicates = self.search([
-                ('id', '!=', record.id),
-                ('user_id', '=', record.user_id.id),
-                ('ks_update_approver_type', '=', record.ks_update_approver_type),
-            ])
-            if duplicates:
-                raise ValidationError(_(
-                    "User '%s' already has a configuration as Update %s. "
-                    "A user can have both Approver 1 and Approver 2, but not duplicate records for the same approver type."
-                ) % (record.user_id.name, dict(record._fields['ks_update_approver_type'].selection)[record.ks_update_approver_type]))
-
-    @api.constrains('user_id', 'ks_cancel_approver_type')
-    def _check_cancel_approver_duplicate(self):
-        """Check individually for Cancel approver type duplicates"""
-        for record in self:
-            duplicates = self.search([
-                ('id', '!=', record.id),
-                ('user_id', '=', record.user_id.id),
-                ('ks_cancel_approver_type', '=', record.ks_cancel_approver_type),
-            ])
-            if duplicates:
-                raise ValidationError(_(
-                    "User '%s' already has a configuration as Cancel %s. "
-                    "A user can have both Approver 1 and Approver 2, but not duplicate records for the same approver type."
-                ) % (record.user_id.name, dict(record._fields['ks_cancel_approver_type'].selection)[record.ks_cancel_approver_type]))
+            if record.ks_approval_mode == 'two_way':
+                if not record.ks_approver_2_ids:
+                    raise ValidationError(_(
+                        "Approvers 2 are required when using Two Level Approval mode!"
+                    ))
 
     @api.model
-    def get_config_for_user(self, user_id=None):
-        """Get approval configuration for the specified or current user"""
-        if not user_id:
-            user_id = self.env.user.id
-        config = self.search([('user_id', '=', user_id), ('active', '=', True)], limit=1)
+    def get_config(self, company_id=None):
+        """Get the global approval configuration (applies to all companies)"""
+        # Return the active global configuration regardless of company
+        config = self.search([('active', '=', True)], limit=1)
         return config
 
-    def get_approvers_by_type(self, approval_type):
+    def get_all_approvers(self):
+        """Return all approver users configured in the system for this config"""
+        self.ensure_one()
+        approvers = self.ks_approver_1_ids | self.ks_approver_2_ids
+        return approvers
+
+    def get_approvers_by_level(self, approver_level):
         """
-        Get approvers based on approval type (confirm, update, cancel)
-        Returns list of user_ids who are configured as Approver 1 or Approver 2 for this type
+        Get approvers for a specific level (approver_1 or approver_2)
+        Returns list of user_ids who are configured for this level
         """
         self.ensure_one()
-        approver_type_field = {
-            'confirm': 'ks_confirm_approver_type',
-            'update': 'ks_update_approver_type',
-            'cancel': 'ks_cancel_approver_type',
-        }.get(approval_type)
-        
-        if not approver_type_field:
-            return self.env['res.users']
-        
-        approver_type = getattr(self, approver_type_field)
-        # Return users who have this approver type configured
-        domain = [
-            ('active', '=', True),
-            (approver_type_field, '=', approver_type),
-        ]
-        configs = self.search(domain)
-        return configs.mapped('user_id')
+        if approver_level == 'approver_1':
+            return self.ks_approver_1_ids
+        elif approver_level == 'approver_2':
+            return self.ks_approver_2_ids
+        return self.env['res.users']
 
-    def get_all_approvers(self):
-        """Return all users configured as approvers in the system"""
-        configs = self.search([('active', '=', True)])
-        return configs.mapped('user_id')
-
+    def is_two_way_approval(self):
+        """Check if two-way approval mode is enabled"""
+        self.ensure_one()
+        return self.ks_approval_mode == 'two_way'
+    
+    @api.model
+    def get_approval_mode(self):
+        """Get the system-wide approval mode (single or two_way)"""
+        config = self.get_config()
+        if config:
+            return config.ks_approval_mode
+        # Default to two_way if no config exists
+        return 'two_way'

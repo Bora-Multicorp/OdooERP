@@ -1,0 +1,587 @@
+<odoo>
+<record id="paperformat_savex_purchase_order" model="report.paperformat">
+            <field name="name">US Letter</field>
+            <field name="default" eval="True" />
+            <field name="format">Letter</field>
+            <field name="page_height">0</field>
+            <field name="page_width">0</field>
+            <field name="orientation">Portrait</field>
+            <field name="margin_top">5</field>
+            <field name="margin_bottom">10</field>
+            <field name="margin_left">5</field>
+            <field name="margin_right">5</field>
+            <field name="header_line" eval="False" />
+            <field name="header_spacing">20</field>
+            <field name="dpi">90</field>
+            <field name="css_margins" eval="True" />
+        </record>
+    <!-- Define the new report action for sale order -->
+    <record id="action_report_purchase_savex" model="ir.actions.report">
+        <field name="name">Purchase / Discount Order</field>
+        <field name="model">purchase.order</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">ks_templates.purchase_order_savex_report</field>
+        <field name="report_file">ks_templates.purchase_order_savex_report</field>
+        <field name="print_report_name">(object.state in ('draft', 'sent') and 'Custom Quotation - %s' % (object.name)) or 'Custom Order - %s' % (object.name)</field>
+        <field name="binding_model_id" ref="purchase.model_purchase_order"/>
+        <field name="paperformat_id" ref="paperformat_savex_purchase_order"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <!-- New report action for Purchase / without Discount Order -->
+    <record id="action_report_purchase_without_discount" model="ir.actions.report">
+        <field name="name">Purchase / without Discount Order</field>
+        <field name="model">purchase.order</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">ks_templates.purchase_order_without_discount_report</field>
+        <field name="report_file">ks_templates.purchase_order_without_discount_report</field>
+        <field name="print_report_name">(object.state in ('draft', 'sent') and 'Custom Quotation - %s' % (object.name)) or 'Custom Order - %s' % (object.name)</field>
+        <field name="binding_model_id" ref="purchase.model_purchase_order"/>
+        <field name="paperformat_id" ref="paperformat_savex_purchase_order"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <template id="purchase_order_savex_report">
+    <t t-call="web.basic_layout">
+        <t t-foreach="docs" t-as="doc">
+        <main>
+        <!-- TITLE -->
+        <table style="width:100%; border-collapse:collapse;margin-bottom:10px;">
+            <tr>
+                <td style="text-align:center; font-weight:bold; font-size:14px;border-color:white;">
+                    PURCHASE ORDER
+
+                </td>
+            </tr>
+        </table>
+
+        <!-- HEADER SECTION -->
+        <table style="width:100%; border-collapse:collapse; border:1px solid #000; font-size:11px;">
+            <tr>
+                <!-- LEFT SIDE -->
+                <td style="width:55%; vertical-align:top; border:1px solid #000; padding:6px;">
+                    Invoice To<br/>
+                    <strong>RINAN ENTERPRISES LLP</strong><br/>
+                    FLOOR NO 4, FLAT NO 401, WING A6, MIRCHANDANI BELLAGIO<br/>
+                    UNDRI, NEAR CITY CENTRE, Pune<br/>
+                    Pune, Maharashtra, 411060<br/>
+                    GSTIN/UIN: 27ABCFR5871K1ZP<br/>
+                    State Name : Maharashtra, Code : 27
+                    <div style="border-top:1px solid black;height:1px;"/>
+
+                    <strong>Consignee (Ship to)</strong><br/>
+                    <strong>RINAN ENTERPRISES LLP</strong><br/>
+                    FLOOR NO 4, FLAT NO 401, WING A6,<br/>
+                    MIRCHANDANI BELLAGIO, UNDRI, NEAR CITY<br/>
+                    CENTRE, Pune, Pune, Maharashtra, 411060<br/>
+                    GSTIN/UIN   : 27ABCFR5871K1ZP<br/>
+                    State Name  : Maharashtra, Code : 27
+                    <div style="border-top:1px solid black;height:1px;"/>
+
+                    Supplier (Bill from)<br/>
+                    <strong>SAVEX TECHNOLOGIES PRIVATE LIMITED</strong><br/>
+                    S1 Gala#1 2 101 102 Prerana Complex, Anjur<br/>
+                    Phata Mankholi Dapoda Rd, Vilage Val Bhiwandi-421302<br/>
+                    GSTIN/UIN   : 27AAACS5547H1Z8<br/>
+                    State Name  : Maharashtra, Code : 27
+                </td>
+
+                <!-- RIGHT SIDE -->
+                <td style="width:45%;vertical-align:top; padding:0;">
+                            <table style="width:100%; border-collapse:collapse;border-color:white;">
+                                <tr>
+                                    <td style="border-right:1px solid #000;padding:1px;">Voucher No.</td>
+                                    <td style="padding:1px;" colspan="3">Dated</td>
+                                </tr>
+                                <tr>
+                                    <td style="border-right:1px solid #000; padding:1px;"><strong>RELLP/25/PO06/4</strong></td>
+                                    <td style="border-left:1px solid #000; padding:1px;" colspan="3"><strong>26-Feb-25</strong></td>
+                                </tr>
+                                <tr>
+                                    <td style="border-right:1px solid #000; padding:1px;border-top:1px solid #000; padding:1px;">
+
+                                    </td>
+                                    <td style="border-left:1px solid #000; padding:1px;border-right:1px solid #000; padding:1px;border-top:1px solid #000; padding:1px;" colspan="3">Mode/Terms of Payment</td>
+                                </tr>
+                                <tr>
+                                    <td style="border-right:1px solid #000; padding:1px;">
+
+                                    </td>
+                                    <td style="border-right:1px solid #000; padding:1px;" colspan="3"><strong>100% Advance</strong></td>
+                                </tr>
+                                <tr>
+                                    <td style="border-right:1px solid #000; padding:1px;border-top:1px solid #000; padding:1px;">Reference No. &amp; Date.</td>
+                                    <td style="border-left:1px solid #000; padding:1px;border-right:1px solid #000; padding:1px;border-top:1px solid #000; padding:1px;" colspan="3">Other Reference(s)</td>
+                                </tr>
+                                <tr>
+                                    <td style="border-right:1px solid #000; padding:1px;"><strong>RELLP/25/PO06/4</strong></td>
+                                    <td style="border-right:1px solid #000; padding:1px;" colspan="3"></td>
+                                </tr>
+                                <tr>
+                                    <td style="border-right:1px solid #000; padding:1px;border-top:1px solid #000; padding:1px;">Despatched through</td>
+                                    <td style="border-left:1px solid #000; padding:1px;border-right:1px solid #000; padding:1px;border-top:1px solid #000; padding:1px;" colspan="3">Destination</td>
+                                </tr>
+                                <tr>
+                                    <td style="border-right:1px solid #000; padding:1px;height: 11px;">Self Pickup</td>
+                                    <td style="border-right:1px solid #000; padding:1px;height: 11px;" colspan="3">Pune</td>
+                                </tr>
+
+                                <tr>
+                                    <td style="border-top:1px solid #000; padding:1px;" colspan="3">
+                                        <strong>Terms of Delivery</strong>
+                                    </td>
+
+                                </tr>
+
+                            </table>
+                        </td>
+            </tr>
+        </table>
+
+        <!-- ITEMS TABLE (STATIC DATA) -->
+        <table style="width:100%;  border:1px solid #000; font-size:11px; margin-top:5px;">
+            <tr>
+                <th style="border:1px solid #000;">Sl No.</th>
+                <th style="border:1px solid #000;">Description of Goods and Services</th>
+                <th style="border:1px solid #000;">HSN/SAC</th>
+                <th style="border:1px solid #000;">Quantity</th>
+                <th style="border:1px solid #000;">Rate</th>
+                <th style="border:1px solid #000;">Per</th>
+                <th style="border:1px solid #000;">Amount</th>
+            </tr>
+
+            <!-- Dynamic Data for Purchase Order Items -->
+            <t t-set="line_num" t-value="0"/>
+            <t t-foreach="doc.order_line.filtered(lambda l: l.display_type not in ('line_section', 'line_note'))" t-as="line">
+                <t t-set="line_num" t-value="line_num + 1"/>
+                <tr>
+                    <td style="border:1px solid #000; text-align:center;" t-esc="line_num"/>
+                    <td style="border:1px solid #000;padding-left:4px;">
+                        <t t-esc="line.name or ''"/>
+                        <t t-if="line.product_id and line.product_id.product_tmpl_id.made_country">
+                            <br/><t t-esc="'Made in ' + (line.product_id.product_tmpl_id.made_country.name or '')"/>
+                        </t>
+                    </td>
+                    <td style="border:1px solid #000; text-align:right;text-align:center;">
+                        <t t-esc="doc.get_line_hsn_code(line)"/>
+                    </td>
+                    <td style="border:1px solid #000; text-align:right;text-align:center;">
+                        <t t-esc="doc.format_number(line.product_qty, digits=2)"/> <t t-esc="line.product_uom.name or 'NOS'"/>
+                    </td>
+                    <td style="border:1px solid #000; text-align:right;text-align:center;">
+                        <t t-esc="doc.currency_id.symbol or '$'"/> <t t-esc="doc.format_number(line.price_unit, digits=2)"/>
+                    </td>
+                    <td style="border:1px solid #000; text-align:center;" t-esc="line.product_uom.name or 'pcs'"/>
+                    <td style="border:1px solid #000; text-align:right;padding-right:4px;">
+                        <t t-esc="doc.currency_id.symbol or '$'"/> <t t-esc="doc.format_number(line.price_subtotal, digits=2)"/>
+                    </td>
+                </tr>
+            </t>
+            <tr>
+                <td style="border-left:1px solid #000;border-right:1px solid #000;border-top:1px solid white;border-bottom:1px solid #000; text-align:center;"></td>
+                <td style="border:1px solid #000;padding-left:4px;">
+                    <t t-set="discount_amount" t-value="doc.get_discount_amount()"/>
+                    <t t-set="tax_info" t-value="doc.get_cgst_sgst_info()"/>
+                    <t t-set="tds_info" t-value="doc.get_tds_info()"/>
+                    <t t-if="discount_amount > 0">
+                        Less :          Discount Before GST/IGST<br/>
+                    </t>
+                    <t t-if="tax_info['cgst_amount'] > 0">
+                        Input CGST @ <t t-esc="doc.format_number(tax_info['cgst_rate'], digits=2)"/>%<br/>
+                    </t>
+                    <t t-if="tax_info['sgst_amount'] > 0">
+                        Input SGST @ <t t-esc="doc.format_number(tax_info['sgst_rate'], digits=2)"/>%<br/>
+                    </t>
+                    <t t-if="tds_info['tds_amount'] > 0">
+                        Less :          <t t-esc="tds_info['tds_name']"/><br/>
+                    </t>
+                    Round Off
+                </td>
+                <td style="border:1px solid #000; text-align:right;"></td>
+                <td style="border:1px solid #000; text-align:right;"></td>
+                <td style="border:1px solid #000; text-align:right;padding-right:4px;">
+                    <t t-if="discount_amount > 0"><br/></t>
+                    <t t-if="tax_info['cgst_amount'] > 0">
+                        <t t-esc="doc.format_number(tax_info['cgst_rate'], digits=2)"/><br/>
+                    </t>
+                    <t t-if="tax_info['sgst_amount'] > 0">
+                        <t t-esc="doc.format_number(tax_info['sgst_rate'], digits=2)"/><br/>
+                    </t>
+                    <t t-if="tds_info['tds_amount'] > 0"><br/></t>
+                </td>
+                <td style="border:1px solid #000; text-align:center;">
+                    <t t-if="discount_amount > 0"><br/></t>
+                    <t t-if="tax_info['cgst_amount'] > 0">%<br/></t>
+                    <t t-if="tax_info['sgst_amount'] > 0">%<br/></t>
+                    <t t-if="tds_info['tds_amount'] > 0"><br/></t>
+                </td>
+                <td style="border:1px solid #000; text-align:right;padding-right:4px;">
+                    <t t-if="discount_amount > 0">
+                        (-)<t t-esc="doc.format_number(discount_amount, digits=2)"/><br/>
+                    </t>
+                    <t t-if="tax_info['cgst_amount'] > 0">
+                        <t t-esc="doc.format_number(tax_info['cgst_amount'], digits=2)"/><br/>
+                    </t>
+                    <t t-if="tax_info['sgst_amount'] > 0">
+                        <t t-esc="doc.format_number(tax_info['sgst_amount'], digits=2)"/><br/>
+                    </t>
+                    <t t-if="tds_info['tds_amount'] > 0">
+                        (-)<t t-esc="doc.format_number(tds_info['tds_amount'], digits=2)"/><br/>
+                    </t>
+                    <t t-set="round_off" t-value="doc.amount_total - (doc.amount_untaxed + doc.amount_tax - discount_amount - tds_info['tds_amount'])"/>
+                    <t t-if="round_off != 0">
+                        <t t-if="round_off &lt; 0">(-)</t><t t-esc="doc.format_number(abs(round_off), digits=2)"/>
+                    </t>
+                </td>
+            </tr>
+            <!-- Add more static rows as needed -->
+
+            <!-- TOTAL -->
+            <t t-set="total_qty" t-value="sum(line.product_qty for line in doc.order_line.filtered(lambda l: l.display_type not in ('line_section', 'line_note')))"/>
+            <tr>
+                <td style="border:1px solid #000; text-align:center;"></td>
+                <td style="border:1px solid #000;padding-left:4px;">
+                    Total
+                </td>
+                <td style="border:1px solid #000; text-align:right;"></td>
+                <td style="border:1px solid #000; text-align:right;padding-right:4px;">
+                    <t t-esc="doc.format_number(total_qty, digits=2)"/> NOS
+                </td>
+                <td style="border:1px solid #000; text-align:right;"></td>
+                <td style="border:1px solid #000; text-align:center;"></td>
+                <td style="border:1px solid #000; text-align:right;padding-right:4px;">
+                    <t t-esc="doc.currency_id.symbol or '$'"/> <t t-esc="doc.format_number(doc.amount_total, digits=2)"/>
+                </td>
+            </tr>
+            <tr>
+                    <td style="width:100%; border-top:1px solid #000;border-bottom:1px solid white;border-left:1px solid #000;border-right:1px solid #000; padding:6px;"
+                        colspan="7">
+                        Amount Chargeable (in words)
+                        <br/>
+                        <strong>
+                            <t t-esc="doc.get_amount_in_words_inr(doc.amount_total)"/> (INR <t t-esc="doc.format_number(doc.amount_total, digits=2)"/>)
+                        </strong>
+                    </td>
+            </tr>
+            <tr>
+                    <td style="width:100%; border-left:1px solid #000;border-right:1px solid #000; padding:6px;height:40px;"
+                        colspan="7">
+
+                    </td>
+            </tr>
+            <tr>
+                    <td style="width:100%; border-left:1px solid #000;border-right:1px solid #000;border-top:1px solid white; padding:6px;padding-left:4px;text-align:left;"
+                        colspan="7">
+                         Remarks:<br/>
+                        all neat &amp; clean stocks will be accepted.<br/>
+                        Dirty, damage will not be accepted and will be retuned back
+                    </td>
+            </tr>
+            <tr>
+    <td colspan="4"
+        style="padding:0;
+               border-left:1px solid #000;
+               border-bottom:1px solid #000;">
+
+        <div style="padding:20px; border-top:2px solid white;">
+        </div>
+    </td>
+
+    <td colspan="3"
+        style="border-left:1px solid #000;
+               border-right:1px solid #000;
+               border-bottom:1px solid #000;
+               text-align:center;
+               vertical-align:bottom;
+text-align:right;padding-right:4px;">
+        for BORA ELECTRONICS FZCO
+        <br/><br/>
+        Authorised Signatory
+    </td>
+</tr>
+        </table>
+
+
+
+        </main>
+        </t>
+        <footer class="pt-0">
+
+                <p style="text-align:center; font-size:10px;">
+                    This is a Computer Generated Invoice
+                </p>
+
+         </footer>
+    </t>
+
+</template>
+
+    <!-- Template for Purchase / without Discount Order -->
+    <template id="purchase_order_without_discount_report">
+    <t t-call="web.basic_layout">
+        <t t-foreach="docs" t-as="doc">
+        <main>
+        <!-- TITLE -->
+        <table style="width:100%; border-collapse:collapse;margin-bottom:10px;">
+            <tr>
+                <td style="text-align:center; font-weight:bold; font-size:14px;border-color:white;">
+                    PURCHASE ORDER
+
+                </td>
+            </tr>
+        </table>
+
+        <!-- HEADER SECTION -->
+        <table style="width:100%; border-collapse:collapse; border:1px solid #000; font-size:11px;">
+            <tr>
+                <!-- LEFT SIDE -->
+                <td style="width:55%; vertical-align:top; border:1px solid #000; padding:6px;">
+                    Invoice To<br/>
+                    <strong>RINAN ENTERPRISES LLP</strong><br/>
+                    FLOOR NO 4, FLAT NO 401, WING A6, MIRCHANDANI BELLAGIO<br/>
+                    UNDRI, NEAR CITY CENTRE, Pune<br/>
+                    Pune, Maharashtra, 411060<br/>
+                    GSTIN/UIN: 27ABCFR5871K1ZP<br/>
+                    State Name : Maharashtra, Code : 27
+                    <div style="border-top:1px solid black;height:1px;"/>
+
+                    <strong>Consignee (Ship to)</strong><br/>
+                    <strong>RINAN ENTERPRISES LLP</strong><br/>
+                    FLOOR NO 4, FLAT NO 401, WING A6,<br/>
+                    MIRCHANDANI BELLAGIO, UNDRI, NEAR CITY<br/>
+                    CENTRE, Pune, Pune, Maharashtra, 411060<br/>
+                    GSTIN/UIN   : 27ABCFR5871K1ZP<br/>
+                    State Name  : Maharashtra, Code : 27
+                    <div style="border-top:1px solid black;height:1px;"/>
+
+                    Supplier (Bill from)<br/>
+                    <strong>SAVEX TECHNOLOGIES PRIVATE LIMITED</strong><br/>
+                    S1 Gala#1 2 101 102 Prerana Complex, Anjur<br/>
+                    Phata Mankholi Dapoda Rd, Vilage Val Bhiwandi-421302<br/>
+                    GSTIN/UIN   : 27AAACS5547H1Z8<br/>
+                    State Name  : Maharashtra, Code : 27
+                </td>
+
+                <!-- RIGHT SIDE -->
+                <td style="width:45%;vertical-align:top; padding:0;">
+                            <table style="width:100%; border-collapse:collapse;border-color:white;">
+                                <tr>
+                                    <td style="border-right:1px solid #000;padding:1px;">Voucher No.</td>
+                                    <td style="padding:1px;" colspan="3">Dated</td>
+                                </tr>
+                                <tr>
+                                    <td style="border-right:1px solid #000; padding:1px;"><strong>RELLP/25/PO06/4</strong></td>
+                                    <td style="border-left:1px solid #000; padding:1px;" colspan="3"><strong>26-Feb-25</strong></td>
+                                </tr>
+                                <tr>
+                                    <td style="border-right:1px solid #000; padding:1px;border-top:1px solid #000; padding:1px;">
+
+                                    </td>
+                                    <td style="border-left:1px solid #000; padding:1px;border-right:1px solid #000; padding:1px;border-top:1px solid #000; padding:1px;" colspan="3">Mode/Terms of Payment</td>
+                                </tr>
+                                <tr>
+                                    <td style="border-right:1px solid #000; padding:1px;">
+
+                                    </td>
+                                    <td style="border-right:1px solid #000; padding:1px;" colspan="3"><strong>100% Advance</strong></td>
+                                </tr>
+                                <tr>
+                                    <td style="border-right:1px solid #000; padding:1px;border-top:1px solid #000; padding:1px;">Reference No. &amp; Date.</td>
+                                    <td style="border-left:1px solid #000; padding:1px;border-right:1px solid #000; padding:1px;border-top:1px solid #000; padding:1px;" colspan="3">Other Reference(s)</td>
+                                </tr>
+                                <tr>
+                                    <td style="border-right:1px solid #000; padding:1px;"><strong>RELLP/25/PO06/4</strong></td>
+                                    <td style="border-right:1px solid #000; padding:1px;" colspan="3"></td>
+                                </tr>
+                                <tr>
+                                    <td style="border-right:1px solid #000; padding:1px;border-top:1px solid #000; padding:1px;">Despatched through</td>
+                                    <td style="border-left:1px solid #000; padding:1px;border-right:1px solid #000; padding:1px;border-top:1px solid #000; padding:1px;" colspan="3">Destination</td>
+                                </tr>
+                                <tr>
+                                    <td style="border-right:1px solid #000; padding:1px;height: 11px;">Self Pickup</td>
+                                    <td style="border-right:1px solid #000; padding:1px;height: 11px;" colspan="3">Pune</td>
+                                </tr>
+
+                                <tr>
+                                    <td style="border-top:1px solid #000; padding:1px;" colspan="3">
+                                        <strong>Terms of Delivery</strong>
+                                    </td>
+
+                                </tr>
+
+                            </table>
+                        </td>
+            </tr>
+        </table>
+
+        <!-- ITEMS TABLE -->
+        <table style="width:100%;  border:1px solid #000; font-size:11px; margin-top:5px;">
+            <tr>
+                <th style="border:1px solid #000;">Sl No.</th>
+                <th style="border:1px solid #000;">Description of Goods and Services</th>
+                <th style="border:1px solid #000;">HSN/SAC</th>
+                <th style="border:1px solid #000;">Quantity</th>
+                <th style="border:1px solid #000;">Rate</th>
+                <th style="border:1px solid #000;">Per</th>
+                <th style="border:1px solid #000;">Amount</th>
+            </tr>
+
+            <!-- Dynamic Data for Purchase Order Items -->
+            <t t-set="line_num" t-value="0"/>
+            <t t-foreach="doc.order_line.filtered(lambda l: l.display_type not in ('line_section', 'line_note'))" t-as="line">
+                <t t-set="line_num" t-value="line_num + 1"/>
+                <tr>
+                    <td style="border:1px solid #000; text-align:center;" t-esc="line_num"/>
+                    <td style="border:1px solid #000;padding-left:4px;">
+                        <t t-esc="line.name or ''"/>
+                        <t t-if="line.product_id and line.product_id.product_tmpl_id.made_country">
+                            <br/><t t-esc="'Made in ' + (line.product_id.product_tmpl_id.made_country.name or '')"/>
+                        </t>
+                    </td>
+                    <td style="border:1px solid #000; text-align:right;text-align:center;">
+                        <t t-esc="doc.get_line_hsn_code(line)"/>
+                    </td>
+                    <td style="border:1px solid #000; text-align:right;text-align:center;">
+                        <t t-esc="doc.format_number(line.product_qty, digits=2)"/> <t t-esc="line.product_uom.name or 'NOS'"/>
+                    </td>
+                    <td style="border:1px solid #000; text-align:right;text-align:center;">
+                        <t t-esc="doc.currency_id.symbol or '$'"/> <t t-esc="doc.format_number(line.price_unit, digits=2)"/>
+                    </td>
+                    <td style="border:1px solid #000; text-align:center;" t-esc="line.product_uom.name or 'pcs'"/>
+                    <td style="border:1px solid #000; text-align:right;padding-right:4px;">
+                        <t t-esc="doc.currency_id.symbol or '$'"/> <t t-esc="doc.format_number(line.price_subtotal, digits=2)"/>
+                    </td>
+                </tr>
+            </t>
+            <tr>
+                <td style="border-left:1px solid #000;border-right:1px solid #000;border-top:1px solid white;border-bottom:1px solid #000; text-align:center;"></td>
+                <td style="border:1px solid #000;padding-left:4px;">
+                    <t t-set="tax_info" t-value="doc.get_cgst_sgst_info()"/>
+                    <t t-set="tds_info" t-value="doc.get_tds_info()"/>
+                    <t t-if="tax_info['cgst_amount'] > 0">
+                        Input CGST @ <t t-esc="doc.format_number(tax_info['cgst_rate'], digits=2)"/>%<br/>
+                    </t>
+                    <t t-if="tax_info['sgst_amount'] > 0">
+                        Input SGST @ <t t-esc="doc.format_number(tax_info['sgst_rate'], digits=2)"/>%<br/>
+                    </t>
+                    <t t-if="tds_info['tds_amount'] > 0">
+                        Less :          <t t-esc="tds_info['tds_name']"/><br/>
+                    </t>
+                    Round Off
+                </td>
+                <td style="border:1px solid #000; text-align:right;"></td>
+                <td style="border:1px solid #000; text-align:right;"></td>
+                <td style="border:1px solid #000; text-align:right;padding-right:4px;">
+                    <t t-if="tax_info['cgst_amount'] > 0">
+                        <t t-esc="doc.format_number(tax_info['cgst_rate'], digits=2)"/><br/>
+                    </t>
+                    <t t-if="tax_info['sgst_amount'] > 0">
+                        <t t-esc="doc.format_number(tax_info['sgst_rate'], digits=2)"/><br/>
+                    </t>
+                    <t t-if="tds_info['tds_amount'] > 0"><br/></t>
+                </td>
+                <td style="border:1px solid #000; text-align:center;">
+                    <t t-if="tax_info['cgst_amount'] > 0">%<br/></t>
+                    <t t-if="tax_info['sgst_amount'] > 0">%<br/></t>
+                    <t t-if="tds_info['tds_amount'] > 0"><br/></t>
+                </td>
+                <td style="border:1px solid #000; text-align:right;padding-right:4px;">
+                    <t t-if="tax_info['cgst_amount'] > 0">
+                        <t t-esc="doc.format_number(tax_info['cgst_amount'], digits=2)"/><br/>
+                    </t>
+                    <t t-if="tax_info['sgst_amount'] > 0">
+                        <t t-esc="doc.format_number(tax_info['sgst_amount'], digits=2)"/><br/>
+                    </t>
+                    <t t-if="tds_info['tds_amount'] > 0">
+                        (-)<t t-esc="doc.format_number(tds_info['tds_amount'], digits=2)"/><br/>
+                    </t>
+                    <t t-set="round_off" t-value="doc.amount_total - (doc.amount_untaxed + doc.amount_tax - tds_info['tds_amount'])"/>
+                    <t t-if="round_off != 0">
+                        <t t-if="round_off &lt; 0">(-)</t><t t-esc="doc.format_number(abs(round_off), digits=2)"/>
+                    </t>
+                </td>
+            </tr>
+
+            <!-- TOTAL -->
+            <t t-set="total_qty" t-value="sum(line.product_qty for line in doc.order_line.filtered(lambda l: l.display_type not in ('line_section', 'line_note')))"/>
+            <tr>
+                <td style="border:1px solid #000; text-align:center;"></td>
+                <td style="border:1px solid #000;padding-left:4px;">
+                    Total
+                </td>
+                <td style="border:1px solid #000; text-align:right;"></td>
+                <td style="border:1px solid #000; text-align:right;padding-right:4px;">
+                    <t t-esc="doc.format_number(total_qty, digits=2)"/> NOS
+                </td>
+                <td style="border:1px solid #000; text-align:right;"></td>
+                <td style="border:1px solid #000; text-align:center;"></td>
+                <td style="border:1px solid #000; text-align:right;padding-right:4px;">
+                    <t t-esc="doc.currency_id.symbol or '$'"/> <t t-esc="doc.format_number(doc.amount_total, digits=2)"/>
+                </td>
+            </tr>
+            <tr>
+                    <td style="width:100%; border-top:1px solid #000;border-bottom:1px solid white;border-left:1px solid #000;border-right:1px solid #000; padding:6px;"
+                        colspan="7">
+                        Amount Chargeable (in words)
+                        <br/>
+                        <strong>
+                            <t t-esc="doc.get_amount_in_words_inr(doc.amount_total)"/> (INR <t t-esc="doc.format_number(doc.amount_total, digits=2)"/>)
+                        </strong>
+                    </td>
+            </tr>
+            <tr>
+                    <td style="width:100%; border-left:1px solid #000;border-right:1px solid #000; padding:6px;height:40px;"
+                        colspan="7">
+
+                    </td>
+            </tr>
+            <tr>
+                    <td style="width:100%; border-left:1px solid #000;border-right:1px solid #000;border-top:1px solid white; padding:6px;padding-left:4px;text-align:left;"
+                        colspan="7">
+                         Remarks:<br/>
+                        all neat &amp; clean stocks will be accepted.<br/>
+                        Dirty, damage will not be accepted and will be retuned back
+                    </td>
+            </tr>
+            <tr>
+    <td colspan="4"
+        style="padding:0;
+               border-left:1px solid #000;
+               border-bottom:1px solid #000;">
+
+        <div style="padding:20px; border-top:2px solid white;">
+        </div>
+    </td>
+
+    <td colspan="3"
+        style="border-left:1px solid #000;
+               border-right:1px solid #000;
+               border-bottom:1px solid #000;
+               text-align:center;
+               vertical-align:bottom;
+text-align:right;padding-right:4px;">
+        for BORA ELECTRONICS FZCO
+        <br/><br/>
+        Authorised Signatory
+    </td>
+</tr>
+        </table>
+
+
+
+        </main>
+        </t>
+        <footer class="pt-0">
+
+                <p style="text-align:center; font-size:10px;">
+                    This is a Computer Generated Invoice
+                </p>
+
+         </footer>
+    </t>
+
+</template>
+
+
+
+</odoo>

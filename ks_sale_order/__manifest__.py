@@ -40,6 +40,8 @@ Configuration:
         'data/mail_template_data.xml',
         'views/res_config_settings_views.xml',
         'views/sale_order_views.xml',
+        'views/tax_fields_readonly_views.xml',
+        'views/product_pricelist_item_views.xml',
     ],
     'installable': True,
     'application': False,

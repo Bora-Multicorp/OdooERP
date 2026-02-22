@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Inherit sale.order form view to add custom fields in Other Information tab -->
+        <record id="view_sale_order_form_inherit_ks_templates" model="ir.ui.view">
+            <field name="name">sale.order.form.ks.templates</field>
+            <field name="model">sale.order</field>
+            <field name="inherit_id" ref="sale.view_order_form"/>
+            <field name="arch" type="xml">
+                <!-- Add fields to Other Information tab -->
+                <xpath expr="//page[@name='other_information']/group" position="inside">
+                    <group string="Additional Information">
+                        <field name="ks_other_reference" placeholder="Other Reference(s)"/>
+                        <field name="ks_despatched_through" placeholder="Despatch through"/>
+                        <field name="ks_city_port_of_discharge" placeholder="Destination"/>
+                    </group>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>
+

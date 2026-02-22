@@ -27,10 +27,10 @@
             <field name="perm_unlink" eval="False"/>
         </record>
 
-        <record id="ks_purchase_approval_config_rule_manager" model="ir.rule">
-            <field name="name">KS Purchase Approval Config: Full Access for Managers</field>
+        <record id="ks_purchase_approval_config_rule_admin" model="ir.rule">
+            <field name="name">KS Purchase Approval Config: Full Access for Admins</field>
             <field name="model_id" ref="model_ks_purchase_approval_config"/>
-            <field name="groups" eval="[(4, ref('purchase.group_purchase_manager'))]"/>
+            <field name="groups" eval="[(4, ref('base.group_system'))]"/>
             <field name="perm_read" eval="True"/>
             <field name="perm_write" eval="True"/>
             <field name="perm_create" eval="True"/>

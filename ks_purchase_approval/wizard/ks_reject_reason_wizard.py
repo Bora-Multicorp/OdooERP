@@ -4,60 +4,41 @@ from odoo.exceptions import UserError
 
 
 class KsRejectReasonWizard(models.TransientModel):
-    _name = 'ks.reject.reason.wizard'
-    _description = 'KS Reject Reason Wizard'
+    _name = 'ks.purchase.reject.reason.wizard'
+    _description = 'KS Purchase Reject Reason Wizard'
 
     ks_purchase_order_id = fields.Many2one(
         'purchase.order',
         string='Purchase Order',
         required=True,
     )
-    ks_rejection_type = fields.Selection([
-        ('confirm', 'Confirmation Rejection'),
-        ('update', 'Update Rejection'),
-        ('cancel', 'Cancellation Rejection'),
-    ], string='Rejection Type', required=True)
+    
+    ks_action_type = fields.Selection([
+        ('cancel_request', 'Cancel Request'),
+        ('edit_request', 'Edit Request'),
+    ], string='Action Type', default='cancel_request')
     
     ks_reason = fields.Text(
-        string='Rejection Reason',
+        string='Reason',
         required=True,
-        help='Please provide a reason for the rejection (required)',
-    )
-    
-    ks_rejection_type_label = fields.Char(
-        string='Rejection Type Label',
-        compute='_compute_rejection_type_label',
+        help='Please provide a reason (required)',
     )
 
-    @api.depends('ks_rejection_type')
-    def _compute_rejection_type_label(self):
-        for record in self:
-            if record.ks_rejection_type == 'confirm':
-                record.ks_rejection_type_label = _('Confirmation Rejection')
-            elif record.ks_rejection_type == 'update':
-                record.ks_rejection_type_label = _('Update Rejection')
-            elif record.ks_rejection_type == 'cancel':
-                record.ks_rejection_type_label = _('Cancellation Rejection')
-            else:
-                record.ks_rejection_type_label = ''
-
-    def action_submit_rejection(self):
-        """Submit the rejection with the provided reason"""
+    def action_submit(self):
+        """Submit the request with the provided reason"""
         self.ensure_one()
         
         if not self.ks_reason or not self.ks_reason.strip():
-            raise UserError(_("Rejection reason is required."))
+            raise UserError(_("Reason is required."))
         
         order = self.ks_purchase_order_id
         reason = self.ks_reason.strip()
         
-        if self.ks_rejection_type == 'confirm':
-            order.ks_do_reject_confirmation(reason)
-        elif self.ks_rejection_type == 'update':
-            order.ks_do_reject_update(reason)
-        elif self.ks_rejection_type == 'cancel':
-            order.ks_do_reject_cancel(reason)
+        if self.ks_action_type == 'cancel_request':
+            order.ks_do_request_cancel(reason)
+        elif self.ks_action_type == 'edit_request':
+            order.ks_do_request_edit(reason)
         else:
-            raise UserError(_("Invalid rejection type."))
+            raise UserError(_("Invalid action type."))
         
         return {'type': 'ir.actions.act_window_close'}

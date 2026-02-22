@@ -38,9 +38,32 @@ class ContactKYCApproval(models.Model):
     def create(self, vals_list):
         """
         Override create to:
+        - Validate no duplicate KYC records (unless explicitly Re-KYC)
         - Create KYC record
         - Link attachments to `res.partner.kyc.approval`
         """
+        # Check for duplicate KYC records before creating
+        for vals in vals_list:
+            partner_id = vals.get('partner_id')
+            if partner_id:
+                # Check if partner already has a KYC record
+                existing_kyc = self.search([
+                    ('partner_id', '=', partner_id)
+                ], limit=1)
+                
+                # Only allow creation if explicitly marked as Re-KYC update (via context)
+                # or if no existing KYC record exists
+                is_rekyc_update = self._context.get('is_rekyc_update', False)
+                if existing_kyc and not is_rekyc_update:
+                    # Check if partner's is_kyc flag is False (indicating Re-KYC scenario)
+                    partner = self.env['res.partner'].browse(partner_id)
+                    if partner.is_kyc:
+                        # Partner already has active KYC - this should be an update, not create
+                        raise ValidationError(_(
+                            "A KYC record already exists for this partner. "
+                            "Please use Re-KYC to update the existing record instead of creating a new one."
+                        ))
+        
         res_list = super().create(vals_list)
 
         attachment_fields = [
@@ -110,6 +133,17 @@ class ContactKYCApproval(models.Model):
         for record in self:
             record.is_form_owner = bool(record.create_uid and record.create_uid == current_user)
 
+    @api.depends('poc_user', 'rekyc_state')
+    @api.depends_context('uid')
+    def _compute_can_rekyc_approve(self):
+        current_user = self.env.user
+        for record in self:
+            record.can_rekyc_approve = bool(
+                record.rekyc_state == 'pending'
+                and record.poc_user
+                and record.poc_user == current_user
+            )
+
 
     # -------------------------------------------------------------------------
     # KYC Fields
@@ -168,7 +202,7 @@ class ContactKYCApproval(models.Model):
     gst_return_duration = fields.Selection([
         ('Monthly', 'Monthly'),
         ('Quarterly', 'Quarterly')
-    ], string="GST Return duration")
+    ], string="Filing Frequency")
 
     shop_photos = fields.Many2many('ir.attachment', 'vendor_kyc_shop_photos_rels',
                                    'partner_id', 'attachment_id', string="Shop Photos")
@@ -181,7 +215,7 @@ class ContactKYCApproval(models.Model):
 
     directors_detail = fields.One2many('director.details', 'kyc_approval_id', string="KYC Details", tracking=True)
     pan_no = fields.Char("PAN Number", required=True)
-    comp_google_loc = fields.Char("Google Location of Shop")
+    comp_google_loc = fields.Char("GPS Location of Shop",required=True)
     partner_llp_filename = fields.Char()
     partner_llp = fields.Binary("Partnership/LLP Deed")
 
@@ -250,6 +284,21 @@ class ContactKYCApproval(models.Model):
     can_set_draft = fields.Boolean(
         compute="_compute_can_set_draft", string="Can Set Draft"
     )
+    rekyc_state = fields.Selection([
+        ('draft', 'Draft'),
+        ('pending', 'Pending'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+    ], default='draft', tracking=True, copy=False)
+    rekyc_pending_payload = fields.Json(copy=False)
+    rekyc_requested_by = fields.Many2one('res.users', string='Re-KYC Requested By', tracking=True, copy=False)
+    rekyc_requested_on = fields.Datetime(string='Re-KYC Requested On', tracking=True, copy=False)
+    rekyc_approved_by = fields.Many2one('res.users', string='Re-KYC Approved By', tracking=True, copy=False)
+    rekyc_approved_on = fields.Datetime(string='Re-KYC Approved On', tracking=True, copy=False)
+    rekyc_rejected_by = fields.Many2one('res.users', string='Re-KYC Rejected By', tracking=True, copy=False)
+    rekyc_rejected_on = fields.Datetime(string='Re-KYC Rejected On', tracking=True, copy=False)
+    rekyc_rejection_reason = fields.Text(string='Re-KYC Rejection Reason', tracking=True, copy=False)
+    can_rekyc_approve = fields.Boolean(compute='_compute_can_rekyc_approve')
 
     # -------------------------------------------------------------------------
     # Compute draft button visibility
@@ -301,12 +350,18 @@ class ContactKYCApproval(models.Model):
         if not (is_admin or is_owner):
             raise ValidationError(_("Access Denied: Only administrators or the form creator can submit for approval."))
         
-        # Check if approval config exists with both approver types
-        approver1_configs = self.env['vendor.approval.config'].search([('approver_type', '=', 'approver1')])
-        approver2_configs = self.env['vendor.approval.config'].search([('approver_type', '=', 'approver2')])
+        # Check if approval config exists
+        config = self.env['vendor.approval.config'].get_config()
+        if not config:
+            raise ValidationError(_("Please configure Vendor Approval Settings before Submit Request"))
         
-        if not approver1_configs or not approver2_configs:
-            raise ValidationError(_("Please configure both Approver 1 and Approver 2 in Vendor Approval Settings before Submit Request"))
+        # Check approvers based on approval mode
+        if config.ks_approval_mode == 'two_way':
+            if not config.ks_approver_1_ids or not config.ks_approver_2_ids:
+                raise ValidationError(_("Please configure both Approver 1 and Approver 2 in Vendor Approval Settings before Submit Request"))
+        else:
+            if not config.ks_approver_1_ids:
+                raise ValidationError(_("Please configure Approver 1 in Vendor Approval Settings before Submit Request"))
 
         # Return action without sudo() to maintain proper access control
         return {
@@ -416,6 +471,309 @@ class ContactKYCApproval(models.Model):
         })
 
         self.approval_users_ids.write({'is_active': False})
+
+    def _get_rekyc_snapshot(self):
+        self.ensure_one()
+        return {
+            'email': self.email or '',
+            'point_of_contact': self.point_of_contact or '',
+            'poc_user': self.poc_user.id if self.poc_user else False,
+            'business_legal_name': self.business_legal_name or '',
+            'is_same_trade_name': bool(self.is_same_trade_name),
+            'business_trade_name': self.business_trade_name or '',
+            'const_business': self.const_business or '',
+            'other_business': self.other_business or '',
+            'aadhaar_pan_link': self.aadhaar_pan_link or '',
+            'gst_no': self.gst_no or '',
+            'license_registered': self.license_registered or '',
+            'udyam_number': self.udyam_number or '',
+            'gst_return_duration': self.gst_return_duration or '',
+            'pan_no': self.pan_no or '',
+            'comp_google_loc': self.comp_google_loc or '',
+            'partner_llp': self.partner_llp or False,
+            'cin_no': self.cin_no or '',
+            'no_partner_director': self.no_partner_director or '',
+            'moa_aoa': sorted(self.moa_aoa.ids),
+            'electricity_bill': sorted(self.electricity_bill.ids),
+            'pan_card_document': sorted(self.pan_card_document.ids),
+            'incorporation_certificate': sorted(self.incorporation_certificate.ids),
+            'gst_certificate': sorted(self.gst_certificate.ids),
+            'udyam_document': sorted(self.udyam_document.ids),
+            'shop_act_document': sorted(self.shop_act_document.ids),
+            'shop_photos': sorted(self.shop_photos.ids),
+            'shop_videos': sorted(self.shop_videos.ids),
+            'directors_detail': [
+                {
+                    'designation': d.designation or '',
+                    'name': d.name or '',
+                    'contact_no': d.contact_no or '',
+                    'email': d.email or '',
+                    'aadhaar_card_attachments': sorted(d.aadhaar_card_attachments.ids),
+                    'pan_card_attachments': sorted(d.pan_card_attachments.ids),
+                }
+                for d in self.directors_detail
+            ],
+            'bank_detail': [
+                {
+                    'bank_name': b.bank_name or '',
+                    'account_no': b.account_no or '',
+                    'ifsc_code': b.ifsc_code or '',
+                    'bank_address': b.bank_address or '',
+                    'bank_cheque_attachments': sorted(b.bank_cheque_attachments.ids),
+                }
+                for b in self.bank_detail
+            ],
+            'address_detail': [
+                {
+                    'business_street': a.business_street or '',
+                    'business_city': a.business_city or '',
+                    'business_pincode': a.business_pincode or '',
+                    'business_phone': a.business_phone or '',
+                    'business_email': a.business_email or '',
+                    'business_state_id': a.business_state_id.id if a.business_state_id else False,
+                    'business_country_id': a.business_country_id.id if a.business_country_id else False,
+                }
+                for a in self.address_detail
+            ],
+        }
+
+    def _build_rekyc_changes(self, new_payload):
+        self.ensure_one()
+        old_payload = self._get_rekyc_snapshot()
+        labels = {
+            'email': 'Email',
+            'point_of_contact': 'Point of Contact',
+            'poc_user': 'Point of Contact to Vendor',
+            'business_legal_name': 'Business Legal Name',
+            'is_same_trade_name': 'Trade Name Same as Legal Name',
+            'business_trade_name': 'Business Trade Name',
+            'const_business': 'Constitution of Business',
+            'other_business': 'Other Business',
+            'aadhaar_pan_link': 'Aadhaar PAN Link',
+            'gst_no': 'GST Number',
+            'license_registered': 'Licenses Registered',
+            'udyam_number': 'Udyam Number',
+            'gst_return_duration': 'Filing Frequency',
+            'pan_no': 'PAN Number',
+            'comp_google_loc': 'Google Location',
+            'cin_no': 'CIN Number',
+            'no_partner_director': 'Number of Directors/Partners',
+            'moa_aoa': 'MOA/AOA',
+            'electricity_bill': 'Electricity Bill',
+            'pan_card_document': 'PAN Card Document',
+            'incorporation_certificate': 'Incorporation Certificate',
+            'gst_certificate': 'GST Certificate',
+            'udyam_document': 'Udyam Document',
+            'shop_act_document': 'Shop Act Document',
+            'shop_photos': 'Shop Photos',
+            'shop_videos': 'Shop Videos',
+            'directors_detail': 'Director Details',
+            'bank_detail': 'Bank Details',
+            'address_detail': 'Address Details',
+        }
+        changes = []
+        for key, label in labels.items():
+            old_val = old_payload.get(key)
+            new_val = new_payload.get(key)
+            if old_val != new_val:
+                changes.append({
+                    'field': label,
+                    'old': old_val,
+                    'new': new_val,
+                })
+        return changes
+
+    def _stringify_change_value(self, value):
+        if value in (False, None, '', []):
+            return 'Empty'
+        if isinstance(value, bool):
+            return 'Yes' if value else 'No'
+        if isinstance(value, list):
+            return f'{len(value)} item(s)'
+        return str(value)
+
+    def submit_rekyc_payload(self, payload, remark=''):
+        self.ensure_one()
+        if self.state != 'confirmed':
+            raise ValidationError(_("Re-KYC can only be submitted for confirmed KYC records."))
+        if not self.poc_user:
+            raise ValidationError(_("Point of Contact to Vendor is required to submit Re-KYC for approval."))
+        changes = self._build_rekyc_changes(payload)
+        if not changes:
+            raise ValidationError(_("No changes detected. Please update at least one field before submitting Re-KYC."))
+
+        lines = []
+        for ch in changes:
+            lines.append(
+                f"<li><b>{ch['field']}</b>: \"{self._stringify_change_value(ch['old'])}\" "
+                f"&rarr; \"{self._stringify_change_value(ch['new'])}\"</li>"
+            )
+
+        self.write({
+            'rekyc_state': 'pending',
+            'rekyc_pending_payload': payload,
+            'rekyc_requested_by': self.env.user.id,
+            'rekyc_requested_on': fields.Datetime.now(),
+            'rekyc_rejection_reason': False,
+            'rekyc_rejected_by': False,
+            'rekyc_rejected_on': False,
+            'rekyc_approved_by': False,
+            'rekyc_approved_on': False,
+        })
+
+        self.activity_schedule(
+            act_type_xmlid='mail.mail_activity_data_todo',
+            summary=f"Re-KYC Approval for: {self.partner_id.name}",
+            note=_("Please review Re-KYC changes and approve/reject."),
+            user_id=self.poc_user.id,
+            date_deadline=fields.Date.context_today(self),
+        )
+
+        self.message_post(
+            body=Markup(
+                "<p><b>Re-KYC submitted for approval.</b></p>"
+                f"<p><b>Reason:</b> {remark or 'N/A'}</p>"
+                "<p><b>Changed fields:</b></p><ul>"
+                + "".join(lines) +
+                "</ul>"
+            ),
+            message_type='comment',
+            subtype_xmlid='mail.mt_note',
+        )
+
+    def _rekyc_payload_to_write_vals(self, payload):
+        write_vals = {
+            'email': payload.get('email'),
+            'point_of_contact': payload.get('point_of_contact'),
+            'poc_user': payload.get('poc_user') or False,
+            'business_legal_name': payload.get('business_legal_name'),
+            'is_same_trade_name': bool(payload.get('is_same_trade_name')),
+            'business_trade_name': payload.get('business_trade_name'),
+            'const_business': payload.get('const_business'),
+            'other_business': payload.get('other_business'),
+            'aadhaar_pan_link': payload.get('aadhaar_pan_link'),
+            'gst_no': payload.get('gst_no'),
+            'license_registered': payload.get('license_registered'),
+            'udyam_number': payload.get('udyam_number'),
+            'gst_return_duration': payload.get('gst_return_duration'),
+            'pan_no': payload.get('pan_no'),
+            'comp_google_loc': payload.get('comp_google_loc'),
+            'partner_llp': payload.get('partner_llp'),
+            'cin_no': payload.get('cin_no'),
+            'no_partner_director': payload.get('no_partner_director'),
+            'moa_aoa': [(6, 0, payload.get('moa_aoa', []))],
+            'electricity_bill': [(6, 0, payload.get('electricity_bill', []))],
+            'pan_card_document': [(6, 0, payload.get('pan_card_document', []))],
+            'incorporation_certificate': [(6, 0, payload.get('incorporation_certificate', []))],
+            'gst_certificate': [(6, 0, payload.get('gst_certificate', []))],
+            'udyam_document': [(6, 0, payload.get('udyam_document', []))],
+            'shop_act_document': [(6, 0, payload.get('shop_act_document', []))],
+            'shop_photos': [(6, 0, payload.get('shop_photos', []))],
+            'shop_videos': [(6, 0, payload.get('shop_videos', []))],
+            'directors_detail': [(5, 0, 0)] + [
+                (0, 0, {
+                    'designation': d.get('designation'),
+                    'name': d.get('name'),
+                    'contact_no': d.get('contact_no'),
+                    'email': d.get('email'),
+                    'aadhaar_card_attachments': [(6, 0, d.get('aadhaar_card_attachments', []))],
+                    'pan_card_attachments': [(6, 0, d.get('pan_card_attachments', []))],
+                }) for d in payload.get('directors_detail', [])
+            ],
+            'bank_detail': [(5, 0, 0)] + [
+                (0, 0, {
+                    'bank_name': b.get('bank_name'),
+                    'account_no': b.get('account_no'),
+                    'ifsc_code': b.get('ifsc_code'),
+                    'bank_address': b.get('bank_address'),
+                    'bank_cheque_attachments': [(6, 0, b.get('bank_cheque_attachments', []))],
+                }) for b in payload.get('bank_detail', [])
+            ],
+            'address_detail': [(5, 0, 0)] + [
+                (0, 0, {
+                    'business_street': a.get('business_street'),
+                    'business_city': a.get('business_city'),
+                    'business_pincode': a.get('business_pincode'),
+                    'business_phone': a.get('business_phone'),
+                    'business_email': a.get('business_email'),
+                    'business_state_id': a.get('business_state_id') or False,
+                    'business_country_id': a.get('business_country_id') or False,
+                }) for a in payload.get('address_detail', [])
+            ],
+        }
+        return write_vals
+
+    def action_approve_rekyc(self):
+        self.ensure_one()
+        if self.rekyc_state != 'pending':
+            raise ValidationError(_("No pending Re-KYC request found."))
+        if self.env.user != self.poc_user:
+            raise ValidationError(_("Only the configured Point of Contact can approve Re-KYC."))
+
+        payload = self.rekyc_pending_payload or {}
+        self.write(self._rekyc_payload_to_write_vals(payload))
+
+        self.write({
+            'rekyc_state': 'approved',
+            'rekyc_approved_by': self.env.user.id,
+            'rekyc_approved_on': fields.Datetime.now(),
+            'rekyc_pending_payload': False,
+        })
+
+        activities = self.env['mail.activity'].search([
+            ('res_model', '=', 'res.partner.kyc.approval'),
+            ('res_id', '=', self.id),
+            ('user_id', '=', self.env.user.id),
+            ('summary', 'ilike', 'Re-KYC Approval'),
+        ])
+        activities.unlink()
+
+        self.message_post(
+            body=Markup("<p><b>Re-KYC approved.</b> Pending changes applied to the existing KYC record.</p>"),
+            message_type='comment',
+            subtype_xmlid='mail.mt_note',
+        )
+
+    def action_open_rekyc_reject_wizard(self):
+        self.ensure_one()
+        return {
+            'name': _('Reject Re-KYC'),
+            'type': 'ir.actions.act_window',
+            'res_model': 'rekyc.reject.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'default_kyc_id': self.id,
+            },
+        }
+
+    def action_reject_rekyc(self, reason):
+        self.ensure_one()
+        if self.rekyc_state != 'pending':
+            raise ValidationError(_("No pending Re-KYC request found."))
+        if self.env.user != self.poc_user:
+            raise ValidationError(_("Only the configured Point of Contact can reject Re-KYC."))
+
+        self.write({
+            'rekyc_state': 'rejected',
+            'rekyc_rejected_by': self.env.user.id,
+            'rekyc_rejected_on': fields.Datetime.now(),
+            'rekyc_rejection_reason': reason,
+        })
+
+        activities = self.env['mail.activity'].search([
+            ('res_model', '=', 'res.partner.kyc.approval'),
+            ('res_id', '=', self.id),
+            ('user_id', '=', self.env.user.id),
+            ('summary', 'ilike', 'Re-KYC Approval'),
+        ])
+        activities.unlink()
+
+        self.message_post(
+            body=Markup(f"<p><b>Re-KYC rejected.</b><br/><b>Reason:</b> {reason}</p>"),
+            message_type='comment',
+            subtype_xmlid='mail.mt_note',
+        )
 
 
     # -------------------------------------------------------------------------
@@ -580,17 +938,21 @@ class ContactKYCApproval(models.Model):
         """
         Notifies all approvers of rejection event.
         """
-        approval_users = self.env['vendor.approval.config'].sudo().search([])
+        config = self.env['vendor.approval.config'].get_config()
+        if not config:
+            return
+        
+        approval_users = config.get_all_approvers()
 
         for user in approval_users:
             msg = (
                 f'Vendor approval request for {self.partner_id.name}, rejected by {self.env.user.name}.'
-                if user.user_id != self.env.user else
+                if user != self.env.user else
                 f'Vendor approval request for {self.partner_id.name}, successfully rejected by you.'
             )
 
             self.env['bus.bus']._sendone(
-                user.user_id.partner_id,
+                user.partner_id,
                 'simple_notification',
                 {
                     'type': 'info',

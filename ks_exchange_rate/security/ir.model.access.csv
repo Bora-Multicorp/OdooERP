@@ -1,0 +1,8 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_ks_exchange_rate_sale_order,ks_exchange_rate.sale.order,model_sale_order,,1,1,1,1
+access_ks_exchange_rate_sale_order_line,ks_exchange_rate.sale.order.line,model_sale_order_line,,1,1,1,1
+access_ks_exchange_rate_account_move,ks_exchange_rate.account.move,model_account_move,,1,1,1,1
+access_ks_exchange_rate_account_move_line,ks_exchange_rate.account.move.line,model_account_move_line,,1,1,1,1
+access_ks_exchange_rate_purchase_order,ks_exchange_rate.purchase.order,model_purchase_order,,1,1,1,1
+access_ks_exchange_rate_purchase_order_line,ks_exchange_rate.purchase.order.line,model_purchase_order_line,,1,1,1,1
+

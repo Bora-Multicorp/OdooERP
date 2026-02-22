@@ -1,8 +1,9 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_ks_purchase_approval_config_user,ks.purchase.approval.config.user,model_ks_purchase_approval_config,purchase.group_purchase_user,1,0,0,0
-access_ks_purchase_approval_config_manager,ks.purchase.approval.config.manager,model_ks_purchase_approval_config,purchase.group_purchase_manager,1,1,1,1
-access_ks_request_reason_wizard_user,ks.request.reason.wizard.user,model_ks_request_reason_wizard,purchase.group_purchase_user,1,1,1,1
-access_ks_reject_reason_wizard_user,ks.reject.reason.wizard.user,model_ks_reject_reason_wizard,purchase.group_purchase_user,1,1,1,1
+access_ks_purchase_approval_config_admin,ks.purchase.approval.config.admin,model_ks_purchase_approval_config,base.group_system,1,1,1,1
+access_ks_reject_reason_wizard_user,ks.purchase.reject.reason.wizard.user,model_ks_purchase_reject_reason_wizard,purchase.group_purchase_user,1,1,1,1
 access_ks_approval_confirmation_wizard_user,ks.approval.confirmation.wizard.user,model_ks_approval_confirmation_wizard,purchase.group_purchase_user,1,1,1,1
-access_ks_approve_confirmation_reason_wizard_user,ks.approve.confirmation.reason.wizard.user,model_ks_approve_confirmation_reason_wizard,purchase.group_purchase_user,1,1,1,1
-access_ks_approve_update_reason_wizard_user,ks.approve.update.reason.wizard.user,model_ks_approve_update_reason_wizard,purchase.group_purchase_user,1,1,1,1
+access_ks_approve_reason_wizard_user,ks.approve.reason.wizard.user,model_ks_approve_reason_wizard,purchase.group_purchase_user,1,1,1,1
+access_ks_cancel_approval_request_wizard_user,ks.purchase.cancel.approval.request.wizard.user,model_ks_purchase_cancel_approval_request_wizard,purchase.group_purchase_user,1,1,1,1
+access_ks_edit_approval_request_wizard_user,ks.purchase.edit.approval.request.wizard.user,model_ks_purchase_edit_approval_request_wizard,purchase.group_purchase_user,1,1,1,1
+access_ks_approval_reason_wizard_user,ks.purchase.approval.reason.wizard.user,model_ks_purchase_approval_reason_wizard,purchase.group_purchase_user,1,1,1,1

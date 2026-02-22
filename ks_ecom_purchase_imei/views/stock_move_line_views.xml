@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Add smart button to picking for IMEI mismatches -->
+    <record id="view_picking_form_inherit_imei_mismatch" model="ir.ui.view">
+        <field name="name">stock.picking.form.imei.mismatch</field>
+        <field name="model">stock.picking</field>
+        <field name="inherit_id" ref="stock.view_picking_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_view_imei_mismatches"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-exclamation-triangle"
+                        invisible="imei_mismatch_count == 0">
+                    <field name="imei_mismatch_count" widget="statinfo" string="IMEI Mismatches"/>
+                </button>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Stock Move Line Search View Extension -->
+    <record id="stock_move_line_search_inherit_imei" model="ir.ui.view">
+        <field name="name">stock.move.line.search.imei</field>
+        <field name="model">stock.move.line</field>
+        <field name="inherit_id" ref="stock.stock_move_line_view_search"/>
+        <field name="arch" type="xml">
+            <xpath expr="//search" position="inside">
+                <field name="imei"/>
+                <field name="imei2"/>
+                <field name="imei_status" widget="statusbar"/>
+                <separator/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Stock Move Line List View (standalone) with IMEI mismatch action -->
+    <record id="view_stock_move_line_tree_imei_mismatch" model="ir.ui.view">
+        <field name="name">stock.move.line.list.imei.mismatch</field>
+        <field name="model">stock.move.line</field>
+        <field name="arch" type="xml">
+            <list string="IMEI Mismatch Lines">
+                <field name="picking_id"/>
+                <field name="product_id"/>
+                <field name="lot_id" optional="show"/>
+                <field name="imei"/>
+                <field name="imei2" optional="show"/>
+                <field name="location_id"/>
+                <field name="location_dest_id"/>
+                <field name="original_location_dest_id" optional="show"/>
+                <field name="is_imei_mismatch"/>
+                <field name="quantity"/>
+<!--                <button name="action_resolve_imei_mismatch"-->
+<!--                        type="object"-->
+<!--                        string="Resolve"-->
+<!--                        icon="fa-check"-->
+<!--                        invisible="not is_imei_mismatch"/>-->
+            </list>
+        </field>
+    </record>
+
+    <!-- Action for IMEI Mismatch Lines -->
+    <record id="action_stock_move_line_imei_mismatch" model="ir.actions.act_window">
+        <field name="name">IMEI Mismatches</field>
+        <field name="res_model">stock.move.line</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_id" ref="view_stock_move_line_tree_imei_mismatch"/>
+        <field name="domain">[('is_imei_mismatch', '=', True)]</field>
+        <field name="context">{'search_default_imei_mismatch': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No IMEI mismatches found
+            </p>
+            <p>
+                Products with IMEI validation mismatches will appear here.
+                Resolve mismatches to make items available in stock.
+            </p>
+        </field>
+    </record>
+
+    <!-- Menu Item for IMEI Mismatches -->
+    <menuitem id="menu_stock_move_line_imei_mismatch"
+              name="IMEI Mismatches"
+              parent="stock.menu_stock_warehouse_mgmt"
+              action="action_stock_move_line_imei_mismatch"
+              sequence="99"/>
+
+</odoo>

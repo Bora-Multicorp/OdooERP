@@ -57,15 +57,15 @@
             </xpath>
             
             <!-- Add button to view Source Sale Order -->
-            <xpath expr="//form/header" position="inside">
-                <button name="action_view_source_sale_order" 
-                        type="object"
-                        invisible="not ks_source_sale_order_id"
-                        class="oe_stat_button"
-                        icon="fa-shopping-cart">
-                    <field name="ks_source_sale_order_id" widget="statinfo" string="Sale Order"/>
-                </button>
-            </xpath>
+<!--            <xpath expr="//form/header" position="inside">-->
+<!--                <button name="action_view_source_sale_order" -->
+<!--                        type="object"-->
+<!--                        invisible="not ks_source_sale_order_id"-->
+<!--                        class="oe_stat_button"-->
+<!--                        icon="fa-shopping-cart">-->
+<!--                    <field name="ks_source_sale_order_id" widget="statinfo" string="Sale Order"/>-->
+<!--                </button>-->
+<!--            </xpath>-->
         </field>
     </record>
 </odoo>

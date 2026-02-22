@@ -7,7 +7,7 @@
     'version': '0.1',
     'license': 'LGPL-3',
     # any module necessary for this one to work correctly
-    'depends': ['l10n_in','base', 'contacts', 'account', 'accountant', 'purchase', 'sale', 'survey', 'case_sensitive_widget', 'sh_survey_matrix_adv','base_multi_company', 'ks_contact_access_rights'],
+    'depends': ['l10n_in','base', 'contacts', 'account', 'accountant', 'purchase', 'sale', 'survey', 'case_sensitive_widget', 'sh_survey_matrix_adv','base_multi_company', 'ks_contact_access_rights','ks_sale_order'],
     # always loaded
     'data': [
         'security/ir.model.access.csv',
@@ -19,6 +19,7 @@
         'wizard/approve_request_views.xml',
         'wizard/reject_request_views.xml',
         'wizard/re_kyc_request_views.xml',
+        'wizard/rekyc_reject_views.xml',
         'wizard/survey_invite_inherit.xml',
         'wizard/vendor_kyc_approval_users_picker_wizard.xml',
         'wizard/vendor_suspended_by_admin_wizard.xml',

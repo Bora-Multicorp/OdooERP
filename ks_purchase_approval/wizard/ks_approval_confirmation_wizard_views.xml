@@ -12,9 +12,11 @@
                 </group>
                 <div class="alert alert-info" role="alert" style="margin: 16px;">
                     <p><strong>Please select approvers for confirmation approval:</strong></p>
-                    <p>Both approvers are mandatory. Approval process is sequential (Approver 1 must approve before Approver 2).</p>
+                    <p invisible="not ks_is_two_way_approval">Both approvers are mandatory. Approval process is sequential (Approver 1 must approve before Approver 2).</p>
+                    <p invisible="ks_is_two_way_approval">Only Approver 1 is required for Single Level Approval mode.</p>
                 </div>
                 <group>
+                    <field name="ks_is_two_way_approval" invisible="1"/>
                     <field name="ks_approver_1_id" 
                            options="{'no_create': True}"
                            domain="[('id', 'in', ks_available_approver_1_ids), ('share', '=', False), ('id', '!=', ks_approver_2_id)]"
@@ -22,7 +24,8 @@
                     <field name="ks_approver_2_id" 
                            options="{'no_create': True}"
                            domain="[('id', 'in', ks_available_approver_2_ids), ('share', '=', False), ('id', '!=', ks_approver_1_id)]"
-                           required="1"/>
+                           required="ks_is_two_way_approval"
+                           invisible="not ks_is_two_way_approval"/>
                 </group>
                 <footer>
                     <button name="action_confirm_send" 

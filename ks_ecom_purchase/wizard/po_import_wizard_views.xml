@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_ks_po_import_wizard_form" model="ir.ui.view">
+        <field name="name">ks.po.import.wizard.form</field>
+        <field name="model">ks.po.import.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Create PO Form Import">
+                <group>
+                    <field name="file_name" placeholder="example.xlsx"/>
+                    <field name="file_data" filename="file_name"/>
+                </group>
+                <footer>
+                    <button
+                        name="action_import_purchase_orders"
+                        string="Import"
+                        type="object"
+                        class="btn-primary"
+                    />
+                    <button string="Cancel" special="cancel" class="btn-secondary"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_ks_po_import_wizard" model="ir.actions.act_window">
+        <field name="name">Create PO Form Import</field>
+        <field name="res_model">ks.po.import.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="view_ks_po_import_wizard_form"/>
+        <field name="target">new</field>
+    </record>
+</odoo>
+

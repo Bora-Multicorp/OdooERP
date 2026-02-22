@@ -38,7 +38,7 @@
                                        options="{'no_create': True, 'no_create_edit': True}" domain="[('code', '=', 'IN')]"/>
                             </form>
                         </field>
-                        <field name="const_business" widget="radio"/>
+                        <field name="const_business" placeholder="Your Answer"/>
                         <field name="other_business" string="Please Specify"
                                invisible="const_business != 'Other'"
                                required="const_business == 'Other'"/>
@@ -107,7 +107,7 @@
                         <field name="pan_card_document" widget="many2many_attachment_preview"
                                options="{'accepted_file_extensions': 'image/*, .pdf'}"
                                required="const_business in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
-                        <field name="aadhaar_pan_link" widget="radio" options="{'horizontal': true}"/>
+                        <field name="aadhaar_pan_link" placeholder="Your Answer" options="{'horizontal': true}"/>
                         <field name="gst_no" placeholder="Your Answer" widget="upper_case"/>
                         <field name="license_registered" placeholder="Your Answer" widget="upper_case" invisible="const_business in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
                         <field name="udyam_number" placeholder="Your Answer" widget="upper_case"/>

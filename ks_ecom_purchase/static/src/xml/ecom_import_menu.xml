@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="ks_ecom_purchase.KsEcomImportMenu">
+        <DropdownItem class="'o_import_menu'" onSelected.bind="openImportWizard">
+            <i class="fa fa-fw fa-file-excel-o me-1"/>Import XLSX Report
+        </DropdownItem>
+        <DropdownItem class="'o_import_menu'" onSelected.bind="openReceiptImportWizard">
+            <i class="fa fa-fw fa-file-excel-o me-1"/>Import XLSX Receipt Data
+        </DropdownItem>
+    </t>
+</templates>
