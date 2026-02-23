@@ -1,3 +1,0 @@
-id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-access_account_payment_ks_payment_access,account.payment.ks.payment.access,account.model_account_payment,ks_payment.group_ks_payment_access,1,1,1,1
-
