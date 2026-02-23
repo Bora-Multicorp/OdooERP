@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates xml:space="preserve">
+    <t t-name="card_skeleton">
+        <div class="ks-skeleton-card ks-skeleton-loading">
+            <div class="ks-card-img"/>
+            <div class="ks-card-title"/>
+            <div class="ks-card-text"/>
+        </div>
+    </t>
+
+    <t t-name="graph_skeleton">
+        <div class="ks-content ks-skeleton-loading position-absolute h-100 w-100">
+            <div class="ks-chart-loading"/>
+            <div class="d-flex align-items-center gap-2 ks-legend-box">
+                <div t-foreach="[1,2,3]" t-key="count" t-as="count" class="d-flex h-100 w-100 gap-1 align-items-center">
+                    <div class="ks-square-line"/>
+                    <div class="ks-overview-line"/>
+                </div>
+            </div>
+        </div>
+    </t>
+
+    <t t-name="ai_explanation_skeleton">
+        <div class="ks-explain-content ks-skeleton-loading">
+            <div class="ks-explain-card"/>
+            <div class="text w-100"/>
+            <div class="text w-75"/>
+            <div class="text w-50"/>
+            <div class="text w-25"/>
+            <div class="text"/>
+        </div>
+    </t>
+</templates>

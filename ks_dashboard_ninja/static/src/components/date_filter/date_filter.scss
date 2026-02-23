@@ -1,0 +1,40 @@
+.ks_custom_date_filter .dropdown-menu{
+    @include custom-scrollbar;
+}
+
+.custom-date-range-selector {
+    &.magic-star-dd {
+        .img-bg {
+           background-color: var(--color-white) !important;
+
+            svg {
+                path {
+                   fill: var(--color-6789C6) !important;
+                    stroke: none !important;
+                }
+            }
+        }
+    }
+}
+
+.ks_date_input_fields {
+    input {
+        border: 0.81px solid var(--color-D1D5DB) !important;
+        border-radius: 6px;
+        padding: 12px 10px !important;
+        font-size: 14px;
+        font-weight: 400;
+        line-height: 18.52px;
+        text-align: left;
+       color: var(--color-black);
+        background-color: var(--color-white);
+
+
+        &#ks_btn_middle_child,
+        &#ks_btn_last_child {
+            border-radius: 6px !important;
+            padding: 12px 10px !important;
+            background-color: var(--color-1A2438-imp--white) !important;
+        }
+    }
+}

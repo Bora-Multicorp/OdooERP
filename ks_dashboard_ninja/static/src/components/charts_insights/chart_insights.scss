@@ -1,0 +1,118 @@
+.ks-common-tab-pills {
+    .nav {
+        border-bottom: 1px solid var(--color-E5E7EB) !important;
+
+        .nav-link {
+            font-size: $font-14;
+            font-weight: $f-w-400;
+            line-height: 24px;
+            letter-spacing: 0.01em;
+            text-align: left;
+           color: var(--color-paragraph) !important;
+            padding: 16px !important;
+
+            &:hover {
+                transition: 0.2s linear;
+                transform: scale(1.1);
+                cursor: pointer !important;
+            }
+
+            svg {
+               stroke: var(--color-black);
+            }
+
+            &.active {
+                color: var(--color-E7495E) !important;
+                background-color: var(--color-white);
+                border-bottom: 2px solid var(--color-E7495E);
+                border-radius: 0 !important;
+                transition: 0.2s linear;
+                transform: scale(1.1);
+                cursor: pointer !important;
+
+                svg {
+                          stroke: var(--color-E7495E);
+                }
+            }
+        }
+    }
+}
+
+.share-switch {
+    .bg-F5F8FB {
+         background-color: var(--color-bg-main);
+    }
+}
+
+
+.expalin-content-box {
+    //     border: 1px solid $color-E5E7EB;
+    //     background-color: $color-bg-main;
+    min-height: 581px;
+    border-radius: 20px;
+    position: relative;
+
+    .title {
+        font-size: $font-16;
+        font-weight: $f-w-500;
+        line-height: 22.4px;
+        text-align: left;
+        color: var(--color-black);
+
+        @include max-992 {
+            font-size: $font-12;
+        }
+    }
+
+    .description-box {
+        max-height: 500px;
+        overflow: auto;
+        @include custom-scrollbar;
+
+        @include max-992 {
+            max-height: calc(100vh - 387px);
+
+        }
+
+        p {
+            font-size: 12px;
+            font-weight: 400;
+            line-height: 19.2px;
+            text-align: left;
+             color: var(--color-black);
+        }
+    }
+
+}
+
+
+.ks-chart-insight {
+    border: 1.63px solid var(--color-E5E7EB);
+    min-height: 579px;
+    box-shadow: 0px 6.05px 30.23px 0px #EEEEEE80;
+    border-radius: 30px;
+    padding: 8px;
+
+    h4 {
+        font-size: $font-20;
+        font-weight: $f-w-500;
+        line-height: 48.38px;
+        text-align: left;
+        color: var(--color-05004E);
+
+        @include max-992 {
+            font-size: $font-14;
+        }
+    }
+
+    .chart-img {
+        height: 462px;
+        width: 100%;
+
+        img {
+            height: 100%;
+            width: 100%;
+            object-fit: contain;
+        }
+    }
+}

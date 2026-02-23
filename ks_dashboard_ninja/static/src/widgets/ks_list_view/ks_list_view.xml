@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="ks_list_view">
+        <t t-if="props.record.data.ks_data_calculation_type == 'custom' and props.record.data.ks_model_id and props.record.data.ks_dashboard_item_type == 'ks_list_view'">
+            <t t-if="props.record.data.ks_list_view_type == 'ungrouped' ">
+                <t t-if="props.record.data.ks_list_view_fields.count != 0">
+                    <DNGraph itemId="props.record.resId" itemConfig="props.record.data" isPreview="true" isFormPreview="true" t-key="state.count"/>
+                </t>
+                <t t-else="">
+                    <div t-esc="'Select Fields to show in list view'"/>
+                </t>
+            </t>
+            <t t-elif="props.record.data.ks_list_view_type == 'grouped'">
+                <t t-if="props.record.data.ks_list_view_group_fields.count != 0 and props.record.data.ks_chart_relation_groupby">
+                    <t t-if="props.record.data.ks_chart_groupby_type == 'relational_type' or  props.record.data.ks_chart_groupby_type == 'selection' or props.record.data.ks_chart_groupby_type == 'other' or (props.record.data.ks_chart_groupby_type == 'date_type' and props.record.data.ks_chart_date_groupby)">
+                        <DNGraph itemId="props.record.resId" itemConfig="props.record.data" isPreview="true" isFormPreview="true" t-key="state.count"/>
+                    </t>
+                    <t t-else="">
+                        <div>
+                            Select Group by Date to show list data.
+                        </div>
+                    </t>
+                </t>
+                <t t-else="">
+                    <div>
+                        Select Fields and Group By to show in list view
+                    </div>
+                </t>
+            </t>
+        </t>
+        <t t-elif="props.record.data.ks_data_calculation_type == 'query'">
+            <t t-if="props.record.data.ks_query_result">
+                <DNGraph itemId="props.record.resId" itemConfig="props.record.data" isPreview="true" isFormPreview="true" t-key="state.count"/>
+            </t>
+            <t t-else="">
+                <div>
+                    Please run the appropriate Query
+                </div>
+            </t>
+        </t>
+        <t t-else="">
+            <div>
+                Select a model first
+            </div>
+        </t>
+    </t>
+
+</templates>

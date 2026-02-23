@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="res_user_form_inherit" model="ir.ui.view">
+        <field name="name">res.users.form.view.inherit</field>
+        <field name="model">res.users</field>
+        <field name="inherit_id" ref="base.view_users_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form/sheet/div/group/field[@name='partner_id']" position="before">
+                <field name="ks_profile_line_ids" widget="many2many_tags" string="Profiles" groups="base.group_system"
+                       invisible = "ks_admin_user" required="not ks_admin_user"/>
+                <field name="ks_password_expire_date" invisible="1"/>
+                <field name="ks_admin_user" invisible="1" force_save="1"/>
+            </xpath>
+            <xpath expr="//div[hasclass('oe_button_box')]/button[@name='action_show_groups']" position="before">
+                <button
+                        class="oe_stat_button"
+                        string="Create Profile"
+                        icon="fa-users"
+                        name="ks_action_create_profile"
+                        type="object"
+                        groups="base.group_system"
+                        invisible = "ks_admin_user"
+                />
+            </xpath>
+            <xpath expr="//notebook" position="inside">
+                <page string="Profile management" groups="base.group_system" invisible = "ks_admin_user">
+                    <field name="ks_user_management_id">
+                        <list>
+                            <field name="name"/>
+                        </list>
+                    </field>
+                </page>
+                <page string="Recent Activity">
+                    <field name="ks_recent_activity_line">
+                        <list editable="top" default_order="ks_login_date desc">
+                            <field name="ks_user_id"/>
+                            <field name="ks_login_date"/>
+                            <field name="ks_logout_date"/>
+                            <field name="ks_duration"/>
+                            <field name="ks_status" string="Status"/>
+                            <button string="Logout" invisible = "ks_status ==  'close'"
+                                    groups="base.group_system" name="ks_action_logout" type="object"/>
+                        </list>
+                    </field>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+
+    <record id="res_user_tree_inherit" model="ir.ui.view">
+        <field name="name">res.users.list.inherit</field>
+        <field name="model">res.users</field>
+        <field name="inherit_id" ref="base.view_users_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='login']" position="after">
+                <field name="ks_profile_line_ids" widget="many2many_tags" string="User Profile" groups="base.group_system"/>
+                <field name="ks_password_expire_date" invisible="0" groups="base.group_system"/>
+                <field name="ks_password_update" invisible="0"/>
+                <field name="ks_is_passwd_expired" invisible="1"/>
+                <field name="ks_admin_user" invisible="1"/>
+            </xpath>
+            <xpath expr="//field[@name='state']" position="after">
+                <button name="ks_action_login_confirm" groups="base.group_system" string="Login" type="object"/>
+            </xpath>
+        </field>
+    </record>
+    <record id="res_users_search_inherit" model="ir.ui.view">
+        <field name="name">res.users.search.inherit</field>
+        <field name="model">res.users</field>
+        <field name="inherit_id" ref="base.view_users_search"/>
+        <field name="arch" type="xml">
+            <field name="company_ids" position="after">
+                <field name="ks_profile_ids" string="Profile" widget="many2many_tags" groups="base.group_system"/>
+            </field>
+        </field>
+    </record>
+
+
+</odoo>

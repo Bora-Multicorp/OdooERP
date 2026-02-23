@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="res_config_settings_inherit_view" model="ir.ui.view">
+        <field name="name">res.config.settings.inherit.view</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="base_setup.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="inside">
+                <app data-string="Dashboard Ninja" string="Dashboard Ninja" name="dashboard_ninja_config"
+                     logo="/ks_dashboard_ninja/static/description/icon.png">
+                    <div id="dashboard_api_key">
+                        <h2>Dashboard API Key</h2>
+                        <div class="row mt16 o_settings_container" name="dn_ai_api_key_container">
+                            <div class="col-12 col-lg-6 o_setting_box" id="dn_ai_api_key">
+                                <div class="o_setting_right_pane">
+                                    <label for="dn_api_key" class="col-sm-5 col-form-label">
+                                        Dashboard Ninja Api Key
+                                    </label>
+                                    <field name="dn_api_key"/>
+                                    <label for="ks_email_id" class="col-sm-5 col-form-label">
+                                        Email ID
+                                    </label>
+                                    <field name="ks_email_id"/>
+                                    <div class="o_row">
+                                        <label for="url" class="col-sm-5 col-form-label">
+                                            URL
+                                        </label>
+                                        <field name="url"/>
+                                        <button name="Open_wizard" string="Get API key" type="object"
+                                                class="btn-primary"/>
+                                    </div>
+
+                                </div>
+                            </div>
+                            <div class="col-12 col-lg-6 o_setting_box" id="dn_ai_api_key">
+                                <div class="o_setting_right_pane">
+                                    <label for="ks_analysis_word_length" class="col-sm-5 col-form-label">
+                                        AI Analysis length
+                                    </label>
+                                    <field name="ks_analysis_word_length"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="dashboard_charts">
+                        <block title="Dashboard Charts Configurations" name="dashboard_charts_configurations">
+                            <setting string="Enable Zooming" help="Enable Zooming for charts on mouse scroll" id="dn_chart_config">
+                                <field name="enable_chart_zoom"/>
+                            </setting>
+                            <setting string="Enable Auto Update" help="Enable automatic dashboard updates when records are created or modified. When disabled, notifications will only be sent if a client is actively subscribed to the dashboard channel." id="dn_auto_update_config">
+                                <field name="enable_auto_update"/>
+                            </setting>
+                            <div id="dashboard_charts"/>
+                        </block>
+                    </div>
+                </app>
+            </xpath>
+        </field>
+    </record>
+</odoo>

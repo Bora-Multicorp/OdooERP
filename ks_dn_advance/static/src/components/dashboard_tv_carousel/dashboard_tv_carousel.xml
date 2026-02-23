@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<template>
+
+    <t t-name="presentation_mode_svg">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <title>Collapse</title>
+            <path d="M7.49935 18.3334H12.4993C16.666 18.3334 18.3327 16.6667 18.3327 12.5001V7.50008C18.3327 3.33341 16.666 1.66675 12.4993 1.66675H7.49935C3.33268 1.66675 1.66602 3.33341 1.66602 7.50008V12.5001C1.66602 16.6667 3.33268 18.3334 7.49935 18.3334Z" stroke="" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M15 5L5 15" stroke-width="1.25" stroke="" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M14.9993 8.33333V5H11.666" stroke="" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M5 11.6667V15.0001H8.33333" stroke="" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M5 5L15 15" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M5 8.33333V5H8.33333" stroke="" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M14.9993 11.6667V15.0001H11.666" stroke="" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+    </t>
+
+    <t t-name="pause_svg">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" class="ks-tv-pause-svg" height="20" viewBox="0 0 20 20" fill="none">
+            <title>Pause</title>
+            <path d="M8.875 15.925V4.075C8.875 2.95 8.4 2.5 7.2 2.5H4.175C2.975 2.5 2.5 2.95 2.5 4.075V15.925C2.5 17.05 2.975 17.5 4.175 17.5H7.2C8.4 17.5 8.875 17.05 8.875 15.925Z" stroke="#292D32" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M17.5 15.925V4.075C17.5 2.95 17.025 2.5 15.825 2.5H12.8C11.6083 2.5 11.125 2.95 11.125 4.075V15.925C11.125 17.05 11.6 17.5 12.8 17.5H15.825C17.025 17.5 17.5 17.05 17.5 15.925Z" stroke="#292D32" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+    </t>
+
+    <t t-name="play_svg">
+        <svg xmlns="http://www.w3.org/2000/svg" class="ks-tv-play-svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <title>Play</title>
+            <path d="M11.97 22C17.4928 22 21.97 17.5228 21.97 12C21.97 6.47715 17.4928 2 11.97 2C6.44712 2 1.96997 6.47715 1.96997 12C1.96997 17.5228 6.44712 22 11.97 22Z" stroke="#292D32" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M8.73999 12.23V10.56C8.73999 8.48 10.21 7.63 12.01 8.67L13.46 9.51L14.91 10.35C16.71 11.39 16.71 13.09 14.91 14.13L13.46 14.97L12.01 15.81C10.21 16.85 8.73999 16 8.73999 13.92V12.23Z" stroke="#292D32" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+    </t>
+
+    <t t-name="ks_dashboard_ninja.carousel_control_buttons">
+        <div class="ks-carousel-control-buttons">
+            <span class="img-bg" t-on-click="togglePresentationMode">
+                <div class="stroke_class" t-att-class="{ 'active': this.state.isPresentationMode}">
+                    <t t-call="presentation_mode_svg"/>
+                </div>
+            </span>
+            <span class="img-bg ks-tv-play-svg-visible" t-ref="isPlayPauseRef" t-on-click="toggleSliding">
+                <t t-call="play_svg"/>
+                <t t-call="pause_svg"/>
+            </span>
+        </div>
+    </t>
+
+    <t t-name="ks_dn_advance.dashboard_tv">
+        <Dialog size="'lg'" title="'Dashboard TV'" footer="false">
+
+            <t t-call="ks_dashboard_ninja.carousel_control_buttons"/>
+
+            <div class='d-flex justify-content-center align-items-center position-relative' t-ref='rootRef'>
+                <t t-component='props.componentInfo.component' t-props='props.componentInfo.props'/>
+                <span class="position-absolute top-50 start-0 cursor-pointer" t-on-click='onPrev'>
+                    <img src='/ks_dn_advance/static/description/images/left.png'/>
+                </span>
+                <span class="position-absolute top-50 end-0 cursor-pointer" t-on-click='onNext'>
+                    <img src='/ks_dn_advance/static/description/images/right.png'/>
+                </span>
+            </div>
+        </Dialog>
+    </t>
+
+    <t t-name="ks_dn_advance.KsCarousel">
+        <div t-ref="carousel">
+            <div class="owl-carousel owl-theme">
+                <t t-foreach="tiles" t-as="item" t-key="item['id']">
+                      <Ksdashboardtile item="item"
+                     dashboard_data="ks_dashboard_data"
+                     ksdatefilter="props.ksdatefilter"
+                     pre_defined_filter="props.pre_defined_filter"
+                     custom_filter="props.custom_filter" itemsToUpdateList="[]"
+                     ks_speak="(ev)=>this.speak_once(ev,items)" onItemClick="() => {}"
+
+                    />
+                </t>
+                <t t-foreach="kpi" t-as="item" t-key="item['id']">
+                   <Ksdashboardkpiview item="item" dashboard_data="ks_dashboard_data"
+                    ksdatefilter="props.ksdatefilter"
+                    pre_defined_filter="props.pre_defined_filter"
+                    custom_filter="props.custom_filter" itemsToUpdateList="[]"
+                    ks_speak="(ev)=>this.speak_once(ev,items)" onItemClick="() => {}"
+                    />
+                </t>
+                <t t-foreach="graph" t-as="item" t-key="item['id']">
+                    <Ksdashboardgraph item="item" dashboard_data="ks_dashboard_data"
+                                      ksdatefilter="props.ksdatefilter"
+                                      pre_defined_filter="props.pre_defined_filter"
+                                      custom_filter="props.custom_filter"
+                                      ks_speak="(ev)=>this.speak_once(ev,items)"
+                                      explain_ai_whole="true" onItemClick="() => {}"
+                                      itemsToUpdateList="[]"
+
+                    />
+                </t>
+                <t t-foreach="to_do" t-as="item_todo" t-key="item_todo['id']">
+                    <Ksdashboardtodo item="item_todo" dashboard_data="ks_dashboard_data" />
+                </t>
+            </div>
+        </div>
+    </t>
+
+</template>

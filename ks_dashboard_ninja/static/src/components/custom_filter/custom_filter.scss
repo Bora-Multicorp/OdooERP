@@ -1,0 +1,165 @@
+.custom-dash-collapse{
+  .o_input{
+      button{
+            border: none;
+            background: transparent;
+          }
+
+      button.dropdown-toggle{
+        border: 0.5px solid var(--color-E5E7EB) !important;
+      }
+    border: none;
+  }
+  .dropdown-toggle.d-flex.encapsulated-link{
+    overflow: auto;
+    max-height: 75px;
+  }
+  .dash-default-btn{
+   svg{
+    fill: transparent !important;
+   }
+  }
+  .table-dlt-btn{
+   &:hover{
+        border-color: var(--color-E7495E) !important;
+       svg{
+           stroke: var(--color-E7495E) !important;
+           }
+   }
+  }
+  .o-dropdown{
+   .ks-nav-link{
+    button{
+        min-width: 150px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        text-align: left;
+    }
+   }
+  }
+
+  .ks-nav-link{
+   button{
+     background-color: transparent;
+     border: none;
+   }
+  }
+  .dash-dd-2{
+   .selcted-opt.opted{
+      background-color: var(--color-F5F8FB);
+     padding-right: 22px;
+    }
+.dropdown-toggle{
+   &:after{
+       display: none;
+       }
+  }
+  }
+
+  .encapsulated-cross {
+       position: absolute;
+       top: 2px;
+    }
+}
+
+.table-custom {
+    display: flex;
+    flex-direction: column;
+    overflow: auto;
+    max-height: calc(100vh - 483px);
+
+    @include custom-scrollbar;
+
+    .table-row {
+        display: flex;
+        align-items: center;
+        margin-bottom: 11px; // Adjust the spacing between rows if necessary
+
+        .table-cell {
+//             padding: 0px 11px 11px 0;
+            flex-shrink: 0; // Prevents the cell from shrinking smaller than its content
+            width: auto; // Allows the cell to take space based on its content
+
+
+            & .o_multi_record_selector .o_record_autocomplete_with_caret {
+                min-width: auto !important;
+                &::after {
+                    display: none !important;
+                }
+
+            }
+            .table-dlt-btn {
+                 border: 0.81px solid var(--color-D1D5DB);
+                padding: 10px 14px;
+                border-radius: 6px;
+                display: block;
+                background-color: transparent;
+
+                svg {
+                    stroke: var(--color-black);
+                    fill: none;
+                }
+
+                &.active,
+                &:focus {
+                    svg {
+                        stroke: var(--color-danger);
+                    }
+                }
+            }
+
+            .table-dd {
+                .dropdown-menu {
+                    width: 100%;
+                }
+
+                .dropdown-toggle {
+                     border: 0.81px solid var(--color-D1D5DB);
+                    padding: 12px 11px;
+                    border-radius: 6px;
+                    font-size: $font-14;
+                    font-weight: $f-w-400;
+                    line-height: 18.52px;
+                    text-align: left;
+                   color: var(--color-black);
+                    display: block;
+
+                    &::after {
+                        margin-left: 8.2em;
+
+                        @include max-992 {
+                            display: inline-block;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@media only screen and (max-width: 1600px) {
+    .custom-dash-collapse{
+      .o-dropdown{
+       .ks-nav-link{
+        button{
+            min-width: 80px;
+
+        }
+    }
+}
+}
+}
+@media only screen and (max-width: 1600px) {
+    .custom-dash-collapse{
+      .o-dropdown{
+       .ks-nav-link{
+        button{
+            min-width: 60px;
+
+        }
+    }
+}
+}
+}
+
