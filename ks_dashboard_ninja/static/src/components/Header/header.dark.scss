@@ -1,0 +1,36 @@
+ .added-features {
+        svg {
+            path {
+                &:first-child {
+                    fill: var(--color-paragraph); // Use the correct CSS variable syntax
+                }
+
+                &:not(:first-child) {
+                    stroke: var(--color-white-imp); // Set stroke to white for all paths except the first
+                }
+            }
+        }
+    }
+
+.ks_body_class .ks_dashboard_item_hover .img-bg.hover-item img {
+    filter: invert(1) brightness(10);
+}
+.ks_body_class .ks_dashboard_item_hover .img-bg.hover-item svg path {
+    stroke: var(--color-white-imp) !important;
+}
+.ks_body_class .feature-btn:hover svg path {
+    fill: var(--color-white-imp) !important;
+}
+.ks_body_class .dropdown-menu .dropdown-item {
+    color: var(--color-white-imp);
+}
+.ks_body_class .dropdown-menu  {
+    border: transparent;
+}
+ .overview-sec-dasboards .data-added .dashboard-box .dashboard-info .right .marked .bookmark path {
+    stroke: white;
+}
+
+ .ks_md_heading {
+    color: var(--color-white-imp) !important;
+}

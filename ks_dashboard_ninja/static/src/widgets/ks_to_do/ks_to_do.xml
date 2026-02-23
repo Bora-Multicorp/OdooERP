@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="ks_to_do_container">
+        <DNTodo itemId="props.record.resId" itemConfig="props.record.data" isPreview="true" isFormPreview="true"/>
+    </t>
+</templates>

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates>
+
+    <t t-name="ks_dashboard_ninja.fav_filter_wizard">
+        <Dialog title="'Create Favourite Filter'" size="'md'" contentClass="'favFilterDialog'">
+            <div>
+                <label for="favourite_filter_name" class="mb-2 input-label">Filter Name</label>
+                <input type="text" id="favourite_filter_name" class="form-control form common-input mb-3" placeholder="Enter Filter Name (eg. Order States, SaleOrder)" maxlength="35" t-model="state.name"/>
+                <input type="checkbox" id="favFilterShareBool" class="form-check-input common-checkbox " t-model="state.accessId"/>
+                <label for="favFilterShareBool" class="ms-2 ps-1 label-checkbox">Show with all users</label>
+            </div>
+            <t t-set-slot="footer">
+                <button class="dash-btn-red o-default-button" t-on-click="onSave">Save</button>
+                <button class="dash-default-btn" t-on-click="props.close">Close</button>
+            </t>
+        </Dialog>
+    </t>
+
+
+    <t t-name="ks_dashboard_ninja.favourite_filter" owl="1">
+        <Dropdown menuClass="'ks-dropdown-menu'">
+            <t t-set-slot="content">
+                <DropdownItem t-foreach="Object.values(props.data)" t-as="favourite_filter" t-key="favourite_filter_index"
+                          class="{ 'd-flex justify-content-between ': true, ' global-active': state.activeId === favourite_filter.id}"
+                          onSelected="() => this.onSelect(favourite_filter)">
+                    <span><t t-esc="favourite_filter.name"/></span>
+                    <button class="dadsh-dlt-btn" t-on-click.stop="() => this.ondelete(favourite_filter)">
+                        <t t-call="delete_svg"/>
+                    </button>
+                </DropdownItem>
+            </t>
+            <div class="">
+                <t t-call="fav_filter_symbol_svg"/>
+            </div>
+        </Dropdown>
+    </t>
+
+    <t t-name="delete_svg">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M10.5 2.98999C8.835 2.82499 7.16 2.73999 5.49 2.73999C4.5 2.73999 3.51 2.78999 2.52 2.88999L1.5 2.98999" stroke="#EC2D30" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M4.25 2.485L4.36 1.83C4.44 1.355 4.5 1 5.345 1H6.655C7.5 1 7.565 1.375 7.64 1.835L7.75 2.485" stroke="#EC2D30" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M9.4252 4.57007L9.1002 9.60507C9.0452 10.3901 9.0002 11.0001 7.6052 11.0001H4.3952C3.0002 11.0001 2.9552 10.3901 2.9002 9.60507L2.5752 4.57007" stroke="#EC2D30" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M5.16504 8.25H6.83004" stroke="#EC2D30" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M4.75 6.25H7.25" stroke="#EC2D30" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+    </t>
+
+    <t t-name="fav_filter_symbol_svg">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M11.0836 6.75843L12.1836 8.95843C12.3336 9.25843 12.7336 9.55843 13.067 9.60843L15.0586 9.94177C16.3336 10.1584 16.6336 11.0751 15.717 11.9918L14.167 13.5501C13.9086 13.8084 13.7586 14.3168 13.842 14.6834L14.2836 16.6084C14.6336 18.1251 13.8253 18.7168 12.4836 17.9251L10.617 16.8168C10.2753 16.6168 9.7253 16.6168 9.38364 16.8168L7.50864 17.9168C6.16697 18.7084 5.35864 18.1168 5.70864 16.6001L6.1503 14.6751C6.23364 14.3168 6.08364 13.8084 5.8253 13.5418L4.28364 12.0001C3.36697 11.0834 3.66697 10.1584 4.94197 9.9501L6.93364 9.61677C7.26697 9.55843 7.66697 9.26677 7.81697 8.96677L8.91697 6.76677C9.50864 5.56677 10.492 5.56677 11.0836 6.75843Z" fill="#6789C6" />
+            <path d="M5 8.12508C4.65833 8.12508 4.375 7.84175 4.375 7.50008V1.66675C4.375 1.32508 4.65833 1.04175 5 1.04175C5.34167 1.04175 5.625 1.32508 5.625 1.66675V7.50008C5.625 7.84175 5.34167 8.12508 5 8.12508Z" fill="#6789C6" />
+            <path d="M15 8.12508C14.6583 8.12508 14.375 7.84175 14.375 7.50008V1.66675C14.375 1.32508 14.6583 1.04175 15 1.04175C15.3417 1.04175 15.625 1.32508 15.625 1.66675V7.50008C15.625 7.84175 15.3417 8.12508 15 8.12508Z" fill="#6789C6" />
+            <path d="M10 3.95841C9.65833 3.95841 9.375 3.67508 9.375 3.33341V1.66675C9.375 1.32508 9.65833 1.04175 10 1.04175C10.3417 1.04175 10.625 1.32508 10.625 1.66675V3.33341C10.625 3.67508 10.3417 3.95841 10 3.95841Z" fill="#6789C6" />
+        </svg>
+    </t>
+
+</templates>

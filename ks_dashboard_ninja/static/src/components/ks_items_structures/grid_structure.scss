@@ -1,0 +1,40 @@
+
+.ks-grid-inner-root {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: auto;
+    gap: 16px;
+    @include max-992 {
+        grid-template-columns: 1fr 1fr;
+    }
+    @include max-575 {
+        grid-template-columns: 1fr;
+    }
+    .ks-grid-child {
+        grid-column: span 1;
+        box-shadow: 0px 3.29px 16.47px 0px #EEEEEE80;
+        border: 0.82px solid var(--color-E5E7EB);
+        border-radius: 16px;
+        min-height: 292px;
+       background-color: var(--color-white);
+        padding: 8px 12px;
+        position: relative;
+        height: 100%;
+        .select-btn {
+            position: absolute;
+            right: 12px;
+            top: 9px;
+            z-index: 10;
+            display: block !important;
+            svg {
+                stroke: var(--color-737791);
+            }
+            &.active {
+                svg {
+                     fill: var(--color-6789C6) !important;
+                    stroke: white !important;
+                }
+            }
+        }
+    }
+}

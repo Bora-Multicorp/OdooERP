@@ -1,0 +1,239 @@
+.chat-ai-box {
+    padding-right: 11px;
+    height: auto;
+    padding: 0 10px !important;
+
+    @include max-992 {
+        max-height: calc(100vh - 387px);
+
+    }
+
+    .chat-sec {
+        max-height: calc(100vh - 350px);
+        overflow: auto;
+        @include custom-scrollbar;
+
+        .left,
+        .right {
+            .title {
+                font-size: $font-14;
+                font-weight: $f-w-500;
+                line-height: 19.6px;
+                text-align: left;
+                color: var(--color-black);
+
+                @include max-992 {
+                    font-size: $font-12;
+                }
+            }
+
+            .answers,
+            .questions {
+                font-size: $font-12;
+                font-weight: $f-w-400;
+                line-height: 19.2px;
+                text-align: left;
+                color: var(--color-black);
+
+                @include max-992 {
+                    font-size: $font-10;
+                }
+            }
+
+
+
+            .user-icon {
+                height: 30px;
+                width: 30px;
+                border-radius: 5px;
+                font-size: $font-14;
+                font-weight: $f-w-500;
+                line-height: 32px;
+                text-align: left;
+               color: var(--color-black);
+                background-color: var(--color-white);
+            }
+
+        }
+    }
+
+    .typer-box {
+        position: absolute;
+        bottom: 0px;
+        left: 0;
+        padding: 12px;
+        width: 100%;
+        height: auto !important;
+
+        .typer {
+            border-radius: 16px;
+           background-color: var(--color-white);
+            padding: 10px 46px 10px 10px;
+            position: relative;
+
+            textarea {
+                min-height: 79px;
+                border: none;
+                flex: 1;
+                resize: none;
+                position: relative;
+                padding: 6px;
+                @include custom-scrollbar;
+
+                &:focus {
+                    outline: none;
+                }
+
+                &::placeholder {
+                    font-size: $font-14;
+                    font-weight: $f-w-400;
+                    line-height: 18.52px;
+                    text-align: left;
+                      color: var(--color-placeholders);
+                    position: absolute;
+                    bottom: 0;
+                }
+            }
+
+            .chat-logo {
+                border-radius: 5px;
+              background-color: var(--color-E7495E);
+                height: 30px;
+                width: 30px;
+                cursor: pointer;
+                border: none;
+                position: absolute;
+                right: 10px;
+
+
+                &:focus {
+                    outline: none;
+                    border: none;
+                }
+            }
+        }
+    }
+}
+
+
+
+.chat_explain_ai {
+    .ks_chart_container {
+        height: 100%;
+
+        .ks_dashboarditem_chart_container {
+            height: 100%;
+        }
+    }
+}
+
+// message-with-ai-ui
+
+.ks_body_class .message_with_ai {
+    .modal-dialog {
+        width: 50% !important;
+        height: calc(100% - 90%) !important;
+        min-height: calc(100% - 26%) !important;
+    }
+
+    .modal-content {
+        left: auto !important;
+        border: 1px solid var(--color-E5E7EB) !important;
+        background-color: var(--color-F5F8FB);
+    }
+
+    .modal-header {
+        border-bottom: 1px solid var(--color-E5E7EB) !important;
+    }
+
+    .chat-ai-box {
+        height: auto !important;
+        padding: 0 !important;
+
+        .chat-sec {
+            padding: 0 8px !important;
+        }
+    }
+}
+
+// not draggable-modal-css
+
+.ks_body_class #chatid {
+    .modal-dialog {
+        height: calc(100vh - 75px) !important;
+        right: 0;
+        border-radius: 10px !important;
+        margin: 0 !important;
+        padding: 0;
+        position: absolute;
+    }
+
+    height: 100%;
+}
+
+// new chat-ai-css
+
+.ks_body_class .answers {
+    .chart-table-wrapper {
+        overflow: auto;
+        max-height: calc(100vh - 615px);
+      border: 0.66px solid var(--color-EDEDED);
+        box-shadow: 1.32px 1.32px 2.64px 0px #0000000F;
+        border-radius: 10px;
+        @include custom-scrollbar;
+
+        table {
+            // overflow: hidden;
+            width: 100%;
+            border-collapse: collapse;
+
+            thead {
+
+                tr {
+                    th {
+                        background-color: var(--color-secondary-bg);
+                        padding: 10px;
+                        font-size: $font-10;
+                        font-weight: $f-w-600;
+                        line-height: 13.88px;
+                        text-align: left;
+                       color: var(--color-2C2D35);
+                        border-right: 0.66px solid var(--color-FFFCFC);
+                        position: sticky;
+                        top: 0;
+                        z-index: 20;
+                    }
+                }
+            }
+
+            tbody {
+                tr {
+                    td {
+                        font-size: $font-10;
+                        font-weight: $f-w-400;
+                        line-height: 15.86px;
+                        text-align: left;
+                        color: var(--color-black);
+                        padding: 10px;
+                          border-right: 0.66px solid var(--color-FFFCFC);
+
+
+                        &:nth-child(2) {
+                             color: var(--color-727378);
+                        }
+                    }
+
+                    &:nth-of-type(odd)>* {
+                       --bs-table-bg-type: var(--color-white) !important;
+                    }
+
+                    &:nth-of-type(even)>* {
+                      --bs-table-bg-type: var(--color-secondary-bg) !important;
+                    }
+                }
+            }
+
+        }
+    }
+}
+

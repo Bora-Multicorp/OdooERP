@@ -1,0 +1,99 @@
+<templates>
+    <t t-name="ks_select_labels">
+        <t t-if="props.record.data.ks_query_result and props.record.data.ks_dashboard_item_type != 'ks_kpi'">
+            <t t-if="props.record.data.ks_query_result">
+                <t t-if="props.readonly == false">
+                    <select t-att-id="class" class="o_input o_group_selector o_add_group ks_label_select'"
+                            t-ref="select_label" t-on-change="ks_toggle_icon_input_click">
+                        <t t-foreach="Object.keys(ks_columns_list)" t-as="ks_columns_key" t-key="ks_columns_key_index">
+                            <option t-att-value="ks_columns_key">
+                                <t t-if="ks_columns_list[ks_columns_key]">
+                                    <t t-esc="ks_columns_list[ks_columns_key]"/>
+                                </t>
+                            </option>
+                        </t>
+                    </select>
+                </t>
+                <t t-else="">
+                    <span>
+                        <t t-esc="value"/>
+                    </span>
+                </t>
+            </t>
+            <t t-else="">
+                <div>
+                    No Data Available
+                </div>
+            </t>
+        </t>
+        <t t-else="">
+            <div>
+                Please Enter the Appropriate Query for this.
+            </div>
+        </t>
+    </t>
+
+
+    <t t-name="ks_y_label_table">
+        <t t-if="props.record.data.ks_query_result and props.record.data.ks_dashboard_item_type != 'ks_kpi' and y_label">
+            <t t-if="props.record.data.ks_query_result">
+                <t t-if="props.record.data.ks_dashboard_item_type != 'ks_kpi' and props.record.data.ks_dashboard_item_type != 'ks_list_view' and props.record.data.ks_dashboard_item_type != 'ks_tile'">
+                    <table class="table table-bordered" t-ref="y_label">
+                        <thead>
+                            <tr>
+                                <th>
+                                    Measures
+                                </th>
+                                <th>
+                                    Chart Type
+                                </th>
+                                <t t-if="y_label.ks_is_group_column">
+                                    <th>
+                                        Group
+                                    </th>
+                                </t>
+                            </tr>
+                        </thead>
+                        <tbody class="ks_y_axis">
+                            <t t-foreach="Object.keys(y_label.label_rows)" t-as="table_row" t-key="table_row_index">
+
+                                <tr>
+                                    <td>
+                                        <t t-esc="y_label.label_rows[table_row]['measure']"/>
+                                    </td>
+                                    <td>
+                                        <t t-call="ks_select_labels">
+                                            <t t-set="ks_columns_list"
+                                               t-value="y_label.label_rows[table_row]['chart_type']"/>
+                                            <t t-set="class" t-value="table_row"/>
+                                            <t t-set="value"
+                                               t-value="y_label.label_rows[table_row]['chart_type'][y_label.chart_type[table_row]]"/>
+                                        </t>
+                                    </td>
+                                    <t t-if="y_label.ks_is_group_column">
+                                        <td t-att-id="table_row" contenteditable="true" class="ks_stack_group"
+                                            t-on-focusout="ks_group_input_click">
+                                            <t t-esc="y_label.label_rows[table_row]['group']"/>
+                                        </td>
+                                    </t>
+                                </tr>
+                            </t>
+                        </tbody>
+                    </table>
+                </t>
+            </t>
+            <t t-else="">
+                <div>
+                    No Data Available
+                </div>
+
+            </t>
+        </t>
+        <t t-else="">
+            <div>
+                Please Enter the Appropriate Query for this.
+            </div>
+        </t>
+    </t>
+
+</templates>

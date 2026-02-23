@@ -1,0 +1,435 @@
+// chat-inbox
+
+.ks_body_class .chart-sec-modal {
+    .modal {
+        background-color: transparent;
+
+        .modal-dialog {
+            height: calc(100% - 2%) !important;
+            right: 0;
+            border-radius: 10px !important;
+            margin: 0 !important;
+            position: absolute;
+
+            @include max-575 {
+                justify-content: end;
+            }
+
+            .modal-content {
+                top: 71px !important;
+                height: 100%;
+                box-shadow: 0px 0px 10px 5px #9C8B8A26;
+                right: 0px;
+                border-radius: 10px !important;
+                border: none !important;
+
+
+                @include max-575 {
+                    height: 92% !important;
+                    width: 80%;
+                }
+
+                .modal-header {
+                    border-radius: 10px 10px 0 0 !important;
+                }
+
+                .modal-body {
+                    >div {
+                        height: 100%;
+
+                        >div {
+                            height: 100%;
+                            display: flex;
+                            flex-direction: column;
+
+                            >* {
+                                height: auto;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+.ks_body_class .o-mail-ChatWindow:not(.o-folded) {
+        height: 100%;
+        box-shadow: 0px 0px 10px 5px #9C8B8A26;
+        right: 0px !important;
+        border-radius: 10px !important;
+        border: none !important;
+        width: 600px !important;
+        max-height: 92vh !important;
+
+        .o-mail-Composer{
+                max-height: 50vh;
+            }
+}
+.ks_body_class .modal-backdrop.show {
+    opacity: 0.2;
+}
+.ks_body_class {
+    .modal-dialog {
+
+        .modal-content {
+            border-radius: 18px !important;
+
+            .filter {
+                display: none !important;
+            }
+
+            @include max-575 {
+                height: auto !important;
+            }
+
+            .modal-header {
+                padding: 12px 16px;
+                 background-color: var(--color-bg-main-164E63);
+                border-radius: 16px 16px 0 0;
+                border-bottom: 0;
+                justify-content: start !important;
+
+                @include max-575 {
+                    background-color: var(--color-bg-main-164E63) !important;
+                }
+
+                .modal-title {
+                    font-size: $font-16;
+                    font-weight: $f-w-500;
+                    line-height: 22.4px;
+                    text-align: left;
+                    color: var(--color-black);
+
+                    @include max-575 {
+                      color: var(--color-black) !important;
+                    }
+                }
+
+                .btn-close {
+                    background: url("../../images/icons/close-circle.svg") center/1.5em auto no-repeat;
+                    opacity: 1;
+
+                    &:focus {
+                        box-shadow: none;
+                    }
+                }
+            }
+
+            .modal-body {
+                background-color: var(--color-white-222B3F);
+                .encapsulated-tile-container {
+                    position: relative;
+                    max-width: 250px;
+                    width: 100%;
+                    .ks_explain_ai_view {
+                    min-height: 180px;
+                    }
+                }
+
+                .minimum-180 {
+                    min-height: 180px;
+                    height: 100%;
+                }
+
+                .ks_list_view_container {
+                    padding: unset !important;
+                    border-radius: unset;
+                    border: unset !important;
+                }
+
+                .main-box {
+                    overflow: unset !important;
+                    height: auto;
+                }
+
+                // for double scroll of modal body on chart screen view
+                .encapsulated-form-view .o_form_renderer {
+                    max-height: calc(100vh - 316px);
+                }
+
+                // for chart screen double arrow fix
+                .encapsulated-form-arrow {
+                    .o_dropdown_button::after {
+                        display: none !important;
+                    }
+                }
+
+                .screen-info,
+                .chart_button_container, .ks_explain_todo {
+                    display: none !important;
+                }
+                @include custom-scrollbar;
+
+                .ks_dashboard_main_content {
+                    max-height: unset !important;
+                    overflow: unset;
+
+                }
+
+                // delete-modal
+                .modal-para {
+                    font-size: $font-24;
+                    font-weight: $f-w-500;
+                    line-height: 33.6px;
+                    text-align: center;
+                    color: var(--color-black);
+                }
+
+                // duplicate dashboard
+                .duplicate-db {
+                    .o_form_renderer {
+                        display: flex !important;
+                        justify-content: center;
+                        align-items: center;
+                        padding-bottom: 0;
+
+                        .o_inner_group {
+                            display: flex;
+                            flex-direction: column;
+                            justify-content: center;
+                            align-items: center;
+                            max-width: 378.5px;
+                            width: 100%;
+
+                            label {
+                                margin-bottom: 0 !important;
+                            }
+                        }
+                    }
+                }
+
+                .o_form_label {
+                    font-size: $font-12;
+                    font-weight: $f-w-400;
+                    line-height: 9.66px;
+                    letter-spacing: 0.0015em;
+                    text-align: left;
+                    color: var(--color-black);
+                    margin-bottom: 8px;
+                    opacity: 1 !important;
+
+                    &:focus {
+                       border: 1px solid var(--color-black);
+                    }
+                }
+
+                .ks_dash_row {
+                    .o_wrap_field {
+                        @include max-768 {
+                            margin-bottom: 0 !important;
+                        }
+                    }
+
+                    .o_cell {
+                        width: 100% !important;
+
+                        @include max-992 {
+                            margin-bottom: 24px;
+                        }
+                    }
+
+                    .o_inner_group {
+                        gap: 32px 16px !important;
+
+                        @include max-992 {
+                            gap: 0 !important;
+                        }
+                    }
+                }
+
+                @include max-768 {
+                    .o_cell {
+                        width: 100% !important;
+                    }
+
+                    .o_form_view .o_group {
+                        .o_inner_group {
+                            flex-direction: column !important;
+                        }
+                    }
+                }
+
+                .ui-widget.ui-autocomplete {
+                    box-shadow: 0px 4px 12px 0px #00000040;
+                    border-radius: 8px;
+                    border: none;
+                    padding: 8px;
+
+                    & .ui-menu-item>a {
+                        padding: 8px;
+                        font-size: $font-14;
+                        font-weight: $f-w-400;
+                        line-height: 16px;
+                        text-align: left;
+                        color: var(--color-paragraph);
+
+                        &:hover,
+                        &.ui-state-active {
+                            color: var(--color-secondary-main);
+                            background-color: var(--color-E6FCF5);
+                        }
+                    }
+                }
+
+                // dashboard-settings-start
+
+
+            }
+
+            .modal-footer {
+                border: 0;
+                justify-content: flex-end !important;
+                background-color: var(--color-white-222B3F);
+
+                .o_form_buttons_edit {
+                    justify-content: end !important;
+                }
+
+                footer {
+                    justify-content: flex-end !important;
+
+                    button {
+                        @include max-768 {
+                            width: auto !important;
+                        }
+                    }
+                }
+
+                .duplicate-btn-box {
+                    justify-content: center !important;
+                }
+            }
+        }
+
+        .favFilterDialog {
+            .modal-footer {
+                justify-content: end !important;
+            }
+        }
+    }
+}
+.ks_form_sheet {
+
+    .o_notebook {
+        margin-top: 20px;
+
+        .o_notebook_headers {
+            padding: 0 16px;
+
+            .nav-tabs {
+                border-bottom: 1px solid var(--color-E5E7EB);
+                padding-left: 0;
+                padding-right: 0;
+                background-color: transparent;
+
+                .nav-link {
+                    font-size: $font-16;
+                    font-weight: $f-w-500;
+                    line-height: 24px;
+                    letter-spacing: 0.01em;
+                    text-align: left;
+                    color: var(--color-black);
+                    padding: 16px;
+                    border: none;
+                    background-color: transparent;
+
+                    &.active {
+                        color: var(--color-E7495E);
+                        border-bottom: 2px solid var(--color-E7495E);
+                    }
+                }
+            }
+        }
+
+        .o_notebook_content {
+            margin-top: 24px;
+
+            .tab-pane {
+                .o_renderer.table-responsive {
+                    margin: -16px 0;
+
+                    table {
+                        --table-hover-bg: var(--color-white) !important;
+                        thead {
+                            .o_list_sortable_caret {
+                                background-color: transparent !important;
+                            }
+                            tr {
+                                th {
+
+                                    &:last-child {
+                                        width: 84px !important;
+                                    }
+                                     background-color: var(--color-secondary-bg-24304B);
+                                    font-size: $font-16;
+                                    font-weight: $f-w-500;
+                                    line-height: 18px;
+                                    padding: 12px 24px;
+                                    text-align: left;
+                                   color: var(--color-paragraph);
+                                   border-bottom: 1px solid var(--color-EAECF0) !important;
+
+                                    @include max-768 {
+                                        width: fit-content !important;
+                                        max-width: fit-content !important;
+                                    }
+                                }
+                            }
+                        }
+
+                        tbody {
+                            tr {
+                                td {
+                                    padding: 16px 24px;
+                                     border-bottom: 1px solid var(--color-EAECF0);
+                                    background-color: var(--color-white-222B3F) !important;
+                                    --table-accent-bg: var(--color-white-222B3F);
+                                    --table-bg-type: var(--color-white-222B3F) !important;
+                                    font-size: 14px;
+                                    font-weight: 400;
+                                    line-height: 20px;
+                                    text-align: left;
+                                     color: var(--color-black);
+                                    vertical-align: middle;
+
+                                    button {
+                                        &.fa-trash-o {
+                                            display: flex;
+                                            justify-content: center;
+                                            align-items: center;
+                                             background-color: var(--color-bg-main) !important;
+                                             border: 0.38px solid var(--color-CDAAAA);
+                                            border-radius: 50% !important;
+                                            height: 30px;
+                                            width: 30px;
+                                        }
+                                    }
+
+                                    a {
+                                        font-size: $font-16;
+                                        font-weight: $f-w-400;
+                                        line-height: 20px;
+                                        text-align: left;
+                                        color: var(--color-04A9CC-imp) !important;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+.ks_body_class .o_dropdown_button::after {
+        content: url("../../../../ks_dashboard_ninja/static/images/dashboardOverview/down-arrow.svg") !important;
+    display: inline-block !important;
+    margin-left: .255em;
+    vertical-align: 2px !important;
+    border: none !important;
+    transition: transform 0.4s ease-in-out;
+    position: absolute;
+    top: 7px;
+    left: -21px;
+}

@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+
+    <t t-name="ks_dashboard_ninja.dashboard_view" owl="1">
+        <t t-if="!state.is_loading">
+            <KsHeader dashboardData="state.dashboardData" mode="isDashboardManager ? 'manager' : 'user'" dnStore.alike="dnStore"
+                      dashboardRootRef="rootRef" dashboardActions="dashboardActions" DNGridStack.alike="DNGridStack"
+                      itemsBasicData="state.itemsBasicData"/>
+            <main class="main-box" t-ref="rootRef">
+                <t t-call="ks_dashboard_ninja.dashboard_body"/>
+            </main>
+        </t>
+    </t>
+
+    <t t-name="ks_dashboard_ninja.dashboard_body" owl="1">
+        <div t-if="!state.is_loading" class="ks_dashboard_main_content h-100">
+            <t t-call="ks_dashboard_ninja.ks_dashboard_items_view"/>
+        </div>
+        <t t-else="" t-call="ks_loading_template"/>
+    </t>
+
+    <t t-name="ks_dashboard_ninja.ks_dashboard_items_view">
+        <KsItems dashboardData="state.dashboardData" itemsBasicData="state.itemsBasicData" dateFilterConfig="state.dateFilterConfig"
+                 filtersConfig="state.filtersConfig" DNGridStack.alike="DNGridStack" isGridStack="true" gsRootRef.alike="gsRootRef"
+                 dnStore.alike="dnStore"/>
+    </t>
+
+    <t t-name="ks_loading_template">
+        <div t-att-class="'o_blockUI fixed-top d-flex justify-content-center align-items-center flex-column vh-100'">
+            <div class="o_spinner mb-4">
+                <img src="/ks_dashboard_ninja/static/images/loader.gif" alt="Loading..." loading="lazy"/>
+            </div>
+            <div class="o_message text-center px-4">Loading...</div>
+        </div>
+    </t>
+
+    <t t-name="ksNoItemChartView">
+        <div class="overview-sec-dasboards container-fluid h-100 graph_text">
+            <div t-if="!filteredDashboardsInfo" class="d-flex flex-column justify-content-center align-items-center h-100 no-data">
+                <div>
+                    <img src="/ks_dashboard_ninja/static/images/dashboardOverview/no-data.png" alt="no-data-files" class="img-fluid" loading="lazy"/>
+                </div>
+                <h3 class="mb-0">
+                    No Data Found!!
+                </h3>
+            </div>
+        </div>
+    </t>
+
+    <t t-name="no-data-view-without-button">
+        <div class="no-data-avilable">
+            <div class="d-flex align-items-center justify-content-center flex-column">
+                <div class="no-data-img">
+                    <img src="/ks_dashboard_ninja/static/images/dashboardOverview/no-data.png" alt="no-data-available" loading="lazy"
+                         class="img-fluid w-75"/>
+                </div>
+                <div class="title mb-1">
+                    <t t-esc="header_text"/>
+                </div>
+                <p>
+                    <t t-esc="body_text"/>
+                </p>
+            </div>
+        </div>
+    </t>
+
+</templates>

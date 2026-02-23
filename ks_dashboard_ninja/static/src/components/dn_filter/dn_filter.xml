@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="ks_dashboard_ninja.dn_filter" owl="1">
+        <div class="d-flex justify-content-center align-items-center gap-2 filters_section_root">
+            <div class="dropdown dash-dd-2 filter filters_section d-lg-block d-none" t-att-class="state.filtersCount ? 'active' : ''">
+
+                <a class="text-decoration-none d-flex dropdown-toggle align-items-center" data-bs-toggle="collapse"
+                    data-bs-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
+                    <span class="d-flex align-items-center">
+                        <t t-call="filter_svg"/>
+                    </span>
+                    <span class="d-lg-block d-none ellipsis-content max-width-medium-4vw">Filters</span>
+                    <div class="ms-1 d-flex justify-content-center filters-amount" t-if="state.filtersCount" t-esc="state.filtersCount"/>
+                </a>
+
+                <div class="collapse custom-dash-collapse" id="collapseExample">
+                    <div class="card card-body">
+                        <ul class="nav nav-pills mb-3 border-bottom border-2" id="pills-tab" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link text-primary fw-semibold position-relative show active" id="pills-home-tab"
+                                        data-bs-toggle="pill" data-bs-target="#pills-home"
+                                    type="button" role="tab" aria-controls="pills-home" aria-selected="true">Predefined Filter
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link text-primary fw-semibold position-relative" id="pills-profile-tab"
+                                        data-bs-toggle="pill" data-bs-target="#pills-profile" type="button" role="tab"
+                                        title="Create domain and apply filter" aria-controls="pills-profile"
+                                        aria-selected="false">Custom Filter
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link text-primary fw-semibold position-relative" id="pills-charts-filter-tab"
+                                        data-bs-toggle="pill" data-bs-target="#pills-charts-filter" type="button" role="tab"
+                                        title="Create domain and apply filter" aria-controls="pills-charts-filter"
+                                        aria-selected="false"> Charts Filter
+                                </button>
+                            </li>
+                            <div class="position-relative ms-auto encapsulated-bottom d-flex">
+                                <span class="d-flex justify-content-center align-items-center me-2" data-tooltip="Clear Retention" t-on-click="clearRetention">
+                                    <img src="/ks_dashboard_ninja/static/images/dashboardOverview/filter-retention.svg" alt="cross-icon" style="height: 20px; width: 20px;"
+                                            class="img-fluid me-2" loading="lazy"/>
+                                </span>
+                                <button class="favorite-btn me-3 d-flex align-items-center justify-content-center" t-on-click="saveNewFavFilter">
+                                    <img src="/ks_dashboard_ninja/static/images/dashboardOverview/ranking.png" alt="ranking"
+                                        class="img-fluid me-1" loading="lazy"/>
+                                    Save as Favourite
+                                </button>
+                            </div>
+                            <div t-on-click="hideFilterTab" class="position-relative d-flex align-items-center me-2 encapsulated-bottom">
+                                 <img src="/ks_dashboard_ninja/static/images/dashboardOverview/close-circle.svg" alt="cross-icon" style="height: 20px; width: 20px;"
+                                            class="img-fluid me-2" loading="lazy"/>
+                            </div>
+                        </ul>
+
+
+                        <div class="tab-content" id="pills-tabContent">
+                            <!-- Home tab pane (default visible tab) -->
+                            <div class="tab-pane fade show active predefined-filter-tab" id="pills-home" role="tabpanel" aria-labelledby="pills-home-tab">
+                                    <PreDefinedFilter data="props.dashboardData.ks_dashboard_pre_domain_filter" options="options"
+                                                      update.bind="updateSubDomains" remove.bind="removeSubDomains" isReset="state.resetAll"/>
+                            </div>
+
+                            <!-- Profile tab pane -->
+                            <div class="tab-pane fade custom-filter-tab" id="pills-profile" role="tabpanel" aria-labelledby="pills-profile-tab">
+                                <t t-if="isShowCustomFilter">
+                                    <CustomFilter data="props.dashboardData.ks_dashboard_custom_domain_filter" options="options"
+                                                  update.bind="updateSubDomains" remove.bind="removeSubDomains" isReset="state.resetAll"/>
+                                </t>
+                                <t t-else="">
+                                    <t t-call="ks_dn.no-filter-view"/>
+                                </t>
+                            </div>
+                            <div class="tab-pane fade charts-filter-tab" id="pills-charts-filter" role="tabpanel" aria-labelledby="pills-charts-filter-tab">
+                                <ModelDrivenFilterApplicator options="options" update.bind="updateSubDomains"
+                                                                 remove.bind="removeSubDomains" isReset="state.resetAll"/>
+                            </div>
+
+                        </div>
+            </div>
+                </div>
+            </div>
+
+            <FavouriteFilter t-if="Object.keys(state.favFilterData).length" data="state.favFilterData" options="options"
+                             onDelete.bind="deleteFavFilter" update.bind="applyFavouriteFilter" remove.bind="removeSubDomains"/>
+
+        </div>
+    </t>
+
+    <t t-name="filter_svg">
+        <svg width="20" class="me-lg-2 me-0" height="20" viewBox="0 0 20 20" fill="" xmlns="http://www.w3.org/2000/svg">
+            <path d="M18.0249 12.2917C18.0249 13.0334 17.8249 13.7334 17.4583 14.3334C16.7749 15.4751 15.5166 16.25 14.0666 16.25C13.2833 16.25 12.5499 16.0167 11.9333 15.6084C11.4166 15.2917 10.9916 14.8501 10.6833 14.3334C10.3166 13.7334 10.1083 13.0334 10.1083 12.2917C10.1083 10.1084 11.8833 8.33337 14.0666 8.33337C14.3666 8.33337 14.6583 8.3667 14.9333 8.43337C16.7083 8.82504 18.0249 10.4084 18.0249 12.2917Z" stroke="" stroke-width="1.25" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M12.5253 12.2917L13.5003 13.2667L15.6086 11.3167" stroke="" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M17.2413 3.34995V5.19995C17.2413 5.87495 16.8163 6.71663 16.3996 7.14163L14.9329 8.43329C14.6579 8.36662 14.3663 8.33329 14.0663 8.33329C11.8829 8.33329 10.1079 10.1083 10.1079 12.2916C10.1079 13.0333 10.3163 13.7333 10.6829 14.3333C10.9913 14.85 11.4163 15.2916 11.9329 15.6083V15.8916C11.9329 16.4 11.5996 17.075 11.1746 17.325L9.9996 18.0833C8.90794 18.7583 7.39127 18 7.39127 16.65V12.1916C7.39127 11.6 7.0496 10.8416 6.71627 10.425L3.51625 7.05829C3.09958 6.63329 2.75793 5.87497 2.75793 5.37497V3.43329C2.75793 2.42496 3.51628 1.66663 4.44128 1.66663H15.5579C16.4829 1.66663 17.2413 2.42495 17.2413 3.34995Z" stroke="" stroke-width="1.25" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+    </t>
+</templates>

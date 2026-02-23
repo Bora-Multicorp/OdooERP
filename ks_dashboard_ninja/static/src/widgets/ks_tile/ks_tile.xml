@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="ks_dashboard_ninja.tile_widget_view" owl="1">
+        <DNTile itemId="props.record.resId" itemConfig="props.record.data" isPreview="true" isFormPreview="true" t-key="state.count"/>
+    </t>
+</templates>

@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="ks_dashboard_ninja.dn_graph_view">
+
+        <!-- INFO: Wrapper for the Explanation and Chart -->
+
+        <div class="ks_chart_container ks_dashboarditem_id h-100" t-ref="rootRef" t-att-class="props.isAIExplanation ? ' ks_with_explanation' : ''">
+
+            <!-- INFO: Wrapper for the Border and padding -->
+            <div class="ks_dashboarditem_chart_container position-relative h-100
+                    ks_border_radius ks_dashboard_item_hover dashboard-container d-flex flex-fill flex-column border-0"
+                    t-att-class="props.isAIExplanation ? 'ks_ai_chart ' : ''">
+
+                <!-- INFO: This is the main div Chart -->
+                <div class="h-100 w-100 flex-grow-1">
+                    <t t-if="state.config">
+                        <KsItemButton t-if="!props.isPreview" itemComponent.alike="constructor" chartInsightsProps.bind.alike="chartInsightsProps"
+                                      itemConfig="state.config" rootClasses.alike="''" fetchOrUpdateItem.bind.alike="() => this.fetchOrUpdateItem(this.props)"
+                                      isDashboardManager.alike="state.config.ks_dashboard_manager" dnStore="props.dnStore" graphConfig="chartConfig.chartData"
+                                      allDashboardLists.alike="props.dashboardData.ks_dashboard_list" updateChartColor.bind="updateChartColor"
+                                      itemBasicDataFields.alike="props.dashboardData.item_basic_data_fields" listConfig="state.listViewConfig"
+                                      resetChart.alike="resetChart" itemActions="itemActions" drillDownActionLength="state.actions.length" itemRootRef="rootRef"/>
+
+                        <t t-if="state.config" t-call="ks_dashboard_ninja.item_header"/>
+                    </t>
+                    <t t-else="" t-call="graph_skeleton"/>
+                    <div class="mt-1 card-body ks_chart_card_body" t-ref="graphRef"/>
+                    <t t-if="state.type == 'list'" t-call="ks_dashboard_ninja.listRenderer"/>
+
+                </div>
+            </div>
+            <ExplanationViewer t-if="props.isAIExplanation" fetchExplanation="fetchExplanation" chartConfig="chartConfig.chartData"
+                               listViewConfig="state.config.listViewConfig" itemConfig="state.config"
+                               explanationText="state.config.ks_ai_analysis"/>
+        </div>
+    </t>
+
+    <t t-name="ks_dashboard_ninja.item_header">
+        <div class="dashboard-header position-relative py-3 mb-1 px-3 d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center w-50">
+                <Dropdown menuClass="'ks-dropdown-menu'" disabled="state.actions.length lte 1">
+                    <t t-set-slot="content">
+                        <DropdownItem t-foreach="state.actions" t-as="action" t-key="action_index" t-esc="action.name"
+                            class="{ '': true }" onSelected="() => this.drillUp(action)"/>
+                    </t>
+
+                    <t t-set="t_name" t-value="state.config.name || state.config.ks_model_id?.[1] || '-----'"/>
+
+                    <h4 class="ks_chart_heading text-capitalize text-start" t-att-data-tooltip="t_name" t-esc="t_name"/>
+                    <span t-if="state.actions.length gt 1" class="dropdown-toggle ms-2"/>
+
+                </Dropdown>
+            </div>
+        </div>
+    </t>
+
+
+</templates>

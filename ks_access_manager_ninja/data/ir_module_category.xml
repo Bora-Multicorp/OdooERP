@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record model="ir.module.category" id="ir_module_category_profiles">
+        <field name="name">User Profiles</field>
+    </record>
+</odoo>

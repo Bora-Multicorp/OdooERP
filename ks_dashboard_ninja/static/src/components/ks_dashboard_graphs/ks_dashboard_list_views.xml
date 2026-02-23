@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="ks_dashboard_ninja.listRenderer">
+        <t t-if="state.config" t-call="ks_dashboard_ninja.list_view"/>
+    </t>
+
+    <t t-name="ks_dashboard_ninja.list_view">
+        <div t-if="Object.values(state.listViewConfig.columns).length" class="ks_list_view_container ks_dashboard_item_hover">
+
+            <div class="table-responsive ks_list_item_table">
+                <table class="table table-hover" t-att-class="getLayoutClasses">
+                <thead>
+                    <t t-call="ks_dashboard_ninja.table_header"/>
+                </thead>
+                <tbody class="ks_table_body">
+                    <t t-call="ks_dashboard_ninja.table_body"/>
+                </tbody>
+            </table>
+            </div>
+
+            <!-- TODO: pagination should be there  in drill down actions -->
+            <div t-if="state.actions.length lte 1 and !props.isFormPreview and state.listViewConfig.total"
+                 class="list-pagination d-flex justify-content-between align-items-center">
+
+                <div class="total-items" t-esc="start + '-' + end + ' / ' + state.listViewConfig.total"/>
+
+                <div class="page-numbers">
+                    <span class="cursor-pointer" t-call="pagination_left_arrow" t-on-click.stop="() => this.onPageUpdate(-1)"/>
+                    <span t-esc="'Page ' + currentPageCount + ' of ' + totalPagesCount"/>
+                    <span class="cursor-pointer" t-call="pagination_right_arrow" t-on-click.stop="() => this.onPageUpdate(1)"/>
+                </div>
+            </div>
+
+        </div>
+        <div t-else="" class="d-flex justify-content-center align-items-center h-100">
+            No Data Present
+        </div>
+    </t>
+
+    <t t-name="ks_dashboard_ninja.table_header">
+        <tr>
+            <t t-foreach="Object.values(state.listViewConfig.columns)" t-as="table_column" t-key="table_column_index">
+                <th t-on-click="() => this.onColumnCellClick(table_column)" class="x_path_table_header">
+                    <t t-esc="table_column.field_description"/>
+                </th>
+            </t>
+            <th t-if="state.config.ks_show_records and !props.isPreview and state.config.ks_data_calculation_type === 'custom'"/>
+        </tr>
+    </t>
+
+    <t t-name="ks_dashboard_ninja.table_body">
+        <tr t-foreach="state.listViewConfig.records" t-as="record" t-key="record_index"
+            class="ks_tr">
+            <t t-foreach="record.data" t-as="field_name" t-key="field_name_index">
+                <t t-set="isBooleanField" t-value="state.listViewConfig.columns[field_name].ttype === 'boolean' ? true : false"/>
+                <t t-set="isRelationOrSelectionField"
+                   t-value="['many2one', 'selection'].includes(state.listViewConfig.columns[field_name].ttype)"/>
+
+                <t t-set="field_value" t-value="record.data[field_name].value !== false ? record.data[field_name].value : ''"/>
+                <t t-set="field_value" t-value="state.listViewConfig.columns[field_name].ttype == 'html' ? markup(record.data[field_name].value) : field_value"/>
+                <td class="ks_list_canvas_click" t-on-click="() => this.onRecordCellClick(record, field_name)"
+                    t-out="isBooleanField ? record.data[field_name].value : field_value"
+                    t-att-class="{ 'cursor-pointer': isRelationOrSelectionField }"/>
+            </t>
+            <td t-if="state.config.ks_show_records and !props.isPreview and state.config.ks_data_calculation_type === 'custom'"
+                data-tooltip="Open View" t-on-click="() => this.openRecord(record)"
+                class="ks_info cursor-pointer align-items-center justify-content-center d-flex">
+                <t t-call="list_view_edit_svg"/>
+            </td>
+        </tr>
+    </t>
+
+    <t t-name="pagination_right_arrow">
+        <svg width="16" height="16" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M1.09131 7.83329L4.42464 4.49996L1.09131 1.16663" stroke="#727378" stroke-width="1.33333" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+    </t>
+
+    <t t-name="list_view_edit_svg">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 20 20" fill="none">
+            <path d="M9.16675 1.66663H7.50008C3.33341 1.66663 1.66675 3.33329 1.66675 7.49996V12.5C1.66675 16.6666 3.33341 18.3333 7.50008 18.3333H12.5001C16.6667 18.3333 18.3334 16.6666 18.3334 12.5V10.8333" stroke="#241C1D" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M13.3666 2.51663L6.7999 9.0833C6.5499 9.3333 6.2999 9.82497 6.2499 10.1833L5.89157 12.6916C5.75823 13.6 6.3999 14.2333 7.30823 14.1083L9.81657 13.75C10.1666 13.7 10.6582 13.45 10.9166 13.2L17.4832 6.6333C18.6166 5.49997 19.1499 4.1833 17.4832 2.51663C15.8166 0.849966 14.4999 1.3833 13.3666 2.51663Z" stroke="#241C1D" stroke-width="1.25" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M12.425 3.45837C12.9834 5.45004 14.5417 7.00837 16.5417 7.57504" stroke="#241C1D" stroke-width="1.25" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+    </t>
+
+    <t t-name="pagination_left_arrow">
+        <svg width="16" height="16" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M4.75781 7.83329L1.42448 4.49996L4.75781 1.16663" stroke="#727378" stroke-width="1.33333" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+    </t>
+</templates>

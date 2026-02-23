@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates xml:space="preserve">
+
+    <t t-name="ks_dashboard_ninja.switch_chart_type">
+        <div class="ks-common-tab-pills">
+            <ul class="nav nav-pills mb-3 border-bottom border-2" id="pills-tab" role="tablist">
+                <t t-set="t_getItemTypes" t-value="this.getItemTypes()"/>
+                <li t-foreach="t_getItemTypes" t-as="t_getItemType" t-key="t_getItemType_index">
+                    <button class="nav-link text-primary fw-semibold position-relative" t-att-class="{ 'active': this.state.itemType === t_getItemType }"
+                        id="pills-home-tab" data-bs-toggle="pill" data-bs-target="#pills-one" type="button"
+                        role="tab" aria-controls="pills-home" aria-selected="true"
+                        t-on-click="() => this.switchItem(t_getItemType)">
+                        <t t-call="{{t_getItemType}}"/>
+                    </button>
+                </li>
+            </ul>
+        </div>
+    </t>
+
+    <t t-name="ks_bar_chart">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M2.5 18.3334H17.5" stroke="" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M4.66665 6.9834H3.33333C2.875 6.9834 2.5 7.3584 2.5 7.81673V15.0001C2.5 15.4584 2.875 15.8334 3.33333 15.8334H4.66665C5.12498 15.8334 5.49998 15.4584 5.49998 15.0001V7.81673C5.49998 7.3584 5.12498 6.9834 4.66665 6.9834Z" stroke="" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M10.6666 4.32507H9.33333C8.875 4.32507 8.5 4.70007 8.5 5.15841V15.0001C8.5 15.4584 8.875 15.8334 9.33333 15.8334H10.6666C11.125 15.8334 11.5 15.4584 11.5 15.0001V5.15841C11.5 4.70007 11.125 4.32507 10.6666 4.32507Z" stroke="" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M16.6666 1.66675H15.3333C14.875 1.66675 14.5 2.04175 14.5 2.50008V15.0001C14.5 15.4584 14.875 15.8334 15.3333 15.8334H16.6666C17.125 15.8334 17.5 15.4584 17.5 15.0001V2.50008C17.5 2.04175 17.125 1.66675 16.6666 1.66675Z"  stroke="" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+    </t>
+
+    <t t-name="ks_area_chart">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M7.50033 18.3333L12.5003 18.3333C16.667 18.3333 18.3337 16.6666 18.3337 12.5L18.3337 7.49996C18.3337 3.33329 16.667 1.66663 12.5003 1.66663L7.50033 1.66663C3.33366 1.66663 1.66699 3.33329 1.66699 7.49996L1.66699 12.5C1.66699 16.6666 3.33366 18.3333 7.50033 18.3333Z" stroke="" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M6.1084 12.075L8.09173 9.50005C8.37507 9.13338 8.90007 9.06672 9.26673 9.35005L10.7917 10.55C11.1584 10.8334 11.6834 10.7667 11.9667 10.4084L13.8917 7.92505" stroke="" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+    </t>
+
+    <t t-name="ks_pie_chart">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M15.2667 10.0002C17.4333 10.0002 18.3333 9.16686 17.5333 6.43352C16.9917 4.59186 15.4083 3.00852 13.5667 2.46686C10.8333 1.66686 10 2.56686 10 4.73352V7.13352C10 9.16686 10.8333 10.0002 12.5 10.0002H15.2667Z" stroke="" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M16.6672 12.2498C15.8922 16.1081 12.1922 18.9081 7.98384 18.2248C4.82551 17.7164 2.28384 15.1748 1.76718 12.0164C1.09218 7.82476 3.87551 4.12476 7.71718 3.34143" stroke="" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+    </t>
+
+    <t t-name="ks_radialBar_chart">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M3.35033 4.97496C2.29199 6.37496 1.66699 8.11663 1.66699 9.99996C1.66699 14.6 5.40033 18.3333 10.0003 18.3333C14.6003 18.3333 18.3337 14.6 18.3337 9.99996C18.3337 5.39996 14.6003 1.66663 10.0003 1.66663" stroke="" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M4.16699 9.99996C4.16699 13.225 6.77533 15.8333 10.0003 15.8333C13.2253 15.8333 15.8337 13.225 15.8337 9.99996C15.8337 6.77496 13.2253 4.16663 10.0003 4.16663" stroke="" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M10 13.3333C11.8417 13.3333 13.3333 11.8416 13.3333 9.99996C13.3333 8.15829 11.8417 6.66663 10 6.66663" stroke="" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+    </t>
+
+    <t t-name="ks_funnel_chart">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M4.50065 1.75H15.5007C16.4173 1.75 17.1673 2.5 17.1673 3.41667V5.25C17.1673 5.91667 16.7507 6.75 16.334 7.16667L12.7507 10.3333C12.2507 10.75 11.9173 11.5833 11.9173 12.25V15.8333C11.9173 16.3333 11.584 17 11.1673 17.25L10.0007 18C8.91732 18.6667 7.41732 17.9167 7.41732 16.5833V12.1667C7.41732 11.5833 7.08398 10.8333 6.75065 10.4167L3.58398 7.08333C3.16732 6.66667 2.83398 5.91667 2.83398 5.41667V3.5C2.83398 2.5 3.58398 1.75 4.50065 1.75Z" stroke="" stroke-width="1.25" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M9.10833 1.75L5 8.33333" stroke="" stroke-width="1.25" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+    </t>
+
+
+</templates>

@@ -1,0 +1,75 @@
+<odoo>
+    <data>
+
+        <record id="ks_dashboard_ninja_ai_form_view" model="ir.ui.view">
+            <field name="name">ks_dashboard_ninja.arti_int form</field>
+            <field name="model">ks_dashboard_ninja.arti_int</field>
+            <field name="arch" type="xml">
+                <form string="AI Dashboard" class="ks_import_dashboard_d_none ks_dashboard_ninja ks_create_chart_body p-0">
+                    <div class="ks-modal-body-inner p-0" invisible="created_dashboard_id > 0 or created_item_id > 0">
+<!--                        <div class="ks-modal-title">-->
+<!--                            <span>Generate items with AI</span>-->
+<!--                        </div>-->
+                        <div class="ks-generateAI-body create-ai">
+                            <group>
+                                <group>
+                                    <field name="ks_type" class="form-control form-input-box encapsulated-form-arrow" nolabel="1" string="Generate with" required="1"/>
+                                </group>
+                                <group>
+                                    <field name="ks_import_model_id"
+                                           string="Model" invisible="(ks_type == 'ks_keyword')" options="{'no_create': True, 'no_create_edit':True, 'no_open': True}"
+                                           required="(ks_type == 'ks_model')" placeholder="Enter Model" class="form-control form-input-box removed-link encapsulated-form-arrow"
+                                           nolabel="1"/>
+                                    <field class="ks_import_model_class form-control form-input-box encapsulated-keyword-input" name="ks_import_model" string="Model" nolabel="1"
+                                           placeholder="Select Model"
+                                           invisible="(ks_model_show == False)"
+                                           required="(ks_model_show == True)"/>
+                                </group>
+                                <group>
+                                    <field name="ks_input_keywords"
+                                           string="Keywords"
+                                           nolabel="1"
+                                           class="form-control form-input-box"
+                                           widget="ks_keyword_selection"
+                                           invisible="(ks_type == 'ks_model')"
+                                           required="(ks_type == 'ks_keyword')"/>
+                                    <field name="ks_model_show" class="form-control form-input-box "
+                                           invisible="(ks_type == 'ks_keyword') or (ks_type == 'ks_model')"/>
+
+                                </group>
+
+                            </group>
+                        </div>
+                    </div>
+
+                    <div class="text-center fw-semibold fs-5" invisible="created_dashboard_id == 0 and created_item_id == 0">
+                        Chart successfully created!! Please save to render immediately.
+                    </div>
+                    <footer>
+                        <button string="Save" special="save" invisible="created_dashboard_id == 0 and created_item_id == 0"
+                                class="dash-btn-red"/>
+                        <button name="ks_do_action" string="Generate with AI" type="object" class="dash-btn-red"
+                                invisible="(created_dashboard_id > 0 or created_item_id > 0) or (ks_type == 'ks_keyword')"/>
+                        <button name="ks_generate_item" string="Generate Item" type="object" class="dash-btn-red"
+                                invisible="(created_dashboard_id > 0 or created_item_id > 0) or (ks_type == 'ks_model')"/>
+                        <button string="Cancel" class="dash-default-btn" invisible="(created_dashboard_id > 0 or created_item_id > 0)"
+                                special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+
+        <record id="ks_dashboard_ninja_ai_action" model="ir.actions.act_window">
+            <field name="name">AI Dashboard</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">ks_dashboard_ninja.arti_int</field>
+            <field name="view_mode">form</field>
+            <field name="view_id" ref="ks_dashboard_ninja_ai_form_view"/>
+            <field name="target">new</field>
+        </record>
+
+
+    </data>
+
+</odoo>

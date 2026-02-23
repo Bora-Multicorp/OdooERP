@@ -1,0 +1,102 @@
+.ks_with_explanation {
+    display: flex;
+    width: 100%;
+    box-shadow: none !important;
+    min-width: unset !important;
+    max-width:unset !important;
+    gap: 24px;
+    @include max-768 {
+        flex-direction: column;
+        gap: 16px;
+        .ks_ai_chart,.ks_ai_explanation {
+            width: 100% !important;
+        }
+    }
+    &.encapsulated-tile-container:hover {
+        box-shadow: none !important;
+    }
+    .ks_ai_chart {
+        flex: unset !important;
+        width: 50%;
+        border: 0.82px solid var(--color-E5E7EB) !important;
+        border-radius: 16px;
+        height: 100%;
+        padding: 9px 16px;
+        display: -webkit-box;
+        display: -webkit-flex;
+        display: flex;
+        justify-content: center;
+        flex-direction: column;
+        align-items: start;
+        min-height: 400px;
+
+        .ks_list_view_container {
+            margin: 0;
+            .ks_list_item_table {
+                max-height: 282px !important;
+            }
+        }
+
+        .dashboard-header {
+            padding-left: 0 !important;
+        }
+        .ks_border_radius {
+            height: auto !important;
+        }
+        .ks_explain_ai_view {
+            width: 100%;
+        }
+    }
+    .ks_ai_explanation {
+        flex: unset !important;
+        width: 50%;
+        border: 1px solid var(--color-E5E7EB);
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 19.2px;
+        text-align: left;
+        color: var(--color-black);
+        position: relative;
+        background-color: var(--color-bg-main);
+        padding: 18px 14px;
+        min-height: 400px;
+        .charts-content-box {
+            max-height: 342px;
+            overflow: auto;
+            max-width: 100% !important;
+            @include custom-scrollbar;
+        }
+        .voice-button {
+            height: 40px;
+            width: 40px;
+            border-radius: 50%;
+            background-color: var(--color-white);
+            display: -webkit-box;
+            display: -webkit-flex;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: absolute;
+            right: 16px;
+            bottom: 16px;
+        }
+    }
+}
+
+.ks_row_root {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    .ks_row_child {
+        width: auto !important;
+        margin-bottom: 16px;
+        &:last-child {
+            margin-bottom: 0;
+        }
+    }
+}
+.ks-explain-with-ai-max-height{
+    max-height: 700px;
+    min-height: 700px;
+ }
