@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Payment Tracker List View (LO-002 columns) -->
+    <record id="ks_payment_tracker_list_view" model="ir.ui.view">
+        <field name="name">ks.payment.tracker.list</field>
+        <field name="model">ks.payment.tracker</field>
+        <field name="arch" type="xml">
+            <list string="Payment Tracker" create="1" delete="1" edit="1" default_order="sn">
+                <field name="sn"/>
+                <field name="purchase_order_id"/>
+                <field name="user_id" widget="many2one_avatar_user"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+                <field name="partner_id"/>
+                <field name="invoice_no"/>
+                <field name="e_invoice"/>
+                <field name="product_id"/>
+                <field name="fa"/>
+                <field name="product_qty"/>
+                <field name="price_unit" widget="monetary"/>
+                <field name="price_subtotal" widget="monetary"/>
+                <field name="currency_id" column_invisible="1"/>
+                <field name="tds" widget="monetary"/>
+                <field name="amt_to_be_paid" widget="monetary"/>
+                <field name="stock_status"/>
+                <field name="purpose"/>
+                <field name="purchase_date"/>
+                <field name="transporter_id"/>
+                <field name="at_warehouse"/>
+                <field name="approved" widget="boolean"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Payment Tracker Form View -->
+    <record id="ks_payment_tracker_form_view" model="ir.ui.view">
+        <field name="name">ks.payment.tracker.form</field>
+        <field name="model">ks.payment.tracker</field>
+        <field name="arch" type="xml">
+            <form string="Payment Tracker">
+                <sheet>
+                    <group>
+                        <group string="Reference">
+                            <field name="sn" readonly="1"/>
+                            <field name="purchase_order_id" options="{'no_create': True}"/>
+                            <field name="purchase_line_id" options="{'no_create': True}" invisible="1"/>
+                            <field name="user_id" string="Sales Person"/>
+                            <field name="company_id" string="From"/>
+                            <field name="partner_id" string="Vendor"/>
+                            <field name="purchase_date"/>
+                        </group>
+                        <group string="Invoice &amp; Product">
+                            <field name="invoice_no"/>
+                            <field name="e_invoice"/>
+                            <field name="product_id" string="Model"/>
+                            <field name="fa" string="F/A"/>
+                            <field name="product_qty" string="Qty"/>
+                            <field name="price_unit" string="Rate"/>
+                            <field name="price_subtotal" string="Amount"/>
+                            <field name="currency_id" column_invisible="1"/>
+                            <field name="tds"/>
+                            <field name="amt_to_be_paid"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="Status">
+                            <field name="stock_status"/>
+                            <field name="purpose"/>
+                            <field name="transporter_id"/>
+                            <field name="at_warehouse"/>
+                            <field name="approved"/>
+                            <field name="approved_notes"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action: Payment Tracker -->
+    <record id="ks_payment_tracker_action" model="ir.actions.act_window">
+        <field name="name">Payment Tracker</field>
+        <field name="res_model">ks.payment.tracker</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{'search_default_my_records': 0}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a Payment Tracker record manually, or select Purchase Orders from the
+                Purchase menu and click <strong>Submit for Payment Approval</strong> to create
+                tracker lines from PO lines.
+            </p>
+        </field>
+    </record>
+
+    <!-- Menu: Payment Tracker under Purchase -->
+    <menuitem id="ks_payment_tracker_menu_root"
+              name="Payment Tracker"
+              action="ks_payment_tracker_action"
+              parent="purchase.menu_purchase_root"
+              sequence="50"/>
+</odoo>

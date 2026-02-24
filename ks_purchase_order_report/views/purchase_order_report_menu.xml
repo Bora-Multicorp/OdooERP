@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_purchase_order_otek_report" model="ir.actions.act_url">
+        <field name="name">Otek Purchase Order Report</field>
+        <field name="url">/purchase_order/export_otek_xlsx</field>
+        <field name="target">self</field>
+    </record>
+
+    <menuitem id="menu_purchase_order_otek_report"
+              name="Otek Purchase Order Report"
+              parent="purchase.menu_purchase_root"
+              action="action_purchase_order_otek_report"
+              sequence="100"/>
+</odoo>
