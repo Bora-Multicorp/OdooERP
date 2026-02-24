@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+<!--    <record id="ir_cron_scheduler_vendor_breached_report" model="ir.cron">-->
+<!--        <field name="name">Vendor Breached Report</field>-->
+<!--        <field name="interval_number">1</field>-->
+<!--        <field name="interval_type">days</field>-->
+<!--&lt;!&ndash;        <field name="nextcall"&ndash;&gt;-->
+<!--&lt;!&ndash;               eval="(DateTime.now().replace(hour=10, minute=0) + timedelta(days=1)).strftime('%Y-%m-%d %H:%M:%S')"/>&ndash;&gt;-->
+<!--        <field name="model_id" ref="model_procurement_sla_cron"/>-->
+<!--        &lt;!&ndash;<field name="code">model.trigger_email_kyc_expiry_follow_up()</field>&ndash;&gt;-->
+<!--        <field name="code">model.cron_check_sla_breach()</field>-->
+<!--        <field name="state">code</field>-->
+<!--    </record>-->
+
+    <record id="ir_cron_sla_breach_check" model="ir.cron">
+    <field name="name">SLA Breach Check</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+    <field name="model_id" ref="model_procurement_sla_cron"/>
+    <field name="state">code</field>
+    <field name="code">model.cron_check_sla_breach()</field>
+
+
+
+</record>
+
+</odoo>

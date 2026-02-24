@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        
+        <!-- IMEI On Hold Location -->
+        <record id="imei_on_hold_location" model="stock.location">
+            <field name="name">IMEI On Hold</field>
+            <field name="usage">internal</field>
+            <field name="location_id" ref="stock.stock_location_locations"/>
+            <field name="barcode">IMEI-ONHOLD</field>
+        </record>
+
+    </data>
+</odoo>

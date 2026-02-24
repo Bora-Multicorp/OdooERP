@@ -219,6 +219,7 @@ class VendorKycWizard(models.TransientModel):
                 rec.business_trade_name = False
 
     partner_id = fields.Many2one('res.partner', string='Contact', domain="[('id', '=', active_id)]", tracking=True)
+    existing_kyc_id = fields.Many2one('res.partner.kyc.approval', string='Existing KYC Record', readonly=True)
     email = fields.Char("Email", required=True, tracking=True)
     point_of_contact = fields.Char("Point of Contact", required=True, tracking=True)
     poc_user = fields.Many2one('res.users', string="Point of Contact to Vendor", default=lambda self: self.env.user,
@@ -268,7 +269,7 @@ class VendorKycWizard(models.TransientModel):
                                          string="Shop Act documents", required=False)
 
     gst_return_duration = fields.Selection([('Monthly', 'Monthly'), ('Quarterly', 'Quarterly')],
-                                           required=False, string="GST Return duration")
+                                           required=False, string="Filing Frequency")
 
     shop_photos = fields.Many2many('ir.attachment', 'vendor_kyc_shop_photos_rel', 'wizard_id', 'attachment_id',
                                    string="Shop Photos", required=True,
@@ -286,7 +287,7 @@ class VendorKycWizard(models.TransientModel):
     incorporation_certificate = fields.Many2many('ir.attachment', 'incorportaion_certificate_rel', 'wizard_id',
                                                  'attachment_id',
                                                  string="Incorporation Certificate")
-    comp_google_loc = fields.Char(string="Google Location of Shop", required=False)
+    comp_google_loc = fields.Char(string="Google Location of Shop", required=True)
 
     partner_llp_filename = fields.Char()
     partner_llp = fields.Binary(string="Partnership Deed or LLP Deed")
@@ -326,13 +327,119 @@ class VendorKycWizard(models.TransientModel):
         values = super().default_get(fields)
         res_id = self._context.get('active_id')
         res_model = self._context.get('active_model')
-        if res_id and res_model:
+        is_rekyc = self._context.get('is_rekyc', False)
+        default_partner_id = self._context.get('default_partner_id')
+        
+        # Get partner - either from context or from active record
+        partner = None
+        if default_partner_id:
+            # Partner ID directly in context (from Re-KYC wizard)
+            partner = self.env['res.partner'].browse(default_partner_id)
+        elif res_id and res_model:
             record = self.env[res_model].browse(res_id)
+            # If record is a partner, use it directly
+            if res_model == 'res.partner':
+                partner = record
+            # If record is rekyc.request.wizard, get partner from it
+            elif res_model == 'rekyc.request.wizard' and hasattr(record, 'partner_id'):
+                partner = record.partner_id
+        
+        # Update values from partner if found
+        if partner:
             values.update(
-                email=record.email,
-                gst_no=record.vat,
-                pan_no=record.l10n_in_pan,
+                email=partner.email or '',
+                gst_no=partner.vat or '',
+                pan_no=partner.l10n_in_pan or '',
             )
+            
+            # If Re-KYC, pre-fill from existing KYC record
+            if is_rekyc:
+                existing_kyc = self.env['res.partner.kyc.approval'].search([
+                    ('partner_id', '=', partner.id)
+                ], order='create_date desc', limit=1)
+                
+                if existing_kyc:
+                    # Pre-fill all main fields from existing KYC
+                    kyc_fields = [
+                        'email', 'point_of_contact', 'business_legal_name',
+                        'is_same_trade_name', 'business_trade_name', 'const_business',
+                        'other_business', 'aadhaar_pan_link', 'gst_no', 'license_registered',
+                        'udyam_number', 'gst_return_duration', 'pan_no', 'comp_google_loc',
+                        'partner_llp', 'cin_no', 'no_partner_director'
+                    ]
+                    
+                    for field in kyc_fields:
+                        if field in fields and hasattr(existing_kyc, field):
+                            value = getattr(existing_kyc, field)
+                            if value:
+                                values[field] = value
+                    
+                    # Handle poc_user separately (Many2one field - need to convert to ID)
+                    if 'poc_user' in fields and existing_kyc.poc_user:
+                        values['poc_user'] = existing_kyc.poc_user.id
+                    
+                    # Pre-fill Many2many attachment fields
+                    attachment_fields = [
+                        'gst_certificate', 'udyam_document', 'shop_act_document',
+                        'shop_photos', 'shop_videos', 'pan_card_document',
+                        'incorporation_certificate', 'moa_aoa', 'electricity_bill'
+                    ]
+                    
+                    for field in attachment_fields:
+                        if field in fields and hasattr(existing_kyc, field):
+                            attachments = getattr(existing_kyc, field)
+                            if attachments:
+                                values[field] = [(6, 0, attachments.ids)]
+                    
+                    # Pre-fill One2many fields (directors, banks, addresses)
+                    if 'directors_detail' in fields and existing_kyc.directors_detail:
+                        directors_data = []
+                        for director in existing_kyc.directors_detail:
+                            dir_vals = {
+                                'name': director.name,
+                                'designation': director.designation,
+                                'contact_no': director.contact_no,
+                                'email': director.email,
+                            }
+                            # Add attachments if they exist
+                            if director.aadhaar_card_attachments:
+                                dir_vals['aadhaar_card_attachments'] = [(6, 0, director.aadhaar_card_attachments.ids)]
+                            if director.pan_card_attachments:
+                                dir_vals['pan_card_attachments'] = [(6, 0, director.pan_card_attachments.ids)]
+                            directors_data.append((0, 0, dir_vals))
+                        values['directors_detail'] = directors_data
+                    
+                    if 'bank_detail' in fields and existing_kyc.bank_detail:
+                        bank_data = []
+                        for bank in existing_kyc.bank_detail:
+                            bank_vals = {
+                                'bank_name': bank.bank_name,
+                                'account_no': bank.account_no,
+                                'ifsc_code': bank.ifsc_code,
+                                'bank_address': bank.bank_address,
+                            }
+                            if bank.bank_cheque_attachments:
+                                bank_vals['bank_cheque_attachments'] = [(6, 0, bank.bank_cheque_attachments.ids)]
+                            bank_data.append((0, 0, bank_vals))
+                        values['bank_detail'] = bank_data
+                    
+                    if 'address_detail' in fields and existing_kyc.address_detail:
+                        address_data = []
+                        for addr in existing_kyc.address_detail:
+                            address_data.append((0, 0, {
+                                'business_street': addr.business_street,
+                                'business_city': addr.business_city,
+                                'business_pincode': addr.business_pincode,
+                                'business_phone': addr.business_phone,
+                                'business_email': addr.business_email,
+                                'business_state_id': addr.business_state_id.id if addr.business_state_id else False,
+                                'business_country_id': addr.business_country_id.id if addr.business_country_id else False,
+                            }))
+                        values['address_detail'] = address_data
+                    
+                    # Store existing KYC ID for update
+                    values['existing_kyc_id'] = existing_kyc.id
+        
         return values
 
     # @api.onchange('const_business')
@@ -363,11 +470,18 @@ class VendorKycWizard(models.TransientModel):
                     value = getattr(line, source_field)
                     # Convert M2O records to their ID
                     if isinstance(value, models.BaseModel):
-                        item[target_field] = value.id
+                        # Handle recordset - get ID if exists, else False
+                        item[target_field] = value.id if value else False
+                    elif value is None:
+                        item[target_field] = False
                     else:
                         item[target_field] = value
                 for m2m_field in many2many_fields:
-                    item[m2m_field] = [(6, 0, getattr(line, m2m_field).ids)]
+                    attachments = getattr(line, m2m_field, False)
+                    if attachments:
+                        item[m2m_field] = [(6, 0, attachments.ids)]
+                    else:
+                        item[m2m_field] = [(5, 0, 0)]  # Remove all
                 result.append((0, 0, item))
             return result
 
@@ -410,12 +524,45 @@ class VendorKycWizard(models.TransientModel):
             }
         )
 
+        directors_payload = []
+        for line in self.directors_detail:
+            directors_payload.append({
+                'designation': line.designation or '',
+                'name': line.name or '',
+                'contact_no': line.contact_no or '',
+                'email': line.email or '',
+                'aadhaar_card_attachments': sorted(line.aadhaar_card_attachments.ids),
+                'pan_card_attachments': sorted(line.pan_card_attachments.ids),
+            })
+
+        bank_payload = []
+        for line in self.bank_detail:
+            bank_payload.append({
+                'bank_name': line.bank_name or '',
+                'account_no': line.account_no or '',
+                'ifsc_code': line.ifsc_code or '',
+                'bank_address': line.bank_address or '',
+                'bank_cheque_attachments': sorted(line.bank_cheque_attachments.ids),
+            })
+
+        address_payload = []
+        for line in self.address_detail:
+            address_payload.append({
+                'business_street': line.business_street or '',
+                'business_city': line.business_city or '',
+                'business_pincode': line.business_pincode or '',
+                'business_phone': line.business_phone or '',
+                'business_email': line.business_email or '',
+                'business_state_id': line.business_state_id.id if line.business_state_id else False,
+                'business_country_id': line.business_country_id.id if line.business_country_id else False,
+            })
+
         # Prepare main record values
         kyc_vals = {
-            'partner_id': self.partner_id.id,
+            'partner_id': self.partner_id.id if self.partner_id else False,
             'email': self.email,
             'point_of_contact': self.point_of_contact,
-            'poc_user': self.poc_user.id,
+            'poc_user': self.poc_user.id if self.poc_user else False,
             'business_legal_name': self.business_legal_name,
             'is_same_trade_name': self.is_same_trade_name,
             'business_trade_name': self.business_trade_name,
@@ -438,21 +585,74 @@ class VendorKycWizard(models.TransientModel):
             'pan_no': self.pan_no,
             'comp_google_loc': self.comp_google_loc,
             'partner_llp': self.partner_llp,
-            'moa_aoa': [(6, 0, self.moa_aoa.ids)],
+            'moa_aoa': [(6, 0, self.moa_aoa.ids)] if self.moa_aoa else [(5, 0, 0)],
             'cin_no': self.cin_no,
-            'electricity_bill': [(6, 0, self.electricity_bill.ids)],
-            'pan_card_document': [(6, 0, self.pan_card_document.ids)],
-            'incorporation_certificate': [(6, 0, self.incorporation_certificate.ids)],
-            'gst_certificate': [(6, 0, self.gst_certificate.ids)],
-            'udyam_document': [(6, 0, self.udyam_document.ids)],
-            'shop_act_document': [(6, 0, self.shop_act_document.ids)],
+            'electricity_bill': [(6, 0, self.electricity_bill.ids)] if self.electricity_bill else [(5, 0, 0)],
+            'pan_card_document': [(6, 0, self.pan_card_document.ids)] if self.pan_card_document else [(5, 0, 0)],
+            'incorporation_certificate': [(6, 0, self.incorporation_certificate.ids)] if self.incorporation_certificate else [(5, 0, 0)],
+            'gst_certificate': [(6, 0, self.gst_certificate.ids)] if self.gst_certificate else [(5, 0, 0)],
+            'udyam_document': [(6, 0, self.udyam_document.ids)] if self.udyam_document else [(5, 0, 0)],
+            'shop_act_document': [(6, 0, self.shop_act_document.ids)] if self.shop_act_document else [(5, 0, 0)],
             'gst_return_duration': self.gst_return_duration,
-            'shop_photos': [(6, 0, self.shop_photos.ids)],
-            'shop_videos': [(6, 0, self.shop_videos.ids)],
+            'shop_photos': [(6, 0, self.shop_photos.ids)] if self.shop_photos else [(5, 0, 0)],
+            'shop_videos': [(6, 0, self.shop_videos.ids)] if self.shop_videos else [(5, 0, 0)],
             'bank_detail': bank_data,
         }
-        # Create the KYC record
-        kyc_record = self.env['res.partner.kyc.approval'].create(kyc_vals)
+        
+        # Check if this is Re-KYC (update existing record) or new KYC (create new record)
+        if self.existing_kyc_id:
+            # Re-KYC: submit changes for approval, do not update old record immediately.
+            kyc_record = self.existing_kyc_id
+            payload = {
+                'email': self.email or '',
+                'point_of_contact': self.point_of_contact or '',
+                'poc_user': self.poc_user.id if self.poc_user else False,
+                'business_legal_name': self.business_legal_name or '',
+                'is_same_trade_name': bool(self.is_same_trade_name),
+                'business_trade_name': self.business_trade_name or '',
+                'const_business': self.const_business or '',
+                'other_business': self.other_business or '',
+                'aadhaar_pan_link': self.aadhaar_pan_link or '',
+                'gst_no': self.gst_no or '',
+                'license_registered': self.license_registered or '',
+                'udyam_number': self.udyam_number or '',
+                'gst_return_duration': self.gst_return_duration or '',
+                'pan_no': self.pan_no or '',
+                'comp_google_loc': self.comp_google_loc or '',
+                'partner_llp': self.partner_llp or False,
+                'cin_no': self.cin_no or '',
+                'no_partner_director': self.no_partner_director or '',
+                'moa_aoa': sorted(self.moa_aoa.ids),
+                'electricity_bill': sorted(self.electricity_bill.ids),
+                'pan_card_document': sorted(self.pan_card_document.ids),
+                'incorporation_certificate': sorted(self.incorporation_certificate.ids),
+                'gst_certificate': sorted(self.gst_certificate.ids),
+                'udyam_document': sorted(self.udyam_document.ids),
+                'shop_act_document': sorted(self.shop_act_document.ids),
+                'shop_photos': sorted(self.shop_photos.ids),
+                'shop_videos': sorted(self.shop_videos.ids),
+                'directors_detail': directors_payload,
+                'bank_detail': bank_payload,
+                'address_detail': address_payload,
+            }
+
+            rekyc_remark = self._context.get('rekyc_remark', '')
+            kyc_record.submit_rekyc_payload(payload, rekyc_remark)
+            return {'type': 'ir.actions.act_window_close'}
+        else:
+            # New KYC: Create new record
+            # Check if partner already has a KYC record to prevent duplicates
+            existing_kyc = self.env['res.partner.kyc.approval'].search([
+                ('partner_id', '=', self.partner_id.id)
+            ], limit=1)
+            
+            if existing_kyc:
+                raise ValidationError(_(
+                    "A KYC record already exists for this partner. "
+                    "Please use Re-KYC to update the existing record instead of creating a new one."
+                ))
+            
+            kyc_record = self.env['res.partner.kyc.approval'].create(kyc_vals)
 
         # Link attachments to the new KYC record
         # attachment_fields = [

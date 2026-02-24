@@ -91,6 +91,33 @@ class SaleAdvancePayment(models.TransientModel):
         if self.journal_id and self.journal_id.inbound_payment_method_line_ids:
             self.payment_method_line_id = self.journal_id.inbound_payment_method_line_ids[0]
 
+    def _add_advance_deduction_line(self):
+        """Add a sale order line to reduce the SO total by the advance amount (e.g. SO 100, advance 20 → total 80)."""
+        self.ensure_one()
+        product = self.env.ref(
+            'ks_sale_advance_payment.product_template_advance_deduction',
+            raise_if_not_found=False
+        )
+        if not product:
+            return
+        product = product.product_variant_id
+        if not product:
+            return
+        order = self.sale_order_id
+        # Create line: Advance Payment Deduction, qty 1, unit price = -advance amount
+        line_vals = {
+            'order_id': order.id,
+            'product_id': product.id,
+            'name': _('Advance payment received'),
+            'product_uom_qty': 1.0,
+            'product_uom': product.uom_id.id,
+            'price_unit': -self.amount,
+            'tax_id': [(5, 0, 0)],  # No tax on deduction
+        }
+        line = self.env['sale.order.line'].create(line_vals)
+        # Ensure price is not overwritten by pricelist
+        line.write({'price_unit': -self.amount})
+
     def action_create_payment(self):
         """Create account.payment record directly from sale order"""
         self.ensure_one()
@@ -135,13 +162,19 @@ class SaleAdvancePayment(models.TransientModel):
         # Post the payment
         payment.action_post()
         
+        # Update sale order: add a deduction line so SO total is reduced by advance amount (e.g. 100 - 20 = 80)
+        self._add_advance_deduction_line()
+        
         # Log in chatter
         formatted_amount = formatLang(self.env, self.amount, currency_obj=self.currency_id)
         self.sale_order_id.message_post(
-            body=_('Advance payment <a href="#" data-oe-model="account.payment" data-oe-id="%s">%s</a> of %s has been created and posted.', 
-                   payment.id,
-                   payment.name, 
-                   formatted_amount)
+            body=_(
+                'An advance payment has been created and posted. '
+                'Payment: %s, '
+                'Amount: %s',
+                payment.name,
+                formatted_amount
+            )
         )
         
         # Return action to view the created payment

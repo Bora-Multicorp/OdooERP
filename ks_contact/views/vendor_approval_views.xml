@@ -14,10 +14,16 @@
                         <field name="has_pending_approval" invisible="1"/>
                         <field name="is_admin_user" invisible="1"/>
                         <field name="is_form_owner" invisible="1"/>
+                        <field name="can_rekyc_approve" invisible="1"/>
                         <button name="%(approve_request_wizard_action)d" string="Approve" type="action"
                                 invisible="state in ('draft', 'confirmed', 'rejected', 'expired') or not has_pending_approval or is_approved"/>
                         <button name="%(reject_request_wizard_action)d" string="Reject" type="action"
                                 invisible="state in ('draft', 'confirmed', 'rejected', 'expired') or not has_pending_approval or is_approved"/>
+                        <button name="action_approve_rekyc" string="Approve Re-KYC" type="object"
+                                class="oe_highlight"
+                                invisible="rekyc_state != 'pending' or not can_rekyc_approve"/>
+                        <button name="action_open_rekyc_reject_wizard" string="Reject Re-KYC" type="object"
+                                invisible="rekyc_state != 'pending' or not can_rekyc_approve"/>
                         <button name="approve_by_manager" string="Approval By Manager" type="object"
                                 class="oe_highlight"
                                 confirm="Do you want to Approve the request?" invisible="1"/>
@@ -31,6 +37,14 @@
                         <group>
                             <field name="partner_id" readonly="1"/>
                             <field name="can_set_draft" invisible="1"/>
+                            <field name="rekyc_state" readonly="1"/>
+                            <field name="rekyc_requested_by" readonly="1" invisible="rekyc_state == 'draft'"/>
+                            <field name="rekyc_requested_on" readonly="1" invisible="rekyc_state == 'draft'"/>
+                            <field name="rekyc_approved_by" readonly="1" invisible="rekyc_state != 'approved'"/>
+                            <field name="rekyc_approved_on" readonly="1" invisible="rekyc_state != 'approved'"/>
+                            <field name="rekyc_rejected_by" readonly="1" invisible="rekyc_state != 'rejected'"/>
+                            <field name="rekyc_rejected_on" readonly="1" invisible="rekyc_state != 'rejected'"/>
+                            <field name="rekyc_rejection_reason" readonly="1" invisible="rekyc_state != 'rejected'"/>
                             <field name="email" widget="upper_case" readonly="state not in ('draft')"/>
                             <field name="point_of_contact" placeholder="Your Answer" widget="upper_case"
                                    readonly="state not in ('draft')"/>
@@ -72,7 +86,7 @@
                                            domain="[('code', '=', 'IN')]"/>
                                 </form>
                             </field>
-                            <field name="const_business" widget="radio" readonly="state not in ['draft']"/>
+                            <field name="const_business"  placeholder="Your Answer" readonly="state not in ['draft']"/>
                             <field name="other_business" string="Please Specify"
                                    readonly="state not in ['draft']"
                                    invisible="const_business != 'Other'"
@@ -134,7 +148,7 @@
                                    options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 1}"
                                    readonly="state not in ['draft']"
                                    required="const_business in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
-                            <field name="aadhaar_pan_link" widget="radio" options="{'horizontal': true}"
+                            <field name="aadhaar_pan_link" placeholder="Your Answer" options="{'horizontal': true}"
                                    readonly="state not in ['draft']"/>
                             <field name="gst_no" placeholder="Your Answer" widget="upper_case"
                                    readonly="state not in ['draft']"/>

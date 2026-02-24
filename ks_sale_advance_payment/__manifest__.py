@@ -7,6 +7,7 @@
     'depends': ['sale', 'account', 'ks_payment_access_control'],
     'data': [
         'security/ir.model.access.csv',
+        'data/advance_deduction_product.xml',
         'wizard/sale_advance_payment_views.xml',
         'views/sale_order_views.xml',
     ],

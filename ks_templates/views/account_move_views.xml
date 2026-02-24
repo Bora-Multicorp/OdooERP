@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Inherit account.move form view to add custom fields in Other Information tab -->
+        <record id="view_move_form_inherit_ks_templates" model="ir.ui.view">
+            <field name="name">account.move.form.ks.templates</field>
+            <field name="model">account.move</field>
+            <field name="inherit_id" ref="account.view_move_form"/>
+            <field name="arch" type="xml">
+                <!-- Add fields to Other Information tab -->
+                <xpath expr="//group[@name='sale_info_group']" position="inside">
+                    <field name="ks_delivery_note" placeholder="Delivery Note"/>
+                    <field name="ks_supplier_reference" placeholder="Supplier's Reference"/>
+                    <field name="ks_reference_no_date" placeholder="Reference No. &amp; Date"/>
+                    <field name="ks_despatch_document_no" placeholder="Despatch Document No."/>
+                    <field name="ks_delivery_note_date" widget="date" placeholder="Delivery Note Date"/>
+                    <field name="ks_despatched_through" placeholder="Despatched Through"/>
+                    <field name="ks_vessel_flight_no" placeholder="Vessel / Flight No."/>
+                    <field name="ks_place_of_receipt_by_shipper" placeholder="Place of Receipt by Shipper"/>
+                    <field name="ks_city_port_of_loading" placeholder="City / Port of Loading"/>
+                    <field name="ks_city_port_of_discharge" placeholder="City / Port of Discharge"/>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>
+

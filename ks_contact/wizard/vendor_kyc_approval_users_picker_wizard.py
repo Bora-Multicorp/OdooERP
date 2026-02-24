@@ -47,17 +47,15 @@ class POConfirmationApprovalUsersPicker(models.TransientModel):
     def _compute_approver_user_ids(self):
         """Compute available approver users from config"""
         for rec in self:
-            # Get users configured as Approver 1
-            approver1_configs = self.env['vendor.approval.config'].search([
-                ('approver_type', '=', 'approver1'),
-            ])
-            rec.approver1_user_ids = approver1_configs.mapped('user_id')
-
-            # Get users configured as Approver 2
-            approver2_configs = self.env['vendor.approval.config'].search([
-                ('approver_type', '=', 'approver2'),
-            ])
-            rec.approver2_user_ids = approver2_configs.mapped('user_id')
+            config = self.env['vendor.approval.config'].get_config()
+            if config:
+                # Get users configured as Approver 1
+                rec.approver1_user_ids = config.ks_approver_1_ids
+                # Get users configured as Approver 2
+                rec.approver2_user_ids = config.ks_approver_2_ids
+            else:
+                rec.approver1_user_ids = False
+                rec.approver2_user_ids = False
 
     @api.depends('approver1_user', 'approver2_user')
     def _compute_add_button_disabled(self):

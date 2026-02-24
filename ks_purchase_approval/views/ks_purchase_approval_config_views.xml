@@ -1,89 +1,102 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Configuration Form View -->
-    <record id="ks_purchase_approval_config_form_view" model="ir.ui.view">
+    <!-- Purchase Approval Configuration Form View -->
+    <record id="ks_purchase_approval_config_form" model="ir.ui.view">
         <field name="name">ks.purchase.approval.config.form</field>
         <field name="model">ks.purchase.approval.config</field>
         <field name="arch" type="xml">
             <form string="Purchase Approval Configuration">
                 <sheet>
                     <div class="oe_title">
-                        <h1>Purchase Order Approval Configuration</h1>
+                        <h1>
+                            <field name="name" placeholder="Global Purchase Approval Configuration"/>
+                        </h1>
                     </div>
-                    <group>
-                        <field name="user_id" 
-                               options="{'no_create': True}"
-                               domain="[('share', '=', False)]"/>
-                        <field name="active"/>
-                    </group>
-                    <group>
-                        <field name="ks_confirm_approver_type" 
-                               widget="radio" 
-                               options="{'horizontal': true}"/>
-                        <field name="ks_update_approver_type" 
-                               widget="radio" 
-                               options="{'horizontal': true}"/>
-                        <field name="ks_cancel_approver_type" 
-                               widget="radio" 
-                               options="{'horizontal': true}"/>
-                    </group>
                     <div class="alert alert-info" role="alert">
-                        <strong>Note:</strong> 
-                        <ul>
-                            <li>Each user can be configured as Approver 1 or Approver 2 for each approval type (Confirmation, Update, Cancel).</li>
-                            <li>The same user can be selected as both Approver 1 and Approver 2 for different approval types.</li>
-                            <li>When submitting for approval, users will select approvers from the configured list.</li>
-                            <li>Both approvers are mandatory and approval process is sequential (Approver 1 must approve before Approver 2).</li>
-                        </ul>
+                        <strong>Global Configuration:</strong> This configuration applies to all companies. Only one active configuration is allowed.
                     </div>
+                    <group>
+                        <group string="Approval Mode">
+                            <field name="ks_approval_mode" widget="radio"/>
+                        </group>
+                        <group>
+                            <field name="active" widget="boolean_toggle"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Approvers" name="approvers">
+                            <group>
+                                <group string="Approver 1 Users">
+                                    <field name="ks_approver_1_ids" 
+                                           widget="many2many_tags"
+                                           options="{'no_create': True}"
+                                           context="{'show_email': True}"
+                                           placeholder="Select users for Approval 1"/>
+                                </group>
+                                <group string="Approver 2 Users" 
+                                       invisible="ks_approval_mode == 'single'">
+                                    <field name="ks_approver_2_ids" 
+                                           widget="many2many_tags"
+                                           options="{'no_create': True}"
+                                           context="{'show_email': True}"
+                                           placeholder="Select users for Approval 2"/>
+                                </group>
+                            </group>
+                            <div class="alert alert-info" role="alert" 
+                                 invisible="ks_approval_mode != 'single'">
+                                <strong>Single Level Approval:</strong> Only one approver from Approver 1 list is required to confirm Purchase Orders.
+                                Users will select an approver when requesting approval.
+                            </div>
+                            <div class="alert alert-info" role="alert" 
+                                 invisible="ks_approval_mode != 'two_way'">
+                                <strong>Two Level Approval:</strong> Both Approver 1 and Approver 2 must approve before Purchase Orders are confirmed.
+                                Users will select approvers from each list when requesting approval.
+                                Approver 2 cannot approve until Approver 1 has approved.
+                            </div>
+                        </page>
+                    </notebook>
                 </sheet>
             </form>
         </field>
     </record>
 
-    <!-- Configuration Tree View -->
-    <record id="ks_purchase_approval_config_tree_view" model="ir.ui.view">
-        <field name="name">ks.purchase.approval.config.tree</field>
+    <!-- Purchase Approval Configuration List View -->
+    <record id="ks_purchase_approval_config_list" model="ir.ui.view">
+        <field name="name">ks.purchase.approval.config.list</field>
         <field name="model">ks.purchase.approval.config</field>
         <field name="arch" type="xml">
             <list string="Purchase Approval Configurations">
-                <field name="user_id"/>
-                <field name="ks_confirm_approver_type"/>
-                <field name="ks_update_approver_type"/>
-                <field name="ks_cancel_approver_type"/>
-                <field name="active"/>
+                <field name="name"/>
+                <field name="active" widget="boolean_toggle"/>
+                <field name="ks_approval_mode"/>
+                <field name="ks_approver_1_ids" widget="many2many_tags"/>
+                <field name="ks_approver_2_ids" widget="many2many_tags" optional="show"/>
             </list>
         </field>
     </record>
 
-    <!-- Configuration Action -->
-    <record id="ks_purchase_approval_config_action" model="ir.actions.act_window">
-        <field name="name">Approval Configuration</field>
+    <!-- Purchase Approval Configuration Action (Admin only) -->
+    <record id="action_ks_purchase_approval_config" model="ir.actions.act_window">
+        <field name="name">Purchase Approval Configuration</field>
         <field name="res_model">ks.purchase.approval.config</field>
         <field name="view_mode">list,form</field>
-        <field name="context">{'search_default_active': 1, 'default_active': True}</field>
-        <field name="domain">[]</field>
+        <field name="groups_id" eval="[(4, ref('base.group_system'))]"/>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
                 Configure Purchase Order Approval Workflow
             </p>
             <p>
-                Set up approvers for:
-                <ul>
-                    <li>PO Confirmation</li>
-                    <li>PO Update Requests</li>
-                    <li>PO Cancellation Requests</li>
-                </ul>
+                Set up approvers for Purchase Order approval requests.
+                You can choose between single level approval or require both Approver 1 and Approver 2 to approve.
             </p>
         </field>
     </record>
 
-    <!-- Menu Items -->
+    <!-- Menu Items (Admin only) -->
     <menuitem id="menu_ks_purchase_approval_config"
-              name="Approval Configuration"
+              name="Purchase Approval Configuration"
               parent="purchase.menu_purchase_config"
-              action="ks_purchase_approval_config_action"
-              sequence="5"
-              groups="purchase.group_purchase_manager"/>
+              action="action_ks_purchase_approval_config"
+              sequence="100"
+              groups="base.group_system"/>
 </odoo>
-

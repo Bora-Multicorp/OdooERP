@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from odoo import fields, models
+from odoo import fields, models, _
 
 
 class ReKYCRequestWizard(models.TransientModel):
@@ -16,20 +16,6 @@ class ReKYCRequestWizard(models.TransientModel):
         if not partner:
             return
 
-        # Reset KYC and approval flags
-        update_vals = {
-            'is_kyc': False,
-            'is_approved': False,
-            'deadline': False,
-        }
-
-        # Adjust partner ranks
-        if partner.is_vendor:
-            update_vals['supplier_rank'] = 0
-
-
-        partner.write(update_vals)
-
         # Log remark in chatter
         partner.message_post(
             body=f"Re-KYC Requested: {self.remark}",
@@ -37,4 +23,16 @@ class ReKYCRequestWizard(models.TransientModel):
             subtype_xmlid="mail.mt_note",
         )
 
-        return {'type': 'ir.actions.act_window_close'}
+        # Open KYC wizard for Re-KYC with existing data pre-filled
+        return {
+            'name': _('Re-KYC Form'),
+            'type': 'ir.actions.act_window',
+            'res_model': 'vendor.kyc.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'default_partner_id': partner.id,
+                'is_rekyc': True,  # Flag to indicate this is Re-KYC
+                'rekyc_remark': self.remark,
+            },
+        }

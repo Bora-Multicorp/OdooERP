@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Inherit stock.picking form view to add packing list fields -->
+        <record id="view_stock_picking_form_inherit_ks_templates" model="ir.ui.view">
+            <field name="name">stock.picking.form.ks.templates</field>
+            <field name="model">stock.picking</field>
+            <field name="inherit_id" ref="stock.view_picking_form"/>
+            <field name="arch" type="xml">
+                <!-- Add fields to existing Additional Info tab -->
+                <xpath expr="//page[@name='extra']" position="inside">
+                    <group string="Packing List Information">
+                        <group>
+                            <field name="ks_exporter_ref" placeholder="Exporter's Ref"/>
+                            <field name="ks_other_reference" placeholder="Other Reference(s)"/>
+                            <field name="ks_supplier_reference" placeholder="Supplier's Reference"/>
+                            <field name="ks_reference_no_date" placeholder="Reference No. and Date"/>
+                        </group>
+                        <group>
+                            <field name="ks_country_of_origin" placeholder="Country of Origin of Goods"/>
+                            <field name="ks_country_of_final_destination" placeholder="Country of Final Destination"/>
+                            <field name="ks_pre_carriage_by" placeholder="Pre-Carriage by"/>
+                            <field name="ks_place_of_receipt_by_pre_carrier" placeholder="Place of Receipt by Pre-Carrier"/>
+                            <field name="ks_no_kin_of_pkg" placeholder="No. and Kind of Pkg"/>
+                        </group>
+                        <group>
+                            <field name="ks_vessel_flight_no" placeholder="Vessel / Flight No."/>
+                            <field name="ks_port_of_loading" placeholder="Port of Loading"/>
+                            <field name="ks_port_of_discharge" placeholder="Port of Discharge"/>
+                            <field name="ks_final_destination" placeholder="Final Destination"/>
+                            <field name="ks_gross_weight" placeholder="Gross Weight"/>
+                            <field name="ks_net_weight" placeholder="Net Weight"/>
+                            <field name="ks_remark" placeholder="Remark"/>
+                        </group>
+                    </group>
+                    <group string="Terms of Delivery">
+                        <group>
+                            <field name="ks_contact_date" placeholder="Contact Date"/>
+                            <field name="ks_contact_no" placeholder="Contact No"/>
+                            <field name="ks_lut_no" placeholder="LUT No"/>
+                            <field name="ks_lut_date" placeholder="Date"/>
+                        </group>
+                    </group>
+                </xpath>
+            </field>
+        </record>
+
+        <!-- Inherit stock.move.line detailed operations view to add packing list fields -->
+        <record id="view_stock_move_line_detailed_operation_tree_inherit_ks_templates" model="ir.ui.view">
+            <field name="name">stock.move.line.detailed.operations.ks.templates</field>
+            <field name="model">stock.move.line</field>
+            <field name="inherit_id" ref="stock.view_stock_move_line_detailed_operation_tree"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='quantity']" position="after">
+                    <field name="ks_no_kin_of_pkg" string="No. and Kind of Pkg" optional="show"/>
+                    <field name="ks_remark" string="Remark" optional="show"/>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>
+

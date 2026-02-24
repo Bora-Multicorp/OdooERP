@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Manifest Upload Wizard Form View -->
+    <record id="view_manifest_upload_wizard_form" model="ir.ui.view">
+        <field name="name">manifest.upload.wizard.form</field>
+        <field name="model">manifest.upload.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Upload Manifest">
+                <group invisible="state != 'upload'">
+                    <group>
+                        <field name="is_multi_po" invisible="1"/>
+                        <field name="order_id" readonly="1" invisible="is_multi_po"/>
+                        <field name="order_ids" readonly="1" invisible="not is_multi_po" widget="many2many_tags"/>
+                    </group>
+                    <group>
+                        <field name="file_data" filename="file_name" required="state == 'upload'"/>
+                        <field name="file_name" invisible="1"/>
+                    </group>
+                    <group colspan="2">
+                        <div class="alert alert-info" role="alert">
+                            <strong>CSV Format:</strong>
+                            <p class="mb-0" invisible="is_multi_po">
+                                Single PO: <code>SKU, IMEI, IMEI2 (optional), Qty</code>
+                            </p>
+                            <p class="mb-0" invisible="not is_multi_po">
+                                Multi-PO: <code>PO Name, SKU, IMEI, IMEI2 (optional), Qty</code>
+                            </p>
+                            <p class="mb-0" invisible="is_multi_po">Example:</p>
+                            <pre class="mb-0" invisible="is_multi_po">SKU,IMEI,IMEI2,Qty
+PHONE-001,123456789012345,123456789012346,1
+PHONE-002,234567890123456,,1</pre>
+                            <p class="mb-0" invisible="not is_multi_po">Example:</p>
+                            <pre class="mb-0" invisible="not is_multi_po">PO Name,SKU,IMEI,IMEI2,Qty
+PO001,PHONE-001,123456789012345,123456789012346,1
+PO002,PHONE-002,234567890123456,,1</pre>
+                        </div>
+                    </group>
+                </group>
+                
+                <group invisible="state != 'preview'">
+                    <group>
+                        <field name="is_multi_po" invisible="1"/>
+                        <field name="order_id" readonly="1" invisible="is_multi_po"/>
+                        <field name="order_ids" readonly="1" invisible="not is_multi_po" widget="many2many_tags"/>
+                        <field name="total_lines" readonly="1"/>
+                    </group>
+
+                    <field name="preview_line_ids" nolabel="1" colspan="2">
+                        <list string="Preview Lines" editable="bottom" create="false" delete="false">
+                            <field name="order_id" invisible="not parent.is_multi_po"/>
+                            <field name="sku"/>
+                            <field name="imei"/>
+                            <field name="imei2"/>
+                            <field name="qty"/>
+                            <field name="product_id"/>
+                        </list>
+                    </field>
+                </group>
+                
+                <field name="state" invisible="1"/>
+                
+                <footer>
+                    <button string="Parse CSV" 
+                            name="action_parse_csv" 
+                            type="object" 
+                            class="btn-primary"
+                            invisible="state != 'upload'"/>
+                    <button string="Import" 
+                            name="action_confirm_upload" 
+                            type="object" 
+                            class="btn-primary"
+                            invisible="state != 'preview'"/>
+                    <button string="Back" 
+                            name="action_back_to_upload" 
+                            type="object"
+                            invisible="state != 'preview'"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Manifest Upload Wizard Action -->
+    <record id="action_manifest_upload_wizard" model="ir.actions.act_window">
+        <field name="name">Upload Manifest</field>
+        <field name="res_model">manifest.upload.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+</odoo>
+

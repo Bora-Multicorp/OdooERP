@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="paperformat_packing_list" model="report.paperformat">
+        <field name="name">US Letter</field>
+        <field name="default" eval="True"/>
+        <field name="format">Letter</field>
+        <field name="orientation">Portrait</field>
+        <field name="margin_top">5</field>
+        <field name="margin_bottom">10</field>
+        <field name="margin_left">5</field>
+        <field name="margin_right">5</field>
+        <field name="dpi">90</field>
+        <field name="css_margins" eval="True"/>
+    </record>
+
+    <record id="action_report_packing_list" model="ir.actions.report">
+        <field name="name">Packing List</field>
+        <field name="model">stock.picking</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">ks_templates.packing_list_report</field>
+        <field name="report_file">ks_templates.packing_list_report</field>
+        <field name="binding_model_id" ref="stock.model_stock_picking"/>
+        <field name="paperformat_id" ref="paperformat_packing_list"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <template id="packing_list_report">
+        <t t-call="web.basic_layout">
+            <t t-foreach="docs" t-as="doc">
+                <main>
+
+                    <t t-set="invoice_info" t-value="doc.get_invoice_info()"/>
+                    <t t-set="invoice_date" t-value="invoice_info.get('invoice_date')"/>
+                    <t t-set="exporter_info" t-value="doc.get_exporter_info()"/>
+                    <t t-set="packing_lines" t-value="doc.get_packing_list_lines()"/>
+                    <t t-set="packing_totals" t-value="doc.get_packing_list_totals()"/>
+                    <t t-set="consignee_partner" t-value="doc.partner_id"/>
+                    <t t-set="buyer_partner" t-value="doc.sale_id.partner_id if doc.sale_id and doc.sale_id.partner_id else doc.partner_id"/>
+
+                    <h2 style="text-align:center; margin:0 0 6px 0; font-size:20px;">PACKING LIST</h2>
+
+                    <!-- ================= HEADER TABLE ================= -->
+
+                    <table style="width:100%; border-collapse:collapse; border:1px solid #000; font-size:11px;">
+
+                        <!-- Exporter Row -->
+                        <tr>
+                            <td rowspan="3" style="width:36%; border:1px solid #000; vertical-align:top; padding:4px;">
+                                <strong>Exporter</strong><br/>
+                                <strong t-esc="doc.company_id.name or ''"/><br/>
+                                <t t-if="doc.company_id.partner_id.street" t-esc="doc.company_id.partner_id.street"/><br/>
+                                <t t-if="doc.company_id.partner_id.street2" t-esc="doc.company_id.partner_id.street2"/><br/>
+                                <t t-if="doc.company_id.partner_id.city">
+                                    <t t-esc="doc.company_id.partner_id.city"/>
+                                    <t t-if="doc.company_id.partner_id.zip"> <t t-esc="doc.company_id.partner_id.zip"/></t><br/>
+                                </t>
+                                <t t-if="doc.company_id.vat">GST : <t t-esc="doc.company_id.vat"/><br/></t>
+                                <t t-if="exporter_info.get('iec')">IEC : <t t-esc="exporter_info.get('iec')"/></t>
+                            </td>
+
+                            <td style="width:34%; border:1px solid #000; padding:2px;">
+                                <strong>Invoice No. &amp; Date</strong>
+                            </td>
+
+                            <td style="width:30%; border:1px solid #000; padding:2px;">
+                                <strong>Exporter's Ref</strong>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td style="border:1px solid #000; padding:2px; font-weight:bold;">
+                                <t t-esc="invoice_info.get('invoice_no') or doc.name or ''"/>
+                                <t t-if="invoice_date"> DATE - <t t-esc="invoice_date.strftime('%d.%m.%Y')"/></t>
+                            </td>
+                            <td style="border:1px solid #000; padding:2px;" t-esc="doc.ks_exporter_ref or ''"/>
+                        </tr>
+
+                        <tr>
+                            <td colspan="2" style="border:1px solid #000; padding:2px;">
+                                <strong>Other Reference (s)</strong><br/>
+                                <t t-esc="doc.ks_other_reference or ''"/>
+                            </td>
+                        </tr>
+
+                        <!-- Consignee / Buyer Row -->
+                        <tr>
+                            <td style="border:1px solid #000; vertical-align:top; padding:2px;">
+                                <strong>Consignee</strong><br/>
+                                <t t-esc="consignee_partner.name"/><br/>
+                                <t t-esc="consignee_partner.street"/><br/>
+                                <t t-esc="consignee_partner.city"/>
+                                <t t-if="consignee_partner.country_id">, <t t-esc="consignee_partner.country_id.name"/></t>
+                            </td>
+
+                            <td colspan="2" style="border:1px solid #000; vertical-align:top; padding:2px;">
+                                <strong>Buyer (if other than consignee)</strong><br/>
+                                <t t-esc="buyer_partner.name"/><br/>
+                                <t t-esc="buyer_partner.street"/><br/>
+                                <t t-esc="buyer_partner.city"/>
+                                <t t-if="buyer_partner.country_id">, <t t-esc="buyer_partner.country_id.name"/></t>
+
+                                <!-- Country moved here -->
+                                <br/><br/>
+                                <strong>Country of Final Destination</strong><br/>
+                                <t t-esc="doc.ks_country_of_final_destination or doc.partner_id.country_id.name or ''"/>
+                            </td>
+                        </tr>
+
+                        <!-- ================= COMPACT SHIPPING SECTION ================= -->
+
+                        <tr style="font-size:10px;">
+                            <td style="border:1px solid #000; padding:1px 2px; line-height:14px;">
+                                <strong>Pre-Carriage by</strong><br/>
+                                <t t-esc="doc.ks_pre_carriage_by or 'NA'"/>
+                            </td>
+
+                            <td style="border:1px solid #000; padding:1px 2px; line-height:14px;">
+                                <strong>Place of Receipt by Pre-Carrier</strong><br/>
+                                <t t-esc="doc.ks_place_of_receipt_by_pre_carrier or 'NA'"/>
+                            </td>
+
+                            <td rowspan="2" style="border:1px solid #000; vertical-align:top; padding:1px 2px; font-size:10px; line-height:14px;">
+                                <strong>Terms of Delivery &amp; Payment</strong><br/>
+                                <t t-esc="doc.ks_terms_of_delivery_payment or ''"/>
+                            </td>
+                        </tr>
+
+                        <tr style="font-size:10px;">
+                            <td style="border:1px solid #000; padding:1px 2px; line-height:14px;">
+                                <strong>Vessel/Flight No</strong><br/>
+                                <t t-esc="doc.ks_vessel_flight_no or 'BY SEA'"/>
+                            </td>
+
+                            <td style="border:1px solid #000; padding:1px 2px; line-height:14px;">
+                                <strong>Port of Loading</strong><br/>
+                                <t t-esc="doc.ks_port_of_loading or ''"/>
+                            </td>
+                        </tr>
+
+                        <tr style="font-size:10px;">
+                            <td style="border:1px solid #000; padding:1px 2px; line-height:14px;">
+                                <strong>Port of Discharge</strong><br/>
+                                <t t-esc="doc.ks_port_of_discharge or ''"/>
+                            </td>
+
+                            <td style="border:1px solid #000; padding:1px 2px; line-height:14px;">
+                                <strong>Final Destination</strong><br/>
+                                <t t-esc="doc.ks_final_destination or ''"/>
+                            </td>
+
+                            <td style="border:1px solid #000;"></td>
+                        </tr>
+
+                    </table>
+
+                    <!-- ================= PACKING LINES TABLE ================= -->
+                    <table style="width:100%; border-collapse:collapse; border:1px solid #000; font-size:11px; margin-top:0;">
+                        <thead>
+                            <tr>
+                                <th style="width:12%; border:1px solid #000; text-align:center; padding:2px;">
+                                    DIMENTIONS<br/>(CMs)
+                                </th>
+                                <th style="width:16%; border:1px solid #000; text-align:center; padding:2px;">
+                                    No. &amp;<br/>Kind of Packages
+                                </th>
+                                <th style="width:48%; border:1px solid #000; text-align:center; padding:2px;">
+                                    Description of Goods
+                                </th>
+                                <th style="width:9%; border:1px solid #000; text-align:center; padding:2px;">
+                                    Quantity<br/>NOS
+                                </th>
+                                <th style="width:15%; border:1px solid #000; text-align:center; padding:2px;">
+                                    Remarks
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr t-foreach="packing_lines" t-as="line">
+                                <td style="border:1px solid #000; vertical-align:top; padding:3px;" t-esc="line.get('dimensions') or ''"/>
+                                <td style="border:1px solid #000; vertical-align:top; padding:3px;" t-esc="line.get('boxes') or ''"/>
+                                <td style="border:1px solid #000; vertical-align:top; padding:3px;">
+                                    <t t-foreach="line.get('description_list') or []" t-as="desc">
+                                        <div t-esc="desc"/>
+                                    </t>
+                                </td>
+                                <td style="border:1px solid #000; vertical-align:top; text-align:center; padding:3px;">
+                                    <t t-foreach="line.get('quantity_list') or []" t-as="qty">
+                                        <div t-esc="qty"/>
+                                    </t>
+                                </td>
+                                <td style="border:1px solid #000; vertical-align:top; text-align:center; padding:3px;" t-esc="line.get('remarks') or ''"/>
+                            </tr>
+
+                            <tr>
+                                <td style="border:1px solid #000; text-align:center; padding:3px;"><strong>TOTAL</strong></td>
+                                <td style="border:1px solid #000; text-align:center; padding:3px;">
+                                    <t t-if="packing_totals.get('total_packages')">
+                                        <t t-esc="'%s BOXES (1-%s)' % (packing_totals.get('total_boxes') or 0, packing_totals.get('total_packages') or 0)"/>
+                                    </t>
+                                    <t t-else="">
+                                        <t t-esc="'%s BOXES' % (packing_totals.get('total_boxes') or 0)"/>
+                                    </t>
+                                </td>
+                                <td style="border:1px solid #000; padding:3px;"></td>
+                                <td style="border:1px solid #000; text-align:center; padding:3px;" t-esc="packing_totals.get('total_quantity') or 0"/>
+                                <td style="border:1px solid #000; padding:3px;"></td>
+                            </tr>
+
+                            <tr>
+                                <td colspan="4" style="border:1px solid #000; vertical-align:top; padding:6px 8px;">
+                                    <strong>Gross Weight</strong>
+                                    <span t-esc="' %.3f KGS' % (packing_totals.get('gross_weight') or 0.0)"/><br/>
+                                    <strong>Net Weight</strong>
+                                    <span t-esc="' %.3f KGS' % (packing_totals.get('net_weight') or 0.0)"/>
+                                </td>
+                                <td style="border:1px solid #000; vertical-align:top; padding:6px 8px;">
+                                    <strong>SIGNATURE</strong>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                </main>
+            </t>
+        </t>
+    </template>
+
+</odoo>

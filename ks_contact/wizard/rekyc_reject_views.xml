@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="rekyc_reject_wizard_view_form" model="ir.ui.view">
+        <field name="name">rekyc.reject.wizard.form</field>
+        <field name="model">rekyc.reject.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Reject Re-KYC">
+                <sheet>
+                    <group>
+                        <field name="kyc_id" readonly="1"/>
+                        <field name="reason" placeholder="Please provide rejection reason..."/>
+                    </group>
+                    <footer>
+                        <button name="action_confirm_reject" string="Reject" type="object" class="btn-primary"/>
+                        <button string="Cancel" special="cancel" class="btn-secondary"/>
+                    </footer>
+                </sheet>
+            </form>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Product used as a deduction line on sale order when advance payment is received (reduces SO total) -->
+        <record id="product_template_advance_deduction" model="product.template">
+            <field name="name">Advance Payment Deduction</field>
+            <field name="type">service</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="list_price">0</field>
+            <field name="invoice_policy">order</field>
+            <field name="description">Deduction applied on sale order for advance payment received. Reduces the total amount to be invoiced.</field>
+        </record>
+    </data>
+</odoo>

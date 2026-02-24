@@ -242,7 +242,7 @@ class SurveyUserInput(models.Model):
                 raise UserError(_("Unsupported file field type for field: %s") % field_name)
 
         # -------------------------------------------------------------------------
-        # Create KYC Record If Data Exists
+        # Create or Update KYC Record If Data Exists
         # -------------------------------------------------------------------------
         if values:
             vendor_email = (self.email or '').strip()
@@ -252,17 +252,74 @@ class SurveyUserInput(models.Model):
                 values['partner_id'] = partner.id
 
                 try:
-                    kyc_record = self.env['res.partner.kyc.approval'].create(values)
-
-                    # Rebind attachments to newly created KYC record
-                    for field_name in attachments_by_field:
-                        att_m2m_value = values.get(field_name)
-                        if att_m2m_value and att_m2m_value[0][0] == 6:
-                            att_ids = att_m2m_value[0][2]
-                            self.env['ir.attachment'].browse(att_ids).sudo().write({
-                                'res_model': 'res.partner.kyc.approval',
-                                'res_id': kyc_record.id,
+                    # Check if this is Re-KYC (existing KYC record exists)
+                    existing_kyc = self.env['res.partner.kyc.approval'].search([
+                        ('partner_id', '=', partner.id)
+                    ], order='create_date desc', limit=1)
+                    
+                    if existing_kyc and not partner.is_kyc:
+                        # Re-KYC: Update existing record
+                        kyc_record = existing_kyc
+                        
+                        # Clear existing One2many records by first clearing Many2many attachments
+                        # This prevents foreign key constraint errors
+                        for director in kyc_record.directors_detail:
+                            # Clear Many2many relationships first
+                            director.write({
+                                'aadhaar_card_attachments': [(5, 0, 0)],
+                                'pan_card_attachments': [(5, 0, 0)],
                             })
+                        
+                        for bank in kyc_record.bank_detail:
+                            # Clear Many2many relationships first
+                            bank.write({
+                                'bank_cheque_attachments': [(5, 0, 0)],
+                            })
+                        
+                        # Use ORM commands to clear and replace One2many records
+                        if 'directors_detail' in values:
+                            # Prepend (5, 0, 0) to clear all existing records
+                            if isinstance(values['directors_detail'], list):
+                                values['directors_detail'] = [(5, 0, 0)] + values['directors_detail']
+                        if 'bank_detail' in values:
+                            if isinstance(values['bank_detail'], list):
+                                values['bank_detail'] = [(5, 0, 0)] + values['bank_detail']
+                        if 'address_detail' in values:
+                            if isinstance(values['address_detail'], list):
+                                values['address_detail'] = [(5, 0, 0)] + values['address_detail']
+                        
+                        # Update the record
+                        kyc_record.write(values)
+                        
+                        # Rebind attachments to updated KYC record
+                        for field_name in attachments_by_field:
+                            att_m2m_value = values.get(field_name)
+                            if att_m2m_value and att_m2m_value[0][0] == 6:
+                                att_ids = att_m2m_value[0][2]
+                                self.env['ir.attachment'].browse(att_ids).sudo().write({
+                                    'res_model': 'res.partner.kyc.approval',
+                                    'res_id': kyc_record.id,
+                                })
+                        
+                        # Log Re-KYC update in chatter
+                        kyc_record.message_post(
+                            body=_("Re-KYC Form Updated via Survey by %s") % (self.env.user.name if self.env.user else 'System'),
+                            message_type="comment",
+                            subtype_xmlid="mail.mt_note",
+                        )
+                    else:
+                        # New KYC: Create new record
+                        kyc_record = self.env['res.partner.kyc.approval'].create(values)
+
+                        # Rebind attachments to newly created KYC record
+                        for field_name in attachments_by_field:
+                            att_m2m_value = values.get(field_name)
+                            if att_m2m_value and att_m2m_value[0][0] == 6:
+                                att_ids = att_m2m_value[0][2]
+                                self.env['ir.attachment'].browse(att_ids).sudo().write({
+                                    'res_model': 'res.partner.kyc.approval',
+                                    'res_id': kyc_record.id,
+                                })
 
                     # Update partner KYC status
                     partner.write({
@@ -273,14 +330,14 @@ class SurveyUserInput(models.Model):
                     })
 
                 except Exception as e:
-                    _logger.exception("Error while creating KYC for email: %s", vendor_email)
+                    _logger.exception("Error while creating/updating KYC for email: %s", vendor_email)
                     self.env['ir.logging'].sudo().create({
                         'type': 'server',
-                        'name': 'KYC Creation Error',
+                        'name': 'KYC Creation/Update Error',
                         'level': 'DEBUG',
                         'path': 'res.partner.kyc.approval',
                         'func': '_mark_done',
                         'line': 1,
-                        'message': f"Error creating KYC for email: {vendor_email}. Exception: {e}"
+                        'message': f"Error creating/updating KYC for email: {vendor_email}. Exception: {e}"
                     })
                     return False

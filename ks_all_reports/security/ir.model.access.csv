@@ -1,5 +1,0 @@
-id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-access_part_wise_all_data_report,part.wise.all.data.report,sale.model_sale_order,base.group_user,1,0,0,0
-access_ks_part_wise_all_data_report_wizard,ks.part.wise.all.data.report,ks_all_reports.model_ks_part_wise_all_data_report,base.group_user,1,1,1,1
-access_ks_e002_report_wizard,ks.e002.report,ks_all_reports.model_ks_e002_report,base.group_user,1,1,1,1
-

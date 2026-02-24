@@ -41,7 +41,7 @@
                     <!-- Documents Sent Banner -->
                     <div class="alert alert-success mb-3" role="alert"
                          invisible="not ks_documents_sent">
-                        <i class="fa fa-check-circle me-2"/>
+                        <i class="fa fa-check-circle me-2" title="Documents sent"/>
                         <strong>Documents sent to customer</strong> on 
                         <field name="ks_documents_sent_date" widget="datetime" readonly="1" class="d-inline"/>
                     </div>
