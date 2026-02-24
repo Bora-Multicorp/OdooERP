@@ -19,12 +19,28 @@ class StockQuantInherit(models.Model):
                                        tracking=True)
     origin_source = ''
 
+    specs_made = fields.Many2one(
+        'res.country',
+        string='Spec Made For',
+        help='Specification made for a specific country.',
+        tracking=True,
+        readonly=True
+    )
+
+    made_country = fields.Many2one(
+        'res.country',
+        string='Made In',
+        help='Country where the product is manufactured',
+        tracking=True,
+        readonly=True
+    )
+
     @api.model
     def _get_inventory_fields_create(self):
         """Extend the list of fields available in inventory_mode creation."""
         # Call super to get base list and append your custom fields
         return super()._get_inventory_fields_create() + ['imei', 'imei2', 'activation_status', 'activation_date',
-                                                         'active_months']
+                                                         'active_months', 'specs_made', 'made_country']
 
     @api.depends('activation_date')
     def _compute_active_months(self):
@@ -44,6 +60,47 @@ class StockQuantInherit(models.Model):
                 rec.activation_status = False
                 rec.active_months = False  # or "" to keep it blank
 
+    def _gather(self, product_id, location_id, lot_id=None, package_id=None, owner_id=None, strict=False, qty=0):
+        """Override to filter quants based on specs_made and made_country from context"""
+        quants = super()._gather(product_id, location_id, lot_id=lot_id, package_id=package_id, owner_id=owner_id, strict=strict, qty=qty)
+        
+        # Filter quants based on specs_made and made_country from context (set by stock.move)
+        specs_made_id = self.env.context.get('filter_specs_made')
+        made_country_id = self.env.context.get('filter_made_country')
+        
+        if specs_made_id or made_country_id:
+            filtered_quants = self.env['stock.quant']
+            for quant in quants:
+                # If specs_made is specified, quant must have matching specs_made
+                if specs_made_id:
+                    if not quant.specs_made or quant.specs_made.id != specs_made_id:
+                        continue
+                # If made_country is specified, quant must have matching made_country
+                if made_country_id:
+                    if not quant.made_country or quant.made_country.id != made_country_id:
+                        continue
+                filtered_quants |= quant
+            return filtered_quants
+        
+        return quants
+
+    def _get_inventory_move_values(self, qty, location_id, location_dest_id, package_id=False, package_dest_id=False):
+        """Override to include specs_made and made_country in inventory adjustment moves"""
+        res = super()._get_inventory_move_values(qty, location_id, location_dest_id, package_id, package_dest_id)
+        # Add country fields to move
+        if self.specs_made:
+            res['specs_made'] = self.specs_made.id
+        if self.made_country:
+            res['made_country'] = self.made_country.id
+        # Add country fields to move line
+        if res.get('move_line_ids') and len(res['move_line_ids']) > 0:
+            move_line_vals = res['move_line_ids'][0][2]
+            if self.specs_made:
+                move_line_vals['specs_made'] = self.specs_made.id
+            if self.made_country:
+                move_line_vals['made_country'] = self.made_country.id
+        return res
+
     @api.model_create_multi
     def create(self, vals_list):
 
@@ -57,6 +114,11 @@ class StockQuantInherit(models.Model):
                 if move_line:
                     vals['imei'] = move_line.imei or ''
                     vals['imei2'] = move_line.imei2 or ''
+                    # Propagate country fields from move line if available
+                    if move_line.specs_made:
+                        vals['specs_made'] = move_line.specs_made.id
+                    if move_line.made_country:
+                        vals['made_country'] = move_line.made_country.id
 
         if self.env.context.get('inventory_mode'):
             self._check_all_validations()
