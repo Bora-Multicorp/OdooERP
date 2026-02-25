@@ -1,8 +1,46 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Server Action to trigger XLSX report download -->
-    <record id="action_part_wise_all_data_download" model="ir.actions.server">
+    <!-- Window Action: open list of confirmed Sale Orders (user selects records and clicks Print) -->
+    <record id="action_part_wise_all_data_list" model="ir.actions.act_window">
         <field name="name">Part Wise All Data</field>
+        <field name="res_model">sale.order</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('state', 'in', ['sale', 'done'])]</field>
+        <field name="context">{'search_default_quotation': 0}</field>
+    </record>
+
+    <!-- Server Action: Print Part Wise All Data - generates report for selected Sale Orders (from list) -->
+    <record id="action_part_wise_all_data_print" model="ir.actions.server">
+        <field name="name">Print Part Wise All Data</field>
+        <field name="model_id" ref="sale.model_sale_order"/>
+        <field name="binding_model_id" ref="sale.model_sale_order"/>
+        <field name="binding_view_types">list</field>
+        <field name="state">code</field>
+        <field name="code">
+# Generate XLSX report for selected Sale Orders
+sale_order_ids = records.ids if records else env.context.get('active_ids', [])
+if not sale_order_ids:
+    raise UserError('Please select at least one Sale Order to print the report.')
+report_model = env['ks.part.wise.all.data.report']
+file_content = report_model.generate_xlsx_report(sale_order_ids=sale_order_ids)
+attachment = env['ir.attachment'].create({
+    'name': 'Part_Wise_All_Data.xlsx',
+    'type': 'binary',
+    'datas': file_content,
+    'res_model': 'sale.order',
+    'mimetype': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+})
+action = {
+    'type': 'ir.actions.act_url',
+    'url': '/web/content/' + str(attachment.id) + '?download=true',
+    'target': 'self',
+}
+        </field>
+    </record>
+
+    <!-- Legacy server action (kept for backward compatibility if called elsewhere) -->
+    <record id="action_part_wise_all_data_download" model="ir.actions.server">
+        <field name="name">Part Wise All Data (Direct Download)</field>
         <field name="model_id" ref="sale.model_sale_order"/>
         <field name="state">code</field>
         <field name="code">
@@ -65,11 +103,11 @@ action = {
         groups="sales_team.group_sale_manager"
     />
 
-    <!-- First Report under Part Wise All Data -->
+    <!-- First Report under Part Wise All Data: opens list of Sale Orders; user selects and clicks Print -->
     <menuitem 
         id="menu_part_wise_all_data"
         name="Part Wise All Data"
-        action="action_part_wise_all_data_download"
+        action="action_part_wise_all_data_list"
         parent="menu_part_wise_all_data_parent"
         sequence="1"
         groups="sales_team.group_sale_manager"

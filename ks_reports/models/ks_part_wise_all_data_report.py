@@ -3,6 +3,7 @@
 import io
 import base64
 import re
+from datetime import date
 from odoo import models, api, fields
 from odoo.exceptions import UserError
 try:
@@ -46,164 +47,189 @@ class PartWiseAllDataReport(models.TransientModel):
     filename = fields.Char(string='Filename', default='Part_Wise_All_Data.xlsx')
 
     @api.model
-    def generate_xlsx_report(self):
+    def generate_xlsx_report(self, sale_order_ids=None):
         """
-        Generate XLSX report with Sale Order data
-        Product-wise display (each product on separate row)
-        Returns base64 encoded file content
+        Generate XLSX report "SUMMARY FOR NEW ORDER" with Sale Order data.
+        Layout: Month, title, TILL DATE; green header with SN, PI NO., PARTY NAME, PRODUCTS,
+        quantities/amounts, DISPATCH AMOUNT, BALANCE QTY, deviation, net remaining; TOTAL footer.
+        Product-wise display (each product on separate row).
+        If sale_order_ids is provided, only those sale orders are included; otherwise all confirmed.
+        Returns base64 encoded file content.
         """
-        # Create output in memory
         output = io.BytesIO()
         workbook = xlsxwriter.Workbook(output, {'in_memory': True})
-        
-        # Define header style with bold text and light background
+
+        num_cols = 19
+        # Green header with bold WHITE text (as per screenshot)
         header_format = workbook.add_format({
             'bold': True,
-            'bg_color': '#D3D3D3',  # Light gray background
+            'bg_color': '#2E7D32',  # Dark green
+            'font_color': '#FFFFFF',
             'border': 1,
             'align': 'center',
             'valign': 'vcenter',
         })
-        
-        # Define data row format
+        title_format = workbook.add_format({
+            'bold': True,
+            'align': 'center',
+            'font_size': 14,
+        })
+        till_date_format = workbook.add_format({
+            'bold': True,
+            'align': 'right',
+        })
         data_format = workbook.add_format({
             'border': 1,
             'valign': 'vcenter',
         })
-        
-        # Define number format
         number_format = workbook.add_format({
             'border': 1,
             'valign': 'vcenter',
+            'align': 'right',
             'num_format': '#,##0.00',
         })
-        
-        # Define column headings in exact order as specified
-        headers = [
-            'PI NO.',
-            'PRODUCTS',
-            'TOTAL PI QUANTITY',
-            'TOTAL PI AMOUNT',
-            'DISPATCHED QUANTITY',
-            'BALANCE QTY',
-            'REMAINING AMOUNT AGAINST PI',
-            'MONTHLY PLAN QUANTITY',
-            'MONTHLY PLAN AMOUNT',
-            'EXPORT INVOICE QUANTITY FOR THIS MONTH',
-            'GST',
-            'DEVIATION FROM PLAN',
-            'DEVIATION FROM PLAN AMOUNT',
-            'NET REMAINING QTY',
-            'NET REMAINING AMOUNT',
-        ]
-        
-        # Set column widths
+        total_format = workbook.add_format({
+            'bold': True,
+            'bg_color': '#E8F5E9',
+            'border': 1,
+            'valign': 'vcenter',
+            'num_format': '#,##0.00',
+            'align': 'right',
+        })
+        total_label_format = workbook.add_format({
+            'bold': True,
+            'bg_color': '#E8F5E9',
+            'border': 1,
+            'valign': 'vcenter',
+        })
+
+        # Column widths sized to fit header text in single line (no sub-headers)
         column_widths = [
-            20,  # PI NO.
-            30,  # PRODUCTS
-            18,  # TOTAL PI QUANTITY
-            18,  # TOTAL PI AMOUNT
-            18,  # DISPATCHED QUANTITY
-            15,  # BALANCE QTY
-            25,  # REMAINING AMOUNT AGAINST PI
-            20,  # MONTHLY PLAN QUANTITY
-            20,  # MONTHLY PLAN AMOUNT
-            30,  # EXPORT INVOICE QUANTITY FOR THIS MONTH
-            15,  # GST
-            20,  # DEVIATION FROM PLAN
-            25,  # DEVIATION FROM PLAN AMOUNT
-            18,  # NET REMAINING QTY
-            20,  # NET REMAINING AMOUNT
+            8,   # SN
+            14,  # PI NO.
+            22,  # PARTY NAME
+            28,  # PRODUCTS
+            22,  # TOTAL PI QUANTITY
+            20,  # TOTAL PI AMOUNT
+            24,  # DISPATCHED QUANTITY
+            22,  # DISPATCHED AMOUNT
+            14,  # BALANCE QTY
+            32,  # REMAINING AMOUNT AGAINST PI
+            24,  # MONTHLY PLAN QUANTITY
+            22,  # MONTHLY PLAN AMOUNT
+            42,  # EXPORT INVOICE QUANTITY FOR THIS MONTH
+            40,  # EXPORT INVOICE AMOUNT FOR THIS MONTH
+            10,  # GST
+            22,  # DEVIATION FROM PLAN
+            28,  # DEVIATION FROM PLAN (2nd col)
+            22,  # NET REMAINING QTY
+            26,  # NET REMAINING AMOUNT
         ]
-        
-        # Create a single worksheet for all products
+
         sheet = workbook.add_worksheet('Part Wise All Data')
-        
-        # Write headers to first row
-        for col, header in enumerate(headers):
-            sheet.write(0, col, header, header_format)
-        
-        # Apply column widths
-        for col, width in enumerate(column_widths):
-            sheet.set_column(col, col, width)
-        
-        # Freeze first row
-        sheet.freeze_panes(1, 0)
-        
-        # Get all confirmed Sale Orders
-        sale_orders = self.env['sale.order'].search([
-            ('state', '=', 'sale')
-        ])
-        
-        # Process each Sale Order and its lines (product-wise)
-        row = 1
+        for col, w in enumerate(column_widths):
+            sheet.set_column(col, col, w)
+
+        # Title block: one line "MONTH SUMMARY FOR NEW ORDER" centered; "TILL DATE dd-mm-yyyy" right-aligned
+        till_date = fields.Date.context_today(self)
+        till_date_str = till_date.strftime('%d-%m-%Y') if till_date else date.today().strftime('%d-%m-%Y')
+        month_name = (till_date or date.today()).strftime('%B').upper()
+        sheet.merge_range(0, 0, 0, num_cols - 1, '%s SUMMARY FOR NEW ORDER' % month_name, title_format)
+        sheet.merge_range(1, 0, 1, num_cols - 1, 'TILL DATE %s' % till_date_str, title_format)
+
+        # Header row (green, white text) - row 2 (0-indexed)
+        main_headers = [
+            'SN', 'PI NO.', 'PARTY NAME', 'PRODUCTS',
+            'TOTAL PI QUANTITY', 'TOTAL PI AMOUNT', 'DISPATCHED QUANTITY', 'DISPATCHED AMOUNT',
+            'BALANCE QTY', 'REMAINING AMOUNT AGAINST PI',
+            'MONTHLY PLAN QUANTITY', 'MONTHLY PLAN AMOUNT',
+            'EXPORT INVOICE QUANTITY FOR THIS MONTH', 'EXPORT INVOICE AMOUNT FOR THIS MONTH',
+            'GST',
+            'DEVIATION FROM PLAN', 'DEVIATION FROM PLAN',
+            'NET REMAINING QTY', 'NET REMAINING AMOUNT',
+        ]
+        for col, h in enumerate(main_headers):
+            sheet.write(2, col, h, header_format)
+
+        sheet.freeze_panes(3, 0)
+
+        # Get Sale Orders
+        if sale_order_ids:
+            sale_orders = self.env['sale.order'].browse(sale_order_ids).filtered(
+                lambda o: o.state in ['sale', 'done']
+            )
+        else:
+            sale_orders = self.env['sale.order'].search([
+                ('state', 'in', ['sale', 'done'])
+            ])
+
+        row = 3
+        sn = 1
+        totals = [0.0] * num_cols
+
         for order in sale_orders:
-            # Get order-level data
             pi_no = order.name or ''
-            
-            # Process each order line (each product on separate row)
+            party_name = order.partner_id.name or ''
+
             for line in order.order_line.filtered(lambda l: not l.display_type and l.product_id):
-                # PI NO.
-                sheet.write(row, 0, pi_no, data_format)
-                
-                # PRODUCTS - Product name
-                product_name = line.product_id.name if line.product_id else ''
-                sheet.write(row, 1, product_name, data_format)
-                
-                # TOTAL PI QUANTITY - Ordered quantity
                 total_pi_qty = line.product_uom_qty or 0.0
-                sheet.write(row, 2, total_pi_qty, number_format)
-                
-                # TOTAL PI AMOUNT - Line amount (quantity * unit price)
                 total_pi_amount = line.price_subtotal or 0.0
-                sheet.write(row, 3, total_pi_amount, number_format)
-                
-                # DISPATCHED QUANTITY - Delivered quantity
                 dispatched_qty = line.qty_delivered or 0.0
-                sheet.write(row, 4, dispatched_qty, number_format)
-                
-                # BALANCE QTY - Empty as per requirement
-                sheet.write(row, 5, '', data_format)
-                
-                # REMAINING AMOUNT AGAINST PI - Based on undelivered quantity
-                undelivered_qty = total_pi_qty - dispatched_qty
-                remaining_amount = undelivered_qty * (line.price_unit or 0.0)
-                sheet.write(row, 6, remaining_amount, number_format)
-                
-                # MONTHLY PLAN QUANTITY - Placeholder (empty/zero)
-                sheet.write(row, 7, 0.0, number_format)
-                
-                # MONTHLY PLAN AMOUNT - Placeholder (empty/zero)
-                sheet.write(row, 8, 0.0, number_format)
-                
-                # EXPORT INVOICE QUANTITY FOR THIS MONTH - Placeholder
-                sheet.write(row, 9, 0.0, number_format)
-                
-                # GST - Tax amount from sale order line
+                unit_price = line.price_unit or 0.0
+                dispatch_amount = dispatched_qty * unit_price
+                balance_qty = total_pi_qty - dispatched_qty
+                remaining_amount = balance_qty * unit_price
                 gst_amount = (line.price_total or 0.0) - (line.price_subtotal or 0.0)
-                sheet.write(row, 10, gst_amount, number_format)
-                
-                # DEVIATION FROM PLAN - Placeholder
-                sheet.write(row, 11, 0.0, number_format)
-                
-                # DEVIATION FROM PLAN AMOUNT - Placeholder
-                sheet.write(row, 12, 0.0, number_format)
-                
-                # NET REMAINING QTY - Remaining quantity
-                net_remaining_qty = total_pi_qty - dispatched_qty
-                sheet.write(row, 13, net_remaining_qty, number_format)
-                
-                # NET REMAINING AMOUNT - Remaining amount
-                net_remaining_amount = net_remaining_qty * (line.price_unit or 0.0)
-                sheet.write(row, 14, net_remaining_amount, number_format)
-                
+                net_remaining_qty = balance_qty
+                net_remaining_amount = remaining_amount
+
+                product_name = line.product_id.name if line.product_id else ''
+
+                sheet.write(row, 0, sn, data_format)
+                sheet.write(row, 1, pi_no, data_format)
+                sheet.write(row, 2, party_name, data_format)
+                sheet.write(row, 3, product_name, data_format)
+                sheet.write(row, 4, total_pi_qty, number_format)
+                sheet.write(row, 5, total_pi_amount, number_format)
+                sheet.write(row, 6, dispatched_qty, number_format)
+                sheet.write(row, 7, dispatch_amount, number_format)
+                sheet.write(row, 8, balance_qty, number_format)
+                sheet.write(row, 9, remaining_amount, number_format)
+                sheet.write(row, 10, 0.0, number_format)   # MONTHLY PLAN QUANTITY
+                sheet.write(row, 11, 0.0, number_format)  # MONTHLY PLAN AMOUNT
+                sheet.write(row, 12, 0.0, number_format)   # EXPORT INVOICE QTY THIS MONTH
+                sheet.write(row, 13, 0.0, number_format)   # EXPORT INVOICE AMOUNT THIS MONTH
+                sheet.write(row, 14, gst_amount, number_format)
+                sheet.write(row, 15, 0.0, number_format)   # DEVIATION Balance of plan
+                sheet.write(row, 16, 0.0, number_format)   # DEVIATION qty * Balance Quant
+                sheet.write(row, 17, net_remaining_qty, number_format)
+                sheet.write(row, 18, net_remaining_amount, number_format)
+
+                # Accumulate totals (cols 4-18 are numeric)
+                totals[4] += total_pi_qty
+                totals[5] += total_pi_amount
+                totals[6] += dispatched_qty
+                totals[7] += dispatch_amount
+                totals[8] += balance_qty
+                totals[9] += remaining_amount
+                totals[14] += gst_amount
+                totals[17] += net_remaining_qty
+                totals[18] += net_remaining_amount
+
                 row += 1
-        
-        # Close workbook
+                sn += 1
+
+        # TOTAL row (TOTAL in column B as per screenshot)
+        sheet.write(row, 0, '', total_label_format)
+        sheet.write(row, 1, 'TOTAL', total_label_format)
+        sheet.write(row, 2, '', total_label_format)
+        sheet.write(row, 3, '', total_label_format)
+        for col in range(4, num_cols):
+            sheet.write(row, col, totals[col], total_format)
+        row += 1
+
         workbook.close()
         output.seek(0)
-        
-        # Return base64 encoded content
         return base64.b64encode(output.read())
 
     @api.model
