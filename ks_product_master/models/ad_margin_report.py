@@ -19,7 +19,7 @@ class AdMarginReport(models.TransientModel):
     sales_quantity = fields.Float(string='Sales Quantity', digits='Product Unit of Measure')
     
     mop = fields.Float(string='MOP', digits='Product Price', help='Market Operating Price')
-    x_gst_mop = fields.Float(string='X GST MO', digits='Product Price', compute='_compute_x_gst_mop')
+    x_gst_mop = fields.Float(string='X GST MC', digits='Product Price', compute='_compute_x_gst_mop')
     diff = fields.Float(string='Diff', digits='Product Price', compute='_compute_diff')
     margin = fields.Float(string='Margin', digits=(12, 2), compute='_compute_margin')
     total = fields.Float(string='Total', digits='Product Price', compute='_compute_total')
@@ -30,29 +30,22 @@ class AdMarginReport(models.TransientModel):
 
     @api.depends('mop')
     def _compute_x_gst_mop(self):
-        """Calculate X GST MO = MOP / (1 + GST_rate)"""
+        """X GST MC = MOP / 1.18 (MOP excluding GST, as per formula)"""
         for record in self:
-            # Get GST rate from company or use default 18%
-            company = self.env.company
-            gst_rate = 0.18  # Default 18% GST
-            # Try to get GST rate from company settings if available
-            if hasattr(company, 'gst_rate'):
-                gst_rate = company.gst_rate / 100.0 if company.gst_rate else 0.18
-            
             if record.mop:
-                record.x_gst_mop = record.mop / (1 + gst_rate)
+                record.x_gst_mop = record.mop / 1.18
             else:
                 record.x_gst_mop = 0.0
 
     @api.depends('sales_rate', 'x_gst_mop')
     def _compute_diff(self):
-        """Calculate Diff = Sales Rate - X GST MO"""
+        """Diff = X GST MC - Sales Rate (Item), as per formula =G3-D3"""
         for record in self:
-            record.diff = record.sales_rate - record.x_gst_mop
+            record.diff = (record.x_gst_mop or 0.0) - (record.sales_rate or 0.0)
 
     @api.depends('diff', 'x_gst_mop')
     def _compute_margin(self):
-        """Calculate Margin = (Diff / X GST MO) * 100"""
+        """Margin = Diff / X GST MC, as per formula =H3/G3 (stored as percentage)"""
         for record in self:
             if record.x_gst_mop and record.x_gst_mop != 0:
                 record.margin = (record.diff / record.x_gst_mop) * 100
@@ -61,9 +54,9 @@ class AdMarginReport(models.TransientModel):
 
     @api.depends('diff', 'sales_quantity')
     def _compute_total(self):
-        """Calculate Total = Diff * Quantity"""
+        """Total = Diff * Sales Quantity, as per formula =H3*E3"""
         for record in self:
-            record.total = record.diff * record.sales_quantity
+            record.total = (record.diff or 0.0) * (record.sales_quantity or 0.0)
 
 
 class AdMarginReportWizard(models.TransientModel):

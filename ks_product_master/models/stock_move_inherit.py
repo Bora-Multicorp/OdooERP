@@ -496,6 +496,6 @@ class StockPickingInherit(models.Model):
                 move_line.write(update_vals)
         
         # Raise validation error if any move lines don't have matching quants
-        if missing_quants:
-            error_message = _('Cannot validate delivery order. The following products do not have matching inventory:\n\n%s') % '\n'.join(missing_quants)
-            raise ValidationError(error_message)
+        # if missing_quants:
+        #     error_message = _('Cannot validate delivery order. The following products do not have matching inventory:\n\n%s') % '\n'.join(missing_quants)
+        #     raise ValidationError(error_message)

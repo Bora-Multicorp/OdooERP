@@ -47,10 +47,10 @@
                 <field name="party_name" string="Party Name" readonly="1"/>
                 <field name="item_name" string="Item Name" readonly="1"/>
                 <field name="item_alias" string="Item" readonly="1"/>
-                <field name="sales_rate" string="Sales Rate" sum="Total:" readonly="1"/>
+                <field name="sales_rate" string="Sale" sum="Total:" readonly="1"/>
                 <field name="sales_quantity" string="Sales Quantity" sum="Total:" readonly="1"/>
                 <field name="mop" string="MOP" sum="Total:" readonly="1"/>
-                <field name="x_gst_mop" string="X GST MO" sum="Total:" readonly="1"/>
+                <field name="x_gst_mop" string="X GST MC" sum="Total:" readonly="1"/>
                 <field name="diff" string="Diff" sum="Total:" readonly="1"/>
                 <field name="margin" string="Margin" sum="Total:" readonly="1"/>
                 <field name="total" string="Total" sum="Total:" readonly="1"/>

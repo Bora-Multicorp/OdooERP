@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError
+from odoo.tools import float_round
 from datetime import datetime, timedelta
 
 
@@ -16,57 +17,46 @@ class MarginAnalysisReport(models.TransientModel):
     purchase_actual_qty = fields.Float(string='Purchase Actual Quantity', digits='Product Unit of Measure')
     purchase_rate = fields.Float(string='Purchase Rate', digits='Product Price')
     
-    nlc = fields.Float(string='NLC', digits='Product Price', help='Net Landed Cost')
+    nlc = fields.Float(string='NLC', digits='Product Price', help='Net Landed Cost (Purchase Rate incl. 18%% GST)')
     mop = fields.Float(string='MOP', digits='Product Price', help='Market Operating Price', readonly=False)
     
-    funnal = fields.Float(string='Funnal', digits='Product Price', compute='_compute_funnal')
-    funnal_percent = fields.Float(string='%', digits=(12, 2), compute='_compute_funnal')
+    funnal = fields.Float(string='Funnal', digits='Product Price', compute='_compute_funnal', help='MOP - NLC (per unit)')
+    funnal_percent = fields.Float(string='%', digits=(12, 2), compute='_compute_funnal', help='Funnal / MOP')
     
-    total_funnal = fields.Float(string='Total Funnal', digits='Product Price', compute='_compute_total_funnal')
-    gst_funnal = fields.Float(string='x GST Funnal', digits='Product Price', compute='_compute_gst_funnal')
+    total_funnal = fields.Float(string='Total Funnal', digits='Product Price', compute='_compute_total_funnal', help='Purchase Qty * Funnal')
+    gst_funnal = fields.Float(string='x GST Funnal', digits='Product Price', compute='_compute_gst_funnal', help='Total Funnal / 1.18')
     
     report_id = fields.Many2one('margin.analysis.report.wizard', string='Report', ondelete='cascade')
     date_from = fields.Date(string='Date From', related='report_id.date_from')
     date_to = fields.Date(string='Date To', related='report_id.date_to')
 
-    @api.depends('mop', 'nlc', 'purchase_actual_qty')
+    @api.depends('mop', 'nlc')
     def _compute_funnal(self):
-        """Calculate Funnal = (MOP - NLC) * Quantity"""
+        """Funnal = MOP - NLC (per unit). % = Funnal / MOP"""
         for record in self:
-            if record.mop and record.nlc:
-                record.funnal = (record.mop - record.nlc) * record.purchase_actual_qty
-                # Calculate percentage: ((MOP - NLC) / NLC) * 100
-                if record.nlc > 0:
-                    record.funnal_percent = ((record.mop - record.nlc) / record.nlc) * 100
+            if record.mop is not False and record.nlc is not False:
+                record.funnal = record.mop - record.nlc
+                # Percentage: Funnal / MOP (as per formula =G4/F4)
+                if record.mop and record.mop != 0:
+                    record.funnal_percent = (record.funnal / record.mop) * 100
                 else:
                     record.funnal_percent = 0.0
             else:
                 record.funnal = 0.0
                 record.funnal_percent = 0.0
 
-    @api.depends('funnal')
+    @api.depends('funnal', 'purchase_actual_qty')
     def _compute_total_funnal(self):
-        """Total Funnal is same as Funnal for individual line"""
+        """Total Funnal = Purchase Actual Quantity * Funnal (as per formula =C4*G4)"""
         for record in self:
-            record.total_funnal = record.funnal
+            record.total_funnal = (record.purchase_actual_qty or 0.0) * (record.funnal or 0.0)
 
     @api.depends('total_funnal')
     def _compute_gst_funnal(self):
-        """x GST Funnal = Total Funnal / (1 + GST_rate)"""
+        """x GST Funnal = Total Funnal / 1.18 (as per formula =I4/1.18)"""
         for record in self:
-            # Get GST rate from company or use default 18%
-            company = self.env.company
-            gst_rate = 0.18  # Default 18% GST
-            # Try to get GST rate from company settings if available
-            if hasattr(company, 'gst_rate'):
-                gst_rate = company.gst_rate / 100.0 if company.gst_rate else 0.18
-            elif hasattr(company, 'vat') and company.vat:
-                # Some companies store GST rate in vat field format
-                # This is a fallback - adjust based on your setup
-                pass
-            
             if record.total_funnal:
-                record.gst_funnal = record.total_funnal / (1 + gst_rate)
+                record.gst_funnal = record.total_funnal / 1.18
             else:
                 record.gst_funnal = 0.0
 
@@ -141,9 +131,11 @@ class MarginAnalysisReportWizard(models.TransientModel):
             else:
                 avg_purchase_rate = 0.0
             
-            # Get NLC (Net Landed Cost) - using standard_price or purchase rate
-            # NLC typically includes all costs (purchase price + landing costs)
-            nlc = product.standard_price or avg_purchase_rate
+            # NLC = Incl GST price of that SKU (as per formula =D4*1.18).
+            # Prefer product cost from inventory master; else use Purchase Rate from PO. Then add 18% GST.
+            cost_excl_gst = product.standard_price or avg_purchase_rate or 0.0
+            rounding = self.env['decimal.precision'].precision_get('Product Price')
+            nlc = float_round(cost_excl_gst * 1.18, precision_digits=rounding)
             
             # Get MOP (Market Operating Price) from MOP Master based on date
             # Use date_to from wizard, or today if not available
