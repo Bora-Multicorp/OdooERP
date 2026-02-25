@@ -469,13 +469,13 @@ class StockPickingInherit(models.Model):
             # Now find available quant matching country fields (regardless of previous serial)
             quant = self.env['stock.quant'].search(domain, limit=1)
             
-            if not quant:
-                # No matching quant found
-                missing_quants.append(
-                    _('Product: %s - No inventory found matching Spec Made For: %s and Made In: %s') % 
-                    (move_line.product_id.display_name, self.specs_made.name, self.made_country.name)
-                )
-                continue
+            # if not quant:
+            #     # No matching quant found
+            #     missing_quants.append(
+            #         _('Product: %s - No inventory found matching Spec Made For: %s and Made In: %s') %
+            #         (move_line.product_id.display_name, self.specs_made.name, self.made_country.name)
+            #     )
+            #     continue
             
             # If quant found, update move line with new serial number and IMEI
             update_vals = {}
@@ -496,6 +496,6 @@ class StockPickingInherit(models.Model):
                 move_line.write(update_vals)
         
         # Raise validation error if any move lines don't have matching quants
-        if missing_quants:
-            error_message = _('Cannot validate delivery order. The following products do not have matching inventory:\n\n%s') % '\n'.join(missing_quants)
-            raise ValidationError(error_message)
+        # if missing_quants:
+        #     error_message = _('Cannot validate delivery order. The following products do not have matching inventory:\n\n%s') % '\n'.join(missing_quants)
+        #     raise ValidationError(error_message)
