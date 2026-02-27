@@ -6,7 +6,7 @@
         <field name="model">sb.brc.master</field>
         <field name="arch" type="xml">
             <list string="SB/BRC Master Report" editable="top" class="o_sb_brc_list_scrollable" create="1" delete="1">
-                <field name="sr_no" readonly="1"/>
+<!--                <field name="sr_no" readonly="1"/>-->
                 <field name="date"/>
                 <field name="invoice_id" options="{'no_create': True}"/>
                 <field name="sb_no"/>
@@ -14,13 +14,14 @@
                 <field name="consignee" readonly="1"/>
                 <field name="buyer" readonly="1"/>
                 <field name="awb_number"/>
-                <field name="qty_kg" readonly="1"/>
-                <field name="unit_rate" readonly="1"/>
+                <field name="qty" readonly="1"/>
+                <field name="sb_date"/>
+<!--                <field name="unit_rate" readonly="1"/>-->
                 <field name="currency_id" readonly="1"/>
-                <field name="calendar_date"/>
+<!--                <field name="calendar_date"/>-->
                 <field name="invoice_amount_usd" readonly="1"/>
                 <field name="ex_rate" readonly="1"/>
-                <field name="sb_rate"/>
+                <field name="sb_ex_rate"/>
                 <field name="amount_inr" readonly="1"/>
                 <field name="fob_value_inr"/>
                 <field name="gst_rate"/>
@@ -31,22 +32,22 @@
                 <field name="other_charges"/>
                 <field name="freight"/>
                 <field name="agency_charges"/>
-                <field name="bus_charges_fumigation"/>
+                <field name="doc_charges_fumigation"/>
                 <field name="terminal_handling"/>
                 <field name="drawback_charges"/>
-                <field name="mis_charges"/>
+                <field name="awb_charges"/>
                 <field name="gate_pass"/>
                 <field name="transportation_to_air_cargo"/>
                 <field name="load_unload"/>
                 <field name="pallet_charges"/>
                 <field name="other_charges_2"/>
-                <field name="local_warehouse"/>
+                <field name="sai_warehouse"/>
                 <field name="insurance"/>
                 <field name="total_charges" readonly="1"/>
                 <field name="no_of_pallets"/>
                 <field name="weight_as_per_awb"/>
-                <field name="for_planning_costing" readonly="1"/>
-                <field name="average_for_costing" readonly="1"/>
+                <field name="per_piece_costing" readonly="1"/>
+                <field name="average_per_costing" readonly="1"/>
                 <field name="airlines"/>
                 <field name="country_id"/>
                 <field name="port"/>
@@ -54,21 +55,26 @@
                 <field name="brc_date"/>
                 <field name="brc_no"/>
                 <field name="brc_amount_usd"/>
-                <field name="still_in_realization" readonly="1"/>
+                <field name="diff_in_realization" readonly="1"/>
                 <field name="sb_fob_value"/>
                 <field name="fresh"/>
                 <field name="activated"/>
                 <field name="other_country"/>
                 <field name="rodtep_amount" readonly="1"/>
                 <field name="rodtep_amount_per_sb"/>
-                <field name="dbk_percentage"/>
+<!--                <field name="dbk_percentage"/>-->
                 <field name="dbk_claimed"/>
                 <field name="dbk_as_per_calculation" readonly="1"/>
                 <field name="dbk_amount"/>
                 <field name="application_status"/>
                 <field name="drawback_received"/>
-                <field name="received_date"/>
-                <!-- 62 columns total per REPORT_SOURCE_SH001 (Row 1 = behaviour, Row 2 = column name) -->
+                <field name="remarks"/>
+                <field name="fob_value"/>
+                <field name="tax_able_amt"/>
+                <field name="gst_amt"/>
+                <field name="tds_amt"/>
+                <field name="net_balance_payable"/>
+<!--                <field name="received_date"/>-->
             </list>
         </field>
     </record>
@@ -81,7 +87,7 @@
                 <sheet>
                     <group>
                         <group>
-                            <field name="sr_no" readonly="1"/>
+<!--                            <field name="sr_no" readonly="1"/>-->
                             <field name="date"/>
                             <field name="invoice_id" options="{'no_create': True}"/>
                             <field name="sb_no"/>
@@ -99,17 +105,17 @@
                         <page string="Invoice Details" name="invoice_details">
                             <group>
                                 <group>
-                                    <field name="qty_kg" readonly="1"/>
-                                    <field name="unit_rate" readonly="1"/>
+                                    <field name="qty" readonly="1"/>
+<!--                                    <field name="unit_rate" readonly="1"/>-->
                                     <field name="invoice_amount_usd" readonly="1"/>
                                     <field name="ex_rate" readonly="1"/>
-                                    <field name="sb_rate"/>
+<!--                                    <field name="sb_rate"/>-->
                                     <field name="amount_inr" readonly="1"/>
                                     <field name="fob_value_inr"/>
                                     <field name="gst_rate"/>
                                     <field name="gst_amount"/>
                                     <field name="invoice_value" readonly="1"/>
-                                    <field name="calendar_date"/>
+<!--                                    <field name="calendar_date"/>-->
                                 </group>
                             </group>
                         </page>
@@ -121,16 +127,16 @@
                                     <field name="other_charges"/>
                                     <field name="freight"/>
                                     <field name="agency_charges"/>
-                                    <field name="bus_charges_fumigation"/>
+                                    <field name="doc_charges_fumigation"/>
                                     <field name="terminal_handling"/>
                                     <field name="drawback_charges"/>
-                                    <field name="mis_charges"/>
+                                    <field name="awb_charges"/>
                                     <field name="gate_pass"/>
                                     <field name="transportation_to_air_cargo"/>
                                     <field name="load_unload"/>
                                     <field name="pallet_charges"/>
                                     <field name="other_charges_2"/>
-                                    <field name="local_warehouse"/>
+                                    <field name="sai_warehouse"/>
                                     <field name="insurance"/>
                                     <field name="total_charges" readonly="1"/>
                                 </group>
@@ -141,8 +147,8 @@
                                 <group>
                                     <field name="no_of_pallets"/>
                                     <field name="weight_as_per_awb"/>
-                                    <field name="for_planning_costing" readonly="1"/>
-                                    <field name="average_for_costing" readonly="1"/>
+                                    <field name="per_piece_costing" readonly="1"/>
+                                    <field name="average_per_costing" readonly="1"/>
                                     <field name="airlines"/>
                                     <field name="country_id"/>
                                     <field name="port"/>
@@ -150,7 +156,7 @@
                                     <field name="brc_date"/>
                                     <field name="brc_no"/>
                                     <field name="brc_amount_usd"/>
-                                    <field name="still_in_realization" readonly="1"/>
+                                    <field name="diff_in_realization" readonly="1"/>
                                     <field name="sb_fob_value"/>
                                 </group>
                             </group>
@@ -163,14 +169,14 @@
                                     <field name="other_country"/>
                                     <field name="rodtep_amount" readonly="1"/>
                                     <field name="rodtep_amount_per_sb"/>
-                                    <field name="dbk_percentage"/>
+<!--                                    <field name="dbk_percentage"/>-->
                                     <field name="dbk_claimed"/>
                                     <field name="dbk_as_per_calculation" readonly="1"/>
                                     <field name="dbk_amount"/>
                                     <field name="application_status"/>
                                     <field name="drawback_received"/>
-                                    <field name="received_date"/>
-                                    <field name="received_amount"/>
+<!--                                    <field name="received_date"/>-->
+<!--                                    <field name="received_amount"/>-->
                                 </group>
                                 <group>
                                     <field name="tax_able_amt"/>
@@ -219,7 +225,7 @@
 <!--                <field name="received_date" type="row"/>-->
 <!--                &lt;!&ndash; Measures (columns): all numeric/monetary &ndash;&gt;-->
 <!--                <field name="sr_no" type="measure"/>-->
-<!--                <field name="qty_kg" type="measure"/>-->
+<!--                <field name="qty" type="measure"/>-->
 <!--                <field name="unit_rate" type="measure"/>-->
 <!--                <field name="invoice_amount_usd" type="measure"/>-->
 <!--                <field name="ex_rate" type="measure"/>-->
@@ -232,7 +238,7 @@
 <!--                <field name="other_charges" type="measure"/>-->
 <!--                <field name="freight" type="measure"/>-->
 <!--                <field name="agency_charges" type="measure"/>-->
-<!--                <field name="bus_charges_fumigation" type="measure"/>-->
+<!--                <field name="doc_charges_fumigation" type="measure"/>-->
 <!--                <field name="terminal_handling" type="measure"/>-->
 <!--                <field name="drawback_charges" type="measure"/>-->
 <!--                <field name="mis_charges" type="measure"/>-->
@@ -266,7 +272,7 @@
         <field name="model">sb.brc.master</field>
         <field name="arch" type="xml">
             <search string="SB/BRC Master">
-                <field name="sr_no"/>
+<!--                <field name="sr_no"/>-->
                 <field name="date"/>
                 <field name="invoice_id"/>
                 <field name="sb_no"/>
