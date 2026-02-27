@@ -141,7 +141,7 @@ class SbBrcMaster(models.Model):
                 (r.doc_charges_fumigation or 0) + (r.terminal_handling or 0) + (r.drawback_charges or 0) +
                 (r.awb_charges or 0) + (r.gate_pass or 0) + (r.transportation_to_air_cargo or 0) +
                 (r.load_unload or 0) + (r.pallet_charges or 0) + (r.other_charges_2 or 0) +
-                (r.local_warehouse or 0) + (r.insurance or 0)
+                (r.sai_warehouse or 0) + (r.insurance or 0)
             )
 
     @api.depends('total_charges', 'qty')
