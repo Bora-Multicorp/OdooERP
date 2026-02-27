@@ -1,132 +1,140 @@
+# -*- coding: utf-8 -*-
+
 import base64
-import csv
-import logging
-from datetime import datetime
-from io import StringIO, BytesIO
-from odoo.exceptions import ValidationError
-from openpyxl import load_workbook
+import re
+from io import BytesIO
 
-from odoo import models, fields
+from odoo import models, fields, api
+from odoo.exceptions import ValidationError, UserError
 
-_logger = logging.getLogger(__name__)
+try:
+    from openpyxl import load_workbook
+except ImportError:
+    load_workbook = None
 
 
 class ActivationStatusWizard(models.TransientModel):
     _name = 'activation.status.wizard'
-    _description = 'Activation Status Wizard'
+    _description = 'Update Activation Status using CSV'
 
-    csv_file = fields.Binary(string='CSV or Excel File', required=True)
-    filename = fields.Char(string="Filename")
+    csv_file = fields.Binary(string='Excel File', required=False, help='Upload Excel with columns: IMEI, Activation state (Active/Not active)')
+    filename = fields.Char(string='Filename')
+    result_message = fields.Html(string='Result', readonly=True)
+    post_sale_message = fields.Text(
+        string='Post-sale activation note',
+        help='Optional message to log when updating activation for products that are already sold (post-sale activation update).'
+    )
+
+    def _parse_excel_rows(self):
+        """Parse uploaded Excel: first column = IMEI, second = Activation state. Returns list of (imei, is_active)."""
+        if not load_workbook:
+            raise UserError('Please install openpyxl: pip install openpyxl')
+        if not self.csv_file or not self.filename:
+            raise ValidationError('Please upload an Excel file.')
+        if not self.filename.lower().endswith(('.xlsx', '.xlsm', '.xls')):
+            raise ValidationError('Unsupported format. Please upload an Excel file (.xlsx, .xlsm, .xls).')
+
+        file_content = base64.b64decode(self.csv_file)
+        wb = load_workbook(filename=BytesIO(file_content), data_only=True)
+        sheet = wb.active
+        rows = list(sheet.iter_rows(values_only=True))
+        if not rows:
+            raise ValidationError('The Excel file is empty.')
+
+        # Optional header row: if first cell looks like "IMEI" or "IEMI", skip it
+        start = 0
+        if rows and len(rows[0]) >= 2:
+            first_cell = (rows[0][0] or '').strip().upper()
+            if first_cell in ('IMEI', 'IEMI', 'IMEI NO', 'IMEI NO.'):
+                start = 1
+
+        result = []
+        for row in rows[start:]:
+            if not row or (row[0] is None and row[1] is None):
+                continue
+            imei_raw = row[0]
+            activation_raw = row[1] if len(row) > 1 else None
+            if imei_raw is None:
+                continue
+            imei = re.sub(r'\s+', '', str(imei_raw).strip())
+            if not imei:
+                continue
+            # Normalize activation: Active / Not active (case insensitive)
+            is_active = True
+            if activation_raw is not None and str(activation_raw).strip():
+                val = str(activation_raw).strip().lower()
+                if val in ('not active', 'notactive', 'no', '0', 'false', 'inactive'):
+                    is_active = False
+                elif val in ('active', 'yes', '1', 'true'):
+                    is_active = True
+            result.append((imei, is_active))
+        return result
+
+    def _find_quant_by_imei(self, imei):
+        return self.env['stock.quant'].search([
+            '|', ('imei', '=', imei), ('imei2', '=', imei)
+        ], limit=1)
 
     def action_process_file(self):
-        if not self.csv_file or not self.filename:
-            raise ValidationError("Please upload a file.")
+        self.ensure_one()
+        rows = self._parse_excel_rows()
+        if not rows:
+            raise ValidationError('No valid IMEI rows found in the file. Expected columns: IMEI, Activation state (Active/Not active).')
 
-        try:
-            file_content = base64.b64decode(self.csv_file)
-            records = []
+        # Duplicate IMEI detection (in file)
+        imei_seen = {}
+        duplicates = []
+        for imei, _ in rows:
+            if imei in imei_seen:
+                duplicates.append(imei)
+            imei_seen[imei] = True
+        if duplicates:
+            unique_dupes = list(dict.fromkeys(duplicates))
+            raise ValidationError(
+                'Duplicate IMEI(s) in the file (each IMEI should appear only once): %s' % ', '.join(unique_dupes)
+            )
 
-            # Determine file type
-            if self.filename.lower().endswith('.csv'):
-                # CSV processing
-                data = StringIO(file_content.decode('utf-8'))
-                reader = csv.DictReader(data)
-                records = [row for row in reader]
+        updated = 0
+        failed_imeis = []
+        post_sale_note = (self.post_sale_message or '').strip()
 
-            elif self.filename.lower().endswith(('.xlsx', '.xlsm', '.xls')):
-                # Excel processing
-                workbook = load_workbook(filename=BytesIO(file_content), data_only=True)
-                sheet = workbook.active
-                headers = []
+        for imei, is_active in rows:
+            quant = self._find_quant_by_imei(imei)
+            if not quant:
+                failed_imeis.append(imei)
+                continue
+            product = quant.product_id
+            # Update quant
+            quant.write({
+                'activation_status': is_active,
+                'activation_date': quant.activation_date if is_active else False,
+            })
+            # Update product activation_status (selection: active / not_active)
+            product.write({'activation_status': 'active' if is_active else 'not_active'})
+            updated += 1
+            # Optional: log post-sale message on product (chatter)
+            if post_sale_note and product:
+                product.message_post(
+                    body='Activation status updated via CSV wizard. Note: %s' % post_sale_note,
+                    message_type='notification',
+                )
 
-                for row_index, row in enumerate(sheet.iter_rows(values_only=True)):
-                    if row_index == 0:
-                        headers = [str(cell).strip() if cell else '' for cell in row]
-                    else:
-                        row_data = dict(zip(headers, row))
-                        records.append(row_data)
-            else:
-                raise ValidationError("Unsupported file format. Please upload a CSV or Excel file.")
+        # Build result message and keep wizard open so user sees it
+        failed_list = '<br/>'.join(failed_imeis) if failed_imeis else 'None'
+        msg = (
+            '<p><strong>Updated:</strong> %s</p>'
+            '<p><strong>Failed (IMEI not found):</strong> %s</p>'
+            '<p><strong>Failed IMEI list:</strong></p><p>%s</p>'
+        ) % (updated, len(failed_imeis), failed_list or '-')
+        self.write({'result_message': msg})
 
-            # ✅ Pass the unified list of dicts to a separate processor
-            file_arraay_data = self._process_data(records)
-            self._update_status_in_inventory(file_arraay_data)
-
-        except Exception as e:
-            raise ValidationError(f"Failed to process file: {str(e)}")
-
-        # self.env.user.notify_success(message="CSV imported successfully! Devices updated.")
-
-        return {'type': 'ir.actions.client', 'tag': 'reload'}
-
-    def _process_data(self, data_list):
-        records = []
-        for idx, row in enumerate(data_list, start=1):
-            try:
-                results_raw = row['Result']
-                if not results_raw:
-                    raise ValueError(f"Missing 'Result' field in row {idx}")
-
-                parsed = self._parse_results_string(results_raw)
-
-                imei_raw = parsed.get('IMEI')
-                if not imei_raw:
-                    raise ValueError(f"Missing 'IMEI' in parsed data at row {idx}")
-                imei = imei_raw.strip()
-
-                date_str = parsed.get('Estimated Purchase Date')
-                if not date_str:
-                    ValueError(f"Missing 'Estimated Purchase Date' in parsed data at row {idx}")
-                activation_date = self._grab_purchase_date(date_str).strip()
-
-                parsed_data_in_dict = {
-                    "imei": imei,
-                    "activation_date": activation_date
-                }
-                records.append(parsed_data_in_dict)
-
-            except Exception as e:
-                raise ValidationError(f"Failed to process file: {str(e)}")
-
-        return records
-
-    def _parse_results_string(self, results_string):
-        data = {}
-        if not results_string:
-            return data
-
-        try:
-            # Split by pipe and loop
-            for item in results_string.split('|'):
-                if ':' in item:
-                    key, value = item.split(':', 1)
-                    key = key.strip()
-                    value = value.strip()
-                    data[key] = value
-        except Exception as e:
-            raise ValidationError(f"Failed to process file: {str(e)}")
-
-        return data
-
-    def _grab_purchase_date(self, date_containing_string):
-        if not date_containing_string:
-            return ''
-        try:
-            splits = date_containing_string.split('r')
-            return splits[0]
-        except Exception as e:
-            raise ValidationError(f"Error grabbing purchase date from: {date_containing_string}")
-
-    def _update_status_in_inventory(self, file_arraay_data):
-
-        for idx, item in enumerate(file_arraay_data, start=1):
-            imei = item.get('imei')
-            activation_date_as_string = item.get('activation_date')
-            activation_date = datetime.strptime(activation_date_as_string, '%d %b %Y').date()
-
-            quants = self.env['stock.quant'].search([], order='create_date desc')
-            # quants = self.env['stock.quant'].search([])
-            for quant in quants:
-                if quant.imei == imei or quant.imei2 == imei:
-                    quant.write({'activation_status': True, 'activation_date': activation_date})
-                    break
+        # Reopen the same wizard record so the form stays open and shows the result.
+        # User closes the wizard with Cancel / Close / Done.
+        return {
+            'type': 'ir.actions.act_window',
+            'res_model': 'activation.status.wizard',
+            'res_id': self.id,
+            'view_mode': 'form',
+            'views': [(False, 'form')],
+            'target': 'new',
+        }

@@ -454,6 +454,131 @@ class PartWiseAllDataReport(models.TransientModel):
         return base64.b64encode(output.read())
 
     @api.model
+    def generate_advance_sheet_xlsx_report(self):
+        """
+        Generate Advance Sheet XLSX report.
+        One row per customer (PARTY NAME) with:
+        - PAYMENT RECEIVED: Sum of (ks_advance_payment_amount + total_invoice_payment_received) for all SOs of that customer
+        - STOCK DESPATCHED AMOUNT: Sum of value of products delivered (qty_delivered * price_unit) for that customer's SOs
+        - BALANCE AVAILABLE WITH US: PAYMENT RECEIVED - STOCK DESPATCHED AMOUNT
+        Format as per screenshot: yellow/orange header, light blue data rows, bold total.
+        Returns base64 encoded file content.
+        """
+        output = io.BytesIO()
+        workbook = xlsxwriter.Workbook(output, {'in_memory': True})
+
+        # Header: yellow for A1-D1, orange-red for E1 (BALANCE AVAILABLE WITH US)
+        header_format_yellow = workbook.add_format({
+            'bold': True,
+            'bg_color': '#FFFF00',
+            'border': 1,
+            'align': 'center',
+            'valign': 'vcenter',
+        })
+        header_format_orange = workbook.add_format({
+            'bold': True,
+            'bg_color': '#FFA500',
+            'border': 1,
+            'align': 'center',
+            'valign': 'vcenter',
+        })
+        # Data rows: light blue background
+        data_format = workbook.add_format({
+            'border': 1,
+            'valign': 'vcenter',
+            'bg_color': '#ADD8E6',
+        })
+        number_format = workbook.add_format({
+            'border': 1,
+            'valign': 'vcenter',
+            'num_format': '#,##0.00',
+            'bg_color': '#ADD8E6',
+        })
+        total_format = workbook.add_format({
+            'bold': True,
+            'border': 1,
+            'valign': 'vcenter',
+            'num_format': '#,##0.00',
+        })
+
+        headers = [
+            'SR NO.',
+            'PARTY NAME',
+            'PAYMENT RECEIVED',
+            'STOCK DESPATCHED AMOUNT',
+            'BALANCE AVAILABLE WITH US',
+        ]
+        column_widths = [10, 40, 25, 28, 28]
+        sheet = workbook.add_worksheet('Advance Sheet')
+
+        # Write headers with colors
+        for col, header in enumerate(headers):
+            fmt = header_format_orange if col == 4 else header_format_yellow
+            sheet.write(0, col, header, fmt)
+        for col, width in enumerate(column_widths):
+            sheet.set_column(col, col, width)
+        sheet.freeze_panes(1, 0)
+
+        sale_orders = self.env['sale.order'].search([
+            ('state', 'in', ['sale', 'done'])
+        ], order='partner_id, name')
+
+        customer_data = {}
+        for order in sale_orders:
+            partner = order.partner_id
+            pid = partner.id
+            if pid not in customer_data:
+                customer_data[pid] = {
+                    'party_name': partner.name or '',
+                    'payment_received': 0.0,
+                    'stock_despatched_amount': 0.0,
+                }
+            # PAYMENT RECEIVED = ks_advance_payment_amount + total_invoice_payment_received (per SO, then sum)
+            adv = getattr(order, 'ks_advance_payment_amount', 0.0) or 0.0
+            inv_pay = getattr(order, 'total_invoice_payment_received', 0.0) or 0.0
+            customer_data[pid]['payment_received'] += adv + inv_pay
+            # STOCK DESPATCHED = sum of delivered value per line
+            for line in order.order_line.filtered(lambda l: not l.display_type and l.product_id):
+                if line.qty_delivered and line.qty_delivered > 0:
+                    customer_data[pid]['stock_despatched_amount'] += line.qty_delivered * (line.price_unit or 0.0)
+
+        for pid, data in customer_data.items():
+            data['balance_available'] = data['payment_received'] - data['stock_despatched_amount']
+
+        row = 1
+        sr_no = 1
+        total_payment = 0.0
+        total_despatched = 0.0
+        total_balance = 0.0
+        sorted_customers = sorted(customer_data.items(), key=lambda x: x[1]['party_name'])
+
+        for _pid, data in sorted_customers:
+            sheet.write(row, 0, sr_no, data_format)
+            sheet.write(row, 1, data['party_name'], data_format)
+            pr = data['payment_received'] or 0.0
+            sd = data['stock_despatched_amount'] or 0.0
+            bal = data['balance_available'] or 0.0
+            sheet.write(row, 2, pr, number_format)
+            sheet.write(row, 3, sd, number_format)
+            sheet.write(row, 4, bal, number_format)
+            total_payment += pr
+            total_despatched += sd
+            total_balance += bal
+            row += 1
+            sr_no += 1
+
+        total_row = row
+        sheet.write(total_row, 0, '', total_format)
+        sheet.write(total_row, 1, 'TOTAL', total_format)
+        sheet.write(total_row, 2, total_payment, total_format)
+        sheet.write(total_row, 3, total_despatched, total_format)
+        sheet.write(total_row, 4, total_balance, total_format)
+
+        workbook.close()
+        output.seek(0)
+        return base64.b64encode(output.read())
+
+    @api.model
     def generate_deepa_working_xlsx_report(self, partner_id=None):
         """
         Generate Deepa Working XLSX report with Sale Order, Payment, and Dispatch data
@@ -840,12 +965,12 @@ class PartWiseAllDataReport(models.TransientModel):
         return base64.b64encode(output.read())
 
     @api.model
-    def generate_advance_sheet_xlsx_report(self):
+    def generate_advance_sheet_xlsx_report(self, sale_order_ids=None):
         """
-        Advance Sheet: scan ALL sale orders, one row per customer (commercial partner).
+        Advance Sheet: scan sale orders (or all if sale_order_ids not provided), one row per customer (commercial partner).
         - PARTY NAME: customer name
-        - PAYMENT RECEIVED: total paid (advance + invoice payments) across ALL their sale orders. NA if none.
-        - STOCK DESPATCHED AMOUNT: total despatched value across ALL their sale orders. NA if none.
+        - PAYMENT RECEIVED: total paid (advance + invoice payments) across their sale orders. NA if none.
+        - STOCK DESPATCHED AMOUNT: total despatched value across their sale orders. NA if none.
         - BALANCE AVAILABLE WITH US: Payment - Stock. NA if payment or delivery not done.
         """
         output = io.BytesIO()
@@ -897,10 +1022,15 @@ class PartWiseAllDataReport(models.TransientModel):
             sheet.set_column(col, col, width)
         sheet.freeze_panes(1, 0)
         
-        # 1. Scan ALL sale orders (any state except cancel) to get every customer
-        sale_orders = self.env['sale.order'].search([
-            ('state', '!=', 'cancel')
-        ], order='partner_id')
+        # Sale orders: selected IDs if provided, otherwise all (except cancel)
+        if sale_order_ids:
+            sale_orders = self.env['sale.order'].browse(sale_order_ids).filtered(
+                lambda o: o.state != 'cancel'
+            )
+        else:
+            sale_orders = self.env['sale.order'].search([
+                ('state', '!=', 'cancel')
+            ], order='partner_id')
         
         # 2. Unique customers: by commercial partner (so same company = one row)
         commercial_partner_ids = set()
@@ -1043,11 +1173,12 @@ class PartWiseAllDataReport(models.TransientModel):
         return base64.b64encode(output.read())
 
     @api.model
-    def generate_exchange_gl_xlsx_report(self):
+    def generate_exchange_gl_xlsx_report(self, sale_order_ids=None):
         """
         Generate Exchange GL XLSX report with Proforma Invoice, Commercial Invoice, 
         Shipping Bill, and Payment data with exchange rate calculations
-        Based on screenshot structure with grouped data by Proforma Invoice
+        Based on screenshot structure with grouped data by Proforma Invoice.
+        If sale_order_ids provided, only those sale orders are included; otherwise all confirmed.
         Returns base64 encoded file content
         """
         from datetime import datetime
@@ -1162,10 +1293,15 @@ class PartWiseAllDataReport(models.TransientModel):
         # Freeze first row
         sheet.freeze_panes(1, 0)
         
-        # Get all confirmed Sale Orders
-        sale_orders = self.env['sale.order'].search([
-            ('state', 'in', ['sale', 'done'])
-        ], order='name, date_order')
+        # Get Sale Orders: selected IDs if provided, otherwise all confirmed
+        if sale_order_ids:
+            sale_orders = self.env['sale.order'].browse(sale_order_ids).filtered(
+                lambda o: o.state in ['sale', 'done']
+            )
+        else:
+            sale_orders = self.env['sale.order'].search([
+                ('state', 'in', ['sale', 'done'])
+            ], order='name, date_order')
         
         # Group orders by Proforma Invoice (Sale Order)
         row = 1

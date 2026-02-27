@@ -1,8 +1,12 @@
 # -*- coding: utf-8 -*-
+"""Clear report line tables before FK is changed to reference new header tables.
 
-def pre_init_hook(cr):
-    """Clear old report lines that referenced transient wizards,
-    so new FKs to permanent header tables can be added on upgrade."""
+Runs on upgrade so that margin_analysis_report and ad_margin_report no longer
+contain rows with report_id pointing to old transient wizard tables.
+"""
+
+
+def migrate(cr, version):
     for table in ('margin_analysis_report', 'ad_margin_report'):
         cr.execute("""
             SELECT EXISTS (
@@ -12,8 +16,3 @@ def pre_init_hook(cr):
         """, (table,))
         if cr.fetchone()[0]:
             cr.execute("DELETE FROM " + table)
-
-
-from . import models
-from . import wizards
-

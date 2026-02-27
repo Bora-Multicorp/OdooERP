@@ -47,6 +47,26 @@ class ProductTemplateInherit(models.Model):
 
     attribute_ids = fields.Many2many('product.attribute', tracking=True)
 
+    # Activation status from variants (readonly, for display on template form)
+    activation_status_display = fields.Char(
+        string='Activation Status (Summary)',
+        compute='_compute_activation_status_display',
+        help='Shows activation status from variant(s). Updated via "Update Activation Status using CSV" wizard.'
+    )
+
+    @api.depends('product_variant_ids.activation_status')
+    def _compute_activation_status_display(self):
+        labels = {'active': 'Active', 'not_active': 'Not Active'}
+        for rec in self:
+            # mapped() returns a list, not a recordset
+            statuses = [s for s in rec.product_variant_ids.mapped('activation_status') if s]
+            if not statuses:
+                rec.activation_status_display = ''
+            elif len(set(statuses)) > 1:
+                rec.activation_status_display = 'Mixed'
+            else:
+                rec.activation_status_display = labels.get(statuses[0], statuses[0] or '')
+
     # To check if mobile category is selected from the Category field
     @api.depends('categ_id')
     def _compute_category_change(self):
@@ -194,6 +214,18 @@ class ProductTemplateInherit(models.Model):
                 rec._generate_and_assign_sku()
 
         return res
+
+
+class ProductProductInherit(models.Model):
+    _inherit = 'product.product'
+
+    activation_status = fields.Selection(
+        selection=[('active', 'Active'), ('not_active', 'Not Active')],
+        string='Activation Status',
+        help='Mobile/tablet activation status. Updated only via "Update Activation Status using CSV" wizard.',
+        readonly=True,
+        tracking=True,
+    )
 
 
 class ProductBrand(models.Model):

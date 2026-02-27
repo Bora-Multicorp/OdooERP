@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <data>
         <record id="update_activation_status_using_csv_form" model="ir.ui.view">
@@ -6,20 +7,22 @@
             <field name="arch" type="xml">
                 <form string="Update Activation Status using CSV">
                     <group>
-                        <field name="csv_file" filename="filename"
-                               options="{'accepted_file_extensions': '.csv, .xls, .xlsx, .xlsm'}"/>
-                        <field name="filename" invisible="1"/>
+                        <group string="Upload">
+                            <field name="csv_file" filename="filename"
+                                   options="{'accepted_file_extensions': '.xlsx, .xlsm, .xls'}"/>
+                            <field name="filename" invisible="1"/>
+                        </group>
+                        <group string="Options">
+                            <field name="post_sale_message" placeholder="Optional note for post-sale activation updates (logged on product)"/>
+                        </group>
+                    </group>
+                    <group string="Result" invisible="not result_message">
+                        <field name="result_message" nolabel="1" colspan="2"/>
                     </group>
                     <footer>
-                        <button name="action_process_file" string="Submit" type="object" class="btn-primary"/>
-                        <button string="Cancel" class="btn-secondary" special="cancel" data-hotkey="x"/>
-                        <div style="margin-left:auto;">
-
-                            <a class="btn btn-primary" role="button" type="object" name="your_method_name">Download
-                                Sample Format File
-                            </a>
-
-                        </div>
+                        <button name="action_process_file" string="Upload" type="object" class="btn-primary"/>
+                        <button string="Close" class="btn-primary" special="cancel" invisible="not result_message" data-hotkey="q"/>
+                        <button string="Cancel" class="btn-secondary" special="cancel" data-hotkey="x" invisible="result_message"/>
                     </footer>
                 </form>
             </field>
@@ -29,11 +32,12 @@
             <field name="res_model">activation.status.wizard</field>
             <field name="view_mode">form</field>
             <field name="target">new</field>
-            <!-- Opens in a modal -->
             <field name="view_id" ref="update_activation_status_using_csv_form"/>
         </record>
         <menuitem id="activation_status_update_using_csv" name="Update Activation Status using CSV"
                   action="update_activation_status_using_csv"
-                  parent="stock.menu_stock_warehouse_mgmt" sequence="202"/>
+                  parent="stock.menu_stock_warehouse_mgmt"
+                  sequence="202"
+                  groups="ks_product_master.group_activation_status_update"/>
     </data>
 </odoo>

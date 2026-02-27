@@ -1,5 +1,17 @@
 <odoo>
     <data>
+        <!-- Activation Status on main product form (inherit base template form so it always shows) -->
+        <record id="view_product_template_form_activation_status" model="ir.ui.view">
+            <field name="name">product.template.form.activation.status</field>
+            <field name="model">product.template</field>
+            <field name="inherit_id" ref="product.product_template_form_view"/>
+            <field name="priority" eval="99"/>
+            <field name="arch" type="xml">
+                <xpath expr="//group[@name='group_general']" position="inside">
+                    <field name="activation_status_display" readonly="1" string="Activation Status"/>
+                </xpath>
+            </field>
+        </record>
         <record id="product_template_form_view_inherit_hide_company" model="ir.ui.view">
             <field name="name">product.template.form.inherit.hide.company</field>
             <field name="model">product.template</field>

@@ -10,10 +10,13 @@
     # Categories can be used to filter modules in modules listing
     # for the full list
     'category': 'Uncategorized',
-    'version': '0.1',
+    'version': '0.2',
+
+    # run on new install only; for upgrade use migrations/0.2/pre-clear_report_lines.py
+    'pre_init_hook': 'pre_init_hook',
 
     # any module necessary for this one to work correctly
-    'depends': ['base', 'product', 'stock', 'sale_project', 'purchase', 'account'],
+    'depends': ['base', 'product', 'stock', 'sale_project', 'purchase', 'account', 'mail'],
 
     # always loaded
     'data': [
@@ -32,12 +35,12 @@
         'views/show_hide_product_fields.xml',
         'views/product_context_change.xml',
         'views/product_template_tree_view.xml',
+        'security/ir_rules.xml',
         'wizards/activation_status_wizard_view.xml',
         'views/stock_traceability_report_pdf.xml',
         'views/margin_analysis_report_views.xml',
         'views/ad_margin_report_views.xml',
         'views/mop_master_views.xml',
-        'security/ir_rules.xml',
         'security/ir.model.access.csv',
 
     ],
