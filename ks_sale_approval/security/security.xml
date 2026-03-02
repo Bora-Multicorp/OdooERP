@@ -5,7 +5,7 @@
         <record id="group_ks_sale_approval_manager" model="res.groups">
             <field name="name">Sale Approval Manager (PM)</field>
             <field name="category_id" ref="base.module_category_sales"/>
-            <field name="implied_ids" eval="[(4, ref('sales_team.group_sale_salesman'))]"/>
+<!--            <field name="implied_ids" eval="[(4, ref('sales_team.group_sale_salesman'))]"/>-->
             <field name="comment">Users with this role can approve or reject Sale Order confirmation and cancellation requests. They can also edit prices and confirm orders directly.</field>
         </record>
 
