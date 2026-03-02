@@ -554,24 +554,10 @@
                             <td style="width: 50%; vertical-align: top; padding: 6px; border: 1px solid #000;">
                                 <!-- Bank Details -->
                                 <p style="font-weight: bold; margin-bottom: 5px;">Company's Bank Details</p>
-                                <t t-if="bank_info['bank_name']">
-                                    <span><strong>Bank Name:</strong> <t t-esc="bank_info['bank_name']"/></span><br/>
-                                </t>
-                                <t t-if="bank_info['acc_number']">
-                                    <span><strong>A/c No.:</strong> <t t-esc="bank_info['acc_number']"/></span><br/>
-                                </t>
-                                <t t-if="bank_info['city'] or bank_info['ifsc_code']">
-                                    <span><strong>Branch IFS Code:</strong> 
-                                        <t t-if="bank_info['city']" t-esc="bank_info['city']"/>
-                                        <t t-if="bank_info['city'] and bank_info['ifsc_code']"> </t>
-                                        <t t-if="bank_info['ifsc_code']">
-                                            (<t t-esc="bank_info['ifsc_code']"/>)
-                                        </t>
-                                    </span><br/>
-                                </t>
-                                <t t-if="bank_info['swift_code']">
-                                    <span><strong>SWIFT Code:</strong> <t t-esc="bank_info['swift_code']"/></span>
-                                </t>
+                                <span><strong>Bank Name:</strong> <strong><t t-esc="bank_info.get('bank_name') or ''"/></strong></span><br/>
+                                <span><strong>A/c No.:</strong> <strong><t t-esc="bank_info.get('acc_number') or ''"/></strong></span><br/>
+                                <span><strong>Branch IFS Code:</strong> <strong><t t-esc="bank_info.get('city') or ''"/><t t-if="bank_info.get('ifsc_code')"> (<t t-esc="bank_info.get('ifsc_code')"/>)</t></strong></span><br/>
+                                <span><strong>SWIFT Code:</strong> <strong><t t-esc="bank_info.get('swift_code') or ''"/></strong></span>
                             </td>
                         </tr>
                     </table>

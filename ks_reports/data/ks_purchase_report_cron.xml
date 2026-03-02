@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Server action run by the cron (uses purchase.order model to avoid ref to custom model at load) -->
+        <record id="ir_actions_server_ks_purchase_report_sync" model="ir.actions.server">
+            <field name="name">KS Reports: Sync PO to Purchase Report Detail</field>
+            <field name="model_id" ref="purchase.model_purchase_order"/>
+            <field name="state">code</field>
+            <field name="code"><![CDATA[env['ks.purchase.report.detail'].action_sync_po_data()]]></field>
+        </record>
+        <!-- Scheduled Action: disabled; sync is done automatically on PO create/write -->
+        <record id="ir_cron_ks_purchase_report_sync" model="ir.cron">
+            <field name="ir_actions_server_id" ref="ir_actions_server_ks_purchase_report_sync"/>
+            <field name="interval_number">24</field>
+            <field name="interval_type">hours</field>
+            <field name="active" eval="False"/>
+        </record>
+    </data>
+</odoo>

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Inherit res.bank form: rename bic to Account Number, add Swift/AD/IFSC/Branch fields -->
+    <record id="view_res_bank_form_ks_inherit" model="ir.ui.view">
+        <field name="name">res.bank.form.ks.inherit</field>
+        <field name="model">res.bank</field>
+        <field name="inherit_id" ref="base.view_res_bank_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='bic']" position="attributes">
+                <attribute name="string">Account Number</attribute>
+            </xpath>
+            <xpath expr="//group[@name='bank_details']" position="inside">
+                <field name="swift_code"/>
+                <field name="bank_ad_code"/>
+                <field name="ifsc_code"/>
+                <field name="branch_sol_id"/>
+                <field name="branch"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Inherit res.bank tree: rename bic column to Account Number, add new columns -->
+    <record id="view_res_bank_tree_ks_inherit" model="ir.ui.view">
+        <field name="name">res.bank.tree.ks.inherit</field>
+        <field name="model">res.bank</field>
+        <field name="inherit_id" ref="base.view_res_bank_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='bic']" position="attributes">
+                <attribute name="string">Account Number</attribute>
+            </xpath>
+            <xpath expr="//field[@name='country']" position="before">
+                <field name="swift_code" optional="hide"/>
+                <field name="ifsc_code" optional="hide"/>
+                <field name="branch" optional="hide"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

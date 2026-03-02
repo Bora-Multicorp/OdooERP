@@ -19,6 +19,7 @@
                     <field name="ks_place_of_receipt_by_shipper" placeholder="Place of Receipt by Shipper"/>
                     <field name="ks_city_port_of_loading" placeholder="City / Port of Loading"/>
                     <field name="ks_city_port_of_discharge" placeholder="City / Port of Discharge"/>
+                    <field name="ks_bank_id" placeholder="Bank Information (from Sale Order)"/>
                 </xpath>
             </field>
         </record>

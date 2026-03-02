@@ -22,8 +22,8 @@ class StockPicking(models.Model):
     ks_final_destination = fields.Char(string="Final Destination")
     ks_gross_weight = fields.Char(string="Gross Weight")
     ks_net_weight = fields.Char(string="Net Weight")
-    ks_no_kin_of_pkg  = fields.Char(string="No. and Kind of Pkg ")
-    ks_remark = fields.Text(string="Remark")
+    # User signature for packing list PDF
+    ks_user_signature = fields.Binary(string="User Signature", attachment=True)
     # Terms of Delivery fields
     ks_contact_date = fields.Date(string="Contact Date")
     ks_contact_no = fields.Char(string="Contact No")
@@ -173,18 +173,17 @@ class StockPicking(models.Model):
         return buyer_info
 
     def get_packing_list_lines(self):
-        """Get packing list line items - one row per package with all products in description column"""
+        """Get packing list line items. Uses move-level manual fields (x_dimensions, x_package_info, x_line_remark) when set."""
         self.ensure_one()
         lines = []
-        
-        # Group by package if available, otherwise by product
+
         package_levels = self.package_level_ids
         if package_levels:
-            # Process by packages - one row per package with all products
             for idx, package_level in enumerate(package_levels, 1):
                 move_lines = package_level.move_line_ids.filtered(lambda ml: ml.product_id)
-                
-                # Get package dimensions if available
+                moves = move_lines.mapped('move_id')
+
+                # Dimensions: prefer first move's manual x_dimensions
                 dimensions = ''
                 try:
                     if hasattr(package_level, 'package_id') and package_level.package_id:
@@ -192,20 +191,17 @@ class StockPicking(models.Model):
                         if hasattr(package, 'pack_length') and hasattr(package, 'pack_width') and hasattr(package, 'pack_height'):
                             if package.pack_length and package.pack_width and package.pack_height:
                                 dimensions = f"{package.pack_length}*{package.pack_width}*{package.pack_height}"
-                except:
+                except Exception:
                     pass
-                
-                # Get invoice reference for package
+
                 invoice_ref = ''
                 invoice_info = self.get_invoice_info()
                 if invoice_info.get('invoice_no'):
                     invoice_ref = invoice_info.get('invoice_no', '')
-                
-                # Count boxes
+
                 box_count = len(move_lines) if move_lines else 0
                 box_range = f"(1-{box_count})" if box_count > 0 else ""
-                
-                # Build dimensions text
+
                 dim_parts = [f"PALLET NO.{idx}"]
                 if box_count > 0:
                     dim_parts.append(f"{box_count} BOXES {box_range}")
@@ -214,95 +210,77 @@ class StockPicking(models.Model):
                 if dimensions:
                     dim_parts.append(f"DIMENSION- {dimensions}")
                 dimensions_text = ", ".join(dim_parts)
-                
-                # Build description with all products (multi-line format)
+
+                # Use move-level manual fields when available (first move in package)
+                manual_dim = moves[0].x_dimensions if moves and moves[0].x_dimensions else None
+                manual_boxes = moves[0].x_package_info if moves and moves[0].x_package_info else None
+                manual_remarks = moves[0].x_line_remark if moves and moves[0].x_line_remark else None
+                if manual_dim:
+                    dimensions_text = manual_dim
+                if manual_boxes:
+                    boxes_text = manual_boxes
+                else:
+                    boxes_text = f"{box_count} BOXES {box_range}" if box_count > 0 else ''
+
                 descriptions = []
                 quantities = []
                 total_qty = 0
-                
                 for move_line in move_lines:
                     if move_line.product_id:
                         product_name = move_line.product_id.name
-                        # Try to get country of origin from product
                         origin_text = ''
                         try:
                             if hasattr(move_line.product_id, 'country_of_origin') and move_line.product_id.country_of_origin:
                                 origin_text = f"Made in {move_line.product_id.country_of_origin.name}"
-                        except:
+                        except Exception:
                             pass
-                        
-                        # Add product name
                         descriptions.append(product_name)
-                        # Add origin if available
                         if origin_text:
                             descriptions.append(origin_text)
-                        
-                        qty = int(move_line.qty_done or move_line.reserved_uom_qty or 0)
+                        qty = int(move_line.quantity or 0)
                         quantities.append(str(qty))
                         total_qty += qty
-                
-                # Format descriptions and quantities as HTML with line breaks
-                description_html = '<br/>'.join(descriptions) if descriptions else ''
-                quantity_html = '<br/>'.join(quantities) if quantities else ''
-                
-                # Create single row for this package
+
                 line_info = {
                     'dimensions': dimensions_text,
-                    'boxes': f"{box_count} BOXES {box_range}" if box_count > 0 else '',
-                    'description': description_html,  # HTML formatted with <br/>
-                    'description_list': descriptions,  # Keep list for template iteration
-                    'quantity': quantity_html,  # HTML formatted with <br/>
-                    'quantity_list': quantities,  # Keep list for template iteration
+                    'boxes': boxes_text,
+                    'description': '<br/>'.join(descriptions) if descriptions else '',
+                    'description_list': descriptions,
+                    'quantity': '<br/>'.join(quantities) if quantities else '',
+                    'quantity_list': quantities,
                     'total_quantity': total_qty,
-                    'remarks': f"{total_qty}*1 = {total_qty}" if total_qty > 0 else '',
+                    'remarks': manual_remarks if manual_remarks else (f"{total_qty}*1 = {total_qty}" if total_qty > 0 else ''),
                 }
                 lines.append(line_info)
         else:
-            # Process by move lines (no packages) - group by product
-            product_groups = {}
-            for move_line in self.move_line_ids:
-                if move_line.product_id:
-                    product = move_line.product_id
-                    if product.id not in product_groups:
-                        product_groups[product.id] = {
-                            'product': product,
-                            'quantity': 0,
-                            'move_lines': []
-                        }
-                    product_groups[product.id]['quantity'] += int(move_line.qty_done or move_line.reserved_uom_qty or 0)
-                    product_groups[product.id]['move_lines'].append(move_line)
-            
-            # Create rows for each product group
-            for product_id, group_data in product_groups.items():
-                product = group_data['product']
-                qty = group_data['quantity']
-                
-                # Get country of origin
+            # No packages: one row per move, use move-level manual fields
+            for move in self.move_ids:
+                if not move.product_id:
+                    continue
+                product = move.product_id
+                qty = int(move.product_qty or 0)
                 origin_text = ''
                 try:
                     if hasattr(product, 'country_of_origin') and product.country_of_origin:
                         origin_text = f"Made in {product.country_of_origin.name}"
-                except:
+                except Exception:
                     pass
-                
                 descriptions = [product.name]
                 if origin_text:
                     descriptions.append(origin_text)
-                
-                description_html = '<br/>'.join(descriptions) if descriptions else ''
-                
+
                 line_info = {
-                    'dimensions': '',
-                    'boxes': '1 BOX',
-                    'description': description_html,
+                    'dimensions': move.x_dimensions or '',
+                    'boxes': move.x_package_info or '1 BOX',
+                    'description': '<br/>'.join(descriptions),
                     'description_list': descriptions,
                     'quantity': str(qty),
                     'quantity_list': [str(qty)],
                     'total_quantity': qty,
-                    'remarks': '',
+                    'remarks': move.x_line_remark or '',
                 }
                 lines.append(line_info)
-        
+
         return lines
 
     def get_packing_list_totals(self):
@@ -326,17 +304,17 @@ class StockPicking(models.Model):
                 totals['total_boxes'] += len(move_lines)
                 for move_line in move_lines:
                     if move_line.product_id:
-                        totals['total_quantity'] += int(move_line.qty_done or move_line.reserved_uom_qty or 0)
+                        totals['total_quantity'] += int(move_line.quantity or 0)
                         if move_line.product_id.weight:
-                            totals['net_weight'] += (move_line.product_id.weight * (move_line.qty_done or move_line.reserved_uom_qty or 0))
+                            totals['net_weight'] += (move_line.product_id.weight * (move_line.quantity or 0))
         else:
             # No packages, count move lines
             totals['total_boxes'] = len(self.move_line_ids)
             for move_line in self.move_line_ids:
                 if move_line.product_id:
-                    totals['total_quantity'] += int(move_line.qty_done or move_line.reserved_uom_qty or 0)
+                    totals['total_quantity'] += int(move_line.quantity or 0)
                     if move_line.product_id.weight:
-                        weight = move_line.product_id.weight * (move_line.qty_done or move_line.reserved_uom_qty or 0)
+                        weight = move_line.product_id.weight * (move_line.quantity or 0)
                         totals['net_weight'] += weight
                         totals['gross_weight'] += weight * 1.1  # Approximate
         

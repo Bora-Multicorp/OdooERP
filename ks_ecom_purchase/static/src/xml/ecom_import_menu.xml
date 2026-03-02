@@ -7,5 +7,8 @@
         <DropdownItem class="'o_import_menu'" onSelected.bind="openReceiptImportWizard">
             <i class="fa fa-fw fa-file-excel-o me-1"/>Import XLSX Receipt Data
         </DropdownItem>
+        <DropdownItem class="'o_import_menu'" onSelected.bind="openRefundImportWizard">
+            <i class="fa fa-fw fa-file-excel-o me-1"/>Import XLSX Refund Data
+        </DropdownItem>
     </t>
 </templates>

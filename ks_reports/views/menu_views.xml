@@ -175,13 +175,13 @@ action = {
         </field>
     </record>
 
-    <!-- Fourth Report (Advance Sheet) under Part Wise All Data -->
+    <!-- Advance Sheet under Sales > Reporting -->
     <menuitem 
         id="menu_advance_sheet_report"
         name="Advance Sheet"
         action="action_advance_sheet_report_download"
-        parent="menu_part_wise_all_data_parent"
-        sequence="4"
+        parent="sale.menu_sale_report"
+        sequence="45"
         groups="sales_team.group_sale_manager"
     />
 

@@ -37,6 +37,16 @@ export class KsEcomImportMenu extends Component {
             },
         });
     }
+
+    async openRefundImportWizard() {
+        const { context, resModel } = this.env.searchModel;
+        await this.action.doAction("ks_ecom_purchase.action_po_refund_import_wizard", {
+            additionalContext: {
+                ...context,
+                active_model: resModel,
+            },
+        });
+    }
 }
 
 export const ksEcomImportMenuItem = {

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Inherit purchase.order form view: add Sync to Report button and Extra PO Field section -->
+        <record id="view_purchase_order_form_ks_reports_extra_po" model="ir.ui.view">
+            <field name="name">purchase.order.form.ks.reports.extra.po</field>
+            <field name="model">purchase.order</field>
+            <field name="inherit_id" ref="purchase.purchase_order_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//form/header" position="inside">
+                    <button name="action_sync_to_report" type="object" string="Sync to Report" class="btn-secondary"/>
+                </xpath>
+                <xpath expr="//page[@name='purchase_delivery_invoice']/group" position="after">
+                    <group string="Extra PO Field">
+                        <group>
+                            <field name="ks_remarks" placeholder="Remarks"/>
+                            <field name="ks_invoice" placeholder="Invoice"/>
+                            <field name="ks_e_invoices" placeholder="E - Invoices"/>
+                            <field name="ks_e_way_bill" placeholder="E-way Bill"/>
+                            <field name="ks_imei_serial_no" placeholder="IMEI/ Serial No"/>
+                        </group>
+                        <group>
+                            <field name="ks_docket" placeholder="DOCKET"/>
+                            <field name="ks_ewaybill_no" placeholder="EWAYBILL NO"/>
+                            <field name="ks_docket_no" placeholder="DOCKET No"/>
+                            <field name="ks_vehicle_no" placeholder="Vehicle No."/>
+                            <field name="ks_transporter" placeholder="TRANSPORTER"/>
+                        </group>
+                    </group>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>

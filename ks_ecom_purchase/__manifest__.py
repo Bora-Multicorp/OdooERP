@@ -12,7 +12,10 @@
         "security/ir.model.access.csv",
         "wizard/po_import_wizard_views.xml",
         "wizard/po_receipt_import_wizard_views.xml",
+        "wizard/po_refund_import_wizard_views.xml",
         "views/purchase_order_views.xml",
+        "views/stock_picking_views.xml",
+        "views/ks_warehouse_data_views.xml",
     ],
     "assets": {
         "web.assets_backend": [

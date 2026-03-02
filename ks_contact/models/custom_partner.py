@@ -150,6 +150,15 @@ class CustomContact(models.Model):
     #                 "A partner cannot be both a Customer and a Vendor. Please uncheck one."
     #             )
 
+    @api.constrains('is_vendor', 'vendor_type')
+    def _check_vendor_type_required(self):
+        """Vendor Type is required when Is Vendor is checked."""
+        for rec in self:
+            if rec.is_vendor and not rec.vendor_type:
+                raise ValidationError(
+                    _("Vendor Type is required when the contact is marked as a Vendor. Please select Type 1 or Type 2.")
+                )
+
     @api.constrains('vat')
     def _check_gst_no_format(self):
         gst_pattern = re.compile(r'^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$')
@@ -237,6 +246,13 @@ class CustomContact(models.Model):
     purpose = fields.Char(string="Purpose", tracking=True)
     # Customer/Vendor KYC Details
     is_vendor = fields.Boolean(string="Is Vendor?", tracking=True)
+    vendor_type = fields.Selection(
+        [('1', 'Type 1'), ('2', 'Type 2')],
+        string='Vendor Type',
+        tracking=True,
+        copy=False,
+        help='Required for vendors. Type 2 vendors bypass the KYC process and are auto-approved.',
+    )
     is_customer = fields.Boolean(string="Is Customer?", tracking=True)
     is_kyc = fields.Boolean(string="Is KYC?", tracking=True)
     is_approved = fields.Boolean(string="Is Approved?", tracking=True)
@@ -249,6 +265,13 @@ class CustomContact(models.Model):
     kyc_details = fields.One2many('res.partner.kyc.approval', 'partner_id', string="KYC Details", tracking=True)
 
     def write(self, vals):
+        # Detect Type 2 → Type 1 switch before write (for KYC reset)
+        type2_to_type1 = {}
+        if 'vendor_type' in vals and vals.get('vendor_type') == '1':
+            for record in self:
+                if record.vendor_type == '2':
+                    type2_to_type1[record.id] = True
+
         res = super().write(vals)
 
         for record in self:
@@ -257,10 +280,26 @@ class CustomContact(models.Model):
                 if record.customer_rank != 1:
                     super(CustomContact, record.sudo()).write({'customer_rank': 1})
 
-            # If marked as Vendor → require approval
+            # If marked as Vendor → require approval (or auto-approve for Type 2)
             if vals.get('is_approved') is True and (vals.get('is_vendor') or record.is_vendor):
                 if record.supplier_rank != 1:
                     super(CustomContact, record.sudo()).write({'supplier_rank': 1})
+
+            # KYC bypass for Type 2 vendors: auto-set is_kyc and is_approved so no KYC form is needed
+            if record.is_vendor and record.vendor_type == '2':
+                partner_vals = {'is_kyc': True, 'is_approved': True}
+                if record.supplier_rank != 1:
+                    partner_vals['supplier_rank'] = 1
+                if not record.is_kyc or not record.is_approved:
+                    super(CustomContact, record.sudo()).write(partner_vals)
+            # When switching from Type 2 to Type 1: clear KYC so they must complete the process (if no real KYC record)
+            elif type2_to_type1.get(record.id):
+                kyc_confirmed = record.kyc_details.filtered(lambda k: k.state == 'confirmed')
+                if not kyc_confirmed and (record.is_kyc or record.is_approved):
+                    super(CustomContact, record.sudo()).write({
+                        'is_kyc': False,
+                        'is_approved': False,
+                    })
 
         return res
 

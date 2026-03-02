@@ -400,10 +400,9 @@
                         <td colspan="2" style="border: 1px solid #000; padding: 6px; font-weight: bold;">Remarks:</td>
                     </tr>
 
-                    <!-- Get bank info from payment first, then fallback to company bank info -->
-                    <t t-set="payment_bank_info" t-value="doc.get_payment_bank_info()"/>
+                    <!-- Get bank info from sale order ks_bank_id (via get_company_bank_info) -->
                     <t t-set="company_bank_info" t-value="doc.get_company_bank_info()"/>
-                    <t t-set="bank_info" t-value="payment_bank_info if payment_bank_info.get('has_payment') else company_bank_info"/>
+                    <t t-set="bank_info" t-value="company_bank_info"/>
                     
                     <tr style="border: 1px solid #000; padding: 6px; ">
                         <td>
@@ -439,24 +438,10 @@
                             <td style="width: 50%; vertical-align: top; padding: 6px; border: 1px solid #000;">
                                 <!-- Bank Details -->
                                 <p style="font-weight: bold; margin-bottom: 5px;">Company's Bank Details</p>
-                                <t t-if="bank_info.get('bank_name')">
-                                    <span><strong>Bank Name:</strong> <t t-esc="bank_info.get('bank_name')"/></span><br/>
-                                </t>
-                                <t t-if="bank_info.get('acc_number')">
-                                    <span><strong>A/c No.:</strong> <t t-esc="bank_info.get('acc_number')"/></span><br/>
-                                </t>
-                                <t t-if="bank_info.get('city') or bank_info.get('ifsc_code')">
-                                    <span><strong>Branch IFS Code:</strong> 
-                                        <t t-if="bank_info.get('city')" t-esc="bank_info.get('city')"/>
-                                        <t t-if="bank_info.get('city') and bank_info.get('ifsc_code')"> </t>
-                                        <t t-if="bank_info.get('ifsc_code')">
-                                            (<t t-esc="bank_info.get('ifsc_code')"/>)
-                                        </t>
-                                    </span><br/>
-                                </t>
-                                <t t-if="bank_info.get('swift_code')">
-                                    <span><strong>SWIFT Code:</strong> <t t-esc="bank_info.get('swift_code')"/></span>
-                                </t>
+                                <span><strong>Bank Name:</strong> <strong><t t-esc="bank_info.get('bank_name') or ''"/></strong></span><br/>
+                                <span><strong>A/c No.:</strong> <strong><t t-esc="bank_info.get('acc_number') or ''"/></strong></span><br/>
+                                <span><strong>Branch IFS Code:</strong> <strong><t t-esc="bank_info.get('city') or ''"/><t t-if="bank_info.get('ifsc_code')"> (<t t-esc="bank_info.get('ifsc_code')"/>)</t></strong></span><br/>
+                                <span><strong>SWIFT Code:</strong> <strong><t t-esc="bank_info.get('swift_code') or ''"/></strong></span>
                             </td>
                         </tr>
                     </table>

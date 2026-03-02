@@ -210,12 +210,27 @@
                             <tr>
                                 <td colspan="4" style="border:1px solid #000; vertical-align:top; padding:6px 8px;">
                                     <strong>Gross Weight</strong>
-                                    <span t-esc="' %.3f KGS' % (packing_totals.get('gross_weight') or 0.0)"/><br/>
+                                    <t t-if="doc.ks_gross_weight">
+                                        <span t-esc="doc.ks_gross_weight"/>
+                                    </t>
+                                    <t t-else="">
+                                        <span t-esc="' %.3f KGS' % (packing_totals.get('gross_weight') or 0.0)"/>
+                                    </t>
+                                    <br/>
                                     <strong>Net Weight</strong>
-                                    <span t-esc="' %.3f KGS' % (packing_totals.get('net_weight') or 0.0)"/>
+                                    <t t-if="doc.ks_net_weight">
+                                        <span t-esc="doc.ks_net_weight"/>
+                                    </t>
+                                    <t t-else="">
+                                        <span t-esc="' %.3f KGS' % (packing_totals.get('net_weight') or 0.0)"/>
+                                    </t>
                                 </td>
                                 <td style="border:1px solid #000; vertical-align:top; padding:6px 8px;">
                                     <strong>SIGNATURE</strong>
+                                    <t t-if="doc.ks_user_signature">
+                                        <br/>
+                                        <img t-att-src="image_data_uri(doc.ks_user_signature)" style="max-width:100%; max-height:55px; margin-top:4px; display:block;" alt=""/>
+                                    </t>
                                 </td>
                             </tr>
                         </tbody>

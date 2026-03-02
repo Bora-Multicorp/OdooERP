@@ -18,6 +18,12 @@
                     string="Import XLSX Receipt Data"
                     class="btn-secondary"
                 />
+                <button
+                    name="action_open_refund_import_wizard"
+                    type="object"
+                    string="Import XLSX Refund Data"
+                    class="btn-secondary"
+                />
             </xpath>
 
             <xpath expr="//notebook/page[@name='purchase_delivery_invoice']" position="after">

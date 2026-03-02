@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- 1) Make base PDF Quote (Quotation / Order) use Dubai template content -->
+    <template id="report_saleorder_raw_use_dubai" inherit_id="sale.report_saleorder_raw">
+        <xpath expr="//t[@t-foreach='docs']" position="replace">
+            <t t-call="ks_templates.report_saleorder_dubai"/>
+        </xpath>
+    </template>
+
+    <!-- 2) Apply Dubai paperformat to the base report -->
+    <record id="sale.action_report_saleorder" model="ir.actions.report">
+        <field name="paperformat_id" ref="ks_templates.paperformat_dubai_saleorder"/>
+    </record>
+
+    <!-- 3) Remove "Dubai Quotation / Order" from Print menu (delete the separate report action) -->
+    <delete model="ir.actions.report" id="ks_templates.action_report_saleorder_dubai"/>
+
+</odoo>

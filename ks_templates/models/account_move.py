@@ -17,6 +17,13 @@ class AccountMove(models.Model):
     ks_place_of_receipt_by_shipper = fields.Char(string='Place of Receipt by Shipper')
     ks_city_port_of_loading = fields.Char(string='City / Port of Loading')
     ks_city_port_of_discharge = fields.Char(string='City / Port of Discharge')
+    # Bank details for invoice (copied from sale order ks_bank_id when invoice is created from SO)
+    ks_bank_id = fields.Many2one(
+        'res.bank',
+        string='Bank Information',
+        copy=False,
+        help='Bank details for this Invoice. Filled from Sale Order when invoice is created from SO.',
+    )
 
     def get_amount_in_words_aed(self, amount):
         """Convert amount to words in AED currency in the format: UAE Dirham [amount in words] and [fils] fils Only"""
@@ -309,7 +316,7 @@ class AccountMove(models.Model):
         return ''
 
     def get_company_bank_info(self):
-        """Get company bank information safely"""
+        """Get company bank information: prefer sale order ks_bank_id, else company partner bank."""
         self.ensure_one()
         bank_info = {
             'ad_code': '',
@@ -320,7 +327,33 @@ class AccountMove(models.Model):
             'ifsc_code': '',
             'city': '',
         }
-        
+        try:
+            # Prefer invoice's own ks_bank_id (set from sale order when invoice is created)
+            if getattr(self, 'ks_bank_id', None) and self.ks_bank_id:
+                bank = self.ks_bank_id
+                bank_info['bank_name'] = bank.name or ''
+                bank_info['acc_number'] = getattr(bank, 'bic', None) or ''
+                bank_info['swift_code'] = getattr(bank, 'swift_code', None) or getattr(bank, 'bic', None) or ''
+                bank_info['ad_code'] = getattr(bank, 'bank_ad_code', None) or ''
+                bank_info['ifsc_code'] = getattr(bank, 'ifsc_code', None) or ''
+                bank_info['branch'] = getattr(bank, 'branch', None) or getattr(bank, 'branch_sol_id', None) or ''
+                bank_info['city'] = getattr(bank, 'city', None) or ''
+                return bank_info
+            # Else prefer bank from linked sale order (ks_bank_id)
+            sale_order = self.get_sale_order_info()
+            if sale_order and getattr(sale_order, 'ks_bank_id', None):
+                bank = sale_order.ks_bank_id
+                bank_info['bank_name'] = bank.name or ''
+                bank_info['acc_number'] = getattr(bank, 'bic', None) or ''  # Account Number in ks_sale_order
+                bank_info['swift_code'] = getattr(bank, 'swift_code', None) or getattr(bank, 'bic', None) or ''
+                bank_info['ad_code'] = getattr(bank, 'bank_ad_code', None) or ''
+                bank_info['ifsc_code'] = getattr(bank, 'ifsc_code', None) or ''
+                bank_info['branch'] = getattr(bank, 'branch', None) or getattr(bank, 'branch_sol_id', None) or ''
+                bank_info['city'] = getattr(bank, 'city', None) or ''
+                return bank_info
+        except Exception:
+            pass
+
         try:
             company_bank = self.company_id.partner_id.bank_ids[:1] if self.company_id.partner_id.bank_ids else False
             if company_bank:
