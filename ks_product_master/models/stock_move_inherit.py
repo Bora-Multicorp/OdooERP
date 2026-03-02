@@ -378,8 +378,6 @@ class StockPickingInherit(models.Model):
         tracking=True
     )
 
-
-
     def action_confirm(self):
         """Override to propagate specs_made and made_country to moves and move lines"""
         res = super().action_confirm()
@@ -402,21 +400,23 @@ class StockPickingInherit(models.Model):
                 })
 
     def button_validate(self):
-        """Override to validate country fields, assign matching quants, and propagate before validation"""
-        # Validate that required fields are populated
+        """Override to validate country fields, assign matching quants, and propagate before validation.
+        Country/spec validation and matching-inventory check run only for delivery orders (outgoing)."""
+        # Validate that required fields are populated (only for delivery orders)
         for picking in self:
-            if picking.state in ('draft', 'waiting', 'confirmed', 'assigned'):
+            if picking.picking_type_id.code == 'outgoing' and picking.state in ('draft', 'waiting', 'confirmed', 'assigned'):
                 if not picking.specs_made:
                     raise ValidationError(_('Please set "Spec Made For" field before validating the delivery order.'))
                 if not picking.made_country:
                     raise ValidationError(_('Please set "Made In" field before validating the delivery order.'))
         
-        # Assign matching quants based on country fields and validate
+        # Assign matching quants based on country fields only for delivery orders
         for picking in self:
-            picking._assign_quants_by_country_fields()
+            if picking.picking_type_id.code == 'outgoing':
+                picking._assign_quants_by_country_fields()
         
-        # Propagate fields to moves and move lines before validation
-        self._propagate_country_fields_to_moves()
+        # Propagate fields to moves and move lines before validation (only for delivery orders)
+        self.filtered(lambda p: p.picking_type_id.code == 'outgoing')._propagate_country_fields_to_moves()
         
         packaging_category = self.env.ref('ks_product_master.product_category_type_packaging_material',
                                           raise_if_not_found=False)
@@ -469,13 +469,13 @@ class StockPickingInherit(models.Model):
             # Now find available quant matching country fields (regardless of previous serial)
             quant = self.env['stock.quant'].search(domain, limit=1)
             
-            # if not quant:
-            #     # No matching quant found
-            #     missing_quants.append(
-            #         _('Product: %s - No inventory found matching Spec Made For: %s and Made In: %s') %
-            #         (move_line.product_id.display_name, self.specs_made.name, self.made_country.name)
-            #     )
-            #     continue
+            if not quant:
+                # No matching quant found
+                missing_quants.append(
+                    _('Product: %s - No inventory found matching Spec Made For: %s and Made In: %s') %
+                    (move_line.product_id.display_name, self.specs_made.name, self.made_country.name)
+                )
+                continue
             
             # If quant found, update move line with new serial number and IMEI
             update_vals = {}
@@ -496,6 +496,6 @@ class StockPickingInherit(models.Model):
                 move_line.write(update_vals)
         
         # Raise validation error if any move lines don't have matching quants
-        # if missing_quants:
-        #     error_message = _('Cannot validate delivery order. The following products do not have matching inventory:\n\n%s') % '\n'.join(missing_quants)
-        #     raise ValidationError(error_message)
+        if missing_quants:
+            error_message = _('Cannot validate delivery order. The following products do not have matching inventory:\n\n%s') % '\n'.join(missing_quants)
+            raise ValidationError(error_message)

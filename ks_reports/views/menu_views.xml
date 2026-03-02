@@ -1,12 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Window Action: open list of confirmed Sale Orders (user selects records and clicks Print) -->
+    <!-- Window Action: open list in report format (same as print). Server action fills lines and opens this. -->
     <record id="action_part_wise_all_data_list" model="ir.actions.act_window">
         <field name="name">Part Wise All Data</field>
-        <field name="res_model">sale.order</field>
-        <field name="view_mode">list,form</field>
-        <field name="domain">[('state', 'in', ['sale', 'done'])]</field>
-        <field name="context">{'search_default_quotation': 0}</field>
+        <field name="res_model">ks.part.wise.report.line</field>
+        <field name="view_mode">list</field>
+        <field name="search_view_id" eval="False"/>
+    </record>
+
+    <!-- Server Action: open Part Wise list view with data (same format as print); then user can Download XLSX -->
+    <record id="action_part_wise_all_data_show_list" model="ir.actions.server">
+        <field name="name">Part Wise All Data</field>
+        <field name="model_id" ref="sale.model_sale_order"/>
+        <field name="state">code</field>
+        <field name="code">
+report = env['ks.part.wise.all.data.report']
+rows = report.get_part_wise_report_rows(sale_order_ids=None)
+env['ks.part.wise.report.line'].search([]).unlink()
+if rows:
+    line_ids = env['ks.part.wise.report.line'].create(rows).ids
+    action = env.ref('ks_reports.action_part_wise_report_line_list').read()[0]
+    action['domain'] = [('id', 'in', line_ids)]
+else:
+    action = env.ref('ks_reports.action_part_wise_report_line_list').read()[0]
+        </field>
     </record>
 
     <!-- Server Action: Print Part Wise All Data - generates report for selected Sale Orders (from list) -->
@@ -17,7 +34,6 @@
         <field name="binding_view_types">list</field>
         <field name="state">code</field>
         <field name="code">
-# Generate XLSX report for selected Sale Orders
 sale_order_ids = records.ids if records else env.context.get('active_ids', [])
 if not sale_order_ids:
     raise UserError('Please select at least one Sale Order to print the report.')
@@ -103,11 +119,11 @@ action = {
         groups="sales_team.group_sale_manager"
     />
 
-    <!-- First Report under Part Wise All Data: opens list of Sale Orders; user selects and clicks Print -->
+    <!-- First Report under Part Wise All Data: opens list in same format as print -->
     <menuitem 
         id="menu_part_wise_all_data"
         name="Part Wise All Data"
-        action="action_part_wise_all_data_list"
+        action="action_part_wise_all_data_show_list"
         parent="menu_part_wise_all_data_parent"
         sequence="1"
         groups="sales_team.group_sale_manager"
@@ -213,12 +229,32 @@ action = {
         </field>
     </record>
 
-    <!-- Window Action: open list of Sale Orders for Advance Sheet (user selects and clicks Print) -->
+    <!-- Window Action: open Advance Sheet list in report format (same as print). Server action fills lines and opens this. -->
     <record id="action_advance_sheet_list" model="ir.actions.act_window">
         <field name="name">Advance Sheet</field>
-        <field name="res_model">sale.order</field>
-        <field name="view_mode">list,form</field>
-        <field name="domain">[('state', 'in', ['sale', 'done'])]</field>
+        <field name="res_model">ks.advance.sheet.line</field>
+        <field name="view_mode">list</field>
+        <field name="search_view_id" eval="False"/>
+    </record>
+
+    <!-- Server Action: open Advance Sheet list view with data (same format as print) -->
+    <record id="action_advance_sheet_show_list" model="ir.actions.server">
+        <field name="name">Advance Sheet</field>
+        <field name="model_id" ref="sale.model_sale_order"/>
+        <field name="state">code</field>
+        <field name="code">
+report = env['ks.part.wise.all.data.report']
+rows = report.get_advance_sheet_report_rows(sale_order_ids=None)
+for r in rows:
+    r['balance_available'] = r.get('balance_available') or 0.0
+env['ks.advance.sheet.line'].search([]).unlink()
+if rows:
+    line_ids = env['ks.advance.sheet.line'].create(rows).ids
+    action = env.ref('ks_reports.action_advance_sheet_line_list').read()[0]
+    action['domain'] = [('id', 'in', line_ids)]
+else:
+    action = env.ref('ks_reports.action_advance_sheet_line_list').read()[0]
+        </field>
     </record>
 
     <!-- Server Action: Print Advance Sheet - generates report for selected Sale Orders (from list) -->
@@ -249,21 +285,21 @@ action = {
         </field>
     </record>
 
-    <!-- Fourth Report (Advance Sheet) under Part Wise All Data: opens list; user selects and clicks Print -->
+    <!-- Fourth Report (Advance Sheet): opens list in same format as print -->
     <menuitem 
         id="menu_advance_sheet_report"
         name="Advance Sheet"
-        action="action_advance_sheet_list"
+        action="action_advance_sheet_show_list"
         parent="menu_part_wise_all_data_parent"
         sequence="4"
         groups="sales_team.group_sale_manager"
     />
 	
-    <!-- Advance Sheet under Sales > Reporting: opens list; user selects and clicks Print -->
+    <!-- Advance Sheet under Sales > Reporting: opens list in same format as print -->
     <menuitem 
         id="menu_advance_sheet_report_sales"
         name="Advance Sheet"
-        action="action_advance_sheet_list"
+        action="action_advance_sheet_show_list"
         parent="sale.menu_sale_report"
         sequence="45"
         groups="sales_team.group_sale_manager"
@@ -297,12 +333,30 @@ action = {
         </field>
     </record>
 
-    <!-- Window Action: open list of Sale Orders for Exchange GL (user selects and clicks Print) -->
+    <!-- Window Action: open Exchange GL list in report format (same as print). Server action fills lines and opens this. -->
     <record id="action_exchange_gl_list" model="ir.actions.act_window">
         <field name="name">Exchange GL</field>
-        <field name="res_model">sale.order</field>
-        <field name="view_mode">list,form</field>
-        <field name="domain">[('state', 'in', ['sale', 'done'])]</field>
+        <field name="res_model">ks.exchange.gl.line</field>
+        <field name="view_mode">list</field>
+        <field name="search_view_id" eval="False"/>
+    </record>
+
+    <!-- Server Action: open Exchange GL list view with data (same format as print) -->
+    <record id="action_exchange_gl_show_list" model="ir.actions.server">
+        <field name="name">Exchange GL</field>
+        <field name="model_id" ref="sale.model_sale_order"/>
+        <field name="state">code</field>
+        <field name="code">
+report = env['ks.part.wise.all.data.report']
+rows = report.get_exchange_gl_report_rows(sale_order_ids=None)
+env['ks.exchange.gl.line'].search([]).unlink()
+if rows:
+    line_ids = env['ks.exchange.gl.line'].create(rows).ids
+    action = env.ref('ks_reports.action_exchange_gl_line_list').read()[0]
+    action['domain'] = [('id', 'in', line_ids)]
+else:
+    action = env.ref('ks_reports.action_exchange_gl_line_list').read()[0]
+        </field>
     </record>
 
     <!-- Server Action: Print Exchange GL - generates report for selected Sale Orders (from list) -->
@@ -333,11 +387,11 @@ action = {
         </field>
     </record>
 
-    <!-- Fifth Report (Exchange GL) under Part Wise All Data: opens list; user selects and clicks Print -->
+    <!-- Fifth Report (Exchange GL): opens list in same format as print -->
     <menuitem 
         id="menu_exchange_gl_report"
         name="Exchange GL"
-        action="action_exchange_gl_list"
+        action="action_exchange_gl_show_list"
         parent="menu_part_wise_all_data_parent"
         sequence="5"
         groups="sales_team.group_sale_manager"

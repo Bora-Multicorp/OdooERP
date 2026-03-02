@@ -1,51 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- MOP Master Wizard Form -->
-    <record id="view_mop_master_wizard_form" model="ir.ui.view">
-        <field name="name">mop.master.wizard.form</field>
-        <field name="model">mop.master.wizard</field>
-        <field name="arch" type="xml">
-            <form string="Create MOP Records">
-                <sheet>
-                    <group>
-                        <group>
-                            <field name="effective_date"/>
-                            <field name="default_mop"/>
-                        </group>
-                        <group>
-                            <field name="category_id"/>
-                            <field name="brand_id"/>
-                        </group>
-                    </group>
-                    <group>
-                        <field name="product_ids" widget="many2many_tags" options="{'no_create': True}" nolabel="1"/>
-                    </group>
-                </sheet>
-                <footer>
-                    <button name="action_create_mop" string="Create MOP Records" type="object" class="btn-primary"/>
-                    <button string="Cancel" class="btn-secondary" special="cancel"/>
-                </footer>
-            </form>
-        </field>
-    </record>
-
-    <!-- MOP Master Wizard Action -->
-    <record id="action_mop_master_wizard" model="ir.actions.act_window">
-        <field name="name">Generate MOP Records</field>
-        <field name="res_model">mop.master.wizard</field>
-        <field name="view_mode">form</field>
-        <field name="target">new</field>
-    </record>
-
-    <!-- MOP Master List View -->
+    <!-- MOP Master List View (manual entry only) -->
     <record id="view_mop_master_list" model="ir.ui.view">
         <field name="name">mop.master.list</field>
         <field name="model">mop.master</field>
         <field name="arch" type="xml">
             <list string="MOP Master" default_order="effective_date desc, product_id" editable="bottom" create="1" import="1">
-                <header>
-                    <button name="%(ks_product_master.action_mop_master_wizard)d" string="Generate MOP Records" type="action" class="btn-primary"/>
-                </header>
                 <field name="product_id" string="SKU" required="1" options="{'no_create': True}"/>
                 <field name="sku_code" string="SKU Code" readonly="1"/>
                 <field name="mop" string="MOP" required="1"/>
@@ -128,8 +88,7 @@
                 Create your first MOP Master record!
             </p>
             <p>
-                MOP Master allows you to manage Market Operating Prices for products with effective dates.
-                Back date and future date are allowed.
+                MOP Master is for manual entry of Market Operating Prices per product and effective date. Back date and future date are allowed.
             </p>
         </field>
     </record>
@@ -140,10 +99,5 @@
               parent="stock.menu_warehouse_config"
               action="action_mop_master"
               sequence="50"/>
-    <menuitem id="menu_mop_master_wizard"
-              name="Generate MOP Records"
-              parent="stock.menu_warehouse_config"
-              action="action_mop_master_wizard"
-              sequence="51"/>
 </odoo>
 

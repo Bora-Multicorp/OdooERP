@@ -12,7 +12,6 @@
     'category': 'Uncategorized',
     'version': '0.2',
 
-    # run on new install only; for upgrade use migrations/0.2/pre-clear_report_lines.py
     'pre_init_hook': 'pre_init_hook',
 
     # any module necessary for this one to work correctly

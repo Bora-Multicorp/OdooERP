@@ -54,5 +54,29 @@
                 </xpath>
             </field>
         </record>
+
+        <!-- Menu: Sold stock that is not activated -->
+        <record id="action_stock_quant_sold_not_activated" model="ir.actions.act_window">
+            <field name="name">Sold &amp; Not Activated</field>
+            <field name="res_model">stock.quant</field>
+            <field name="view_mode">list,form</field>
+            <field name="domain">[('location_id.usage', '=', 'customer'), ('activation_status', '=', False)]</field>
+            <field name="context">{'show_IMEI': True, 'show_IMEI2': True}</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    No sold, unactivated stock
+                </p>
+                <p>
+                    This list shows stock that has been delivered to customers (sold) but is not yet activated.
+                    Use &quot;Update Activation Status using CSV&quot; to update activation from an Excel file.
+                </p>
+            </field>
+        </record>
+        <menuitem id="menu_stock_quant_sold_not_activated"
+                  name="Sold &amp; Not Activated"
+                  parent="stock.menu_stock_warehouse_mgmt"
+                  action="action_stock_quant_sold_not_activated"
+                  sequence="201"
+                  groups="ks_product_master.group_activation_status_update"/>
     </data>
 </odoo>

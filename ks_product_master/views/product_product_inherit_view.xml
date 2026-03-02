@@ -9,30 +9,6 @@
                 <xpath expr="//field[@name='default_code']" position="attributes">
                     <attribute name="readonly">1</attribute>
                 </xpath>
-                <xpath expr="//group[@name='codes']" position="inside">
-                    <field name="activation_status" readonly="1" string="Activation Status"/>
-                </xpath>
-            </field>
-        </record>
-        <record id="view_product_product_tree_activation" model="ir.ui.view">
-            <field name="name">product.product.tree.activation</field>
-            <field name="model">product.product</field>
-            <field name="inherit_id" ref="product.product_product_tree_view"/>
-            <field name="arch" type="xml">
-                <xpath expr="//field[@name='default_code']" position="after">
-                    <field name="activation_status" optional="show"/>
-                </xpath>
-            </field>
-        </record>
-        <!-- Also show Activation Status on normalized product form (used in some actions) -->
-        <record id="view_product_product_form_normalized_activation" model="ir.ui.view">
-            <field name="name">product.product.form.normalized.activation</field>
-            <field name="model">product.product</field>
-            <field name="inherit_id" ref="product.product_product_view_form_normalized"/>
-            <field name="arch" type="xml">
-                <xpath expr="//group[@name='name']" position="inside">
-                    <field name="activation_status" readonly="1" string="Activation Status"/>
-                </xpath>
             </field>
         </record>
     </data>

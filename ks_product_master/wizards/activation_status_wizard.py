@@ -20,10 +20,6 @@ class ActivationStatusWizard(models.TransientModel):
     csv_file = fields.Binary(string='Excel File', required=False, help='Upload Excel with columns: IMEI, Activation state (Active/Not active)')
     filename = fields.Char(string='Filename')
     result_message = fields.Html(string='Result', readonly=True)
-    post_sale_message = fields.Text(
-        string='Post-sale activation note',
-        help='Optional message to log when updating activation for products that are already sold (post-sale activation update).'
-    )
 
     def _parse_excel_rows(self):
         """Parse uploaded Excel: first column = IMEI, second = Activation state. Returns list of (imei, is_active)."""
@@ -70,10 +66,11 @@ class ActivationStatusWizard(models.TransientModel):
             result.append((imei, is_active))
         return result
 
-    def _find_quant_by_imei(self, imei):
+    def _find_quants_by_imei(self, imei):
+        """Find all stock.quant where the given IMEI matches either imei or imei2."""
         return self.env['stock.quant'].search([
             '|', ('imei', '=', imei), ('imei2', '=', imei)
-        ], limit=1)
+        ])
 
     def action_process_file(self):
         self.ensure_one()
@@ -96,28 +93,18 @@ class ActivationStatusWizard(models.TransientModel):
 
         updated = 0
         failed_imeis = []
-        post_sale_note = (self.post_sale_message or '').strip()
 
         for imei, is_active in rows:
-            quant = self._find_quant_by_imei(imei)
-            if not quant:
+            quants = self._find_quants_by_imei(imei)
+            if not quants:
                 failed_imeis.append(imei)
                 continue
-            product = quant.product_id
-            # Update quant
-            quant.write({
+            # Update activation_status (and activation_date) on every matching quant (imei or imei2)
+            quants.write({
                 'activation_status': is_active,
-                'activation_date': quant.activation_date if is_active else False,
+                'activation_date': fields.Date.today() if is_active else False,
             })
-            # Update product activation_status (selection: active / not_active)
-            product.write({'activation_status': 'active' if is_active else 'not_active'})
-            updated += 1
-            # Optional: log post-sale message on product (chatter)
-            if post_sale_note and product:
-                product.message_post(
-                    body='Activation status updated via CSV wizard. Note: %s' % post_sale_note,
-                    message_type='notification',
-                )
+            updated += len(quants)
 
         # Build result message and keep wizard open so user sees it
         failed_list = '<br/>'.join(failed_imeis) if failed_imeis else 'None'

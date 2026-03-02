@@ -2327,3 +2327,215 @@ class PartWiseAllDataReport(models.TransientModel):
         # Return base64 encoded content
         return base64.b64encode(output.read())
 
+    # --- List view data (same format as print report) ---
+
+    @api.model
+    def get_advance_sheet_report_rows(self, sale_order_ids=None):
+        """Return list of dicts for Advance Sheet list view (same columns as XLSX)."""
+        if sale_order_ids:
+            sale_orders = self.env['sale.order'].browse(sale_order_ids).filtered(
+                lambda o: o.state != 'cancel'
+            )
+        else:
+            sale_orders = self.env['sale.order'].search([
+                ('state', '!=', 'cancel')
+            ], order='partner_id')
+
+        commercial_partner_ids = set()
+        for order in sale_orders:
+            comp = order.partner_id.commercial_partner_id
+            commercial_partner_ids.add(comp.id)
+
+        company = self.env.company
+        company_currency = company.currency_id
+        party_data = {}
+        for comp_id in commercial_partner_ids:
+            comp = self.env['res.partner'].browse(comp_id)
+            partner_orders = sale_orders.filtered(
+                lambda o: o.partner_id.commercial_partner_id.id == comp_id
+            )
+            payment_received = 0.0
+            stock_dispatched_amount = 0.0
+
+            for order in partner_orders:
+                if hasattr(order, 'ks_advance_payment_ids') and order.ks_advance_payment_ids:
+                    for pay in order.ks_advance_payment_ids.filtered(lambda p: p.state == 'posted'):
+                        payment_received += _payment_to_company_currency(
+                            pay, pay.amount, company_currency, company, self
+                        )
+                invoices = self.env['account.move'].search([
+                    ('invoice_origin', '=', order.name),
+                    ('move_type', 'in', ['out_invoice', 'out_refund']),
+                    ('state', '=', 'posted'),
+                ])
+                for inv in invoices:
+                    try:
+                        for pay in inv._get_reconciled_payments():
+                            payment_received += _payment_to_company_currency(
+                                pay, abs(pay.amount), company_currency, company, self
+                            )
+                    except Exception:
+                        pass
+
+                order_date = order.date_order.date() if order.date_order else fields.Date.context_today(self)
+                order_currency = order.currency_id
+                for line in order.order_line.filtered(
+                    lambda l: not l.display_type and l.product_id
+                ):
+                    delivered_qty = 0.0
+                    if getattr(line, 'qty_delivered_method', None) == 'stock_move' and getattr(line, '_get_outgoing_incoming_moves', None):
+                        try:
+                            outgoing_moves, incoming_moves = line._get_outgoing_incoming_moves()
+                            for move in outgoing_moves:
+                                if move.state == 'done':
+                                    delivered_qty += move.product_uom._compute_quantity(
+                                        move.quantity, line.product_uom, rounding_method='HALF-UP'
+                                    )
+                            for move in incoming_moves:
+                                if move.state == 'done':
+                                    delivered_qty -= move.product_uom._compute_quantity(
+                                        move.quantity, line.product_uom, rounding_method='HALF-UP'
+                                    )
+                        except Exception:
+                            delivered_qty = line.qty_delivered
+                    else:
+                        delivered_qty = line.qty_delivered
+                    if delivered_qty and (line.price_unit or 0.0):
+                        line_amount = delivered_qty * (line.price_unit or 0.0)
+                        stock_dispatched_amount += _to_company_currency(
+                            order_currency, line_amount, company_currency, company, order_date, self
+                        )
+
+            pr = payment_received
+            sd = stock_dispatched_amount
+            balance_available = None if (pr == 0 or sd == 0) else (pr - sd)
+            party_data[comp_id] = {
+                'party_name': comp.name or '',
+                'payment_received': pr,
+                'stock_dispatched_amount': sd,
+                'balance_available': balance_available,
+            }
+
+        sorted_parties = sorted(
+            party_data.items(),
+            key=lambda x: (x[1]['party_name'] or '').lower()
+        )
+        rows = []
+        for sr_no, (_pk, data) in enumerate(sorted_parties, start=1):
+            rows.append({
+                'sr_no': sr_no,
+                'party_name': data['party_name'],
+                'payment_received': data['payment_received'],
+                'stock_dispatched_amount': data['stock_dispatched_amount'],
+                'balance_available': data['balance_available'],
+            })
+        return rows
+
+    @api.model
+    def get_part_wise_report_rows(self, sale_order_ids=None):
+        """Return list of dicts for Part Wise All Data list view (same columns as XLSX)."""
+        if sale_order_ids:
+            sale_orders = self.env['sale.order'].browse(sale_order_ids).filtered(
+                lambda o: o.state in ['sale', 'done']
+            )
+        else:
+            sale_orders = self.env['sale.order'].search([
+                ('state', 'in', ['sale', 'done'])
+            ])
+
+        rows = []
+        sn = 1
+        for order in sale_orders:
+            pi_no = order.name or ''
+            party_name = order.partner_id.name or ''
+            for line in order.order_line.filtered(lambda l: not l.display_type and l.product_id):
+                total_pi_qty = line.product_uom_qty or 0.0
+                total_pi_amount = line.price_subtotal or 0.0
+                dispatched_qty = line.qty_delivered or 0.0
+                unit_price = line.price_unit or 0.0
+                dispatch_amount = dispatched_qty * unit_price
+                balance_qty = total_pi_qty - dispatched_qty
+                remaining_amount = balance_qty * unit_price
+                gst_amount = (line.price_total or 0.0) - (line.price_subtotal or 0.0)
+                rows.append({
+                    'sn': sn,
+                    'pi_no': pi_no,
+                    'party_name': party_name,
+                    'products': line.product_id.name if line.product_id else '',
+                    'total_pi_quantity': total_pi_qty,
+                    'total_pi_amount': total_pi_amount,
+                    'dispatched_quantity': dispatched_qty,
+                    'dispatched_amount': dispatch_amount,
+                    'balance_qty': balance_qty,
+                    'remaining_amount_against_pi': remaining_amount,
+                    'monthly_plan_quantity': 0.0,
+                    'monthly_plan_amount': 0.0,
+                    'export_inv_qty_this_month': 0.0,
+                    'export_inv_amount_this_month': 0.0,
+                    'gst': gst_amount,
+                    'deviation_from_plan_1': 0.0,
+                    'deviation_from_plan_2': 0.0,
+                    'net_remaining_qty': balance_qty,
+                    'net_remaining_amount': remaining_amount,
+                })
+                sn += 1
+        return rows
+
+    @api.model
+    def get_exchange_gl_report_rows(self, sale_order_ids=None):
+        """Return list of dicts for Exchange GL list view (same columns as XLSX)."""
+        if sale_order_ids:
+            sale_orders = self.env['sale.order'].browse(sale_order_ids).filtered(
+                lambda o: o.state in ['sale', 'done']
+            )
+        else:
+            sale_orders = self.env['sale.order'].search([
+                ('state', 'in', ['sale', 'done'])
+            ], order='name')
+
+        company = self.env.company
+        company_currency = company.currency_id
+        rows = []
+        for order in sale_orders:
+            pi_no = order.name or ''
+            pi_date = order.date_order.date() if order.date_order else None
+            order_currency = order.currency_id
+            order_lines = order.order_line.filtered(lambda l: not l.display_type and l.product_id)
+            rate_inr = 1.0
+            if order_currency != company_currency and order.date_order:
+                try:
+                    rate_inr = order_currency._get_rates(order.company_id, order.date_order.date()).get(order_currency.id, 1.0)
+                except Exception:
+                    pass
+            for line in order_lines:
+                qty = line.product_uom_qty or 0.0
+                rate = line.price_unit or 0.0
+                line_amount = (line.price_subtotal or 0.0)
+                line_amount_inr_line = _to_company_currency(order_currency, line_amount, company_currency, company, pi_date or fields.Date.context_today(self), self)
+                rows.append({
+                    'proforma_invoice_no': pi_no,
+                    'proforma_invoice_date': pi_date,
+                    'currency': order_currency.name,
+                    'exchange_rate_pi_date': rate_inr,
+                    'qty': qty,
+                    'total_qty': sum(l.product_uom_qty for l in order_lines),
+                    'rate_inr': rate if order_currency == company_currency else rate * rate_inr,
+                    'pi_amount': line_amount,
+                    'total_amount': line_amount_inr_line,
+                    'commercial_invoice_no': '',
+                    'commercial_invoice_date': None,
+                    'commercial_invoice_amount': 0.0,
+                    'shipping_bill_no': '',
+                    'shipping_bill_date': None,
+                    'shipping_bill_value': 0.0,
+                    'shipping_bill_exchange_rate': 0.0,
+                    'shipping_bill_value_inr': 0.0,
+                    'total_amount_received': 0.0,
+                    'bank_charges': 0.0,
+                    'net_amount_received': 0.0,
+                    'exchange_rate_remittance_date': 0.0,
+                    'payment_received_inr': 0.0,
+                    'exchange_gain_loss': 0.0,
+                })
+        return rows
+

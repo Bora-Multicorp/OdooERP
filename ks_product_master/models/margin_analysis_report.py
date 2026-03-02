@@ -213,14 +213,11 @@ class MarginAnalysisReportWizard(models.TransientModel):
             # NLC = Purchase Rate × (1 + GST rate)
             nlc = avg_purchase_rate * (1 + gst_rate)
 
+            # MOP from MOP Master only (by report date_to)
             mop_date = self.date_to or fields.Date.today()
             mop = self.env['mop.master'].get_current_mop(product_id, mop_date)
             if mop is False:
-                mop = product.list_price
-                if 'mop' in product._fields:
-                    mop = product.mop or mop
-                elif 'mop' in product.product_tmpl_id._fields:
-                    mop = product.product_tmpl_id.mop or mop
+                mop = 0.0
 
             report_lines.append({
                 'product_id': product_id,

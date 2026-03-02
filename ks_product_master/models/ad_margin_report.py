@@ -199,15 +199,11 @@ class AdMarginReportWizard(models.TransientModel):
             else:
                 avg_sales_rate = 0.0
 
-            invoice = self.env['account.move'].browse(data['invoice_id'])
-            invoice_date = invoice.invoice_date or fields.Date.today()
-            mop = self.env['mop.master'].get_current_mop(product_id, invoice_date)
+            # MOP from MOP Master only (by report date_to, same as Funnel)
+            mop_date = self.date_to or fields.Date.today()
+            mop = self.env['mop.master'].get_current_mop(product_id, mop_date)
             if mop is False:
-                mop = product.list_price
-                if 'mop' in product._fields:
-                    mop = product.mop or mop
-                elif 'mop' in product.product_tmpl_id._fields:
-                    mop = product.product_tmpl_id.mop or mop
+                mop = 0.0
 
             report_lines.append({
                 'partner_id': partner_id,
