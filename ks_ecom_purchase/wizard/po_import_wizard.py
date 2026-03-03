@@ -28,16 +28,20 @@ class KsPoImportWizard(models.TransientModel):
     _PRODUCT_CODE_ALIASES = {"asin", "sku", "productcode", "defaultcode", "internalreference", "barcode"}
     _QTY_ALIASES = {"orderquantity", "qty", "quantity", "orderedqty", "productqty"}
     _PRICE_ALIASES = {"price", "unitprice", "priceunit", "cost"}
+    _SUBTOTAL_ALIASES = {"ordersubtotal", "order_subtotal", "subtotal", "linesubtotal"}
     _UOM_ALIASES = {"uom", "unit", "unitofmeasure"}
     _DATE_ALIASES = {"dateplanned", "planneddate", "expecteddate", "scheduledate", "date"}
+    _CURRENCY_ALIASES = {"currency", "currencycode", "curr"}
 
     _LINE_LEVEL_ALIASES = (
         _PRODUCT_NAME_ALIASES
         | _PRODUCT_CODE_ALIASES
         | _QTY_ALIASES
         | _PRICE_ALIASES
+        | _SUBTOTAL_ALIASES
         | _UOM_ALIASES
         | _DATE_ALIASES
+        | _CURRENCY_ALIASES
     )
 
     @staticmethod
@@ -104,8 +108,10 @@ class KsPoImportWizard(models.TransientModel):
         product_code_key = self._find_header(normalized_headers, self._PRODUCT_CODE_ALIASES)
         qty_key = self._find_header(normalized_headers, self._QTY_ALIASES)
         price_key = self._find_header(normalized_headers, self._PRICE_ALIASES)
+        subtotal_key = self._find_header(normalized_headers, self._SUBTOTAL_ALIASES)
         uom_key = self._find_header(normalized_headers, self._UOM_ALIASES)
         date_key = self._find_header(normalized_headers, self._DATE_ALIASES)
+        currency_key = self._find_header(normalized_headers, self._CURRENCY_ALIASES)
 
         if not order_id_key:
             raise UserError(_("Missing required column: Order ID."))
@@ -133,8 +139,15 @@ class KsPoImportWizard(models.TransientModel):
             # Prioritize ASIN if available, otherwise use other product code fields
             product_code = self._to_string(get_cell(product_code_key)) if product_code_key else ""
             qty = self._to_float(get_cell(qty_key), default=0.0)
-            price_unit = self._to_float(get_cell(price_key), default=0.0) if price_key else 0.0
+            order_subtotal = self._to_float(get_cell(subtotal_key), default=0.0) if subtotal_key else 0.0
+            price_direct = self._to_float(get_cell(price_key), default=0.0) if price_key else 0.0
+            # Unit price: Order Subtotal / Order Quantity when Subtotal present, else use Price column
+            if order_subtotal and qty:
+                price_unit = order_subtotal / qty
+            else:
+                price_unit = price_direct
             uom_name = self._to_string(get_cell(uom_key)) if uom_key else ""
+            currency_name = self._to_string(get_cell(currency_key)) if currency_key else ""
 
             date_raw = get_cell(date_key) if date_key else None
             date_planned = False
@@ -171,6 +184,7 @@ class KsPoImportWizard(models.TransientModel):
                     "price_unit": price_unit,
                     "uom_name": uom_name,
                     "date_planned": date_planned,
+                    "currency_name": currency_name,
                     "raw": row_raw,
                 }
             )
@@ -234,6 +248,26 @@ class KsPoImportWizard(models.TransientModel):
                 return uom
         return product.uom_po_id or product.uom_id
 
+    def _get_currency(self, currency_name, company):
+        """Resolve currency from Excel. Fallback to company currency if not found."""
+        if not currency_name:
+            return company.currency_id
+        currency_name = currency_name.strip().upper()
+        currency = self.env["res.currency"].search(
+            [("name", "=", currency_name)],
+            limit=1,
+        )
+        if currency:
+            return currency
+        # Try full_name if the column has a long label (e.g. "US Dollar")
+        currency = self.env["res.currency"].search(
+            [("full_name", "ilike", currency_name)],
+            limit=1,
+        )
+        if currency:
+            return currency
+        return company.currency_id
+
     def _prepare_extra_info_commands(self, sample_row):
         excluded_keys = self._ORDER_ID_ALIASES | self._LINE_LEVEL_ALIASES
         commands = []
@@ -265,11 +299,15 @@ class KsPoImportWizard(models.TransientModel):
         vendor = self._get_or_create_vendor("FLIPKART")
         
         created_orders = self.env["purchase.order"]
+        company = self.env.company
         for order_id, order_rows in grouped_rows.items():
-            # Vendor is always FLIPKART, no need to check multiple vendors
+            # Currency from first line (or company currency if column missing/not found)
+            sample_currency = order_rows[0].get("currency_name") if order_rows else ""
+            currency = self._get_currency(sample_currency, company)
             po_vals = {
                 "partner_id": vendor.id,
                 "origin": _("E-com Import - %s") % order_id,
+                "currency_id": currency.id,
                 "ks_ecom_imported": True,
                 "ks_ecom_order_id": order_id,
                 "ks_ecom_source_file": self.file_name,
@@ -296,6 +334,10 @@ class KsPoImportWizard(models.TransientModel):
                     }
                 )
 
+            # Auto-confirm the PO (creates receipt; e-com receipt flag set via _create_picking override and here)
+            purchase_order.button_confirm()
+            if purchase_order.picking_ids:
+                purchase_order.picking_ids.write({"ks_ecom_po_reciept": True})
             created_orders |= purchase_order
 
         if not created_orders:

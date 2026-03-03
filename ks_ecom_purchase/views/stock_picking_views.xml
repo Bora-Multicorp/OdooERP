@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_stock_picking_form_ks_ecom" model="ir.ui.view">
+        <field name="name">stock.picking.form.ks.ecom</field>
+        <field name="model">stock.picking</field>
+        <field name="inherit_id" ref="stock.view_picking_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='note']" position="after">
+                <page string="E-com Information" name="ks_ecom_information">
+                    <group>
+                        <group>
+                            <field name="ks_ecom_order_id" readonly="1" placeholder="Order ID"/>
+                            <field name="ks_ecom_po_reciept" readonly="1"/>
+                            <field name="is_ecom_updated" readonly="1"/>
+                            <field name="is_ecom_refund" readonly="1"/>
+                        </group>
+                    </group>
+                    <field name="ks_ecom_info_ids" readonly="1">
+                        <list string="Imported Fields" create="false" edit="false" delete="false">
+                            <field name="field_key"/>
+                            <field name="field_value"/>
+                        </list>
+                    </field>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>

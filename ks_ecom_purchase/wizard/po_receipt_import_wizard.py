@@ -4,7 +4,7 @@ import re
 from collections import defaultdict
 from io import BytesIO
 
-from odoo import _, fields, models
+from odoo import Command, _, fields, models
 from odoo.exceptions import UserError
 
 try:
@@ -116,11 +116,20 @@ class KsPoReceiptImportWizard(models.TransientModel):
             if qty_done <= 0:
                 raise UserError(_("Quantity Done must be greater than 0 at row %s.") % line_no)
 
+            # Capture all columns for E-com Information tab (field-value storage)
+            row_raw = {}
+            for idx, header in enumerate(headers):
+                if not header:
+                    continue
+                value = row[idx] if idx < len(row) else None
+                row_raw[header] = self._to_string(value)
+
             receipt_data.append({
                 "line_no": line_no,
                 "order_id": order_id,
                 "asin": asin,
                 "qty_done": qty_done,
+                "raw": row_raw,
             })
 
         if not receipt_data:
@@ -128,8 +137,23 @@ class KsPoReceiptImportWizard(models.TransientModel):
 
         return receipt_data
 
+    def _prepare_ecom_info_commands(self, sample_row):
+        """Build commands to set ks_ecom_info_ids from a row's raw key-value data."""
+        excluded = self._ORDER_ID_ALIASES | self._PRODUCT_CODE_ALIASES | self._QTY_DONE_ALIASES
+        commands = []
+        for key, value in (sample_row or {}).items():
+            normalized = re.sub(r"[^a-z0-9]+", "", (key or "").strip().lower())
+            if not normalized or normalized in excluded:
+                continue
+            if value in (None, ""):
+                continue
+            commands.append(
+                Command.create({"field_key": key, "field_value": self._to_string(value)})
+            )
+        return commands
+
     def action_import_receipt_data(self):
-        """Import receipt data and update stock picking move lines"""
+        """Import receipt data: update existing stock pickings only (no new receipts created)."""
         self.ensure_one()
         receipt_data = self._extract_sheet_data()
 
@@ -143,44 +167,43 @@ class KsPoReceiptImportWizard(models.TransientModel):
         warnings = []
 
         for order_id, rows in grouped_data.items():
-            # Find Purchase Order by ks_ecom_order_id
-            # Only search for orders that have ks_ecom_order_id set (e-com imported orders)
+            # Find existing Purchase Order by unique identifier (ks_ecom_order_id or origin)
             po = self.env["purchase.order"].search([
+                "|",
                 ("ks_ecom_order_id", "=", order_id),
-                ("ks_ecom_order_id", "!=", False),  # Ensure ks_ecom_order_id is set
+                ("origin", "ilike", order_id),
+                ("state", "in", ("purchase", "done")),
             ], limit=1)
+            # Prefer e-com imported PO when origin matches
+            if not po or (po.origin and order_id in po.origin and not po.ks_ecom_order_id):
+                po_ecom = self.env["purchase.order"].search([
+                    ("ks_ecom_order_id", "=", order_id),
+                    ("ks_ecom_order_id", "!=", False),
+                ], limit=1)
+                if po_ecom:
+                    po = po_ecom
 
             if not po:
-                # Check if order exists but doesn't have ks_ecom_order_id
-                po_without_ecom = self.env["purchase.order"].search([
-                    ("name", "=", order_id)
-                ], limit=1)
-                
-                if po_without_ecom:
-                    warnings.append(_("Order ID '%s' found but it's not an e-com imported order (missing ks_ecom_order_id). Only e-com imported orders can be processed.") % order_id)
+                po_by_name = self.env["purchase.order"].search([("name", "=", order_id)], limit=1)
+                if po_by_name:
+                    warnings.append(_("Order ID '%s' found (PO: %s) but not an e-com order. Only e-com imported orders can be updated.") % (order_id, po_by_name.name))
                 else:
                     warnings.append(_("Order ID '%s' not found in Purchase Orders.") % order_id)
                 skipped_count += len(rows)
                 continue
-            
-            # Additional validation: ensure the PO has ks_ecom_order_id set
-            if not po.ks_ecom_order_id:
-                warnings.append(_("Purchase Order %s does not have ks_ecom_order_id set. Only e-com imported orders can be processed.") % po.name)
-                skipped_count += len(rows)
-                continue
 
-            # Find related stock pickings (receipts) in assigned or confirmed state
+            # Find existing receipt only (do not create new pickings)
             pickings = po.picking_ids.filtered(
-                lambda p: p.picking_type_id.code == 'incoming' and p.state in ('assigned', 'confirmed', 'draft')
+                lambda p: p.picking_type_id.code == "incoming" and p.state in ("assigned", "confirmed", "draft")
             )
 
             if not pickings:
-                warnings.append(_("No receipt found for Order ID '%s' (PO: %s).") % (order_id, po.name))
+                warnings.append(_("No existing receipt found for Order ID '%s' (PO: %s). Create receipt by confirming the PO first.") % (order_id, po.name))
                 skipped_count += len(rows)
                 continue
 
-            # Use the first available picking (or most recent)
-            picking = pickings.sorted('create_date', reverse=True)[0]
+            # Use the first available picking (most recent)
+            picking = pickings.sorted("create_date", reverse=True)[0]
 
             # Process each row for this order
             for row in rows:
@@ -220,25 +243,27 @@ class KsPoReceiptImportWizard(models.TransientModel):
                 )
 
                 if not move_line:
-                    # Create move line if it doesn't exist
                     move_line_vals = {
                         "move_id": move.id,
                         "product_id": product.id,
                         "product_uom_id": product.uom_id.id,
                         "location_id": move.location_id.id,
                         "location_dest_id": move.location_dest_id.id,
-                        "quantity": qty_done,  # Use 'quantity' field for stock.move.line
+                        "quantity": qty_done,
                         "picked": True,
                     }
                     self.env["stock.move.line"].create(move_line_vals)
                     updated_count += 1
                 else:
-                    # Update existing move line(s) - update all matching lines
-                    move_line.write({
-                        "quantity": qty_done,
-                        "picked": True,
-                    })
+                    move_line.write({"quantity": qty_done, "picked": True})
                     updated_count += 1
+
+            # Store Order ID and all imported Excel data in E-com Information (first row of this order)
+            picking.ks_ecom_order_id = order_id
+            info_commands = self._prepare_ecom_info_commands(rows[0].get("raw"))
+            if info_commands:
+                picking.ks_ecom_info_ids = [Command.clear()] + info_commands
+            picking.is_ecom_updated = True
 
         # Prepare result message
         result_message = _("Receipt Import Completed:\n")
@@ -253,15 +278,6 @@ class KsPoReceiptImportWizard(models.TransientModel):
         if updated_count == 0:
             raise UserError(result_message)
 
-        # Show success message with warnings if any
-        return {
-            "type": "ir.actions.client",
-            "tag": "display_notification",
-            "params": {
-                "title": _("Receipt Import"),
-                "message": result_message,
-                "type": "success" if not warnings else "warning",
-                "sticky": bool(warnings),
-            },
-        }
+        # Close the wizard after successful import
+        return {"type": "ir.actions.act_window_close"}
 

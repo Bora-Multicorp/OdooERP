@@ -273,20 +273,13 @@
 
                 </td>
                 <td style="width:40%; border:1px solid white;border-right:1px solid #000;border-bottom:1px solid #000; padding:6px;" colspan="3">
-                    <t t-set="payment_bank_info" t-value="doc.get_payment_bank_info()"/>
-                    <t t-if="payment_bank_info['has_payment']">
-                        Company's Bank Details<br/>
-                        <strong>Payment has been received in a bank account:</strong><br/>
-                        1. Bank Name : <t t-esc="payment_bank_info['bank_name'] or ''"/><br/>
-                        2. Account Number (A/c No.) : <t t-esc="payment_bank_info['acc_number'] or ''"/><br/>
-                        3. IFSC Code : <t t-esc="payment_bank_info['ifsc_code'] or ''"/><br/>
-                        4. Branch &amp; SWIFT Code :
-                        <t t-if="(payment_bank_info.get('branch') or '') or (payment_bank_info.get('swift_code') or '')">
-                            <t t-if="payment_bank_info.get('branch')" t-esc="payment_bank_info.get('branch') or ''"/>
-                            <t t-if="payment_bank_info.get('branch') and payment_bank_info.get('swift_code')"> / </t>
-                            <t t-if="payment_bank_info.get('swift_code')" t-esc="payment_bank_info.get('swift_code') or ''"/>
-                        </t><br/>
-                    </t>
+                    <!-- Company's Bank Details from sale order ks_bank_id (via get_company_bank_info) -->
+                    <t t-set="bank_info" t-value="doc.get_company_bank_info()"/>
+                    Company's Bank Details<br/>
+                    1. Bank Name : <strong><t t-esc="bank_info.get('bank_name') or ''"/></strong><br/>
+                    2. Account Number (A/c No.) : <strong><t t-esc="bank_info.get('acc_number') or ''"/></strong><br/>
+                    3. IFSC Code : <strong><t t-esc="bank_info.get('ifsc_code') or ''"/></strong><br/>
+                    4. Branch &amp; SWIFT Code : <strong><t t-esc="bank_info.get('branch') or ''"/><t t-if="bank_info.get('branch') and bank_info.get('swift_code')"> / </t><t t-esc="bank_info.get('swift_code') or ''"/></strong><br/>
                 </td>
             </tr>
             <tr>

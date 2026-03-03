@@ -235,6 +235,13 @@ class PurchaseOrder(models.Model):
         config = self.env['ks.purchase.approval.config'].get_config()
         return bool(config)
 
+    def _requires_approval(self):
+        """True if this PO must go through approval workflow. False when ks_ecom_imported is True (bypass all approvals)."""
+        self.ensure_one()
+        if getattr(self, 'ks_ecom_imported', False):
+            return False
+        return self._has_approval_config()
+
     def _get_available_approvers(self):
         """
         Get available approvers for purchase order approval
@@ -282,8 +289,11 @@ class PurchaseOrder(models.Model):
                 # Pending states - locked for everyone
                 order.ks_can_edit = False
             elif order.state == 'purchase':
+                # E-com imported POs bypass approvals: always editable
+                if not order._requires_approval():
+                    order.ks_can_edit = True
                 # Confirmed state - PM users can edit, or normal users if edit is approved
-                if order.ks_is_pm_user:
+                elif order.ks_is_pm_user:
                     order.ks_can_edit = True
                 elif order.ks_edit_approved and order.ks_edit_request_user_id == self.env.user:
                     order.ks_can_edit = True
@@ -320,7 +330,7 @@ class PurchaseOrder(models.Model):
             order.ks_show_reject_edit_button = False
             order.ks_show_complete_edit_button = False
 
-            if not order._has_approval_config():
+            if not order._requires_approval():
                 continue
 
             current_user = self.env.user
@@ -417,9 +427,8 @@ class PurchaseOrder(models.Model):
             order.order_line._validate_analytic_distribution()
             order._add_supplier_to_product()
             
-            # Check if approval config exists
-            if not order._has_approval_config():
-                # No config, use standard behavior
+            # E-com imported POs bypass all approvals; no config = standard behavior
+            if not order._requires_approval():
                 return super().button_confirm()
             
             config = order._get_approval_config()
@@ -448,9 +457,9 @@ class PurchaseOrder(models.Model):
             order.order_line._validate_analytic_distribution()
             order._add_supplier_to_product()
             
-            # Check if approval config exists
-            if not order._has_approval_config():
-                # No config, use standard behavior
+            # E-com imported POs bypass all approvals; no config = standard behavior
+            if not order._requires_approval():
+                order.button_confirm()
                 continue
             
             config = order._get_approval_config()
@@ -812,11 +821,9 @@ class PurchaseOrder(models.Model):
     # ===== Cancel Request Methods =====
     
     def action_cancel(self):
-        """Override: Normal users must request cancellation for confirmed POs, Approvers can directly cancel"""
+        """Override: Normal users must request cancellation for confirmed POs, Approvers can directly cancel. E-com imported POs bypass approvals."""
         for order in self:
-            # Check if approval config exists
-            if not order._has_approval_config():
-                # No config, use standard behavior
+            if not order._requires_approval():
                 return super().action_cancel()
             
             config = order._get_approval_config()
@@ -1504,8 +1511,10 @@ class PurchaseOrder(models.Model):
     # ===== Override _is_readonly =====
     
     def _is_readonly(self):
-        """Override to handle new states"""
+        """Override to handle new states. E-com imported POs bypass approvals and are not readonly when confirmed."""
         self.ensure_one()
+        if getattr(self, 'ks_ecom_imported', False):
+            return False
         if self.state == 'pending_approval':
             return True
         if self.state == 'purchase':

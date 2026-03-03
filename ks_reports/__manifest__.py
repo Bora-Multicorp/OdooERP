@@ -19,11 +19,14 @@
     'category': 'Sales/Reporting',
     'author': 'Ksolves',
     'website': '',
-    'depends': ['sale', 'sale_stock', 'account', 'web', 'ks_sale_advance_payment'],
+    'depends': ['sale', 'sale_stock', 'account', 'web', 'ks_sale_advance_payment', 'purchase', 'ks_sale_order'],
     'data': [
         'security/ir.model.access.csv',
+        'data/ks_purchase_report_cron.xml',
         'views/menu_views.xml',
         'views/sale_order_views.xml',
+        'views/purchase_order_views.xml',
+        'views/ks_purchase_report_detail_views.xml',
     ],
     'assets': {
         'web.assets_backend': [

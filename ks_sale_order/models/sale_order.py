@@ -6,7 +6,21 @@ from odoo.exceptions import UserError
 
 class SaleOrder(models.Model):
     _inherit = 'sale.order'
-    
+
+    ks_bank_id = fields.Many2one(
+        'res.bank',
+        string='Bank Information',
+        copy=False,
+        help='Bank details for this Sale Order.',
+    )
+
+    def _prepare_invoice(self):
+        """Copy ks_bank_id from sale order to invoice."""
+        invoice_vals = super()._prepare_invoice()
+        if self.ks_bank_id:
+            invoice_vals['ks_bank_id'] = self.ks_bank_id.id
+        return invoice_vals
+
     # Fields to track PO creation and notifications
     ks_po_created_for_stock = fields.Boolean(
         string='PO Created for Stock',

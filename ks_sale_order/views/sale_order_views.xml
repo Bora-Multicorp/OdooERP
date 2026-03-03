@@ -41,6 +41,13 @@
                     </field>
                 </page>
             </xpath>
+
+            <!-- Bank Account Information under Other Info tab -->
+            <xpath expr="//page[@name='other_information']" position="inside">
+                <group name="bank_details" string="Bank Account Information">
+                    <field name="ks_bank_id"/>
+                </group>
+            </xpath>
         </field>
     </record>
     

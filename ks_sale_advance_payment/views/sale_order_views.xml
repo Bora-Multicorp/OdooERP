@@ -42,6 +42,7 @@
                     <group>
                         <field name="ks_advance_payment_amount" string="Total Advance Received"/>
                         <field name="ks_advance_payment_balance" string="Balance Due"/>
+                        <field name="total_invoice_payment_received" string="Total Invoice Payment Received"/>
                     </group>
                 </group>
             </xpath>

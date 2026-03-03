@@ -4,6 +4,13 @@ from odoo import fields, models
 class PurchaseOrder(models.Model):
     _inherit = "purchase.order"
 
+    def _create_picking(self):
+        result = super()._create_picking()
+        for order in self.filtered("ks_ecom_imported"):
+            if order.picking_ids:
+                order.picking_ids.write({"ks_ecom_po_reciept": True})
+        return result
+
     ks_ecom_imported = fields.Boolean(
         string="Imported from E-com",
         copy=False,
@@ -35,6 +42,11 @@ class PurchaseOrder(models.Model):
     def action_open_receipt_import_wizard(self):
         """Open XLSX receipt import wizard from Purchase Order form."""
         action = self.env.ref("ks_ecom_purchase.action_po_receipt_import_wizard").read()[0]
+        return action
+
+    def action_open_refund_import_wizard(self):
+        """Open XLSX refund import wizard from Purchase Order form."""
+        action = self.env.ref("ks_ecom_purchase.action_po_refund_import_wizard").read()[0]
         return action
 
 

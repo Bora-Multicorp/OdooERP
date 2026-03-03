@@ -3,4 +3,7 @@ access_ks_ecom_tag_user,access.ks.ecom.tag.user,model_ks_ecom_tag,purchase.group
 access_ks_ecom_purchase_info_user,access.ks.ecom.purchase.info.user,model_ks_ecom_purchase_info,purchase.group_purchase_user,1,1,1,0
 access_ks_po_import_wizard_user,access.ks.po.import.wizard.user,model_ks_po_import_wizard,purchase.group_purchase_user,1,1,1,1
 access_ks_po_receipt_import_wizard_user,access.ks.po.receipt.import.wizard.user,model_ks_po_receipt_import_wizard,purchase.group_purchase_user,1,1,1,1
+access_ks_po_refund_import_wizard_user,access.ks.po.refund.import.wizard.user,model_ks_po_refund_import_wizard,purchase.group_purchase_user,1,1,1,1
+access_ks_ecom_picking_info_user,access.ks.ecom.picking.info.user,ks_ecom_purchase.model_ks_ecom_picking_info,purchase.group_purchase_user,1,1,1,1
+access_ks_warehouse_data_user,access.ks.warehouse.data.user,model_ks_warehouse_data,purchase.group_purchase_user,1,1,1,1
 
