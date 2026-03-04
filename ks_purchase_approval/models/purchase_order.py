@@ -692,6 +692,7 @@ class PurchaseOrder(models.Model):
             # Ensure validation is done (should already be done, but ensure it)
             self.order_line._validate_analytic_distribution()
             self._add_supplier_to_product()
+            self._ks_update_products_latest_purchase_price()
             
             # Set state to 'purchase' and date_approve (standard confirmation)
             self.write({
@@ -1522,3 +1523,29 @@ class PurchaseOrder(models.Model):
             if not self.ks_is_pm_user:
                 return True
         return super()._is_readonly()
+
+    def _ks_update_products_latest_purchase_price(self):
+        """
+        Update ks_latest_purchase_price on product.product for each order line,
+        using the line's unit price converted to company (base) currency.
+        """
+        for order in self:
+            order_currency = order.currency_id
+            order_company = order.company_id
+            base_currency = order_company.currency_id
+            for line in order.order_line:
+                if line.display_type or not line.product_id:
+                    continue
+                # Line price is in order currency; convert to company base currency
+                date = line.date_planned.date() if line.date_planned else fields.Date.today()
+                price_base = order_currency._convert(
+                    line.price_unit,
+                    base_currency,
+                    order_company,
+                    date,
+                )
+                line.product_id.sudo().write({
+                    'ks_latest_purchase_price': price_base,
+                    'ks_latest_purchase_currency_id': base_currency.id,
+                })
+        return True

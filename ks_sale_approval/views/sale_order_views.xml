@@ -251,6 +251,7 @@
             <!-- Add computed field to inline list view -->
             <xpath expr="//field[@name='order_line']//list//field[@name='price_unit']" position="before">
                 <field name="ks_can_edit_price" column_invisible="1"/>
+                <field name="ks_min_unit_price" optional="hide" string="Min. Price (Purchase)"/>
             </xpath>
             <!-- Make price_unit readonly for normal users in inline list -->
             <xpath expr="//field[@name='order_line']//list//field[@name='price_unit']" position="attributes">
@@ -263,6 +264,7 @@
             <!-- Add computed field to inline form view -->
             <xpath expr="//field[@name='order_line']//form//field[@name='price_unit']" position="before">
                 <field name="ks_can_edit_price" invisible="1"/>
+                <field name="ks_min_unit_price" invisible="not product_id" readonly="1"/>
             </xpath>
             <!-- Make price_unit readonly for normal users in inline form -->
             <xpath expr="//field[@name='order_line']//form//field[@name='price_unit']" position="attributes">

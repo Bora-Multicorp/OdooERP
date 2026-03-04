@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from odoo import api, fields, models, _
-from odoo.exceptions import UserError
+from odoo.exceptions import UserError, ValidationError
+from odoo.tools import float_compare
 
 
 class SaleOrderLine(models.Model):
@@ -13,6 +14,50 @@ class SaleOrderLine(models.Model):
         store=False,
         default=False,
     )
+    # Minimum allowed unit price (in order currency) from latest purchase price - for display
+    ks_min_unit_price = fields.Monetary(
+        string='Min. Unit Price (from Purchase)',
+        currency_field='currency_id',
+        compute='_compute_ks_min_unit_price',
+        store=False,
+        help='Minimum unit price allowed: latest purchase price converted to order currency.',
+    )
+
+    @api.depends('product_id', 'order_id.currency_id', 'order_id.company_id', 'order_id.date_order')
+    def _compute_ks_min_unit_price(self):
+        """
+        Minimum allowed unit price in SO currency.
+        Converts product's latest purchase price (e.g. INR) to order currency (e.g. USD) for display.
+        """
+        for line in self:
+            if not line.product_id or not line.product_id.ks_latest_purchase_currency_id:
+                line.ks_min_unit_price = 0.0
+                continue
+            order = line.order_id
+            if not order or not order.company_id or not order.currency_id:
+                line.ks_min_unit_price = 0.0
+                continue
+            from_cur = line.product_id.ks_latest_purchase_currency_id
+            to_cur = order.currency_id
+            company = order.company_id
+            date = order.date_order.date() if order.date_order else fields.Date.today()
+            amount = line.product_id.ks_latest_purchase_price
+            if from_cur == to_cur:
+                line.ks_min_unit_price = amount
+                continue
+            try:
+                if order.is_exchange:
+                    line.ks_min_unit_price = amount * order.rate
+                else:
+                    line.ks_min_unit_price = from_cur._convert(
+                        amount,
+                        to_cur,
+                        company=company,
+                        date=date,
+                        round=False,
+                    )
+            except Exception:
+                line.ks_min_unit_price = 0.0
 
     @api.depends_context('uid')
     @api.depends('order_id.state', 'order_id.ks_edit_approved', 'order_id.ks_edit_request_user_id')
@@ -166,3 +211,77 @@ class SaleOrderLine(models.Model):
         )
         return price_unit
 
+    def _ks_get_sale_price_in_order_currency(self):
+        """
+        Return line's price_unit in order currency.
+        Sale line price is already in order.currency_id, so no conversion needed.
+        """
+        self.ensure_one()
+        if not self.order_id or not self.product_id or self.display_type:
+            return None
+        if not self.order_id.currency_id:
+            return None
+        return self.price_unit
+
+    def _ks_get_latest_purchase_price_in_order_currency(self):
+        """
+        Return product's latest purchase price converted to order's currency.
+        Handles multi-currency: latest purchase in INR, SO in USD → converts INR to USD.
+        """
+        self.ensure_one()
+        if not self.product_id or not self.product_id.ks_latest_purchase_currency_id:
+            return None
+        order = self.order_id
+        if not order or not order.currency_id:
+            return None
+        from_cur = self.product_id.ks_latest_purchase_currency_id
+        to_cur = order.currency_id
+        company = order.company_id
+        date = order.date_order.date() if order.date_order else fields.Date.today()
+        amount = self.product_id.ks_latest_purchase_price
+        if from_cur == to_cur:
+            return amount
+        try:
+            if order.is_exchange:
+                return amount * order.rate
+            else:
+                return from_cur._convert(
+                    amount,
+                    to_cur,
+                    company=company,
+                    date=date,
+                    round=False,
+                )
+        except Exception:
+            return None
+
+    @api.constrains('price_unit', 'product_id', 'order_id', 'display_type')
+    def _check_sale_price_not_below_latest_purchase(self):
+        """
+        Sales price must not be below latest purchase price.
+        Comparison is done in order currency: sale price is already in order currency;
+        latest purchase price is converted to order currency (e.g. INR → USD when SO is in USD).
+        """
+        for line in self:
+            if line.display_type or not line.product_id or not line.order_id:
+                continue
+            min_purchase = line._ks_get_latest_purchase_price_in_order_currency()
+            if min_purchase is None:
+                continue
+            sale_price = line._ks_get_sale_price_in_order_currency()
+            if sale_price is None:
+                continue
+            if float_compare(sale_price, min_purchase, precision_digits=2) < 0:
+                order = line.order_id
+                order_cur = order.currency_id
+                raise ValidationError(_(
+                    "Sales price cannot be below the latest purchase price. "
+                    "Product '%(product)s': unit price in order currency (%(order_cur)s) is %(sale)s, "
+                    "but latest purchase price (converted to %(order_cur)s) is %(min)s. "
+                    "Please set unit price to at least %(min)s %(order_cur)s."
+                ) % {
+                    'product': line.product_id.display_name,
+                    'order_cur': order_cur.name,
+                    'sale': order_cur.round(sale_price),
+                    'min': order_cur.round(min_purchase),
+                })

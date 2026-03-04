@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from odoo import api, fields, models, _
 from odoo.exceptions import UserError
+from odoo.tools import float_compare
 
 
 class SaleOrder(models.Model):
@@ -407,6 +408,29 @@ class SaleOrder(models.Model):
         return self.env.user.has_group('base.group_system')
 
     # ===== Override Confirm Action =====
+
+    def _confirmation_error_message(self):
+        """Include check: sales price must not be below latest purchase price (in order currency)."""
+        msg = super()._confirmation_error_message()
+        if msg:
+            return msg
+        self.ensure_one()
+        for line in self.order_line:
+            if line.display_type or not line.product_id:
+                continue
+            min_purchase = line._ks_get_latest_purchase_price_in_order_currency()
+            if min_purchase is None:
+                continue
+            sale_price = line._ks_get_sale_price_in_order_currency()
+            if sale_price is None:
+                continue
+            if float_compare(sale_price, min_purchase, precision_digits=2) < 0:
+                order_cur = self.currency_id
+                return _(
+                    "Sales price cannot be below latest purchase price. "
+                    "Product '%s': unit price in order currency (%s) is below latest purchase price (min %s %s)."
+                ) % (line.product_id.display_name, order_cur.name, order_cur.round(min_purchase), order_cur.name)
+        return False
 
     def action_confirm(self):
         """

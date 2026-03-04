@@ -36,7 +36,7 @@
     'category': 'Sales/Sales',
     'author': 'Ksolves',
     'website': '',
-    'depends': ['sale', 'sales_team', 'mail'],
+    'depends': ['sale', 'sales_team', 'mail', 'purchase','ks_product_master'],
     'data': [
         'security/security.xml',
         'security/ir.model.access.csv',
@@ -48,6 +48,7 @@
         'wizard/ks_approval_reason_wizard_views.xml',
         'views/ks_sale_approval_config_views.xml',
         'views/sale_order_views.xml',
+        'views/product_views.xml',
     ],
     'installable': True,
     'application': False,
