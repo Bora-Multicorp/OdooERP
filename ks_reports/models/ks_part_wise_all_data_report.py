@@ -2458,9 +2458,10 @@ class PartWiseAllDataReport(models.TransientModel):
             key=lambda x: (x[1]['party_name'] or '').lower()
         )
         rows = []
-        for sr_no, (_pk, data) in enumerate(sorted_parties, start=1):
+        for sr_no, (comp_id, data) in enumerate(sorted_parties, start=1):
             rows.append({
                 'sr_no': sr_no,
+                'commercial_partner_id': comp_id,
                 'party_name': data['party_name'],
                 'payment_received': data['payment_received'],
                 'stock_dispatched_amount': data['stock_dispatched_amount'],

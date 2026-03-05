@@ -1,6 +1,6 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_bora_product_brand,bora_product.product_brand,model_product_brand,base.group_user,1,1,1,1
-access_activation_status_wizard,activation_status_wizard,model_activation_status_wizard,base.group_user,1,1,1,1
+access_activation_status_wizard,activation_status_wizard,model_activation_status_wizard,ks_product_master.group_activation_status_update,1,1,1,1
 access_ink_tonner_model,inktonner_status,model_ink_tonner_model_number,base.group_user,1,1,1,1
 access_accessory_group,bora_product_accessory_group,model_product_accessories_group,base.group_user,1,1,1,1
 purchase.access_purchase_order_manager,purchase.order,purchase.model_purchase_order,purchase.group_purchase_manager,1,1,0,1
