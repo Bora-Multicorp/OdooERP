@@ -20,4 +20,8 @@ access_rekyc_reject_wizard,rekyc.reject.wizard,model_rekyc_reject_wizard,base.gr
 access_vendor_approval_config_admin,vendor.approval.config,model_vendor_approval_config,base.group_system,1,1,1,1
 access_sms_history,sms.history,model_sms_history,base.group_user,1,1,1,0
 access_kyc_user_picker,vendor.kyc.approval.users,model_vendor_kyc_approval_user_picker_wizard,base.group_user,1,1,1,1
+access_res_partner_approval_line,res.partner.approval.line,model_res_partner_approval_line,base.group_user,1,1,1,1
+access_partner_approval_user_picker,partner.approval.user.picker.wizard,model_partner_approval_user_picker_wizard,base.group_user,1,1,1,1
+access_partner_approve_request_wizard,partner.approve.request.wizard,model_partner_approve_request_wizard,base.group_user,1,1,1,1
+access_partner_reject_request_wizard,partner.reject.request.wizard,model_partner_reject_request_wizard,base.group_user,1,1,1,1
 vendor.suspended.user,vendor.kyc.suspended.users,model_suspend_vendor_confirm_wizard,base.group_user,1,1,1,1

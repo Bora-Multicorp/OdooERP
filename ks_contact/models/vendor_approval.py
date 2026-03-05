@@ -92,19 +92,19 @@ class ContactKYCApproval(models.Model):
         for record in self:
             record.existing_user_ids = [(6, 0, record.approval_users_ids.mapped('user_id').ids)]
 
-    @api.depends('approval_users_ids.user_id', 'approval_users_ids.state')
+    @api.depends('approval_users_ids.user_id', 'approval_users_ids.state', 'approval_users_ids.is_active')
     @api.depends_context('uid')
     def _compute_has_pending_approval(self):
         """Check if current user has a pending approval request (sequential - only current approver)"""
         current_user = self.env.user
         for record in self:
-            # Get the first pending approver in sequence (sequential approval)
+            # Only consider active approval lines with no decision yet (pending)
             pending_approvers = sorted(
-                record.approval_users_ids.filtered(lambda l: not l.state),
+                record.approval_users_ids.filtered(lambda l: l.is_active and not l.state),
                 key=lambda l: l.sequence
             )
             # Only show approval button if current user is the first pending approver
-            if pending_approvers and pending_approvers[0].user_id == current_user:
+            if pending_approvers and pending_approvers[0].user_id.id == current_user.id:
                 record.has_pending_approval = True
             else:
                 record.has_pending_approval = False
@@ -215,7 +215,7 @@ class ContactKYCApproval(models.Model):
 
     directors_detail = fields.One2many('director.details', 'kyc_approval_id', string="KYC Details", tracking=True)
     pan_no = fields.Char("PAN Number", required=True)
-    comp_google_loc = fields.Char("GPS Location of Shop",required=True)
+    comp_google_loc = fields.Char("GPS Location of Shop")
     partner_llp_filename = fields.Char()
     partner_llp = fields.Binary("Partnership/LLP Deed")
 
@@ -713,11 +713,14 @@ class ContactKYCApproval(models.Model):
         payload = self.rekyc_pending_payload or {}
         self.write(self._rekyc_payload_to_write_vals(payload))
 
+        # When Re-KYC is approved, set deadline to exactly 1 year from current date
+        deadline_date = fields.Date.context_today(self) + relativedelta(years=1)
         self.write({
             'rekyc_state': 'approved',
             'rekyc_approved_by': self.env.user.id,
             'rekyc_approved_on': fields.Datetime.now(),
             'rekyc_pending_payload': False,
+            'deadline': deadline_date,
         })
 
         activities = self.env['mail.activity'].search([
@@ -894,13 +897,12 @@ class ContactKYCApproval(models.Model):
                 # Use write() to trigger proper state change logic
                 rec.write({'state': 'rejected'})
             elif states and all(s == 'approve' for s in states):
-                # All approvers have approved - confirm the KYC
-                # Use write() to trigger proper state change logic and activity updates
-                # The write() method will handle partner updates, activity removal, and notifications
-                rec.write({'state': 'confirmed'})
-                today = datetime.date.today()
-                # Add exactly 1 year
-                rec.deadline = today + relativedelta(years=1)
+                # All approvers have approved - confirm the KYC and set deadline to 1 year from today
+                deadline_date = date.today() + relativedelta(years=1)
+                rec.write({
+                    'state': 'confirmed',
+                    'deadline': deadline_date,
+                })
 
                 rec.unlink_expiry_activities()
                 
@@ -1016,19 +1018,19 @@ class ContactKYCApproval(models.Model):
         # --- Confirmed Logic ---
         for record in self:
             if vals.get('state') == 'confirmed':
+                # Always set KYC deadline to exactly 1 year from current date when approved
+                deadline_date = fields.Date.context_today(record) + relativedelta(years=1)
+                now = fields.Datetime.now()
+                record.write({
+                    'approval_date': now,
+                    'deadline': deadline_date,
+                })
 
                 if record.partner_id and not record.partner_id.is_approved:
-                    now = fields.Datetime.now()
-                    one_year = now + relativedelta(years=1)
-
-                    # Update partner and record
+                    # Update partner (deadline is computed from KYC on partner)
                     record.partner_id.write({
                         'is_approved': True,
-                        'deadline': one_year,
-                    })
-                    record.write({
-                        'approval_date': now,
-                        'deadline': one_year,
+                        'approval_status': 'approved',
                     })
 
                     # Notify all approvers
@@ -1040,14 +1042,23 @@ class ContactKYCApproval(models.Model):
                             _("KYC for %s has been approved.") % record.partner_id.name
                         )
 
+            # --- Pending Logic: sync partner approval_status when KYC is submitted for approval ---
+            elif vals.get('state') == 'pending':
+                for record in self:
+                    if record.partner_id and hasattr(record.partner_id, 'approval_status'):
+                        record.partner_id.write({'approval_status': 'to_approve'})
+
             # --- Rejected Logic ---
             elif vals.get('state') == 'rejected':
-                for user in record.existing_user_ids:
-                    _schedule_activity(
-                        record, user,
-                        f"KYC Rejected for: {record.partner_id.name}",
-                        _("KYC for %s has been rejected.") % record.partner_id.name
-                    )
+                for record in self:
+                    if record.partner_id and hasattr(record.partner_id, 'approval_status'):
+                        record.partner_id.write({'approval_status': 'draft'})
+                    for user in record.existing_user_ids:
+                        _schedule_activity(
+                            record, user,
+                            f"KYC Rejected for: {record.partner_id.name}",
+                            _("KYC for %s has been rejected.") % record.partner_id.name
+                        )
 
         return res
 

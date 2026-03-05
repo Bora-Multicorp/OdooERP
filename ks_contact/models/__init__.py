@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from . import master
+from . import partner_approval_line
 from . import vendor_approval
 from . import custom_partner
 from . import survey

@@ -97,6 +97,15 @@
 <!--                    deadline &lt; DateTime.today()-->
                     <button name="%(rekyc_request_wizard_action)d" string="Re-KYC" type="action"
                             class="oe_highlight" invisible="not (is_expired or is_rejected)"/>
+                    <button name="action_submit_for_approval" string="Submit for Approval" type="object"
+                            class="btn-primary"
+                            invisible="not is_vendor or approval_status != 'draft' or vendor_type == 'regular'"/>
+                    <field name="has_pending_approval" invisible="1"/>
+                    <button name="%(partner_approve_request_wizard_action)d" string="Approve" type="action"
+                            class="btn-primary"
+                            invisible="not is_vendor or approval_status != 'to_approve' or not has_pending_approval or is_approved"/>
+                    <button name="%(partner_reject_request_wizard_action)d" string="Reject" type="action"
+                            invisible="not is_vendor or approval_status != 'to_approve' or not has_pending_approval or is_approved"/>
                     <!--invisible="not is_approved or (deadline and deadline &lt;= context_today())"/>-->
                 </header>
             </xpath>
@@ -115,6 +124,7 @@
             <xpath expr="//field[@name='category_id']" position="after">
                 <field name="is_vendor" readonly="is_kyc"/>
                 <field name="vendor_type" invisible="not is_vendor" required="is_vendor"/>
+                <field name="approval_status" invisible="not is_vendor" readonly="1"/>
                 <field name="is_customer" readonly="is_kyc" invisible="0"/>
                 <field name="is_kyc" readonly="1"/>
                 <field name="is_approved" readonly="1" invisible="not is_approved"/>
@@ -126,6 +136,17 @@
             </xpath>
 
             <xpath expr="//notebook" position="inside">
+                <page name="approval_authorities" string="Approval Authorities" invisible="not is_vendor">
+                    <field name="approval_line_ids" nolabel="1" readonly="approval_status not in ('draft', 'to_approve')">
+                        <list create="false" delete="false" edit="false">
+                            <field name="sequence"/>
+                            <field name="user_id"/>
+                            <field name="state"/>
+                            <field name="remark"/>
+                            <field name="action_date"/>
+                        </list>
+                    </field>
+                </page>
                 <page name="vendor_customer_details" string="KYC Form Details">
                     <field name="kyc_details">
                         <list create="False" edit="False" delete="False">

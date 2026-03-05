@@ -464,16 +464,26 @@
                                 <t t-set="swift_val" t-value="company_bank.bank_id.bic or ''"/>
                             </t>
                             <t t-set="bank_name_display" t-value="''"/>
-                            <t t-if="company_bank and company_bank.bank_id">
+                            <t t-set="acc_number_display" t-value="''"/>
+                            <t t-set="iban_display" t-value="iban_number or ''"/>
+                            <!-- When sale order has ks_bank_id, use bank_info (from ks_bank_id) for Company's Bank Details -->
+                            <t t-if="doc.ks_bank_id and bank_info">
+                                <t t-set="bank_name_display" t-value="bank_info.get('bank_name') or ''"/>
+                                <t t-set="acc_number_display" t-value="bank_info.get('acc_number') or ''"/>
+                                <t t-set="iban_display" t-value="''"/>
+                            </t>
+                            <t t-elif="company_bank and company_bank.bank_id">
                                 <t t-set="bank_name_display" t-value="(company_bank.bank_id.name or '') + (company_bank.currency_id and (' - ' + company_bank.currency_id.name + ' A/C') or ' - AED A/C')"/>
+                                <t t-set="acc_number_display" t-value="company_bank.acc_number or ''"/>
                             </t>
                             <t t-elif="company_bank and company_bank.bank_name">
                                 <t t-set="bank_name_display" t-value="(company_bank.bank_name or '') + (company_bank.currency_id and (' - ' + company_bank.currency_id.name + ' A/C') or ' - AED A/C')"/>
+                                <t t-set="acc_number_display" t-value="company_bank.acc_number or ''"/>
                             </t>
                             <strong>Company's Bank Details</strong><br/>
                             Bank Name : <t t-esc="bank_name_display or ''"/><br/>
-                            A/c No. : <t t-esc="(company_bank and company_bank.acc_number) or ''"/><br/>
-                            IBAN : <t t-esc="iban_number or ''"/><br/>
+                            A/c No. : <t t-esc="acc_number_display or ''"/><br/>
+                            IBAN : <t t-esc="iban_display or ''"/><br/>
                             Branch &amp; SWIFT Code : <t t-if="branch_val" t-esc="branch_val"/><t t-if="branch_val and swift_val"> / </t><t t-if="swift_val" t-esc="swift_val"/><br/>
                             <t t-if="doc.company_id.name">for <t t-esc="doc.company_id.name or ''"/></t>
                         </td>

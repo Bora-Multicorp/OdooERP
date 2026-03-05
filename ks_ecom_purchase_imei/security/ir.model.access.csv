@@ -1,8 +1,0 @@
-id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-access_po_manifest_line_user,po.manifest.line.user,model_po_manifest_line,purchase.group_purchase_user,1,1,1,0
-access_po_manifest_line_manager,po.manifest.line.manager,model_po_manifest_line,purchase.group_purchase_manager,1,1,1,1
-access_po_manifest_line_stock_user,po.manifest.line.stock.user,model_po_manifest_line,stock.group_stock_user,1,0,0,0
-access_manifest_upload_wizard,manifest.upload.wizard.user,model_manifest_upload_wizard,purchase.group_purchase_user,1,1,1,1
-access_manifest_upload_preview_line,manifest.upload.preview.line.user,model_manifest_upload_preview_line,purchase.group_purchase_user,1,1,1,1
-access_imei_validation_wizard,imei.validation.wizard.user,model_imei_validation_wizard,stock.group_stock_user,1,1,1,1
-access_imei_validation_line,imei.validation.line.user,model_imei_validation_line,stock.group_stock_user,1,1,1,1
