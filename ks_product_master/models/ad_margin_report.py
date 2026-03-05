@@ -12,6 +12,13 @@ class AdMarginReport(models.TransientModel):
     party_name = fields.Char(string='Party Name', related='partner_id.name', readonly=True)
     
     product_id = fields.Many2one('product.product', string='Product', required=True, index=True)
+    brand_id = fields.Many2one(
+        'product.brand',
+        string='Brand',
+        related='product_id.product_tmpl_id.brand_id',
+        readonly=True,
+        store=True,
+    )
     item_name = fields.Char(string='Item Name', related='product_id.name', readonly=True)
     item_alias = fields.Char(string='Item', related='product_id.default_code', readonly=True)
     

@@ -9,15 +9,15 @@
                    'You can also add multiple file attachment to Survey Form .',
     'author': 'Ksolves Private Limited',
     'website': 'https://www.ksolves.com/',
-    'depends': ['quality','sale'],
+    'depends': ['quality', 'sale', 'ks_automail'],
     'assets': {
 
     },
     'data': [
+        'data/ks_cash_handling_product.xml',
         'report/qc_email_template.xml',
         'report/sale_order_mail_3pl.xml',
         'views/sale_order_view.xml',
-
     ],
     'images': [],
     'license': 'LGPL-3',

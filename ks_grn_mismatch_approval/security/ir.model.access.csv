@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_ks_grn_mismatch_approval_user,ks.grn.mismatch.approval.user,model_ks_grn_mismatch_approval,stock.group_stock_user,1,1,1,0
+access_ks_grn_mismatch_approval_manager,ks.grn.mismatch.approval.manager,model_ks_grn_mismatch_approval,stock.group_stock_manager,1,1,1,1
+access_ks_grn_mismatch_approve_wizard_user,ks.grn.mismatch.approve.wizard.user,model_ks_grn_mismatch_approve_wizard,stock.group_stock_user,1,1,1,1

@@ -44,6 +44,7 @@
         <field name="model">ad.margin.report</field>
         <field name="arch" type="xml">
             <list string="AD Margin Report" default_order="partner_id, product_id" decoration-info="sales_quantity > 0" editable="bottom">
+                <field name="brand_id" string="Brand" optional="show"/>
                 <field name="party_name" string="Party Name" readonly="1"/>
                 <field name="item_name" string="Item Name" readonly="1"/>
                 <field name="item_alias" string="Item" readonly="1"/>
@@ -72,6 +73,7 @@
                 <filter string="Date From" name="date_from" domain="[('invoice_date', '&lt;=', context_today().strftime('%Y-%m-%d'))]"/>
                 <filter string="Date To" name="date_to" domain="[('invoice_date', '&gt;=', context_today().strftime('%Y-%m-%d'))]"/>
                 <group expand="0" string="Group By">
+                    <filter string="Brand" name="group_by_brand" context="{'group_by': 'brand_id'}"/>
                     <filter string="Party Name" name="group_by_partner" context="{'group_by': 'partner_id'}"/>
                     <filter string="Product" name="group_by_product" context="{'group_by': 'product_id'}"/>
                     <filter string="Invoice Date" name="group_by_invoice_date" context="{'group_by': 'invoice_date'}"/>

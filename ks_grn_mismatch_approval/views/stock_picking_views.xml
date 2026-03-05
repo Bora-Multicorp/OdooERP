@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_picking_form_inherit_grn_mismatch" model="ir.ui.view">
+        <field name="name">stock.picking.form.inherit.grn.mismatch</field>
+        <field name="model">stock.picking</field>
+        <field name="inherit_id" ref="stock.view_picking_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_ks_grn_mismatch_approval" type="object"
+                        class="oe_stat_button" icon="fa-check-square-o"
+                        invisible="ks_grn_mismatch_approval_count == 0 or picking_type_id.code != 'incoming'">
+                    <field name="ks_grn_mismatch_approval_count" widget="statinfo" string="GRN Mismatch"/>
+                </button>
+            </xpath>
+            <xpath expr="//field[@name='state']" position="after">
+                <field name="ks_grn_mismatch_approved" invisible="1"/>
+                <field name="ks_grn_mismatch_approval_count" invisible="1"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

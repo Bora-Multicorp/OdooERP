@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_ks_grn_mismatch_approval_form" model="ir.ui.view">
+        <field name="name">ks.grn.mismatch.approval.form</field>
+        <field name="model">ks.grn.mismatch.approval</field>
+        <field name="arch" type="xml">
+            <form string="GRN Mismatch Approval">
+                <header>
+                    <button name="action_approve" string="Approve" type="object" class="btn-primary"
+                            invisible="state != 'pending_approval'"/>
+                    <button name="action_reject" string="Reject" type="object" class="btn-secondary"
+                            invisible="state != 'pending_approval'"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box"/>
+                    <group>
+                        <group>
+                            <field name="picking_id" options="{'no_create': True}"/>
+                            <field name="purchase_id" options="{'no_create': True}"/>
+                            <field name="state" widget="statusbar" statusbar_visible="draft,pending_approval,approved"/>
+                            <field name="request_user_id" readonly="1"/>
+                            <field name="request_date" readonly="1"/>
+                            <field name="mismatch_details" readonly="1" colspan="2"/>
+                        </group>
+                        <group>
+                            <field name="approve_user_id" invisible="state != 'approved'"/>
+                            <field name="approve_date" invisible="state != 'approved'"/>
+                            <field name="approve_reason" invisible="state != 'approved'" colspan="2"/>
+                            <field name="reject_user_id" invisible="state != 'rejected'"/>
+                            <field name="reject_date" invisible="state != 'rejected'"/>
+                            <field name="reject_reason" invisible="state != 'rejected'" colspan="2"/>
+                            <field name="warehouse_notified" invisible="1"/>
+                        </group>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_ks_grn_mismatch_approval_search" model="ir.ui.view">
+        <field name="name">ks.grn.mismatch.approval.search</field>
+        <field name="model">ks.grn.mismatch.approval</field>
+        <field name="arch" type="xml">
+            <search string="GRN Mismatch Approvals">
+                <field name="picking_id"/>
+                <field name="purchase_id"/>
+                <filter name="pending_approval" string="Pending Approval" domain="[('state', '=', 'pending_approval')]"/>
+                <filter name="approved" string="Approved" domain="[('state', '=', 'approved')]"/>
+                <group expand="0" string="Group By">
+                    <filter name="group_state" string="Status" context="{'group_by': 'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_ks_grn_mismatch_approval_list" model="ir.ui.view">
+        <field name="name">ks.grn.mismatch.approval.list</field>
+        <field name="model">ks.grn.mismatch.approval</field>
+        <field name="arch" type="xml">
+            <list string="GRN Mismatch Approvals" decoration-warning="state == 'pending_approval'" decoration-success="state == 'approved'" decoration-muted="state in ('rejected', 'draft')">
+                <field name="picking_id"/>
+                <field name="purchase_id"/>
+                <field name="state"/>
+                <field name="request_user_id"/>
+                <field name="request_date"/>
+                <field name="approve_user_id"/>
+                <field name="approve_date"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_ks_grn_mismatch_approval" model="ir.actions.act_window">
+        <field name="name">GRN Mismatch Approvals</field>
+        <field name="res_model">ks.grn.mismatch.approval</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_ks_grn_mismatch_approval_search"/>
+        <field name="context">{'search_default_pending_approval': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No GRN mismatch approval requests.
+            </p>
+            <p>
+                When a receipt (GRN) has received quantity greater than the Purchase Order or contains products not on the PO,
+                validation is blocked and a request is created here. PO approvers can approve or reject from this list or from the receipt.
+            </p>
+        </field>
+    </record>
+
+    <menuitem id="menu_ks_grn_mismatch_approval"
+              name="GRN Mismatch Approvals"
+              parent="stock.menu_stock_warehouse_mgmt"
+              action="action_ks_grn_mismatch_approval"
+              sequence="50"/>
+</odoo>
