@@ -12,6 +12,7 @@
                                 class="oe_highlight"
                                 invisible="state != 'draft' or is_approved or (not is_admin_user and not is_form_owner)"/>
                         <field name="has_pending_approval" invisible="1"/>
+                        <field name="is_approved" invisible="1"/>
                         <field name="is_admin_user" invisible="1"/>
                         <field name="is_form_owner" invisible="1"/>
                         <field name="can_rekyc_approve" invisible="1"/>

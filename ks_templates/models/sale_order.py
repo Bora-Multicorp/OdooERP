@@ -154,7 +154,7 @@ class SaleOrder(models.Model):
         return formatLang(self.env, amount, digits=2)
 
     def get_company_bank_info(self):
-        """Get company bank information safely"""
+        """Get company bank information: prefer sale order ks_bank_id when set, else company partner bank."""
         self.ensure_one()
         bank_info = {
             'ad_code': '',
@@ -165,7 +165,21 @@ class SaleOrder(models.Model):
             'ifsc_code': '',
             'city': '',
         }
-        
+        try:
+            # Prefer sale order's selected bank (ks_bank_id) when set
+            if getattr(self, 'ks_bank_id', None) and self.ks_bank_id:
+                bank = self.ks_bank_id
+                bank_info['bank_name'] = bank.name or ''
+                bank_info['acc_number'] = getattr(bank, 'bic', None) or ''
+                bank_info['swift_code'] = getattr(bank, 'swift_code', None) or getattr(bank, 'bic', None) or ''
+                bank_info['ad_code'] = getattr(bank, 'bank_ad_code', None) or ''
+                bank_info['ifsc_code'] = getattr(bank, 'ifsc_code', None) or ''
+                bank_info['branch'] = getattr(bank, 'branch', None) or getattr(bank, 'branch_sol_id', None) or ''
+                bank_info['city'] = getattr(bank, 'city', None) or ''
+                return bank_info
+        except Exception:
+            pass
+
         try:
             company_bank = self.company_id.partner_id.bank_ids[:1] if self.company_id.partner_id.bank_ids else False
             if company_bank:
