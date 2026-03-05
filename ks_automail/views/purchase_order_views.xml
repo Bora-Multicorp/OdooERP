@@ -13,6 +13,10 @@
                        readonly="state in ('purchase', 'done', 'cancel')"/>
                 <field name="ks_no_tax_allowed" optional="show"/>
             </xpath>
+            <!-- When No Tax is checked, tax on order lines is readonly (and cleared by onchange/write) -->
+            <xpath expr="//field[@name='order_line']/list/field[@name='taxes_id']" position="attributes">
+                <attribute name="readonly">parent.ks_no_tax_allowed</attribute>
+            </xpath>
         </field>
     </record>
 

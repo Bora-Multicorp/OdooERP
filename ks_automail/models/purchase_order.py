@@ -19,12 +19,25 @@ class PurchaseOrder(models.Model):
     ks_no_tax_allowed = fields.Boolean(
         string='No Tax',
         default=False,
-        help='If checked, validation will prevent confirmation when any order line has tax applied.',
+        help='If checked, no tax can be applied on order lines; existing line taxes are cleared.',
         tracking=True,
     )
 
+    @api.onchange('ks_no_tax_allowed')
+    def _onchange_ks_no_tax_allowed_clear_tax(self):
+        """When No Tax is ticked, remove tax from all order lines."""
+        if self.ks_no_tax_allowed and self.order_line:
+            for line in self.order_line:
+                if line.taxes_id:
+                    line.taxes_id = [(5, 0, 0)]
+
     def write(self, vals):
-        """Prevent changing ks_zone once order is in purchase/done state"""
+        """Clear line taxes when No Tax is set; prevent changing ks_zone once order is in purchase/done state."""
+        if vals.get('ks_no_tax_allowed'):
+            for order in self:
+                lines_with_tax = order.order_line.filtered(lambda l: l.taxes_id)
+                if lines_with_tax:
+                    lines_with_tax.write({'taxes_id': [(5, 0, 0)]})
         if 'ks_zone' in vals:
             for order in self:
                 if order.state in ('purchase', 'done'):

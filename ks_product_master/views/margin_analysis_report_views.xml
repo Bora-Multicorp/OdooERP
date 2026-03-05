@@ -9,16 +9,10 @@
                 <sheet>
                     <group>
                         <group>
+                            <field name="name" string="Report Name"/>
                             <field name="date_from"/>
                             <field name="date_to"/>
                         </group>
-                        <group>
-                            <field name="brand_id"/>
-                            <field name="category_id"/>
-                        </group>
-                    </group>
-                    <group>
-                        <field name="product_ids" widget="many2many_tags" options="{'no_create': True}"/>
                     </group>
                 </sheet>
                 <footer>
@@ -68,13 +62,6 @@
                             <field name="date_from"/>
                             <field name="date_to"/>
                         </group>
-                        <group>
-                            <field name="brand_id"/>
-                            <field name="category_id"/>
-                        </group>
-                    </group>
-                    <group>
-                        <field name="product_ids" widget="many2many_tags" options="{'no_create': True}"/>
                     </group>
                     <notebook>
                         <page string="Lines" name="lines">
