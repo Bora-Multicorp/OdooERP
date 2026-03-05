@@ -1,4 +1,4 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-access_ks_part_wise_all_data_report,ks.part.wise.all.data.report,sale.model_sale_order,base.group_user,1,1,1,1
+access_ks_part_wise_all_data_report,ks.part.wise.all.data.report,model_ks_part_wise_all_data_report,base.group_user,1,1,1,1
 access_ks_purchase_report_detail,ks.purchase.report.detail,ks_reports.model_ks_purchase_report_detail,purchase.group_purchase_user,1,1,1,1
 
