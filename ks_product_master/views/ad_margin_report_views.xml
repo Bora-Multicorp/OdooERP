@@ -38,15 +38,12 @@
         <field name="target">new</field>
     </record>
 
-    <!-- AD Margin Report Header - List View (Master: all saved reports) -->
+    <!-- AD Margin Report Header - List View (Master: all saved reports; New button creates new report) -->
     <record id="view_ad_margin_report_header_list" model="ir.ui.view">
         <field name="name">ad.margin.report.header.list</field>
         <field name="model">ad.margin.report.header</field>
         <field name="arch" type="xml">
-            <list string="AD Margin Reports" create="0" delete="1" edit="1">
-                <header>
-                    <button name="%(ks_product_master.action_ad_margin_report_wizard)d" string="Generate AD Margin Report" type="action" class="btn-primary"/>
-                </header>
+            <list string="AD Margin Reports" create="1" delete="1" edit="1">
                 <field name="name"/>
                 <field name="date_from"/>
                 <field name="date_to"/>
@@ -56,32 +53,45 @@
         </field>
     </record>
 
-    <!-- AD Margin Report Header - Form View (with chatter and editable lines) -->
+    <!-- AD Margin Report Header - Form View (name, dates, filters; Generate button; lines read-only) -->
     <record id="view_ad_margin_report_header_form" model="ir.ui.view">
         <field name="name">ad.margin.report.header.form</field>
         <field name="model">ad.margin.report.header</field>
         <field name="arch" type="xml">
             <form string="AD Margin Report">
                 <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_generate_lines" string="Generate" type="object" class="btn-primary"/>
+                    </div>
                     <group>
                         <group>
                             <field name="name"/>
                             <field name="date_from"/>
                             <field name="date_to"/>
                         </group>
+                        <group>
+                            <field name="brand_id"/>
+                            <field name="category_id"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="partner_ids" widget="many2many_tags" options="{'no_create': True}" string="Customers"/>
+                        <field name="product_ids" widget="many2many_tags" options="{'no_create': True}"/>
                     </group>
                     <notebook>
                         <page string="Lines" name="lines">
                             <field name="line_ids" nolabel="1">
-                                <list string="AD Margin" default_order="partner_id, product_id" editable="bottom" create="1" delete="1" decoration-info="sales_quantity > 0">
+                                <list string="AD Margin" default_order="partner_id, product_id, invoice_date, mop_date" create="0" delete="0" decoration-info="sales_quantity > 0">
                                     <field name="partner_id" optional="hide"/>
                                     <field name="party_name" string="Party" readonly="1"/>
                                     <field name="product_id" optional="hide"/>
                                     <field name="item_name" string="Item Name" readonly="1"/>
                                     <field name="item_alias" string="Item" readonly="1"/>
-                                    <field name="sales_rate" string="Sales Rate"/>
-                                    <field name="sales_quantity" string="Sales Qty"/>
-                                    <field name="mop" string="MOP"/>
+                                    <field name="invoice_date" string="Invoice Date" optional="show"/>
+                                    <field name="mop_date" string="MOP Date" optional="show"/>
+                                    <field name="sales_rate" string="Sales Rate" readonly="1"/>
+                                    <field name="sales_quantity" string="Sales Qty" readonly="1"/>
+                                    <field name="mop" string="MOP" readonly="1"/>
                                     <field name="x_gst_mop" string="X GST MO" readonly="1"/>
                                     <field name="diff" string="Diff" readonly="1"/>
                                     <field name="margin" string="Margin" readonly="1"/>
@@ -114,11 +124,13 @@
         <field name="name">ad.margin.report.list</field>
         <field name="model">ad.margin.report</field>
         <field name="arch" type="xml">
-            <list string="AD Margin Report" default_order="partner_id, product_id" decoration-info="sales_quantity > 0" editable="bottom" create="1" delete="1">
+            <list string="AD Margin Report" default_order="partner_id, product_id, invoice_date, mop_date" decoration-info="sales_quantity > 0" editable="bottom" create="1" delete="1">
                 <field name="report_id" optional="show"/>
                 <field name="party_name" string="Party" readonly="1"/>
                 <field name="item_name" string="Item Name" readonly="1"/>
                 <field name="item_alias" string="Item" readonly="1"/>
+                <field name="invoice_date" string="Invoice Date" optional="show"/>
+                <field name="mop_date" string="MOP Date" optional="show"/>
                 <field name="sales_rate" string="Sales Rate" sum="Total:"/>
                 <field name="sales_quantity" string="Sales Quantity" sum="Total:"/>
                 <field name="mop" string="MOP" sum="Total:"/>
@@ -163,7 +175,7 @@
                 Create your first AD Margin report
             </p>
             <p>
-                Click "Generate AD Margin Report" to create a new report by date range and filters. Reports are saved here; lines are editable and all changes are tracked in chatter. Back date and future date are allowed.
+                Click "New" to create a report. Fill report name, dates and filters, then open the record and click "Generate" to create report lines. Lines are read-only.
             </p>
         </field>
     </record>
@@ -182,10 +194,4 @@
               parent="stock.menu_warehouse_report"
               action="action_ad_margin_report_header"
               sequence="101"/>
-    <!-- Generate new AD Margin report (wizard) -->
-    <menuitem id="menu_ad_margin_report_generate"
-              name="Generate AD Margin Report"
-              parent="stock.menu_warehouse_report"
-              action="action_ad_margin_report_wizard"
-              sequence="102"/>
 </odoo>

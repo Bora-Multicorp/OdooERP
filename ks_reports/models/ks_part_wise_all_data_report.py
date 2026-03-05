@@ -1355,6 +1355,7 @@ class PartWiseAllDataReport(models.TransientModel):
             # Calculate total quantity and total amount for the order
             total_qty = sum(order_lines.mapped('product_uom_qty'))
             total_amount = order.amount_total
+            company = self.env.company
             
             # Get commercial invoices
             commercial_invoices = self.env['account.move'].search([
@@ -1373,7 +1374,11 @@ class PartWiseAllDataReport(models.TransientModel):
                     commercial_inv_dates.append(inv.invoice_date.strftime('%d-%b-%y') if hasattr(inv.invoice_date, 'strftime') else str(inv.invoice_date))
                 else:
                     commercial_inv_dates.append('')
-                commercial_inv_amounts.append(inv.amount_total or 0.0)
+                # Use amount_total_signed so refunds (out_refund) are negative and sum is net
+                amt = getattr(inv, 'amount_total_signed', None)
+                if amt is None:
+                    amt = (inv.amount_total or 0.0) if inv.move_type == 'out_invoice' else -(inv.amount_total or 0.0)
+                commercial_inv_amounts.append(amt)
             
             commercial_inv_str = ', '.join(commercial_inv_names) if commercial_inv_names else ''
             commercial_inv_date_str = ', '.join(commercial_inv_dates) if commercial_inv_dates else ''
@@ -1431,43 +1436,76 @@ class PartWiseAllDataReport(models.TransientModel):
             sb_value_total = sum(sb_values) if sb_values else 0.0
             sb_value_inr = sb_value_total * (sb_exchange_rates[0] if sb_exchange_rates else exchange_rate_pi) if sb_value_total > 0 else 0.0
             
-            # Get payment information
-            payments = self.env['account.payment'].search([
+            # Get payment information (unique payments: linked to SO or reconciled to its invoices)
+            payments_direct = self.env['account.payment'].search([
                 ('ks_sale_order_id', '=', order.id),
                 ('state', '=', 'posted')
             ])
+            payment_ids_seen = set()
+            for inv in commercial_invoices:
+                try:
+                    for p in inv._get_reconciled_payments():
+                        payment_ids_seen.add(p.id)
+                except Exception:
+                    pass
+            all_payments = payments_direct
+            for pid in payment_ids_seen:
+                p = self.env['account.payment'].browse(pid)
+                if p.exists() and p.state == 'posted':
+                    all_payments |= p
             
-            # Also get payments from invoices
-            for invoice in commercial_invoices:
-                invoice_payments = invoice._get_reconciled_payments()
-                payments |= invoice_payments
-            
-            total_amount_received = 0.0
-            bank_charges = 0.0
-            net_amount_received = 0.0
+            total_amount_received = 0.0  # in order currency
+            bank_charges = 0.0           # in order currency
             payment_exchange_rate = exchange_rate_pi
-            payment_received_inr = 0.0
+            latest_payment_date = None
             
-            payment_dates = []
-            for payment in payments:
-                total_amount_received += abs(payment.amount)
+            for payment in all_payments:
+                # Convert payment amount to order currency (avoid mixing currencies)
+                pay_currency = payment.currency_id
+                pay_amount = abs(payment.amount or 0.0)
+                if pay_amount:
+                    if pay_currency == currency:
+                        amount_in_order_currency = pay_amount
+                    else:
+                        try:
+                            amount_in_order_currency = pay_currency._convert(
+                                pay_amount, currency, company,
+                                payment.date or fields.Date.today()
+                            )
+                        except Exception:
+                            amount_in_order_currency = pay_amount
+                    total_amount_received += amount_in_order_currency
                 if payment.date:
-                    payment_dates.append(payment.date)
-                    # Get exchange rate on payment date
-                    if currency and currency.name != 'INR':
-                        rate_obj = self.env['res.currency.rate'].search([
-                            ('currency_id', '=', currency.id),
-                            ('name', '<=', payment.date)
-                        ], order='name desc', limit=1)
-                        if rate_obj:
-                            payment_exchange_rate = rate_obj.rate or exchange_rate_pi
+                    if latest_payment_date is None or payment.date > latest_payment_date:
+                        latest_payment_date = payment.date
+                # Bank charges: from custom field if present (e.g. ks_bank_charges), in payment currency
+                bc = getattr(payment, 'ks_bank_charges', None) or getattr(payment, 'bank_charges', None)
+                if bc and bc != 0:
+                    if pay_currency == currency:
+                        bank_charges += abs(float(bc))
+                    else:
+                        try:
+                            bank_charges += abs(float(pay_currency._convert(
+                                bc, currency, company, payment.date or fields.Date.today()
+                            )))
+                        except Exception:
+                            bank_charges += abs(float(bc))
+            
+            # Exchange rate on remittance date (latest payment date)
+            if latest_payment_date and currency and currency.name != 'INR':
+                rate_obj = self.env['res.currency.rate'].search([
+                    ('currency_id', '=', currency.id),
+                    ('name', '<=', latest_payment_date)
+                ], order='name desc', limit=1)
+                if rate_obj:
+                    payment_exchange_rate = rate_obj.rate or exchange_rate_pi
             
             net_amount_received = total_amount_received - bank_charges
-            payment_received_inr = net_amount_received * payment_exchange_rate if net_amount_received > 0 else 0.0
+            # Payment received INR = net amount (in order currency) × rate (order currency to INR)
+            payment_received_inr = (net_amount_received * payment_exchange_rate) if net_amount_received > 0 else 0.0
             
-            # Calculate exchange gain or loss
-            # Gain/Loss = (Payment Received INR) - (PI Amount in INR)
-            pi_amount_inr = total_amount * exchange_rate_pi if currency and currency.name != 'INR' else total_amount
+            # Exchange gain or loss = Payment Received INR − PI Amount in INR
+            pi_amount_inr = (total_amount * exchange_rate_pi) if currency and currency.name != 'INR' else total_amount
             exchange_gain_loss = payment_received_inr - pi_amount_inr if payment_received_inr > 0 else 0.0
             
             # Write data for each order line
@@ -2483,7 +2521,7 @@ class PartWiseAllDataReport(models.TransientModel):
 
     @api.model
     def get_exchange_gl_report_rows(self, sale_order_ids=None):
-        """Return list of dicts for Exchange GL list view (same columns as XLSX)."""
+        """Return list of dicts for Exchange GL list view (same columns and calculations as XLSX)."""
         if sale_order_ids:
             sale_orders = self.env['sale.order'].browse(sale_order_ids).filtered(
                 lambda o: o.state in ['sale', 'done']
@@ -2497,45 +2535,171 @@ class PartWiseAllDataReport(models.TransientModel):
         company_currency = company.currency_id
         rows = []
         for order in sale_orders:
-            pi_no = order.name or ''
-            pi_date = order.date_order.date() if order.date_order else None
-            order_currency = order.currency_id
             order_lines = order.order_line.filtered(lambda l: not l.display_type and l.product_id)
-            rate_inr = 1.0
-            if order_currency != company_currency and order.date_order:
+            if not order_lines:
+                continue
+            pi_no = order.name or ''
+            pi_date = order.date_order.date() if order.date_order else fields.Date.context_today(self)
+            order_currency = order.currency_id
+            total_amount = order.amount_total or 0.0
+
+            # Exchange rate on PI date (same as XLSX)
+            exchange_rate_pi = 1.0
+            if order_currency and order_currency != company_currency:
+                rate_obj = self.env['res.currency.rate'].search([
+                    ('currency_id', '=', order_currency.id),
+                    ('name', '<=', pi_date)
+                ], order='name desc', limit=1)
+                if rate_obj:
+                    exchange_rate_pi = rate_obj.rate or 1.0
+
+            # Commercial invoices
+            commercial_invoices = self.env['account.move'].search([
+                ('invoice_origin', '=', order.name),
+                ('move_type', 'in', ['out_invoice', 'out_refund']),
+                ('state', '!=', 'cancel')
+            ], order='invoice_date desc')
+            commercial_inv_names = [inv.name or '' for inv in commercial_invoices]
+            commercial_inv_dates = []
+            commercial_inv_amounts = []
+            for inv in commercial_invoices:
+                if inv.invoice_date:
+                    commercial_inv_dates.append(inv.invoice_date)
+                else:
+                    commercial_inv_dates.append(None)
+                amt = getattr(inv, 'amount_total_signed', None)
+                if amt is None:
+                    amt = (inv.amount_total or 0.0) if inv.move_type == 'out_invoice' else -(inv.amount_total or 0.0)
+                commercial_inv_amounts.append(amt)
+            commercial_inv_str = ', '.join(commercial_inv_names) if commercial_inv_names else ''
+            commercial_inv_total = sum(commercial_inv_amounts) if commercial_inv_amounts else 0.0
+            commercial_inv_date_first = commercial_inv_dates[0] if commercial_inv_dates else None
+
+            # Shipping bills
+            pickings = self.env['stock.picking'].search([
+                ('sale_id', '=', order.id),
+                ('state', '=', 'done')
+            ], order='date_done desc')
+            sb_numbers = []
+            sb_dates = []
+            sb_values = []
+            sb_exchange_rates = []
+            for picking in pickings:
+                sb_no = getattr(picking, 'l10n_in_shipping_bill_no', None) or picking.name or ''
+                if sb_no:
+                    sb_numbers.append(sb_no)
+                    sb_dates.append(picking.date_done.date() if picking.date_done and hasattr(picking.date_done, 'date') else (picking.date_done if picking.date_done else None))
+                    sb_value = 0.0
+                    for move in picking.move_ids.filtered(lambda m: m.state == 'done' and m.sale_line_id):
+                        qty_done = move.quantity
+                        if not qty_done and move.move_line_ids:
+                            qty_done = sum(move.move_line_ids.mapped('quantity'))
+                        sb_value += qty_done * (move.sale_line_id.price_unit or 0.0)
+                    sb_values.append(sb_value)
+                    sb_rate = exchange_rate_pi
+                    if picking.date_done and order_currency != company_currency:
+                        rate_obj = self.env['res.currency.rate'].search([
+                            ('currency_id', '=', order_currency.id),
+                            ('name', '<=', picking.date_done.date() if hasattr(picking.date_done, 'date') else fields.Date.today())
+                        ], order='name desc', limit=1)
+                        if rate_obj:
+                            sb_rate = rate_obj.rate or exchange_rate_pi
+                    sb_exchange_rates.append(sb_rate)
+            sb_no_str = ', '.join(sb_numbers) if sb_numbers else ''
+            sb_date_first = sb_dates[0] if sb_dates else None
+            sb_value_total = sum(sb_values) if sb_values else 0.0
+            sb_value_inr = sb_value_total * (sb_exchange_rates[0] if sb_exchange_rates else exchange_rate_pi) if sb_value_total > 0 else 0.0
+            sb_rate_first = sb_exchange_rates[0] if sb_exchange_rates else 0.0
+
+            # Payments (same logic as XLSX: convert to order currency, deduplicate, bank charges)
+            payments_direct = self.env['account.payment'].search([
+                ('ks_sale_order_id', '=', order.id),
+                ('state', '=', 'posted')
+            ])
+            payment_ids_seen = set()
+            for inv in commercial_invoices:
                 try:
-                    rate_inr = order_currency._get_rates(order.company_id, order.date_order.date()).get(order_currency.id, 1.0)
+                    for p in inv._get_reconciled_payments():
+                        payment_ids_seen.add(p.id)
                 except Exception:
                     pass
+            all_payments = payments_direct
+            for pid in payment_ids_seen:
+                p = self.env['account.payment'].browse(pid)
+                if p.exists() and p.state == 'posted':
+                    all_payments |= p
+            total_amount_received = 0.0
+            bank_charges = 0.0
+            latest_payment_date = None
+            for payment in all_payments:
+                pay_currency = payment.currency_id
+                pay_amount = abs(payment.amount or 0.0)
+                if pay_amount:
+                    if pay_currency == order_currency:
+                        total_amount_received += pay_amount
+                    else:
+                        try:
+                            total_amount_received += pay_currency._convert(
+                                pay_amount, order_currency, company,
+                                payment.date or fields.Date.today()
+                            )
+                        except Exception:
+                            total_amount_received += pay_amount
+                if payment.date:
+                    if latest_payment_date is None or payment.date > latest_payment_date:
+                        latest_payment_date = payment.date
+                bc = getattr(payment, 'ks_bank_charges', None) or getattr(payment, 'bank_charges', None)
+                if bc and bc != 0:
+                    if pay_currency == order_currency:
+                        bank_charges += abs(float(bc))
+                    else:
+                        try:
+                            bank_charges += abs(float(pay_currency._convert(bc, order_currency, company, payment.date or fields.Date.today())))
+                        except Exception:
+                            bank_charges += abs(float(bc))
+            payment_exchange_rate = exchange_rate_pi
+            if latest_payment_date and order_currency != company_currency:
+                rate_obj = self.env['res.currency.rate'].search([
+                    ('currency_id', '=', order_currency.id),
+                    ('name', '<=', latest_payment_date)
+                ], order='name desc', limit=1)
+                if rate_obj:
+                    payment_exchange_rate = rate_obj.rate or exchange_rate_pi
+            net_amount_received = total_amount_received - bank_charges
+            payment_received_inr = (net_amount_received * payment_exchange_rate) if net_amount_received > 0 else 0.0
+            pi_amount_inr = (total_amount * exchange_rate_pi) if order_currency != company_currency else total_amount
+            exchange_gain_loss = payment_received_inr - pi_amount_inr if payment_received_inr > 0 else 0.0
+
             for line in order_lines:
                 qty = line.product_uom_qty or 0.0
                 rate = line.price_unit or 0.0
-                line_amount = (line.price_subtotal or 0.0)
-                line_amount_inr_line = _to_company_currency(order_currency, line_amount, company_currency, company, pi_date or fields.Date.context_today(self), self)
+                line_amount = line.price_subtotal or 0.0
+                rate_inr = rate if order_currency == company_currency else rate * exchange_rate_pi
+                line_amount_inr = _to_company_currency(order_currency, line_amount, company_currency, company, pi_date, self)
                 rows.append({
                     'proforma_invoice_no': pi_no,
                     'proforma_invoice_date': pi_date,
                     'currency': order_currency.name,
-                    'exchange_rate_pi_date': rate_inr,
+                    'exchange_rate_pi_date': exchange_rate_pi,
                     'qty': qty,
                     'total_qty': sum(l.product_uom_qty for l in order_lines),
-                    'rate_inr': rate if order_currency == company_currency else rate * rate_inr,
+                    'rate_inr': rate_inr,
                     'pi_amount': line_amount,
-                    'total_amount': line_amount_inr_line,
-                    'commercial_invoice_no': '',
-                    'commercial_invoice_date': None,
-                    'commercial_invoice_amount': 0.0,
-                    'shipping_bill_no': '',
-                    'shipping_bill_date': None,
-                    'shipping_bill_value': 0.0,
-                    'shipping_bill_exchange_rate': 0.0,
-                    'shipping_bill_value_inr': 0.0,
-                    'total_amount_received': 0.0,
-                    'bank_charges': 0.0,
-                    'net_amount_received': 0.0,
-                    'exchange_rate_remittance_date': 0.0,
-                    'payment_received_inr': 0.0,
-                    'exchange_gain_loss': 0.0,
+                    'total_amount': line_amount_inr,
+                    'commercial_invoice_no': commercial_inv_str,
+                    'commercial_invoice_date': commercial_inv_date_first,
+                    'commercial_invoice_amount': commercial_inv_total,
+                    'shipping_bill_no': sb_no_str,
+                    'shipping_bill_date': sb_date_first,
+                    'shipping_bill_value': sb_value_total,
+                    'shipping_bill_exchange_rate': sb_rate_first,
+                    'shipping_bill_value_inr': sb_value_inr,
+                    'total_amount_received': total_amount_received,
+                    'bank_charges': bank_charges,
+                    'net_amount_received': net_amount_received,
+                    'exchange_rate_remittance_date': payment_exchange_rate,
+                    'payment_received_inr': payment_received_inr,
+                    'exchange_gain_loss': exchange_gain_loss,
                 })
         return rows
 

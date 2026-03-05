@@ -10,8 +10,23 @@ class AdMarginReportHeader(models.Model):
     _order = 'date_to desc, id desc'
 
     name = fields.Char(string='Report Name', required=True, default='AD Margin Report', tracking=True)
-    date_from = fields.Date(string='Date From', required=True, tracking=True)
-    date_to = fields.Date(string='Date To', required=True, tracking=True)
+    date_from = fields.Date(
+        string='Date From',
+        required=True,
+        default=lambda self: fields.Date.today().replace(day=1),
+        tracking=True,
+    )
+    date_to = fields.Date(
+        string='Date To',
+        required=True,
+        default=lambda self: fields.Date.today(),
+        tracking=True,
+    )
+    partner_ids = fields.Many2many('res.partner', string='Customers', domain=[('is_company', '=', True)], help='Leave empty for all.')
+    product_ids = fields.Many2many('product.product', string='Products', help='Leave empty for all.')
+    brand_id = fields.Many2one('product.brand', string='Brand')
+    category_id = fields.Many2one('product.category', string='Category')
+
     line_ids = fields.One2many(
         'ad.margin.report',
         'report_id',
@@ -19,11 +34,86 @@ class AdMarginReportHeader(models.Model):
         tracking=True,
     )
 
+    def action_generate_lines(self):
+        """Generate report lines: one line per (invoice line × MOP record) for same product within date range.
+        Invoice lines: invoice_date in [date_from, date_to]. MOP: effective_date in [date_from, date_to].
+        Calculations unchanged (x_gst_mop, diff, margin, total).
+        """
+        self.ensure_one()
+        domain = [
+            ('move_id.move_type', '=', 'out_invoice'),
+            ('move_id.state', '=', 'posted'),
+            ('move_id.invoice_date', '>=', self.date_from),
+            ('move_id.invoice_date', '<=', self.date_to),
+            ('product_id', '!=', False),
+        ]
+        if self.partner_ids:
+            domain.append(('move_id.partner_id', 'in', self.partner_ids.ids))
+        if self.product_ids:
+            domain.append(('product_id', 'in', self.product_ids.ids))
+        if self.brand_id:
+            domain.append(('product_id.brand_id', '=', self.brand_id.id))
+        if self.category_id:
+            domain.append(('product_id.categ_id', 'child_of', self.category_id.id))
+
+        invoice_lines = self.env['account.move.line'].search(domain, order='move_id, id')
+        if not invoice_lines:
+            raise UserError(_('No invoice lines found for the selected date range and criteria.'))
+
+        product_ids = invoice_lines.mapped('product_id').ids
+        mop_records = self.env['mop.master'].search([
+            ('product_id', 'in', product_ids),
+            ('effective_date', '>=', self.date_from),
+            ('effective_date', '<=', self.date_to),
+            ('active', '=', True),
+        ], order='product_id, effective_date')
+        mop_by_product = {}
+        for mop in mop_records:
+            mop_by_product.setdefault(mop.product_id.id, []).append(mop)
+
+        report_lines = []
+        for inv_line in invoice_lines:
+            partner_id = inv_line.move_id.partner_id.id
+            product_id = inv_line.product_id.id
+            sales_rate = inv_line.price_unit or 0.0
+            sales_quantity = inv_line.quantity or 0.0
+            invoice_id = inv_line.move_id.id
+
+            mop_list = mop_by_product.get(product_id, [])
+            if not mop_list:
+                report_lines.append({
+                    'report_id': self.id,
+                    'partner_id': partner_id,
+                    'product_id': product_id,
+                    'sales_rate': sales_rate,
+                    'sales_quantity': sales_quantity,
+                    'mop': 0.0,
+                    'mop_date': None,
+                    'invoice_id': invoice_id,
+                })
+            else:
+                for mop_rec in mop_list:
+                    report_lines.append({
+                        'report_id': self.id,
+                        'partner_id': partner_id,
+                        'product_id': product_id,
+                        'sales_rate': sales_rate,
+                        'sales_quantity': sales_quantity,
+                        'mop': mop_rec.mop,
+                        'mop_date': mop_rec.effective_date,
+                        'invoice_id': invoice_id,
+                    })
+
+        self.line_ids.unlink()
+        for vals in report_lines:
+            self.env['ad.margin.report'].create(vals)
+        return True
+
 
 class AdMarginReport(models.Model):
     _name = 'ad.margin.report'
     _description = 'AD Margin Report Line'
-    _order = 'partner_id, product_id'
+    _order = 'partner_id, product_id, invoice_date, mop_date'
 
     partner_id = fields.Many2one('res.partner', string='Party Name', required=True, index=True, tracking=True)
     party_name = fields.Char(string='Party', related='partner_id.name', readonly=True)
@@ -36,6 +126,8 @@ class AdMarginReport(models.Model):
     sales_quantity = fields.Float(string='Sales Quantity', digits='Product Unit of Measure', tracking=True)
 
     mop = fields.Float(string='MOP', digits='Product Price', help='Market Operating Price', tracking=True)
+    mop_date = fields.Date(string='MOP Date', help='MOP effective date for this line', tracking=True)
+
     x_gst_mop = fields.Float(string='X GST MO', digits='Product Price', compute='_compute_x_gst_mop')
     diff = fields.Float(string='Diff', digits='Product Price', compute='_compute_diff')
     margin = fields.Float(string='Margin', digits=(12, 2), compute='_compute_margin')
@@ -145,6 +237,7 @@ class AdMarginReportWizard(models.TransientModel):
     category_id = fields.Many2one('product.category', string='Category')
 
     def action_generate_report(self):
+        """Same logic as header action: one line per (invoice line × MOP) in date range."""
         self.ensure_one()
 
         domain = [
@@ -154,7 +247,6 @@ class AdMarginReportWizard(models.TransientModel):
             ('move_id.invoice_date', '<=', self.date_to),
             ('product_id', '!=', False),
         ]
-
         if self.partner_ids:
             domain.append(('move_id.partner_id', 'in', self.partner_ids.ids))
         if self.product_ids:
@@ -164,55 +256,51 @@ class AdMarginReportWizard(models.TransientModel):
         if self.category_id:
             domain.append(('product_id.categ_id', 'child_of', self.category_id.id))
 
-        invoice_lines = self.env['account.move.line'].search(domain)
-
+        invoice_lines = self.env['account.move.line'].search(domain, order='move_id, id')
         if not invoice_lines:
-            raise UserError(_('No invoice lines found for the selected criteria.'))
+            raise UserError(_('No invoice lines found for the selected date range and criteria.'))
 
-        report_data = {}
-        for line in invoice_lines:
-            partner = line.move_id.partner_id
-            product = line.product_id
-            key = (partner.id, product.id)
-
-            if key not in report_data:
-                report_data[key] = {
-                    'partner_id': partner.id,
-                    'product_id': product.id,
-                    'sales_rate': 0.0,
-                    'sales_quantity': 0.0,
-                    'total_amount': 0.0,
-                    'invoice_id': line.move_id.id,
-                }
-
-            qty = line.quantity
-            price = line.price_unit
-            report_data[key]['sales_quantity'] += qty
-            report_data[key]['total_amount'] += qty * price
+        product_ids = invoice_lines.mapped('product_id').ids
+        mop_records = self.env['mop.master'].search([
+            ('product_id', 'in', product_ids),
+            ('effective_date', '>=', self.date_from),
+            ('effective_date', '<=', self.date_to),
+            ('active', '=', True),
+        ], order='product_id, effective_date')
+        mop_by_product = {}
+        for mop in mop_records:
+            mop_by_product.setdefault(mop.product_id.id, []).append(mop)
 
         report_lines = []
-        for (partner_id, product_id), data in report_data.items():
-            product = self.env['product.product'].browse(product_id)
+        for inv_line in invoice_lines:
+            partner_id = inv_line.move_id.partner_id.id
+            product_id = inv_line.product_id.id
+            sales_rate = inv_line.price_unit or 0.0
+            sales_quantity = inv_line.quantity or 0.0
+            invoice_id = inv_line.move_id.id
 
-            if data['sales_quantity'] > 0:
-                avg_sales_rate = data['total_amount'] / data['sales_quantity']
+            mop_list = mop_by_product.get(product_id, [])
+            if not mop_list:
+                report_lines.append({
+                    'partner_id': partner_id,
+                    'product_id': product_id,
+                    'sales_rate': sales_rate,
+                    'sales_quantity': sales_quantity,
+                    'mop': 0.0,
+                    'mop_date': None,
+                    'invoice_id': invoice_id,
+                })
             else:
-                avg_sales_rate = 0.0
-
-            # MOP from MOP Master only (by report date_to, same as Funnel)
-            mop_date = self.date_to or fields.Date.today()
-            mop = self.env['mop.master'].get_current_mop(product_id, mop_date)
-            if mop is False:
-                mop = 0.0
-
-            report_lines.append({
-                'partner_id': partner_id,
-                'product_id': product_id,
-                'sales_rate': avg_sales_rate,
-                'sales_quantity': data['sales_quantity'],
-                'mop': mop,
-                'invoice_id': data['invoice_id'],
-            })
+                for mop_rec in mop_list:
+                    report_lines.append({
+                        'partner_id': partner_id,
+                        'product_id': product_id,
+                        'sales_rate': sales_rate,
+                        'sales_quantity': sales_quantity,
+                        'mop': mop_rec.mop,
+                        'mop_date': mop_rec.effective_date,
+                        'invoice_id': invoice_id,
+                    })
 
         header = self.env['ad.margin.report.header'].create({
             'name': self.name or 'AD Margin Report',

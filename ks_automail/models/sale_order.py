@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from odoo import api, fields, models, _
-from odoo.exceptions import UserError
+from odoo.exceptions import UserError, ValidationError
 
 
 class SaleOrder(models.Model):
@@ -12,9 +12,18 @@ class SaleOrder(models.Model):
         ('russia', 'Russia'),
         ('india', 'India'),
         ('dubai', 'Dubai'),
+        ('sez', 'Sez'),
     ], string='Zone', required=True, default='india',
        help='Select the zone for this sale order. Automatic emails will only be sent for India and Dubai zones. This field cannot be changed once the order is confirmed.',
        tracking=True)
+
+    # When True, no tax is allowed on order lines; confirm will raise if any line has tax
+    ks_no_tax_allowed = fields.Boolean(
+        string='No Tax',
+        default=False,
+        help='If checked, validation will prevent confirmation when any order line has tax applied.',
+        tracking=True,
+    )
     
     def write(self, vals):
         """Override write to prevent updating ks_zone when order is confirmed"""
@@ -106,6 +115,7 @@ class SaleOrder(models.Model):
                 )
                 order.ks_automail_config_id = config.id if config else False
             else:
+                # Russia, Sez: no auto email config
                 order.ks_automail_config_id = False
     
     @api.depends('ks_automail_config_id', 'ks_zone')
@@ -119,7 +129,7 @@ class SaleOrder(models.Model):
                 order.ks_auto_send_shipped = order.ks_automail_config_id.auto_send_shipped
             else:
                 # No config or Russia zone - default to False
-                if order.ks_zone == 'russia':
+                if order.ks_zone in ('russia', 'sez'):
                     order.ks_auto_send_confirmation = False
                     order.ks_auto_send_packed = False
                     order.ks_auto_send_shipped = False
@@ -130,7 +140,17 @@ class SaleOrder(models.Model):
                     order.ks_auto_send_shipped = True
 
     def action_confirm(self):
-        """Override to send confirmation email"""
+        """Validate no tax when flag set; then send confirmation email"""
+        for order in self:
+            if order.ks_no_tax_allowed:
+                lines_with_tax = order.order_line.filtered(
+                    lambda l: not l.display_type and l.tax_id
+                )
+                if lines_with_tax:
+                    raise ValidationError(_(
+                        'Tax is not allowed on this order (No Tax is checked). '
+                        'Please remove tax from the following line(s): %s'
+                    ) % ', '.join(lines_with_tax.mapped('name') or lines_with_tax.mapped('product_id.name')))
         result = super().action_confirm()
         
         for order in self:
