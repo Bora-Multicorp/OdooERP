@@ -234,15 +234,48 @@ class KsPoRefundImportWizard(models.TransientModel):
                 self.env["stock.picking"].browse(return_picking_id).write({"is_ecom_refund": True})
                 created_count += 1
 
-        result_message = _("Refund Import Completed:\n")
-        result_message += _("- Returns created: %s\n") % created_count
-        result_message += _("- Skipped: %s line(s)\n") % skipped_count
-        if warnings:
-            result_message += _("\nWarnings:\n")
-            for w in warnings:
-                result_message += "- %s\n" % w
+        # Same message style as PO Import: red box for records not created/skipped, green box for success
+        bus = self.env["bus.bus"]
+        partner_id = self.env.user.partner_id
 
-        if created_count == 0:
-            raise UserError(result_message)
+        # Red box: warnings / records not created
+        if warnings:
+            warning_list = "; ".join(warnings[:10])
+            if len(warnings) > 10:
+                warning_list += _(" (and %s more)") % (len(warnings) - 10)
+            bus._sendone(
+                partner_id,
+                "simple_notification",
+                {
+                    "type": "danger",
+                    "title": _("Refund Import: Records not created"),
+                    "message": warning_list,
+                    "sticky": True,
+                },
+            )
+
+        # Green box: success summary
+        if created_count > 0:
+            bus._sendone(
+                partner_id,
+                "simple_notification",
+                {
+                    "type": "success",
+                    "title": _("Refund Import: Success"),
+                    "message": _("Created: %s return(s).") % created_count,
+                    "sticky": True,
+                },
+            )
+        elif not warnings:
+            bus._sendone(
+                partner_id,
+                "simple_notification",
+                {
+                    "type": "warning",
+                    "title": _("Refund Import"),
+                    "message": _("No returns were created. Check file format and data."),
+                    "sticky": True,
+                },
+            )
 
         return {"type": "ir.actions.act_window_close"}

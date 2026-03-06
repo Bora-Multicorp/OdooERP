@@ -65,15 +65,15 @@ class KsRequestReasonWizard(models.TransientModel):
                 }.get(approval_type)
                 
                 if approver_type_field:
-                    # Get users configured as Approver 1
-                    configs_approver_1 = self.env['ks.purchase.approval.config'].search([
+                    # Get users configured as Approver 1 (sudo: config visible only to admin)
+                    configs_approver_1 = self.env['ks.purchase.approval.config'].sudo().search([
                         ('active', '=', True),
                         (approver_type_field, '=', 'approver_1'),
                     ])
                     record.ks_available_approver_1_ids = configs_approver_1.mapped('user_id')
-                    
+
                     # Get users configured as Approver 2
-                    configs_approver_2 = self.env['ks.purchase.approval.config'].search([
+                    configs_approver_2 = self.env['ks.purchase.approval.config'].sudo().search([
                         ('active', '=', True),
                         (approver_type_field, '=', 'approver_2'),
                     ])

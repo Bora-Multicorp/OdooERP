@@ -32,7 +32,6 @@
         'wizard/ks_approve_reason_wizard_views.xml',
         'wizard/ks_cancel_approval_request_wizard_views.xml',
         'wizard/ks_edit_approval_request_wizard_views.xml',
-        'wizard/ks_approval_reason_wizard_views.xml',
         'views/ks_purchase_approval_config_views.xml',
         'views/purchase_order_views.xml',
         'views/sale_order_views.xml',

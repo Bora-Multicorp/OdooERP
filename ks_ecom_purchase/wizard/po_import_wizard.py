@@ -209,37 +209,17 @@ class KsPoImportWizard(models.TransientModel):
             partner.supplier_rank = 1
         return partner
 
-    def _get_or_create_product(self, product_name, product_code):
+    def _get_product_by_asin(self, product_code):
         """
-        Get or create product using ASIN (product_code) as internal reference.
-        ASIN is stored in default_code field for product lookup.
+        Get product by ASIN (Internal Reference / default_code) only.
+        Does NOT create a product. Returns product or empty recordset if not found.
         """
-        product = self.env["product.product"]
-        # Prioritize ASIN/product_code (default_code) for product lookup
-        if product_code:
-            product = self.env["product.product"].search([("default_code", "=", product_code)], limit=1)
-        # Fallback to product name if ASIN not found
-        if not product and product_name:
-            product = self.env["product.product"].search([("name", "=ilike", product_name)], limit=1)
-        # Create product if not found, using ASIN as default_code
-        if not product:
-            # Ensure product name is never empty
-            product_name_final = product_name or product_code or _("Product")
-            template_vals = {
-                "name": product_name_final,
-                "purchase_ok": True,
-                "sale_ok": False,
-                "type": "consu",  # In Odoo 18, field is 'type', not 'detailed_type'
-            }
-            # Always set ASIN as default_code (internal reference)
-            if product_code:
-                template_vals["default_code"] = product_code
-            template = self.env["product.template"].create(template_vals)
-            product = template.product_variant_id
-            # Ensure product has a valid name after creation
-            if not product.name or product.name == _("Product"):
-                product.name = product_name_final
-        return product
+        if not product_code or not str(product_code).strip():
+            return self.env["product.product"]
+        return self.env["product.product"].search(
+            [("default_code", "=", str(product_code).strip())],
+            limit=1,
+        )
 
     def _get_uom(self, line_uom_name, product):
         if line_uom_name:
@@ -287,6 +267,46 @@ class KsPoImportWizard(models.TransientModel):
             )
         return commands
 
+    def _build_toast_notification(self, failed_lines, created_orders, total_lines_created):
+        """
+        Build payloads for Odoo toasts (simple_notification).
+        Returns separate payloads for success and for failed ASINs (red/different box).
+        """
+        failed_count = len(failed_lines)
+        success_payload = None
+        failed_payload = None
+
+        # Success message (green box) - only when something was created
+        if created_orders:
+            success_payload = {
+                "title": _("PO Import: Success"),
+                "message": _("Created: %(po_count)s Purchase Order(s), %(line_count)s line(s).") % {
+                    "po_count": len(created_orders),
+                    "line_count": total_lines_created,
+                },
+                "type": "success",
+            }
+
+        # Failed ASINs message (red box) - separate message box for records not created
+        if failed_count:
+            failed_asin_list = ", ".join(item["asin"] for item in failed_lines[:10])
+            if failed_count > 10:
+                failed_asin_list += _(" and %s more") % (failed_count - 10)
+            failed_payload = {
+                "title": _("PO Import: Records not created"),
+                "message": _("ASIN(s) not found (no matching product): %s") % failed_asin_list,
+                "type": "danger",
+            }
+        elif not created_orders:
+            # No failures and no success = empty file or all skipped
+            success_payload = {
+                "title": _("PO Import"),
+                "message": _("No lines imported. Ensure ASINs match product Internal References."),
+                "type": "warning",
+            }
+
+        return {"success": success_payload, "failed": failed_payload}
+
     def action_import_purchase_orders(self):
         self.ensure_one()
         grouped_rows = self._extract_sheet_data()
@@ -295,13 +315,37 @@ class KsPoImportWizard(models.TransientModel):
         if not ecom_tag:
             ecom_tag = self.env["ks.ecom.tag"].sudo().create({"name": "E-com"})
 
-        # Get or create FLIPKART vendor (hardcoded)
         vendor = self._get_or_create_vendor("FLIPKART")
-        
-        created_orders = self.env["purchase.order"]
         company = self.env.company
+
+        created_orders = self.env["purchase.order"]
+        failed_lines = []  # list of {"asin", "order_id", "line_no"}
+        total_lines_created = 0
+
         for order_id, order_rows in grouped_rows.items():
-            # Currency from first line (or company currency if column missing/not found)
+            valid_rows = []
+            for row in order_rows:
+                product_code = row.get("product_code") or ""
+                if not product_code or not str(product_code).strip():
+                    failed_lines.append({
+                        "asin": product_code or _("(empty)"),
+                        "order_id": order_id,
+                        "line_no": row["line_no"],
+                    })
+                    continue
+                product = self._get_product_by_asin(product_code)
+                if not product:
+                    failed_lines.append({
+                        "asin": product_code,
+                        "order_id": order_id,
+                        "line_no": row["line_no"],
+                    })
+                    continue
+                valid_rows.append((row, product))
+
+            if not valid_rows:
+                continue
+
             sample_currency = order_rows[0].get("currency_name") if order_rows else ""
             currency = self._get_currency(sample_currency, company)
             po_vals = {
@@ -316,32 +360,62 @@ class KsPoImportWizard(models.TransientModel):
             }
             purchase_order = self.env["purchase.order"].create(po_vals)
 
-            for row in order_rows:
-                product = self._get_or_create_product(row["product_name"], row["product_code"])
+            for row, product in valid_rows:
                 uom = self._get_uom(row["uom_name"], product)
-                # Ensure name is never empty - use product name, ASIN, or fallback
-                line_name = row["product_name"] or product.name or product.display_name or row["product_code"] or _("Product")
-
-                self.env["purchase.order.line"].create(
-                    {
-                        "order_id": purchase_order.id,
-                        "product_id": product.id,
-                        "name": line_name,
-                        "product_qty": row["qty"],
-                        "product_uom": uom.id,
-                        "price_unit": row["price_unit"],
-                        "date_planned": row["date_planned"] or fields.Datetime.now(),
-                    }
+                line_name = (
+                    row["product_name"]
+                    or product.name
+                    or product.display_name
+                    or row["product_code"]
+                    or _("Product")
                 )
+                self.env["purchase.order.line"].create({
+                    "order_id": purchase_order.id,
+                    "product_id": product.id,
+                    "name": line_name,
+                    "product_qty": row["qty"],
+                    "product_uom": uom.id,
+                    "price_unit": row["price_unit"],
+                    "date_planned": row["date_planned"] or fields.Datetime.now(),
+                })
+                total_lines_created += 1
 
-            # Auto-confirm the PO (creates receipt; e-com receipt flag set via _create_picking override and here)
             purchase_order.button_confirm()
             if purchase_order.picking_ids:
                 purchase_order.picking_ids.write({"ks_ecom_po_reciept": True})
             created_orders |= purchase_order
 
+        # Show toasts: red box for records not created, green box for success (separate message boxes)
+        toasts = self._build_toast_notification(failed_lines, created_orders, total_lines_created)
+        bus = self.env["bus.bus"]
+        partner_id = self.env.user.partner_id
+        # Red message box: ASINs that did not match (records not created)
+        if toasts["failed"]:
+            bus._sendone(
+                partner_id,
+                "simple_notification",
+                {
+                    "type": toasts["failed"]["type"],
+                    "title": toasts["failed"]["title"],
+                    "message": toasts["failed"]["message"],
+                    "sticky": True,
+                },
+            )
+        # Green message box: successfully created POs/lines
+        if toasts["success"]:
+            bus._sendone(
+                partner_id,
+                "simple_notification",
+                {
+                    "type": toasts["success"]["type"],
+                    "title": toasts["success"]["title"],
+                    "message": toasts["success"]["message"],
+                    "sticky": True,
+                },
+            )
+
         if not created_orders:
-            raise UserError(_("No purchase order was created from the uploaded file."))
+            return {"type": "ir.actions.act_window_close"}
 
         if len(created_orders) == 1:
             return {
@@ -352,7 +426,6 @@ class KsPoImportWizard(models.TransientModel):
                 "res_id": created_orders.id,
                 "target": "current",
             }
-
         return {
             "type": "ir.actions.act_window",
             "name": _("Imported Purchase Orders"),

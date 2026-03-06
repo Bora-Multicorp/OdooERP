@@ -280,14 +280,12 @@
                                             <field name="bank_name" placeholder="Your Answer" widget="upper_case"/>
                                             <field name="account_no" placeholder="Your Answer"/>
                                             <field name="ifsc_code" placeholder="Your Answer" widget="upper_case"/>
-                                            <field name="bank_address" placeholder="Your Answer" widget="upper_case"/>
                                             <field name="bank_cheque_attachments" widget="many2many_attachment_preview"/>
                                         </list>
                                         <form>
                                             <field name="bank_name" placeholder="Your Answer" widget="upper_case"/>
                                             <field name="account_no" placeholder="Your Answer"/>
                                             <field name="ifsc_code" placeholder="Your Answer" widget="upper_case"/>
-                                            <field name="bank_address" placeholder="Your Answer" widget="upper_case"/>
                                             <field name="bank_cheque_attachments" widget="many2many_attachment_preview"/>
                                         </form>
                                     </field>
