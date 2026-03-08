@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_purchase_landing_cost_report,purchase.landing.cost.report,model_purchase_landing_cost_report,base.group_user,1,1,1,1
+access_purchase_landing_cost_report_line,purchase.landing.cost.report.line,model_purchase_landing_cost_report_line,base.group_user,1,1,1,1

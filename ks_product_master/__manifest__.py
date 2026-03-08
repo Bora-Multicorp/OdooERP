@@ -13,7 +13,7 @@
     'version': '0.1',
 
     # any module necessary for this one to work correctly
-    'depends': ['base', 'product', 'stock', 'sale_project', 'purchase', 'account'],
+    'depends': ['base', 'product', 'stock', 'stock_account', 'sale_project', 'purchase', 'account'],
 
     # always loaded
     'data': [
@@ -22,6 +22,7 @@
         'data/inventory_traceability_config.xml',
         'views/account_move_view.xml',
         'views/stock_move_inherit_view.xml',
+        'views/stock_valuation_layer_views.xml',
         'views/product_template_inherit_view.xml',
         'views/stock_quant_inherit_view.xml',
         'views/imei_search.xml',
@@ -33,6 +34,7 @@
         'views/product_context_change.xml',
         'views/product_template_tree_view.xml',
         'wizards/activation_status_wizard_view.xml',
+        'wizards/stock_move_upload_csv_wizard_view.xml',
         'views/stock_traceability_report_pdf.xml',
         'views/margin_analysis_report_views.xml',
         'views/ad_margin_report_views.xml',
@@ -44,9 +46,9 @@
 
     'assets': {
         'web.assets_backend': [
-            '/ks_product_master/static/sample/IMEI_ACTIVATION_SAMPLE_REPORT.xlsx',
-            '/ks_product_master/static/src/js/barcode_focus_change.js',
-            '/ks_product_master/static/src/xml/stock_traceability_report.xml',
+            'ks_product_master/static/sample/IMEI_ACTIVATION_SAMPLE_REPORT.xlsx',
+            'ks_product_master/static/src/js/barcode_focus_change.js',
+            'ks_product_master/static/src/xml/stock_traceability_report.xml',
         ],
     },
 

@@ -4,7 +4,7 @@
             <field name="name">activation.status.wizard.form</field>
             <field name="model">activation.status.wizard</field>
             <field name="arch" type="xml">
-                <form string="Update Activation Status using CSV">
+                <form string="Update Activation Status">
                     <group>
                         <field name="csv_file" filename="filename"
                                options="{'accepted_file_extensions': '.csv, .xls, .xlsx, .xlsm'}"/>
@@ -25,14 +25,14 @@
             </field>
         </record>
         <record id="update_activation_status_using_csv" model="ir.actions.act_window">
-            <field name="name">Update Activation Status using CSV</field>
+            <field name="name">Update Activation Status</field>
             <field name="res_model">activation.status.wizard</field>
             <field name="view_mode">form</field>
             <field name="target">new</field>
             <!-- Opens in a modal -->
             <field name="view_id" ref="update_activation_status_using_csv_form"/>
         </record>
-        <menuitem id="activation_status_update_using_csv" name="Update Activation Status using CSV"
+        <menuitem id="activation_status_update_using_csv" name="Update Activation Status"
                   action="update_activation_status_using_csv"
                   parent="stock.menu_stock_warehouse_mgmt" sequence="202"/>
     </data>

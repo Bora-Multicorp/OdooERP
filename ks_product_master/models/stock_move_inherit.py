@@ -1,5 +1,5 @@
 # -- coding: utf-8 --
-from odoo.exceptions import ValidationError
+from odoo.exceptions import ValidationError, UserError
 
 from odoo import models, fields, api, _
 
@@ -102,6 +102,130 @@ class StockMove(models.Model):
             move_line_vals, taken_quantity = super()._update_reserved_quantity_vals(need, location_id, lot_id, package_id, owner_id, strict)
         
         return move_line_vals, taken_quantity
+
+    def action_open_upload_csv_wizard(self):
+        self.ensure_one()
+        return {
+            "name": _("Import Serials/Lots from CSV"),
+            "type": "ir.actions.act_window",
+            "res_model": "stock.move.upload.csv.wizard",
+            "view_mode": "form",
+            "target": "new",
+            "context": {"default_move_id": self.id},
+        }
+
+    def action_apply_csv_serial_lines(self, csv_rows, keep_lines=False):
+        """Create or update move lines from CSV rows (server-side). Each row: {lot_name, imei, imei2}."""
+        self.ensure_one()
+        if not self.product_id:
+            raise UserError(_("No product found to generate Serials/Lots for."))
+        context = {
+            "default_product_id": self.product_id.id,
+            "default_location_dest_id": self.location_dest_id.id,
+            "default_location_id": self.location_id.id,
+            "default_tracking": self.has_tracking,
+            "default_quantity": self.product_qty,
+        }
+        if self.picking_type_id:
+            context["default_picking_type_id"] = self.picking_type_id.id
+        if self.company_id:
+            context["default_company_id"] = self.company_id.id
+        vals_list = self._get_csv_move_line_vals_raw(context, csv_rows)
+        if not keep_lines:
+            self.move_line_ids.unlink()
+        MoveLine = self.env["stock.move.line"]
+        for vals in vals_list:
+            vals["move_id"] = self.id
+            MoveLine.create(vals)
+
+    def _get_csv_move_line_vals_raw(self, context, csv_rows):
+        """Return list of move line vals (raw ids) from context and csv_rows. No webclient formatting."""
+        default_vals = {}
+        for key, value in context.items():
+            if key.startswith("default_"):
+                default_vals[key[8:]] = value  # remove 'default_'
+        vals_list = []
+        for row in csv_rows:
+            lot_name = (row.get("lot_name") or row.get("serial") or "").strip()
+            if not lot_name:
+                continue
+            imei = (row.get("imei") or row.get("imei1") or "").strip() or False
+            imei2 = (row.get("imei2") or "").strip() or False
+            loc_dest = self.env["stock.location"].browse(default_vals["location_dest_id"])
+            product = self.env["product.product"].browse(default_vals["product_id"])
+            loc_dest = loc_dest._get_putaway_strategy(product, 1)
+            line_vals = {
+                **default_vals,
+                "lot_name": lot_name,
+                "quantity": 1,
+                "location_dest_id": loc_dest.id,
+                "product_uom_id": product.uom_id.id,
+                "imei": imei,
+                "imei2": imei2,
+            }
+            vals_list.append(line_vals)
+        if default_vals.get("picking_type_id"):
+            picking_type = self.env["stock.picking.type"].browse(default_vals["picking_type_id"])
+            if picking_type.use_existing_lots:
+                self._create_lot_ids_from_move_line_vals(
+                    vals_list, default_vals["product_id"], default_vals["company_id"]
+                )
+        allowed = set(self.env["stock.move.line"]._fields.keys())
+        return [{k: v for k, v in v.items() if k in allowed} for v in vals_list]
+
+    @api.model
+    def action_generate_lot_line_vals_from_csv(self, context, csv_rows):
+        """Generate move line values from CSV rows. Each row is [lot_name, imei, imei2].
+        Returns same structure as action_generate_lot_line_vals for use in the receipt serial/lot wizard.
+        """
+        if not context.get('default_product_id'):
+            raise UserError(_("No product found to generate Serials/Lots for."))
+        default_vals = {}
+
+        def remove_prefix(text, prefix):
+            if text.startswith(prefix):
+                return text[len(prefix):]
+            return text
+        for key in context:
+            if key.startswith('default_'):
+                default_vals[remove_prefix(key, 'default_')] = context[key]
+
+        vals_list = []
+        for row in csv_rows:
+            lot_name = (row.get('lot_name') or row.get('serial') or '').strip()
+            if not lot_name:
+                continue
+            imei = (row.get('imei') or row.get('imei1') or '').strip()
+            imei2 = (row.get('imei2') or '').strip()
+            loc_dest = self.env['stock.location'].browse(default_vals['location_dest_id'])
+            product = self.env['product.product'].browse(default_vals['product_id'])
+            loc_dest = loc_dest._get_putaway_strategy(product, 1)
+            line_vals = {
+                **default_vals,
+                'lot_name': lot_name,
+                'quantity': 1,
+                'location_dest_id': loc_dest.id,
+                'product_uom_id': product.uom_id.id,
+                'imei': imei or False,
+                'imei2': imei2 or False,
+            }
+            vals_list.append(line_vals)
+        if default_vals.get('picking_type_id'):
+            picking_type = self.env['stock.picking.type'].browse(default_vals['picking_type_id'])
+            if picking_type.use_existing_lots:
+                self._create_lot_ids_from_move_line_vals(
+                    vals_list, default_vals['product_id'], default_vals['company_id']
+                )
+        for values in vals_list:
+            for key, value in list(values.items()):
+                if key in self.env['stock.move.line']._fields and value and isinstance(value, int):
+                    f = self.env['stock.move.line']._fields[key]
+                    if f.type == 'many2one':
+                        values[key] = {
+                            'id': value,
+                            'display_name': self.env[f.comodel_name].browse(value).display_name
+                        }
+        return vals_list
 
 
 class StockMoveLine(models.Model):

@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <template id="report_purchase_landing_cost_document">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="doc">
+                <t t-call="web.external_layout">
+                    <div class="page">
+                        <h2>Net Landing Cost Report - <t t-esc="doc.purchase_order_id.name"/></h2>
+                        <p class="text-muted">This report calculates Net Landing Cost of each product per PO.</p>
+                        <t t-set="non_foc" t-value="doc.line_ids.filtered(lambda l: not l.is_foc)"/>
+                        <t t-set="foc" t-value="doc.line_ids.filtered(lambda l: l.is_foc)"/>
+                        <t t-if="non_foc">
+                            <h4>PO No: <t t-esc="doc.purchase_order_id.name"/></h4>
+                            <p>Misc: <t t-esc="doc.misc"/> | Freight: <t t-esc="doc.freight"/> | Insurance: <t t-esc="doc.insurance"/></p>
+                            <table class="table table-sm table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Sr No</th><th>Stock Item</th><th>HSN</th><th>USD Rate</th><th>Qty</th><th>USD Value</th>
+                                        <th>Ex. Rate</th><th>INR Value</th><th>Misc</th><th>Freight</th><th>Insurance</th>
+                                        <th>Assessable</th><th>BCD</th><th>SWS</th><th>Value+Cess+Duty</th><th>GST</th><th>Total Duty</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="non_foc" t-as="line">
+                                        <tr>
+                                            <td><t t-esc="line.sequence"/></td>
+                                            <td><t t-esc="line.product_id.display_name"/></td>
+                                            <td><t t-esc="line.hsn_code"/></td>
+                                            <td><t t-esc="'%.2f' % line.usd_rate"/></td>
+                                            <td><t t-esc="'%.2f' % line.qty"/></td>
+                                            <td><t t-esc="'%.2f' % line.usd_value"/></td>
+                                            <td><t t-esc="'%.6f' % line.exchange_rate"/></td>
+                                            <td><t t-esc="'%.2f' % line.inr_value"/></td>
+                                            <td><t t-esc="'%.2f' % line.misc_amt"/></td>
+                                            <td><t t-esc="'%.2f' % line.freight_amt"/></td>
+                                            <td><t t-esc="'%.2f' % line.insurance_amt"/></td>
+                                            <td><t t-esc="'%.2f' % line.assessable_value"/></td>
+                                            <td><t t-esc="'%.2f' % line.bcd_amt"/></td>
+                                            <td><t t-esc="'%.2f' % line.sws_amt"/></td>
+                                            <td><t t-esc="'%.2f' % line.value_plus_cess_duty"/></td>
+                                            <td><t t-esc="'%.2f' % line.gst_amt"/></td>
+                                            <td><t t-esc="'%.2f' % line.total_duty"/></td>
+                                        </tr>
+                                    </t>
+                                    <tr class="fw-bold">
+                                        <td colspan="5">Total</td>
+                                        <td><t t-esc="'%.2f' % sum(non_foc.mapped('usd_value'))"/></td>
+                                        <td colspan="10"/>
+                                        <td><t t-esc="'%.2f' % sum(non_foc.mapped('total_duty'))"/></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </t>
+                        <t t-if="foc">
+                            <h4 class="mt-4">PO No: <t t-esc="doc.purchase_order_id.name"/> - Free of Cost (duty on assessable value)</h4>
+                            <p>Freight: <t t-esc="doc.foc_freight"/> | Insurance: <t t-esc="doc.foc_insurance"/></p>
+                            <table class="table table-sm table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Sr No</th><th>Stock Item</th><th>HSN</th><th>USD Rate</th><th>Qty</th><th>USD Value</th>
+                                        <th>Ex. Rate</th><th>INR Value</th><th>Freight</th><th>Insurance</th>
+                                        <th>Assessable</th><th>BCD</th><th>SWS</th><th>Value+Cess+Duty</th><th>GST</th><th>Total Duty</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="foc" t-as="line">
+                                        <tr>
+                                            <td><t t-esc="line.sequence"/></td>
+                                            <td><t t-esc="line.product_id.display_name"/> (FOC)</td>
+                                            <td><t t-esc="line.hsn_code"/></td>
+                                            <td><t t-esc="'%.2f' % line.usd_rate"/></td>
+                                            <td><t t-esc="'%.2f' % line.qty"/></td>
+                                            <td><t t-esc="'%.2f' % line.usd_value"/></td>
+                                            <td><t t-esc="'%.6f' % line.exchange_rate"/></td>
+                                            <td><t t-esc="'%.2f' % line.inr_value"/></td>
+                                            <td><t t-esc="'%.2f' % line.freight_amt"/></td>
+                                            <td><t t-esc="'%.2f' % line.insurance_amt"/></td>
+                                            <td><t t-esc="'%.2f' % line.assessable_value"/></td>
+                                            <td><t t-esc="'%.2f' % line.bcd_amt"/></td>
+                                            <td><t t-esc="'%.2f' % line.sws_amt"/></td>
+                                            <td><t t-esc="'%.2f' % line.value_plus_cess_duty"/></td>
+                                            <td><t t-esc="'%.2f' % line.gst_amt"/></td>
+                                            <td><t t-esc="'%.2f' % line.total_duty"/></td>
+                                        </tr>
+                                    </t>
+                                    <tr class="fw-bold">
+                                        <td colspan="5">Total</td>
+                                        <td><t t-esc="'%.2f' % sum(foc.mapped('usd_value'))"/></td>
+                                        <td colspan="9"/>
+                                        <td><t t-esc="'%.2f' % sum(foc.mapped('total_duty'))"/></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </t>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+    <record id="action_report_purchase_landing_cost" model="ir.actions.report">
+        <field name="name">Net Landing Cost (PU-003)</field>
+        <field name="model">purchase.landing.cost.report</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">purchase_landing_cost.report_purchase_landing_cost_document</field>
+        <field name="report_file">purchase_landing_cost.report_purchase_landing_cost_document</field>
+        <field name="print_report_name">'Net_Landing_Cost_%s' % (object.purchase_order_id.name or 'Report')</field>
+    </record>
+</odoo>
