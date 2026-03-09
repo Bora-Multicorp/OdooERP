@@ -1345,7 +1345,7 @@ class PurchaseOrder(models.Model):
         """Override: Only approver users can unlock"""
         for order in self:
             if order._has_approval_config():
-                all_approvers = self.env['ks.purchase.approval.config'].search([('active', '=', True)]).mapped('user_id')
+                all_approvers = order._get_approval_config().get_all_approvers()
                 if self.env.user not in all_approvers:
                     raise UserError(_("Only approver users can unlock Purchase Orders."))
         return super().button_unlock()

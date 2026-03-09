@@ -265,19 +265,49 @@ class KsPoReceiptImportWizard(models.TransientModel):
                 picking.ks_ecom_info_ids = [Command.clear()] + info_commands
             picking.is_ecom_updated = True
 
-        # Prepare result message
-        result_message = _("Receipt Import Completed:\n")
-        result_message += _("- Updated: %s line(s)\n") % updated_count
-        result_message += _("- Skipped: %s line(s)\n") % skipped_count
+        # Same message style as PO Import: red box for records not updated, green box for success
+        bus = self.env["bus.bus"]
+        partner_id = self.env.user.partner_id
 
+        # Red box: warnings / records not updated
         if warnings:
-            result_message += _("\nWarnings:\n")
-            for warning in warnings:
-                result_message += "- %s\n" % warning
+            warning_list = "; ".join(warnings[:10])
+            if len(warnings) > 10:
+                warning_list += _(" (and %s more)") % (len(warnings) - 10)
+            bus._sendone(
+                partner_id,
+                "simple_notification",
+                {
+                    "type": "danger",
+                    "title": _("Receipt Import: Records not updated"),
+                    "message": warning_list,
+                    "sticky": True,
+                },
+            )
 
-        if updated_count == 0:
-            raise UserError(result_message)
+        # Green box: success summary
+        if updated_count > 0:
+            bus._sendone(
+                partner_id,
+                "simple_notification",
+                {
+                    "type": "success",
+                    "title": _("Receipt Import: Success"),
+                    "message": _("Updated: %s line(s).") % updated_count,
+                    "sticky": True,
+                },
+            )
+        elif not warnings:
+            bus._sendone(
+                partner_id,
+                "simple_notification",
+                {
+                    "type": "warning",
+                    "title": _("Receipt Import"),
+                    "message": _("No lines were updated. Check file format and data."),
+                    "sticky": True,
+                },
+            )
 
-        # Close the wizard after successful import
         return {"type": "ir.actions.act_window_close"}
 

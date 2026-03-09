@@ -287,7 +287,7 @@ class VendorKycWizard(models.TransientModel):
     incorporation_certificate = fields.Many2many('ir.attachment', 'incorportaion_certificate_rel', 'wizard_id',
                                                  'attachment_id',
                                                  string="Incorporation Certificate")
-    comp_google_loc = fields.Char(string="Google Location of Shop",)
+    comp_google_loc = fields.Char(string="GPS Location of Shop", required=True)
 
     partner_llp_filename = fields.Char()
     partner_llp = fields.Binary(string="Partnership Deed or LLP Deed")

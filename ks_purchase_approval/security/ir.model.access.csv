@@ -1,5 +1,4 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-access_ks_purchase_approval_config_user,ks.purchase.approval.config.user,model_ks_purchase_approval_config,purchase.group_purchase_user,1,0,0,0
 access_ks_purchase_approval_config_admin,ks.purchase.approval.config.admin,model_ks_purchase_approval_config,base.group_system,1,1,1,1
 access_ks_reject_reason_wizard_user,ks.purchase.reject.reason.wizard.user,model_ks_purchase_reject_reason_wizard,purchase.group_purchase_user,1,1,1,1
 access_ks_approval_confirmation_wizard_user,ks.approval.confirmation.wizard.user,model_ks_approval_confirmation_wizard,purchase.group_purchase_user,1,1,1,1

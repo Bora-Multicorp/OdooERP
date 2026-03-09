@@ -6,7 +6,7 @@
     "author": "Ksolves",
     "website": "https://www.ksolves.com",
     "license": "LGPL-3",
-    "depends": ["purchase", "base_import", "ks_sale_order", "stock"],
+    "depends": ["purchase", "base_import", "ks_sale_order", "stock", "bus"],
     "external_dependencies": {"python": ["openpyxl"]},
     "data": [
         "security/ir.model.access.csv",

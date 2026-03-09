@@ -215,7 +215,7 @@ class ContactKYCApproval(models.Model):
 
     directors_detail = fields.One2many('director.details', 'kyc_approval_id', string="KYC Details", tracking=True)
     pan_no = fields.Char("PAN Number", required=True)
-    comp_google_loc = fields.Char("GPS Location of Shop")
+    comp_google_loc = fields.Char("GPS Location of Shop",required=True)
     partner_llp_filename = fields.Char()
     partner_llp = fields.Binary("Partnership/LLP Deed")
 

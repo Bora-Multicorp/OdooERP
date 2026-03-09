@@ -14,28 +14,5 @@
             <field name="implied_ids" eval="[(4, ref('group_ks_purchase_approval_manager'))]"/>
         </record>
     </data>
-
-    <data noupdate="0">
-        <!-- Record rules for approval config - only managers can modify -->
-        <record id="ks_purchase_approval_config_rule_user" model="ir.rule">
-            <field name="name">KS Purchase Approval Config: Read for Purchase Users</field>
-            <field name="model_id" ref="model_ks_purchase_approval_config"/>
-            <field name="groups" eval="[(4, ref('purchase.group_purchase_user'))]"/>
-            <field name="perm_read" eval="True"/>
-            <field name="perm_write" eval="False"/>
-            <field name="perm_create" eval="False"/>
-            <field name="perm_unlink" eval="False"/>
-        </record>
-
-        <record id="ks_purchase_approval_config_rule_admin" model="ir.rule">
-            <field name="name">KS Purchase Approval Config: Full Access for Admins</field>
-            <field name="model_id" ref="model_ks_purchase_approval_config"/>
-            <field name="groups" eval="[(4, ref('base.group_system'))]"/>
-            <field name="perm_read" eval="True"/>
-            <field name="perm_write" eval="True"/>
-            <field name="perm_create" eval="True"/>
-            <field name="perm_unlink" eval="True"/>
-        </record>
-    </data>
 </odoo>
 
