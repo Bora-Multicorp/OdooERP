@@ -23,6 +23,7 @@
     'data': [
         'security/ir.model.access.csv',
         'data/ks_purchase_report_cron.xml',
+        'views/ks_report_line_views.xml',
         'views/menu_views.xml',
         'views/sale_order_views.xml',
         'views/purchase_order_views.xml',

@@ -22,6 +22,16 @@
             <field name="category_id" ref="ks_product_master.ks_staff_category"/>
     </record>
 
+    <record model="ir.module.category" id="module_category_activation_status">
+        <field name="name">Activation Status</field>
+        <field name="sequence">61</field>
+    </record>
+    <record id="ks_product_master.group_activation_status_update" model="res.groups">
+        <field name="name">Update Activation Status (CSV)</field>
+        <field name="category_id" ref="ks_product_master.module_category_activation_status"/>
+        <field name="comment">Users in this group can open the "Update Activation Status using CSV" wizard.</field>
+    </record>
+
     </data>
 </odoo>
  

@@ -15,6 +15,11 @@
                        options="{'horizontal': true}"
                        readonly="state in ('sale', 'done', 'cancel')"
                        help="Select the zone. Automatic emails will only be sent for India and Dubai zones. This field cannot be changed once the order is confirmed."/>
+                <field name="ks_no_tax_allowed" optional="show"/>
+            </xpath>
+            <!-- When No Tax is checked, tax on order lines is readonly (and cleared by onchange/write) -->
+            <xpath expr="//field[@name='order_line']/list/field[@name='tax_id']" position="attributes">
+                <attribute name="readonly">parent.ks_no_tax_allowed</attribute>
             </xpath>
             
             <!-- Email Settings Tab Removed - Configuration is now global -->

@@ -1,16 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Server Action to trigger XLSX report download -->
-    <record id="action_part_wise_all_data_download" model="ir.actions.server">
+    <!-- Server Action: open Part Wise list view with data (same format as print); user can then click Download XLSX -->
+    <record id="action_part_wise_all_data_show_list" model="ir.actions.server">
         <field name="name">Part Wise All Data</field>
         <field name="model_id" ref="sale.model_sale_order"/>
         <field name="state">code</field>
         <field name="code">
-# Generate XLSX report directly using the model method
+report = env['ks.part.wise.all.data.report']
+rows = report.get_part_wise_report_rows(sale_order_ids=None)
+env['ks.part.wise.report.line'].search([]).unlink()
+if rows:
+    line_ids = env['ks.part.wise.report.line'].create(rows).ids
+    action = env.ref('ks_reports.action_part_wise_report_line_list').read()[0]
+    action['domain'] = [('id', 'in', line_ids)]
+else:
+    action = env.ref('ks_reports.action_part_wise_report_line_list').read()[0]
+        </field>
+    </record>
+
+    <!-- Legacy: direct download (kept for backward compatibility) -->
+    <record id="action_part_wise_all_data_download" model="ir.actions.server">
+        <field name="name">Part Wise All Data (Direct Download)</field>
+        <field name="model_id" ref="sale.model_sale_order"/>
+        <field name="state">code</field>
+        <field name="code">
 report_model = env['ks.part.wise.all.data.report']
 file_content = report_model.generate_xlsx_report()
-
-# Create attachment to store the file
 attachment = env['ir.attachment'].create({
     'name': 'Part_Wise_All_Data.xlsx',
     'type': 'binary',
@@ -18,8 +33,6 @@ attachment = env['ir.attachment'].create({
     'res_model': 'sale.order',
     'mimetype': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
 })
-
-# Return download action
 action = {
     'type': 'ir.actions.act_url',
     'url': '/web/content/' + str(attachment.id) + '?download=true',
@@ -65,11 +78,11 @@ action = {
         groups="sales_team.group_sale_manager"
     />
 
-    <!-- First Report under Part Wise All Data -->
+    <!-- First Report under Part Wise All Data: opens list (same format as report), then Download XLSX on list -->
     <menuitem 
         id="menu_part_wise_all_data"
         name="Part Wise All Data"
-        action="action_part_wise_all_data_download"
+        action="action_part_wise_all_data_show_list"
         parent="menu_part_wise_all_data_parent"
         sequence="1"
         groups="sales_team.group_sale_manager"
@@ -147,17 +160,34 @@ if records:
         </field>
     </record>
 
-    <!-- Server Action to trigger Advance Sheet XLSX report download -->
-    <record id="action_advance_sheet_report_download" model="ir.actions.server">
+    <!-- Server Action: open Advance Sheet list view with data; user can then click Download XLSX -->
+    <record id="action_advance_sheet_show_list" model="ir.actions.server">
         <field name="name">Advance Sheet</field>
         <field name="model_id" ref="sale.model_sale_order"/>
         <field name="state">code</field>
         <field name="code">
-# Generate Advance Sheet XLSX report directly using the model method
+report = env['ks.part.wise.all.data.report']
+rows = report.get_advance_sheet_report_rows(sale_order_ids=None)
+for r in rows:
+    r['balance_available'] = r.get('balance_available') or 0.0
+env['ks.advance.sheet.line'].search([]).unlink()
+if rows:
+    line_ids = env['ks.advance.sheet.line'].create(rows).ids
+    action = env.ref('ks_reports.action_advance_sheet_line_list').read()[0]
+    action['domain'] = [('id', 'in', line_ids)]
+else:
+    action = env.ref('ks_reports.action_advance_sheet_line_list').read()[0]
+        </field>
+    </record>
+
+    <!-- Legacy: direct download -->
+    <record id="action_advance_sheet_report_download" model="ir.actions.server">
+        <field name="name">Advance Sheet (Direct Download)</field>
+        <field name="model_id" ref="sale.model_sale_order"/>
+        <field name="state">code</field>
+        <field name="code">
 report_model = env['ks.part.wise.all.data.report']
 file_content = report_model.generate_advance_sheet_xlsx_report()
-
-# Create attachment to store the file
 attachment = env['ir.attachment'].create({
     'name': 'Advance_Sheet_Report.xlsx',
     'type': 'binary',
@@ -165,37 +195,46 @@ attachment = env['ir.attachment'].create({
     'res_model': 'sale.order',
     'mimetype': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
 })
-
-# Return download action
-action = {
-    'type': 'ir.actions.act_url',
-    'url': '/web/content/' + str(attachment.id) + '?download=true',
-    'target': 'self',
-}
+action = {'type': 'ir.actions.act_url', 'url': '/web/content/' + str(attachment.id) + '?download=true', 'target': 'self'}
         </field>
     </record>
 
-    <!-- Advance Sheet under Sales > Reporting -->
+    <!-- Advance Sheet under Sales > Reporting: opens list, then Download XLSX on list -->
     <menuitem 
         id="menu_advance_sheet_report"
         name="Advance Sheet"
-        action="action_advance_sheet_report_download"
+        action="action_advance_sheet_show_list"
         parent="sale.menu_sale_report"
         sequence="45"
         groups="sales_team.group_sale_manager"
     />
 
-    <!-- Server Action to trigger Exchange GL XLSX report download -->
-    <record id="action_exchange_gl_report_download" model="ir.actions.server">
+    <!-- Server Action: open Exchange GL list view with data; user can then click Download XLSX -->
+    <record id="action_exchange_gl_show_list" model="ir.actions.server">
         <field name="name">Exchange GL</field>
         <field name="model_id" ref="sale.model_sale_order"/>
         <field name="state">code</field>
         <field name="code">
-# Generate Exchange GL XLSX report directly using the model method
+report = env['ks.part.wise.all.data.report']
+rows = report.get_exchange_gl_report_rows(sale_order_ids=None)
+env['ks.exchange.gl.line'].search([]).unlink()
+if rows:
+    line_ids = env['ks.exchange.gl.line'].create(rows).ids
+    action = env.ref('ks_reports.action_exchange_gl_line_list').read()[0]
+    action['domain'] = [('id', 'in', line_ids)]
+else:
+    action = env.ref('ks_reports.action_exchange_gl_line_list').read()[0]
+        </field>
+    </record>
+
+    <!-- Legacy: direct download -->
+    <record id="action_exchange_gl_report_download" model="ir.actions.server">
+        <field name="name">Exchange GL (Direct Download)</field>
+        <field name="model_id" ref="sale.model_sale_order"/>
+        <field name="state">code</field>
+        <field name="code">
 report_model = env['ks.part.wise.all.data.report']
 file_content = report_model.generate_exchange_gl_xlsx_report()
-
-# Create attachment to store the file
 attachment = env['ir.attachment'].create({
     'name': 'Exchange_GL_Report.xlsx',
     'type': 'binary',
@@ -203,21 +242,15 @@ attachment = env['ir.attachment'].create({
     'res_model': 'sale.order',
     'mimetype': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
 })
-
-# Return download action
-action = {
-    'type': 'ir.actions.act_url',
-    'url': '/web/content/' + str(attachment.id) + '?download=true',
-    'target': 'self',
-}
+action = {'type': 'ir.actions.act_url', 'url': '/web/content/' + str(attachment.id) + '?download=true', 'target': 'self'}
         </field>
     </record>
 
-    <!-- Fifth Report (Exchange GL) under Part Wise All Data -->
+    <!-- Fifth Report (Exchange GL) under Part Wise All Data: opens list, then Download XLSX on list -->
     <menuitem 
         id="menu_exchange_gl_report"
         name="Exchange GL"
-        action="action_exchange_gl_report_download"
+        action="action_exchange_gl_show_list"
         parent="menu_part_wise_all_data_parent"
         sequence="5"
         groups="sales_team.group_sale_manager"
