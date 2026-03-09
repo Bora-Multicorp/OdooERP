@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_vendor_payment_approval_config_list" model="ir.ui.view">
+        <field name="name">vendor.payment.approval.config.list</field>
+        <field name="model">vendor.payment.approval.config</field>
+        <field name="arch" type="xml">
+            <list string="Vendor Payment Approval Settings" editable="bottom">
+                <field name="sequence" widget="handle"/>
+                <field name="user_id" string="Approver"/>
+                <field name="approver_type" string="Approver Type"/>
+                <field name="active" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_vendor_payment_approval_config_form" model="ir.ui.view">
+        <field name="name">vendor.payment.approval.config.form</field>
+        <field name="model">vendor.payment.approval.config</field>
+        <field name="arch" type="xml">
+            <form string="Vendor Payment Approval Settings">
+                <sheet>
+                    <group>
+                        <field name="sequence"/>
+                        <field name="user_id" string="Approver"/>
+                        <field name="approver_type"/>
+                        <field name="active"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="action_vendor_payment_approval_config" model="ir.actions.act_window">
+        <field name="name">Vendor Payment Approval Settings</field>
+        <field name="res_model">vendor.payment.approval.config</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No approvers configured.
+            </p>
+            <p>
+                Add users who can approve or reject vendor payment requests. Each user can only be assigned once.
+                Approver 1 must approve before Approver 2. Without at least one approver, payment (and advance payment) cannot be created for Purchase Orders.
+            </p>
+        </field>
+    </record>
+    <menuitem id="menu_vendor_payment_approval_config"
+              name="Vendor Payment Approval Settings"
+              parent="purchase.menu_purchase_config"
+              action="action_vendor_payment_approval_config"
+              groups="purchase.group_purchase_manager"
+              sequence="50"/>
+</odoo>

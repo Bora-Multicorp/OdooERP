@@ -37,7 +37,7 @@ class SaleOrder(models.Model):
 
     total_invoice_payment_received = fields.Monetary(
         string="Total Invoice Payment Received",
-        # compute="_compute_total_payment_received",
+        compute="_compute_total_payment_received",
         store=True,  # Store=True zaroori hai agar aapko reports ya search mein use karna hai
         currency_field='currency_id'
     )
