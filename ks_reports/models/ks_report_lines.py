@@ -70,10 +70,16 @@ class PartWiseReportLine(models.TransientModel):
     export_inv_qty_this_month = fields.Float('Export Inv Qty This Month', digits='Product Unit of Measure')
     export_inv_amount_this_month = fields.Float('Export Inv Amount This Month', digits='Account')
     gst = fields.Float('GST', digits='Account')
-    deviation_from_plan_1 = fields.Float('Deviation From Plan', digits='Account')
-    deviation_from_plan_2 = fields.Float('Deviation From Plan 2', digits='Account')
+    deviation_from_plan_1 = fields.Float('Deviation From Plan', digits='Product Unit of Measure', compute='_compute_deviation_and_net', store=False)
+    deviation_from_plan_2 = fields.Float('Deviation From Plan 2', digits='Account', compute='_compute_deviation_and_net', store=False)
     net_remaining_qty = fields.Float('Net Remaining Qty', digits='Product Unit of Measure')
     net_remaining_amount = fields.Float('Net Remaining Amount', digits='Account')
+
+    @api.depends('monthly_plan_quantity', 'monthly_plan_amount', 'balance_qty', 'remaining_amount_against_pi')
+    def _compute_deviation_and_net(self):
+        for r in self:
+            r.deviation_from_plan_1 = (r.monthly_plan_quantity or 0.0) - (r.balance_qty or 0.0)
+            r.deviation_from_plan_2 = (r.monthly_plan_amount or 0.0) - (r.remaining_amount_against_pi or 0.0)
 
     def action_download_xlsx(self):
         if not self:
@@ -87,7 +93,10 @@ class PartWiseReportLine(models.TransientModel):
                 ('state', 'in', ['sale', 'done']),
             ])
             sale_order_ids = orders.ids if orders else []
-        file_content = report_model.generate_xlsx_report(sale_order_ids=sale_order_ids or None)
+        file_content = report_model.generate_xlsx_report(
+            sale_order_ids=sale_order_ids or None,
+            report_lines=self,
+        )
         attachment = self.env['ir.attachment'].create({
             'name': 'Part_Wise_All_Data.xlsx',
             'type': 'binary',

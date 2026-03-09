@@ -54,7 +54,8 @@
         <field name="arch" type="xml">
             <form string="Net Landing Cost Report" create="0" delete="0">
                 <header>
-                    <button name="action_print_report" string="Print" type="object" class="btn-primary" icon="fa-print"/>
+                    <button name="action_download_xlsx" string="Download Excel" type="object" class="btn-primary" icon="fa-file-excel-o"/>
+                    <button name="action_print_report" string="Print (PDF)" type="object" class="btn-secondary" icon="fa-print"/>
                 </header>
                 <sheet>
                     <div class="mb-3">

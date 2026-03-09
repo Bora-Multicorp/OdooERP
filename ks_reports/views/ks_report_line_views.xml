@@ -18,34 +18,34 @@
         </field>
     </record>
 
-    <!-- Part Wise All Data: list view same columns as print report -->
+    <!-- Part Wise All Data: list view same columns as print report; only Monthly Plan Qty/Amount editable -->
     <record id="view_part_wise_report_line_list" model="ir.ui.view">
         <field name="name">ks.part.wise.report.line.list</field>
         <field name="model">ks.part.wise.report.line</field>
         <field name="arch" type="xml">
-            <list string="Part Wise All Data" create="false" edit="false" delete="false">
+            <list string="Part Wise All Data" create="false" delete="false" editable="bottom">
                 <header>
                     <button name="action_download_xlsx" string="Download XLSX" type="object" class="btn-primary" icon="fa-download"/>
                 </header>
-                <field name="sn"/>
-                <field name="pi_no"/>
-                <field name="party_name"/>
-                <field name="products"/>
-                <field name="total_pi_quantity"/>
-                <field name="total_pi_amount"/>
-                <field name="dispatched_quantity"/>
-                <field name="dispatched_amount"/>
-                <field name="balance_qty"/>
-                <field name="remaining_amount_against_pi"/>
+                <field name="sn" readonly="1"/>
+                <field name="pi_no" readonly="1"/>
+                <field name="party_name" readonly="1"/>
+                <field name="products" readonly="1"/>
+                <field name="total_pi_quantity" readonly="1"/>
+                <field name="total_pi_amount" readonly="1"/>
+                <field name="dispatched_quantity" readonly="1"/>
+                <field name="dispatched_amount" readonly="1"/>
+                <field name="balance_qty" readonly="1"/>
+                <field name="remaining_amount_against_pi" readonly="1"/>
                 <field name="monthly_plan_quantity"/>
                 <field name="monthly_plan_amount"/>
-                <field name="export_inv_qty_this_month"/>
-                <field name="export_inv_amount_this_month"/>
-                <field name="gst"/>
-                <field name="deviation_from_plan_1"/>
-                <field name="deviation_from_plan_2"/>
-                <field name="net_remaining_qty"/>
-                <field name="net_remaining_amount"/>
+                <field name="export_inv_qty_this_month" readonly="1"/>
+                <field name="export_inv_amount_this_month" readonly="1"/>
+                <field name="gst" readonly="1"/>
+                <field name="deviation_from_plan_1" readonly="1"/>
+                <field name="deviation_from_plan_2" readonly="1"/>
+                <field name="net_remaining_qty" readonly="1"/>
+                <field name="net_remaining_amount" readonly="1"/>
             </list>
         </field>
     </record>

@@ -47,13 +47,15 @@ class PartWiseAllDataReport(models.TransientModel):
     filename = fields.Char(string='Filename', default='Part_Wise_All_Data.xlsx')
 
     @api.model
-    def generate_xlsx_report(self, sale_order_ids=None):
+    def generate_xlsx_report(self, sale_order_ids=None, report_lines=None):
         """
         Generate XLSX report "SUMMARY FOR NEW ORDER" with Sale Order data.
         Layout: Month, title, TILL DATE; green header with SN, PI NO., PARTY NAME, PRODUCTS,
         quantities/amounts, DISPATCH AMOUNT, BALANCE QTY, deviation, net remaining; TOTAL footer.
         Product-wise display (each product on separate row).
         If sale_order_ids is provided, only those sale orders are included; otherwise all confirmed.
+        If report_lines (ks.part.wise.report.line recordset) is provided, Monthly Plan Qty/Amount
+        from those lines are used (same order as generated rows).
         Returns base64 encoded file content.
         """
         output = io.BytesIO()
@@ -161,63 +163,117 @@ class PartWiseAllDataReport(models.TransientModel):
         else:
             sale_orders = self.env['sale.order'].search([
                 ('state', 'in', ['sale', 'done'])
-            ])
+            ], order='name asc, id asc')
+
+        # When report_lines provided, use them as row source
+        report_lines_list = list(report_lines) if report_lines else []
 
         row = 3
         sn = 1
         totals = [0.0] * num_cols
 
-        for order in sale_orders:
-            pi_no = order.name or ''
-            party_name = order.partner_id.name or ''
+        if report_lines_list:
+            for rl in report_lines_list:
+                monthly_plan_qty = rl.monthly_plan_quantity or 0.0
+                monthly_plan_amt = rl.monthly_plan_amount or 0.0
+                balance_qty = rl.balance_qty or 0.0
+                remaining_amount = rl.remaining_amount_against_pi or 0.0
+                net_remaining_qty = rl.net_remaining_qty if rl.net_remaining_qty is not None else balance_qty
+                net_remaining_amount = rl.net_remaining_amount if rl.net_remaining_amount is not None else remaining_amount
 
-            for line in order.order_line.filtered(lambda l: not l.display_type and l.product_id):
-                total_pi_qty = line.product_uom_qty or 0.0
-                total_pi_amount = line.price_subtotal or 0.0
-                dispatched_qty = line.qty_delivered or 0.0
-                unit_price = line.price_unit or 0.0
-                dispatch_amount = dispatched_qty * unit_price
-                balance_qty = total_pi_qty - dispatched_qty
-                remaining_amount = balance_qty * unit_price
-                gst_amount = (line.price_total or 0.0) - (line.price_subtotal or 0.0)
-                net_remaining_qty = balance_qty
-                net_remaining_amount = remaining_amount
-
-                product_name = line.product_id.name if line.product_id else ''
-
-                sheet.write(row, 0, sn, data_format)
-                sheet.write(row, 1, pi_no, data_format)
-                sheet.write(row, 2, party_name, data_format)
-                sheet.write(row, 3, product_name, data_format)
-                sheet.write(row, 4, total_pi_qty, number_format)
-                sheet.write(row, 5, total_pi_amount, number_format)
-                sheet.write(row, 6, dispatched_qty, number_format)
-                sheet.write(row, 7, dispatch_amount, number_format)
+                sheet.write(row, 0, rl.sn or 0, data_format)
+                sheet.write(row, 1, rl.pi_no or '', data_format)
+                sheet.write(row, 2, rl.party_name or '', data_format)
+                sheet.write(row, 3, rl.products or '', data_format)
+                sheet.write(row, 4, rl.total_pi_quantity or 0.0, number_format)
+                sheet.write(row, 5, rl.total_pi_amount or 0.0, number_format)
+                sheet.write(row, 6, rl.dispatched_quantity or 0.0, number_format)
+                sheet.write(row, 7, rl.dispatched_amount or 0.0, number_format)
                 sheet.write(row, 8, balance_qty, number_format)
                 sheet.write(row, 9, remaining_amount, number_format)
-                sheet.write(row, 10, 0.0, number_format)   # MONTHLY PLAN QUANTITY
-                sheet.write(row, 11, 0.0, number_format)  # MONTHLY PLAN AMOUNT
-                sheet.write(row, 12, 0.0, number_format)   # EXPORT INVOICE QTY THIS MONTH
-                sheet.write(row, 13, 0.0, number_format)   # EXPORT INVOICE AMOUNT THIS MONTH
-                sheet.write(row, 14, gst_amount, number_format)
-                sheet.write(row, 15, 0.0, number_format)   # DEVIATION Balance of plan
-                sheet.write(row, 16, 0.0, number_format)   # DEVIATION qty * Balance Quant
+                sheet.write(row, 10, monthly_plan_qty, number_format)
+                sheet.write(row, 11, monthly_plan_amt, number_format)
+                sheet.write(row, 12, rl.export_inv_qty_this_month or 0.0, number_format)
+                sheet.write(row, 13, rl.export_inv_amount_this_month or 0.0, number_format)
+                sheet.write(row, 14, rl.gst or 0.0, number_format)
+                sheet.write(row, 15, rl.deviation_from_plan_1 or 0.0, number_format)
+                sheet.write(row, 16, rl.deviation_from_plan_2 or 0.0, number_format)
                 sheet.write(row, 17, net_remaining_qty, number_format)
                 sheet.write(row, 18, net_remaining_amount, number_format)
 
-                # Accumulate totals (cols 4-18 are numeric)
-                totals[4] += total_pi_qty
-                totals[5] += total_pi_amount
-                totals[6] += dispatched_qty
-                totals[7] += dispatch_amount
+                totals[4] += rl.total_pi_quantity or 0.0
+                totals[5] += rl.total_pi_amount or 0.0
+                totals[6] += rl.dispatched_quantity or 0.0
+                totals[7] += rl.dispatched_amount or 0.0
                 totals[8] += balance_qty
                 totals[9] += remaining_amount
-                totals[14] += gst_amount
+                totals[10] += monthly_plan_qty
+                totals[11] += monthly_plan_amt
+                totals[14] += rl.gst or 0.0
+                totals[15] += rl.deviation_from_plan_1 or 0.0
+                totals[16] += rl.deviation_from_plan_2 or 0.0
                 totals[17] += net_remaining_qty
                 totals[18] += net_remaining_amount
 
                 row += 1
                 sn += 1
+        else:
+            for order in sale_orders:
+                pi_no = order.name or ''
+                party_name = order.partner_id.name or ''
+
+                for line in order.order_line.filtered(lambda l: not l.display_type and l.product_id):
+                    total_pi_qty = line.product_uom_qty or 0.0
+                    total_pi_amount = line.price_subtotal or 0.0
+                    dispatched_qty = line.qty_delivered or 0.0
+                    unit_price = line.price_unit or 0.0
+                    dispatch_amount = dispatched_qty * unit_price
+                    balance_qty = total_pi_qty - dispatched_qty
+                    remaining_amount = balance_qty * unit_price
+                    gst_amount = (line.price_total or 0.0) - (line.price_subtotal or 0.0)
+                    net_remaining_qty = balance_qty
+                    net_remaining_amount = remaining_amount
+
+                    product_name = line.product_id.name if line.product_id else ''
+
+                    monthly_plan_qty = 0.0
+                    monthly_plan_amt = 0.0
+
+                    sheet.write(row, 0, sn, data_format)
+                    sheet.write(row, 1, pi_no, data_format)
+                    sheet.write(row, 2, party_name, data_format)
+                    sheet.write(row, 3, product_name, data_format)
+                    sheet.write(row, 4, total_pi_qty, number_format)
+                    sheet.write(row, 5, total_pi_amount, number_format)
+                    sheet.write(row, 6, dispatched_qty, number_format)
+                    sheet.write(row, 7, dispatch_amount, number_format)
+                    sheet.write(row, 8, balance_qty, number_format)
+                    sheet.write(row, 9, remaining_amount, number_format)
+                    sheet.write(row, 10, monthly_plan_qty, number_format)   # MONTHLY PLAN QUANTITY
+                    sheet.write(row, 11, monthly_plan_amt, number_format)  # MONTHLY PLAN AMOUNT
+                    sheet.write(row, 12, 0.0, number_format)   # EXPORT INVOICE QTY THIS MONTH
+                    sheet.write(row, 13, 0.0, number_format)   # EXPORT INVOICE AMOUNT THIS MONTH
+                    sheet.write(row, 14, gst_amount, number_format)
+                    sheet.write(row, 15, 0.0, number_format)   # DEVIATION Balance of plan
+                    sheet.write(row, 16, 0.0, number_format)   # DEVIATION qty * Balance Quant
+                    sheet.write(row, 17, net_remaining_qty, number_format)
+                    sheet.write(row, 18, net_remaining_amount, number_format)
+
+                    # Accumulate totals (cols 4-18 are numeric)
+                    totals[4] += total_pi_qty
+                    totals[5] += total_pi_amount
+                    totals[6] += dispatched_qty
+                    totals[7] += dispatch_amount
+                    totals[8] += balance_qty
+                    totals[9] += remaining_amount
+                    totals[10] += monthly_plan_qty
+                    totals[11] += monthly_plan_amt
+                    totals[14] += gst_amount
+                    totals[17] += net_remaining_qty
+                    totals[18] += net_remaining_amount
+
+                    row += 1
+                    sn += 1
 
         # TOTAL row (TOTAL in column B as per screenshot)
         sheet.write(row, 0, '', total_label_format)
@@ -227,6 +283,148 @@ class PartWiseAllDataReport(models.TransientModel):
         for col in range(4, num_cols):
             sheet.write(row, col, totals[col], total_format)
         row += 1
+
+        workbook.close()
+        output.seek(0)
+        return base64.b64encode(output.read())
+
+    @api.model
+    def generate_summary_new_order_with_profit_xlsx_report(self, sale_order_ids=None):
+        """
+        Generate "SUMMARY FOR NEW ORDER" XLSX with product/cost columns (green) and
+        summary/profit columns (orange): Landing Cost, Sales Rate, Basic Value,
+        GROSS PROFIT (Selling Price - Landing Cost), SELLING %, GROSS PROFIT %,
+        COL (C+D+E+F+G), etc. All formulas applied as per requirement.
+        """
+        output = io.BytesIO()
+        workbook = xlsxwriter.Workbook(output, {'in_memory': True})
+
+        # Formats
+        green_header = workbook.add_format({
+            'bold': True, 'bg_color': '#2E7D32', 'font_color': '#FFFFFF',
+            'border': 1, 'align': 'center', 'valign': 'vcenter', 'text_wrap': True,
+        })
+        orange_header = workbook.add_format({
+            'bold': True, 'bg_color': '#FF9800', 'font_color': '#000000',
+            'border': 1, 'align': 'center', 'valign': 'vcenter', 'text_wrap': True,
+        })
+        data_fmt = workbook.add_format({'border': 1, 'valign': 'vcenter'})
+        num_fmt = workbook.add_format({'border': 1, 'valign': 'vcenter', 'align': 'right', 'num_format': '#,##0.00'})
+        pct_fmt = workbook.add_format({'border': 1, 'valign': 'vcenter', 'align': 'right', 'num_format': '0.00%'})
+        total_fmt = workbook.add_format({'bold': True, 'bg_color': '#E8F5E9', 'border': 1, 'valign': 'vcenter', 'num_format': '#,##0.00', 'align': 'right'})
+        total_label_fmt = workbook.add_format({'bold': True, 'bg_color': '#E8F5E9', 'border': 1, 'valign': 'vcenter'})
+
+        if sale_order_ids:
+            sale_orders = self.env['sale.order'].browse(sale_order_ids).filtered(lambda o: o.state in ['sale', 'done'])
+        else:
+            sale_orders = self.env['sale.order'].search([('state', 'in', ['sale', 'done'])])
+
+        # Column layout: 0=No., 1=HSN, 2=Product Description, 3=Type Of Measurement, 4=Received Qty,
+        # 5=Landing Cost (Amount), 6=Unit Cost (Amount), 7=Balance Qty, 8=Sales Rate, 9=Basic Value,
+        # 10=Customer Landing, 11=Gross Landing Cost | 12=COL(C+D+E+F+G), 13=GP/Unit, 14=GP/Qty, 15=GP/Kg/Meter,
+        # 16=MRP, 17=MRP %, 18=Selling Price, 19=Difference in Selling, 20=Gross Profit, 21=SELLING %, 22=GROSS PROFIT %
+        green_headers = [
+            'No.', 'HSN', 'Product Description', 'Type Of Measurement', 'Received Quantity',
+            'Landing Cost (Amount)', 'Unit Cost (Amount)', 'Balance Quantity', 'Sales Rate', 'Basic Value',
+            'Customer Landing', 'Gross Landing Cost (Amount)',
+        ]
+        orange_headers = [
+            'COL (C + D + E + F + G)', 'GROSS PROFIT PER UNIT', 'GROSS PROFIT PER QTY', 'GROSS PROFIT PER KG/METER',
+            'MRP', 'MRP PERCENTAGE', 'SELLING PRICE', 'DIFFERENCE IN SELLING',
+            'GROSS PROFIT (Selling Price - Landing Cost)', 'SELLING %', 'GROSS PROFIT %',
+        ]
+        all_headers = green_headers + orange_headers
+        col_widths = [6, 12, 32, 18, 14, 18, 14, 14, 14, 14, 16, 22, 22, 18, 18, 22, 12, 14, 14, 20, 38, 12, 14]
+
+        sheet = workbook.add_worksheet('Summary for New Order')
+        for c, w in enumerate(col_widths):
+            sheet.set_column(c, c, w)
+
+        till_date = fields.Date.context_today(self)
+        till_date_str = till_date.strftime('%d-%m-%Y') if till_date else date.today().strftime('%d-%m-%Y')
+        month_name = (till_date or date.today()).strftime('%B').upper()
+        title_fmt = workbook.add_format({'bold': True, 'align': 'center', 'font_size': 14})
+        sheet.merge_range(0, 0, 0, len(all_headers) - 1, '%s SUMMARY FOR NEW ORDER' % month_name, title_fmt)
+        sheet.merge_range(1, 0, 1, len(all_headers) - 1, 'TILL DATE %s' % till_date_str, workbook.add_format({'bold': True, 'align': 'right'}))
+
+        for col, h in enumerate(green_headers):
+            sheet.write(2, col, h, green_header)
+        for col, h in enumerate(orange_headers):
+            sheet.write(2, len(green_headers) + col, h, orange_header)
+
+        sheet.freeze_panes(3, 0)
+
+        row = 3
+        sn = 1
+        totals = [0.0] * len(all_headers)
+        num_cols = len(all_headers)
+
+        for order in sale_orders:
+            for line in order.order_line.filtered(lambda l: not l.display_type and l.product_id):
+                product = line.product_id
+                received_qty = line.product_uom_qty or 0.0
+                balance_qty = received_qty - (line.qty_delivered or 0.0)
+                sales_rate = line.price_unit or 0.0
+                basic_value = line.price_subtotal or 0.0  # Selling price total
+                unit_cost = product.standard_price or 0.0
+                landing_cost_amt = unit_cost * received_qty
+                gross_profit = basic_value - landing_cost_amt
+                selling_pct = (gross_profit / landing_cost_amt * 100.0) if landing_cost_amt else 0.0
+                gross_profit_pct = (gross_profit / basic_value * 100.0) if basic_value else 0.0
+                col_c_d_e_f_g = received_qty + landing_cost_amt + (unit_cost if received_qty else 0)
+                gp_per_unit = (gross_profit / received_qty) if received_qty else 0.0
+                mrp = product.list_price or 0.0
+                selling_price = basic_value
+                diff_selling = selling_price - (mrp * received_qty) if mrp else 0.0
+                mrp_pct = ((sales_rate - mrp) / mrp * 100.0) if mrp else 0.0
+                hsn = getattr(product, 'l10n_in_hsn_code', None) or ''
+                uom = (line.product_uom.name or '') if line.product_uom else ''
+
+                sheet.write(row, 0, sn, data_fmt)
+                sheet.write(row, 1, hsn, data_fmt)
+                sheet.write(row, 2, product.name or '', data_fmt)
+                sheet.write(row, 3, uom, data_fmt)
+                sheet.write(row, 4, received_qty, num_fmt)
+                sheet.write(row, 5, landing_cost_amt, num_fmt)
+                sheet.write(row, 6, unit_cost, num_fmt)
+                sheet.write(row, 7, balance_qty, num_fmt)
+                sheet.write(row, 8, sales_rate, num_fmt)
+                sheet.write(row, 9, basic_value, num_fmt)
+                sheet.write(row, 10, 0.0, num_fmt)
+                sheet.write(row, 11, landing_cost_amt, num_fmt)
+                sheet.write(row, 12, col_c_d_e_f_g, num_fmt)
+                sheet.write(row, 13, gp_per_unit, num_fmt)
+                sheet.write(row, 14, gross_profit, num_fmt)
+                sheet.write(row, 15, 0.0, num_fmt)
+                sheet.write(row, 16, mrp, num_fmt)
+                sheet.write(row, 17, mrp_pct / 100.0 if mrp_pct else 0.0, pct_fmt)
+                sheet.write(row, 18, selling_price, num_fmt)
+                sheet.write(row, 19, diff_selling, num_fmt)
+                sheet.write(row, 20, gross_profit, num_fmt)
+                sheet.write(row, 21, selling_pct / 100.0 if selling_pct else 0.0, pct_fmt)
+                sheet.write(row, 22, gross_profit_pct / 100.0 if gross_profit_pct else 0.0, pct_fmt)
+
+                totals[4] += received_qty
+                totals[5] += landing_cost_amt
+                totals[6] += unit_cost * (1 if received_qty else 0)
+                totals[7] += balance_qty
+                totals[9] += basic_value
+                totals[11] += landing_cost_amt
+                totals[12] += col_c_d_e_f_g
+                totals[14] += gross_profit
+                totals[18] += selling_price
+                totals[20] += gross_profit
+                row += 1
+                sn += 1
+
+        if row > 3:
+            sheet.write(row, 0, '', total_label_fmt)
+            sheet.write(row, 1, 'Total', total_label_fmt)
+            for c in range(2, num_cols):
+                if c in (4, 5, 7, 9, 11, 12, 14, 18, 20):
+                    sheet.write(row, c, totals[c] or 0.0, total_fmt)
+                else:
+                    sheet.write(row, c, '', total_fmt)
 
         workbook.close()
         output.seek(0)
@@ -2479,7 +2677,7 @@ class PartWiseAllDataReport(models.TransientModel):
         else:
             sale_orders = self.env['sale.order'].search([
                 ('state', 'in', ['sale', 'done'])
-            ])
+            ], order='name asc, id asc')
 
         rows = []
         sn = 1
@@ -2511,8 +2709,6 @@ class PartWiseAllDataReport(models.TransientModel):
                     'export_inv_qty_this_month': 0.0,
                     'export_inv_amount_this_month': 0.0,
                     'gst': gst_amount,
-                    'deviation_from_plan_1': 0.0,
-                    'deviation_from_plan_2': 0.0,
                     'net_remaining_qty': balance_qty,
                     'net_remaining_amount': remaining_amount,
                 })

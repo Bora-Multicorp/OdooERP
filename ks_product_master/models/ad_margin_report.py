@@ -1,6 +1,33 @@
 # -*- coding: utf-8 -*-
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError
+from datetime import timedelta
+
+
+def _mop_windows_for_product(mop_list, date_to):
+    """Build MOP windows for a product: list of (mop_record, window_end_date).
+    Window for mop[i]: [mop.effective_date, window_end], where window_end is
+    (next MOP effective_date - 1 day) or date_to if last MOP.
+    """
+    if not mop_list:
+        return []
+    windows = []
+    for i, mop in enumerate(mop_list):
+        start = mop.effective_date
+        if i + 1 < len(mop_list):
+            end = mop_list[i + 1].effective_date - timedelta(days=1)
+        else:
+            end = date_to
+        windows.append((mop, end))
+    return windows
+
+
+def _find_mop_for_date(windows, doc_date):
+    """Return (mop_record, window_end) for the window that contains doc_date, or None."""
+    for mop, end in windows:
+        if mop.effective_date <= doc_date <= end:
+            return (mop, end)
+    return None
 
 
 class AdMarginReportHeader(models.Model):
@@ -35,9 +62,12 @@ class AdMarginReportHeader(models.Model):
     )
 
     def action_generate_lines(self):
-        """Generate report lines: one line per (invoice line × MOP record) for same product within date range.
-        Invoice lines: invoice_date in [date_from, date_to]. MOP: effective_date in [date_from, date_to].
-        Calculations unchanged (x_gst_mop, diff, margin, total).
+        """Generate report lines only when MOP exists for SKU and SO (invoice) exists for same product
+        on same or later date within the MOP window.
+        - MOP windows: for each product, MOP records in [date_from, date_to] ordered by effective_date.
+          First MOP covers [mop1.date, mop2.date - 1 day], next covers [mop2.date, mop3.date - 1], last covers [mop_last.date, date_to].
+        - Include invoice line only if invoice_date falls in a MOP window (invoice_date >= MOP date and <= window end).
+        - Same date + same SKU (and same partner): one line with sum of qty; sales_rate = weighted average.
         """
         self.ensure_one()
         domain = [
@@ -57,52 +87,72 @@ class AdMarginReportHeader(models.Model):
             domain.append(('product_id.categ_id', 'child_of', self.category_id.id))
 
         invoice_lines = self.env['account.move.line'].search(domain, order='move_id, id')
-        if not invoice_lines:
+
+        # MOP records in report range; build windows per product
+        all_product_ids = invoice_lines.mapped('product_id').ids
+        if not all_product_ids:
             raise UserError(_('No invoice lines found for the selected date range and criteria.'))
 
-        product_ids = invoice_lines.mapped('product_id').ids
         mop_records = self.env['mop.master'].search([
-            ('product_id', 'in', product_ids),
+            ('product_id', 'in', all_product_ids),
             ('effective_date', '>=', self.date_from),
             ('effective_date', '<=', self.date_to),
             ('active', '=', True),
         ], order='product_id, effective_date')
+
         mop_by_product = {}
         for mop in mop_records:
             mop_by_product.setdefault(mop.product_id.id, []).append(mop)
 
-        report_lines = []
-        for inv_line in invoice_lines:
-            partner_id = inv_line.move_id.partner_id.id
-            product_id = inv_line.product_id.id
-            sales_rate = inv_line.price_unit or 0.0
-            sales_quantity = inv_line.quantity or 0.0
-            invoice_id = inv_line.move_id.id
+        mop_windows_by_product = {}
+        for pid, mop_list in mop_by_product.items():
+            mop_windows_by_product[pid] = _mop_windows_for_product(mop_list, self.date_to)
 
-            mop_list = mop_by_product.get(product_id, [])
-            if not mop_list:
-                report_lines.append({
-                    'report_id': self.id,
+        # Only products that have at least one MOP in range get lines
+        products_with_mop = set(mop_windows_by_product.keys())
+
+        # Collect (partner, product, invoice_date, mop_date) -> aggregated qty, weighted rate, first invoice_id
+        aggregated = {}
+        for inv_line in invoice_lines:
+            product_id = inv_line.product_id.id
+            if product_id not in products_with_mop:
+                continue
+            inv_date = inv_line.move_id.invoice_date
+            match = _find_mop_for_date(mop_windows_by_product[product_id], inv_date)
+            if not match:
+                continue
+            mop_rec, window_end = match
+            partner_id = inv_line.move_id.partner_id.id
+            key = (partner_id, product_id, inv_date, mop_rec.effective_date)
+            qty = inv_line.quantity or 0.0
+            rate = inv_line.price_unit or 0.0
+            if key not in aggregated:
+                aggregated[key] = {
                     'partner_id': partner_id,
                     'product_id': product_id,
-                    'sales_rate': sales_rate,
-                    'sales_quantity': sales_quantity,
-                    'mop': 0.0,
-                    'mop_date': None,
-                    'invoice_id': invoice_id,
-                })
-            else:
-                for mop_rec in mop_list:
-                    report_lines.append({
-                        'report_id': self.id,
-                        'partner_id': partner_id,
-                        'product_id': product_id,
-                        'sales_rate': sales_rate,
-                        'sales_quantity': sales_quantity,
-                        'mop': mop_rec.mop,
-                        'mop_date': mop_rec.effective_date,
-                        'invoice_id': invoice_id,
-                    })
+                    'invoice_date': inv_date,
+                    'mop_date': mop_rec.effective_date,
+                    'mop': mop_rec.mop,
+                    'sales_quantity': 0.0,
+                    'sales_rate_sum': 0.0,
+                    'invoice_id': inv_line.move_id.id,
+                }
+            aggregated[key]['sales_quantity'] += qty
+            aggregated[key]['sales_rate_sum'] += rate * qty
+
+        report_lines = []
+        for key, ag in aggregated.items():
+            total_qty = ag['sales_quantity']
+            report_lines.append({
+                'report_id': self.id,
+                'partner_id': ag['partner_id'],
+                'product_id': ag['product_id'],
+                'sales_rate': (ag['sales_rate_sum'] / total_qty) if total_qty else 0.0,
+                'sales_quantity': total_qty,
+                'mop': ag['mop'],
+                'mop_date': ag['mop_date'],
+                'invoice_id': ag['invoice_id'],
+            })
 
         self.line_ids.unlink()
         for vals in report_lines:
@@ -230,7 +280,7 @@ class AdMarginReportWizard(models.TransientModel):
     category_id = fields.Many2one('product.category', string='Category')
 
     def action_generate_report(self):
-        """Same logic as header action: one line per (invoice line × MOP) in date range. Creates header and lines then opens header form."""
+        """Same logic as header action: MOP windows, SO date in window, aggregate same date/SKU. Creates header and lines then opens header form."""
         self.ensure_one()
 
         domain = [
@@ -253,9 +303,9 @@ class AdMarginReportWizard(models.TransientModel):
         if not invoice_lines:
             raise UserError(_('No invoice lines found for the selected date range and criteria.'))
 
-        product_ids = invoice_lines.mapped('product_id').ids
+        all_product_ids = invoice_lines.mapped('product_id').ids
         mop_records = self.env['mop.master'].search([
-            ('product_id', 'in', product_ids),
+            ('product_id', 'in', all_product_ids),
             ('effective_date', '>=', self.date_from),
             ('effective_date', '<=', self.date_to),
             ('active', '=', True),
@@ -264,36 +314,51 @@ class AdMarginReportWizard(models.TransientModel):
         for mop in mop_records:
             mop_by_product.setdefault(mop.product_id.id, []).append(mop)
 
-        report_lines = []
-        for inv_line in invoice_lines:
-            partner_id = inv_line.move_id.partner_id.id
-            product_id = inv_line.product_id.id
-            sales_rate = inv_line.price_unit or 0.0
-            sales_quantity = inv_line.quantity or 0.0
-            invoice_id = inv_line.move_id.id
+        mop_windows_by_product = {}
+        for pid, mop_list in mop_by_product.items():
+            mop_windows_by_product[pid] = _mop_windows_for_product(mop_list, self.date_to)
+        products_with_mop = set(mop_windows_by_product.keys())
 
-            mop_list = mop_by_product.get(product_id, [])
-            if not mop_list:
-                report_lines.append({
+        aggregated = {}
+        for inv_line in invoice_lines:
+            product_id = inv_line.product_id.id
+            if product_id not in products_with_mop:
+                continue
+            inv_date = inv_line.move_id.invoice_date
+            match = _find_mop_for_date(mop_windows_by_product[product_id], inv_date)
+            if not match:
+                continue
+            mop_rec, window_end = match
+            partner_id = inv_line.move_id.partner_id.id
+            key = (partner_id, product_id, inv_date, mop_rec.effective_date)
+            qty = inv_line.quantity or 0.0
+            rate = inv_line.price_unit or 0.0
+            if key not in aggregated:
+                aggregated[key] = {
                     'partner_id': partner_id,
                     'product_id': product_id,
-                    'sales_rate': sales_rate,
-                    'sales_quantity': sales_quantity,
-                    'mop': 0.0,
-                    'mop_date': None,
-                    'invoice_id': invoice_id,
-                })
-            else:
-                for mop_rec in mop_list:
-                    report_lines.append({
-                        'partner_id': partner_id,
-                        'product_id': product_id,
-                        'sales_rate': sales_rate,
-                        'sales_quantity': sales_quantity,
-                        'mop': mop_rec.mop,
-                        'mop_date': mop_rec.effective_date,
-                        'invoice_id': invoice_id,
-                    })
+                    'invoice_date': inv_date,
+                    'mop_date': mop_rec.effective_date,
+                    'mop': mop_rec.mop,
+                    'sales_quantity': 0.0,
+                    'sales_rate_sum': 0.0,
+                    'invoice_id': inv_line.move_id.id,
+                }
+            aggregated[key]['sales_quantity'] += qty
+            aggregated[key]['sales_rate_sum'] += rate * qty
+
+        report_lines = []
+        for ag in aggregated.values():
+            total_qty = ag['sales_quantity']
+            report_lines.append({
+                'partner_id': ag['partner_id'],
+                'product_id': ag['product_id'],
+                'sales_rate': (ag['sales_rate_sum'] / total_qty) if total_qty else 0.0,
+                'sales_quantity': total_qty,
+                'mop': ag['mop'],
+                'mop_date': ag['mop_date'],
+                'invoice_id': ag['invoice_id'],
+            })
 
         header = self.env['ad.margin.report.header'].create({
             'name': self.name or 'AD Margin Report',

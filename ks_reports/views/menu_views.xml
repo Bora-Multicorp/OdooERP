@@ -98,6 +98,37 @@ action = {
         groups="sales_team.group_sale_manager"
     />
 
+    <!-- Summary for New Order with Profit (Landing Cost, Gross Profit, SELLING %, GROSS PROFIT %) -->
+    <record id="action_summary_new_order_with_profit_download" model="ir.actions.server">
+        <field name="name">Summary for New Order (with Profit)</field>
+        <field name="model_id" ref="sale.model_sale_order"/>
+        <field name="state">code</field>
+        <field name="code">
+report_model = env['ks.part.wise.all.data.report']
+file_content = report_model.generate_summary_new_order_with_profit_xlsx_report(sale_order_ids=None)
+attachment = env['ir.attachment'].create({
+    'name': 'Summary_For_New_Order_With_Profit.xlsx',
+    'type': 'binary',
+    'datas': file_content,
+    'res_model': 'sale.order',
+    'mimetype': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+})
+action = {
+    'type': 'ir.actions.act_url',
+    'url': '/web/content/' + str(attachment.id) + '?download=true',
+    'target': 'self',
+}
+        </field>
+    </record>
+    <menuitem 
+        id="menu_summary_new_order_with_profit"
+        name="Summary for New Order (with Profit)"
+        action="action_summary_new_order_with_profit_download"
+        parent="menu_part_wise_all_data_parent"
+        sequence="3"
+        groups="sales_team.group_sale_manager"
+    />
+
     <!-- Server Action to trigger Deepa Working XLSX report download (for backward compatibility) -->
     <record id="action_deepa_working_report_download" model="ir.actions.server">
         <field name="name">Deepa Working</field>
