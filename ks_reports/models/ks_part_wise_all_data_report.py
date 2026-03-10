@@ -168,6 +168,61 @@ class PartWiseAllDataReport(models.TransientModel):
         # When report_lines provided, use them as row source
         report_lines_list = list(report_lines) if report_lines else []
 
+        # For direct-download path: same logic as get_part_wise_report_rows (single search on invoice lines)
+        today = fields.Date.context_today(self)
+        month_start = today.replace(day=1)
+        month_end = today
+        pi_names = [n for n in sale_orders.mapped('name') if n]
+        sale_order_ids_list = sale_orders.ids
+        all_product_ids = []
+        for _o in sale_orders:
+            for _l in _o.order_line.filtered(lambda l: not l.display_type and l.product_id):
+                if _l.product_id.id not in all_product_ids:
+                    all_product_ids.append(_l.product_id.id)
+        export_by_pi_product = {}
+        if all_product_ids and pi_names:
+            try:
+                Aml = self.env['account.move.line']
+                base = [
+                    ('move_id.move_type', '=', 'out_invoice'),
+                    ('move_id.state', '=', 'posted'),
+                    ('product_id', 'in', all_product_ids),
+                ]
+                inv_lines = Aml.search(base + [('move_id.invoice_origin', 'in', pi_names)])
+                if hasattr(Aml, 'sale_line_ids'):
+                    try:
+                        inv_lines = inv_lines | Aml.search(base + [('sale_line_ids.order_id', 'in', sale_order_ids_list)])
+                    except Exception:
+                        pass
+                inv_lines_month = inv_lines.filtered(
+                    lambda l: (l.move_id.invoice_date or l.move_id.date or today) >= month_start
+                    and (l.move_id.invoice_date or l.move_id.date or today) <= month_end
+                )
+                if not inv_lines_month and inv_lines:
+                    inv_lines_month = inv_lines
+                for inv_line in inv_lines_month:
+                    qty = inv_line.quantity or 0.0
+                    amt = inv_line.price_subtotal or 0.0
+                    pid = inv_line.product_id.id
+                    pi_set = set()
+                    if getattr(inv_line, 'sale_line_ids', None):
+                        for sol in inv_line.sale_line_ids:
+                            if sol.order_id.name in pi_names:
+                                pi_set.add(sol.order_id.name)
+                    if not pi_set and inv_line.move_id.invoice_origin:
+                        for origin in (inv_line.move_id.invoice_origin or '').split(','):
+                            o = origin.strip()
+                            if o in pi_names:
+                                pi_set.add(o)
+                    for pi_no in pi_set:
+                        key = (pi_no, pid)
+                        if key not in export_by_pi_product:
+                            export_by_pi_product[key] = [0.0, 0.0]
+                        export_by_pi_product[key][0] += qty
+                        export_by_pi_product[key][1] += amt
+            except Exception:
+                pass
+
         row = 3
         sn = 1
         totals = [0.0] * num_cols
@@ -209,6 +264,8 @@ class PartWiseAllDataReport(models.TransientModel):
                 totals[9] += remaining_amount
                 totals[10] += monthly_plan_qty
                 totals[11] += monthly_plan_amt
+                totals[12] += rl.export_inv_qty_this_month or 0.0
+                totals[13] += rl.export_inv_amount_this_month or 0.0
                 totals[14] += rl.gst or 0.0
                 totals[15] += rl.deviation_from_plan_1 or 0.0
                 totals[16] += rl.deviation_from_plan_2 or 0.0
@@ -238,6 +295,12 @@ class PartWiseAllDataReport(models.TransientModel):
 
                     monthly_plan_qty = 0.0
                     monthly_plan_amt = 0.0
+                    export_qty = 0.0
+                    export_amt = 0.0
+                    if line.product_id:
+                        key = (pi_no, line.product_id.id)
+                        if key in export_by_pi_product:
+                            export_qty, export_amt = export_by_pi_product[key]
 
                     sheet.write(row, 0, sn, data_format)
                     sheet.write(row, 1, pi_no, data_format)
@@ -251,8 +314,8 @@ class PartWiseAllDataReport(models.TransientModel):
                     sheet.write(row, 9, remaining_amount, number_format)
                     sheet.write(row, 10, monthly_plan_qty, number_format)   # MONTHLY PLAN QUANTITY
                     sheet.write(row, 11, monthly_plan_amt, number_format)  # MONTHLY PLAN AMOUNT
-                    sheet.write(row, 12, 0.0, number_format)   # EXPORT INVOICE QTY THIS MONTH
-                    sheet.write(row, 13, 0.0, number_format)   # EXPORT INVOICE AMOUNT THIS MONTH
+                    sheet.write(row, 12, export_qty, number_format)   # EXPORT INVOICE QTY THIS MONTH
+                    sheet.write(row, 13, export_amt, number_format)   # EXPORT INVOICE AMOUNT THIS MONTH
                     sheet.write(row, 14, gst_amount, number_format)
                     sheet.write(row, 15, 0.0, number_format)   # DEVIATION Balance of plan
                     sheet.write(row, 16, 0.0, number_format)   # DEVIATION qty * Balance Quant
@@ -268,6 +331,8 @@ class PartWiseAllDataReport(models.TransientModel):
                     totals[9] += remaining_amount
                     totals[10] += monthly_plan_qty
                     totals[11] += monthly_plan_amt
+                    totals[12] += export_qty
+                    totals[13] += export_amt
                     totals[14] += gst_amount
                     totals[17] += net_remaining_qty
                     totals[18] += net_remaining_amount
@@ -2669,7 +2734,10 @@ class PartWiseAllDataReport(models.TransientModel):
 
     @api.model
     def get_part_wise_report_rows(self, sale_order_ids=None):
-        """Return list of dicts for Part Wise All Data list view (same columns as XLSX)."""
+        """Return list of dicts for Part Wise All Data list view (same columns as XLSX).
+        Export Inv Qty/Amount This Month = invoice line quantity and amount from posted customer
+        invoices related to the same PI (Sale Order), for the current month.
+        """
         if sale_order_ids:
             sale_orders = self.env['sale.order'].browse(sale_order_ids).filtered(
                 lambda o: o.state in ['sale', 'done']
@@ -2679,12 +2747,79 @@ class PartWiseAllDataReport(models.TransientModel):
                 ('state', 'in', ['sale', 'done'])
             ], order='name asc, id asc')
 
+        # Current month for "Export Inv This Month"
+        today = fields.Date.context_today(self)
+        month_start = today.replace(day=1)
+        month_end = today
+
+        pi_names = [n for n in sale_orders.mapped('name') if n]
+        sale_order_ids_list = sale_orders.ids
+        product_ids = []
+        for order in sale_orders:
+            for line in order.order_line:
+                if line.product_id and (not getattr(line, 'display_type', None) or line.display_type not in ('line_section', 'line_note')):
+                    if line.product_id.id not in product_ids:
+                        product_ids.append(line.product_id.id)
+
+        export_by_pi_product = {}
+        if product_ids and pi_names:
+            try:
+                Aml = self.env['account.move.line']
+                base = [
+                    ('move_id.move_type', '=', 'out_invoice'),
+                    ('move_id.state', '=', 'posted'),
+                    ('product_id', 'in', product_ids),
+                ]
+                # Search by invoice origin only (no dependency on sale_line_ids)
+                inv_lines = Aml.search(base + [('move_id.invoice_origin', 'in', pi_names)])
+                # If sale module adds sale_line_ids, also get lines linked via sale order
+                if hasattr(Aml, 'sale_line_ids'):
+                    try:
+                        inv_lines_sale = Aml.search(base + [('sale_line_ids.order_id', 'in', sale_order_ids_list)])
+                        inv_lines = inv_lines | inv_lines_sale
+                    except Exception:
+                        pass
+
+                inv_lines_month = inv_lines.filtered(
+                    lambda l: (l.move_id.invoice_date or l.move_id.date or today) >= month_start
+                    and (l.move_id.invoice_date or l.move_id.date or today) <= month_end
+                )
+                if not inv_lines_month and inv_lines:
+                    inv_lines_month = inv_lines
+
+                for inv_line in inv_lines_month:
+                    qty = inv_line.quantity or 0.0
+                    amt = inv_line.price_subtotal or 0.0
+                    pid = inv_line.product_id.id
+
+                    pi_set = set()
+                    if getattr(inv_line, 'sale_line_ids', None):
+                        for sol in inv_line.sale_line_ids:
+                            if sol.order_id.name in pi_names:
+                                pi_set.add(sol.order_id.name)
+                    if not pi_set and inv_line.move_id.invoice_origin:
+                        for origin in (inv_line.move_id.invoice_origin or '').split(','):
+                            o = origin.strip()
+                            if o in pi_names:
+                                pi_set.add(o)
+
+                    for pi_no in pi_set:
+                        key = (pi_no, pid)
+                        if key not in export_by_pi_product:
+                            export_by_pi_product[key] = [0.0, 0.0]
+                        export_by_pi_product[key][0] += qty
+                        export_by_pi_product[key][1] += amt
+            except Exception:
+                pass
+
         rows = []
         sn = 1
         for order in sale_orders:
             pi_no = order.name or ''
             party_name = order.partner_id.name or ''
-            for line in order.order_line.filtered(lambda l: not l.display_type and l.product_id):
+            for line in order.order_line:
+                if not line.product_id or getattr(line, 'display_type', None) in ('line_section', 'line_note'):
+                    continue
                 total_pi_qty = line.product_uom_qty or 0.0
                 total_pi_amount = line.price_subtotal or 0.0
                 dispatched_qty = line.qty_delivered or 0.0
@@ -2693,6 +2828,14 @@ class PartWiseAllDataReport(models.TransientModel):
                 balance_qty = total_pi_qty - dispatched_qty
                 remaining_amount = balance_qty * unit_price
                 gst_amount = (line.price_total or 0.0) - (line.price_subtotal or 0.0)
+
+                export_qty = 0.0
+                export_amt = 0.0
+                if line.product_id:
+                    key = (pi_no, line.product_id.id)
+                    if key in export_by_pi_product:
+                        export_qty, export_amt = export_by_pi_product[key]
+
                 rows.append({
                     'sn': sn,
                     'pi_no': pi_no,
@@ -2706,8 +2849,8 @@ class PartWiseAllDataReport(models.TransientModel):
                     'remaining_amount_against_pi': remaining_amount,
                     'monthly_plan_quantity': 0.0,
                     'monthly_plan_amount': 0.0,
-                    'export_inv_qty_this_month': 0.0,
-                    'export_inv_amount_this_month': 0.0,
+                    'export_inv_qty_this_month': export_qty,
+                    'export_inv_amount_this_month': export_amt,
                     'gst': gst_amount,
                     'net_remaining_qty': balance_qty,
                     'net_remaining_amount': remaining_amount,

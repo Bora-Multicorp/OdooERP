@@ -7,14 +7,24 @@
         <field name="state">code</field>
         <field name="code">
 report = env['ks.part.wise.all.data.report']
-rows = report.get_part_wise_report_rows(sale_order_ids=None)
+sale_order_ids = None
+if records and env.context.get('active_model') == 'sale.order':
+    sale_order_ids = records.ids
+try:
+    rows = report.get_part_wise_report_rows(sale_order_ids=sale_order_ids)
+except Exception as e:
+    raise UserError('Part Wise report failed: %s' % str(e))
 env['ks.part.wise.report.line'].search([]).unlink()
 if rows:
-    line_ids = env['ks.part.wise.report.line'].create(rows).ids
+    try:
+        line_ids = env['ks.part.wise.report.line'].create(rows).ids
+    except Exception as e:
+        raise UserError('Part Wise report (create lines) failed: %s' % str(e))
     action = env.ref('ks_reports.action_part_wise_report_line_list').read()[0]
     action['domain'] = [('id', 'in', line_ids)]
 else:
     action = env.ref('ks_reports.action_part_wise_report_line_list').read()[0]
+    raise UserError("No data to display. Make sure you have Sale Orders in state 'Sale Order' or 'Done' with at least one product line. If you opened this from the Sales menu, try selecting specific orders from the list and run the report again.")
         </field>
     </record>
 
