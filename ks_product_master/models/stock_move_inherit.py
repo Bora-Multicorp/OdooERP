@@ -518,6 +518,11 @@ class StockPickingInherit(models.Model):
         return pickings
 
     def write(self, vals):
+        # Prevent changing Spec Made For / Made In once delivery is done (validated)
+        if 'specs_made' in vals or 'made_country' in vals:
+            done = self.filtered(lambda p: p.state == 'done')
+            if done:
+                raise ValidationError(_('You cannot change "Spec Made For" or "Made In" after the delivery has been validated.'))
         res = super().write(vals)
         if 'specs_made' in vals or 'made_country' in vals:
             for picking in self:
