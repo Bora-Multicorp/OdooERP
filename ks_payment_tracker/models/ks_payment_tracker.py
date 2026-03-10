@@ -130,47 +130,12 @@ class KsPaymentTracker(models.Model):
         string='At Warehouse',
         help='Mark as received after GRN',
     )
-    # Payment approval type: with bill vs without bill (for report/workflow)
-    payment_approval_type = fields.Selection(
-        [
-            ('with_bill', 'Payment approval with bill for purchase'),
-            ('without_bill', 'Payment approval without bill for purchase'),
-        ],
-        string='Payment Approval Type',
-        required=True,
-        default='with_bill',
-        help='Whether this payment approval is with or without vendor bill.',
-    )
-    # Approval workflow state
-    state = fields.Selection(
-        [
-            ('draft', 'Draft'),
-            ('pending_approval', 'Pending Approval'),
-            ('approved', 'Approved'),
-            ('rejected', 'Rejected'),
-        ],
-        string='Status',
-        default='draft',
-        required=True,
-        help='Approval workflow state.',
-    )
     approved = fields.Boolean(
         string='Approved',
         default=False,
-        compute='_compute_approved',
-        store=True,
-        help='True when state is approved (kept for backward compatibility).',
+        help='Payment approval status',
     )
     approved_notes = fields.Text(string='Approved Notes')
-    approval_user_id = fields.Many2one(
-        'res.users',
-        string='Approved By',
-        readonly=True,
-        copy=False,
-    )
-    approval_date = fields.Datetime(string='Approval Date', readonly=True, copy=False)
-    rejection_notes = fields.Text(string='Rejection Notes', readonly=True, copy=False)
-
     currency_id = fields.Many2one(
         'res.currency',
         related='purchase_order_id.currency_id',
@@ -178,58 +143,9 @@ class KsPaymentTracker(models.Model):
         readonly=True,
     )
 
-    @api.depends('state')
-    def _compute_approved(self):
-        for rec in self:
-            rec.approved = rec.state == 'approved'
-
     def _get_next_sn(self):
         last = self.search([], order='sn desc', limit=1)
         return (last.sn or 0) + 1
-
-    def action_submit_for_approval(self):
-        """Move to Pending Approval."""
-        self.check_can_submit()
-        self.write({'state': 'pending_approval'})
-        return True
-
-    def check_can_submit(self):
-        if any(r.state != 'draft' for r in self):
-            raise UserError(_('Only draft records can be submitted for approval.'))
-
-    def action_approve(self):
-        """Approve payment tracker line(s)."""
-        for rec in self:
-            if rec.state != 'pending_approval':
-                raise UserError(_('Only pending records can be approved.'))
-        self.write({
-            'state': 'approved',
-            'approval_user_id': self.env.user.id,
-            'approval_date': fields.Datetime.now(),
-        })
-        return True
-
-    def action_reject(self):
-        """Reject payment tracker line(s). Opens wizard or uses context rejection_notes."""
-        for rec in self:
-            if rec.state != 'pending_approval':
-                raise UserError(_('Only pending records can be rejected.'))
-        notes = self.env.context.get('rejection_notes', '')
-        self.write({
-            'state': 'rejected',
-            'rejection_notes': notes,
-        })
-        return True
-
-    def action_reset_to_draft(self):
-        """Reset to draft (e.g. for correction)."""
-        self.write({
-            'state': 'draft',
-            'approval_user_id': False,
-            'approval_date': False,
-            'rejection_notes': False,
-        })
-        return True
 
     @api.model_create_multi
     def create(self, vals_list):

@@ -16,6 +16,17 @@ class VendorPaymentApprovalRequest(models.Model):
         ondelete='cascade',
         index=True,
     )
+    approval_type = fields.Selection(
+        [
+            ('without_bill', 'Payment approval without bill for purchase'),
+            ('with_bill', 'Payment approval with bill for purchase'),
+        ],
+        string='Approval Type',
+        required=True,
+        default='without_bill',
+        copy=False,
+        help='Set automatically from PO: with bill if vendor bill exists, otherwise without bill.',
+    )
     state = fields.Selection(
         [
             ('draft', 'Draft'),
@@ -51,17 +62,85 @@ class VendorPaymentApprovalRequest(models.Model):
         store=True,
     )
 
+    @api.model_create_multi
+    def create(self, vals_list):
+        """Set approval_type from PO when PO is set; prevent duplicate draft/pending per PO."""
+        for vals in vals_list:
+            po_id = vals.get('purchase_order_id')
+            if po_id:
+                po = self.env['purchase.order'].browse(po_id)
+                if po.exists():
+                    vals['approval_type'] = 'with_bill' if po.has_vendor_bill else 'without_bill'
+                existing = self.search([
+                    ('purchase_order_id', '=', po_id),
+                    ('state', 'in', ('draft', 'pending_approval')),
+                ], limit=1)
+                if existing:
+                    raise ValidationError(
+                        _(
+                            'A payment approval request is already open for this Purchase Order (%s). '
+                            'Please use the existing request or wait until it is approved or rejected.'
+                        )
+                        % (existing.purchase_order_id.name,)
+                    )
+        return super().create(vals_list)
+
+    @api.constrains('purchase_order_id', 'state')
+    def _check_one_active_request_per_po(self):
+        """Only one draft or pending request per purchase order."""
+        for rec in self:
+            if rec.state not in ('draft', 'pending_approval'):
+                continue
+            other = self.search([
+                ('purchase_order_id', '=', rec.purchase_order_id.id),
+                ('state', 'in', ('draft', 'pending_approval')),
+                ('id', '!=', rec.id),
+            ], limit=1)
+            if other:
+                raise ValidationError(
+                    _(
+                        'Only one payment approval request can be open per Purchase Order. '
+                        'An open request already exists for %s.'
+                    )
+                    % (rec.purchase_order_id.name,)
+                )
+
     def action_submit(self):
         """Submit for approval: create lines from config and set state to pending."""
         for rec in self:
             if rec.state != 'draft':
                 raise UserError(_('Only draft requests can be submitted.'))
+            if rec.approval_type == 'with_bill' and not rec.purchase_order_id.has_vendor_bill:
+                raise UserError(
+                    _(
+                        'Cannot submit "Payment approval with bill" request: Purchase Order %s does not have a posted vendor bill yet. '
+                        'Create and validate a vendor bill for this PO first.'
+                    )
+                    % rec.purchase_order_id.name
+                )
             configs = self.env['vendor.payment.approval.config'].search([
                 ('active', '=', True),
+                ('approval_type', '=', rec.approval_type),
             ], order='sequence, approver_type')
             if not configs:
                 raise UserError(
-                    _('No approvers configured. Please set up Vendor Payment Approval Settings (Purchase → Configuration).')
+                    _(
+                        'No approvers configured for "%s". '
+                        'Please set up Vendor Payment Approval Settings (Purchase → Configuration) for this approval type.'
+                    )
+                    % dict(rec._fields['approval_type'].selection).get(rec.approval_type, rec.approval_type)
+                )
+            approver_types = configs.mapped('approver_type')
+            if set(approver_types) != {'approver1', 'approver2'}:
+                raise UserError(
+                    _(
+                        'For "%s" both Approver 1 and Approver 2 must be configured in Vendor Payment Approval Settings. '
+                        'Currently missing: %s'
+                    )
+                    % (
+                        dict(rec._fields['approval_type'].selection).get(rec.approval_type, rec.approval_type),
+                        ', '.join({'approver1', 'approver2'} - set(approver_types)),
+                    )
                 )
             lines = [(5, 0, 0)]
             for cfg in configs:
@@ -70,7 +149,7 @@ class VendorPaymentApprovalRequest(models.Model):
                     'approver_type': cfg.approver_type,
                     'sequence': cfg.sequence,
                 }))
-            rec.write({
+            rec.sudo().write({
                 'state': 'pending_approval',
                 'approval_line_ids': lines,
             })
@@ -82,10 +161,11 @@ class VendorPaymentApprovalRequest(models.Model):
         self.ensure_one()
         next_line = self.approval_line_ids.filtered(lambda l: l.state == 'pending').sorted('sequence')[:1]
         if next_line and next_line.user_id:
+            type_label = dict(self._fields['approval_type'].selection).get(self.approval_type, self.approval_type)
             self.activity_schedule(
                 'mail.mail_activity_data_todo',
                 user_id=next_line.user_id.id,
-                note=_('Vendor payment approval requested for PO %s.') % self.purchase_order_id.name,
+                note=_('Vendor payment approval (%s) requested for PO %s.') % (type_label, self.purchase_order_id.name),
                 summary=_('Vendor Payment Approval: %s') % self.purchase_order_id.name,
             )
 

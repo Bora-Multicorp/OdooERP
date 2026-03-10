@@ -43,7 +43,6 @@
         <field name="model">margin.analysis.report</field>
         <field name="arch" type="xml">
             <list string="Funnel" default_order="product_id" decoration-info="purchase_actual_qty > 0" editable="bottom">
-                <field name="brand_id" string="Brand" optional="show"/>
                 <field name="item_name" string="Item Name" readonly="1"/>
                 <field name="item_alias" string="Item Alias" readonly="1"/>
                 <field name="purchase_actual_qty" string="Purchase Actual Quantity" sum="Total:" readonly="1"/>
@@ -70,7 +69,6 @@
                 <filter string="Date From" name="date_from" domain="[('date_from', '&lt;=', context_today().strftime('%Y-%m-%d'))]"/>
                 <filter string="Date To" name="date_to" domain="[('date_to', '&gt;=', context_today().strftime('%Y-%m-%d'))]"/>
                 <group expand="0" string="Group By">
-                    <filter string="Brand" name="group_by_brand" context="{'group_by': 'brand_id'}"/>
                     <filter string="Product" name="group_by_product" context="{'group_by': 'product_id'}"/>
                     <filter string="Date From" name="group_by_date_from" context="{'group_by': 'date_from'}"/>
                     <filter string="Date To" name="group_by_date_to" context="{'group_by': 'date_to'}"/>

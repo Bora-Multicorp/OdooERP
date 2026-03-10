@@ -243,11 +243,11 @@ class PurchaseAdvancePayment(models.TransientModel):
         if not self.payment_method_line_id:
             raise UserError(_('Please select a payment method.'))
 
-        if not self.purchase_order_id.has_approved_payment_request:
+        if not self.purchase_order_id.has_approved_advance_payment_request:
             raise UserError(
                 _(
-                    'Advance payment is not allowed until a Vendor Payment Approval Request for this Purchase Order is approved. '
-                    'Please create a Payment Approval Request (Request Payment Approval) and get it approved first.'
+                    'Advance payment is not allowed until a "Payment approval without bill" request for this Purchase Order is approved. '
+                    'Please create a Payment Approval Request (Request Advance Payment Approval) and get it approved first.'
                 )
             )
 

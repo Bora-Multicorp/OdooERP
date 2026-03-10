@@ -14,11 +14,17 @@ class PurchaseOrder(models.Model):
         string='Payment Approval Requests',
         copy=False,
     )
-    has_approved_payment_request = fields.Boolean(
-        string='Has Approved Payment Request',
-        compute='_compute_has_approved_payment_request',
+    has_approved_advance_payment_request = fields.Boolean(
+        string='Has Approved Advance Payment Request',
+        compute='_compute_has_approved_payment_requests',
         store=True,
-        help='True if at least one vendor payment approval request is approved for this PO.',
+        help='True if at least one approved request of type "without bill" exists (allows advance payment).',
+    )
+    has_approved_bill_payment_request = fields.Boolean(
+        string='Has Approved Bill Payment Request',
+        compute='_compute_has_approved_payment_requests',
+        store=True,
+        help='True if at least one approved request of type "with bill" exists (allows payment from vendor bill).',
     )
     payment_approval_request_count = fields.Integer(
         string='Payment Approval Count',
@@ -38,11 +44,15 @@ class PurchaseOrder(models.Model):
                 order.invoice_ids.filtered(lambda inv: inv.state == 'posted')
             )
 
-    @api.depends('payment_approval_request_ids', 'payment_approval_request_ids.state')
-    def _compute_has_approved_payment_request(self):
+    @api.depends('payment_approval_request_ids', 'payment_approval_request_ids.state', 'payment_approval_request_ids.approval_type')
+    def _compute_has_approved_payment_requests(self):
         for order in self:
-            order.has_approved_payment_request = any(
-                r.state == 'approved' for r in order.payment_approval_request_ids
+            requests = order.payment_approval_request_ids
+            order.has_approved_advance_payment_request = any(
+                r.state == 'approved' and r.approval_type == 'without_bill' for r in requests
+            )
+            order.has_approved_bill_payment_request = any(
+                r.state == 'approved' and r.approval_type == 'with_bill' for r in requests
             )
 
     @api.depends('payment_approval_request_ids')
@@ -51,22 +61,26 @@ class PurchaseOrder(models.Model):
             order.payment_approval_request_count = len(order.payment_approval_request_ids)
 
     def action_create_payment_approval_request(self):
-        """Create a new draft payment approval request for this PO (or open existing draft)."""
+        """Create or open the single payment approval request for this PO. Type is set from PO: with bill if vendor bill exists, else without bill."""
         self.ensure_one()
         if self.state not in ('purchase', 'done'):
             raise UserError(_('Only confirmed or locked Purchase Orders can request payment approval.'))
-        draft = self.payment_approval_request_ids.filtered(lambda r: r.state == 'draft')[:1]
-        if draft:
+        existing = self.payment_approval_request_ids.filtered(
+            lambda r: r.state in ('draft', 'pending_approval')
+        )[:1]
+        if existing:
             return {
                 'name': _('Payment Approval Request'),
                 'type': 'ir.actions.act_window',
                 'res_model': 'vendor.payment.approval.request',
                 'view_mode': 'form',
-                'res_id': draft.id,
+                'res_id': existing.id,
                 'target': 'current',
             }
+        approval_type = 'with_bill' if self.has_vendor_bill else 'without_bill'
         request = self.env['vendor.payment.approval.request'].create({
             'purchase_order_id': self.id,
+            'approval_type': approval_type,
         })
         return {
             'name': _('Payment Approval Request'),
@@ -77,11 +91,19 @@ class PurchaseOrder(models.Model):
             'target': 'current',
         }
 
+    def action_create_payment_approval_request_advance(self):
+        """Deprecated: use action_create_payment_approval_request. Kept for backward compatibility with cached views."""
+        return self.action_create_payment_approval_request()
+
+    def action_create_payment_approval_request_bill(self):
+        """Deprecated: use action_create_payment_approval_request. Kept for backward compatibility with cached views."""
+        return self.action_create_payment_approval_request()
+
     def action_view_payment_approval_requests(self):
         """View payment approval requests for this PO."""
         self.ensure_one()
         return {
-            'name': _('Payment Approval Requests'),
+            'name': _('Payment Approval Request'),
             'type': 'ir.actions.act_window',
             'res_model': 'vendor.payment.approval.request',
             'view_mode': 'list,form',

@@ -28,26 +28,27 @@
             <xpath expr="//field[@name='partner_id']" position="before">
                 <field name="ks_advance_payment_amount" invisible="1"/>
                 <field name="ks_advance_payment_balance" invisible="1"/>
-                <field name="has_approved_payment_request" invisible="1"/>
+                <field name="has_approved_advance_payment_request" invisible="1"/>
+                <field name="has_approved_bill_payment_request" invisible="1"/>
                 <field name="payment_approval_request_count" invisible="1"/>
                 <field name="has_vendor_bill" invisible="1"/>
             </xpath>
 
-            <!-- Request Payment Approval and Advance Payment buttons in header -->
+            <!-- Request Payment Approval (single button: type set from PO) and Advance Payment buttons in header -->
             <xpath expr="//button[@name='action_create_invoice']" position="after">
                 <button name="action_create_payment_approval_request"
                         type="object"
                         string="Request Payment Approval"
                         class="btn-secondary"
-                        invisible="state not in ('purchase', 'done')"
-                        help="Create a payment approval request. Once approved, you can create advance payments and register payments for vendor bills."/>
+                        invisible="state not in ('purchase', 'done') or (has_vendor_bill and has_approved_bill_payment_request) or (not has_vendor_bill and has_approved_advance_payment_request)"
+                        help="Request payment approval for this PO. Type is set automatically: with bill if a vendor bill exists, otherwise without bill. Hidden when approval already exists for this PO."/>
                 <button name="action_create_advance_payment"
                         type="object"
                         string="Create Advance Payment"
                         class="btn-secondary"
                         groups="ks_payment_access_control.group_ks_payment_access"
-                        invisible="state not in ('purchase', 'done') or not has_approved_payment_request"
-                        help="Create a payment directly from this purchase order without creating a bill (requires approved payment approval request)"/>
+                        invisible="state not in ('purchase', 'done') or not has_approved_advance_payment_request"
+                        help="Create a payment directly from this purchase order without creating a bill (requires approved advance payment approval request)"/>
             </xpath>
 
             <!-- Add Advance Payment Summary in the Other Information tab -->

@@ -3,7 +3,7 @@
 {
     'name': "Purchase Advance Payment",
     'summary': "Advance payment from PO, vendor payment approval (with/without bill), approval settings",
-    'version': '18.0.1.0.0',
+    'version': '18.0.2.0.0',
     'depends': ['purchase', 'account', 'mail', 'ks_payment_access_control'],
     'data': [
         'security/ir.model.access.csv',
@@ -12,6 +12,7 @@
         'views/vendor_payment_approval_request_views.xml',
         'views/vendor_payment_approval_bulk_actions.xml',
         'views/purchase_order_views.xml',
+        'views/account_move_views.xml',
         'views/purchase_order_menus.xml',
         'wizard/purchase_advance_payment_views.xml',
         'wizard/vendor_payment_approval_approve_wizard_views.xml',

@@ -15,6 +15,7 @@
                     <group>
                         <group>
                             <field name="purchase_order_id" options="{'no_create': True}"/>
+                            <field name="approval_type"/>
                             <field name="state" widget="statusbar" statusbar_visible="draft,pending_approval,approved"/>
                             <field name="request_user_id"/>
                             <field name="request_date"/>
@@ -51,8 +52,9 @@
         <field name="name">vendor.payment.approval.request.list</field>
         <field name="model">vendor.payment.approval.request</field>
         <field name="arch" type="xml">
-            <list string="Payment Approval Requests" decoration-success="state == 'approved'" decoration-danger="state == 'rejected'" decoration-warning="state == 'pending_approval'">
+            <list string="Payment Approval Request" decoration-success="state == 'approved'" decoration-danger="state == 'rejected'" decoration-warning="state == 'pending_approval'">
                 <field name="purchase_order_id"/>
+                <field name="approval_type"/>
                 <field name="state" widget="badge"/>
                 <field name="request_user_id"/>
                 <field name="request_date"/>
@@ -64,8 +66,10 @@
         <field name="name">vendor.payment.approval.request.search</field>
         <field name="model">vendor.payment.approval.request</field>
         <field name="arch" type="xml">
-            <search string="Payment Approval Requests">
+            <search string="Payment Approval Request">
                 <field name="purchase_order_id"/>
+                <filter name="filter_without_bill" string="Without Bill (Advance)" domain="[('approval_type', '=', 'without_bill')]"/>
+                <filter name="filter_with_bill" string="With Bill" domain="[('approval_type', '=', 'with_bill')]"/>
                 <filter name="draft" string="Draft" domain="[('state', '=', 'draft')]"/>
                 <filter name="pending" string="Pending Approval" domain="[('state', '=', 'pending_approval')]"/>
                 <filter name="approved" string="Approved" domain="[('state', '=', 'approved')]"/>
@@ -74,7 +78,7 @@
         </field>
     </record>
     <record id="action_vendor_payment_approval_request" model="ir.actions.act_window">
-        <field name="name">Payment Approval Requests</field>
+        <field name="name">Payment Approval Request</field>
         <field name="res_model">vendor.payment.approval.request</field>
         <field name="view_mode">list,form</field>
         <field name="search_view_id" ref="view_vendor_payment_approval_request_search"/>
@@ -88,9 +92,14 @@
             </p>
         </field>
     </record>
-    <menuitem id="menu_vendor_payment_approval_request"
-              name="Payment Approval Requests"
+    <!-- Parent menu: Vendor Payment (groups PO with/without bill and Payment Approval Request) -->
+    <menuitem id="menu_vendor_payment_approval_root"
+              name="Vendor Payment"
               parent="purchase.menu_purchase_root"
+              sequence="14"/>
+    <menuitem id="menu_vendor_payment_approval_request"
+              name="Payment Approval Request"
+              parent="menu_vendor_payment_approval_root"
               action="action_vendor_payment_approval_request"
-              sequence="45"/>
+              sequence="10"/>
 </odoo>

@@ -5,10 +5,8 @@
         <field name="name">ks.payment.tracker.list</field>
         <field name="model">ks.payment.tracker</field>
         <field name="arch" type="xml">
-            <list string="Payment Tracker" create="1" delete="1" edit="1" default_order="sn" decoration-success="state == 'approved'" decoration-warning="state == 'pending_approval'" decoration-muted="state in ('draft', 'rejected')">
+            <list string="Payment Tracker" create="1" delete="1" edit="1" default_order="sn">
                 <field name="sn"/>
-                <field name="state" widget="badge" decoration-info="state == 'draft'"/>
-                <field name="payment_approval_type"/>
                 <field name="purchase_order_id"/>
                 <field name="user_id" widget="many2one_avatar_user"/>
                 <field name="company_id" groups="base.group_multi_company"/>
@@ -39,18 +37,10 @@
         <field name="model">ks.payment.tracker</field>
         <field name="arch" type="xml">
             <form string="Payment Tracker">
-                <header>
-                    <button name="action_submit_for_approval" string="Submit for Approval" type="object" class="btn-primary" invisible="state != 'draft'"/>
-                    <button name="action_approve" string="Approve" type="object" class="btn-primary" invisible="state != 'pending_approval'"/>
-                    <button name="action_reject" string="Reject" type="object" class="btn-secondary" invisible="state != 'pending_approval'"/>
-                    <button name="action_reset_to_draft" string="Reset to Draft" type="object" invisible="state not in ('pending_approval', 'rejected')"/>
-                </header>
                 <sheet>
                     <group>
                         <group string="Reference">
                             <field name="sn" readonly="1"/>
-                            <field name="state" widget="statusbar" statusbar_visible="draft,pending_approval,approved"/>
-                            <field name="payment_approval_type"/>
                             <field name="purchase_order_id" options="{'no_create': True}"/>
                             <field name="purchase_line_id" options="{'no_create': True}" invisible="1"/>
                             <field name="user_id" string="Sales Person"/>
@@ -79,33 +69,10 @@
                             <field name="at_warehouse"/>
                             <field name="approved"/>
                             <field name="approved_notes"/>
-                            <field name="approval_user_id" readonly="1" invisible="state != 'approved'"/>
-                            <field name="approval_date" readonly="1" invisible="state != 'approved'"/>
-                            <field name="rejection_notes" readonly="1" invisible="state != 'rejected'"/>
                         </group>
                     </group>
                 </sheet>
             </form>
-        </field>
-    </record>
-
-    <!-- Search View: Payment Tracker -->
-    <record id="ks_payment_tracker_search_view" model="ir.ui.view">
-        <field name="name">ks.payment.tracker.search</field>
-        <field name="model">ks.payment.tracker</field>
-        <field name="arch" type="xml">
-            <search string="Payment Tracker">
-                <field name="purchase_order_id"/>
-                <field name="partner_id"/>
-                <field name="invoice_no"/>
-                <filter string="Draft" name="draft" domain="[('state', '=', 'draft')]"/>
-                <filter string="Pending Approval" name="pending" domain="[('state', '=', 'pending_approval')]"/>
-                <filter string="Approved" name="approved" domain="[('state', '=', 'approved')]"/>
-                <filter string="Rejected" name="rejected" domain="[('state', '=', 'rejected')]"/>
-                <separator/>
-                <filter string="Payment approval with bill" name="with_bill" domain="[('payment_approval_type', '=', 'with_bill')]"/>
-                <filter string="Payment approval without bill" name="without_bill" domain="[('payment_approval_type', '=', 'without_bill')]"/>
-            </search>
         </field>
     </record>
 
@@ -114,7 +81,6 @@
         <field name="name">Payment Tracker</field>
         <field name="res_model">ks.payment.tracker</field>
         <field name="view_mode">list,form</field>
-        <field name="search_view_id" ref="ks_payment_tracker_search_view"/>
         <field name="context">{'search_default_my_records': 0}</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
@@ -126,40 +92,11 @@
         </field>
     </record>
 
-    <!-- Action: Payment approval with bill for purchase -->
-    <record id="ks_payment_tracker_action_with_bill" model="ir.actions.act_window">
-        <field name="name">Payment approval with bill for purchase</field>
-        <field name="res_model">ks.payment.tracker</field>
-        <field name="view_mode">list,form</field>
-        <field name="search_view_id" ref="ks_payment_tracker_search_view"/>
-        <field name="context">{'search_default_with_bill': 1}</field>
-    </record>
-
-    <!-- Action: Payment approval without bill for purchase -->
-    <record id="ks_payment_tracker_action_without_bill" model="ir.actions.act_window">
-        <field name="name">Payment approval without bill for purchase</field>
-        <field name="res_model">ks.payment.tracker</field>
-        <field name="view_mode">list,form</field>
-        <field name="search_view_id" ref="ks_payment_tracker_search_view"/>
-        <field name="context">{'search_default_without_bill': 1}</field>
-    </record>
-
     <!-- Menu: Payment Tracker under Purchase -->
     <menuitem id="ks_payment_tracker_menu_root"
               name="Payment Tracker"
               action="ks_payment_tracker_action"
               parent="purchase.menu_purchase_root"
               sequence="50"/>
-    <!-- Submenu: Payment approval with bill -->
-    <menuitem id="ks_payment_tracker_menu_with_bill"
-              name="Payment approval with bill for purchase"
-              action="ks_payment_tracker_action_with_bill"
-              parent="ks_payment_tracker.ks_payment_tracker_menu_root"
-              sequence="10"/>
-    <!-- Submenu: Payment approval without bill -->
-    <menuitem id="ks_payment_tracker_menu_without_bill"
-              name="Payment approval without bill for purchase"
-              action="ks_payment_tracker_action_without_bill"
-              parent="ks_payment_tracker.ks_payment_tracker_menu_root"
-              sequence="20"/>
+
 </odoo>
