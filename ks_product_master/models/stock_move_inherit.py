@@ -268,15 +268,22 @@ class StockMoveLine(models.Model):
         if 'quant_id' in vals and vals['quant_id']:
             for line in self:
                 quant = self.env['stock.quant'].browse(vals['quant_id'])
-                # Check if move line has country fields set
-                specs_made = line.specs_made or (line.move_id and line.move_id.specs_made)
-                made_country = line.made_country or (line.move_id and line.move_id.made_country)
-                
-                if specs_made and quant.specs_made and quant.specs_made.id != specs_made.id:
-                    raise ValidationError(_('The selected quant has a different "Spec Made For" (%s) than required (%s).') % 
+                # Use country from vals first (so same-write update of quant + country passes), then line/move
+                specs_made = vals.get('specs_made') and self.env['res.country'].browse(vals['specs_made'])
+                if not specs_made:
+                    specs_made = line.specs_made or (line.move_id and line.move_id.specs_made)
+                made_country = vals.get('made_country') and self.env['res.country'].browse(vals['made_country'])
+                if not made_country:
+                    made_country = line.made_country or (line.move_id and line.move_id.made_country)
+                # Compare ids for consistency
+                specs_made_id = specs_made.id if specs_made else None
+                made_country_id = made_country.id if made_country else None
+
+                if specs_made_id and quant.specs_made and quant.specs_made.id != specs_made_id:
+                    raise ValidationError(_('The selected quant has a different "Spec Made For" (%s) than required (%s).') %
                                         (quant.specs_made.name, specs_made.name))
-                if made_country and quant.made_country and quant.made_country.id != made_country.id:
-                    raise ValidationError(_('The selected quant has a different "Made In" (%s) than required (%s).') % 
+                if made_country_id and quant.made_country and quant.made_country.id != made_country_id:
+                    raise ValidationError(_('The selected quant has a different "Made In" (%s) than required (%s).') %
                                         (quant.made_country.name, made_country.name))
         
         res = super().write(vals)
@@ -502,7 +509,21 @@ class StockPickingInherit(models.Model):
         tracking=True
     )
 
+    @api.model_create_multi
+    def create(self, vals_list):
+        pickings = super().create(vals_list)
+        for picking in pickings:
+            if picking.specs_made and picking.made_country and picking.picking_type_id.code == 'outgoing':
+                picking._update_move_quantities_by_country_stock()
+        return pickings
 
+    def write(self, vals):
+        res = super().write(vals)
+        if 'specs_made' in vals or 'made_country' in vals:
+            for picking in self:
+                if picking.specs_made and picking.made_country and picking.picking_type_id.code == 'outgoing':
+                    picking._update_move_quantities_by_country_stock()
+        return res
 
     def action_confirm(self):
         """Override to propagate specs_made and made_country to moves and move lines"""
@@ -524,6 +545,164 @@ class StockPickingInherit(models.Model):
                     'specs_made': picking.specs_made.id if picking.specs_made else False,
                     'made_country': picking.made_country.id if picking.made_country else False,
                 })
+
+    def _update_move_quantities_by_country_stock(self):
+        """Update move (product line) quantities to available stock for Spec Made For + Made In.
+        When both specs_made and made_country are set, cap each move's product_uom_qty to the
+        available quantity in the source location matching those country fields.
+        Also assign serial/lot and IMEI on move lines from matching quants.
+        """
+        for picking in self:
+            for move, assign_qty in picking._get_country_stock_assign_quantities():
+                if move.product_uom_qty != assign_qty:
+                    move.write({'product_uom_qty': assign_qty})
+            picking._assign_move_line_quants_by_country_fields(persist=True)
+
+    def _assign_move_line_quants_by_country_fields(self, persist=True):
+        """Assign lot/serial and IMEI on move lines from quants matching Spec Made For + Made In.
+        Each line gets a distinct matching quant (no reuse). persist=True: write to DB; False: set in memory for onchange.
+        First clears any line whose current quant does not match picking's Spec Made For/Made In, so validation passes.
+        """
+        self.ensure_one()
+        if not self.specs_made or not self.made_country:
+            return
+        specs_made_id = self.specs_made.id
+        made_country_id = self.made_country.id
+
+        # First pass: clear quant/lot/IMEI on any line whose current quant doesn't match picking's country (so later write(quant_id=...) won't raise validation)
+        for move_line in self.move_line_ids:
+            if not move_line.product_id or not move_line.location_id:
+                continue
+            quant = move_line.quant_id if hasattr(move_line, 'quant_id') and move_line.quant_id else None
+            if quant:
+                if (quant.specs_made and quant.specs_made.id != specs_made_id) or (quant.made_country and quant.made_country.id != made_country_id):
+                    clear_vals = {
+                        'lot_id': False,
+                        'lot_name': False,
+                        'imei': False,
+                        'imei2': False,
+                        'quant_id': False,
+                        'specs_made': specs_made_id,
+                        'made_country': made_country_id,
+                    }
+                    if persist:
+                        move_line.write(clear_vals)
+                    else:
+                        for k, v in clear_vals.items():
+                            setattr(move_line, k, v)
+
+        # Second pass: assign matching quants (each line gets a distinct quant)
+        assigned_quant_ids = {}
+        for move_line in self.move_line_ids:
+            if not move_line.product_id or not move_line.location_id:
+                continue
+            key = (move_line.product_id.id, move_line.location_id.id)
+            domain = [
+                ('product_id', '=', move_line.product_id.id),
+                ('location_id', '=', move_line.location_id.id),
+                ('quantity', '>', 0),
+                ('specs_made', '=', specs_made_id),
+                ('made_country', '=', made_country_id),
+            ]
+            already_assigned = assigned_quant_ids.setdefault(key, set())
+            if already_assigned:
+                domain.append(('id', 'not in', list(already_assigned)))
+            quant = self.env['stock.quant'].search(domain, limit=1)
+            if not quant:
+                # No matching quant: clear serial/IMEI so they match the selected location
+                clear_vals = {
+                    'lot_id': False,
+                    'lot_name': False,
+                    'imei': False,
+                    'imei2': False,
+                    'quant_id': False,
+                    'specs_made': specs_made_id,
+                    'made_country': made_country_id,
+                }
+                if persist:
+                    move_line.write(clear_vals)
+                else:
+                    for k, v in clear_vals.items():
+                        setattr(move_line, k, v)
+                continue
+            already_assigned.add(quant.id)
+            update_vals = {
+                'specs_made': specs_made_id,
+                'made_country': made_country_id,
+            }
+            if quant.lot_id:
+                update_vals['lot_id'] = quant.lot_id.id
+                update_vals['lot_name'] = quant.lot_id.name
+            if quant.imei:
+                update_vals['imei'] = quant.imei
+            if quant.imei2:
+                update_vals['imei2'] = quant.imei2
+            if quant.id:
+                update_vals['quant_id'] = quant.id
+            if persist:
+                move_line.write(update_vals)
+            else:
+                for k, v in update_vals.items():
+                    setattr(move_line, k, v)
+
+    def _get_country_stock_assign_quantities(self):
+        """Return list of (move, assign_qty) for this picking based on Spec Made For + Made In stock.
+        assign_qty = min(move.product_uom_qty, available for that product/location).
+        """
+        self.ensure_one()
+        if not self.specs_made or not self.made_country or self.picking_type_id.code != 'outgoing' or not self.move_ids:
+            return []
+
+        move_ids = self.move_ids
+        product_ids = move_ids.mapped('product_id').ids
+        location_ids = move_ids.mapped('location_id').ids
+        if not product_ids or not location_ids:
+            return []
+
+        quants = self.env['stock.quant'].read_group(
+            [
+                ('product_id', 'in', product_ids),
+                ('location_id', 'in', location_ids),
+                ('specs_made', '=', self.specs_made.id),
+                ('made_country', '=', self.made_country.id),
+                ('quantity', '>', 0),
+            ],
+            ['product_id', 'location_id', 'quantity:sum'],
+            ['product_id', 'location_id'],
+            lazy=False,
+        )
+        available = {}
+        for q in quants:
+            pid = q.get('product_id')
+            lid = q.get('location_id')
+            if pid is None or lid is None:
+                continue
+            pid = pid[0] if isinstance(pid, tuple) else pid
+            lid = lid[0] if isinstance(lid, tuple) else lid
+            qty = q.get('quantity', 0) or 0
+            available[(pid, lid)] = qty
+
+        result = []
+        for move in move_ids.sorted(key=lambda m: m.id):
+            if not move.product_id or not move.location_id:
+                continue
+            key = (move.product_id.id, move.location_id.id)
+            avail = available.get(key, 0.0)
+            if avail <= 0:
+                assign_qty = 0.0
+            else:
+                assign_qty = min(move.product_uom_qty, avail)
+            available[key] = avail - assign_qty
+            result.append((move, assign_qty))
+        return result
+
+    @api.onchange('specs_made', 'made_country')
+    def _onchange_specs_made_made_country_update_quantities(self):
+        """When Spec Made For or Made In change, update product line quantities and line serial/IMEI to available stock (in-memory)."""
+        if self.specs_made and self.made_country and self.picking_type_id.code == 'outgoing':
+            for move, assign_qty in self._get_country_stock_assign_quantities():
+                move.product_uom_qty = assign_qty
+            self._assign_move_line_quants_by_country_fields(persist=False)
 
     def button_validate(self):
         """Override to validate country fields, assign matching quants, and propagate before validation"""
