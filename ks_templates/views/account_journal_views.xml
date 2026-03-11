@@ -18,6 +18,9 @@
                     <field name="ifsc_code" placeholder="e.g. HDFC0000104"/>
                     <field name="branch_sol_id" placeholder="e.g. 001 - Sberbank, New Delhi or 1144"/>
                     <field name="branch" placeholder="e.g. 001 - 675 / KHALED BIN WALEED STREET"/>
+                    <field name="is_cash_credit" widget="boolean_toggle"/>
+                    <field name="ks_cc_limit" invisible="not is_cash_credit"/>
+                    <field name="company_currency_id" column_invisible="1"/>
                 </group>
             </field>
         </record>
