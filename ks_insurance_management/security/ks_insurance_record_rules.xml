@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Multi-company: restrict to current company(ies) or shared (company_id = False) -->
+        <record id="rule_insurance_policy_company" model="ir.rule">
+            <field name="name">Insurance Policy: multi-company</field>
+            <field name="model_id" ref="model_insurance_policy"/>
+            <field name="domain_force">[('company_id', 'in', [False] + user.company_ids.ids)]</field>
+            <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+        </record>
+        <record id="rule_insurance_declaration_company" model="ir.rule">
+            <field name="name">Insurance Declaration: multi-company</field>
+            <field name="model_id" ref="model_insurance_declaration"/>
+            <field name="domain_force">[('company_id', 'in', [False] + user.company_ids.ids)]</field>
+            <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+        </record>
+        <record id="rule_insurance_company_company" model="ir.rule">
+            <field name="name">Insurance Company: multi-company</field>
+            <field name="model_id" ref="model_insurance_company"/>
+            <field name="domain_force">[('company_id', 'in', [False] + user.company_ids.ids)]</field>
+            <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+        </record>
+        <record id="rule_insurance_agent_company" model="ir.rule">
+            <field name="name">Insurance Agent: multi-company</field>
+            <field name="model_id" ref="model_insurance_agent"/>
+            <field name="domain_force">[('company_id', 'in', [False] + user.company_ids.ids)]</field>
+            <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+        </record>
+        <record id="rule_insurance_type_company" model="ir.rule">
+            <field name="name">Insurance Type: multi-company</field>
+            <field name="model_id" ref="model_insurance_type"/>
+            <field name="domain_force">[('company_id', 'in', [False] + user.company_ids.ids)]</field>
+            <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+        </record>
+        <record id="rule_insurance_category_company" model="ir.rule">
+            <field name="name">Insurance Category: multi-company</field>
+            <field name="model_id" ref="model_insurance_category"/>
+            <field name="domain_force">[('company_id', 'in', [False] + user.company_ids.ids)]</field>
+            <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+        </record>
+    </data>
+</odoo>

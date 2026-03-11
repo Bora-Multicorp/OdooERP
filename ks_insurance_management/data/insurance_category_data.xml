@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="cat_fire" model="insurance.category">
+        <field name="name">Fire</field>
+        <field name="code">FIRE</field>
+        <field name="company_id" eval="False"/>
+    </record>
+    <record id="cat_burglary" model="insurance.category">
+        <field name="name">Burglary</field>
+        <field name="code">BURG</field>
+        <field name="company_id" eval="False"/>
+    </record>
+    <record id="cat_marine" model="insurance.category">
+        <field name="name">Marine</field>
+        <field name="code">MARINE</field>
+        <field name="company_id" eval="False"/>
+    </record>
+    <record id="cat_gmc" model="insurance.category">
+        <field name="name">GMC</field>
+        <field name="code">GMC</field>
+        <field name="is_misc">True</field>
+        <field name="company_id" eval="False"/>
+    </record>
+    <record id="cat_gpa" model="insurance.category">
+        <field name="name">GPA</field>
+        <field name="code">GPA</field>
+        <field name="is_misc">True</field>
+        <field name="company_id" eval="False"/>
+    </record>
+    <record id="cat_vehicle" model="insurance.category">
+        <field name="name">Vehicle</field>
+        <field name="code">VEH</field>
+        <field name="is_misc">True</field>
+        <field name="company_id" eval="False"/>
+    </record>
+    <record id="cat_personal" model="insurance.category">
+        <field name="name">Personal</field>
+        <field name="code">PER</field>
+        <field name="is_misc">True</field>
+        <field name="company_id" eval="False"/>
+    </record>
+    <record id="cat_office" model="insurance.category">
+        <field name="name">Office Space</field>
+        <field name="code">OFFICE</field>
+        <field name="is_misc">True</field>
+        <field name="company_id" eval="False"/>
+    </record>
+    <record id="cat_ho_assets" model="insurance.category">
+        <field name="name">HO Assets</field>
+        <field name="code">HO</field>
+        <field name="is_misc">True</field>
+        <field name="company_id" eval="False"/>
+    </record>
+</odoo>

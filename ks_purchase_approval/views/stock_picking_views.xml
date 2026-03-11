@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_stock_picking_form_ks_grn_approval" model="ir.ui.view">
+        <field name="name">stock.picking.form.ks.grn.approval</field>
+        <field name="model">stock.picking</field>
+        <field name="inherit_id" ref="stock.view_picking_form"/>
+        <field name="arch" type="xml">
+            <!-- Hidden fields for GRN approval and button visibility -->
+            <xpath expr="//field[@name='origin']" position="before">
+                <field name="ks_grn_approval_state" invisible="1"/>
+                <field name="ks_grn_show_approve_button" invisible="1"/>
+                <field name="ks_grn_show_reject_button" invisible="1"/>
+            </xpath>
+            <!-- GRN Approval status and request info (for incoming receipts from PO) -->
+            <xpath expr="//field[@name='origin']" position="after">
+                <group invisible="ks_grn_approval_state == 'normal'">
+                    <group string="GRN Approval (over-receipt / new product)">
+                        <field name="ks_grn_approval_state" readonly="1"/>
+                        <field name="ks_grn_request_date" readonly="1"/>
+                        <field name="ks_grn_request_user_id" readonly="1"/>
+                        <field name="ks_grn_pm1_reason" readonly="1" invisible="not ks_grn_pm1_reason"/>
+                        <field name="ks_grn_pm2_reason" readonly="1" invisible="not ks_grn_pm2_reason"/>
+                        <field name="ks_grn_reject_reason" readonly="1" invisible="ks_grn_approval_state != 'rejected'"/>
+                        <field name="ks_grn_reject_user_id" readonly="1" invisible="ks_grn_approval_state != 'rejected'"/>
+                    </group>
+                </group>
+            </xpath>
+            <!-- Approve / Reject GRN buttons in header (visible to PO approvers when pending) -->
+            <xpath expr="//button[@name='button_validate']" position="before">
+                <button name="action_ks_grn_approve_wizard"
+                        type="object"
+                        string="Approve GRN"
+                        class="btn-primary"
+                        invisible="not ks_grn_show_approve_button"/>
+                <button name="action_ks_grn_reject_wizard"
+                        type="object"
+                        string="Reject GRN"
+                        class="btn-secondary"
+                        invisible="not ks_grn_show_reject_button"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

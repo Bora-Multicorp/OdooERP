@@ -5,3 +5,5 @@ from . import ks_approve_reason_wizard
 from . import ks_cancel_approval_request_wizard
 from . import ks_edit_approval_request_wizard
 from . import ks_approval_reason_wizard
+from . import ks_grn_approve_wizard
+from . import ks_grn_reject_wizard
