@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- PO with vendor bill -->
+    <record id="action_purchase_order_with_vendor_bill" model="ir.actions.act_window">
+        <field name="name">PO with Vendor Bill</field>
+        <field name="res_model">purchase.order</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('has_vendor_bill', '=', True), ('state', 'in', ('purchase', 'done'))]</field>
+        <field name="context">{'search_default_purchase': 1}</field>
+        <field name="help" type="html">
+            <p>Purchase orders that have at least one posted vendor bill.</p>
+        </field>
+    </record>
+    <menuitem id="menu_purchase_order_with_vendor_bill"
+              name="PO with Vendor Bill"
+              parent="ks_purchase_advance_payment.menu_vendor_payment_approval_root"
+              action="action_purchase_order_with_vendor_bill"
+              sequence="15"/>
+
+    <!-- PO without vendor bill -->
+    <record id="action_purchase_order_without_vendor_bill" model="ir.actions.act_window">
+        <field name="name">PO without Vendor Bill</field>
+        <field name="res_model">purchase.order</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('has_vendor_bill', '=', False), ('state', 'in', ('purchase', 'done'))]</field>
+        <field name="context">{'search_default_purchase': 1}</field>
+        <field name="help" type="html">
+            <p>Purchase orders that do not have a posted vendor bill yet.</p>
+        </field>
+    </record>
+    <menuitem id="menu_purchase_order_without_vendor_bill"
+              name="PO without Vendor Bill"
+              parent="ks_purchase_advance_payment.menu_vendor_payment_approval_root"
+              action="action_purchase_order_without_vendor_bill"
+              sequence="16"/>
+</odoo>

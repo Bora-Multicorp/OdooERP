@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <record id="view_stock_valuation_layer_tree_inherit" model="ir.ui.view">
+            <field name="name">stock.valuation.layer.tree.inherit.usd</field>
+            <field name="model">stock.valuation.layer</field>
+            <field name="inherit_id" ref="stock_account.stock_valuation_layer_tree"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='value']" position="after">
+                    <field name="value_usd" string="USD" optional="show"/>
+                    <field name="usd_currency_id" column_invisible="True"/>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>

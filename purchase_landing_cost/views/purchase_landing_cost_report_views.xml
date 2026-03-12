@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <!-- Tree view required so "form" action can resolve default views -->
+    <record id="view_purchase_landing_cost_report_tree" model="ir.ui.view">
+        <field name="name">purchase.landing.cost.report.tree</field>
+        <field name="model">purchase.landing.cost.report</field>
+        <field name="arch" type="xml">
+            <list create="0" delete="0">
+                <field name="purchase_order_id"/>
+                <field name="misc"/>
+                <field name="freight"/>
+                <field name="insurance"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Tree view for report lines (One2many list may request default tree for this model) -->
+    <record id="view_purchase_landing_cost_report_line_tree" model="ir.ui.view">
+        <field name="name">purchase.landing.cost.report.line.tree</field>
+        <field name="model">purchase.landing.cost.report.line</field>
+        <field name="arch" type="xml">
+            <list create="0" delete="0">
+                <field name="sequence" string="Sr No" optional="show"/>
+                <field name="product_id" string="Stock Item" optional="show"/>
+                <field name="hsn_code" string="From PO HSN" optional="show"/>
+                <field name="usd_rate" string="From PO USD Rate" optional="show"/>
+                <field name="qty" string="From PO Qty" optional="show"/>
+                <field name="usd_value" string="From PO USD Value" optional="show"/>
+                <field name="exchange_rate" string="Exchange Rate (Text Box)" optional="show"/>
+                <field name="inr_value" string="INR Value (As per Formula)" optional="show"/>
+                <field name="misc_amt" string="Misc (As per Formula)" optional="show"/>
+                <field name="freight_amt" string="Freight (As per Formula)" optional="show"/>
+                <field name="insurance_amt" string="Insurance (As per Formula)" optional="show"/>
+                <field name="assessable_value" string="Assessable Value (As per Formula)" optional="show"/>
+                <field name="bcd_amt" string="BCD" optional="show"/>
+                <field name="sws_amt" string="SWS" optional="show"/>
+                <field name="duty_before_gst" string="Total Duty (BCD+SWS)" optional="show"/>
+                <field name="gst_amt" string="GST" optional="show"/>
+                <field name="total_duty" string="Total Duty (SWS, BCD, GST)" optional="show"/>
+                <field name="bcd_percent_display" string="BCD %" optional="show" readonly="1"/>
+                <field name="sws_percent_display" string="SWS %" optional="show" readonly="1"/>
+                <field name="gst_percent_display" string="GST %" optional="show" readonly="1"/>
+                <field name="is_foc" column_invisible="1"/>
+                <field name="display_section" column_invisible="1"/>
+                <field name="report_id" column_invisible="1"/>
+                <field name="purchase_order_line_id" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_purchase_landing_cost_report_form" model="ir.ui.view">
+        <field name="name">purchase.landing.cost.report.form</field>
+        <field name="model">purchase.landing.cost.report</field>
+        <field name="arch" type="xml">
+            <form string="Net Landing Cost Report" create="0" delete="0">
+                <header>
+                    <button name="action_download_xlsx" string="Download Excel" type="object" class="btn-primary" icon="fa-file-excel-o"/>
+                    <button name="action_print_report" string="Print (PDF)" type="object" class="btn-secondary" icon="fa-print"/>
+                </header>
+                <sheet>
+                    <div class="mb-3">
+                        <h4>This is a report calculating Net Landing Cost of each product per PO</h4>
+                    </div>
+                    <field name="purchase_order_id" invisible="1"/>
+                    <group string="Standard Items - Manual Inputs">
+                        <field name="misc" string="Misc (Text Box)"/>
+                        <field name="freight" string="Freight (Text Box)"/>
+                        <field name="insurance" string="Insurance (Text Box)"/>
+                    </group>
+                    <group string="PO No:" class="mt-3">
+                        <label for="purchase_order_id"/>
+                        <div class="o_row">
+                            <field name="purchase_order_id" readonly="1" nolabel="1" class="fw-bold"/>
+                        </div>
+                    </group>
+                    <div class="mt-3 fw-bold">Standard Items</div>
+                    <field name="standard_line_ids" nolabel="1" mode="list" context="{'default_report_id': id}" class="mt-2">
+                        <list create="0" delete="0" editable="bottom">
+                            <field name="sequence" string="Sr No" optional="show"/>
+                            <field name="product_id" string="Stock Item" optional="show"/>
+                            <field name="hsn_code" string="From PO HSN" optional="show"/>
+                            <field name="usd_rate" string="From PO USD Rate" optional="show"/>
+                            <field name="qty" string="From PO Qty" optional="show"/>
+                            <field name="usd_value" string="From PO USD Value" optional="show"/>
+                            <field name="exchange_rate" string="Exchange Rate (Text Box)" optional="show"/>
+                            <field name="inr_value" string="INR Value (As per Formula)" optional="show"/>
+                            <field name="misc_amt" string="Misc (As per Formula)" optional="show"/>
+                            <field name="freight_amt" string="Freight (As per Formula)" optional="show"/>
+                            <field name="insurance_amt" string="Insurance (As per Formula)" optional="show"/>
+                            <field name="assessable_value" string="Assessable Value (As per Formula)" optional="show"/>
+                            <field name="bcd_amt" string="BCD" optional="show"/>
+                            <field name="sws_amt" string="SWS" optional="show"/>
+                            <field name="duty_before_gst" string="Total Duty (BCD+SWS)" optional="show"/>
+                            <field name="gst_amt" string="GST" optional="show"/>
+                            <field name="total_duty" string="Total Duty (SWS, BCD, GST)" optional="show"/>
+                            <field name="bcd_percent_display" string="BCD %" optional="show" readonly="1"/>
+                            <field name="sws_percent_display" string="SWS %" optional="show" readonly="1"/>
+                            <field name="gst_percent_display" string="GST %" optional="show" readonly="1"/>
+                            <field name="report_id" column_invisible="1"/>
+                            <field name="purchase_order_line_id" column_invisible="1"/>
+                        </list>
+                    </field>
+                    <group string="Free of Cost - Manual Inputs" class="mt-4">
+                        <field name="foc_freight" string="Freight (Text Box)"/>
+                        <field name="foc_insurance" string="Insurance (Text Box)"/>
+                    </group>
+                    <div class="mt-3 fw-bold">Free of Cost But duty is to be paid on assessable value</div>
+                    <field name="foc_line_ids" nolabel="1" mode="list" context="{'default_report_id': id}" class="mt-2">
+                        <list create="0" delete="0" editable="bottom">
+                            <field name="sequence" string="Sr No" optional="show"/>
+                            <field name="product_id" string="Stock Item" optional="show"/>
+                            <field name="hsn_code" string="From PO HSN" optional="show"/>
+                            <field name="usd_rate" string="From PO USD Rate" optional="show"/>
+                            <field name="qty" string="From PO Qty" optional="show"/>
+                            <field name="usd_value" string="From PO USD Value" optional="show"/>
+                            <field name="exchange_rate" string="Exchange Rate (Text Box)" optional="show"/>
+                            <field name="inr_value" string="INR Value (As per Formula)" optional="show"/>
+                            <field name="misc_amt" string="Misc (As per Formula)" optional="show"/>
+                            <field name="freight_amt" string="Freight (As per Formula)" optional="show"/>
+                            <field name="insurance_amt" string="Insurance (As per Formula)" optional="show"/>
+                            <field name="assessable_value" string="Assessable Value (As per Formula)" optional="show"/>
+                            <field name="bcd_amt" string="BCD" optional="show"/>
+                            <field name="sws_amt" string="SWS" optional="show"/>
+                            <field name="duty_before_gst" string="Total Duty (BCD+SWS)" optional="show"/>
+                            <field name="gst_amt" string="GST" optional="show"/>
+                            <field name="total_duty" string="Total Duty (SWS, BCD, GST)" optional="show"/>
+                            <field name="bcd_percent_display" string="BCD %" optional="show" readonly="1"/>
+                            <field name="sws_percent_display" string="SWS %" optional="show" readonly="1"/>
+                            <field name="gst_percent_display" string="GST %" optional="show" readonly="1"/>
+                            <field name="report_id" column_invisible="1"/>
+                            <field name="purchase_order_line_id" column_invisible="1"/>
+                        </list>
+                    </field>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_purchase_order_form_landing_cost_button" model="ir.ui.view">
+        <field name="name">purchase.order.form.landing.cost.button</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <button name="action_open_landing_cost_report" string="PU-003" type="object" class="btn-secondary" invisible="state not in ('purchase', 'done') or not order_line"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

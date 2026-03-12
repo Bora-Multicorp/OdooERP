@@ -54,7 +54,7 @@ class SaleOrder(models.Model):
             for inv in invoices:
                 # 2. Sum the amounts of payment records that are in 'posted' (paid) state
                 # We filter the recordset before mapping the amount
-                valid_payments = inv.reconciled_payment_ids.filtered(lambda p: p.state == 'posted')
+                valid_payments = inv.reconciled_payment_ids.filtered(lambda p: p.state == 'paid')
                 invoice_payment_sum = sum(valid_payments.mapped('amount'))
 
                 # 3. Add to total if it's a standard Invoice, subtract if it's a Credit Note

@@ -3,6 +3,7 @@
 import io
 import base64
 import re
+from datetime import date
 from odoo import models, api, fields
 from odoo.exceptions import UserError
 try:
@@ -46,164 +47,397 @@ class PartWiseAllDataReport(models.TransientModel):
     filename = fields.Char(string='Filename', default='Part_Wise_All_Data.xlsx')
 
     @api.model
-    def generate_xlsx_report(self):
+    def generate_xlsx_report(self, sale_order_ids=None, report_lines=None):
         """
-        Generate XLSX report with Sale Order data
-        Product-wise display (each product on separate row)
-        Returns base64 encoded file content
+        Generate XLSX report "SUMMARY FOR NEW ORDER" with Sale Order data.
+        Layout: Month, title, TILL DATE; green header with SN, PI NO., PARTY NAME, PRODUCTS,
+        quantities/amounts, DISPATCH AMOUNT, BALANCE QTY, deviation, net remaining; TOTAL footer.
+        Product-wise display (each product on separate row).
+        If sale_order_ids is provided, only those sale orders are included; otherwise all confirmed.
+        If report_lines (ks.part.wise.report.line recordset) is provided, Monthly Plan Qty/Amount
+        from those lines are used (same order as generated rows).
+        Returns base64 encoded file content.
         """
-        # Create output in memory
         output = io.BytesIO()
         workbook = xlsxwriter.Workbook(output, {'in_memory': True})
-        
-        # Define header style with bold text and light background
+
+        num_cols = 19
+        # Green header with bold WHITE text (as per screenshot)
         header_format = workbook.add_format({
             'bold': True,
-            'bg_color': '#D3D3D3',  # Light gray background
+            'bg_color': '#2E7D32',  # Dark green
+            'font_color': '#FFFFFF',
             'border': 1,
             'align': 'center',
             'valign': 'vcenter',
         })
-        
-        # Define data row format
+        title_format = workbook.add_format({
+            'bold': True,
+            'align': 'center',
+            'font_size': 14,
+        })
+        till_date_format = workbook.add_format({
+            'bold': True,
+            'align': 'right',
+        })
         data_format = workbook.add_format({
             'border': 1,
             'valign': 'vcenter',
         })
-        
-        # Define number format
         number_format = workbook.add_format({
             'border': 1,
             'valign': 'vcenter',
+            'align': 'right',
             'num_format': '#,##0.00',
         })
-        
-        # Define column headings in exact order as specified
-        headers = [
-            'PI NO.',
-            'PRODUCTS',
-            'TOTAL PI QUANTITY',
-            'TOTAL PI AMOUNT',
-            'DISPATCHED QUANTITY',
-            'BALANCE QTY',
-            'REMAINING AMOUNT AGAINST PI',
-            'MONTHLY PLAN QUANTITY',
-            'MONTHLY PLAN AMOUNT',
-            'EXPORT INVOICE QUANTITY FOR THIS MONTH',
-            'GST',
-            'DEVIATION FROM PLAN',
-            'DEVIATION FROM PLAN AMOUNT',
-            'NET REMAINING QTY',
-            'NET REMAINING AMOUNT',
-        ]
-        
-        # Set column widths
+        total_format = workbook.add_format({
+            'bold': True,
+            'bg_color': '#E8F5E9',
+            'border': 1,
+            'valign': 'vcenter',
+            'num_format': '#,##0.00',
+            'align': 'right',
+        })
+        total_label_format = workbook.add_format({
+            'bold': True,
+            'bg_color': '#E8F5E9',
+            'border': 1,
+            'valign': 'vcenter',
+        })
+
+        # Column widths sized to fit header text in single line (no sub-headers)
         column_widths = [
-            20,  # PI NO.
-            30,  # PRODUCTS
-            18,  # TOTAL PI QUANTITY
-            18,  # TOTAL PI AMOUNT
-            18,  # DISPATCHED QUANTITY
-            15,  # BALANCE QTY
-            25,  # REMAINING AMOUNT AGAINST PI
-            20,  # MONTHLY PLAN QUANTITY
-            20,  # MONTHLY PLAN AMOUNT
-            30,  # EXPORT INVOICE QUANTITY FOR THIS MONTH
-            15,  # GST
-            20,  # DEVIATION FROM PLAN
-            25,  # DEVIATION FROM PLAN AMOUNT
-            18,  # NET REMAINING QTY
-            20,  # NET REMAINING AMOUNT
+            8,   # SN
+            14,  # PI NO.
+            22,  # PARTY NAME
+            28,  # PRODUCTS
+            22,  # TOTAL PI QUANTITY
+            20,  # TOTAL PI AMOUNT
+            24,  # DISPATCHED QUANTITY
+            22,  # DISPATCHED AMOUNT
+            14,  # BALANCE QTY
+            32,  # REMAINING AMOUNT AGAINST PI
+            24,  # MONTHLY PLAN QUANTITY
+            22,  # MONTHLY PLAN AMOUNT
+            42,  # EXPORT INVOICE QUANTITY FOR THIS MONTH
+            40,  # EXPORT INVOICE AMOUNT FOR THIS MONTH
+            10,  # GST
+            22,  # DEVIATION FROM PLAN
+            28,  # DEVIATION FROM PLAN (2nd col)
+            22,  # NET REMAINING QTY
+            26,  # NET REMAINING AMOUNT
         ]
-        
-        # Create a single worksheet for all products
+
         sheet = workbook.add_worksheet('Part Wise All Data')
-        
-        # Write headers to first row
-        for col, header in enumerate(headers):
-            sheet.write(0, col, header, header_format)
-        
-        # Apply column widths
-        for col, width in enumerate(column_widths):
-            sheet.set_column(col, col, width)
-        
-        # Freeze first row
-        sheet.freeze_panes(1, 0)
-        
-        # Get all confirmed Sale Orders
-        sale_orders = self.env['sale.order'].search([
-            ('state', '=', 'sale')
-        ])
-        
-        # Process each Sale Order and its lines (product-wise)
-        row = 1
-        for order in sale_orders:
-            # Get order-level data
-            pi_no = order.name or ''
-            
-            # Process each order line (each product on separate row)
-            for line in order.order_line.filtered(lambda l: not l.display_type and l.product_id):
-                # PI NO.
-                sheet.write(row, 0, pi_no, data_format)
-                
-                # PRODUCTS - Product name
-                product_name = line.product_id.name if line.product_id else ''
-                sheet.write(row, 1, product_name, data_format)
-                
-                # TOTAL PI QUANTITY - Ordered quantity
-                total_pi_qty = line.product_uom_qty or 0.0
-                sheet.write(row, 2, total_pi_qty, number_format)
-                
-                # TOTAL PI AMOUNT - Line amount (quantity * unit price)
-                total_pi_amount = line.price_subtotal or 0.0
-                sheet.write(row, 3, total_pi_amount, number_format)
-                
-                # DISPATCHED QUANTITY - Delivered quantity
-                dispatched_qty = line.qty_delivered or 0.0
-                sheet.write(row, 4, dispatched_qty, number_format)
-                
-                # BALANCE QTY - Empty as per requirement
-                sheet.write(row, 5, '', data_format)
-                
-                # REMAINING AMOUNT AGAINST PI - Based on undelivered quantity
-                undelivered_qty = total_pi_qty - dispatched_qty
-                remaining_amount = undelivered_qty * (line.price_unit or 0.0)
-                sheet.write(row, 6, remaining_amount, number_format)
-                
-                # MONTHLY PLAN QUANTITY - Placeholder (empty/zero)
-                sheet.write(row, 7, 0.0, number_format)
-                
-                # MONTHLY PLAN AMOUNT - Placeholder (empty/zero)
-                sheet.write(row, 8, 0.0, number_format)
-                
-                # EXPORT INVOICE QUANTITY FOR THIS MONTH - Placeholder
-                sheet.write(row, 9, 0.0, number_format)
-                
-                # GST - Tax amount from sale order line
-                gst_amount = (line.price_total or 0.0) - (line.price_subtotal or 0.0)
-                sheet.write(row, 10, gst_amount, number_format)
-                
-                # DEVIATION FROM PLAN - Placeholder
-                sheet.write(row, 11, 0.0, number_format)
-                
-                # DEVIATION FROM PLAN AMOUNT - Placeholder
-                sheet.write(row, 12, 0.0, number_format)
-                
-                # NET REMAINING QTY - Remaining quantity
-                net_remaining_qty = total_pi_qty - dispatched_qty
-                sheet.write(row, 13, net_remaining_qty, number_format)
-                
-                # NET REMAINING AMOUNT - Remaining amount
-                net_remaining_amount = net_remaining_qty * (line.price_unit or 0.0)
-                sheet.write(row, 14, net_remaining_amount, number_format)
-                
+        for col, w in enumerate(column_widths):
+            sheet.set_column(col, col, w)
+
+        # Title block: one line "MONTH SUMMARY FOR NEW ORDER" centered; "TILL DATE dd-mm-yyyy" right-aligned
+        till_date = fields.Date.context_today(self)
+        till_date_str = till_date.strftime('%d-%m-%Y') if till_date else date.today().strftime('%d-%m-%Y')
+        month_name = (till_date or date.today()).strftime('%B').upper()
+        sheet.merge_range(0, 0, 0, num_cols - 1, '%s SUMMARY FOR NEW ORDER' % month_name, title_format)
+        sheet.merge_range(1, 0, 1, num_cols - 1, 'TILL DATE %s' % till_date_str, title_format)
+
+        # Header row (green, white text) - row 2 (0-indexed)
+        main_headers = [
+            'SN', 'PI NO.', 'PARTY NAME', 'PRODUCTS',
+            'TOTAL PI QUANTITY', 'TOTAL PI AMOUNT', 'DISPATCHED QUANTITY', 'DISPATCHED AMOUNT',
+            'BALANCE QTY', 'REMAINING AMOUNT AGAINST PI',
+            'MONTHLY PLAN QUANTITY', 'MONTHLY PLAN AMOUNT',
+            'EXPORT INVOICE QUANTITY FOR THIS MONTH', 'EXPORT INVOICE AMOUNT FOR THIS MONTH',
+            'GST',
+            'DEVIATION FROM PLAN', 'DEVIATION FROM PLAN',
+            'NET REMAINING QTY', 'NET REMAINING AMOUNT',
+        ]
+        for col, h in enumerate(main_headers):
+            sheet.write(2, col, h, header_format)
+
+        sheet.freeze_panes(3, 0)
+
+        # Get Sale Orders
+        if sale_order_ids:
+            sale_orders = self.env['sale.order'].browse(sale_order_ids).filtered(
+                lambda o: o.state in ['sale', 'done']
+            )
+        else:
+            sale_orders = self.env['sale.order'].search([
+                ('state', 'in', ['sale', 'done'])
+            ], order='name asc, id asc')
+
+        # When report_lines provided, use them as row source
+        report_lines_list = list(report_lines) if report_lines else []
+
+        row = 3
+        sn = 1
+        totals = [0.0] * num_cols
+
+        if report_lines_list:
+            for rl in report_lines_list:
+                monthly_plan_qty = rl.monthly_plan_quantity or 0.0
+                monthly_plan_amt = rl.monthly_plan_amount or 0.0
+                balance_qty = rl.balance_qty or 0.0
+                remaining_amount = rl.remaining_amount_against_pi or 0.0
+                net_remaining_qty = rl.net_remaining_qty if rl.net_remaining_qty is not None else balance_qty
+                net_remaining_amount = rl.net_remaining_amount if rl.net_remaining_amount is not None else remaining_amount
+
+                sheet.write(row, 0, rl.sn or 0, data_format)
+                sheet.write(row, 1, rl.pi_no or '', data_format)
+                sheet.write(row, 2, rl.party_name or '', data_format)
+                sheet.write(row, 3, rl.products or '', data_format)
+                sheet.write(row, 4, rl.total_pi_quantity or 0.0, number_format)
+                sheet.write(row, 5, rl.total_pi_amount or 0.0, number_format)
+                sheet.write(row, 6, rl.dispatched_quantity or 0.0, number_format)
+                sheet.write(row, 7, rl.dispatched_amount or 0.0, number_format)
+                sheet.write(row, 8, balance_qty, number_format)
+                sheet.write(row, 9, remaining_amount, number_format)
+                sheet.write(row, 10, monthly_plan_qty, number_format)
+                sheet.write(row, 11, monthly_plan_amt, number_format)
+                sheet.write(row, 12, rl.export_inv_qty_this_month or 0.0, number_format)
+                sheet.write(row, 13, rl.export_inv_amount_this_month or 0.0, number_format)
+                sheet.write(row, 14, rl.gst or 0.0, number_format)
+                sheet.write(row, 15, rl.deviation_from_plan_1 or 0.0, number_format)
+                sheet.write(row, 16, rl.deviation_from_plan_2 or 0.0, number_format)
+                sheet.write(row, 17, net_remaining_qty, number_format)
+                sheet.write(row, 18, net_remaining_amount, number_format)
+
+                totals[4] += rl.total_pi_quantity or 0.0
+                totals[5] += rl.total_pi_amount or 0.0
+                totals[6] += rl.dispatched_quantity or 0.0
+                totals[7] += rl.dispatched_amount or 0.0
+                totals[8] += balance_qty
+                totals[9] += remaining_amount
+                totals[10] += monthly_plan_qty
+                totals[11] += monthly_plan_amt
+                totals[12] += rl.export_inv_qty_this_month or 0.0
+                totals[13] += rl.export_inv_amount_this_month or 0.0
+                totals[14] += rl.gst or 0.0
+                totals[15] += rl.deviation_from_plan_1 or 0.0
+                totals[16] += rl.deviation_from_plan_2 or 0.0
+                totals[17] += net_remaining_qty
+                totals[18] += net_remaining_amount
+
                 row += 1
-        
-        # Close workbook
+                sn += 1
+        else:
+            for order in sale_orders:
+                pi_no = order.name or ''
+                party_name = order.partner_id.name or ''
+
+                for line in order.order_line.filtered(lambda l: not l.display_type and l.product_id):
+                    total_pi_qty = line.product_uom_qty or 0.0
+                    total_pi_amount = line.price_subtotal or 0.0
+                    dispatched_qty = line.qty_delivered or 0.0
+                    unit_price = line.price_unit or 0.0
+                    dispatch_amount = dispatched_qty * unit_price
+                    balance_qty = total_pi_qty - dispatched_qty
+                    remaining_amount = balance_qty * unit_price
+                    gst_amount = (line.price_total or 0.0) - (line.price_subtotal or 0.0)
+                    net_remaining_qty = balance_qty
+                    net_remaining_amount = remaining_amount
+
+                    product_name = line.product_id.name if line.product_id else ''
+
+                    monthly_plan_qty = 0.0
+                    monthly_plan_amt = 0.0
+                    export_inv_qty = line.qty_invoiced or 0.0
+                    export_inv_amount = export_inv_qty * unit_price
+                    deviation_qty = monthly_plan_qty - export_inv_qty
+                    deviation_amt = deviation_qty * unit_price
+
+                    sheet.write(row, 0, sn, data_format)
+                    sheet.write(row, 1, pi_no, data_format)
+                    sheet.write(row, 2, party_name, data_format)
+                    sheet.write(row, 3, product_name, data_format)
+                    sheet.write(row, 4, total_pi_qty, number_format)
+                    sheet.write(row, 5, total_pi_amount, number_format)
+                    sheet.write(row, 6, dispatched_qty, number_format)
+                    sheet.write(row, 7, dispatch_amount, number_format)
+                    sheet.write(row, 8, balance_qty, number_format)
+                    sheet.write(row, 9, remaining_amount, number_format)
+                    sheet.write(row, 10, monthly_plan_qty, number_format)   # MONTHLY PLAN QUANTITY
+                    sheet.write(row, 11, monthly_plan_amt, number_format)  # MONTHLY PLAN AMOUNT
+                    sheet.write(row, 12, export_inv_qty, number_format)   # EXPORT INVOICE QTY THIS MONTH
+                    sheet.write(row, 13, export_inv_amount, number_format)   # EXPORT INVOICE AMOUNT THIS MONTH
+                    sheet.write(row, 14, gst_amount, number_format)
+                    sheet.write(row, 15, deviation_qty, number_format)   # DEVIATION FROM PLAN
+                    sheet.write(row, 16, deviation_amt, number_format)   # DEVIATION FROM PLAN AMOUNT
+                    sheet.write(row, 17, net_remaining_qty, number_format)
+                    sheet.write(row, 18, net_remaining_amount, number_format)
+
+                    # Accumulate totals (cols 4-18 are numeric)
+                    totals[4] += total_pi_qty
+                    totals[5] += total_pi_amount
+                    totals[6] += dispatched_qty
+                    totals[7] += dispatch_amount
+                    totals[8] += balance_qty
+                    totals[9] += remaining_amount
+                    totals[10] += monthly_plan_qty
+                    totals[11] += monthly_plan_amt
+                    totals[12] += export_inv_qty
+                    totals[13] += export_inv_amount
+                    totals[14] += gst_amount
+                    totals[15] += deviation_qty
+                    totals[16] += deviation_amt
+                    totals[17] += net_remaining_qty
+                    totals[18] += net_remaining_amount
+
+                    row += 1
+                    sn += 1
+
+        # TOTAL row (TOTAL in column B as per screenshot)
+        sheet.write(row, 0, '', total_label_format)
+        sheet.write(row, 1, 'TOTAL', total_label_format)
+        sheet.write(row, 2, '', total_label_format)
+        sheet.write(row, 3, '', total_label_format)
+        for col in range(4, num_cols):
+            sheet.write(row, col, totals[col], total_format)
+        row += 1
+
         workbook.close()
         output.seek(0)
-        
-        # Return base64 encoded content
+        return base64.b64encode(output.read())
+
+    @api.model
+    def generate_summary_new_order_with_profit_xlsx_report(self, sale_order_ids=None):
+        """
+        Generate "SUMMARY FOR NEW ORDER" XLSX with product/cost columns (green) and
+        summary/profit columns (orange): Landing Cost, Sales Rate, Basic Value,
+        GROSS PROFIT (Selling Price - Landing Cost), SELLING %, GROSS PROFIT %,
+        COL (C+D+E+F+G), etc. All formulas applied as per requirement.
+        """
+        output = io.BytesIO()
+        workbook = xlsxwriter.Workbook(output, {'in_memory': True})
+
+        # Formats
+        green_header = workbook.add_format({
+            'bold': True, 'bg_color': '#2E7D32', 'font_color': '#FFFFFF',
+            'border': 1, 'align': 'center', 'valign': 'vcenter', 'text_wrap': True,
+        })
+        orange_header = workbook.add_format({
+            'bold': True, 'bg_color': '#FF9800', 'font_color': '#000000',
+            'border': 1, 'align': 'center', 'valign': 'vcenter', 'text_wrap': True,
+        })
+        data_fmt = workbook.add_format({'border': 1, 'valign': 'vcenter'})
+        num_fmt = workbook.add_format({'border': 1, 'valign': 'vcenter', 'align': 'right', 'num_format': '#,##0.00'})
+        pct_fmt = workbook.add_format({'border': 1, 'valign': 'vcenter', 'align': 'right', 'num_format': '0.00%'})
+        total_fmt = workbook.add_format({'bold': True, 'bg_color': '#E8F5E9', 'border': 1, 'valign': 'vcenter', 'num_format': '#,##0.00', 'align': 'right'})
+        total_label_fmt = workbook.add_format({'bold': True, 'bg_color': '#E8F5E9', 'border': 1, 'valign': 'vcenter'})
+
+        if sale_order_ids:
+            sale_orders = self.env['sale.order'].browse(sale_order_ids).filtered(lambda o: o.state in ['sale', 'done'])
+        else:
+            sale_orders = self.env['sale.order'].search([('state', 'in', ['sale', 'done'])])
+
+        # Column layout: 0=No., 1=HSN, 2=Product Description, 3=Type Of Measurement, 4=Received Qty,
+        # 5=Landing Cost (Amount), 6=Unit Cost (Amount), 7=Balance Qty, 8=Sales Rate, 9=Basic Value,
+        # 10=Customer Landing, 11=Gross Landing Cost | 12=COL(C+D+E+F+G), 13=GP/Unit, 14=GP/Qty, 15=GP/Kg/Meter,
+        # 16=MRP, 17=MRP %, 18=Selling Price, 19=Difference in Selling, 20=Gross Profit, 21=SELLING %, 22=GROSS PROFIT %
+        green_headers = [
+            'No.', 'HSN', 'Product Description', 'Type Of Measurement', 'Received Quantity',
+            'Landing Cost (Amount)', 'Unit Cost (Amount)', 'Balance Quantity', 'Sales Rate', 'Basic Value',
+            'Customer Landing', 'Gross Landing Cost (Amount)',
+        ]
+        orange_headers = [
+            'COL (C + D + E + F + G)', 'GROSS PROFIT PER UNIT', 'GROSS PROFIT PER QTY', 'GROSS PROFIT PER KG/METER',
+            'MRP', 'MRP PERCENTAGE', 'SELLING PRICE', 'DIFFERENCE IN SELLING',
+            'GROSS PROFIT (Selling Price - Landing Cost)', 'SELLING %', 'GROSS PROFIT %',
+        ]
+        all_headers = green_headers + orange_headers
+        col_widths = [6, 12, 32, 18, 14, 18, 14, 14, 14, 14, 16, 22, 22, 18, 18, 22, 12, 14, 14, 20, 38, 12, 14]
+
+        sheet = workbook.add_worksheet('Summary for New Order')
+        for c, w in enumerate(col_widths):
+            sheet.set_column(c, c, w)
+
+        till_date = fields.Date.context_today(self)
+        till_date_str = till_date.strftime('%d-%m-%Y') if till_date else date.today().strftime('%d-%m-%Y')
+        month_name = (till_date or date.today()).strftime('%B').upper()
+        title_fmt = workbook.add_format({'bold': True, 'align': 'center', 'font_size': 14})
+        sheet.merge_range(0, 0, 0, len(all_headers) - 1, '%s SUMMARY FOR NEW ORDER' % month_name, title_fmt)
+        sheet.merge_range(1, 0, 1, len(all_headers) - 1, 'TILL DATE %s' % till_date_str, workbook.add_format({'bold': True, 'align': 'right'}))
+
+        for col, h in enumerate(green_headers):
+            sheet.write(2, col, h, green_header)
+        for col, h in enumerate(orange_headers):
+            sheet.write(2, len(green_headers) + col, h, orange_header)
+
+        sheet.freeze_panes(3, 0)
+
+        row = 3
+        sn = 1
+        totals = [0.0] * len(all_headers)
+        num_cols = len(all_headers)
+
+        for order in sale_orders:
+            for line in order.order_line.filtered(lambda l: not l.display_type and l.product_id):
+                product = line.product_id
+                received_qty = line.product_uom_qty or 0.0
+                balance_qty = received_qty - (line.qty_delivered or 0.0)
+                sales_rate = line.price_unit or 0.0
+                basic_value = line.price_subtotal or 0.0  # Selling price total
+                unit_cost = product.standard_price or 0.0
+                landing_cost_amt = unit_cost * received_qty
+                gross_profit = basic_value - landing_cost_amt
+                selling_pct = (gross_profit / landing_cost_amt * 100.0) if landing_cost_amt else 0.0
+                gross_profit_pct = (gross_profit / basic_value * 100.0) if basic_value else 0.0
+                col_c_d_e_f_g = received_qty + landing_cost_amt + (unit_cost if received_qty else 0)
+                gp_per_unit = (gross_profit / received_qty) if received_qty else 0.0
+                mrp = product.list_price or 0.0
+                selling_price = basic_value
+                diff_selling = selling_price - (mrp * received_qty) if mrp else 0.0
+                mrp_pct = ((sales_rate - mrp) / mrp * 100.0) if mrp else 0.0
+                hsn = getattr(product, 'l10n_in_hsn_code', None) or ''
+                uom = (line.product_uom.name or '') if line.product_uom else ''
+
+                sheet.write(row, 0, sn, data_fmt)
+                sheet.write(row, 1, hsn, data_fmt)
+                sheet.write(row, 2, product.name or '', data_fmt)
+                sheet.write(row, 3, uom, data_fmt)
+                sheet.write(row, 4, received_qty, num_fmt)
+                sheet.write(row, 5, landing_cost_amt, num_fmt)
+                sheet.write(row, 6, unit_cost, num_fmt)
+                sheet.write(row, 7, balance_qty, num_fmt)
+                sheet.write(row, 8, sales_rate, num_fmt)
+                sheet.write(row, 9, basic_value, num_fmt)
+                sheet.write(row, 10, 0.0, num_fmt)
+                sheet.write(row, 11, landing_cost_amt, num_fmt)
+                sheet.write(row, 12, col_c_d_e_f_g, num_fmt)
+                sheet.write(row, 13, gp_per_unit, num_fmt)
+                sheet.write(row, 14, gross_profit, num_fmt)
+                sheet.write(row, 15, 0.0, num_fmt)
+                sheet.write(row, 16, mrp, num_fmt)
+                sheet.write(row, 17, mrp_pct / 100.0 if mrp_pct else 0.0, pct_fmt)
+                sheet.write(row, 18, selling_price, num_fmt)
+                sheet.write(row, 19, diff_selling, num_fmt)
+                sheet.write(row, 20, gross_profit, num_fmt)
+                sheet.write(row, 21, selling_pct / 100.0 if selling_pct else 0.0, pct_fmt)
+                sheet.write(row, 22, gross_profit_pct / 100.0 if gross_profit_pct else 0.0, pct_fmt)
+
+                totals[4] += received_qty
+                totals[5] += landing_cost_amt
+                totals[6] += unit_cost * (1 if received_qty else 0)
+                totals[7] += balance_qty
+                totals[9] += basic_value
+                totals[11] += landing_cost_amt
+                totals[12] += col_c_d_e_f_g
+                totals[14] += gross_profit
+                totals[18] += selling_price
+                totals[20] += gross_profit
+                row += 1
+                sn += 1
+
+        if row > 3:
+            sheet.write(row, 0, '', total_label_fmt)
+            sheet.write(row, 1, 'Total', total_label_fmt)
+            for c in range(2, num_cols):
+                if c in (4, 5, 7, 9, 11, 12, 14, 18, 20):
+                    sheet.write(row, c, totals[c] or 0.0, total_fmt)
+                else:
+                    sheet.write(row, c, '', total_fmt)
+
+        workbook.close()
+        output.seek(0)
         return base64.b64encode(output.read())
 
     @api.model
@@ -939,11 +1173,208 @@ class PartWiseAllDataReport(models.TransientModel):
         return base64.b64encode(output.read())
 
     @api.model
-    def generate_exchange_gl_xlsx_report(self):
+    def generate_advance_sheet_xlsx_report(self, sale_order_ids=None):
+        """
+        Advance Sheet: scan sale orders (or all if sale_order_ids not provided), one row per customer (commercial partner).
+        - PARTY NAME: customer name
+        - PAYMENT RECEIVED: total paid (advance + invoice payments) across their sale orders. NA if none.
+        - STOCK DESPATCHED AMOUNT: total despatched value across their sale orders. NA if none.
+        - BALANCE AVAILABLE WITH US: Payment - Stock. NA if payment or delivery not done.
+        """
+        output = io.BytesIO()
+        workbook = xlsxwriter.Workbook(output, {'in_memory': True})
+        
+        header_format = workbook.add_format({
+            'bold': True,
+            'bg_color': '#FFFF00',
+            'border': 1,
+            'align': 'center',
+            'valign': 'vcenter',
+        })
+        data_format = workbook.add_format({
+            'border': 1,
+            'valign': 'vcenter',
+            'bg_color': '#ADD8E6',
+        })
+        number_format = workbook.add_format({
+            'border': 1,
+            'valign': 'vcenter',
+            'num_format': '#,##0.00',
+            'bg_color': '#ADD8E6',
+        })
+        total_format = workbook.add_format({
+            'bold': True,
+            'border': 2,
+            'valign': 'vcenter',
+            'num_format': '#,##0.00',
+        })
+        na_format = workbook.add_format({
+            'border': 1,
+            'valign': 'vcenter',
+            'bg_color': '#ADD8E6',
+        })
+        
+        headers = [
+            'SR NO.',
+            'PARTY NAME',
+            'PAYMENT RECEIVED',
+            'STOCK DESPATCHED AMOUNT',
+            'BALANCE AVAILABLE WITH US',
+        ]
+        column_widths = [10, 30, 22, 28, 28]
+        
+        sheet = workbook.add_worksheet('Advance Sheet')
+        for col, header in enumerate(headers):
+            sheet.write(0, col, header, header_format)
+        for col, width in enumerate(column_widths):
+            sheet.set_column(col, col, width)
+        sheet.freeze_panes(1, 0)
+        
+        # Sale orders: selected IDs if provided, otherwise all (except cancel)
+        if sale_order_ids:
+            sale_orders = self.env['sale.order'].browse(sale_order_ids).filtered(
+                lambda o: o.state != 'cancel'
+            )
+        else:
+            sale_orders = self.env['sale.order'].search([
+                ('state', '!=', 'cancel')
+            ], order='partner_id')
+        
+        # 2. Unique customers: by commercial partner (so same company = one row)
+        commercial_partner_ids = set()
+        for order in sale_orders:
+            comp = order.partner_id.commercial_partner_id
+            commercial_partner_ids.add(comp.id)
+        
+        # 3. For each customer, aggregate over ALL their sale orders
+        company = self.env.company
+        company_currency = company.currency_id
+        party_data = {}
+        for comp_id in commercial_partner_ids:
+            comp = self.env['res.partner'].browse(comp_id)
+            # All SOs where partner's commercial partner is this customer
+            partner_orders = sale_orders.filtered(
+                lambda o: o.partner_id.commercial_partner_id.id == comp_id
+            )
+            payment_received = 0.0
+            stock_dispatched_amount = 0.0
+
+            for order in partner_orders:
+                # PAYMENT RECEIVED = ks_advance_payment_amount + total_invoice_payment_received (per SO, convert to company currency, then sum)
+                adv = getattr(order, 'ks_advance_payment_amount', 0.0) or 0.0
+                inv_pay = getattr(order, 'total_invoice_payment_received', 0.0) or 0.0
+                order_payment = adv + inv_pay
+                if order_payment:
+                    order_date = order.date_order.date() if order.date_order else fields.Date.context_today(self)
+                    payment_received += _to_company_currency(
+                        order.currency_id, order_payment, company_currency, company, order_date, self
+                    )
+
+                # STOCK DESPATCHED AMOUNT: use qty_delivered * price_unit (reliable); optional move-based for sale_stock
+                order_date = order.date_order.date() if order.date_order else fields.Date.context_today(self)
+                order_currency = order.currency_id
+                for line in order.order_line.filtered(
+                    lambda l: not l.display_type and l.product_id
+                ):
+                    delivered_qty = 0.0
+                    if getattr(line, 'qty_delivered_method', None) == 'stock_move' and getattr(line, '_get_outgoing_incoming_moves', None):
+                        try:
+                            outgoing_moves, incoming_moves = line._get_outgoing_incoming_moves()
+                            for move in outgoing_moves:
+                                if move.state == 'done':
+                                    delivered_qty += move.product_uom._compute_quantity(
+                                        move.quantity, line.product_uom, rounding_method='HALF-UP'
+                                    )
+                            for move in incoming_moves:
+                                if move.state == 'done':
+                                    delivered_qty -= move.product_uom._compute_quantity(
+                                        move.quantity, line.product_uom, rounding_method='HALF-UP'
+                                    )
+                        except Exception:
+                            delivered_qty = line.qty_delivered
+                    else:
+                        delivered_qty = line.qty_delivered
+                    if delivered_qty and (line.price_unit or 0.0):
+                        line_amount = delivered_qty * (line.price_unit or 0.0)
+                        stock_dispatched_amount += _to_company_currency(
+                            order_currency, line_amount, company_currency, company, order_date, self
+                        )
+            
+            party_data[comp_id] = {
+                'party_name': comp.name or '',
+                'payment_received': payment_received,
+                'stock_dispatched_amount': stock_dispatched_amount,
+            }
+        
+        # BALANCE AVAILABLE WITH US: Payment - Stock; NA when payment or delivery not done; never negative (show 0 minimum)
+        for data in party_data.values():
+            pr = data['payment_received']
+            sd = data['stock_dispatched_amount']
+            if pr == 0 or sd == 0:
+                data['balance_available'] = None
+            else:
+                data['balance_available'] = max(0.0, pr - sd)
+        
+        # 4. Write all rows
+        row = 1
+        sr_no = 1
+        total_payment_received = 0.0
+        total_stock_dispatched = 0.0
+        total_balance = 0.0
+        total_balance_count = 0
+        
+        sorted_parties = sorted(
+            party_data.items(),
+            key=lambda x: (x[1]['party_name'] or '').lower()
+        )
+        
+        for _partner_key, data in sorted_parties:
+            sheet.write(row, 0, sr_no, data_format)
+            sheet.write(row, 1, data['party_name'], data_format)
+            
+            pr = data['payment_received'] or 0.0
+            if pr == 0:
+                sheet.write(row, 2, 'NA', na_format)
+            else:
+                sheet.write(row, 2, pr, number_format)
+                total_payment_received += pr
+            
+            sd = data['stock_dispatched_amount'] or 0.0
+            if sd == 0:
+                sheet.write(row, 3, 'NA', na_format)
+            else:
+                sheet.write(row, 3, sd, number_format)
+                total_stock_dispatched += sd
+            
+            bal = data.get('balance_available')
+            if bal is None:
+                sheet.write(row, 4, 'NA', na_format)
+            else:
+                sheet.write(row, 4, bal, number_format)
+                total_balance += bal
+                total_balance_count += 1
+            
+            row += 1
+            sr_no += 1
+        
+        total_row = row
+        sheet.write(total_row, 0, '', total_format)
+        sheet.write(total_row, 1, 'TOTAL', total_format)
+        sheet.write(total_row, 2, total_payment_received if total_payment_received else 'NA', total_format)
+        sheet.write(total_row, 3, total_stock_dispatched if total_stock_dispatched else 'NA', total_format)
+        sheet.write(total_row, 4, total_balance if total_balance_count else 'NA', total_format)
+        
+        workbook.close()
+        output.seek(0)
+        return base64.b64encode(output.read())
+
+    @api.model
+    def generate_exchange_gl_xlsx_report(self, sale_order_ids=None):
         """
         Generate Exchange GL XLSX report with Proforma Invoice, Commercial Invoice, 
         Shipping Bill, and Payment data with exchange rate calculations
-        Based on screenshot structure with grouped data by Proforma Invoice
+        Based on screenshot structure with grouped data by Proforma Invoice.
+        If sale_order_ids provided, only those sale orders are included; otherwise all confirmed.
         Returns base64 encoded file content
         """
         from datetime import datetime
@@ -1058,10 +1489,15 @@ class PartWiseAllDataReport(models.TransientModel):
         # Freeze first row
         sheet.freeze_panes(1, 0)
         
-        # Get all confirmed Sale Orders
-        sale_orders = self.env['sale.order'].search([
-            ('state', 'in', ['sale', 'done'])
-        ], order='name, date_order')
+        # Get Sale Orders: selected IDs if provided, otherwise all confirmed
+        if sale_order_ids:
+            sale_orders = self.env['sale.order'].browse(sale_order_ids).filtered(
+                lambda o: o.state in ['sale', 'done']
+            )
+        else:
+            sale_orders = self.env['sale.order'].search([
+                ('state', 'in', ['sale', 'done'])
+            ], order='name, date_order')
         
         # Group orders by Proforma Invoice (Sale Order)
         row = 1
@@ -1133,7 +1569,11 @@ class PartWiseAllDataReport(models.TransientModel):
                     commercial_inv_dates.append(inv.invoice_date.strftime('%d-%b-%y') if hasattr(inv.invoice_date, 'strftime') else str(inv.invoice_date))
                 else:
                     commercial_inv_dates.append('')
-                commercial_inv_amounts.append(inv.amount_total or 0.0)
+                # Use amount_total_signed so refunds (out_refund) are negative and sum is net
+                amt = getattr(inv, 'amount_total_signed', None)
+                if amt is None:
+                    amt = (inv.amount_total or 0.0) if inv.move_type == 'out_invoice' else -(inv.amount_total or 0.0)
+                commercial_inv_amounts.append(amt)
             
             commercial_inv_str = ', '.join(commercial_inv_names) if commercial_inv_names else ''
             commercial_inv_date_str = ', '.join(commercial_inv_dates) if commercial_inv_dates else ''
@@ -1191,43 +1631,76 @@ class PartWiseAllDataReport(models.TransientModel):
             sb_value_total = sum(sb_values) if sb_values else 0.0
             sb_value_inr = sb_value_total * (sb_exchange_rates[0] if sb_exchange_rates else exchange_rate_pi) if sb_value_total > 0 else 0.0
             
-            # Get payment information
-            payments = self.env['account.payment'].search([
+            # Get payment information (unique payments: linked to SO or reconciled to its invoices)
+            payments_direct = self.env['account.payment'].search([
                 ('ks_sale_order_id', '=', order.id),
                 ('state', '=', 'posted')
             ])
-            
-            # Also get payments from invoices
-            for invoice in commercial_invoices:
-                invoice_payments = invoice._get_reconciled_payments()
-                payments |= invoice_payments
-            
-            total_amount_received = 0.0
-            bank_charges = 0.0
-            net_amount_received = 0.0
+            payment_ids_seen = set()
+            for inv in commercial_invoices:
+                try:
+                    for p in inv._get_reconciled_payments():
+                        payment_ids_seen.add(p.id)
+                except Exception:
+                    pass
+            all_payments = payments_direct
+            for pid in payment_ids_seen:
+                p = self.env['account.payment'].browse(pid)
+                if p.exists() and p.state == 'posted':
+                    all_payments |= p
+
+            total_amount_received = 0.0  # in order currency
+            bank_charges = 0.0           # in order currency
             payment_exchange_rate = exchange_rate_pi
-            payment_received_inr = 0.0
+            latest_payment_date = None
             
-            payment_dates = []
-            for payment in payments:
-                total_amount_received += abs(payment.amount)
+            for payment in all_payments:
+                # Convert payment amount to order currency (avoid mixing currencies)
+                pay_currency = payment.currency_id
+                pay_amount = abs(payment.amount or 0.0)
+                if pay_amount:
+                    if pay_currency == currency:
+                        amount_in_order_currency = pay_amount
+                    else:
+                        try:
+                            amount_in_order_currency = pay_currency._convert(
+                                pay_amount, currency, company,
+                                payment.date or fields.Date.today()
+                            )
+                        except Exception:
+                            amount_in_order_currency = pay_amount
+                    total_amount_received += amount_in_order_currency
                 if payment.date:
-                    payment_dates.append(payment.date)
-                    # Get exchange rate on payment date
-                    if currency and currency.name != 'INR':
-                        rate_obj = self.env['res.currency.rate'].search([
-                            ('currency_id', '=', currency.id),
-                            ('name', '<=', payment.date)
-                        ], order='name desc', limit=1)
-                        if rate_obj:
-                            payment_exchange_rate = rate_obj.rate or exchange_rate_pi
+                    if latest_payment_date is None or payment.date > latest_payment_date:
+                        latest_payment_date = payment.date
+                # Bank charges: from custom field if present (e.g. ks_bank_charges), in payment currency
+                bc = getattr(payment, 'ks_bank_charges', None) or getattr(payment, 'bank_charges', None)
+                if bc and bc != 0:
+                    if pay_currency == currency:
+                        bank_charges += abs(float(bc))
+                    else:
+                        try:
+                            bank_charges += abs(float(pay_currency._convert(
+                                bc, currency, company, payment.date or fields.Date.today()
+                            )))
+                        except Exception:
+                            bank_charges += abs(float(bc))
+
+            # Exchange rate on remittance date (latest payment date)
+            if latest_payment_date and currency and currency.name != 'INR':
+                rate_obj = self.env['res.currency.rate'].search([
+                    ('currency_id', '=', currency.id),
+                    ('name', '<=', latest_payment_date)
+                ], order='name desc', limit=1)
+                if rate_obj:
+                    payment_exchange_rate = rate_obj.rate or exchange_rate_pi
             
             net_amount_received = total_amount_received - bank_charges
-            payment_received_inr = net_amount_received * payment_exchange_rate if net_amount_received > 0 else 0.0
+            # Payment received INR = net amount (in order currency) × rate (order currency to INR)
+            payment_received_inr = (net_amount_received * payment_exchange_rate) if net_amount_received > 0 else 0.0
             
-            # Calculate exchange gain or loss
-            # Gain/Loss = (Payment Received INR) - (PI Amount in INR)
-            pi_amount_inr = total_amount * exchange_rate_pi if currency and currency.name != 'INR' else total_amount
+            # Exchange gain or loss = Payment Received INR − PI Amount in INR
+            pi_amount_inr = (total_amount * exchange_rate_pi) if currency and currency.name != 'INR' else total_amount
             exchange_gain_loss = payment_received_inr - pi_amount_inr if payment_received_inr > 0 else 0.0
             
             # Write data for each order line
@@ -1474,8 +1947,11 @@ class PartWiseAllDataReport(models.TransientModel):
                 # Example: INV/2026/00008 -> 00008
                 digits = re.findall(r'\d+', invoice_name)
                 if digits:
-                    # Use full invoice number in column header: EXPORT INVOICE-<full invoice number>
-                    column_name = f'EXPORT INVOICE-{invoice_name}'
+                    # Get last sequence of digits (usually the invoice number part)
+                    last_digits = digits[-1]
+                    # Ensure it's 5 digits (pad with zeros if needed)
+                    invoice_suffix = last_digits[-5:].zfill(5)
+                    column_name = f'EXPORT INVOICE-{invoice_suffix}'
                     
                     # Only add if not already added (avoid duplicates)
                     if column_name not in invoice_columns:
@@ -1506,6 +1982,7 @@ class PartWiseAllDataReport(models.TransientModel):
             'REMAINING QUANTITY',
             'DISPATCH AMOUNT',
             'TOTAL REMAINING AMOUNT',
+            'EXP INV - 38 and CI6',
         ])
         
         # Set column widths
@@ -1527,6 +2004,7 @@ class PartWiseAllDataReport(models.TransientModel):
             18,  # REMAINING QUANTITY
             18,  # DISPATCH AMOUNT
             25,  # TOTAL REMAINING AMOUNT
+            20,  # EXP INV - 38 and CI6
         ])
         
         # Create main report sheet (this is the printable report)
@@ -1640,6 +2118,9 @@ class PartWiseAllDataReport(models.TransientModel):
                 total_remaining_amount_sum += total_remaining_amount
                 col += 1
                 
+                # EXP INV - 38 and CI6 (empty, reserved for future use)
+                report_sheet.write(row, col, '', data_format)
+                
                 row += 1
                 sr_no += 1
         
@@ -1688,6 +2169,10 @@ class PartWiseAllDataReport(models.TransientModel):
             
             # TOTAL REMAINING AMOUNT - sum
             report_sheet.write(total_row, col, total_remaining_amount_sum, total_number_format)
+            col += 1
+            
+            # EXP INV - 38 and CI6 - empty
+            report_sheet.write(total_row, col, '', total_format)
         
         # Close workbook
         workbook.close()
@@ -2074,4 +2559,336 @@ class PartWiseAllDataReport(models.TransientModel):
         
         # Return base64 encoded content
         return base64.b64encode(output.read())
+
+    # --- List view data (same format as print report) ---
+
+    @api.model
+    def get_advance_sheet_report_rows(self, sale_order_ids=None):
+        """Return list of dicts for Advance Sheet list view (same columns as XLSX)."""
+        if sale_order_ids:
+            sale_orders = self.env['sale.order'].browse(sale_order_ids).filtered(
+                lambda o: o.state != 'cancel'
+            )
+        else:
+            sale_orders = self.env['sale.order'].search([
+                ('state', '!=', 'cancel')
+            ], order='partner_id')
+
+        commercial_partner_ids = set()
+        for order in sale_orders:
+            comp = order.partner_id.commercial_partner_id
+            commercial_partner_ids.add(comp.id)
+
+        company = self.env.company
+        company_currency = company.currency_id
+        party_data = {}
+        for comp_id in commercial_partner_ids:
+            comp = self.env['res.partner'].browse(comp_id)
+            partner_orders = sale_orders.filtered(
+                lambda o: o.partner_id.commercial_partner_id.id == comp_id
+            )
+            payment_received = 0.0
+            stock_dispatched_amount = 0.0
+
+            for order in partner_orders:
+                # PAYMENT RECEIVED = ks_advance_payment_amount + total_invoice_payment_received (per SO, convert to company currency, then sum)
+                adv = getattr(order, 'ks_advance_payment_amount', 0.0) or 0.0
+                inv_pay = getattr(order, 'total_invoice_payment_received', 0.0) or 0.0
+                order_payment = adv + inv_pay
+                if order_payment:
+                    order_date = order.date_order.date() if order.date_order else fields.Date.context_today(self)
+                    payment_received += _to_company_currency(
+                        order.currency_id, order_payment, company_currency, company, order_date, self
+                    )
+
+                order_date = order.date_order.date() if order.date_order else fields.Date.context_today(self)
+                order_currency = order.currency_id
+                for line in order.order_line.filtered(
+                    lambda l: not l.display_type and l.product_id
+                ):
+                    delivered_qty = 0.0
+                    if getattr(line, 'qty_delivered_method', None) == 'stock_move' and getattr(line, '_get_outgoing_incoming_moves', None):
+                        try:
+                            outgoing_moves, incoming_moves = line._get_outgoing_incoming_moves()
+                            for move in outgoing_moves:
+                                if move.state == 'done':
+                                    delivered_qty += move.product_uom._compute_quantity(
+                                        move.quantity, line.product_uom, rounding_method='HALF-UP'
+                                    )
+                            for move in incoming_moves:
+                                if move.state == 'done':
+                                    delivered_qty -= move.product_uom._compute_quantity(
+                                        move.quantity, line.product_uom, rounding_method='HALF-UP'
+                                    )
+                        except Exception:
+                            delivered_qty = line.qty_delivered
+                    else:
+                        delivered_qty = line.qty_delivered
+                    if delivered_qty and (line.price_unit or 0.0):
+                        line_amount = delivered_qty * (line.price_unit or 0.0)
+                        stock_dispatched_amount += _to_company_currency(
+                            order_currency, line_amount, company_currency, company, order_date, self
+                        )
+
+            pr = payment_received
+            sd = stock_dispatched_amount
+            balance_available = None if (pr == 0 or sd == 0) else max(0.0, pr - sd)
+            party_data[comp_id] = {
+                'party_name': comp.name or '',
+                'payment_received': pr,
+                'stock_dispatched_amount': sd,
+                'balance_available': balance_available,
+            }
+
+        sorted_parties = sorted(
+            party_data.items(),
+            key=lambda x: (x[1]['party_name'] or '').lower()
+        )
+        rows = []
+        for sr_no, (comp_id, data) in enumerate(sorted_parties, start=1):
+            rows.append({
+                'sr_no': sr_no,
+                'commercial_partner_id': comp_id,
+                'party_name': data['party_name'],
+                'payment_received': data['payment_received'],
+                'stock_dispatched_amount': data['stock_dispatched_amount'],
+                'balance_available': data['balance_available'],
+            })
+        return rows
+
+    @api.model
+    def get_part_wise_report_rows(self, sale_order_ids=None):
+        """Return list of dicts for Part Wise All Data list view (same columns as XLSX)."""
+        if sale_order_ids:
+            sale_orders = self.env['sale.order'].browse(sale_order_ids).filtered(
+                lambda o: o.state in ['sale', 'done']
+            )
+        else:
+            sale_orders = self.env['sale.order'].search([
+                ('state', 'in', ['sale', 'done'])
+            ], order='name asc, id asc')
+
+        rows = []
+        sn = 1
+        for order in sale_orders:
+            pi_no = order.name or ''
+            party_name = order.partner_id.name or ''
+            for line in order.order_line.filtered(lambda l: not l.display_type and l.product_id):
+                total_pi_qty = line.product_uom_qty or 0.0
+                total_pi_amount = line.price_subtotal or 0.0
+                dispatched_qty = line.qty_delivered or 0.0
+                unit_price = line.price_unit or 0.0
+                dispatch_amount = dispatched_qty * unit_price
+                balance_qty = total_pi_qty - dispatched_qty
+                remaining_amount = balance_qty * unit_price
+                gst_amount = (line.price_total or 0.0) - (line.price_subtotal or 0.0)
+                export_inv_qty = line.qty_invoiced or 0.0
+                export_inv_amount = export_inv_qty * unit_price
+                rows.append({
+                    'sn': sn,
+                    'pi_no': pi_no,
+                    'party_name': party_name,
+                    'products': line.product_id.name if line.product_id else '',
+                    'total_pi_quantity': total_pi_qty,
+                    'total_pi_amount': total_pi_amount,
+                    'dispatched_quantity': dispatched_qty,
+                    'dispatched_amount': dispatch_amount,
+                    'balance_qty': balance_qty,
+                    'remaining_amount_against_pi': remaining_amount,
+                    'monthly_plan_quantity': 0.0,
+                    'monthly_plan_amount': 0.0,
+                    'export_inv_qty_this_month': export_inv_qty,
+                    'export_inv_amount_this_month': export_inv_amount,
+                    'unit_price': unit_price,
+                    'gst': gst_amount,
+                    'net_remaining_qty': balance_qty,
+                    'net_remaining_amount': remaining_amount,
+                })
+                sn += 1
+        return rows
+
+    @api.model
+    def get_exchange_gl_report_rows(self, sale_order_ids=None):
+        """Return list of dicts for Exchange GL list view (same columns and calculations as XLSX)."""
+        if sale_order_ids:
+            sale_orders = self.env['sale.order'].browse(sale_order_ids).filtered(
+                lambda o: o.state in ['sale', 'done']
+            )
+        else:
+            sale_orders = self.env['sale.order'].search([
+                ('state', 'in', ['sale', 'done'])
+            ], order='name')
+
+        company = self.env.company
+        company_currency = company.currency_id
+        rows = []
+        for order in sale_orders:
+            order_lines = order.order_line.filtered(lambda l: not l.display_type and l.product_id)
+            if not order_lines:
+                continue
+            pi_no = order.name or ''
+            pi_date = order.date_order.date() if order.date_order else fields.Date.context_today(self)
+            order_currency = order.currency_id
+            total_amount = order.amount_total or 0.0
+
+            # Exchange rate on PI date (same as XLSX)
+            exchange_rate_pi = 1.0
+            if order_currency and order_currency != company_currency:
+                rate_obj = self.env['res.currency.rate'].search([
+                    ('currency_id', '=', order_currency.id),
+                    ('name', '<=', pi_date)
+                ], order='name desc', limit=1)
+                if rate_obj:
+                    exchange_rate_pi = rate_obj.rate or 1.0
+
+            # Commercial invoices
+            commercial_invoices = self.env['account.move'].search([
+                ('invoice_origin', '=', order.name),
+                ('move_type', 'in', ['out_invoice', 'out_refund']),
+                ('state', '!=', 'cancel')
+            ], order='invoice_date desc')
+            commercial_inv_names = [inv.name or '' for inv in commercial_invoices]
+            commercial_inv_dates = []
+            commercial_inv_amounts = []
+            for inv in commercial_invoices:
+                if inv.invoice_date:
+                    commercial_inv_dates.append(inv.invoice_date)
+                else:
+                    commercial_inv_dates.append(None)
+                amt = getattr(inv, 'amount_total_signed', None)
+                if amt is None:
+                    amt = (inv.amount_total or 0.0) if inv.move_type == 'out_invoice' else -(inv.amount_total or 0.0)
+                commercial_inv_amounts.append(amt)
+            commercial_inv_str = ', '.join(commercial_inv_names) if commercial_inv_names else ''
+            commercial_inv_total = sum(commercial_inv_amounts) if commercial_inv_amounts else 0.0
+            commercial_inv_date_first = commercial_inv_dates[0] if commercial_inv_dates else None
+
+            # Shipping bills
+            pickings = self.env['stock.picking'].search([
+                ('sale_id', '=', order.id),
+                ('state', '=', 'done')
+            ], order='date_done desc')
+            sb_numbers = []
+            sb_dates = []
+            sb_values = []
+            sb_exchange_rates = []
+            for picking in pickings:
+                sb_no = getattr(picking, 'l10n_in_shipping_bill_no', None) or picking.name or ''
+                if sb_no:
+                    sb_numbers.append(sb_no)
+                    sb_dates.append(picking.date_done.date() if picking.date_done and hasattr(picking.date_done, 'date') else (picking.date_done if picking.date_done else None))
+                    sb_value = 0.0
+                    for move in picking.move_ids.filtered(lambda m: m.state == 'done' and m.sale_line_id):
+                        qty_done = move.quantity
+                        if not qty_done and move.move_line_ids:
+                            qty_done = sum(move.move_line_ids.mapped('quantity'))
+                        sb_value += qty_done * (move.sale_line_id.price_unit or 0.0)
+                    sb_values.append(sb_value)
+                    sb_rate = exchange_rate_pi
+                    if picking.date_done and order_currency != company_currency:
+                        rate_obj = self.env['res.currency.rate'].search([
+                            ('currency_id', '=', order_currency.id),
+                            ('name', '<=', picking.date_done.date() if hasattr(picking.date_done, 'date') else fields.Date.today())
+                        ], order='name desc', limit=1)
+                        if rate_obj:
+                            sb_rate = rate_obj.rate or exchange_rate_pi
+                    sb_exchange_rates.append(sb_rate)
+            sb_no_str = ', '.join(sb_numbers) if sb_numbers else ''
+            sb_date_first = sb_dates[0] if sb_dates else None
+            sb_value_total = sum(sb_values) if sb_values else 0.0
+            sb_value_inr = sb_value_total * (sb_exchange_rates[0] if sb_exchange_rates else exchange_rate_pi) if sb_value_total > 0 else 0.0
+            sb_rate_first = sb_exchange_rates[0] if sb_exchange_rates else 0.0
+
+            # Payments (same logic as XLSX: convert to order currency, deduplicate, bank charges)
+            payments_direct = self.env['account.payment'].search([
+                ('ks_sale_order_id', '=', order.id),
+                ('state', '=', 'posted')
+            ])
+            payment_ids_seen = set()
+            for inv in commercial_invoices:
+                try:
+                    for p in inv._get_reconciled_payments():
+                        payment_ids_seen.add(p.id)
+                except Exception:
+                    pass
+            all_payments = payments_direct
+            for pid in payment_ids_seen:
+                p = self.env['account.payment'].browse(pid)
+                if p.exists() and p.state == 'posted':
+                    all_payments |= p
+            total_amount_received = 0.0
+            bank_charges = 0.0
+            latest_payment_date = None
+            for payment in all_payments:
+                pay_currency = payment.currency_id
+                pay_amount = abs(payment.amount or 0.0)
+                if pay_amount:
+                    if pay_currency == order_currency:
+                        total_amount_received += pay_amount
+                    else:
+                        try:
+                            total_amount_received += pay_currency._convert(
+                                pay_amount, order_currency, company,
+                                payment.date or fields.Date.today()
+                            )
+                        except Exception:
+                            total_amount_received += pay_amount
+                if payment.date:
+                    if latest_payment_date is None or payment.date > latest_payment_date:
+                        latest_payment_date = payment.date
+                bc = getattr(payment, 'ks_bank_charges', None) or getattr(payment, 'bank_charges', None)
+                if bc and bc != 0:
+                    if pay_currency == order_currency:
+                        bank_charges += abs(float(bc))
+                    else:
+                        try:
+                            bank_charges += abs(float(pay_currency._convert(bc, order_currency, company, payment.date or fields.Date.today())))
+                        except Exception:
+                            bank_charges += abs(float(bc))
+            payment_exchange_rate = exchange_rate_pi
+            if latest_payment_date and order_currency != company_currency:
+                rate_obj = self.env['res.currency.rate'].search([
+                    ('currency_id', '=', order_currency.id),
+                    ('name', '<=', latest_payment_date)
+                ], order='name desc', limit=1)
+                if rate_obj:
+                    payment_exchange_rate = rate_obj.rate or exchange_rate_pi
+            net_amount_received = total_amount_received - bank_charges
+            payment_received_inr = (net_amount_received * payment_exchange_rate) if net_amount_received > 0 else 0.0
+            pi_amount_inr = (total_amount * exchange_rate_pi) if order_currency != company_currency else total_amount
+            exchange_gain_loss = payment_received_inr - pi_amount_inr if payment_received_inr > 0 else 0.0
+
+            for line in order_lines:
+                qty = line.product_uom_qty or 0.0
+                rate = line.price_unit or 0.0
+                line_amount = line.price_subtotal or 0.0
+                rate_inr = rate if order_currency == company_currency else rate * exchange_rate_pi
+                line_amount_inr = _to_company_currency(order_currency, line_amount, company_currency, company, pi_date, self)
+                rows.append({
+                    'invoice_id': commercial_invoices[0].id if commercial_invoices else False,
+                    'proforma_invoice_no': pi_no,
+                    'proforma_invoice_date': pi_date,
+                    'currency': order_currency.name,
+                    'exchange_rate_pi_date': exchange_rate_pi,
+                    'qty': qty,
+                    'total_qty': sum(l.product_uom_qty for l in order_lines),
+                    'rate_inr': rate_inr,
+                    'pi_amount': line_amount,
+                    'total_amount': line_amount_inr,
+                    'commercial_invoice_no': commercial_inv_str,
+                    'commercial_invoice_date': commercial_inv_date_first,
+                    'commercial_invoice_amount': commercial_inv_total,
+                    'shipping_bill_no': sb_no_str,
+                    'shipping_bill_date': sb_date_first,
+                    'shipping_bill_value': sb_value_total,
+                    'shipping_bill_exchange_rate': sb_rate_first,
+                    'shipping_bill_value_inr': sb_value_inr,
+                    'total_amount_received': total_amount_received,
+                    'bank_charges': bank_charges,
+                    'net_amount_received': net_amount_received,
+                    'exchange_rate_remittance_date': payment_exchange_rate,
+                    'payment_received_inr': payment_received_inr,
+                    'exchange_gain_loss': exchange_gain_loss,
+                })
+        return rows
 

@@ -231,6 +231,16 @@
                        placeholder="Select Sale Orders..."/>
             </xpath>
 
+            <!-- Payment Status under Deliver To (picking_type_id) -->
+            <xpath expr="//field[@name='picking_type_id']" position="after">
+                <field name="payment_status"
+                       widget="badge"
+                       decoration-success="payment_status == 'paid'"
+                       decoration-warning="payment_status == 'partial'"
+                       decoration-danger="payment_status == 'unpaid'"
+                       decoration-info="payment_status == 'no_invoice'"/>
+            </xpath>
+
         </field>
     </record>
 

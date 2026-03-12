@@ -7,4 +7,5 @@ access_ks_po_receipt_import_wizard_user,access.ks.po.receipt.import.wizard.user,
 access_ks_po_refund_import_wizard_user,access.ks.po.refund.import.wizard.user,model_ks_po_refund_import_wizard,purchase.group_purchase_user,1,1,1,1
 access_ks_ecom_picking_info_user,access.ks.ecom.picking.info.user,ks_ecom_purchase.model_ks_ecom_picking_info,purchase.group_purchase_user,1,1,1,1
 access_ks_warehouse_data_user,access.ks.warehouse.data.user,model_ks_warehouse_data,purchase.group_purchase_user,1,1,1,1
+access_ks_po_warehouse_tracking_user,access.ks.po.warehouse.tracking.user,model_ks_po_warehouse_tracking,purchase.group_purchase_user,1,1,1,1
 

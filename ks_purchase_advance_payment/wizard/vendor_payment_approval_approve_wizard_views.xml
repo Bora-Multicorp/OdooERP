@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_vendor_payment_approval_approve_wizard_form" model="ir.ui.view">
+        <field name="name">vendor.payment.approval.approve.wizard.form</field>
+        <field name="model">vendor.payment.approval.approve.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Approve Payment Request">
+                <group>
+                    <field name="reason" placeholder="Enter approval reason (required)..."/>
+                </group>
+                <footer>
+                    <button name="action_approve" string="Approve" type="object" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+    <record id="action_vendor_payment_approval_approve_wizard" model="ir.actions.act_window">
+        <field name="name">Approve Payment Request</field>
+        <field name="res_model">vendor.payment.approval.approve.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+</odoo>

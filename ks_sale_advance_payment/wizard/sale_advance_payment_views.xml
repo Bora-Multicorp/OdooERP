@@ -9,10 +9,15 @@
                     <field name="sale_order_id" readonly="1"/>
                     <field name="partner_id" readonly="1"/>
                     <field name="company_id" invisible="1"/>
+                    <field name="order_currency_id" invisible="1"/>
                     <field name="currency_id" invisible="1"/>
                 </group>
                 <group>
+                    <field name="payment_currency_id" options="{'no_create': True}"/>
                     <field name="amount" required="1"/>
+                    <field name="use_manual_rate" invisible="payment_currency_id == order_currency_id"/>
+                    <field name="manual_rate" invisible="not use_manual_rate or payment_currency_id == order_currency_id"/>
+                    <field name="amount_in_order_currency" invisible="payment_currency_id == order_currency_id"/>
                     <field name="payment_date" required="1"/>
                     <field name="journal_id" required="1" options="{'no_create': True}"/>
                     <field name="payment_method_line_id" 

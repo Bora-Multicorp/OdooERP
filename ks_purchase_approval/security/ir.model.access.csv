@@ -6,3 +6,5 @@ access_ks_approve_reason_wizard_user,ks.approve.reason.wizard.user,model_ks_appr
 access_ks_cancel_approval_request_wizard_user,ks.purchase.cancel.approval.request.wizard.user,model_ks_purchase_cancel_approval_request_wizard,purchase.group_purchase_user,1,1,1,1
 access_ks_edit_approval_request_wizard_user,ks.purchase.edit.approval.request.wizard.user,model_ks_purchase_edit_approval_request_wizard,purchase.group_purchase_user,1,1,1,1
 access_ks_approval_reason_wizard_user,ks.purchase.approval.reason.wizard.user,model_ks_purchase_approval_reason_wizard,purchase.group_purchase_user,1,1,1,1
+access_ks_grn_approve_wizard_user,ks.grn.approve.wizard.user,model_ks_grn_approve_wizard,purchase.group_purchase_user,1,1,1,1
+access_ks_grn_reject_wizard_user,ks.grn.reject.wizard.user,model_ks_grn_reject_wizard,purchase.group_purchase_user,1,1,1,1

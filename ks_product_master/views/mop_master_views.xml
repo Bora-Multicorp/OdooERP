@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- MOP Master List View -->
+    <!-- MOP Master List View (manual entry only) -->
     <record id="view_mop_master_list" model="ir.ui.view">
         <field name="name">mop.master.list</field>
         <field name="model">mop.master</field>
         <field name="arch" type="xml">
-            <list string="MOP Master" default_order="effective_date desc, product_id" editable="bottom" create="1" import="1">
+            <list string="MOP Master" default_order="effective_date desc, product_id" create="1" import="1">
                 <field name="product_id" string="SKU" required="1" options="{'no_create': True}"/>
                 <field name="sku_code" string="SKU Code" readonly="1"/>
                 <field name="mop" string="MOP" required="1"/>
@@ -15,7 +15,7 @@
         </field>
     </record>
 
-    <!-- MOP Master Form View -->
+    <!-- MOP Master Form View (field changes tracked in chatter below) -->
     <record id="view_mop_master_form" model="ir.ui.view">
         <field name="name">mop.master.form</field>
         <field name="model">mop.master</field>
@@ -33,24 +33,11 @@
                             <field name="active"/>
                         </group>
                     </group>
-                    <group>
-                        <field name="effective_date" readonly="1" invisible="1"/>
-                    </group>
-                    <notebook>
-                        <page string="Information">
-                            <group>
-                                <field name="product_id" readonly="1"/>
-                                <field name="sku_code" readonly="1"/>
-                                <field name="mop" readonly="1"/>
-                                <field name="effective_date" readonly="1"/>
-                            </group>
-                            <div class="alert alert-info" role="alert">
-                                <strong>Note:</strong> Effective date should always be present date or future date. 
-                                No changes can be applied on MOP of past sales data.
-                            </div>
-                        </page>
-                    </notebook>
+                    <div class="alert alert-info" role="alert">
+                        <strong>Note:</strong> Back date and future date are allowed for effective date. All field changes are tracked in the chatter below.
+                    </div>
                 </sheet>
+                <chatter/>
             </form>
         </field>
     </record>
@@ -91,8 +78,7 @@
                 Create your first MOP Master record!
             </p>
             <p>
-                MOP Master allows you to manage Market Operating Prices for products with effective dates.
-                Effective date should always be present date or future date.
+                MOP Master is for manual entry of Market Operating Prices per product and effective date. Back date and future date are allowed.
             </p>
         </field>
     </record>

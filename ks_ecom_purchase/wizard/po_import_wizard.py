@@ -1,4 +1,5 @@
 import base64
+import logging
 import re
 from collections import defaultdict
 from datetime import date, datetime
@@ -12,6 +13,8 @@ try:
 except ImportError:
     load_workbook = None
 
+_logger = logging.getLogger(__name__)
+
 
 class KsPoImportWizard(models.TransientModel):
     _name = "ks.po.import.wizard"
@@ -23,6 +26,8 @@ class KsPoImportWizard(models.TransientModel):
 
     _ORDER_ID_ALIASES = {"orderid", "order_id", "orderno", "order_no", "ecomorderid"}
     _VENDOR_ALIASES = {"vendor", "vendorname", "supplier", "suppliername", "partner", "partnername"}
+    _COMPANY_ALIASES = {"company", "companyname", "branch", "companybranch"}
+    _WAREHOUSE_ALIASES = {"warehouse", "warehousename", "wh", "deliverto", "deliver_to"}
     _PRODUCT_NAME_ALIASES = {"product", "productname", "item", "itemname", "description"}
     # ASIN is prioritized as product internal reference
     _PRODUCT_CODE_ALIASES = {"asin", "sku", "productcode", "defaultcode", "internalreference", "barcode"}
@@ -104,6 +109,8 @@ class KsPoImportWizard(models.TransientModel):
 
         order_id_key = self._find_header(normalized_headers, self._ORDER_ID_ALIASES)
         vendor_key = self._find_header(normalized_headers, self._VENDOR_ALIASES)
+        company_key = self._find_header(normalized_headers, self._COMPANY_ALIASES)
+        warehouse_key = self._find_header(normalized_headers, self._WAREHOUSE_ALIASES)
         product_name_key = self._find_header(normalized_headers, self._PRODUCT_NAME_ALIASES)
         product_code_key = self._find_header(normalized_headers, self._PRODUCT_CODE_ALIASES)
         qty_key = self._find_header(normalized_headers, self._QTY_ALIASES)
@@ -135,6 +142,8 @@ class KsPoImportWizard(models.TransientModel):
             order_id = self._to_string(get_cell(order_id_key))
             # Vendor is hardcoded to FLIPKART
             vendor_name = "FLIPKART"
+            company_str = self._to_string(get_cell(company_key)) if company_key else ""
+            warehouse_str = self._to_string(get_cell(warehouse_key)) if warehouse_key else ""
             product_name = self._to_string(get_cell(product_name_key)) if product_name_key else ""
             # Prioritize ASIN if available, otherwise use other product code fields
             product_code = self._to_string(get_cell(product_code_key)) if product_code_key else ""
@@ -178,6 +187,8 @@ class KsPoImportWizard(models.TransientModel):
                     "line_no": line_no,
                     "order_id": order_id,
                     "vendor_name": vendor_name,
+                    "company_str": company_str,
+                    "warehouse_str": warehouse_str,
                     "product_name": product_name,
                     "product_code": product_code,
                     "qty": qty,
@@ -208,6 +219,39 @@ class KsPoImportWizard(models.TransientModel):
         elif partner.supplier_rank < 1:
             partner.supplier_rank = 1
         return partner
+
+    @staticmethod
+    def _parse_company_branch(company_str):
+        """
+        Parse 'Company' column: part before '-' is main company name, part after is branch.
+        Returns (company_name, branch_name or None). If no hyphen, branch_name is None.
+        """
+        if not company_str or not str(company_str).strip():
+            return ("", None)
+        parts = str(company_str).strip().split("-", 1)
+        company_name = parts[0].strip() if parts[0] else ""
+        branch_name = parts[1].strip() if len(parts) > 1 and parts[1].strip() else None
+        return (company_name, branch_name)
+
+    def _get_company_by_name(self, company_name):
+        """Find res.company by name (exact then ilike). Returns recordset or empty."""
+        if not company_name or not str(company_name).strip():
+            return self.env["res.company"]
+        name = str(company_name).strip()
+        company = self.env["res.company"].search([("name", "=", name)], limit=1)
+        if company:
+            return company
+        return self.env["res.company"].search([("name", "=ilike", name)], limit=1)
+
+    def _get_warehouse_by_name(self, warehouse_name, company_id=None):
+        """Find stock.warehouse by name, optionally filtered by company_id."""
+        if not warehouse_name or not str(warehouse_name).strip():
+            return self.env["stock.warehouse"]
+        name = str(warehouse_name).strip()
+        domain = [("name", "=ilike", name)]
+        if company_id:
+            domain.append(("company_id", "=", company_id))
+        return self.env["stock.warehouse"].search(domain, limit=1)
 
     def _get_product_by_asin(self, product_code):
         """
@@ -267,14 +311,27 @@ class KsPoImportWizard(models.TransientModel):
             )
         return commands
 
-    def _build_toast_notification(self, failed_lines, created_orders, total_lines_created):
+    def _build_toast_notification(self, failed_lines, created_orders, total_lines_created, import_errors=None):
         """
         Build payloads for Odoo toasts (simple_notification).
-        Returns separate payloads for success and for failed ASINs (red/different box).
+        Returns separate payloads for success, for failed ASINs, and for import validation errors.
         """
+        import_errors = import_errors or []
         failed_count = len(failed_lines)
         success_payload = None
         failed_payload = None
+        errors_payload = None
+
+        # Import validation errors (company/warehouse mismatch, not found, etc.)
+        if import_errors:
+            error_list = "; ".join(e["reason"] for e in import_errors[:5])
+            if len(import_errors) > 5:
+                error_list += _(" and %s more") % (len(import_errors) - 5)
+            errors_payload = {
+                "title": _("PO Import: Validation failed"),
+                "message": _("Order(s) skipped: %s") % error_list,
+                "type": "danger",
+            }
 
         # Success message (green box) - only when something was created
         if created_orders:
@@ -297,7 +354,8 @@ class KsPoImportWizard(models.TransientModel):
                 "message": _("ASIN(s) not found (no matching product): %s") % failed_asin_list,
                 "type": "danger",
             }
-        elif not created_orders:
+
+        elif not created_orders and not import_errors:
             # No failures and no success = empty file or all skipped
             success_payload = {
                 "title": _("PO Import"),
@@ -305,7 +363,7 @@ class KsPoImportWizard(models.TransientModel):
                 "type": "warning",
             }
 
-        return {"success": success_payload, "failed": failed_payload}
+        return {"success": success_payload, "failed": failed_payload, "errors": errors_payload}
 
     def action_import_purchase_orders(self):
         self.ensure_one()
@@ -316,10 +374,11 @@ class KsPoImportWizard(models.TransientModel):
             ecom_tag = self.env["ks.ecom.tag"].sudo().create({"name": "E-com"})
 
         vendor = self._get_or_create_vendor("FLIPKART")
-        company = self.env.company
 
         created_orders = self.env["purchase.order"]
         failed_lines = []  # list of {"asin", "order_id", "line_no"}
+        import_errors = []  # list of {"order_id", "reason"} for company/warehouse validation
+        invoice_failures = []  # list of (po_name, reason) when vendor bill creation fails
         total_lines_created = 0
 
         for order_id, order_rows in grouped_rows.items():
@@ -346,10 +405,82 @@ class KsPoImportWizard(models.TransientModel):
             if not valid_rows:
                 continue
 
+            # --- Order ID uniqueness: one Order ID = one PO; skip if already exists ---
+            existing_po = self.env["purchase.order"].search(
+                [("ks_ecom_order_id", "=", order_id)],
+                limit=1,
+            )
+            if existing_po:
+                import_errors.append({
+                    "order_id": order_id,
+                    "reason": _("Order ID %s already exists.") % order_id,
+                })
+                continue
+
+            # --- Company & Warehouse: extract from first row, validate, resolve ---
+            first_row = order_rows[0]
+            company_str = first_row.get("company_str") or ""
+            warehouse_str = first_row.get("warehouse_str") or ""
+
+            if not company_str.strip():
+                import_errors.append({
+                    "order_id": order_id,
+                    "reason": _("Order %s: Company not found (empty Company column).") % order_id,
+                })
+                continue
+
+            company_name, _branch = self._parse_company_branch(company_str)
+            if not company_name:
+                import_errors.append({
+                    "order_id": order_id,
+                    "reason": _("Order %s: Company not found (no company name before hyphen).") % order_id,
+                })
+                continue
+
+            company = self._get_company_by_name(company_name)
+            if not company:
+                import_errors.append({
+                    "order_id": order_id,
+                    "reason": _("Order %s: Company not found: '%s'.") % (order_id, company_name),
+                })
+                continue
+
+            if not warehouse_str.strip():
+                import_errors.append({
+                    "order_id": order_id,
+                    "reason": _("Order %s: Warehouse not found (empty Warehouse column).") % order_id,
+                })
+                continue
+
+            warehouse = self._get_warehouse_by_name(warehouse_str, company_id=company.id)
+            if not warehouse:
+                import_errors.append({
+                    "order_id": order_id,
+                    "reason": _("Order %s: Warehouse not found: '%s'.") % (order_id, warehouse_str.strip()),
+                })
+                continue
+
+            if warehouse.company_id != company:
+                import_errors.append({
+                    "order_id": order_id,
+                    "reason": _("Warehouse and Company mismatch for Order ID %s.") % order_id,
+                })
+                continue
+
+            picking_type = warehouse.in_type_id
+            if not picking_type:
+                import_errors.append({
+                    "order_id": order_id,
+                    "reason": _("Order %s: No Receipts operation found for warehouse '%s'.") % (order_id, warehouse.name),
+                })
+                continue
+
             sample_currency = order_rows[0].get("currency_name") if order_rows else ""
             currency = self._get_currency(sample_currency, company)
             po_vals = {
                 "partner_id": vendor.id,
+                "company_id": company.id,
+                "picking_type_id": picking_type.id,
                 "origin": _("E-com Import - %s") % order_id,
                 "currency_id": currency.id,
                 "ks_ecom_imported": True,
@@ -358,7 +489,10 @@ class KsPoImportWizard(models.TransientModel):
                 "ks_ecom_tag_ids": [Command.link(ecom_tag.id)],
                 "ks_ecom_info_ids": self._prepare_extra_info_commands(order_rows[0]["raw"]),
             }
-            purchase_order = self.env["purchase.order"].create(po_vals)
+            purchase_order = self.env["purchase.order"].with_company(company).create(po_vals)
+
+            po_date = purchase_order.date_order
+            po_date_date = po_date.date() if po_date else fields.Date.today()
 
             for row, product in valid_rows:
                 uom = self._get_uom(row["uom_name"], product)
@@ -369,7 +503,7 @@ class KsPoImportWizard(models.TransientModel):
                     or row["product_code"]
                     or _("Product")
                 )
-                self.env["purchase.order.line"].create({
+                line = self.env["purchase.order.line"].create({
                     "order_id": purchase_order.id,
                     "product_id": product.id,
                     "name": line_name,
@@ -380,15 +514,71 @@ class KsPoImportWizard(models.TransientModel):
                 })
                 total_lines_created += 1
 
+                # Only create tracking for imported POs (ks_ecom_imported is True on this PO)
+                self.env["ks.po.warehouse.tracking"].with_company(company).create({
+                    "date": po_date_date,
+                    "order_id": order_id,
+                    "product_id": product.id,
+                    "qty": row["qty"],
+                    "rate": row["price_unit"],
+                    "iw": company_name,
+                    "warehouse_id": warehouse.id,
+                    "order_line_id": line.id,
+                })
+
             purchase_order.button_confirm()
             if purchase_order.picking_ids:
                 purchase_order.picking_ids.write({"ks_ecom_po_reciept": True})
+            receipt = purchase_order.picking_ids.filtered(
+                lambda p: p.picking_type_id.code == "incoming"
+            )[:1]
+            if receipt:
+                self.env["ks.po.warehouse.tracking"].search([
+                    ("order_id", "=", order_id),
+                ]).write({"grn_id": receipt.id})
+
+            # Auto-create Vendor Bill (Invoice) after PO confirmation
+            try:
+                action = purchase_order.action_create_invoice()
+                purchase_order.invalidate_recordset(["invoice_ids"])
+                if action and action.get("res_id"):
+                    bill = self.env["account.move"].browse(action["res_id"])
+                    if bill.exists():
+                        bill.invoice_date = bill.invoice_date or fields.Date.context_today(self)
+                elif purchase_order.invoice_ids:
+                    for inv in purchase_order.invoice_ids:
+                        if not inv.invoice_date:
+                            inv.invoice_date = fields.Date.context_today(self)
+            except Exception as e:
+                _logger.warning(
+                    "Vendor bill creation failed for PO %s (Order ID: %s): %s",
+                    purchase_order.name,
+                    order_id,
+                    e,
+                    exc_info=True,
+                )
+                invoice_failures.append((purchase_order.name, str(e)))
+
             created_orders |= purchase_order
 
-        # Show toasts: red box for records not created, green box for success (separate message boxes)
-        toasts = self._build_toast_notification(failed_lines, created_orders, total_lines_created)
+        # Show toasts: validation errors, failed ASINs, success (separate message boxes)
+        toasts = self._build_toast_notification(
+            failed_lines, created_orders, total_lines_created, import_errors=import_errors
+        )
         bus = self.env["bus.bus"]
         partner_id = self.env.user.partner_id
+        # Validation errors (company/warehouse not found or mismatch)
+        if toasts["errors"]:
+            bus._sendone(
+                partner_id,
+                "simple_notification",
+                {
+                    "type": toasts["errors"]["type"],
+                    "title": toasts["errors"]["title"],
+                    "message": toasts["errors"]["message"],
+                    "sticky": True,
+                },
+            )
         # Red message box: ASINs that did not match (records not created)
         if toasts["failed"]:
             bus._sendone(
@@ -410,6 +600,27 @@ class KsPoImportWizard(models.TransientModel):
                     "type": toasts["success"]["type"],
                     "title": toasts["success"]["title"],
                     "message": toasts["success"]["message"],
+                    "sticky": True,
+                },
+            )
+        # Warning: POs confirmed but vendor bill creation failed for some
+        if invoice_failures:
+            failure_list = "; ".join(
+                _("%(po)s: %(reason)s") % {"po": po_name, "reason": reason}
+                for po_name, reason in invoice_failures[:5]
+            )
+            if len(invoice_failures) > 5:
+                failure_list += _(" and %s more") % (len(invoice_failures) - 5)
+            bus._sendone(
+                partner_id,
+                "simple_notification",
+                {
+                    "type": "warning",
+                    "title": _("PO Import: Vendor bill could not be created"),
+                    "message": _(
+                        "Purchase Order(s) were confirmed but the following could not be invoiced: %s"
+                    )
+                    % failure_list,
                     "sticky": True,
                 },
             )

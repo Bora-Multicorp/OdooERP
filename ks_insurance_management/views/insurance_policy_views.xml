@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <record id="insurance_policy_form_view" model="ir.ui.view">
+    <field name="name">insurance.policy.form</field>
+    <field name="model">insurance.policy</field>
+    <field name="arch" type="xml">
+      <form string="Insurance Policy">
+        <header>
+          <button name="action_mark_expired" string="Mark as Expired" type="object"
+                  class="btn-danger" invisible="state == 'expired'"
+                  confirm="Mark this policy as Expired?"/>
+          <field name="state" widget="statusbar" statusbar_visible="active,expired"/>
+        </header>
+        <sheet>
+          <div class="oe_button_box" name="button_box">
+            <button class="oe_stat_button" type="object"
+                    name="action_view_declarations" icon="fa-file-text"
+                    invisible="not id">
+              <field name="declaration_ids" widget="statinfo" string="Declarations"/>
+            </button>
+          </div>
+          <div class="oe_title"><h1><field name="name" readonly="1"/></h1></div>
+          <group>
+            <group string="Policy Information">
+              <field name="policy_number"/>
+              <field name="insurance_type_id"/>
+              <field name="insurance_category_id" readonly="1"/>
+              <field name="policy_type"/>
+              <field name="insurance_company_id"/>
+              <field name="agent_id"/>
+              <field name="company_id" groups="base.group_multi_company"/>
+            </group>
+            <group string="Financial Details">
+              <field name="currency_id"/>
+              <field name="sum_insured"/>
+              <field name="sum_insured_words" readonly="1"/>
+              <field name="premium"/>
+              <field name="premium_percentage" readonly="1"/>
+              <field name="balance_sum_insured" readonly="1"/>
+              <field name="total_premium_paid" readonly="1"/>
+              <field name="start_date"/>
+              <field name="expiry_date"/>
+            </group>
+          </group>
+          <group invisible="policy_type != 'floater'" string="Floater Covered Locations">
+            <field name="floater_location_ids" widget="many2many_tags" nolabel="1"/>
+          </group>
+          <notebook>
+            <page string="Declarations">
+              <field name="declaration_ids" readonly="1">
+                <list>
+                  <field name="name"/><field name="declaration_type"/>
+                  <field name="date_from"/><field name="date_to"/>
+                  <field name="declaration_amount"/>
+                  <field name="state" widget="badge"
+                         decoration-success="state == 'sent'"
+                         decoration-warning="state == 'confirmed'"
+                         decoration-info="state == 'draft'"/>
+                </list>
+              </field>
+            </page>
+            <page string="Payments">
+              <field name="payment_ids" readonly="1">
+                <list>
+                  <field name="name"/><field name="date"/>
+                  <field name="amount"/><field name="state"/>
+                </list>
+              </field>
+            </page>
+            <page string="Notes"><field name="notes"/></page>
+          </notebook>
+        </sheet>
+        <chatter/>
+      </form>
+    </field>
+  </record>
+
+  <record id="insurance_policy_list_view" model="ir.ui.view">
+    <field name="name">insurance.policy.list</field>
+    <field name="model">insurance.policy</field>
+    <field name="arch" type="xml">
+      <list decoration-danger="state == 'expired'" decoration-success="state == 'active'">
+        <field name="name"/><field name="policy_number"/>
+        <field name="insurance_type_id"/><field name="insurance_category_id"/>
+        <field name="policy_type"/><field name="insurance_company_id"/>
+        <field name="sum_insured"/><field name="balance_sum_insured"/>
+        <field name="premium"/><field name="expiry_date"/>
+        <field name="state" widget="badge"
+               decoration-success="state == 'active'"
+               decoration-danger="state == 'expired'"/>
+      </list>
+    </field>
+  </record>
+
+  <record id="insurance_policy_search_view" model="ir.ui.view">
+    <field name="name">insurance.policy.search</field>
+    <field name="model">insurance.policy</field>
+    <field name="arch" type="xml">
+      <search>
+        <field name="name"/><field name="policy_number"/>
+        <field name="insurance_type_id"/><field name="insurance_company_id"/>
+        <filter name="active_policies" string="Active" domain="[('state','=','active')]"/>
+        <filter name="expired_policies" string="Expired" domain="[('state','=','expired')]"/>
+        <filter name="marine" string="Marine" domain="[('is_marine','=',True)]"/>
+        <filter name="fire_burglary" string="Fire &amp; Burglary" domain="[('is_fire_burglary','=',True)]"/>
+        <filter name="misc" string="Miscellaneous" domain="[('is_misc','=',True)]"/>
+        <group expand="0" string="Group By">
+          <filter name="grp_type" string="Insurance Type" context="{'group_by':'insurance_type_id'}"/>
+          <filter name="grp_cat" string="Category" context="{'group_by':'insurance_category_id'}"/>
+          <filter name="grp_state" string="Status" context="{'group_by':'state'}"/>
+        </group>
+      </search>
+    </field>
+  </record>
+
+  <record id="action_insurance_policy" model="ir.actions.act_window">
+    <field name="name">Insurance Policies</field>
+    <field name="res_model">insurance.policy</field>
+    <field name="view_mode">list,form</field>
+    <field name="search_view_id" ref="insurance_policy_search_view"/>
+    <field name="context">{'search_default_active_policies': 1}</field>
+  </record>
+</odoo>

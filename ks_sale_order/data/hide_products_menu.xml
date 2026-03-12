@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Hide Products menu from Sales app -->
+        <function model="ir.ui.menu" name="write">
+            <value eval="[ref('sale.product_menu_catalog')]"/>
+            <value eval="{'active': False}"/>
+        </function>
+        <!-- Hide Products menu from Purchase app -->
+        <function model="ir.ui.menu" name="write">
+            <value eval="[ref('purchase.menu_purchase_products')]"/>
+            <value eval="{'active': False}"/>
+        </function>
+    </data>
+</odoo>

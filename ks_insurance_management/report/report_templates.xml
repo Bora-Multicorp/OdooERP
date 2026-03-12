@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <report id="action_report_fire_burglary" string="Fire &amp; Burglary Report"
+    model="insurance.report.wizard" report_type="qweb-pdf"
+    name="ks_insurance_management.report_fire_burglary_template"
+    file="ks_insurance_management.report_fire_burglary_template" attachment_use="False"/>
+  <template id="report_fire_burglary_template">
+    <t t-call="web.html_container">
+      <t t-call="web.external_layout">
+        <div class="page">
+          <h2 class="text-center">Fire &amp; Burglary Insurance Report</h2>
+          <t t-set="policies" t-value="o._get_policies()"/>
+          <table class="table table-bordered table-sm">
+            <thead class="thead-light"><tr>
+              <th>Policy No.</th><th>Type</th><th>Company</th>
+              <th>Insurer</th><th>Sum Insured</th><th>Premium</th>
+              <th>Premium %</th><th>Avg Inventory</th><th>Expiry</th><th>Status</th>
+            </tr></thead>
+            <tbody>
+              <t t-foreach="policies" t-as="p">
+                <tr>
+                  <td><t t-esc="p.policy_number or '-'"/></td>
+                  <td><t t-esc="p.insurance_type_id.name"/></td>
+                  <td><t t-esc="p.company_id.name"/></td>
+                  <td><t t-esc="p.insurance_company_id.name"/></td>
+                  <td class="text-right"><t t-esc="'{:,.2f}'.format(p.sum_insured)"/></td>
+                  <td class="text-right"><t t-esc="'{:,.2f}'.format(p.premium)"/></td>
+                  <td class="text-right"><t t-esc="'{:.2f}%'.format(p.premium_percentage)"/></td>
+                  <td class="text-right"><t t-esc="'{:,.2f}'.format(p._get_avg_inventory())"/></td>
+                  <td><t t-esc="p.expiry_date"/></td>
+                  <td><t t-esc="p.state.upper()"/></td>
+                </tr>
+              </t>
+            </tbody>
+          </table>
+        </div>
+      </t>
+    </t>
+  </template>
+
+  <report id="action_report_marine" string="Marine Insurance Report"
+    model="insurance.report.wizard" report_type="qweb-pdf"
+    name="ks_insurance_management.report_marine_template"
+    file="ks_insurance_management.report_marine_template" attachment_use="False"/>
+  <template id="report_marine_template">
+    <t t-call="web.html_container">
+      <t t-call="web.external_layout">
+        <div class="page">
+          <h2 class="text-center">Marine Insurance Report</h2>
+          <t t-set="policies" t-value="o._get_policies()"/>
+          <table class="table table-bordered table-sm">
+            <thead class="thead-light"><tr>
+              <th>Policy No.</th><th>Applicability</th><th>Company</th>
+              <th>Insurer</th><th>Sum Insured</th><th>Premium</th>
+              <th>Premium %</th><th>Balance Sum Insured</th>
+              <th>Expiry</th><th>Status</th><th>Declarations</th><th>Remarks</th>
+            </tr></thead>
+            <tbody>
+              <t t-foreach="policies" t-as="p">
+                <tr>
+                  <td><t t-esc="p.policy_number or '-'"/></td>
+                  <td><t t-esc="p.insurance_type_id.marine_applicability or '-'"/></td>
+                  <td><t t-esc="p.company_id.name"/></td>
+                  <td><t t-esc="p.insurance_company_id.name"/></td>
+                  <td class="text-right"><t t-esc="'{:,.2f}'.format(p.sum_insured)"/></td>
+                  <td class="text-right"><t t-esc="'{:,.2f}'.format(p.premium)"/></td>
+                  <td class="text-right"><t t-esc="'{:.2f}%'.format(p.premium_percentage)"/></td>
+                  <td class="text-right"><t t-esc="'{:,.2f}'.format(p.balance_sum_insured)"/></td>
+                  <td><t t-esc="p.expiry_date"/></td>
+                  <td><t t-esc="p.state.upper()"/></td>
+                  <td class="text-right"><t t-esc="len(p.declaration_ids)"/></td>
+                  <td></td>
+                </tr>
+              </t>
+            </tbody>
+          </table>
+          <p class="text-muted" style="font-size:9px">
+            * Last two columns are for reference only and do not affect calculations.
+          </p>
+        </div>
+      </t>
+    </t>
+  </template>
+
+  <report id="action_report_misc" string="Miscellaneous Insurance Report"
+    model="insurance.report.wizard" report_type="qweb-pdf"
+    name="ks_insurance_management.report_misc_template"
+    file="ks_insurance_management.report_misc_template" attachment_use="False"/>
+  <template id="report_misc_template">
+    <t t-call="web.html_container">
+      <t t-call="web.external_layout">
+        <div class="page">
+          <h2 class="text-center">Miscellaneous Insurance Report</h2>
+          <t t-set="policies" t-value="o._get_policies()"/>
+          <table class="table table-bordered table-sm">
+            <thead class="thead-light"><tr>
+              <th>Policy No.</th><th>Type</th><th>Category</th>
+              <th>Company</th><th>Insurer</th><th>Agent</th>
+              <th>Sum Insured</th><th>Premium</th><th>Premium %</th>
+              <th>Expiry</th><th>Status</th>
+            </tr></thead>
+            <tbody>
+              <t t-foreach="policies" t-as="p">
+                <tr>
+                  <td><t t-esc="p.policy_number or '-'"/></td>
+                  <td><t t-esc="p.insurance_type_id.name"/></td>
+                  <td><t t-esc="p.insurance_category_id.name or '-'"/></td>
+                  <td><t t-esc="p.company_id.name"/></td>
+                  <td><t t-esc="p.insurance_company_id.name"/></td>
+                  <td><t t-esc="p.agent_id.name or '-'"/></td>
+                  <td class="text-right"><t t-esc="'{:,.2f}'.format(p.sum_insured)"/></td>
+                  <td class="text-right"><t t-esc="'{:,.2f}'.format(p.premium)"/></td>
+                  <td class="text-right"><t t-esc="'{:.2f}%'.format(p.premium_percentage)"/></td>
+                  <td><t t-esc="p.expiry_date"/></td>
+                  <td><t t-esc="p.state.upper()"/></td>
+                </tr>
+              </t>
+            </tbody>
+          </table>
+        </div>
+      </t>
+    </t>
+  </template>
+
+  <report id="action_report_declaration_letter" string="Declaration Letter"
+    model="insurance.declaration" report_type="qweb-pdf"
+    name="ks_insurance_management.report_declaration_letter_template"
+    file="ks_insurance_management.report_declaration_letter_template" attachment_use="False"/>
+  <template id="report_declaration_letter_template">
+    <t t-call="web.html_container">
+      <t t-foreach="docs" t-as="o">
+        <t t-call="web.external_layout">
+          <div class="page">
+            <div class="text-right mb-2"><strong>Date: </strong><t t-esc="o.date_to"/></div>
+            <p>To,<br/>
+              <strong><t t-esc="o.policy_id.insurance_company_id.name"/></strong>
+            </p>
+            <p><strong>Subject: Declaration for Policy No.
+              <t t-esc="o.policy_id.policy_number"/> —
+              Period <t t-esc="o.date_from"/> to <t t-esc="o.date_to"/>
+            </strong></p>
+            <p>Dear Sir/Madam,</p>
+            <t t-if="o.declaration_type == 'marine'">
+              <p>We hereby declare that the total sales value (inclusive of GST) for the
+                period <strong><t t-esc="o.date_from"/></strong> to
+                <strong><t t-esc="o.date_to"/></strong> amounts to
+                <strong>&#8377; <t t-esc="'{:,.2f}'.format(o.declaration_amount)"/></strong>
+                under Policy No. <strong><t t-esc="o.policy_id.policy_number"/></strong>.
+              </p>
+            </t>
+            <t t-if="o.declaration_type == 'fire_burglary'">
+              <p>We hereby declare that the average inventory value held at
+                <strong><t t-esc="o.warehouse_id.name"/></strong>
+                for the period <strong><t t-esc="o.date_from"/></strong> to
+                <strong><t t-esc="o.date_to"/></strong> amounts to
+                <strong>&#8377; <t t-esc="'{:,.2f}'.format(o.declaration_amount)"/></strong>
+                under Policy No. <strong><t t-esc="o.policy_id.policy_number"/></strong>.
+              </p>
+            </t>
+            <p>Kindly acknowledge receipt of this declaration.</p>
+            <br/>
+            <p>Yours faithfully,<br/>
+              <strong><t t-esc="o.company_id.name"/></strong>
+            </p>
+            <p class="text-muted" style="font-size:9px">Ref: <t t-esc="o.name"/></p>
+          </div>
+        </t>
+      </t>
+    </t>
+  </template>
+
+</odoo>

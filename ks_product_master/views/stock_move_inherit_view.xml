@@ -10,6 +10,9 @@
                     <field name="show_IMEI_field2" invisible="1"/>
                     <field name="hide_imei_fields" invisible="1"/>
                 </xpath>
+                <xpath expr="//widget[@name='import_lots']" position="after">
+                    <button name="action_open_upload_csv_wizard" type="object" string="Upload CSV" class="btn btn-link" invisible="not display_import_lot"/>
+                </xpath>
             </field>
         </record>
         <record id="view_transfer_form_inherit_no_create_product" model="ir.ui.view">
