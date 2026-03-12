@@ -10,7 +10,7 @@
                 <field name="date"/>
                 <field name="invoice_id" options="{'no_create': True}"/>
                 <field name="sb_no"/>
-                <field name="be_no"/>
+<!--                <field name="be_no"/>-->
                 <field name="consignee" readonly="1"/>
                 <field name="buyer" readonly="1"/>
                 <field name="awb_number"/>
@@ -91,7 +91,7 @@
                             <field name="date"/>
                             <field name="invoice_id" options="{'no_create': True}"/>
                             <field name="sb_no"/>
-                            <field name="be_no"/>
+<!--                            <field name="be_no"/>-->
                             <field name="awb_number"/>
                         </group>
                         <group>
@@ -276,7 +276,7 @@
                 <field name="date"/>
                 <field name="invoice_id"/>
                 <field name="sb_no"/>
-                <field name="be_no"/>
+<!--                <field name="be_no"/>-->
                 <field name="awb_number"/>
                 <field name="buyer"/>
                 <field name="consignee"/>
