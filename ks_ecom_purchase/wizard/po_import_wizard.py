@@ -354,6 +354,7 @@ class KsPoImportWizard(models.TransientModel):
                 "message": _("ASIN(s) not found (no matching product): %s") % failed_asin_list,
                 "type": "danger",
             }
+
         elif not created_orders and not import_errors:
             # No failures and no success = empty file or all skipped
             success_payload = {
