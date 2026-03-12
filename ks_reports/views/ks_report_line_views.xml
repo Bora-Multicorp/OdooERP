@@ -41,6 +41,7 @@
                 <field name="monthly_plan_amount"/>
                 <field name="export_inv_qty_this_month" readonly="1"/>
                 <field name="export_inv_amount_this_month" readonly="1"/>
+                <field name="unit_price" readonly="1"/>
                 <field name="gst" readonly="1"/>
                 <field name="deviation_from_plan_1" readonly="1"/>
                 <field name="deviation_from_plan_2" readonly="1"/>
@@ -59,6 +60,7 @@
                 <header>
                     <button name="action_download_xlsx" string="Download XLSX" type="object" class="btn-primary" icon="fa-download"/>
                 </header>
+                <field name="invoice_id" optional="show"/>
                 <field name="proforma_invoice_no"/>
                 <field name="proforma_invoice_date"/>
                 <field name="currency"/>
@@ -95,7 +97,7 @@
     </record>
 
     <record id="action_part_wise_report_line_list" model="ir.actions.act_window">
-        <field name="name">Part Wise All Data</field>
+        <field name="name">Russia Report 1</field>
         <field name="res_model">ks.part.wise.report.line</field>
         <field name="view_mode">list</field>
         <field name="search_view_id" eval="False"/>

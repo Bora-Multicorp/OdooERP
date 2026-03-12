@@ -80,9 +80,8 @@ class VendorApprovalConfig(models.Model):
 
     @api.model
     def get_config(self, company_id=None):
-        """Get the global approval configuration (applies to all companies)"""
-        # Return the active global configuration regardless of company
-        config = self.search([('active', '=', True)], limit=1)
+        """Get the global approval configuration (applies to all companies). Use sudo so only admin can open the config UI."""
+        config = self.sudo().search([('active', '=', True)], limit=1)
         return config
 
     def get_all_approvers(self):
@@ -111,7 +110,7 @@ class VendorApprovalConfig(models.Model):
     @api.model
     def get_approval_mode(self):
         """Get the system-wide approval mode (single or two_way)"""
-        config = self.get_config()
+        config = self.sudo().get_config()
         if config:
             return config.ks_approval_mode
         # Default to two_way if no config exists

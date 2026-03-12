@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from odoo import api, fields, models, _
 from odoo.exceptions import UserError, ValidationError
+from odoo.tools import float_compare
 
 
 class PurchaseOrder(models.Model):
@@ -219,6 +220,22 @@ class PurchaseOrder(models.Model):
         compute='_compute_ks_button_visibility',
     )
 
+    # ===== Payment Status (invoice + advance vs order total) =====
+    payment_status = fields.Selection(
+        selection=[
+            ('no_invoice', 'No Invoice'),
+            ('unpaid', 'Unpaid'),
+            ('partial', 'Partial'),
+            ('paid', 'Paid'),
+        ],
+        string='Payment Status',
+        compute='_compute_payment_status',
+        store=True,
+        readonly=True,
+        copy=False,
+        help='Payment status: total_invoice_payment_made + ks_advance_payment_amount vs order amount_total.',
+    )
+
     # ===== Helper Methods =====
     def _get_approval_config(self):
         """Get the global approval configuration"""
@@ -266,6 +283,50 @@ class PurchaseOrder(models.Model):
             else:
                 order.ks_is_pm_user = False
                 order.ks_is_normal_user = True
+
+    @api.depends(
+        'amount_total',
+        'invoice_ids.state',
+        'invoice_ids.payment_state',
+        'invoice_ids.amount_total',
+        'invoice_ids.move_type',
+        'invoice_ids.reconciled_payment_ids',
+        'invoice_ids.reconciled_payment_ids.state',
+        'invoice_ids.reconciled_payment_ids.amount',
+        'total_invoice_payment_made',
+        'ks_advance_payment_amount',
+    )
+    def _compute_payment_status(self):
+        """Compute payment status from total payment made vs order amount_total.
+        Uses bill payment_state + amount_total for paid/in_payment bills, plus ks_advance_payment_amount.
+        """
+        for order in self:
+            advance_paid = getattr(order, 'ks_advance_payment_amount', None) or 0.0
+            invoices = order.invoice_ids
+            posted = invoices.filtered(lambda m: m.state == 'posted')
+
+            # Sum paid amount from bills: use payment_state so we match what user sees on the bill
+            invoice_paid = 0.0
+            for inv in posted:
+                if inv.payment_state in ('paid', 'in_payment'):
+                    if inv.move_type == 'in_invoice':
+                        invoice_paid += inv.amount_total
+                    elif inv.move_type == 'in_refund':
+                        invoice_paid -= inv.amount_total
+
+            paid_amount = invoice_paid + advance_paid
+            order_total = order.amount_total or 0.0
+
+            if not posted and float_compare(paid_amount, 0.0, precision_digits=2) <= 0:
+                order.payment_status = 'no_invoice'
+            elif order_total <= 0:
+                order.payment_status = 'paid' if float_compare(paid_amount, 0.0, precision_digits=2) > 0 else 'unpaid'
+            elif float_compare(paid_amount, order_total, precision_digits=2) >= 0:
+                order.payment_status = 'paid'
+            elif float_compare(paid_amount, 0.0, precision_digits=2) > 0:
+                order.payment_status = 'partial'
+            else:
+                order.payment_status = 'unpaid'
 
     @api.depends('state', 'ks_is_pm_user', 'ks_edit_approved', 'ks_edit_request_user_id')
     @api.depends_context('uid')
@@ -1345,7 +1406,7 @@ class PurchaseOrder(models.Model):
         """Override: Only approver users can unlock"""
         for order in self:
             if order._has_approval_config():
-                all_approvers = self.env['ks.purchase.approval.config'].search([('active', '=', True)]).mapped('user_id')
+                all_approvers = order._get_approval_config().get_all_approvers()
                 if self.env.user not in all_approvers:
                     raise UserError(_("Only approver users can unlock Purchase Orders."))
         return super().button_unlock()

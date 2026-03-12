@@ -33,6 +33,7 @@
                             <field name="ks_ecom_imported" readonly="1"/>
                             <field name="ks_ecom_order_id" readonly="1"/>
                             <field name="ks_ecom_source_file" readonly="1"/>
+                            <field name="ks_ecom_refunded" readonly="1"/>
                         </group>
                         <group>
                             <field name="ks_ecom_tag_ids" widget="many2many_tags" readonly="1"/>

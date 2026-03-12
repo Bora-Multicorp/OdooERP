@@ -14,6 +14,15 @@
                 <field name="ks_created_po_ids" invisible="1"/>
                 <field name="ks_created_po_count" invisible="1"/>
             </xpath>
+            <!-- Payment Status under Payment Terms (right column) -->
+            <xpath expr="//field[@name='payment_term_id']" position="after">
+                <field name="payment_status"
+                       widget="badge"
+                       decoration-success="payment_status == 'paid'"
+                       decoration-warning="payment_status == 'partial'"
+                       decoration-danger="payment_status == 'unpaid'"
+                       decoration-info="payment_status == 'no_invoice'"/>
+            </xpath>
             <xpath expr="//button[@name='action_view_invoice']" position="before">
                 <button name="action_view_created_purchase_orders"
                         type="object"
@@ -62,17 +71,6 @@
                 <field name="ks_source_sale_order_id"
                        options="{'no_create': True}"/>
             </xpath>
-            
-            <!-- Add button to view Source Sale Order -->
-<!--            <xpath expr="//form/header" position="inside">-->
-<!--                <button name="action_view_source_sale_order" -->
-<!--                        type="object"-->
-<!--                        invisible="not ks_source_sale_order_id"-->
-<!--                        class="oe_stat_button"-->
-<!--                        icon="fa-shopping-cart">-->
-<!--                    <field name="ks_source_sale_order_id" widget="statinfo" string="Sale Order"/>-->
-<!--                </button>-->
-<!--            </xpath>-->
         </field>
     </record>
 </odoo>

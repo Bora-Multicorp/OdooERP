@@ -2,10 +2,26 @@
 
 from odoo import api, fields, models, _
 from odoo.exceptions import UserError
+from odoo.tools import float_compare
 
 
 class SaleOrder(models.Model):
     _inherit = 'sale.order'
+
+    payment_status = fields.Selection(
+        selection=[
+            ('no_invoice', 'No Invoice'),
+            ('unpaid', 'Unpaid'),
+            ('partial', 'Partial'),
+            ('paid', 'Paid'),
+        ],
+        string='Payment Status',
+        compute='_compute_payment_status',
+        store=True,
+        readonly=True,
+        copy=False,
+        help='Payment status: total_invoice_payment_received + ks_advance_payment_amount vs order amount_total.',
+    )
 
     ks_bank_id = fields.Many2one(
         'res.bank',
@@ -20,6 +36,40 @@ class SaleOrder(models.Model):
         if self.ks_bank_id:
             invoice_vals['ks_bank_id'] = self.ks_bank_id.id
         return invoice_vals
+
+    @api.depends(
+        'amount_total',
+        'total_invoice_payment_received',
+        'ks_advance_payment_amount',
+        'order_line.invoice_lines.move_id.state',
+    )
+    def _compute_payment_status(self):
+        """Compute payment status from total payment received vs order amount_total.
+        Total payment = total_invoice_payment_received (from ks_sale_advance_payment) + ks_advance_payment_amount.
+        - no_invoice: no posted invoices and no payment received (invoice + advance = 0).
+        - paid: total payment received >= order amount_total.
+        - partial: some payment received but total < order amount_total.
+        - unpaid: posted invoices exist but no payment received yet.
+        """
+        for order in self:
+            invoice_paid = getattr(order, 'total_invoice_payment_received', None) or 0.0
+            advance_paid = getattr(order, 'ks_advance_payment_amount', None) or 0.0
+            paid_amount = invoice_paid + advance_paid
+            order_total = order.amount_total or 0.0
+
+            invoices = order.invoice_ids
+            posted = invoices.filtered(lambda m: m.state == 'posted')
+
+            if not posted and float_compare(paid_amount, 0.0, precision_digits=2) <= 0:
+                order.payment_status = 'no_invoice'
+            elif order_total <= 0:
+                order.payment_status = 'paid' if float_compare(paid_amount, 0.0, precision_digits=2) > 0 else 'unpaid'
+            elif float_compare(paid_amount, order_total, precision_digits=2) >= 0:
+                order.payment_status = 'paid'
+            elif float_compare(paid_amount, 0.0, precision_digits=2) > 0:
+                order.payment_status = 'partial'
+            else:
+                order.payment_status = 'unpaid'
 
     # Fields to track PO creation and notifications
     ks_po_created_for_stock = fields.Boolean(

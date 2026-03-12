@@ -18,6 +18,12 @@ class PurchaseOrder(models.Model):
     )
     ks_ecom_order_id = fields.Char(string="Order ID", copy=False, index=True)
     ks_ecom_source_file = fields.Char(string="Import File", copy=False, readonly=True)
+    ks_ecom_refunded = fields.Boolean(
+        string="E-com Refunded",
+        copy=False,
+        default=False,
+        help="Set when refund has been processed via XLSX Refund Import (receipt return and/or bill reversal).",
+    )
     ks_ecom_tag_ids = fields.Many2many(
         "ks.ecom.tag",
         "purchase_order_ks_ecom_tag_rel",

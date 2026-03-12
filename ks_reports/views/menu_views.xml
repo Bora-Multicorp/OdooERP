@@ -7,24 +7,14 @@
         <field name="state">code</field>
         <field name="code">
 report = env['ks.part.wise.all.data.report']
-sale_order_ids = None
-if records and env.context.get('active_model') == 'sale.order':
-    sale_order_ids = records.ids
-try:
-    rows = report.get_part_wise_report_rows(sale_order_ids=sale_order_ids)
-except Exception as e:
-    raise UserError('Part Wise report failed: %s' % str(e))
+rows = report.get_part_wise_report_rows(sale_order_ids=None)
 env['ks.part.wise.report.line'].search([]).unlink()
 if rows:
-    try:
-        line_ids = env['ks.part.wise.report.line'].create(rows).ids
-    except Exception as e:
-        raise UserError('Part Wise report (create lines) failed: %s' % str(e))
+    line_ids = env['ks.part.wise.report.line'].create(rows).ids
     action = env.ref('ks_reports.action_part_wise_report_line_list').read()[0]
     action['domain'] = [('id', 'in', line_ids)]
 else:
     action = env.ref('ks_reports.action_part_wise_report_line_list').read()[0]
-    raise UserError("No data to display. Make sure you have Sale Orders in state 'Sale Order' or 'Done' with at least one product line. If you opened this from the Sales menu, try selecting specific orders from the list and run the report again.")
         </field>
     </record>
 
@@ -79,63 +69,14 @@ action = {
         </field>
     </record>
 
-    <!-- Parent Menu Item "Part Wise All Data" under Sales → Reporting -->
-    <menuitem 
-        id="menu_part_wise_all_data_parent"
-        name="Part Wise All Data"
-        parent="sale.menu_sale_report"
-        sequence="50"
-        groups="sales_team.group_sale_manager"
-    />
-
-    <!-- First Report under Part Wise All Data: opens list (same format as report), then Download XLSX on list -->
+    <!-- Parent Menu Item "XLSL Reports" under Sales → Reporting (removed: Part Wise All Data; Russia Report 1 and Exchange GL are now direct under Reporting) -->
+    <!-- Russia Report 1: direct under Sales > Reporting, sequence before Advance Sheet -->
     <menuitem 
         id="menu_part_wise_all_data"
-        name="Part Wise All Data"
+        name="Russia Report 1"
         action="action_part_wise_all_data_show_list"
-        parent="menu_part_wise_all_data_parent"
-        sequence="1"
-        groups="sales_team.group_sale_manager"
-    />
-
-    <!-- Second Report (002) under Part Wise All Data -->
-    <menuitem 
-        id="menu_002_report"
-        name="002"
-        action="action_002_report_download"
-        parent="menu_part_wise_all_data_parent"
-        sequence="2"
-        groups="sales_team.group_sale_manager"
-    />
-
-    <!-- Summary for New Order with Profit (Landing Cost, Gross Profit, SELLING %, GROSS PROFIT %) -->
-    <record id="action_summary_new_order_with_profit_download" model="ir.actions.server">
-        <field name="name">Summary for New Order (with Profit)</field>
-        <field name="model_id" ref="sale.model_sale_order"/>
-        <field name="state">code</field>
-        <field name="code">
-report_model = env['ks.part.wise.all.data.report']
-file_content = report_model.generate_summary_new_order_with_profit_xlsx_report(sale_order_ids=None)
-attachment = env['ir.attachment'].create({
-    'name': 'Summary_For_New_Order_With_Profit.xlsx',
-    'type': 'binary',
-    'datas': file_content,
-    'res_model': 'sale.order',
-    'mimetype': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-})
-action = {
-    'type': 'ir.actions.act_url',
-    'url': '/web/content/' + str(attachment.id) + '?download=true',
-    'target': 'self',
-}
-        </field>
-    </record>
-    <menuitem 
-        id="menu_summary_new_order_with_profit"
-        name="Summary for New Order (with Profit)"
-        action="action_summary_new_order_with_profit_download"
-        parent="menu_part_wise_all_data_parent"
-        sequence="3"
+        parent="sale.menu_sale_report"
+        sequence="44"
         groups="sales_team.group_sale_manager"
     />
 
@@ -240,7 +181,7 @@ action = {'type': 'ir.actions.act_url', 'url': '/web/content/' + str(attachment.
         </field>
     </record>
 
-    <!-- Advance Sheet under Sales > Reporting: opens list, then Download XLSX on list -->
+    <!-- Advance Sheet under Sales > Reporting: after Russia Report 1 -->
     <menuitem 
         id="menu_advance_sheet_report"
         name="Advance Sheet"
@@ -287,13 +228,13 @@ action = {'type': 'ir.actions.act_url', 'url': '/web/content/' + str(attachment.
         </field>
     </record>
 
-    <!-- Fifth Report (Exchange GL) under Part Wise All Data: opens list, then Download XLSX on list -->
+    <!-- Exchange GL: direct under Sales > Reporting -->
     <menuitem 
         id="menu_exchange_gl_report"
         name="Exchange GL"
         action="action_exchange_gl_show_list"
-        parent="menu_part_wise_all_data_parent"
-        sequence="5"
+        parent="sale.menu_sale_report"
+        sequence="46"
         groups="sales_team.group_sale_manager"
     />
 
@@ -347,6 +288,16 @@ action = {
         parent="account.menu_finance_receivables"
         sequence="15"
         groups="account.group_account_invoice,sales_team.group_sale_manager"
+    />
+
+    <!-- SB Tracker: under Sales > Reporting; syncs from Invoices and SB/BRC Master -->
+    <menuitem
+        id="menu_sb_tracker_report"
+        name="SB Tracker"
+        action="action_sb_tracker"
+        parent="sale.menu_sale_report"
+        sequence="47"
+        groups="base.group_user"
     />
 
 </odoo>

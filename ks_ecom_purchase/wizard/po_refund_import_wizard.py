@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import base64
+import logging
 import re
 from collections import defaultdict
 from io import BytesIO
@@ -11,6 +12,8 @@ try:
     from openpyxl import load_workbook
 except ImportError:
     load_workbook = None
+
+_logger = logging.getLogger(__name__)
 
 
 class KsPoRefundImportWizard(models.TransientModel):
@@ -128,7 +131,9 @@ class KsPoRefundImportWizard(models.TransientModel):
         return refund_data
 
     def action_import_refund_data(self):
-        """Create return pickings for matched receipts; set is_ecom_refund on created pickings."""
+        """Cancel non-done receipts, create return pickings for done receipts,
+        reverse posted vendor bills, and mark PO as refunded.
+        """
         self.ensure_one()
         refund_data = self._extract_sheet_data()
 
@@ -139,6 +144,7 @@ class KsPoRefundImportWizard(models.TransientModel):
 
         ReturnWizard = self.env["stock.return.picking"]
         created_count = 0
+        credits_created = 0
         skipped_count = 0
         warnings = []
 
@@ -163,86 +169,205 @@ class KsPoRefundImportWizard(models.TransientModel):
                 skipped_count += len(asin_qty)
                 continue
 
-            # Find original receipt (incoming, done)
-            receipt = po.picking_ids.filtered(
-                lambda p: p.picking_type_id.code == "incoming" and p.state == "done"
-            ).sorted("create_date", reverse=True)[:1]
-
-            if not receipt:
-                warnings.append(_("No done receipt found for Order ID '%s' (PO: %s).") % (order_id, po.name))
-                skipped_count += len(asin_qty)
-                continue
-
-            receipt = receipt[0]
-
-            if not receipt._can_return():
-                warnings.append(_("Receipt %s for Order ID '%s' cannot be returned (must be Done).") % (receipt.name, order_id))
-                skipped_count += len(asin_qty)
-                continue
-
-            # Create return wizard for this receipt
-            wizard = ReturnWizard.with_context(
-                active_id=receipt.id,
-                active_model="stock.picking",
-            ).create({"picking_id": receipt.id})
-
-            if not wizard.product_return_moves:
-                warnings.append(_("No returnable moves for Order ID '%s' (receipt %s).") % (order_id, receipt.name))
-                skipped_count += len(asin_qty)
-                continue
-
-            # Set quantities only for ASINs in file; others stay 0
-            for asin, qty in asin_qty.items():
-                product = self.env["product.product"].search([("default_code", "=", asin)], limit=1)
-                if not product:
-                    warnings.append(_("Product with ASIN '%s' not found (Order ID: %s).") % (asin, order_id))
-                    skipped_count += 1
-                    continue
-
-                line = wizard.product_return_moves.filtered(
-                    lambda l: l.product_id.id == product.id and l.move_id
-                )[:1]
-                if not line:
-                    warnings.append(_("ASIN '%s' not found on receipt for Order ID '%s'.") % (asin, order_id))
-                    skipped_count += 1
-                    continue
-
-                # Validate: do not exceed move quantity
-                max_qty = line.move_id.quantity
-                if qty > max_qty:
-                    warnings.append(_("Refund qty %s for ASIN '%s' (Order ID: %s) exceeds receipt qty %s; using %s.") % (
-                        qty, asin, order_id, max_qty, max_qty
-                    ))
-                    qty = max_qty
-                line.quantity = qty
-
-            if all(line.quantity <= 0 for line in wizard.product_return_moves):
-                warnings.append(_("No positive quantities to return for Order ID '%s'.") % order_id)
-                skipped_count += len(asin_qty)
-                continue
-
             try:
-                action = wizard.action_create_returns()
+                # 1) Cancel receipts (pickings) that are NOT in 'cancel' or 'done'
+                to_cancel = po.picking_ids.filtered(
+                    lambda p: p.state not in ("cancel", "done")
+                )
+                for picking in to_cancel:
+                    try:
+                        picking.action_cancel()
+                    except Exception as cancel_exc:
+                        _logger.warning(
+                            "Could not cancel picking %s for Order ID %s: %s",
+                            picking.name,
+                            order_id,
+                            cancel_exc,
+                            exc_info=True,
+                        )
+                        warnings.append(
+                            _("Order ID '%s': could not cancel receipt %s: %s")
+                            % (order_id, picking.name, cancel_exc)
+                        )
+
+                # 2) For done receipt: create Return Picking (standard Odoo flow)
+                receipt = po.picking_ids.filtered(
+                    lambda p: p.picking_type_id.code == "incoming" and p.state == "done"
+                ).sorted("create_date", reverse=True)[:1]
+
+                if receipt:
+                    receipt = receipt[0]
+                    if receipt._can_return():
+                        wizard = ReturnWizard.with_context(
+                            active_id=receipt.id,
+                            active_model="stock.picking",
+                        ).create({"picking_id": receipt.id})
+
+                        if wizard.product_return_moves:
+                            for asin, qty in asin_qty.items():
+                                product = self.env["product.product"].search(
+                                    [("default_code", "=", asin)], limit=1
+                                )
+                                if not product:
+                                    warnings.append(
+                                        _("Product with ASIN '%s' not found (Order ID: %s).")
+                                        % (asin, order_id)
+                                    )
+                                    skipped_count += 1
+                                    continue
+
+                                line = wizard.product_return_moves.filtered(
+                                    lambda l: l.product_id.id == product.id and l.move_id
+                                )[:1]
+                                if not line:
+                                    warnings.append(
+                                        _("ASIN '%s' not found on receipt for Order ID '%s'.")
+                                        % (asin, order_id)
+                                    )
+                                    skipped_count += 1
+                                    continue
+
+                                max_qty = line.move_id.quantity
+                                if qty > max_qty:
+                                    warnings.append(
+                                        _(
+                                            "Refund qty %s for ASIN '%s' (Order ID: %s) exceeds receipt qty %s; using %s."
+                                        )
+                                        % (qty, asin, order_id, max_qty, max_qty)
+                                    )
+                                    qty = max_qty
+                                line.quantity = qty
+
+                            if any(
+                                line.quantity > 0 for line in wizard.product_return_moves
+                            ):
+                                try:
+                                    action = wizard.action_create_returns()
+                                    return_picking_id = action.get("res_id")
+                                    if return_picking_id:
+                                        self.env["stock.picking"].browse(
+                                            return_picking_id
+                                        ).write({"is_ecom_refund": True})
+                                        created_count += 1
+                                except Exception as e:
+                                    warnings.append(
+                                        _("Order ID '%s': could not create return: %s")
+                                        % (order_id, str(e))
+                                    )
+                            else:
+                                warnings.append(
+                                    _("No positive quantities to return for Order ID '%s'.")
+                                    % order_id
+                                )
+                        else:
+                            warnings.append(
+                                _("No returnable moves for Order ID '%s' (receipt %s).")
+                                % (order_id, receipt.name)
+                            )
+                    else:
+                        _logger.info(
+                            "Receipt %s for Order ID '%s' cannot be returned.",
+                            receipt.name,
+                            order_id,
+                        )
+                        warnings.append(
+                            _("Receipt %s for Order ID '%s' cannot be returned (must be Done).")
+                            % (receipt.name, order_id)
+                        )
+                else:
+                    _logger.info(
+                        "No done receipt for Order ID '%s' (PO: %s); skipping return.",
+                        order_id,
+                        po.name,
+                    )
+
+                # 3) Reverse posted Vendor Bills (create Credit Notes)
+                po.invalidate_recordset(["invoice_ids"])
+                posted_bills = po.invoice_ids.filtered(
+                    lambda m: m.state == "posted" and m.move_type == "in_invoice"
+                )
+                for bill in posted_bills:
+                    try:
+                        reverse_moves = bill._reverse_moves(cancel=True)
+                        if reverse_moves:
+                            credits_created += len(reverse_moves)
+                    except Exception as rev_exc:
+                        _logger.warning(
+                            "Vendor bill reversal failed for PO %s (Order ID: %s), bill %s: %s",
+                            po.name,
+                            order_id,
+                            bill.name,
+                            rev_exc,
+                            exc_info=True,
+                        )
+                        warnings.append(
+                            _("Order ID '%s': could not reverse bill %s: %s")
+                            % (order_id, bill.name, rev_exc)
+                        )
+
+                # 4) Mark PO as refunded
+                po.ks_ecom_refunded = True
+
             except Exception as e:
-                warnings.append(_("Order ID '%s': could not create return: %s") % (order_id, str(e)))
+                _logger.warning(
+                    "Refund processing failed for Order ID '%s' (PO: %s): %s",
+                    order_id,
+                    po.name,
+                    e,
+                    exc_info=True,
+                )
+                warnings.append(
+                    _("Order ID '%s': refund processing failed: %s") % (order_id, e)
+                )
                 skipped_count += len(asin_qty)
-                continue
 
-            # Mark the created return picking as e-com refund
-            return_picking_id = action.get("res_id")
-            if return_picking_id:
-                self.env["stock.picking"].browse(return_picking_id).write({"is_ecom_refund": True})
-                created_count += 1
+        # Same message style as PO Import: red box for records not created/skipped, green box for success
+        bus = self.env["bus.bus"]
+        partner_id = self.env.user.partner_id
 
-        result_message = _("Refund Import Completed:\n")
-        result_message += _("- Returns created: %s\n") % created_count
-        result_message += _("- Skipped: %s line(s)\n") % skipped_count
+        # Red box: warnings / records not created
         if warnings:
-            result_message += _("\nWarnings:\n")
-            for w in warnings:
-                result_message += "- %s\n" % w
+            warning_list = "; ".join(warnings[:10])
+            if len(warnings) > 10:
+                warning_list += _(" (and %s more)") % (len(warnings) - 10)
+            bus._sendone(
+                partner_id,
+                "simple_notification",
+                {
+                    "type": "danger",
+                    "title": _("Refund Import: Records not created"),
+                    "message": warning_list,
+                    "sticky": True,
+                },
+            )
 
-        if created_count == 0:
-            raise UserError(result_message)
+        # Green box: success summary
+        if created_count > 0 or credits_created > 0:
+            parts = []
+            if created_count > 0:
+                parts.append(_("%s return(s)") % created_count)
+            if credits_created > 0:
+                parts.append(_("%s credit note(s)") % credits_created)
+            bus._sendone(
+                partner_id,
+                "simple_notification",
+                {
+                    "type": "success",
+                    "title": _("Refund Import: Success"),
+                    "message": _("Created: %s.") % ", ".join(parts),
+                    "sticky": True,
+                },
+            )
+        elif not warnings:
+            bus._sendone(
+                partner_id,
+                "simple_notification",
+                {
+                    "type": "warning",
+                    "title": _("Refund Import"),
+                    "message": _("No returns were created. Check file format and data."),
+                    "sticky": True,
+                },
+            )
 
         return {"type": "ir.actions.act_window_close"}

@@ -6,6 +6,11 @@ from odoo import fields, models
 class ResCompany(models.Model):
     _inherit = 'res.company'
 
+    iec_no = fields.Char(
+        string="IEC No",
+        help="Import Export Code number (India).",
+    )
+
     ks_sale_procurement_team_user_ids = fields.Many2many(
         comodel_name='res.users',
         relation='ks_sale_order_company_procurement_team_rel',
