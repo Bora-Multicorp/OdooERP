@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_otek_report_wizard_form" model="ir.ui.view">
+        <field name="name">ks.purchase.order.otek.report.wizard.form</field>
+        <field name="model">ks.purchase.order.otek.report.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Otek Purchase Order Report">
+                <group>
+                    <field name="date_from"/>
+                    <field name="date_to"/>
+                </group>
+                <footer>
+                    <button name="action_show_report" string="Show Report" type="object" class="btn-primary"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_otek_report_line_list" model="ir.ui.view">
+        <field name="name">ks.purchase.order.otek.report.line.list</field>
+        <field name="model">ks.purchase.order.otek.report.line</field>
+        <field name="arch" type="xml">
+            <list string="Otek Purchase Order Report" create="0" delete="0" editable="bottom">
+                <header>
+                    <button name="action_export_xlsx" string="Export to Excel" type="object" class="btn-primary"/>
+                </header>
+                <field name="order_id"/>
+                <field name="supplier"/>
+                <field name="product_categ"/>
+                <field name="product"/>
+                <field name="qty"/>
+                <field name="fob"/>
+                <field name="amount"/>
+                <field name="payment"/>
+                <field name="balance"/>
+                <field name="inr_amount"/>
+                <field name="freight_ins"/>
+                <field name="bcd"/>
+                <field name="sws"/>
+                <field name="igst"/>
+                <field name="fine_interest"/>
+                <field name="total_exp"/>
+                <field name="per_pc_landed_cost"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_otek_report_line_search" model="ir.ui.view">
+        <field name="name">ks.purchase.order.otek.report.line.search</field>
+        <field name="model">ks.purchase.order.otek.report.line</field>
+        <field name="arch" type="xml">
+            <search string="Otek Report Lines">
+                <field name="order_id"/>
+                <field name="supplier"/>
+                <field name="product_categ"/>
+                <field name="product"/>
+                <group expand="0" string="Group By">
+                    <filter string="Supplier" name="group_supplier" context="{'group_by': 'supplier'}"/>
+                    <filter string="Product Category" name="group_product_categ" context="{'group_by': 'product_categ'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+</odoo>

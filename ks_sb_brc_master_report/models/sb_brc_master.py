@@ -29,7 +29,7 @@ class SbBrcMaster(models.Model):
     buyer = fields.Char(string='Buyer', related='invoice_id.partner_id.name', store=True, readonly=True, help="Fetched from invoice")
     awb_number = fields.Char(string='AWB NUMBER', help="Text Box – input field")
     qty = fields.Float(string='QTY', compute='_compute_qty_unit_rate', store=True, digits=(16, 2), help="Fetched from invoice")
-    sb_date = fields.Date(string='Date', required=True)
+    sb_date = fields.Date(string='SB Date', required=True)
     # unit_rate = fields.Float(string='Unit Rate', compute='_compute_qty_unit_rate', store=True, digits=(16, 2), help="Fetched from invoice")
     currency_id = fields.Many2one('res.currency', string='Currency', related='invoice_id.currency_id', store=True, readonly=True, help="Fetched from invoice")
     # calendar_date = fields.Date(string='Calendar', help="Calendar/date – input field")
@@ -37,7 +37,7 @@ class SbBrcMaster(models.Model):
     ex_rate = fields.Float(string='EX Rate', related='invoice_id.currency_id.rate', store=True, digits=(16, 6), readonly=True, help="Exchange rate entered during invoicing")
     sb_ex_rate = fields.Float(string='SB Rate', digits=(16, 6), help="Fetched from invoice")
     amount_inr = fields.Monetary(string='Amount (INR)', compute='_compute_amount_inr', store=True, currency_field='company_currency_id', help="As per formula")
-    fob_value_inr = fields.Monetary(string='FOB value (INR)', currency_field='company_currency_id', help="From invoice")
+    fob_value_inr = fields.Monetary(string='FOB value', currency_field='company_currency_id', help="From invoice")
     gst_rate = fields.Char(string='GST Rate', help="From invoice")
     gst_amount = fields.Monetary(string='GST AMOUNT', currency_field='company_currency_id', help="From invoice")
     invoice_value = fields.Monetary(string='Invoice Value', compute='_compute_invoice_value', store=True, currency_field='company_currency_id', help="As per formula")
@@ -99,9 +99,6 @@ class SbBrcMaster(models.Model):
     # received_date = fields.Date(string='Received Date', help="Text Box – input field")
     # received_amount = fields.Monetary(string='Received Amount', currency_field='company_currency_id', help="Text Box – input field")
     remarks = fields.Text(string='Remarks', help="Text Box – input field")
-
-    # FOB VALUE (column 65 in report - same as FOB value INR)
-    fob_value = fields.Monetary(related='fob_value_inr', string='FOB VALUE', currency_field='company_currency_id', readonly=True)
 
     # CHA Invoice (fetched from invoice received from CHA for this shipment)
     tax_able_amt = fields.Monetary(string='Tax Able Amt', currency_field='company_currency_id', help="Fetched from CHA invoice – input field")
