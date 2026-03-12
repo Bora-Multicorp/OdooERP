@@ -131,21 +131,45 @@
       <t t-foreach="docs" t-as="o">
         <t t-call="web.external_layout">
           <div class="page">
-            <div class="text-right mb-2"><strong>Date: </strong><t t-esc="o.date_to"/></div>
-            <p>To,<br/>
+            <div class="text-right mb-2"><strong>Date of declaration: </strong><t t-esc="o.date_to"/></div>
+            <p><strong>Name of the Client:</strong> <t t-esc="o.company_id.name"/></p>
+            <p><strong>Policy No.:</strong> <t t-esc="o.policy_id.policy_number or o.policy_id.name"/></p>
+            <p><strong>To,</strong><br/>
               <strong><t t-esc="o.policy_id.insurance_company_id.name"/></strong>
             </p>
+            <p><strong>Policy Period:</strong> <t t-esc="o.date_from"/> to <t t-esc="o.date_to"/></p>
             <p><strong>Subject: Declaration for Policy No.
-              <t t-esc="o.policy_id.policy_number"/> —
+              <t t-esc="o.policy_id.policy_number or o.policy_id.name"/> —
               Period <t t-esc="o.date_from"/> to <t t-esc="o.date_to"/>
             </strong></p>
-            <p>Dear Sir/Madam,</p>
             <t t-if="o.declaration_type == 'marine'">
-              <p>We hereby declare that the total sales value (inclusive of GST) for the
-                period <strong><t t-esc="o.date_from"/></strong> to
-                <strong><t t-esc="o.date_to"/></strong> amounts to
-                <strong>&#8377; <t t-esc="'{:,.2f}'.format(o.declaration_amount)"/></strong>
-                under Policy No. <strong><t t-esc="o.policy_id.policy_number"/></strong>.
+              <p><strong>Details of turnover as per the below heading (Sales value incl. GST):</strong></p>
+              <t t-set="marine_invoices" t-value="o._get_marine_invoice_lines()"/>
+              <table class="table table-bordered table-sm mb-3">
+                <thead class="thead-light">
+                  <tr>
+                    <th>Sr. no</th>
+                    <th>Invoice No.</th>
+                    <th>Invoice date</th>
+                    <th class="text-right">Invoice value in RS.</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <t t-foreach="marine_invoices" t-as="inv">
+                    <tr>
+                      <td><t t-esc="inv_index + 1"/></td>
+                      <td><t t-esc="inv.name or '-'"/></td>
+                      <td><t t-esc="inv.invoice_date"/></td>
+                      <td class="text-right"><t t-esc="'{:,.2f}'.format(inv.amount_total if inv.move_type == 'out_invoice' else -inv.amount_total)"/></td>
+                    </tr>
+                  </t>
+                </tbody>
+              </table>
+              <p><strong>Total value for declaration (Marine Declaration Amount):</strong>
+                &#8377; <t t-esc="'{:,.2f}'.format(o.declaration_amount)"/>
+              </p>
+              <p><strong>Balance Sum Insured (Closing):</strong>
+                &#8377; <t t-esc="'{:,.2f}'.format(o.policy_id.balance_sum_insured)"/>
               </p>
             </t>
             <t t-if="o.declaration_type == 'fire_burglary'">
@@ -154,7 +178,7 @@
                 for the period <strong><t t-esc="o.date_from"/></strong> to
                 <strong><t t-esc="o.date_to"/></strong> amounts to
                 <strong>&#8377; <t t-esc="'{:,.2f}'.format(o.declaration_amount)"/></strong>
-                under Policy No. <strong><t t-esc="o.policy_id.policy_number"/></strong>.
+                under Policy No. <strong><t t-esc="o.policy_id.policy_number or o.policy_id.name"/></strong>.
               </p>
             </t>
             <p>Kindly acknowledge receipt of this declaration.</p>

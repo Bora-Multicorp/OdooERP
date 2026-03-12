@@ -24,14 +24,14 @@ class InsuranceCategory(models.Model):
     active = fields.Boolean(default=True)
 
     def write(self, vals):
-        if not self.env.user.has_group('ks_insurance_management.group_insurance_admin'):
-            raise AccessError("Only Admin can modify Insurance Categories.")
-        return super().write(vals)
+        if self.env.su or self.env.user.has_group('base.group_system') or self.env.user.has_group('ks_insurance_management.group_insurance_admin'):
+            return super().write(vals)
+        raise AccessError("Only Admin can modify Insurance Categories.")
 
     def unlink(self):
-        if not self.env.user.has_group('ks_insurance_management.group_insurance_admin'):
-            raise AccessError("Only Admin can delete Insurance Categories.")
-        return super().unlink()
+        if self.env.su or self.env.user.has_group('base.group_system') or self.env.user.has_group('ks_insurance_management.group_insurance_admin'):
+            return super().unlink()
+        raise AccessError("Only Admin can delete Insurance Categories.")
 
 
 class InsuranceType(models.Model):
@@ -57,11 +57,11 @@ class InsuranceType(models.Model):
     description = fields.Text(string='Description')
 
     def write(self, vals):
-        if not self.env.user.has_group('ks_insurance_management.group_insurance_admin'):
-            raise AccessError("Only Admin can modify Insurance Types.")
-        return super().write(vals)
+        if self.env.su or self.env.user.has_group('base.group_system') or self.env.user.has_group('ks_insurance_management.group_insurance_admin'):
+            return super().write(vals)
+        raise AccessError("Only Admin can modify Insurance Types.")
 
     def unlink(self):
-        if not self.env.user.has_group('ks_insurance_management.group_insurance_admin'):
-            raise AccessError("Only Admin can delete Insurance Types.")
-        return super().unlink()
+        if self.env.su or self.env.user.has_group('base.group_system') or self.env.user.has_group('ks_insurance_management.group_insurance_admin'):
+            return super().unlink()
+        raise AccessError("Only Admin can delete Insurance Types.")

@@ -76,6 +76,20 @@ class InsuranceDeclaration(models.Model):
         self.avg_inventory_value = total
         self.declaration_amount = total
 
+    def _get_marine_invoice_lines(self):
+        """Invoice-wise lines for Marine Declaration report (xlsx-style format). Returns account.move recordset."""
+        self.ensure_one()
+        if self.declaration_type != 'marine':
+            return self.env['account.move']
+        domain = [
+            ('invoice_date', '>=', self.date_from),
+            ('invoice_date', '<=', self.date_to),
+            ('move_type', 'in', ['out_invoice', 'out_refund']),
+            ('state', '=', 'posted'),
+            ('company_id', '=', self.company_id.id),
+        ]
+        return self.env['account.move'].search(domain, order='invoice_date, name')
+
     @api.model_create_multi
     def create(self, vals_list):
         for vals in vals_list:
@@ -97,10 +111,9 @@ class InsuranceDeclaration(models.Model):
 
     def action_draft_email(self):
         self.ensure_one()
-        template = self.env.ref(
-            'ks_insurance_management.email_template_declaration',
-            raise_if_not_found=False,
-        )
+        template = self._get_declaration_mail_template()
+        if template and not template.report_template_ids:
+            self._attach_declaration_report_to_template(template)
         ctx = {
             'default_model': 'insurance.declaration',
             'default_res_ids': [self.id],
@@ -118,7 +131,38 @@ class InsuranceDeclaration(models.Model):
             'context': ctx,
         }
 
+    def _get_declaration_mail_template(self):
+        """Resolve declaration email template by ref or by name (avoids External ID not found)."""
+        template = self.env.ref(
+            'ks_insurance_management.email_template_declaration',
+            raise_if_not_found=False,
+        )
+        if not template:
+            template = self.env['mail.template'].search(
+                [
+                    ('model_id.model', '=', 'insurance.declaration'),
+                    ('name', '=', 'Insurance: Declaration Email'),
+                ],
+                limit=1,
+            )
+        return template
+
+    def _attach_declaration_report_to_template(self, template):
+        """Ensure the declaration letter report is linked to the template so it is sent as attachment."""
+        report = self.env['ir.actions.report'].search(
+            [('report_name', '=', 'ks_insurance_management.report_declaration_letter_template')],
+            limit=1,
+        )
+        if report and report not in template.report_template_ids:
+            template.report_template_ids = [(4, report.id)]
+
     def action_print_declaration(self):
-        return self.env.ref(
-            'ks_insurance_management.action_report_declaration_letter'
-        ).report_action(self)
+        report = self.env['ir.actions.report'].search(
+            [('report_name', '=', 'ks_insurance_management.report_declaration_letter_template')],
+            limit=1,
+        )
+        if not report:
+            raise UserError(
+                _('Declaration Letter report not found. Please upgrade the Insurance Management module.')
+            )
+        return report.report_action(self)

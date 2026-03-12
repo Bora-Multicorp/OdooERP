@@ -41,6 +41,31 @@
 
 ---
 
+## 📋 Requirements Compliance (Insurance Module Details)
+
+The module aligns with the functional requirements document and report formats under `static/Files/`:
+
+| Requirement | Implementation |
+|-------------|----------------|
+| **Insurance Type** – Admin only CRUD; dropdown on forms | Configuration → Insurance Types (group_insurance_admin); types on policy/declaration |
+| **Policy number** – Manual entry; creation from payment | `policy_number` (Char); popup from Payment Entry creates policy with all fields |
+| **Cover amount in words** | `sum_insured_words` on policy (auto from Sum Insured) |
+| **Premium from invoice/payment** | Payment popup & policy: Premium (Incl. GST); Total Premium Paid from linked payments |
+| **Individual / Floater** | Policy Type; Floater = multiple Covered Locations (warehouses) |
+| **Categories** – Fire, Burglary, Marine, GMC, GPA, Vehicle, Personal, Office, HO Assets | Data + Configuration → Insurance Categories; admin only |
+| **Miscellaneous report** | Policies with category `is_misc`; report in menu |
+| **Marine declarations** – Sales value (incl. GST), configurable, email draft | Declaration Type Marine; sales from posted invoices; email template + PDF |
+| **Marine declaration format (xlsx)** | Declaration Letter PDF: invoice-wise table (Sr. no, Invoice No., Invoice date, Invoice value), Total, Balance Sum Insured |
+| **Fire & Burglary declarations** – Inventory per warehouse | Declaration Type Fire & Burglary; warehouse; average inventory value |
+| **F&B Report** | Fire & Burglary Report (Policy No., Type, Company, Insurer, Sum Insured, Premium, Avg Inventory, Expiry, Status) |
+| **Marine Report** – Applicability, Balance Sum Insured | Marine Insurance Report; EXIM/Domestic/Both/Russia; balance column; last two columns reference only |
+| **Sum insured reset on expiry** | Mark as Expired sets Marine balance to 0; status = Expired |
+| **Declaration Download** – Date From/To, companies, bulk | Bulk Declaration Download wizard; companies multi-select; Generate & Download |
+
+Reference files in `static/Files/`: **Insurance Module Details (1).docx** (requirements), **Marine_Declaration_*.xlsx** / **SSK INCORPORATION_MARINE DECLARATION (1).xlsx** (report layout reference).
+
+---
+
 ## 📚 Key Concepts
 
 | Term | Meaning |

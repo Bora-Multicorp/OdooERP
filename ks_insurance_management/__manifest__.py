@@ -37,6 +37,7 @@
         'views/insurance_declaration_views.xml',
         'views/insurance_menu.xml',
         'report/report_templates.xml',
+        'data/insurance_mail_templates_attach.xml',
     ],
     'installable': True,
     'application': True,

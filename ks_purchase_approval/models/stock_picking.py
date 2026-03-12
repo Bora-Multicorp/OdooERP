@@ -121,6 +121,7 @@ class StockPicking(models.Model):
                 if picking.ks_grn_approval_state != 'approved':
                     # Trigger approval request: set state and notify PO approvers
                     picking._ks_grn_request_approval()
+                    self.env.cr.commit()
                     raise UserError(_(
                         'This receipt has over-received quantities or products not on the Purchase Order. '
                         'An approval request has been sent to the PO approvers. You can validate after they approve.'

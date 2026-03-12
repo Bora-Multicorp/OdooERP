@@ -66,6 +66,12 @@ class BulkDeclarationWizard(models.TransientModel):
                         created |= existing
         if not created:
             raise UserError("No active policies found for the selected criteria.")
-        return self.env.ref(
-            'ks_insurance_management.action_report_declaration_letter'
-        ).report_action(created)
+        report = self.env['ir.actions.report'].search(
+            [('report_name', '=', 'ks_insurance_management.report_declaration_letter_template')],
+            limit=1,
+        )
+        if not report:
+            raise UserError(
+                "Declaration Letter report not found. Please upgrade the Insurance Management module."
+            )
+        return report.report_action(created)
