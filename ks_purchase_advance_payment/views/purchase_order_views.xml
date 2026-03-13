@@ -38,7 +38,7 @@
             <xpath expr="//button[@name='action_create_invoice']" position="after">
                 <button name="action_create_payment_approval_request"
                         type="object"
-                        string="Request Payment Approval"
+                        string="Request For Advance Payment"
                         class="btn-secondary"
                         invisible="state not in ('purchase', 'done') or (has_vendor_bill and has_approved_bill_payment_request) or (not has_vendor_bill and has_approved_advance_payment_request)"
                         help="Request payment approval for this PO. Type is set automatically: with bill if a vendor bill exists, otherwise without bill. Hidden when approval already exists for this PO."/>
