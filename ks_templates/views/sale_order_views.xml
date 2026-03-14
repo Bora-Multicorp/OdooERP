@@ -15,6 +15,14 @@
                         <field name="ks_city_port_of_discharge" placeholder="Destination"/>
                     </group>
                 </xpath>
+                <!-- Add Made In on Sale Order Line (form) -->
+                <xpath expr="//field[@name='order_line']/form/field[@name='name']" position="after">
+                    <field name="made_in_country_id" string="Made In" optional="show" placeholder="e.g. Made in India"/>
+                </xpath>
+                <!-- Add Made In on Sale Order Line (list) -->
+                <xpath expr="//field[@name='order_line']/list/field[@name='name']" position="after">
+                    <field name="made_in_country_id" string="Made In" optional="show"/>
+                </xpath>
             </field>
         </record>
     </data>

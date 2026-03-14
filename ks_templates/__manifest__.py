@@ -9,7 +9,7 @@
                    'You can also add multiple file attachment to Survey Form .',
     'author': 'Ksolves Private Limited',
     'website': 'https://www.ksolves.com/',
-    'depends': ['quality','sale','stock','account','purchase','ks_sale_order'],
+    'depends': ['quality', 'sale', 'stock', 'account', 'purchase', 'ks_sale_order', 'sale_stock', 'purchase_stock'],
     'assets': {
 
     },
@@ -17,6 +17,7 @@
         'views/account_move_views.xml',
         'views/account_journal_views.xml',
         'views/sale_order_views.xml',
+        'views/purchase_order_views.xml',
         'views/stock_picking_views.xml',
         'report/dubai_sales_report_template.xml',
         'report/dubai_sales_report_template_inherit.xml',

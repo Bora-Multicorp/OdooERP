@@ -13,7 +13,6 @@ class KsSaleApprovalCommon(TransactionCase):
         # Get existing groups
         cls.sales_user_group = cls.env.ref('sales_team.group_sale_salesman')
         cls.sales_manager_group = cls.env.ref('sales_team.group_sale_manager')
-        cls.admin_group = cls.env.ref('base.group_system')
         
         # Create test company
         cls.company = cls.env['res.company'].create({
@@ -68,14 +67,15 @@ class KsSaleApprovalCommon(TransactionCase):
             'groups_id': [(4, cls.sales_user_group.id)],
         })
         
-        # Create Admin User
+        # Create Admin User (custom admin: bypass approval via is_custom_admin)
         cls.admin_user = cls.env['res.users'].create({
             'name': 'Admin User',
             'login': 'admin_user',
             'email': 'admin@test.com',
             'company_id': cls.company.id,
             'company_ids': [(4, cls.company.id)],
-            'groups_id': [(4, cls.admin_group.id)],
+            'groups_id': [(4, cls.sales_user_group.id)],
+            'is_custom_admin': True,
         })
         
         # Create Customer

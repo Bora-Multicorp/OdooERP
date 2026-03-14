@@ -379,8 +379,9 @@
                                             <td style="border:1px solid #000; padding:4px; text-align:center;" t-esc="line_num"/>
                                             <td style="border:1px solid #000; padding:4px;">
                                                 <t t-esc="line.name or ''"/>
-                                                <t t-if="line.product_id and line.product_id.product_tmpl_id.made_country">
-                                                    <br/><t t-esc="'Made In ' + (line.product_id.product_tmpl_id.made_country.name or '')"/>
+                                                <t t-set="made_in_country" t-value="line.made_in_country_id or (line.product_id and line.product_id.product_tmpl_id.made_country)"/>
+                                                <t t-if="made_in_country">
+                                                    <br/><span style="margin-left: 1em;"><t t-esc="'Made in ' + (made_in_country.name or '')"/></span>
                                                 </t>
                                             </td>
                                             <td style="border:1px solid #000; padding:4px; text-align:right;" t-esc="doc.format_number(line.product_uom_qty, digits=0)"/>
