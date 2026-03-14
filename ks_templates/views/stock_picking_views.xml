@@ -45,12 +45,11 @@
                         </group>
                     </group>
                 </xpath>
-                <!-- Add line-wise Dimensions, Packages, Remarks, Made In to Operations (move_ids_without_package) list -->
+                <!-- Add line-wise Dimensions, Packages, Remarks to Operations (move_ids_without_package) list -->
                 <xpath expr="//field[@name='move_ids_without_package']//list/field[@name='quantity']" position="after">
                     <field name="x_dimensions" string="Dimensions (L*B*H)" optional="show"/>
                     <field name="x_package_info" string="No. &amp; Kind of Packages" optional="show"/>
                     <field name="x_line_remark" string="Remark" optional="show"/>
-                    <field name="made_in_country_id" string="Made In" optional="show"/>
                 </xpath>
             </field>
         </record>

@@ -211,9 +211,8 @@
                     <td style="border:1px solid #000; text-align:center;" t-esc="line_num"/>
                     <td style="border:1px solid #000;">
                         <strong><t t-esc="line.name or ''"/></strong>
-                        <t t-set="made_in_country" t-value="(line.sale_line_ids and line.sale_line_ids[0].made_in_country_id) or (line.purchase_line_id and line.purchase_line_id.made_in_country_id) or (line.product_id and line.product_id.product_tmpl_id.made_country)"/>
-                        <t t-if="made_in_country">
-                            <br/>(Made <t t-esc="'in ' + (made_in_country.name or '')"/>
+                        <t t-if="line.product_id and line.product_id.product_tmpl_id.made_country">
+                            <br/>(Made <t t-esc="'in ' + (line.product_id.product_tmpl_id.made_country.name or '')"/>
                             <t t-if="line.product_id.product_tmpl_id.ks_unlocked">, Unlocked</t>)
                         </t>
                     </td>

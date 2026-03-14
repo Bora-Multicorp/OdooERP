@@ -399,15 +399,13 @@ class SaleOrder(models.Model):
 
     @api.depends_context('uid')
     def _compute_ks_is_admin_user(self):
-        """Compute if current user is a custom admin (is_custom_admin on res.users)"""
+        """Compute if current user is an admin (has base.group_system)"""
         for order in self:
             order.ks_is_admin_user = order._is_admin_user()
 
     def _is_admin_user(self):
-        """Check if current user has admin privileges (is_custom_admin on res.users).
-        Custom admins bypass all approval stages and can confirm/cancel/edit directly.
-        """
-        return bool(self.env.user.is_custom_admin)
+        """Check if current user is an admin (has base.group_system)"""
+        return self.env.user.has_group('base.group_system')
 
     # ===== Override Confirm Action =====
 
@@ -437,8 +435,8 @@ class SaleOrder(models.Model):
     def action_confirm(self):
         """
         Override:
-        - Custom admin (is_custom_admin): Confirm immediately (bypass all approval)
-        - PM users (from config): Confirm immediately (standard flow)
+        - Admin users: Confirm immediately (bypass all approval)
+        - PM users: Confirm immediately (standard flow)
         - Normal users: Open approval request wizard to show recipients
         """
         for order in self:
@@ -450,7 +448,7 @@ class SaleOrder(models.Model):
             if error_msg:
                 raise UserError(error_msg)
 
-            # Custom admin bypasses all approval restrictions (no group check)
+            # Admin users bypass all approval restrictions
             if order._is_admin_user():
                 return super().action_confirm()
 
@@ -1010,15 +1008,6 @@ class SaleOrder(models.Model):
                     subtype_xmlid='mail.mt_comment',
                 )
 
-            # Send "Sales Order Cancellation Approved" email to user who requested cancellation
-            if self.ks_cancel_request_user_id and self.ks_cancel_request_user_id.email:
-                template = self.env.ref(
-                    'ks_sale_approval.mail_template_sale_order_cancellation_approved',
-                    raise_if_not_found=False,
-                )
-                if template:
-                    template.send_mail(self.id, force_send=True)
-
         return True
 
     def ks_action_reject_cancel(self):
@@ -1307,15 +1296,6 @@ class SaleOrder(models.Model):
                     message_type='notification',
                     subtype_xmlid='mail.mt_comment',
                 )
-
-            # Send "Sales Order Update Request Approved" email to user who requested the update
-            if self.ks_edit_request_user_id and self.ks_edit_request_user_id.email:
-                template = self.env.ref(
-                    'ks_sale_approval.mail_template_sale_order_update_approved',
-                    raise_if_not_found=False,
-                )
-                if template:
-                    template.send_mail(self.id, force_send=True)
 
         return True
 
