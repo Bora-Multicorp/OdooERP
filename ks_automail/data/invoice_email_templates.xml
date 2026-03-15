@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Custom template for "Invoice Sent to Customer" (used via account.move._get_mail_template override).
+             Base account template is in noupdate="1" so we use a separate template and switch to it in code. -->
+        <record id="email_template_invoice_sent_to_customer" model="mail.template">
+            <field name="name">Invoice: Sent to Customer (KS)</field>
+            <field name="model_id" ref="account.model_account_move"/>
+            <field name="email_from">{{ (object.invoice_user_id.email_formatted or object.company_id.email_formatted or user.email_formatted) }}</field>
+            <field name="partner_to">{{ object.partner_id.id }}</field>
+            <field name="subject">Invoice {{ object.name }} – {{ object.company_id.name }}</field>
+            <field name="description">Sent to customers with their invoices in attachment</field>
+            <field name="body_html" type="html">
+<div style="margin: 0px; padding: 0px; font-size: 13px;">
+    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+        Dear <t t-out="object.partner_id.name or 'Valued Customer'">Customer</t>,
+    </p>
+    <br/>
+    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+        Please find attached Invoice <strong><t t-out="object.name or ''">INV/2024/00001</t></strong> for your reference.
+    </p>
+    <br/>
+    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+        If you require any clarification, please feel free to reach out.
+    </p>
+    <br/>
+    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+        Warm regards,<br/>
+        <strong><t t-out="object.company_id.name">Company Name</t></strong>
+    </p>
+</div>
+            </field>
+            <field name="report_template_ids" eval="[]"/>
+            <field name="lang">{{ object.partner_id.lang }}</field>
+            <field name="auto_delete" eval="True"/>
+        </record>
+    </data>
+</odoo>

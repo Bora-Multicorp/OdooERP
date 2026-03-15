@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Add Made In on Purchase Order Line (list and form) -->
+        <record id="view_purchase_order_form_inherit_ks_templates_made_in" model="ir.ui.view">
+            <field name="name">purchase.order.form.ks.templates.made.in</field>
+            <field name="model">purchase.order</field>
+            <field name="inherit_id" ref="purchase.purchase_order_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='order_line']/list/field[@name='name']" position="after">
+                    <field name="made_in_country_id" string="Made In" optional="show"/>
+                </xpath>
+                <xpath expr="//field[@name='order_line']/form/group/group/field[@name='price_unit']" position="after">
+                    <field name="made_in_country_id" string="Made In" placeholder="e.g. Made in India"/>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>
