@@ -36,11 +36,12 @@
     'category': 'Sales/Sales',
     'author': 'Ksolves',
     'website': '',
-    'depends': ['sale', 'sales_team', 'mail', 'purchase','ks_product_master'],
+    'depends': ['sale', 'sales_team', 'mail', 'purchase', 'ks_product_master', 'ks_product_approval'],
     'data': [
         'security/security.xml',
         'security/ir.model.access.csv',
         'data/ks_approval_data.xml',
+        'data/mail_templates.xml',
         'wizard/ks_reject_reason_wizard_views.xml',
         'wizard/ks_approval_request_wizard_views.xml',
         'wizard/ks_cancel_approval_request_wizard_views.xml',

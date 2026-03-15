@@ -38,60 +38,41 @@
             <field name="auto_delete" eval="False"/>
         </record>
 
-        <!-- KYC Approval 'Assign To' Email Template -->
+        <!-- Vendor KYC Approval Assignment (Internal Email) - sent to assigned approver when approval request is submitted -->
         <record id="assign_to_email_template" model="mail.template">
-            <field name="name">Assign To KYC Approved Template</field>
+            <field name="name">Vendor KYC Approval Assignment (Internal Email)</field>
             <field name="model_id" ref="model_res_partner_kyc_approval"/>
-            <field name="subject">KYC Approval for : {{ object.partner_id.name }}</field>
-            <field name="description">Assign To KYC Approved Template</field>
+            <field name="subject">Vendor KYC Approval Required – {{ object.partner_id.name or object.display_name }}</field>
+            <field name="email_from">{{ (user.company_id.email_formatted or user.email_formatted) }}</field>
+            <field name="email_to">{{ object.assigned_to.email if object.assigned_to else '' }}</field>
+            <field name="partner_to">{{ object.assigned_to.partner_id.id if object.assigned_to else '' }}</field>
+            <field name="description">Sent to assigned approver when a vendor KYC approval request is submitted</field>
             <field name="auto_delete" eval="False"/>
             <field name="body_html" type="html">
-                <div>
-                    <p>Dear<t t-out="object.assigned_to.name"/>,
+                <div style="margin: 0px; padding: 0px; font-size: 13px;">
+                    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+                        Dear <t t-out="object.assigned_to.name or 'User'">User</t>,
                     </p>
-                    <p>KYC Approval is assigned to you for following Details:</p>
-                    <table style="width:60%; border-collapse: collapse; font-family: Arial, sans-serif;">
-                        <tr>
-                            <td style="padding: 8px; border: 1px solid #ddd;">
-                                <strong>Name</strong>
-                            </td>
-                            <td style="padding: 8px; border: 1px solid #ddd;">
-                                <t t-out="object.partner_id.name or ''"></t>
-                            </td>
-                        </tr>
-                    </table>
-                    <table style="width: 60%; border-collapse: collapse; font-family: Arial, sans-serif;">
-                        <thead>
-                            <tr>
-                                <th style="padding: 8px; border: 1px solid #ddd;">Approver Name</th>
-                                <th style="padding: 8px; border: 1px solid #ddd;">Action Date</th>
-                                <th style="padding: 8px; border: 1px solid #ddd;">Remarks</th>
-                                <th style="padding: 8px; border: 1px solid #ddd;">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <t t-foreach="object.approval_users_ids" t-as="line">
-                                <tr>
-                                    <td style="padding: 8px; border: 1px solid #ddd;">
-                                        <t t-out="line.user_id.name or ''"/>
-                                    </td>
-                                    <td style="padding: 8px; border: 1px solid #ddd;">
-                                        <t t-out="line.action_date or ''"/>
-                                    </td>
-                                    <td style="padding: 8px; border: 1px solid #ddd;">
-                                        <t t-out="line.remark or ''"/>
-                                    </td>
-                                    <td style="padding: 8px; border: 1px solid #ddd;">
-                                        <t t-out="line.state or ''"/>
-                                    </td>
-                                </tr>
-                            </t>
-                        </tbody>
-                    </table>
                     <br/>
-                    <p>Thanks and Regards.</p>
+                    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+                        A Vendor KYC approval request has been assigned to you for the following vendor:
+                    </p>
+                    <br/>
+                    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+                        <strong>Vendor Name:</strong> <t t-out="object.partner_id.name or ''">Vendor</t>
+                    </p>
+                    <br/>
+                    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+                        Kindly review the submitted KYC documents and proceed with the approval or necessary action in the system.
+                    </p>
+                    <br/>
+                    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+                        Regards,<br/>
+                        <strong><t t-out="(object.partner_id.company_id.name if object.partner_id.company_id else user.company_id.name) or 'Company'">Company Name</t></strong>
+                    </p>
                 </div>
             </field>
+            <field name="lang">{{ object.assigned_to.lang if object.assigned_to else '' }}</field>
         </record>
 
         <!-- KYC Approval Email Template -->
@@ -155,6 +136,64 @@
                     <p>Thanks and Regards.</p>
                 </div>
             </field>
+        </record>
+
+        <!-- Vendor Re-KYC Confirmation Request - sent to vendor when Re-KYC is submitted -->
+        <record id="mail_template_vendor_rekyc_confirmation_request" model="mail.template">
+            <field name="name">Vendor Re-KYC Confirmation Request</field>
+            <field name="model_id" ref="base.model_res_partner"/>
+            <field name="subject">Vendor KYC Re-confirmation Request – {{ object.company_id.name or user.company_id.name }}</field>
+            <field name="email_from">{{ (user.company_id.email_formatted or user.email_formatted) }}</field>
+            <field name="email_to">{{ object.email or '' }}</field>
+            <field name="partner_to">{{ object.id }}</field>
+            <field name="description">Sent to vendor when a Re-KYC confirmation request is submitted</field>
+            <field name="auto_delete" eval="False"/>
+            <field name="body_html" type="html">
+                <div style="margin: 0px; padding: 0px; font-size: 13px;">
+                    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+                        Dear <t t-out="object.name or 'Vendor'">Vendor</t>,
+                    </p>
+                    <br/>
+                    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+                        As part of our periodic compliance process, we are conducting a <strong>re-confirmation of vendor KYC records.</strong>
+                    </p>
+                    <br/>
+                    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+                        Please find below the KYC details currently available in our records:
+                    </p>
+                    <br/>
+                    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+                        <strong>Vendor Name:</strong> <t t-out="object.name or ''">Vendor</t><br/>
+                        <strong>Registered Address:</strong> <t t-out="object.street or ''"/>, <t t-out="object.city or ''"/>, <t t-out="object.state_id.name if object.state_id else ''"/>, <t t-out="object.country_id.name if object.country_id else ''"/><br/>
+                        <strong>GST Number:</strong> <t t-out="object.vat or ''">GST</t><br/>
+                        <strong>Contact Person:</strong> <t t-out="object.name or ''">Contact</t><br/>
+                        <strong>Email:</strong> <t t-out="object.email or ''">Email</t><br/>
+                        <strong>Phone:</strong> <t t-out="object.phone or ''">Phone</t>
+                    </p>
+                    <br/>
+                    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+                        Kindly review the above details and confirm the following:
+                    </p>
+                    <ul style="margin: 0px; padding: 0px 0px 0px 20px; font-size: 13px;">
+                        <li>If there are <strong>no material changes</strong>, please reply to this email confirming that the above details remain unchanged.</li>
+                        <li>If there are <strong>any changes</strong>, please share the updated details along with the relevant supporting documents.</li>
+                    </ul>
+                    <br/>
+                    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+                        Your confirmation will help us ensure that our records remain accurate and up to date.
+                    </p>
+                    <br/>
+                    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+                        We appreciate your cooperation.
+                    </p>
+                    <br/>
+                    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+                        Warm regards,<br/>
+                        <strong><t t-out="object.company_id.name or user.company_id.name or 'Company'">Company Name</t></strong>
+                    </p>
+                </div>
+            </field>
+            <field name="lang">{{ object.lang }}</field>
         </record>
 
         <!-- KYC Rejection Email Template -->

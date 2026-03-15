@@ -6,7 +6,7 @@
         <record id="email_template_sale_confirmation" model="mail.template">
             <field name="name">Sale Order: Confirmation Email</field>
             <field name="model_id" ref="sale.model_sale_order"/>
-            <field name="subject">Order Confirmation - {{ object.name }} - {{ object.company_id.name }}</field>
+            <field name="subject">Order Confirmation – {{ object.name }}</field>
             <field name="email_from">{{ (object.user_id.email_formatted or object.company_id.email_formatted or user.email_formatted) }}</field>
             <field name="email_to">{{ object.partner_id.email or '' }}</field>
             <field name="partner_to">{{ object.partner_id.id }}</field>
@@ -17,54 +17,24 @@
     </p>
     <br/>
     <p style="margin: 0px; padding: 0px; font-size: 13px;">
-        Thank you for your order! We are pleased to confirm that your order <strong><t t-out="object.name">SO/001</t></strong> has been confirmed.
+        Thank you for your order.
     </p>
     <br/>
     <p style="margin: 0px; padding: 0px; font-size: 13px;">
-        <strong>Order Details:</strong>
-    </p>
-    <table style="border-collapse: collapse; margin: 10px 0; width: 100%;">
-        <tr>
-            <td style="padding: 5px 15px 5px 0; color: #666; border-bottom: 1px solid #eee;">Order Reference:</td>
-            <td style="padding: 5px 0; border-bottom: 1px solid #eee;"><strong><t t-out="object.name">SO/001</t></strong></td>
-        </tr>
-        <tr>
-            <td style="padding: 5px 15px 5px 0; color: #666; border-bottom: 1px solid #eee;">Order Date:</td>
-            <td style="padding: 5px 0; border-bottom: 1px solid #eee;"><t t-out="object.date_order.strftime('%B %d, %Y') if object.date_order else ''">January 01, 2024</t></td>
-        </tr>
-        <tr>
-            <td style="padding: 5px 15px 5px 0; color: #666; border-bottom: 1px solid #eee;">Total Amount:</td>
-            <td style="padding: 5px 0; border-bottom: 1px solid #eee;"><strong><t t-out="format_amount(object.amount_total, object.currency_id)">$ 0.00</t></strong></td>
-        </tr>
-    </table>
-    <br/>
-    <p style="margin: 0px; padding: 0px; font-size: 13px;">
-        We are processing your order and will keep you updated on its status. You will receive another email when your order is packed and ready for shipment.
+        We confirm that <strong>Sales Order <t t-out="object.name">SO/001</t></strong> has been successfully received and is now being processed. The order details are attached for your reference.
     </p>
     <br/>
     <p style="margin: 0px; padding: 0px; font-size: 13px;">
-        If you have any questions, please don't hesitate to contact us.
+        Our team will keep you updated on the next steps.
     </p>
     <br/>
     <p style="margin: 0px; padding: 0px; font-size: 13px;">
-        Best regards,<br/>
-        <t t-if="object.user_id">
-            <strong><t t-out="object.user_id.name">Salesperson</t></strong><br/>
-            <t t-if="object.user_id.email"><t t-out="object.user_id.email">Email</t><br/></t>
-        </t>
-        <t t-else="">
-            <strong><t t-out="object.company_id.name">Company</t></strong>
-        </t>
+        If you require any assistance, please feel free to contact us.
     </p>
     <br/>
-    <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;"/>
-    <p style="margin: 0px; padding: 0px; font-size: 11px; color: #666;">
-        <t t-out="object.company_id.name">Company Name</t><br/>
-        <t t-if="object.company_id.street"><t t-out="object.company_id.street">Street</t><br/></t>
-        <t t-if="object.company_id.city or object.company_id.zip">
-            <t t-out="object.company_id.zip or ''">ZIP</t> <t t-out="object.company_id.city or ''">City</t><br/>
-        </t>
-        <t t-if="object.company_id.country_id"><t t-out="object.company_id.country_id.name">Country</t></t>
+    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+        Warm regards,<br/>
+        <strong><t t-out="object.company_id.name">Company Name</t></strong>
     </p>
 </div>
             </field>
@@ -197,6 +167,42 @@
     <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;"/>
     <p style="margin: 0px; padding: 0px; font-size: 11px; color: #666;">
         <t t-out="object.company_id.name">Company Name</t>
+    </p>
+</div>
+            </field>
+            <field name="lang">{{ object.partner_id.lang }}</field>
+            <field name="auto_delete" eval="False"/>
+        </record>
+        
+        <!-- Email Template: Delivery Confirmation (stock.picking) -->
+        <record id="email_template_delivery_confirmation" model="mail.template">
+            <field name="name">Delivery Confirmation</field>
+            <field name="model_id" ref="stock.model_stock_picking"/>
+            <field name="subject">Delivery Confirmation – Order {{ object.sale_id.name if object.sale_id else object.origin or object.name }}</field>
+            <field name="email_from">{{ (object.company_id.email_formatted or user.email_formatted) }}</field>
+            <field name="email_to">{{ object.partner_id.email or '' }}</field>
+            <field name="partner_to">{{ object.partner_id.id }}</field>
+            <field name="body_html" type="html">
+<div style="margin: 0px; padding: 0px; font-size: 13px;">
+    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+        Dear <t t-out="object.partner_id.name or 'Valued Customer'">Customer</t>,
+    </p>
+    <br/>
+    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+        This is to inform you that the goods against Order <strong><t t-out="object.sale_id.name if object.sale_id else object.origin or object.name">SO/001</t></strong> have been successfully dispatched / delivered.
+    </p>
+    <br/>
+    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+        Please find the delivery details attached for your reference.
+    </p>
+    <br/>
+    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+        Should you need any further information or assistance, please feel free to reach out.
+    </p>
+    <br/>
+    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+        Warm regards,<br/>
+        <strong><t t-out="object.company_id.name">Company Name</t></strong>
     </p>
 </div>
             </field>

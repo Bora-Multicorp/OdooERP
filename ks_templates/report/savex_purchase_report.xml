@@ -158,8 +158,9 @@
                     <td style="border:1px solid #000; text-align:center;" t-esc="line_num"/>
                     <td style="border:1px solid #000;padding-left:4px;">
                         <t t-esc="line.name or ''"/>
-                        <t t-if="line.product_id and line.product_id.product_tmpl_id.made_country">
-                            <br/><t t-esc="'Made in ' + (line.product_id.product_tmpl_id.made_country.name or '')"/>
+                        <t t-set="made_in_country" t-value="line.made_in_country_id or (line.product_id and line.product_id.product_tmpl_id.made_country)"/>
+                        <t t-if="made_in_country">
+                            <br/><t t-esc="'Made in ' + (made_in_country.name or '')"/>
                         </t>
                     </td>
                     <td style="border:1px solid #000; text-align:right;text-align:center;">
@@ -434,8 +435,9 @@ text-align:right;padding-right:4px;">
                     <td style="border:1px solid #000; text-align:center;" t-esc="line_num"/>
                     <td style="border:1px solid #000;padding-left:4px;">
                         <t t-esc="line.name or ''"/>
-                        <t t-if="line.product_id and line.product_id.product_tmpl_id.made_country">
-                            <br/><t t-esc="'Made in ' + (line.product_id.product_tmpl_id.made_country.name or '')"/>
+                        <t t-set="made_in_country" t-value="line.made_in_country_id or (line.product_id and line.product_id.product_tmpl_id.made_country)"/>
+                        <t t-if="made_in_country">
+                            <br/><t t-esc="'Made in ' + (made_in_country.name or '')"/>
                         </t>
                     </td>
                     <td style="border:1px solid #000; text-align:right;text-align:center;">

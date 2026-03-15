@@ -167,10 +167,8 @@
                 </group>
             </xpath>
 
-            <!-- Make order lines readonly based on ks_can_edit (admin users can always edit) -->
-            <xpath expr="//field[@name='order_line']" position="attributes">
-                <attribute name="readonly">(not ks_can_edit or state in ('cancel', 'approval_pending', 'cancel_pending', 'edit_pending')) and not ks_is_admin_user</attribute>
-            </xpath>
+            <!-- Order lines remain editable; only tax field is readonly (see ks_sale_order tax_fields_readonly_views.xml).
+                 Price/discount are still restricted by ks_can_edit_price in the line view below. -->
 
             <!-- Make partner_id readonly when in approval states (admin users can always edit) -->
             <xpath expr="//field[@name='partner_id'][not(ancestor::field)]" position="attributes">
@@ -253,22 +251,22 @@
                 <field name="ks_can_edit_price" column_invisible="1"/>
                 <field name="ks_min_unit_price" optional="hide" string="Min. Price (Purchase)"/>
             </xpath>
-            <!-- Make price_unit readonly for normal users in inline list -->
+            <!-- Unit price always editable (no readonly) -->
             <xpath expr="//field[@name='order_line']//list//field[@name='price_unit']" position="attributes">
-                <attribute name="readonly">not ks_can_edit_price or qty_invoiced &gt; 0</attribute>
+                <attribute name="readonly">0</attribute>
             </xpath>
-            <!-- Make discount readonly for normal users in inline list -->
+            <!-- Discount editable (no readonly from approval) -->
             <xpath expr="//field[@name='order_line']//list//field[@name='discount']" position="attributes">
-                <attribute name="readonly">not ks_can_edit_price</attribute>
+                <attribute name="readonly">qty_invoiced &gt; 0</attribute>
             </xpath>
-            <!-- Add computed field to inline form view -->
+            <!-- Add computed field to inline form view (min price display only) -->
             <xpath expr="//field[@name='order_line']//form//field[@name='price_unit']" position="before">
                 <field name="ks_can_edit_price" invisible="1"/>
                 <field name="ks_min_unit_price" invisible="not product_id" readonly="1"/>
             </xpath>
-            <!-- Make price_unit readonly for normal users in inline form -->
+            <!-- Unit price always editable in form (no readonly) -->
             <xpath expr="//field[@name='order_line']//form//field[@name='price_unit']" position="attributes">
-                <attribute name="readonly">not ks_can_edit_price</attribute>
+                <attribute name="readonly">0</attribute>
             </xpath>
         </field>
     </record>

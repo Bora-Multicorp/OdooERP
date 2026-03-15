@@ -18,3 +18,8 @@ class StockMove(models.Model):
     x_line_remark = fields.Char(
         string="Remark",
     )
+    made_in_country_id = fields.Many2one(
+        comodel_name='res.country',
+        string='Made In',
+        help='Country of origin (e.g. Made in India). Propagated from Sale Order Line or Purchase Order Line.',
+    )

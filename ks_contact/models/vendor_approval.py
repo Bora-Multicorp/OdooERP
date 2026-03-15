@@ -641,6 +641,15 @@ class ContactKYCApproval(models.Model):
             subtype_xmlid='mail.mt_note',
         )
 
+        # Send "Vendor Re-KYC Confirmation Request" email to the vendor
+        if self.partner_id and self.partner_id.email:
+            template = self.env.ref(
+                'ks_contact.mail_template_vendor_rekyc_confirmation_request',
+                raise_if_not_found=False,
+            )
+            if template:
+                template.send_mail(self.partner_id.id, force_send=True)
+
     def _rekyc_payload_to_write_vals(self, payload):
         write_vals = {
             'email': payload.get('email'),
@@ -828,6 +837,15 @@ class ContactKYCApproval(models.Model):
                 # Set assigned_to to first pending approver
                 rec.assigned_to = first_approver.user_id
 
+                # Send "Vendor KYC Approval Assignment" email to assigned approver
+                if rec.assigned_to and rec.assigned_to.email:
+                    template = rec.env.ref(
+                        'ks_contact.assign_to_email_template',
+                        raise_if_not_found=False,
+                    )
+                    if template:
+                        template.send_mail(rec.id, force_send=True)
+
     # -------------------------------------------------------------------------
     # Assign next approver (sequential approval)
     # -------------------------------------------------------------------------
@@ -846,7 +864,16 @@ class ContactKYCApproval(models.Model):
             if pending_approvers:
                 next_approver = pending_approvers[0]
                 rec.assigned_to = next_approver.user_id
-                
+
+                # Send "Vendor KYC Approval Assignment" email to next assigned approver
+                if rec.assigned_to and rec.assigned_to.email:
+                    template = rec.env.ref(
+                        'ks_contact.assign_to_email_template',
+                        raise_if_not_found=False,
+                    )
+                    if template:
+                        template.send_mail(rec.id, force_send=True)
+
                 # Create activity for the next approver if not already exists
                 existing_activity = self.env['mail.activity'].search([
                     ('res_model', '=', 'res.partner.kyc.approval'),

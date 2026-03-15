@@ -771,7 +771,7 @@ class BankDetail(models.TransientModel):
     bank_name = fields.Char(string="Bank Name", required=True)
     account_no = fields.Char(string="Account Number", required=True)
     ifsc_code = fields.Char(string="IFSC Code", required=True)
-    bank_address = fields.Char(string="Bank Address", required=True)
+    bank_address = fields.Char(string="Bank Address",)
     bank_cheque_attachments = fields.Many2many('ir.attachment', 'wizard_bank_detail_cheque_rel', 'kyc_wizard_id',
                                                'attachment_id', string="Cancelled Cheques", required=True)
 

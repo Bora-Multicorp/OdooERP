@@ -25,10 +25,12 @@
     'category': 'Sales/Sales',
     'author': 'Ksolves',
     'website': '',
-    'depends': ['sale', 'mail', 'stock', 'purchase'],
+    'depends': ['sale', 'mail', 'stock', 'purchase', 'account'],
     'data': [
         'security/ir.model.access.csv',
         'data/email_templates.xml',
+        'data/purchase_email_templates.xml',
+        'data/invoice_email_templates.xml',
         'views/ks_automail_config_views.xml',
         'views/res_config_settings_views.xml',
         'views/sale_order_views.xml',
