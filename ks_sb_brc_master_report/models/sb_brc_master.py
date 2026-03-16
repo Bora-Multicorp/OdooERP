@@ -9,11 +9,11 @@ from odoo import models, fields, api
 class SbBrcMaster(models.Model):
     _name = 'sb.brc.master'
     _description = 'SB/BRC Master Report'
-    _order = 'date desc'
+    _order = 'date desc, sr_no'
     _rec_name = 'sb_no'
 
     # System Generated
-    # sr_no = fields.Integer(string='Sr. No.', default=1, readonly=True, help="System Generated")
+    sr_no = fields.Integer(string='Sr. No.', default=1, readonly=True, help="System Generated")
     date = fields.Date(string='Date', default=fields.Date.today, required=True, help="System Generated")
 
     # Invoice (Dropdown – single selection)
@@ -38,8 +38,8 @@ class SbBrcMaster(models.Model):
     sb_ex_rate = fields.Float(string='SB Rate', digits=(16, 6), help="Fetched from invoice")
     amount_inr = fields.Monetary(string='Amount (INR)', compute='_compute_amount_inr', store=True, currency_field='company_currency_id', help="As per formula")
     fob_value_inr = fields.Monetary(string='FOB value', currency_field='company_currency_id', help="From invoice")
-    gst_rate = fields.Char(string='GST Rate', help="From invoice")
-    gst_amount = fields.Monetary(string='GST AMOUNT', currency_field='company_currency_id', help="From invoice")
+    gst_rate = fields.Char(string='GST Rate', compute="_compute_gst_rate", help="From invoice",store=True)
+    gst_amount = fields.Monetary(string='GST AMOUNT', compute="_compute_gst_rate", currency_field='company_currency_id', help="From invoice", store=True)
     invoice_value = fields.Monetary(string='Invoice Value', compute='_compute_invoice_value', store=True, currency_field='company_currency_id', help="As per formula")
     company_currency_id = fields.Many2one('res.currency', related='company_id.currency_id', readonly=True)
     company_id = fields.Many2one('res.company', string='Company', default=lambda self: self.env.company)
@@ -64,7 +64,7 @@ class SbBrcMaster(models.Model):
     total_charges = fields.Monetary(string='Total', compute='_compute_total_charges', store=True, currency_field='company_currency_id', help="As per formula")
 
     # Additional – Text box / from PL
-    no_of_pallets = fields.Char(string='No. Of PALLATS', help="Text Box / from PL – input field")
+    no_of_pallets = fields.Integer(string='No. Of Pallets', help="Text Box / from PL – input field")
     weight_as_per_awb = fields.Float(string='Weight as per AWB', digits=(16, 2), help="Text Box – input field")
     per_piece_costing = fields.Float(string='Per Piece Costing', compute='_compute_planning_costing', store=True, digits=(16, 2), help="Same as per formula")
     average_per_costing = fields.Float(string='Average Per Costing', compute='_compute_average_costing', store=True, digits=(16, 2), help="Same as per formula")
@@ -101,10 +101,10 @@ class SbBrcMaster(models.Model):
     remarks = fields.Text(string='Remarks', help="Text Box – input field")
 
     # CHA Invoice (fetched from invoice received from CHA for this shipment)
-    tax_able_amt = fields.Monetary(string='Tax Able Amt', currency_field='company_currency_id', help="Fetched from CHA invoice – input field")
-    gst_amt = fields.Monetary(string='GST Amt', currency_field='company_currency_id', help="Fetched from CHA invoice – input field")
-    tds_amt = fields.Monetary(string='TDS Amt', currency_field='company_currency_id', help="Fetched from CHA invoice – input field")
-    net_balance_payable = fields.Monetary(string='Net Balance Payable', compute='_compute_net_balance_payable', store=True, currency_field='company_currency_id', help="Formula = Taxable + GST")
+    tax_able_amt = fields.Monetary(string='Tax Able Amt',  compute='_compute_tax_able_amt', currency_field='company_currency_id', help="Fetched from CHA invoice – input field")
+    gst_amt = fields.Monetary(string='GST Amt', currency_field='company_currency_id', compute='_compute_gst_tds_amt', help="Fetched from CHA invoice – input field")
+    tds_amt = fields.Monetary(string='TDS Amt', currency_field='company_currency_id', compute='_compute_gst_tds_amt', help="Fetched from CHA invoice – input field")
+    net_balance_payable = fields.Monetary(string='Net Balance Payable', compute='_compute_net_balance_payable',currency_field='company_currency_id', help="Formula = Taxable + GST")
 
     @api.depends('invoice_id', 'invoice_id.invoice_line_ids', 'invoice_id.invoice_line_ids.quantity', 'invoice_id.invoice_line_ids.price_subtotal')
     def _compute_qty_unit_rate(self):
@@ -118,6 +118,19 @@ class SbBrcMaster(models.Model):
                 r.qty = 0.0
                 # r.unit_rate = 0.0
 
+    @api.depends('invoice_id.invoice_line_ids.tax_ids')
+    def _compute_gst_rate(self):
+        for rec in self:
+            rate = 0.0
+            amount = 0.0
+            if rec.invoice_id:
+                taxes = rec.invoice_id.invoice_line_ids.mapped('tax_ids')
+                if taxes:
+                    rate = sum(taxes.mapped('amount'))
+                    amount = rec.invoice_amount_usd*rate
+            rec.gst_rate = rate
+            rec.gst_amount = amount
+
     @api.depends('invoice_amount_usd', 'ex_rate')
     def _compute_amount_inr(self):
         for r in self:
@@ -126,7 +139,7 @@ class SbBrcMaster(models.Model):
     @api.depends('fob_value_inr', 'gst_amount')
     def _compute_invoice_value(self):
         for r in self:
-            r.invoice_value = (r.fob_value_inr or 0.0) + (r.gst_amount or 0.0)
+            r.invoice_value = (r.amount_inr or 0.0) + (r.gst_amount or 0.0)
 
     @api.depends('for_calculation', 'other_charges', 'freight', 'agency_charges', 'doc_charges_fumigation',
                  'terminal_handling', 'drawback_charges', 'awb_charges', 'gate_pass', 'transportation_to_air_cargo',
@@ -159,21 +172,38 @@ class SbBrcMaster(models.Model):
     @api.depends('fob_value_inr')
     def _compute_rodtep_amount(self):
         for r in self:
-            r.rodtep_amount = (r.fob_value_inr or 0.0) * 0.05
+            r.rodtep_amount = (r.fresh or 0.0) * 24.5
 
     @api.depends('fob_value_inr', 'fresh')
     def _compute_dbk_calculation(self):
         for r in self:
             r.dbk_as_per_calculation = (r.fob_value_inr or 0.0) * 0.04 if r.fresh else 0.0
 
+    @api.depends('agency_charges', 'doc_charges_fumigation',
+                 'terminal_handling', 'drawback_charges', 'awb_charges', 'gate_pass', 'transportation_to_air_cargo',
+                 'load_unload', 'pallet_charges', 'other_charges_2',)
+    def _compute_tax_able_amt(self):
+        for r in self:
+            r.tax_able_amt = (
+                    (r.agency_charges or 0) +(r.doc_charges_fumigation or 0) + (r.terminal_handling or 0) + (r.drawback_charges or 0) +
+                    (r.awb_charges or 0) + (r.gate_pass or 0) + (r.transportation_to_air_cargo or 0) +
+                    (r.load_unload or 0) + (r.pallet_charges or 0) + (r.other_charges_2 or 0)
+            )
+
+    @api.depends('tax_able_amt','freight')
+    def _compute_gst_tds_amt(self):
+        for r in self:
+            r.gst_amt = r.tax_able_amt * 0.18
+            r.tds_amt = r.tax_able_amt+r.freight
+
     @api.depends('tax_able_amt', 'gst_amt')
     def _compute_net_balance_payable(self):
         for r in self:
             r.net_balance_payable = (r.tax_able_amt or 0.0) + (r.gst_amt or 0.0)
 
-    # @api.model
-    # def create(self, vals):
-    #     if not vals.get('sr_no'):
-    #         last = self.search([], order='sr_no desc', limit=1)
-    #         vals['sr_no'] = (last.sr_no or 0) + 1
-    #     return super().create(vals)
+    @api.model
+    def create(self, vals):
+        if not vals.get('sr_no'):
+            last = self.search([], order='sr_no desc', limit=1)
+            vals['sr_no'] = (last.sr_no or 0) + 1
+        return super().create(vals)

@@ -6,7 +6,7 @@
         <field name="model">sb.brc.master</field>
         <field name="arch" type="xml">
             <list string="SB/BRC Master Report" editable="top" class="o_sb_brc_list_scrollable" create="1" delete="1">
-<!--                <field name="sr_no" readonly="1"/>-->
+                <field name="sr_no" readonly="1"/>
                 <field name="date"/>
                 <field name="invoice_id" options="{'no_create': True}"/>
                 <field name="sb_no"/>
@@ -23,7 +23,6 @@
                 <field name="ex_rate" readonly="1"/>
                 <field name="sb_ex_rate"/>
                 <field name="amount_inr" readonly="1"/>
-                <field name="fob_value_inr"/>
                 <field name="gst_rate"/>
                 <field name="gst_amount"/>
                 <field name="invoice_value" readonly="1"/>
@@ -69,7 +68,7 @@
                 <field name="application_status"/>
                 <field name="drawback_received"/>
                 <field name="remarks"/>
-                <field name="fob_value"/>
+                <field name="fob_value_inr"/>
                 <field name="tax_able_amt"/>
                 <field name="gst_amt"/>
                 <field name="tds_amt"/>
@@ -87,7 +86,7 @@
                 <sheet>
                     <group>
                         <group>
-<!--                            <field name="sr_no" readonly="1"/>-->
+                            <field name="sr_no" readonly="1"/>
                             <field name="date"/>
                             <field name="invoice_id" options="{'no_create': True}"/>
                             <field name="sb_no"/>
@@ -111,7 +110,6 @@
                                     <field name="ex_rate" readonly="1"/>
 <!--                                    <field name="sb_rate"/>-->
                                     <field name="amount_inr" readonly="1"/>
-                                    <field name="fob_value_inr"/>
                                     <field name="gst_rate"/>
                                     <field name="gst_amount"/>
                                     <field name="invoice_value" readonly="1"/>
@@ -184,6 +182,7 @@
                                     <field name="tds_amt"/>
                                     <field name="net_balance_payable" readonly="1"/>
                                     <field name="remarks"/>
+                                    <field name="fob_value_inr"/>
                                 </group>
                             </group>
                         </page>
@@ -193,86 +192,12 @@
         </field>
     </record>
 
-    <!-- Pivot: numeric/monetary as measures (columns); rest as rows -->
-<!--    <record id="view_sb_brc_master_pivot" model="ir.ui.view">-->
-<!--        <field name="name">sb.brc.master.pivot</field>-->
-<!--        <field name="model">sb.brc.master</field>-->
-<!--        <field name="arch" type="xml">-->
-<!--            <pivot string="SB/BRC Master" display_quantity="1">-->
-<!--                &lt;!&ndash; Rows: non-numeric fields (cannot be measures) &ndash;&gt;-->
-<!--                <field name="date" type="row" interval="month"/>-->
-<!--                <field name="invoice_id" type="row"/>-->
-<!--                <field name="sb_no" type="row"/>-->
-<!--                <field name="be_no" type="row"/>-->
-<!--                <field name="consignee" type="row"/>-->
-<!--                <field name="buyer" type="row"/>-->
-<!--                <field name="awb_number" type="row"/>-->
-<!--                <field name="currency_id" type="row"/>-->
-<!--                <field name="calendar_date" type="row"/>-->
-<!--                <field name="gst_rate" type="row"/>-->
-<!--                <field name="cha_id" type="row"/>-->
-<!--                <field name="no_of_pallets" type="row"/>-->
-<!--                <field name="airlines" type="row"/>-->
-<!--                <field name="country_id" type="row"/>-->
-<!--                <field name="port" type="row"/>-->
-<!--                <field name="brc_status" type="row"/>-->
-<!--                <field name="brc_date" type="row"/>-->
-<!--                <field name="brc_no" type="row"/>-->
-<!--                <field name="dbk_percentage" type="row"/>-->
-<!--                <field name="dbk_claimed" type="row"/>-->
-<!--                <field name="application_status" type="row"/>-->
-<!--                <field name="drawback_received" type="row"/>-->
-<!--                <field name="received_date" type="row"/>-->
-<!--                &lt;!&ndash; Measures (columns): all numeric/monetary &ndash;&gt;-->
-<!--                <field name="sr_no" type="measure"/>-->
-<!--                <field name="qty" type="measure"/>-->
-<!--                <field name="unit_rate" type="measure"/>-->
-<!--                <field name="invoice_amount_usd" type="measure"/>-->
-<!--                <field name="ex_rate" type="measure"/>-->
-<!--                <field name="sb_rate" type="measure"/>-->
-<!--                <field name="amount_inr" type="measure"/>-->
-<!--                <field name="fob_value_inr" type="measure"/>-->
-<!--                <field name="gst_amount" type="measure"/>-->
-<!--                <field name="invoice_value" type="measure"/>-->
-<!--                <field name="for_calculation" type="measure"/>-->
-<!--                <field name="other_charges" type="measure"/>-->
-<!--                <field name="freight" type="measure"/>-->
-<!--                <field name="agency_charges" type="measure"/>-->
-<!--                <field name="doc_charges_fumigation" type="measure"/>-->
-<!--                <field name="terminal_handling" type="measure"/>-->
-<!--                <field name="drawback_charges" type="measure"/>-->
-<!--                <field name="mis_charges" type="measure"/>-->
-<!--                <field name="gate_pass" type="measure"/>-->
-<!--                <field name="transportation_to_air_cargo" type="measure"/>-->
-<!--                <field name="load_unload" type="measure"/>-->
-<!--                <field name="pallet_charges" type="measure"/>-->
-<!--                <field name="other_charges_2" type="measure"/>-->
-<!--                <field name="local_warehouse" type="measure"/>-->
-<!--                <field name="insurance" type="measure"/>-->
-<!--                <field name="total_charges" type="measure"/>-->
-<!--                <field name="weight_as_per_awb" type="measure"/>-->
-<!--                <field name="for_planning_costing" type="measure"/>-->
-<!--                <field name="average_for_costing" type="measure"/>-->
-<!--                <field name="brc_amount_usd" type="measure"/>-->
-<!--                <field name="still_in_realization" type="measure"/>-->
-<!--                <field name="sb_fob_value" type="measure"/>-->
-<!--                <field name="fresh" type="measure"/>-->
-<!--                <field name="activated" type="measure"/>-->
-<!--                <field name="other_country" type="measure"/>-->
-<!--                <field name="rodtep_amount" type="measure"/>-->
-<!--                <field name="rodtep_amount_per_sb" type="measure"/>-->
-<!--                <field name="dbk_as_per_calculation" type="measure"/>-->
-<!--                <field name="dbk_amount" type="measure"/>-->
-<!--            </pivot>-->
-<!--        </field>-->
-<!--    </record>-->
-
     <record id="view_sb_brc_master_search" model="ir.ui.view">
         <field name="name">sb.brc.master.search</field>
         <field name="model">sb.brc.master</field>
         <field name="arch" type="xml">
             <search string="SB/BRC Master">
-<!--                <field name="sr_no"/>-->
+                <field name="sr_no"/>
                 <field name="date"/>
                 <field name="invoice_id"/>
                 <field name="sb_no"/>
