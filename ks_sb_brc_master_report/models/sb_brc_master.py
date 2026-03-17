@@ -127,7 +127,7 @@ class SbBrcMaster(models.Model):
                 taxes = rec.invoice_id.invoice_line_ids.mapped('tax_ids')
                 if taxes:
                     rate = sum(taxes.mapped('amount'))
-                    amount = rec.invoice_amount_usd*rate
+                    amount = rec.invoice_amount_usd*(rate/100)
             rec.gst_rate = rate
             rec.gst_amount = amount
 
