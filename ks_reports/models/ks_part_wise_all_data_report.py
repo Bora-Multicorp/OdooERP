@@ -2258,12 +2258,7 @@ class PartWiseAllDataReport(models.TransientModel):
             credit_notes = self.env['account.move'].browse(credit_note_ids).filtered(
                 lambda m: m.move_type == 'out_refund' and m.state != 'cancel'
             )
-            for cn in credit_notes.sorted(
-                key=lambda m: (
-                    m.invoice_date or (m.create_date.date() if m.create_date else date.min),
-                    m.name or '',
-                )
-            ):
+            for cn in credit_notes.sorted(key=lambda m: (m.invoice_date or m.create_date, m.name or '')):
                 order = None
                 if cn.invoice_origin:
                     order = self.env['sale.order'].search([('name', '=', cn.invoice_origin)], limit=1)

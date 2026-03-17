@@ -25,10 +25,7 @@ class KsPoImportWizard(models.TransientModel):
     purchase_id = fields.Many2one("purchase.order", string="Purchase Order")
 
     _ORDER_ID_ALIASES = {"orderid", "order_id", "orderno", "order_no", "ecomorderid"}
-    _VENDOR_ALIASES = {
-        "vendor", "vendorname", "supplier", "suppliername", "partner", "partnername",
-        "sellername", "seller",
-    }
+    _VENDOR_ALIASES = {"vendor", "vendorname", "supplier", "suppliername", "partner", "partnername"}
     _COMPANY_ALIASES = {"company", "companyname", "branch", "companybranch"}
     _WAREHOUSE_ALIASES = {"warehouse", "warehousename", "wh", "deliverto", "deliver_to"}
     _PRODUCT_NAME_ALIASES = {"product", "productname", "item", "itemname", "description"}
@@ -125,6 +122,7 @@ class KsPoImportWizard(models.TransientModel):
 
         if not order_id_key:
             raise UserError(_("Missing required column: Order ID."))
+        # Vendor is hardcoded to FLIPKART, so vendor_key check is removed
         if not (product_name_key or product_code_key):
             raise UserError(_("Missing product column. Add Product Name or ASIN/Product Code column."))
         if not qty_key:
@@ -142,9 +140,8 @@ class KsPoImportWizard(models.TransientModel):
                 return row[idx]
 
             order_id = self._to_string(get_cell(order_id_key))
-            vendor_name = (
-                self._to_string(get_cell(vendor_key)).strip() if vendor_key else ""
-            ) or "FLIPKART"
+            # Vendor is hardcoded to FLIPKART
+            vendor_name = "FLIPKART"
             company_str = self._to_string(get_cell(company_key)) if company_key else ""
             warehouse_str = self._to_string(get_cell(warehouse_key)) if warehouse_key else ""
             product_name = self._to_string(get_cell(product_name_key)) if product_name_key else ""
@@ -172,6 +169,7 @@ class KsPoImportWizard(models.TransientModel):
 
             if not order_id:
                 raise UserError(_("Order ID is missing at row %s.") % line_no)
+            # Vendor is always FLIPKART, no validation needed
             if not (product_name or product_code):
                 raise UserError(_("Product (ASIN/Product Code or Product Name) is missing at row %s.") % line_no)
             if qty <= 0:
@@ -207,37 +205,19 @@ class KsPoImportWizard(models.TransientModel):
 
         return grouped_rows
 
-    def _get_or_create_vendor(self, vendor_name):
-        """
-        Find existing vendor by name (Seller Name) or create one with approval bypass.
-        New vendors are created with is_vendor=True, vendor_type='operational',
-        created_for_ecom=True, and approval_status='approved' (bypass approval flow).
-        """
-        if not vendor_name or not str(vendor_name).strip():
-            vendor_name = "FLIPKART"
-        vendor_name = str(vendor_name).strip()
+    def _get_or_create_vendor(self, vendor_name="FLIPKART"):
+        """Get or create FLIPKART vendor partner."""
         partner = self.env["res.partner"].search([("name", "=ilike", vendor_name)], limit=1)
-        if partner:
-            if getattr(partner, "supplier_rank", 0) < 1:
-                partner.sudo().write({"supplier_rank": 1})
-            return partner
-        # Create new vendor and bypass approval: set directly to approved state
-        create_vals = {
-            "name": vendor_name,
-            "company_type": "company",
-            "supplier_rank": 1,
-            "is_vendor": True,
-            "vendor_type": "operational",
-            "created_for_ecom": True,
-            "approval_status": "approved",
-            "is_approved": True,
-        }
-        partner = (
-            self.env["res.partner"]
-            .sudo()
-            .with_context(bypass_approval=True)
-            .create(create_vals)
-        )
+        if not partner:
+            partner = self.env["res.partner"].create(
+                {
+                    "name": vendor_name,
+                    "supplier_rank": 1,
+                    "company_type": "company",
+                }
+            )
+        elif partner.supplier_rank < 1:
+            partner.supplier_rank = 1
         return partner
 
     @staticmethod
@@ -393,6 +373,8 @@ class KsPoImportWizard(models.TransientModel):
         if not ecom_tag:
             ecom_tag = self.env["ks.ecom.tag"].sudo().create({"name": "E-com"})
 
+        vendor = self._get_or_create_vendor("FLIPKART")
+
         created_orders = self.env["purchase.order"]
         failed_lines = []  # list of {"asin", "order_id", "line_no"}
         import_errors = []  # list of {"order_id", "reason"} for company/warehouse validation
@@ -492,9 +474,6 @@ class KsPoImportWizard(models.TransientModel):
                     "reason": _("Order %s: No Receipts operation found for warehouse '%s'.") % (order_id, warehouse.name),
                 })
                 continue
-
-            vendor_name = (order_rows[0].get("vendor_name") or "").strip() or "FLIPKART"
-            vendor = self._get_or_create_vendor(vendor_name)
 
             sample_currency = order_rows[0].get("currency_name") if order_rows else ""
             currency = self._get_currency(sample_currency, company)

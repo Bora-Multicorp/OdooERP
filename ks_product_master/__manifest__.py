@@ -57,10 +57,5 @@
     'application': True,
     'installable': True,
     'license': 'Other proprietary',
-
-    # Required for Excel (.xlsx) import in Upload Serials/Lots wizard
-    'external_dependencies': {
-        'python': ['openpyxl'],
-    },
 }
 

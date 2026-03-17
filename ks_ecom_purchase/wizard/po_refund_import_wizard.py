@@ -169,28 +169,6 @@ class KsPoRefundImportWizard(models.TransientModel):
                 skipped_count += len(asin_qty)
                 continue
 
-            # Strict payment validation: only process refund if original bill(s) are
-            # posted, have payment_state 'paid', and have at least one linked account.payment
-            po.invalidate_recordset(["invoice_ids"])
-            posted_bills = po.invoice_ids.filtered(
-                lambda m: m.state == "posted" and m.move_type == "in_invoice"
-            )
-            if posted_bills:
-                bills_not_eligible = posted_bills.filtered(
-                    lambda m: m.payment_state != "in_payment"
-                    or not (m.reconciled_payment_ids or m.matched_payment_ids)
-                )
-                if bills_not_eligible:
-                    warnings.append(
-                        _(
-                            "Order ID %s refund could not be process because Bill  "
-                            "payment is not 'Paid'. first complete the  payment."
-                        )
-                        % order_id
-                    )
-                    skipped_count += len(asin_qty)
-                    continue
-
             try:
                 # 1) Cancel receipts (pickings) that are NOT in 'cancel' or 'done'
                 to_cancel = po.picking_ids.filtered(
@@ -308,17 +286,9 @@ class KsPoRefundImportWizard(models.TransientModel):
                 posted_bills = po.invoice_ids.filtered(
                     lambda m: m.state == "posted" and m.move_type == "in_invoice"
                 )
-                refund_date = fields.Date.context_today(self)
                 for bill in posted_bills:
                     try:
-                        default_vals = {
-                            "invoice_date": refund_date,
-                            "date": refund_date,
-                        }
-                        reverse_moves = bill._reverse_moves(
-                            default_values_list=[default_vals],
-                            cancel=True,
-                        )
+                        reverse_moves = bill._reverse_moves(cancel=True)
                         if reverse_moves:
                             credits_created += len(reverse_moves)
                     except Exception as rev_exc:

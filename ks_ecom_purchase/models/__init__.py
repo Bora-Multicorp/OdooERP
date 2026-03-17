@@ -4,5 +4,4 @@ from . import ks_po_warehouse_tracking
 from . import purchase_order
 from . import stock_picking
 from . import account_move
-from . import res_partner
 

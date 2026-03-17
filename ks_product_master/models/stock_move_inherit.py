@@ -11,7 +11,6 @@ class StockMove(models.Model):
         compute='_compute_show_imei_column',
         store=False, tracking=True
     )
-    made_in_country_id = fields.Many2one('res.country')
 
     @api.depends('product_id.categ_id')
     def _compute_show_imei_column(self):
@@ -466,9 +465,9 @@ class StockMoveLine(models.Model):
 
             # 4.1 Uniqueness of Serial number check in same lines
             exist = self.search([('lot_name', '=', record.lot_name), ('id', '!=', record.id)], limit=1)
-            # if exist:
-            #     raise ValidationError(
-            #         _('Serial number must be unique, the serial number(%s) is already used in another stock item.' % record.lot_name))
+            if exist:
+                raise ValidationError(
+                    _('Serial number must be unique, the serial number(%s) is already used in another stock item.' % record.lot_name))
 
             # 4.2 Uniqueness of Serial number check in all other saved items
             results = self.env['stock.quant'].search([
@@ -717,8 +716,8 @@ class StockPickingInherit(models.Model):
             if picking.state in ('draft', 'waiting', 'confirmed', 'assigned'):
                 if not picking.specs_made:
                     raise ValidationError(_('Please set "Spec Made For" field before validating the delivery order.'))
-                # if not picking.made_country:
-                #     raise ValidationError(_('Please set "Made In" field before validating the delivery order.'))
+                if not picking.made_country:
+                    raise ValidationError(_('Please set "Made In" field before validating the delivery order.'))
         
         # Assign matching quants based on country fields and validate
         for picking in self:
