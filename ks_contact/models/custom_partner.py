@@ -177,19 +177,28 @@ class CustomContact(models.Model):
             if not rec.mobile:
                 continue
 
-            # 1) Strip non-digits
+            # 1) Pehle check karein ke Country selected hai ya nahi
+            if not rec.country_id or not rec.country_id.phone_code:
+                raise ValidationError(
+                    "Please select a Country before entering the mobile number so we can verify the format."
+                )
+
+            # 2) Strip non-digits (like +, -, spaces)
             cleaned_number = re.sub(r'\D', '', rec.mobile)
 
-            # 2) Remove leading country code (as string!)
-            if rec.country_id and rec.country_id.phone_code:
-                code = str(rec.country_id.phone_code)
-                if code and cleaned_number.startswith(code):
-                    cleaned_number = cleaned_number[len(code):]
+            # 3) Remove leading country code
+            code = str(rec.country_id.phone_code)
+            if cleaned_number.startswith(code):
+                cleaned_number = cleaned_number[len(code):]
+            elif cleaned_number.startswith('0') and len(cleaned_number) > 10:
+                # Optional: Handle leading zeros if necessary
+                cleaned_number = cleaned_number[1:]
 
-            # 3) Validate exactly 10 digits
+            # 4) Validate exactly 10 digits
             if not re.fullmatch(r'\d{10}', cleaned_number):
                 raise ValidationError(
-                    "Mobile number must be exactly 10 digits after removing the country code."
+                    f"After removing the country code (+{code}), the mobile number must be exactly 10 digits. "
+                    f"Currently, it is {len(cleaned_number)} digits."
                 )
 
     @api.constrains('phone', 'country_id')
