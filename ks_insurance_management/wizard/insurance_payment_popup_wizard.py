@@ -8,24 +8,74 @@ class InsurancePaymentPopupWizard(models.TransientModel):
     _name = 'insurance.payment.popup.wizard'
     _description = 'Insurance Payment Details Popup'
 
-    payment_id = fields.Many2one('account.payment', string='Payment', required=True)
-    premium = fields.Float(string='Premium (Incl. GST)')
-    company_id = fields.Many2one('res.company', string='Company',
-                                  default=lambda self: self.env.company)
-    insurance_type_id = fields.Many2one('insurance.type',
-                                         string='Insurance Type', required=True)
-    policy_number = fields.Char(string='Policy Number')
-    sum_insured = fields.Float(string='Sum Insured', required=True)
-    sum_insured_words = fields.Char(string='Cover Amount (in Words)',
-                                     compute='_compute_words', store=True)
-    agent = fields.Char(string='Agent')
-    insurance_company_id = fields.Many2one('insurance.company',
-                                            string='Insurance Company', required=True)
-    expiry_date = fields.Date(string='Expiry Date', required=True)
+    payment_id = fields.Many2one(
+        'account.payment',
+        string='Payment',
+        required=True,
+        help='The payment from which this insurance policy is being created.',
+    )
+    premium = fields.Float(
+        string='Premium (Incl. GST)',
+        help='Premium amount auto-fetched from the payment amount (inclusive of GST).',
+    )
+    company_id = fields.Many2one(
+        'res.company',
+        string='Company',
+        default=lambda self: self.env.company,
+        help='The company for which this insurance policy is being taken.',
+    )
+    insurance_type_id = fields.Many2one(
+        'insurance.type',
+        string='Insurance Type',
+        required=True,
+        help='Select the type of insurance policy being created '
+             '(e.g. Marine Open Cover, Fire Insurance, GMC).',
+    )
+    policy_number = fields.Char(
+        string='Policy Number',
+        help='Policy number as issued by the insurer. Enter manually after receiving the policy document.',
+    )
+    sum_insured = fields.Float(
+        string='Sum Insured',
+        required=True,
+        help='The maximum coverage amount (sum insured) for this policy. '
+             'For Marine policies, this becomes the opening balance that is reduced with each declaration.',
+    )
+    sum_insured_words = fields.Char(
+        string='Cover Amount (in Words)',
+        compute='_compute_words',
+        store=True,
+        help='Sum Insured automatically converted to English words (Indian format).',
+    )
+    agent = fields.Char(
+        string='Agent',
+        help='Name of the insurance agent or broker. '
+             'If not found in the system, a new agent record will be created automatically.',
+    )
+    insurance_company_id = fields.Many2one(
+        'insurance.company',
+        string='Insurance Company',
+        required=True,
+        help='The insurer who issued this policy.',
+    )
+    expiry_date = fields.Date(
+        string='Expiry Date',
+        required=True,
+        help='Date on which this policy expires. '
+             'A 30-day advance reminder will be sent automatically via the daily scheduled job.',
+    )
     policy_type = fields.Selection([
         ('individual', 'Individual'), ('floater', 'Floater')
-    ], string='Policy Type', default='individual', required=True)
-    floater_location_ids = fields.Many2many('stock.warehouse', string='Covered Locations')
+    ], string='Policy Type', default='individual', required=True,
+        help='Individual: covers a single location/entity.\n'
+             'Floater: one policy covering multiple warehouse locations under one sum insured.',
+    )
+    floater_location_ids = fields.Many2many(
+        'stock.warehouse',
+        string='Covered Locations',
+        help='Required for Floater policies. '
+             'Select all warehouse locations covered under this single policy.',
+    )
 
     @api.depends('sum_insured')
     def _compute_words(self):

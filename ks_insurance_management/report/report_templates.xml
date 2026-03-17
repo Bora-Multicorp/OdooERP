@@ -1,131 +1,337 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-  <report id="action_report_fire_burglary" string="Fire &amp; Burglary Report"
-    model="insurance.report.wizard" report_type="qweb-pdf"
-    name="ks_insurance_management.report_fire_burglary_template"
-    file="ks_insurance_management.report_fire_burglary_template" attachment_use="False"/>
+
+  <!-- ── Fire &amp; Burglary Report ──────────────────────────────────── -->
+  <record id="action_report_fire_burglary" model="ir.actions.report">
+    <field name="name">Fire &amp; Burglary Report</field>
+    <field name="model">insurance.report.wizard</field>
+    <field name="report_type">qweb-html</field>
+    <field name="report_name">ks_insurance_management.report_fire_burglary_template</field>
+    <field name="attachment_use" eval="False"/>
+  </record>
+
   <template id="report_fire_burglary_template">
     <t t-call="web.html_container">
-      <t t-call="web.external_layout">
-        <div class="page">
-          <h2 class="text-center">Fire &amp; Burglary Insurance Report</h2>
+      <t t-foreach="docs" t-as="o">
+        <t t-call="web.external_layout">
+          <div class="page">
           <t t-set="policies" t-value="o._get_policies()"/>
-          <table class="table table-bordered table-sm">
-            <thead class="thead-light"><tr>
-              <th>Policy No.</th><th>Type</th><th>Company</th>
-              <th>Insurer</th><th>Sum Insured</th><th>Premium</th>
-              <th>Premium %</th><th>Avg Inventory</th><th>Expiry</th><th>Status</th>
-            </tr></thead>
+
+          <!-- Header -->
+          <div class="row mb-3">
+            <div class="col-12 text-center">
+              <h2 style="color:#1F3864; border-bottom:2px solid #1F3864; padding-bottom:6px;">
+                Fire &amp; Burglary Insurance Report
+              </h2>
+            </div>
+          </div>
+          <div class="row mb-3">
+            <div class="col-6">
+              <t t-if="o.company_ids">
+                <strong>Companies: </strong>
+                <t t-foreach="o.company_ids" t-as="c">
+                  <span class="badge badge-secondary mr-1"><t t-esc="c.name"/></span>
+                </t>
+              </t>
+            </div>
+            <div class="col-3">
+              <t t-if="o.date_from or o.date_to">
+                <strong>Period: </strong>
+                <t t-esc="o.date_from or ''"/> – <t t-esc="o.date_to or ''"/>
+              </t>
+            </div>
+            <div class="col-3 text-right">
+              <strong>Status: </strong>
+              <t t-if="o.include_expired">Active &amp; Expired</t>
+              <t t-else="">Active Only</t>
+            </div>
+          </div>
+
+          <!-- Table -->
+          <table class="table table-bordered table-sm table-hover" style="font-size:12px;">
+            <thead style="background-color:#1F3864; color:#fff;">
+              <tr>
+                <th class="text-center">#</th>
+                <th>Policy No.</th>
+                <th>Type</th>
+                <th>Company</th>
+                <th>Insurer</th>
+                <th class="text-right">Sum Insured (₹)</th>
+                <th class="text-right">Premium (₹)</th>
+                <th class="text-center">Premium %</th>
+                <th class="text-right">Avg Inventory (₹)</th>
+                <th class="text-center">Expiry Date</th>
+                <th class="text-center">Status</th>
+              </tr>
+            </thead>
             <tbody>
               <t t-foreach="policies" t-as="p">
-                <tr>
-                  <td><t t-esc="p.policy_number or '-'"/></td>
-                  <td><t t-esc="p.insurance_type_id.name"/></td>
-                  <td><t t-esc="p.company_id.name"/></td>
-                  <td><t t-esc="p.insurance_company_id.name"/></td>
+                <tr t-attf-style="background-color: #{'#fff3f3' if p.state == 'expired' else '#f3fff3'};">
+                  <td class="text-center"><t t-esc="p_index + 1"/></td>
+                  <td><strong><t t-esc="p.policy_number or '-'"/></strong></td>
+                  <td><t t-esc="p.insurance_type_id.name or '-'"/></td>
+                  <td><t t-esc="p.company_id.name or '-'"/></td>
+                  <td><t t-esc="p.insurance_company_id.name or '-'"/></td>
                   <td class="text-right"><t t-esc="'{:,.2f}'.format(p.sum_insured)"/></td>
                   <td class="text-right"><t t-esc="'{:,.2f}'.format(p.premium)"/></td>
-                  <td class="text-right"><t t-esc="'{:.2f}%'.format(p.premium_percentage)"/></td>
+                  <td class="text-center"><t t-esc="'{:.2f}%'.format(p.premium_percentage)"/></td>
                   <td class="text-right"><t t-esc="'{:,.2f}'.format(p._get_avg_inventory())"/></td>
-                  <td><t t-esc="p.expiry_date"/></td>
-                  <td><t t-esc="p.state.upper()"/></td>
+                  <td class="text-center"><t t-esc="p.expiry_date"/></td>
+                  <td class="text-center">
+                    <span t-attf-style="padding:2px 8px; border-radius:4px; font-weight:bold; color:#fff; background-color:#{'#28a745' if p.state == 'active' else '#dc3545'};">
+                      <t t-esc="p.state.upper()"/>
+                    </span>
+                  </td>
                 </tr>
               </t>
             </tbody>
+            <tfoot style="background-color:#e8edf4; font-weight:bold;">
+              <tr>
+                <td colspan="5" class="text-right">Total (<t t-esc="len(policies)"/> policies)</td>
+                <td class="text-right"><t t-esc="'{:,.2f}'.format(sum(policies.mapped('sum_insured')))"/></td>
+                <td class="text-right"><t t-esc="'{:,.2f}'.format(sum(policies.mapped('premium')))"/></td>
+                <td colspan="4"></td>
+              </tr>
+            </tfoot>
           </table>
+
+          <p class="text-muted mt-2" style="font-size:10px;">
+            Report generated on <t t-esc="time.strftime('%d/%m/%Y')"/>
+          </p>
         </div>
+        </t>
       </t>
     </t>
   </template>
 
-  <report id="action_report_marine" string="Marine Insurance Report"
-    model="insurance.report.wizard" report_type="qweb-pdf"
-    name="ks_insurance_management.report_marine_template"
-    file="ks_insurance_management.report_marine_template" attachment_use="False"/>
+  <!-- ── Marine Insurance Report ──────────────────────────────────────── -->
+  <record id="action_report_marine" model="ir.actions.report">
+    <field name="name">Marine Insurance Report</field>
+    <field name="model">insurance.report.wizard</field>
+    <field name="report_type">qweb-html</field>
+    <field name="report_name">ks_insurance_management.report_marine_template</field>
+    <field name="attachment_use" eval="False"/>
+  </record>
+
   <template id="report_marine_template">
     <t t-call="web.html_container">
-      <t t-call="web.external_layout">
-        <div class="page">
-          <h2 class="text-center">Marine Insurance Report</h2>
+      <t t-foreach="docs" t-as="o">
+        <t t-call="web.external_layout">
+          <div class="page">
           <t t-set="policies" t-value="o._get_policies()"/>
-          <table class="table table-bordered table-sm">
-            <thead class="thead-light"><tr>
-              <th>Policy No.</th><th>Applicability</th><th>Company</th>
-              <th>Insurer</th><th>Sum Insured</th><th>Premium</th>
-              <th>Premium %</th><th>Balance Sum Insured</th>
-              <th>Expiry</th><th>Status</th><th>Declarations</th><th>Remarks</th>
-            </tr></thead>
+
+          <!-- Header -->
+          <div class="row mb-3">
+            <div class="col-12 text-center">
+              <h2 style="color:#1F3864; border-bottom:2px solid #1F3864; padding-bottom:6px;">
+                Marine Insurance Report
+              </h2>
+            </div>
+          </div>
+          <div class="row mb-3">
+            <div class="col-6">
+              <t t-if="o.company_ids">
+                <strong>Companies: </strong>
+                <t t-foreach="o.company_ids" t-as="c">
+                  <span class="badge badge-secondary mr-1"><t t-esc="c.name"/></span>
+                </t>
+              </t>
+            </div>
+            <div class="col-3">
+              <t t-if="o.date_from or o.date_to">
+                <strong>Period: </strong>
+                <t t-esc="o.date_from or ''"/> – <t t-esc="o.date_to or ''"/>
+              </t>
+            </div>
+            <div class="col-3 text-right">
+              <strong>Status: </strong>
+              <t t-if="o.include_expired">Active &amp; Expired</t>
+              <t t-else="">Active Only</t>
+            </div>
+          </div>
+
+          <!-- Table -->
+          <table class="table table-bordered table-sm table-hover" style="font-size:12px;">
+            <thead style="background-color:#1F3864; color:#fff;">
+              <tr>
+                <th class="text-center">#</th>
+                <th>Policy No.</th>
+                <th class="text-center">Applicability</th>
+                <th>Company</th>
+                <th>Insurer</th>
+                <th class="text-right">Sum Insured (₹)</th>
+                <th class="text-right">Premium (₹)</th>
+                <th class="text-center">Premium %</th>
+                <th class="text-right">Balance Sum Insured (₹)</th>
+                <th class="text-center">Expiry Date</th>
+                <th class="text-center">Status</th>
+                <th class="text-center">Declarations</th>
+                <th>Remarks</th>
+              </tr>
+            </thead>
             <tbody>
               <t t-foreach="policies" t-as="p">
-                <tr>
-                  <td><t t-esc="p.policy_number or '-'"/></td>
-                  <td><t t-esc="p.insurance_type_id.marine_applicability or '-'"/></td>
-                  <td><t t-esc="p.company_id.name"/></td>
-                  <td><t t-esc="p.insurance_company_id.name"/></td>
+                <tr t-attf-style="background-color: #{'#fff3f3' if p.state == 'expired' else '#f3fff3'};">
+                  <td class="text-center"><t t-esc="p_index + 1"/></td>
+                  <td><strong><t t-esc="p.policy_number or '-'"/></strong></td>
+                  <td class="text-center">
+                    <t t-esc="{'exim':'EXIM','domestic':'Domestic','both':'Both','russia':'Russia Only'}.get(p.insurance_type_id.marine_applicability, '-')"/>
+                  </td>
+                  <td><t t-esc="p.company_id.name or '-'"/></td>
+                  <td><t t-esc="p.insurance_company_id.name or '-'"/></td>
                   <td class="text-right"><t t-esc="'{:,.2f}'.format(p.sum_insured)"/></td>
                   <td class="text-right"><t t-esc="'{:,.2f}'.format(p.premium)"/></td>
-                  <td class="text-right"><t t-esc="'{:.2f}%'.format(p.premium_percentage)"/></td>
-                  <td class="text-right"><t t-esc="'{:,.2f}'.format(p.balance_sum_insured)"/></td>
-                  <td><t t-esc="p.expiry_date"/></td>
-                  <td><t t-esc="p.state.upper()"/></td>
-                  <td class="text-right"><t t-esc="len(p.declaration_ids)"/></td>
+                  <td class="text-center"><t t-esc="'{:.2f}%'.format(p.premium_percentage)"/></td>
+                  <td class="text-right">
+                    <strong><t t-esc="'{:,.2f}'.format(p.balance_sum_insured)"/></strong>
+                  </td>
+                  <td class="text-center"><t t-esc="p.expiry_date"/></td>
+                  <td class="text-center">
+                    <span t-attf-style="padding:2px 8px; border-radius:4px; font-weight:bold; color:#fff; background-color:#{'#28a745' if p.state == 'active' else '#dc3545'};">
+                      <t t-esc="p.state.upper()"/>
+                    </span>
+                  </td>
+                  <td class="text-center"><t t-esc="len(p.declaration_ids)"/></td>
                   <td></td>
                 </tr>
               </t>
             </tbody>
+            <tfoot style="background-color:#e8edf4; font-weight:bold;">
+              <tr>
+                <td colspan="5" class="text-right">Total (<t t-esc="len(policies)"/> policies)</td>
+                <td class="text-right"><t t-esc="'{:,.2f}'.format(sum(policies.mapped('sum_insured')))"/></td>
+                <td class="text-right"><t t-esc="'{:,.2f}'.format(sum(policies.mapped('premium')))"/></td>
+                <td></td>
+                <td class="text-right"><t t-esc="'{:,.2f}'.format(sum(policies.mapped('balance_sum_insured')))"/></td>
+                <td colspan="4"></td>
+              </tr>
+            </tfoot>
           </table>
-          <p class="text-muted" style="font-size:9px">
-            * Last two columns are for reference only and do not affect calculations.
+
+          <p class="text-muted mt-2" style="font-size:10px;">
+            * Declarations and Remarks columns are for reference only and do not affect calculations.
+            Report generated on <t t-esc="time.strftime('%d/%m/%Y')"/>
           </p>
         </div>
+        </t>
       </t>
     </t>
   </template>
 
-  <report id="action_report_misc" string="Miscellaneous Insurance Report"
-    model="insurance.report.wizard" report_type="qweb-pdf"
-    name="ks_insurance_management.report_misc_template"
-    file="ks_insurance_management.report_misc_template" attachment_use="False"/>
+  <!-- ── Miscellaneous Insurance Report ───────────────────────────────── -->
+  <record id="action_report_misc" model="ir.actions.report">
+    <field name="name">Miscellaneous Insurance Report</field>
+    <field name="model">insurance.report.wizard</field>
+    <field name="report_type">qweb-html</field>
+    <field name="report_name">ks_insurance_management.report_misc_template</field>
+    <field name="attachment_use" eval="False"/>
+  </record>
+
   <template id="report_misc_template">
     <t t-call="web.html_container">
-      <t t-call="web.external_layout">
-        <div class="page">
-          <h2 class="text-center">Miscellaneous Insurance Report</h2>
+      <t t-foreach="docs" t-as="o">
+        <t t-call="web.external_layout">
+          <div class="page">
           <t t-set="policies" t-value="o._get_policies()"/>
-          <table class="table table-bordered table-sm">
-            <thead class="thead-light"><tr>
-              <th>Policy No.</th><th>Type</th><th>Category</th>
-              <th>Company</th><th>Insurer</th><th>Agent</th>
-              <th>Sum Insured</th><th>Premium</th><th>Premium %</th>
-              <th>Expiry</th><th>Status</th>
-            </tr></thead>
+
+          <!-- Header -->
+          <div class="row mb-3">
+            <div class="col-12 text-center">
+              <h2 style="color:#1F3864; border-bottom:2px solid #1F3864; padding-bottom:6px;">
+                Miscellaneous Insurance Report
+              </h2>
+            </div>
+          </div>
+          <div class="row mb-3">
+            <div class="col-6">
+              <t t-if="o.company_ids">
+                <strong>Companies: </strong>
+                <t t-foreach="o.company_ids" t-as="c">
+                  <span class="badge badge-secondary mr-1"><t t-esc="c.name"/></span>
+                </t>
+              </t>
+            </div>
+            <div class="col-3">
+              <t t-if="o.date_from or o.date_to">
+                <strong>Period: </strong>
+                <t t-esc="o.date_from or ''"/> – <t t-esc="o.date_to or ''"/>
+              </t>
+            </div>
+            <div class="col-3 text-right">
+              <strong>Status: </strong>
+              <t t-if="o.include_expired">Active &amp; Expired</t>
+              <t t-else="">Active Only</t>
+            </div>
+          </div>
+
+          <!-- Table -->
+          <table class="table table-bordered table-sm table-hover" style="font-size:12px;">
+            <thead style="background-color:#1F3864; color:#fff;">
+              <tr>
+                <th class="text-center">#</th>
+                <th>Policy No.</th>
+                <th>Type</th>
+                <th>Category</th>
+                <th>Company</th>
+                <th>Insurer</th>
+                <th>Agent</th>
+                <th class="text-right">Sum Insured (₹)</th>
+                <th class="text-right">Premium (₹)</th>
+                <th class="text-center">Premium %</th>
+                <th class="text-center">Expiry Date</th>
+                <th class="text-center">Status</th>
+              </tr>
+            </thead>
             <tbody>
               <t t-foreach="policies" t-as="p">
-                <tr>
-                  <td><t t-esc="p.policy_number or '-'"/></td>
-                  <td><t t-esc="p.insurance_type_id.name"/></td>
+                <tr t-attf-style="background-color: #{'#fff3f3' if p.state == 'expired' else '#f3fff3'};">
+                  <td class="text-center"><t t-esc="p_index + 1"/></td>
+                  <td><strong><t t-esc="p.policy_number or '-'"/></strong></td>
+                  <td><t t-esc="p.insurance_type_id.name or '-'"/></td>
                   <td><t t-esc="p.insurance_category_id.name or '-'"/></td>
-                  <td><t t-esc="p.company_id.name"/></td>
-                  <td><t t-esc="p.insurance_company_id.name"/></td>
+                  <td><t t-esc="p.company_id.name or '-'"/></td>
+                  <td><t t-esc="p.insurance_company_id.name or '-'"/></td>
                   <td><t t-esc="p.agent_id.name or '-'"/></td>
                   <td class="text-right"><t t-esc="'{:,.2f}'.format(p.sum_insured)"/></td>
                   <td class="text-right"><t t-esc="'{:,.2f}'.format(p.premium)"/></td>
-                  <td class="text-right"><t t-esc="'{:.2f}%'.format(p.premium_percentage)"/></td>
-                  <td><t t-esc="p.expiry_date"/></td>
-                  <td><t t-esc="p.state.upper()"/></td>
+                  <td class="text-center"><t t-esc="'{:.2f}%'.format(p.premium_percentage)"/></td>
+                  <td class="text-center"><t t-esc="p.expiry_date"/></td>
+                  <td class="text-center">
+                    <span t-attf-style="padding:2px 8px; border-radius:4px; font-weight:bold; color:#fff; background-color:#{'#28a745' if p.state == 'active' else '#dc3545'};">
+                      <t t-esc="p.state.upper()"/>
+                    </span>
+                  </td>
                 </tr>
               </t>
             </tbody>
+            <tfoot style="background-color:#e8edf4; font-weight:bold;">
+              <tr>
+                <td colspan="7" class="text-right">Total (<t t-esc="len(policies)"/> policies)</td>
+                <td class="text-right"><t t-esc="'{:,.2f}'.format(sum(policies.mapped('sum_insured')))"/></td>
+                <td class="text-right"><t t-esc="'{:,.2f}'.format(sum(policies.mapped('premium')))"/></td>
+                <td colspan="3"></td>
+              </tr>
+            </tfoot>
           </table>
+
+          <p class="text-muted mt-2" style="font-size:10px;">
+            Report generated on <t t-esc="time.strftime('%d/%m/%Y')"/>
+          </p>
         </div>
+        </t>
       </t>
     </t>
   </template>
 
-  <report id="action_report_declaration_letter" string="Declaration Letter"
-    model="insurance.declaration" report_type="qweb-pdf"
-    name="ks_insurance_management.report_declaration_letter_template"
-    file="ks_insurance_management.report_declaration_letter_template" attachment_use="False"/>
+  <!-- ── Declaration Letter (PDF — formal letter format) ─────────────── -->
+  <record id="action_report_declaration_letter" model="ir.actions.report">
+    <field name="name">Declaration Letter</field>
+    <field name="model">insurance.declaration</field>
+    <field name="report_type">qweb-pdf</field>
+    <field name="report_name">ks_insurance_management.report_declaration_letter_template</field>
+    <field name="attachment_use" eval="False"/>
+  </record>
+
   <template id="report_declaration_letter_template">
     <t t-call="web.html_container">
       <t t-foreach="docs" t-as="o">
@@ -135,7 +341,7 @@
             <p><strong>Name of the Client:</strong> <t t-esc="o.company_id.name"/></p>
             <p><strong>Policy No.:</strong> <t t-esc="o.policy_id.policy_number or o.policy_id.name"/></p>
             <p><strong>To,</strong><br/>
-              <strong><t t-esc="o.policy_id.insurance_company_id.name"/></strong>
+              <strong><t t-esc="o.policy_id.insurance_company_id.name or ''"/></strong>
             </p>
             <p><strong>Policy Period:</strong> <t t-esc="o.date_from"/> to <t t-esc="o.date_to"/></p>
             <p><strong>Subject: Declaration for Policy No.
@@ -174,7 +380,7 @@
             </t>
             <t t-if="o.declaration_type == 'fire_burglary'">
               <p>We hereby declare that the average inventory value held at
-                <strong><t t-esc="o.warehouse_id.name"/></strong>
+                <strong><t t-esc="o.warehouse_id.name or ''"/></strong>
                 for the period <strong><t t-esc="o.date_from"/></strong> to
                 <strong><t t-esc="o.date_to"/></strong> amounts to
                 <strong>&#8377; <t t-esc="'{:,.2f}'.format(o.declaration_amount)"/></strong>
@@ -186,7 +392,7 @@
             <p>Yours faithfully,<br/>
               <strong><t t-esc="o.company_id.name"/></strong>
             </p>
-            <p class="text-muted" style="font-size:9px">Ref: <t t-esc="o.name"/></p>
+            <p class="text-muted" style="font-size:9px;">Ref: <t t-esc="o.name"/></p>
           </div>
         </t>
       </t>

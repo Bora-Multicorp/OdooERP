@@ -32,16 +32,24 @@
                 <field name="has_approved_bill_payment_request" invisible="1"/>
                 <field name="payment_approval_request_count" invisible="1"/>
                 <field name="has_vendor_bill" invisible="1"/>
+                <field name="has_any_advance_request" invisible="1"/>
+                <field name="has_any_bill_request" invisible="1"/>
             </xpath>
 
             <!-- Request Payment Approval (single button: type set from PO) and Advance Payment buttons in header -->
             <xpath expr="//button[@name='action_create_invoice']" position="after">
-                <button name="action_create_payment_approval_request"
+                <button name="action_create_payment_approval_request_advance"
                         type="object"
                         string="Request For Advance Payment"
                         class="btn-secondary"
-                        invisible="state not in ('purchase', 'done') or (has_vendor_bill and has_approved_bill_payment_request) or (not has_vendor_bill and has_approved_advance_payment_request)"
-                        help="Request payment approval for this PO. Type is set automatically: with bill if a vendor bill exists, otherwise without bill. Hidden when approval already exists for this PO."/>
+                        invisible="state not in ('purchase', 'done') or has_vendor_bill or has_any_advance_request"
+                        help="Request approval for advance payment (no vendor bill yet). Hidden once a request is created or a vendor bill exists."/>
+                <button name="action_create_payment_approval_request_bill"
+                        type="object"
+                        string="Request For Payment"
+                        class="btn-secondary"
+                        invisible="state not in ('purchase', 'done') or not has_vendor_bill"
+                        help="Request approval for payment against vendor bill. Visible when this PO has a posted vendor bill. After approval, you can register payment from the vendor bill."/>
                 <button name="action_create_advance_payment"
                         type="object"
                         string="Create Advance Payment"
@@ -89,6 +97,27 @@
         <field name="arch" type="xml">
             <xpath expr="//field[@name='partner_id']" position="after">
                 <field name="ks_purchase_order_id" string="Purchase Order" optional="show"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- List view: bulk Request For Advance Payment / Request For Payment (for PO with/without Vendor Bill menus) -->
+    <record id="view_purchase_order_list_inherit_advance_payment" model="ir.ui.view">
+        <field name="name">purchase.order.list.advance.payment</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_kpis_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <button name="action_bulk_request_advance_payment"
+                        type="object"
+                        string="Request For Advance Payment"
+                        class="btn-secondary"
+                        help="Create advance payment approval requests for selected POs (without vendor bill)."/>
+                <button name="action_bulk_request_payment"
+                        type="object"
+                        string="Request For Payment"
+                        class="btn-secondary"
+                        help="Create bill payment approval requests for selected POs (with vendor bill)."/>
             </xpath>
         </field>
     </record>

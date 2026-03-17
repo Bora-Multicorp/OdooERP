@@ -239,17 +239,37 @@
             <field name="report_type"/>
             <field name="date_from"/><field name="date_to"/>
             <field name="company_ids" widget="many2many_tags"/>
+            <field name="include_expired"/>
+          </group>
+          <group string="Output Format">
+            <div class="o_field_widget" colspan="2">
+              <p class="text-muted mb-0">
+                Use <b>View Report</b> to see data on screen or <b>Download XLSX</b> to export as Excel.
+              </p>
+            </div>
           </group>
         </sheet>
         <footer>
-          <button name="action_print_fire_burglary" string="Print Fire &amp; Burglary"
+          <!-- Fire &amp; Burglary -->
+          <button name="action_print_fire_burglary" string="View Report"
                   type="object" class="btn-primary"
                   invisible="report_type != 'fire_burglary'"/>
-          <button name="action_print_marine" string="Print Marine"
+          <button name="action_download_fire_burglary_xlsx" string="Download XLSX"
+                  type="object" class="btn-success"
+                  invisible="report_type != 'fire_burglary'"/>
+          <!-- Marine -->
+          <button name="action_print_marine" string="View Report"
                   type="object" class="btn-primary"
                   invisible="report_type != 'marine'"/>
-          <button name="action_print_misc" string="Print Miscellaneous"
+          <button name="action_download_marine_xlsx" string="Download XLSX"
+                  type="object" class="btn-success"
+                  invisible="report_type != 'marine'"/>
+          <!-- Miscellaneous -->
+          <button name="action_print_misc" string="View Report"
                   type="object" class="btn-primary"
+                  invisible="report_type != 'misc'"/>
+          <button name="action_download_misc_xlsx" string="Download XLSX"
+                  type="object" class="btn-success"
                   invisible="report_type != 'misc'"/>
           <button string="Cancel" class="btn-secondary" special="cancel"/>
         </footer>
