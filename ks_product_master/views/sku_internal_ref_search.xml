@@ -1,0 +1,13 @@
+<odoo>
+    <record id="view_product_template_search_inherit_internal_ref" model="ir.ui.view">
+        <field name="name">product.template.search.inherit.internal.reference</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_search_view"/>
+        <field name="arch" type="xml">
+            <!-- Add after the name field -->
+            <xpath expr="//field[@name='name']" position="after">
+                <field name="default_code" string="SKU / Internal Reference"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

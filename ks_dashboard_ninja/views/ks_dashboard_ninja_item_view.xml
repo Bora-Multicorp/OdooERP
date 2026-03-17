@@ -1,0 +1,1262 @@
+<odoo>
+    <data>
+        <!--Tree View Dashboard Items-->
+        <record model="ir.ui.view" id="ks_dashboard_ninja.item">
+            <field name="name">Dashboard Items</field>
+            <field name="model">ks_dashboard_ninja.item</field>
+            <field name="arch" type="xml">
+                <list create="false">
+                    <field name="id" optional="show"/>
+                    <field name="name" optional="show"/>
+                    <field name="ks_dashboard_ninja_board_id" optional="show" string="Dashboard"/>
+                    <field name="ks_dashboard_item_type" optional="show"/>
+                    <field name="ks_model_id" optional="show"/>
+                    <field name="ks_company_id" optional="show"/>
+                    <field name="ks_date_filter_field"  optional="show"/>
+                    <field name="ks_date_filter_selection" optional="show"/>
+                    <field name="ks_item_start_date" optional="show"/>
+                    <field name="ks_item_end_date" optional="show"/>
+                    <field name="ks_compare_period" optional="show"/>
+                    <field name="ks_year_period" optional="show"/>
+                </list>
+            </field>
+        </record>
+
+
+        <!--        Search View Of Dashboard Items-->
+        <record id="ks_item_search_view" model="ir.ui.view">
+            <field name="name">dashboard.items.search.view</field>
+            <field name="model">ks_dashboard_ninja.item</field>
+            <field name="arch" type="xml">
+                <search string="Search Items">
+                    <field name="name"
+                           filter_domain="[('name','ilike',self)]"/>
+                    <field name="ks_dashboard_ninja_board_id"/>
+                    <field name="ks_model_id" filter_domain="[('ks_model_id.model','ilike',self)]"/>
+                    <field name="ks_dashboard_item_type" filter_domain="[('ks_dashboard_item_type','ilike',self)]"/>
+                    <!--TODO : Add more filter and groupby-->
+                </search>
+            </field>
+        </record>
+
+
+        <record model="ir.ui.view" id="ks_dashboard_ninja.item_quick_edit_form_view">
+            <field name="name">ks_dashboard_ninja_item form</field>
+            <field name="model">ks_dashboard_ninja.item</field>
+            <field name="priority">20</field>
+            <field name="arch" type="xml">
+                <form create="false" delete="false" class="ks_qe_form_view">
+                    <group class="ks_qe_form_view_group">
+                        <field name="ks_chart_data" invisible="1"/>
+                        <field name="ks_currency_id" invisible="1"/>
+                        <field name="ks_to_do_data" invisible="1"/>
+                        <field name="ks_precision_digits" invisible="1"/>
+                        <field name="ks_domain_extension_2" invisible="1"/>
+                        <field name="ks_domain_extension" invisible="1"/>
+                        <field name="ks_record_data_limit" invisible="1"/>
+                        <field name="ks_sort_by_field" invisible="1"/>
+                        <field name="ks_sort_by_order" invisible="1"/>
+                        <field name="ks_chart_relation_sub_groupby" invisible="1"/>
+                        <field name="ks_chart_date_sub_groupby" invisible="1"/>
+                        <field name="ks_default_icon_color" invisible="1"/>
+                        <field name="ks_default_icon" invisible="1"/>
+                        <field name="ks_domain_temp" invisible="1"/>
+                        <field name="ks_font_color" invisible="1"/>
+                        <field name="ks_date_filter_field" invisible="1"/>
+<!--                        <field name="ks_kpi_data" invisible="1"/>-->
+                        <field name="ks_background_color" invisible="1"/>
+                        <field name="ks_icon" invisible="1"/>
+                        <field name="ks_icon_select" invisible="1"/>
+                        <field name="ks_icon_select" invisible="1"/>
+                        <field name="ks_list_view_data" invisible="1"/>
+                        <field name="ks_target_view" invisible="1"/>
+                        <field name="ks_model_name" invisible="1"/>
+                        <field name="ks_goal_enable" invisible="1"/>
+                        <field name="ks_previous_period" invisible="1"/>
+                        <field name="ks_date_filter_selection" invisible="1"/>
+                        <field name="ks_data_comparison" invisible="1"/>
+                        <field name="ks_standard_goal_value" invisible="1"/>
+                        <field name="ks_many2many_field_ordering" invisible="1"/>
+                        <field name="ks_goal_lines" invisible="1"/>
+                        <field name="ks_goal_bar_line" invisible="1"/>
+                        <field name="ks_kpi_type" invisible="1"/>
+                        <field name="ks_kpi_preview" invisible="1"/>
+                        <field name="ks_date_filter_selection_2" invisible="1"/>
+                        <field name="ks_domain_2" invisible="1"/>
+                        <field name="ks_item_start_date_2" invisible="1"/>
+                        <field name="ks_item_end_date_2" invisible="1"/>
+                        <field name="ks_date_filter_field_2" invisible="1"/>
+                        <field name="ks_item_start_date" invisible="1"/>
+                        <field name="ks_item_end_date" invisible="1"/>
+                        <field name="ks_compare_period" invisible="1"/>
+                        <field name="ks_year_period" invisible="1"/>
+                        <field name="ks_record_field_2" invisible="1"/>
+                        <field name="ks_record_count_type_2" invisible="1"/>
+                        <field name="ks_model_name_2" invisible="1"/>
+                        <field name="ks_model_id_2" invisible="1"/>
+                        <field name="ks_data_calculation_type" invisible="1"/>
+                        <field name="ks_show_data_value" invisible="1"/>
+                        <field name="ks_unit" invisible="1"/>
+                        <field name="name" placeholder="Name..."/>
+                        <field name="ks_actions" invisible="1"/>
+                        <field name="ks_model_id" placeholder="Model..."
+                               options="{'no_create': True, 'no_create_edit':True, 'no_open': True, 'limit': 10}"
+                               invisible="ks_data_calculation_type == 'query' or ks_dashboard_item_type not in
+                                                        ['ks_kpi','ks_tile','ks_bar_chart','ks_horizontalBar_chart','ks_line_chart','ks_area_chart','ks_pie_chart','ks_map_view','ks_funnel_chart'
+                                                        'ks_doughnut_chart','ks_polarArea_chart','ks_list_view','ks_radar_view','ks_flower_view','ks_scatter_chart','ks_radialBar_chart']"/>
+                        <field name="ks_dashboard_item_type" invisible="1"/>
+                    </group>
+
+                    <group invisible="ks_dashboard_item_type != 'ks_tile' or ks_dashboard_item_type != 'ks_kpi'"
+                           class="ks_qe_form_view_group">
+                        <field name="ks_record_count_type"
+                               invisible="ks_model_id == False"
+                               required="ks_model_id != False and ks_dashboard_item_type == 'ks_tile' or ks_dashboard_item_type == 'ks_kpi'"/>
+                        <field name="ks_record_field" placeholder="Record Field..."
+                               options="{'no_create': True, 'no_create_edit':True, 'no_open': True}"
+                               invisible="ks_record_count_type == 'count'"
+                               required="ks_record_count_type != 'count' and ks_dashboard_item_type == 'ks_tile' or ks_dashboard_item_type == 'ks_kpi'"/>
+                        <field name="ks_record_count" placeholder="Count..."
+                               string="Record Value" invisible="ks_data_calculation_type == 'query'"/>
+                        <field name="ks_layout" placeholder="Layout..."
+                               invisible="ks_dashboard_item_type != 'ks_tile'"/>
+                        <field name="ks_dashboard_item_theme" widget="ks_dashboard_item_theme"/>
+                    </group>
+
+                    <group name="chart_settings"
+                           invisible="ks_data_calculation_type != 'custom' or ks_dashboard_item_type in ['ks_tile','ks_kpi']"
+                           class="ks_qe_form_view_group">
+                        <field name="ks_chart_data_count_type"
+                               invisible="ks_model_id == False or ks_dashboard_item_type == 'ks_tile' or ks_dashboard_item_type == 'ks_list_view'"
+                               required="ks_data_calculation_type == 'custom' or ks_dashboard_item_type != 'ks_tile' or ks_dashboard_item_type != 'ks_list_view'"/>
+
+                        <field name="ks_list_view_type" force_save="1"
+                               invisible="ks_data_calculation_type == 'query' or ks_dashboard_item_type != 'ks_list_view'"
+                               required="ks_data_calculation_type == 'custom' or ks_dashboard_item_type == 'ks_list_view'"/>
+                        <field name="ks_funnel_record_field" string="Measure"
+                               options="{'no_create': True, 'no_create_edit':True, 'no_open': True}"
+                               invisible="ks_model_id == False or ks_chart_data_count_type == 'count' or ks_dashboard_item_type != 'ks_funnel_chart'"/>
+
+                        <field name="ks_chart_measure_field" string="Measures" widget='many2many_tags'
+                               options="{'no_create': True, 'no_create_edit':True, 'no_open': True}"
+                               invisible="ks_chart_data_count_type == 'count' or ks_model_id == False or ks_dashboard_item_type == 'ks_list_view' or ks_dashboard_item_type == 'ks_funnel_chart' or ks_data_calculation_type != 'custom'"/>
+                        <!--                               'required':[('ks_dashboard_item_type','!=','ks_to_do'),('ks_dashboard_item_type','!=','ks_tile'),('ks_dashboard_item_type','!=','ks_kpi'),('ks_dashboard_item_type','!=','ks_list_view'),('ks_data_calculation_type','=','custom'),('ks_chart_data_count_type','!=','count')]}"/>-->
+
+                        <field name="ks_chart_measure_field_2" string="Line Measure" widget='many2many_tags'
+                               options="{'no_create': True, 'no_create_edit':True, 'no_open': True}"
+                               invisible="ks_chart_data_count_type == 'count' or ks_model_id == False or ks_dashboard_item_type == 'ks_list_view' or ks_dashboard_item_type != 'ks_bar_chart'"/>
+
+                        <field name="ks_list_view_fields" string="Fields to show in list"
+                               widget='many2many_tags'
+                               options="{'no_create': True, 'no_create_edit':True, 'no_open': True}"
+                               invisible="ks_data_calculation_type == 'query' or ks_dashboard_item_type != 'ks_list_view' or ks_list_view_type != 'ungrouped'"/>
+
+                        <field name="ks_list_view_group_fields" string="Fields to show in list"
+                               widget='many2many_tags'
+                               options="{'no_create': True, 'no_create_edit':True, 'no_open': True}"
+                               invisible="ks_dashboard_item_type != 'ks_list_view' or ks_list_view_type != 'grouped'"
+                               required="ks_data_calculation_type == 'custom' or ks_dashboard_item_type == 'ks_list_view' or ks_list_view_type == 'grouped'"/>
+
+                        <field name="ks_chart_groupby_type" invisible="1"/>
+                        <field name="ks_chart_relation_groupby" string="Group By"
+                               options="{'no_create': True, 'no_create_edit':True, 'no_open': True}"
+                               invisible="ks_dashboard_item_type == 'ks_scatter_chart' or ks_model_id == False or ks_dashboard_item_type == 'ks_list_view' or ks_list_view_type == 'ungrouped'"/>
+                        <field name="ks_chart_date_groupby" string="Group By Date"
+                               invisible="ks_chart_groupby_type != 'date_type'"
+                               required="ks_data_calculation_type == 'custom' or ks_dashboard_item_type != 'ks_tile' or ks_chart_groupby_type == 'date_type'"/>
+                        <field name="ks_scatter_measure_x_id" invisible="ks_dashboard_item_type in ['ks_kpi','ks_tile','ks_bar_chart','ks_horizontalBar_chart','ks_line_chart','ks_area_chart',
+                                     'ks_pie_chart','ks_doughnut_chart','ks_polarArea_chart','ks_map_view','ks_funnel_chart','ks_bullet_chart','ks_list_view','ks_radar_view','ks_flower_view','ks_radialBar_chart']"/>
+                        <field name="ks_is_scatter_group" invisible="ks_model_id == False or  ks_dashboard_item_type in ['ks_kpi','ks_tile','ks_bar_chart','ks_horizontalBar_chart','ks_line_chart','ks_area_chart',
+                                    'ks_pie_chart','ks_doughnut_chart','ks_polarArea_chart','ks_map_view','ks_funnel_chart','ks_bullet_chart','ks_list_view','ks_radar_view','ks_flower_view','ks_radialBar_chart']"/>
+                        <!--                        <field name="ks_scatter_measure_y_id" invisible ="ks_dashboard_item_type in ['ks_kpi','ks_tile','ks_bar_chart','ks_horizontalBar_chart','ks_line_chart','ks_area_chart',-->
+                        <!--                                   'ks_pie_chart','ks_doughnut_chart','ks_polarArea_chart','ks_map_view','ks_dashboard_graphs','ks_bullet_chart','ks_list_view','ks_radar_view','ks_flower_view','ks_radialBar_chart'] or ks_is_scatter_group == False"/>-->
+                    </group>
+                </form>
+            </field>
+        </record>
+
+        <record model="ir.ui.view" id="ks_dashboard_ninja.item_form_view">
+            <field name="name">ks_dashboard_ninja_item form</field>
+            <field name="model">ks_dashboard_ninja.item</field>
+            <field name="priority">10</field>
+            <field name="arch" type="xml">
+                <form create="false" delete="false" class="ks_dashboard_ninja encapsulated-form-view ks_create_chart_body">
+                    <field name="id" invisible="1"/>
+                    <div class="row encapsulated-r-g-48" >
+                        <div class="col-xl-5 col-lg-6  encapsulated-col-box">
+                            <group style="width:100%;display: block;padding-right:0;">
+                                <field name="ks_currency_id" invisible="1"/>
+                                <field name="ks_chart_data" invisible="1"/>
+                                <field name="ks_precision_digits" invisible="1"/>
+                                <field name="ks_to_do_data" invisible="1"/>
+                                <field name="ks_list_view_data" invisible="1"/>
+                                <field name="ks_model_name" invisible="1"/>
+                                <field name="ks_domain_temp" invisible="1"/>
+                                <field name="ks_domain_extension" invisible="1"/>
+                                <field name="ks_data_calculation_type" invisible="1"/>
+                                <field name="ks_show_data_value" invisible="1"/>
+                                <field name="ks_many2many_field_ordering" invisible="1"/>
+                                <field name="ks_many2many_field_ordering" invisible="1"/>
+                                <field name="ks_export_all_records" invisible="1"/>
+                                <field name="ks_dashboard_item_type" context="{'current_id': id}"
+                                       widget="ks_dashboard_item_type" string="Type"/>
+
+                            </group>
+                            <div class="left-70 ks-char-preview">
+                                <div class="ks-modal-title encapsulated-preview">
+                                    <span>Preview</span>
+                                </div>
+                                <div class="ks-chart-inner encapsulated-preview-box">
+
+                                    <field name="ks_preview" widget="ks_dashboard_item_preview_owl" class="encapsulated-tile-container position-relative"
+                                           invisible="ks_dashboard_item_type != 'ks_tile'"/>
+                                    <field name="ks_graph_preview" string="Preview"
+                                           class="w-100"
+                                           widget="ks_dashboard_graph_preview"
+                                           invisible="ks_dashboard_item_type in
+                                       ['ks_to_do', 'ks_tile', 'ks_list_view', 'ks_kpi', 'ks_map_view', 'ks_funnel_chart',  'ks_bullet_chart',  'ks_kpi']"/>
+                                    <field name="ks_list_view_preview" class="w-100 encapsulated-list-preview"
+                                           widget="ks_dashboard_list_view_preview"
+                                           invisible="ks_dashboard_item_type != 'ks_list_view'"/>
+                                    <field name="ks_kpi_preview" string="Preview"
+                                           widget="ks_dashboard_kpi_owlpreview"
+                                           invisible="ks_dashboard_item_type != 'ks_kpi'"/>
+                                    <field name="ks_to_do_preview"
+                                           string="Preview" class="w-100"
+                                           widget="ks_dashboard_to_do_preview"
+                                           invisible="ks_dashboard_item_type != 'ks_to_do'"/>
+                                    <field name="ks_funnel_preview" string="Preview"
+                                           widget="ks_funnel_chart" class="w-100"
+                                           invisible="ks_dashboard_item_type != 'ks_funnel_chart'"/>
+                                    <field name="ks_bullet_preview" string="Bullet Preview"
+                                           widget="ks_bullet_chart" class="w-100"
+                                           invisible="ks_dashboard_item_type != 'ks_bullet_chart'"/>
+                                    <field name="ks_map_preview" string="Map Preview"
+                                           widget="ks_dashboard_map_preview" class="flex-grow-1 w-100"
+                                           invisible="ks_dashboard_item_type != 'ks_map_view'"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="encapsulated-input-group col-xl-7 col-lg-6">
+                            <div class="chart-form-detail row">
+                                <div class="col-6 gap-2 d-flex flex-column">
+                                    <label for="name" string="Name" class="o_form_label"/>
+                                    <field name="name" required="1" placeholder="Enter Name" class="form-control form-input-box w-100"/>
+                                </div>
+                                <div class="col-6 d-flex flex-column gap-2" invisible="(ks_data_calculation_type == 'query') or (ks_dashboard_item_type in ['ks_to_do', 'ks_map_view'])">
+                                    <label for="data_source" string="Data Source" class="o_form_label"/>
+                                    <field name="data_source" required="ks_data_calculation_type != 'query'"
+                                           class="form-control form-input-box encapsulated-form-arrow bg-white"/>
+                                </div>
+
+                                <field name="name_seq" invisible="1"/>
+                                <field name="zoom_enabled" invisible="1"/>
+                                <field name="ks_partners_map" invisible="1"/>
+                                <!--                            <field name="ks_info"/>-->
+                                <div class="col-6 gap-2 d-flex flex-column" invisible="ks_data_calculation_type == 'query' or data_source != 'odoo' or ks_dashboard_item_type not in
+                                                        ['ks_kpi','ks_radar_view','ks_flower_view','ks_tile','ks_bar_chart','ks_horizontalBar_chart','ks_line_chart','ks_area_chart','ks_pie_chart',
+                                                        'ks_doughnut_chart','ks_polarArea_chart','ks_list_view','ks_scatter_chart','ks_radialBar_chart','ks_funnel_chart','ks_bullet_chart','ks_map_view']">
+
+                                    <label for="ks_model_id" string="Model Name" class="o_form_label"
+                                           />
+
+                                    <field name="ks_model_id" placeholder="Enter Model Name"
+                                           class="form-control form-input-box encapsulated-form-arrow bg-white"
+                                           options="{'no_create': True, 'no_create_edit':True, 'no_open': True}"
+                                           context="{'current_id': id}" required="ks_dashboard_item_type != 'ks_to_do' and data_source == 'odoo'"
+                                           />
+
+
+                                </div>
+                                 <div colspan="2" id="ks_excel_span" invisible="ks_data_calculation_type == 'query' or data_source == 'odoo' or data_source == False  or (ks_dashboard_item_type not in
+                                                        ['ks_kpi','ks_radar_view','ks_flower_view','ks_tile','ks_bar_chart','ks_horizontalBar_chart','ks_line_chart','ks_area_chart','ks_pie_chart',
+                                                        'ks_doughnut_chart','ks_polarArea_chart','ks_scatter_chart','ks_list_view','ks_funnel_chart','ks_bullet_chart','ks_radialBar_chart'])">
+                                    <span name="ks_excel_span" style="font-style: italic; color: #888888;">
+                                        **File names should not contain any special characters. File name can have
+                                        Spaces or separated by Underscores(_).
+                                    </span>
+                                </div>
+                                <div class="col-6 d-flex flex-column gap-2 position-relative" invisible="ks_data_calculation_type == 'query' or data_source != 'excel' or ks_dashboard_item_type not in
+                                                                                            ['ks_kpi','ks_radar_view','ks_flower_view','ks_tile','ks_bar_chart','ks_horizontalBar_chart','ks_line_chart','ks_area_chart','ks_pie_chart',
+                                                                                            'ks_doughnut_chart','ks_polarArea_chart','ks_scatter_chart','ks_list_view','ks_funnel_chart','ks_bullet_chart','ks_radialBar_chart']">
+                                    <div class="d-flex justify-content-center align-items-center position-absolute top-inverse-5 end-0" invisible="upload_excel == False or ks_group_by_lines or ks_model_id != False">
+                                        <button name="data_sync" type="object" string="Sync Data" class="w-100 sync-data-btn">
+                                                <svg width="14" class="me-1" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <path d="M5.25008 12.8337H8.75008C11.6667 12.8337 12.8334 11.667 12.8334 8.75033V5.25033C12.8334 2.33366 11.6667 1.16699 8.75008 1.16699H5.25008C2.33341 1.16699 1.16675 2.33366 1.16675 5.25033V8.75033C1.16675 11.667 2.33341 12.8337 5.25008 12.8337Z" stroke="#292D32" stroke-width="0.875" stroke-linecap="round" stroke-linejoin="round"/>
+                                                    <path d="M10.2082 6.99935C10.2082 8.77268 8.77317 10.2077 6.99984 10.2077C5.2265 10.2077 4.14733 8.42268 4.14733 8.42268M4.14733 8.42268H5.594M4.14733 8.42268V10.0269M3.7915 6.99935C3.7915 5.22602 5.21484 3.79102 6.99984 3.79102C9.14067 3.79102 10.2082 5.57601 10.2082 5.57601M10.2082 5.57601V3.97185M10.2082 5.57601H8.78484" stroke="#292D32" stroke-width="0.875" stroke-linecap="round" stroke-linejoin="round"/>
+                                                </svg>
+                                                Sync Data
+                                        </button>
+                                    </div>
+                                    <label for="upload_excel" string="Upload Excel File" class="o_form_label"
+                                           invisible="ks_data_calculation_type == 'query' or data_source != 'excel'"/>
+                                    <field name="upload_excel" placeholder="Upload Excel File"
+                                           filename="filename"
+                                           class="form-control form-input-box upload-file-btn" required="ks_dashboard_item_type != 'ks_to_do' and data_source == 'excel' and ks_data_calculation_type != 'query'"/>
+                                </div>
+
+
+                                <div class="col-6 d-flex flex-column gap-2 position-relative" invisible="ks_data_calculation_type == 'query' or data_source != 'csv' or ks_dashboard_item_type not in
+                                                        ['ks_kpi','ks_radar_view','ks_flower_view','ks_tile','ks_bar_chart','ks_horizontalBar_chart','ks_line_chart','ks_area_chart','ks_pie_chart',
+                                                        'ks_doughnut_chart','ks_polarArea_chart','ks_scatter_chart','ks_list_view','ks_funnel_chart','ks_bullet_chart','ks_radialBar_chart']">
+                                    <div class="d-flex justify-content-center align-items-center position-absolute top-inverse-5 end-0"  invisible="ks_csv_field == False or ks_csv_group_by_lines">
+                                        <button name="csv_data_sync" type="object" string="Sync Data" class="w-100 sync-data-btn">
+                                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <path d="M5.25008 12.8337H8.75008C11.6667 12.8337 12.8334 11.667 12.8334 8.75033V5.25033C12.8334 2.33366 11.6667 1.16699 8.75008 1.16699H5.25008C2.33341 1.16699 1.16675 2.33366 1.16675 5.25033V8.75033C1.16675 11.667 2.33341 12.8337 5.25008 12.8337Z" stroke="#292D32" stroke-width="0.875" stroke-linecap="round" stroke-linejoin="round"/>
+                                                <path d="M10.2082 6.99935C10.2082 8.77268 8.77317 10.2077 6.99984 10.2077C5.2265 10.2077 4.14733 8.42268 4.14733 8.42268M4.14733 8.42268H5.594M4.14733 8.42268V10.0269M3.7915 6.99935C3.7915 5.22602 5.21484 3.79102 6.99984 3.79102C9.14067 3.79102 10.2082 5.57601 10.2082 5.57601M10.2082 5.57601V3.97185M10.2082 5.57601H8.78484" stroke="#292D32" stroke-width="0.875" stroke-linecap="round" stroke-linejoin="round"/>
+                                            </svg>
+                                            Sync Data
+                                        </button>
+                                    </div>
+                                    <label for="ks_csv_field" string="Upload CSV File" class="o_form_label"
+                                           invisible="ks_data_calculation_type == 'query' or data_source != 'csv'"/>
+                                    <field name="ks_csv_field"
+                                           filename="filename"
+                                           class="form-control form-input-box upload-file-btn" required="ks_dashboard_item_type != 'ks_to_do' and data_source == 'csv' and ks_data_calculation_type != 'query'"/>
+                                </div>
+
+                                <field name="filename" invisible="1"/>
+                                <field name="excel_bool" invisible="1"/>
+                                <field name="model_bool" invisible="1"/>
+                                <field name="csv_bool" invisible="1"/>
+
+                                <div class="col-6 gap-2 d-flex flex-column" id="ks_company_id">
+
+                                    <label for="ks_company_id" string="Company" class="o_form_label"/>
+                                    <field name="ks_company_id" rowspan="2" placeholder="Select Company"
+                                           class="form-control form-input-box encapsulated-form-arrow"
+                                           options="{'no_create': True, 'no_create_edit':True, 'no_open': True}"/>
+                                </div>
+
+                                <div class="col-6 gap-2 d-flex align-items-center xpath_for_ks_semi_circle_chart"
+                                     invisible="ks_chart_data_count_type == 'count' or ks_model_id == False or
+                                      ks_dashboard_item_type == 'ks_list_view' or ks_dashboard_item_type not in ['ks_doughnut_chart','ks_pie_chart']">
+                                    <label for="ks_semi_circle_chart" string="Semi Circle Chart" class="o_form_label"/>
+                                    <field name="ks_semi_circle_chart"
+                                           class="form-control form-input-box w-fit-content"
+                                           context="{'current_id': id}"/>
+                                </div>
+
+                                <field name="ks_country_id" invisible="1"/>
+                                <field name="ks_country_code" invisible="1"/>
+                                <field name="ks_bounds" invisible="1"/>
+                            </div>
+                            <div class="encapsulated-tab-box">
+                                <notebook>
+                                    <page string="Data" name="data_sets">
+                                        <group name="ks_dn_header_line"
+                                               invisible="ks_dashboard_item_type != 'ks_to_do'">
+                                            <field name="ks_dn_header_lines" string="Section"
+                                                   style="margin-top:2px;margin-left:12px;">
+                                                <list string="Section"
+                                                      widget="section_and_note_one2many">
+                                                    <control>
+                                                        <create string="Add a Section"/>
+                                                    </control>
+                                                    <field name="ks_to_do_header" string="Section"/>
+                                                </list>
+                                                <form>
+                                                    <group>
+                                                        <group>
+                                                            <field name="ks_to_do_header" string="Section"
+                                                                   required="1"/>
+                                                        </group>
+                                                    </group>
+                                                    <notebook>
+                                                        <page string="Tasks">
+
+                                                            <field name="ks_to_do_description_lines" string="Tasks">
+                                                                <list string="Task Lines" editable="top"
+                                                                      widget="section_and_note_one2many">
+                                                                    <control>
+                                                                        <create string="Add a Line"/>
+                                                                    </control>
+                                                                    <field name="ks_description" string="Tasks"
+                                                                           required="1"/>
+                                                                    <field name="ks_active" string="Active"/>
+                                                                </list>
+                                                            </field>
+
+                                                        </page>
+                                                    </notebook>
+                                                </form>
+                                            </field>
+                                        </group>
+                                       <div class="row r-g-16">
+                                           <div class="col-6 d-flex flex-column gap-2" invisible="ks_model_id == False or ks_dashboard_item_type == 'ks_tile' or ks_dashboard_item_type == 'ks_list_view' or ks_dashboard_item_type == 'ks_kpi' or ks_dashboard_item_type == 'ks_map_view'">
+                                                 <label for="ks_chart_data_count_type" string="Data Type"
+                                                       class="o_form_label"/>
+                                                <field name="ks_chart_data_count_type" context="{'current_id': id}"
+                                                       nolabel="1" placeholder="Enter Data Type"
+                                                       class="form-input-box form-control encapsulated-form-arrow bg-white"
+                                                       required="ks_dashboard_item_type != 'ks_kpi' or ks_dashboard_item_type != 'ks_tile' or ks_dashboard_item_type != 'ks_list_view' or ks_dashboard_item_type != 'ks_scatter_chart'"/>
+                                        </div>
+                                           <div class="col-12" invisible="ks_dashboard_item_type != 'ks_tile' and ks_dashboard_item_type != 'ks_kpi'">
+                                          <div class="row r-g-16 mb-3">
+
+                                            <div class="col-6 d-flex flex-column gap-2" invisible="ks_model_id == False">
+                                                <label for="ks_record_count_type" string="Record Type" class="o_form_label"/>
+                                                <field name="ks_record_count_type"
+                                                       nolabel="1" placeholder="Enter Record Type"
+                                                       class="form-input-box form-control encapsulated-form-arrow bg-white"
+                                                       required="ks_model_id != False and ks_dashboard_item_type == 'ks_tile' or ks_dashboard_item_type == 'ks_kpi'"/>
+                                            </div>
+
+                                            <div class="col-6 d-flex flex-column gap-2" invisible="ks_record_count_type == 'count' or  (ks_dashboard_item_type != 'ks_kpi' and ks_dashboard_item_type != 'ks_tile')">
+                                                <label for="ks_record_field" string="Record Field" class="o_form_label"/>
+                                                <field name="ks_record_field" nolabel="1" placeholder="Enter Record Field"
+                                                       class="form-input-box form-control encapsulated-form-arrow bg-white"
+                                                       options="{'no_create': True, 'no_create_edit':True, 'no_open': True}"/>
+                                            </div>
+                                            <!--                                                       'required':['&amp;',('ks_record_count_type','!=','count'),'|',('ks_dashboard_item_type','=','ks_kpi'),('ks_dashboard_item_type','=','ks_tile')]}"/>-->
+                                            <div class="col-6 d-flex flex-column gap-2">
+                                                <label for="ks_record_count" string="Record Value"
+                                                       class="o_form_label"/>
+                                                <field name="ks_record_count" nolabel="1" placeholder="Enter Record Value"
+                                                       class="encapsulated-input-common" string="Record Value"/>
+                                            </div>
+
+                                            <div class="col-6 d-flex gap-2" invisible="ks_model_id_2 !=  False or ks_dashboard_item_type != 'ks_kpi' or ks_date_filter_selection not in ['l_none', 'l_day', 't_week','t_month','t_quarter','t_year']">
+                                                <label for="ks_previous_period" string="Compare With Previous Period"
+                                                       class="o_form_label"/>
+                                                <field name="ks_previous_period"  class="w-fit-content" nolabel="1"/>
+                                            </div>
+                                          </div>
+
+                                        </div>
+                                           <div class="encapsulated-d-content row" invisible="ks_dashboard_item_type == 'ks_tile' or ks_dashboard_item_type == 'ks_kpi'">
+                                               <div class="col-6 d-flex flex-column gap-2" invisible="ks_model_id == False or ks_chart_data_count_type == 'count' or ks_dashboard_item_type != 'ks_funnel_chart'">
+                                                   <label for="ks_funnel_record_field" string="Measure"
+                                                          class="o_form_label"/>
+                                                   <field name="ks_funnel_record_field" nolable="1" placeholder="Enter Measure"
+                                                          class="form-input-box form-control encapsulated-form-arrow"
+                                                          options="{'no_create': True, 'no_create_edit':True, 'no_open': True}"/>
+                                               </div>
+
+
+                                               <div class="col-6 d-flex flex-column gap-2" invisible="ks_model_id == False or ks_chart_data_count_type == 'count' or ks_dashboard_item_type != 'ks_map_view'">
+                                                   <label for="ks_map_record_field" string="Measure"
+                                                          class="o_form_label"/>
+                                                   <field name="ks_map_record_field" nolable="1" placeholder="Enter Measure"
+                                                          class="form-input-box form-control encapsulated-form-arrow"
+                                                          options="{'no_create': True, 'no_create_edit':True, 'no_open': True}"/>
+                                               </div>
+
+
+                                               <div class="col-6 d-flex flex-column gap-2" invisible="ks_chart_data_count_type == 'count'  or ks_model_id == False or ks_dashboard_item_type == 'ks_list_view' or ks_dashboard_item_type == 'ks_map_view' or ks_dashboard_item_type == 'ks_funnel_chart'">
+                                                   <label for="ks_chart_measure_field" string="Measures"
+                                                          class="o_form_label"/>
+                                                   <field name="ks_chart_measure_field" placeholder="Enter Measures"
+                                                          class="form-control form-input-box encapsulated-form-arrow bg-white encap-custom-input"
+                                                          widget='many2many_tags' nolable="1"
+                                                          options="{'no_create': True, 'no_create_edit':True, 'no_open': True}"
+                                                          context="{'current_id': id}"/>
+                                               </div>
+
+
+                                               <div class="col-6 d-flex flex-column gap-2" invisible="ks_chart_data_count_type == 'count' or ks_model_id == False or ks_dashboard_item_type == 'ks_list_view' or ks_dashboard_item_type != 'ks_bar_chart' or ks_dashboard_item_type == 'ks_map_view'">
+                                                   <label for="ks_chart_measure_field_2" string="Line Measure"
+                                                          class="o_form_label"/>
+                                                   <field name="ks_chart_measure_field_2"
+                                                          class="form-control form-input-box encapsulated-form-arrow bg-white encap-custom-input"
+                                                          widget='many2many_tags' nolable="1" placeholder="Enter Line Measure"
+                                                          options="{'no_create': True, 'no_create_edit':True, 'no_open': True}"
+                                                          context="{'current_id': id}"/>
+                                               </div>
+
+
+                                               <div class="col-6 d-flex flex-column gap-2" invisible="ks_dashboard_item_type != 'ks_list_view'">
+                                                   <label for="ks_list_view_type" string="List View Type"
+                                                          class="o_form_label"/>
+                                                   <field name="ks_list_view_type" placeholder="Enter List View Type"
+                                                          class="form-control form-input-box encapsulated-form-arrow bg-white"
+                                                          required="ks_dashboard_item_type == 'ks_list_view'"/>
+                                               </div>
+
+
+                                               <div class="col-6 d-flex flex-column gap-2" invisible="ks_dashboard_item_type != 'ks_list_view' or ks_list_view_type != 'ungrouped'">
+                                                   <label for="ks_list_view_fields" string="Fields to show in list"
+                                                          class="o_form_label"/>
+                                                   <field name="ks_list_view_fields"
+                                                          widget='many2many_tags' nolable="1" placeholder="Enter Fields to show in list"
+                                                          class="form-control form-input-box encapsulated-form-arrow bg-white encap-custom-input"
+                                                          options="{'no_create': True, 'no_create_edit':True, 'no_open': True}" context="{'ks_item_type': ks_dashboard_item_type}"/>
+                                               </div>
+
+
+                                               <div class="col-6 d-flex flex-column gap-2" invisible="ks_dashboard_item_type != 'ks_list_view' or ks_list_view_type != 'grouped'">
+                                                   <label for="ks_list_view_group_fields" string="List View Grouped Fields" class="o_form_label"/>
+                                                   <field name="ks_list_view_group_fields"
+                                                          class="form-control form-input-box encapsulated-form-arrow bg-white encap-custom-input"
+                                                          widget='many2many_tags' nolable="1" placeholder="Enter List View Grouped Fields"
+                                                          options="{'no_create': True, 'no_create_edit':True, 'no_open': True}"
+                                                          required="ks_dashboard_item_type == 'ks_list_view' and ks_list_view_type == 'grouped'"/>
+                                               </div>
+
+                                               <div class="col-6 d-flex flex-column gap-2" invisible="ks_dashboard_item_type != 'ks_list_view' or ks_list_view_type != 'grouped' or ks_goal_enable == False or ks_chart_groupby_type != 'date_type'">
+                                                   <label for="ks_list_target_deviation_field" string="Deviation Field"
+                                                          class="o_form_label"/>
+                                                   <field name="ks_list_target_deviation_field"
+                                                          options="{'no_create': True, 'no_create_edit':True, 'no_open': True}"
+                                                          nolable="1" placeholder="Enter Deviation Field"
+                                                          class="form-control form-input-box encapsulated-form-arrow"
+                                                          context="{'current_id': id}"/>
+                                               </div>
+
+
+                                               <div class="col-6 d-flex gap-2 encapsulated-configuration-grid" invisible=" ks_model_id == False or (ks_dashboard_item_type in ['ks_kpi','ks_to_do','ks_tile','ks_bar_chart','ks_horizontalBar_chart','ks_line_chart','ks_area_chart','ks_pie_chart','ks_doughnut_chart','ks_polarArea_chart','ks_map_view','ks_funnel_chart','ks_bullet_chart','ks_list_view','ks_radar_view','ks_radialBar_chart','ks_flower_view'])">
+                                                   <label for="ks_is_scatter_group" string="Scatter Group By"
+                                                          class="o_form_label"/>
+                                                   <field name="ks_is_scatter_group" nolabel="1" placeholder="Enter Scatter Group By"
+                                                          class="form-control form-input-box w-fit-content"
+                                                          context="{'current_id': id}"/>
+                                               </div>
+
+
+                                               <div class="col-6 d-flex flex-column gap-2" invisible="ks_is_scatter_group == False or ks_dashboard_item_type in ['ks_kpi','ks_to_do','ks_tile','ks_bar_chart','ks_horizontalBar_chart','ks_line_chart','ks_area_chart','ks_pie_chart','ks_doughnut_chart','ks_polarArea_chart','ks_map_view','ks_funnel_chart','ks_bullet_chart','ks_list_view','ks_radar_view','ks_flower_view','ks_radialBar_chart']">
+                                                   <label for="ks_scatter_measure_x_id" string="Measure X"
+                                                          class="o_form_label"/>
+                                                   <field name="ks_scatter_measure_x_id" nolable="1"
+                                                          context="{'current_id': id}" placeholder="Enter Measure X"
+                                                          class="form-input-box form-control encapsulated-form-arrow"
+                                                          options="{'no_create': True, 'no_create_edit':True, 'no_open': True}"/>
+                                               </div>
+
+
+                                               <!--                                <field name="ks_scatter_ungroup_measure_y_id" context="{'current_id': id}"-->
+                                               <!--                                       attrs="{'invisible':['|',('ks_dashboard_item_type','in',['ks_kpi','ks_tile','ks_bar_chart','ks_horizontalBar_chart','ks_line_chart','ks_area_chart',-->
+                                               <!--                                                    'ks_pie_chart','ks_doughnut_chart','ks_polarArea_chart','ks_list_view','ks_radar_view']),('ks_is_scatter_group','=',True)],-->
+                                               <!--                                           'required': [('ks_dashboard_item_type','=','ks_scatter_chart')]}"/>-->
+                                               <!--                                <field name="ks_scatter_measure_y_id" context="{'current_id': id}"-->
+                                               <!--                                       invisible="(ks_dashboard_item_type in ['ks_kpi','ks_to_do','ks_tile','ks_bar_chart','ks_horizontalBar_chart','ks_line_chart','ks_area_chart','ks_pie_chart','ks_doughnut_chart','ks_polarArea_chart','ks_map_view','ks_dashboard_graphs','ks_bullet_chart','ks_list_view','ks_radar_view','ks_radialBar_chart','ks_flower_view']) or ks_is_scatter_group == False"/>-->
+                                           </div>
+                                       </div>
+
+                                      <div class="row r-g-16">
+                                        <div name="ks_groups_dimensions" class="col-12 mt-3"
+                                             invisible="ks_dashboard_item_type == 'ks_tile' or ks_dashboard_item_type == 'ks_to_do' or ks_dashboard_item_type == 'ks_kpi'">
+                                          <div class="row r-g-16">
+                                            <h4>Groups/Dimensions</h4>
+                                            <field name="ks_chart_groupby_type" invisible="1"/>
+                                            <field name="ks_chart_sub_groupby_type" invisible="1"/>
+
+
+                                            <div class="col-6 d-flex flex-column gap-2" invisible="ks_dashboard_item_type == 'ks_scatter_chart' or ks_dashboard_item_type == 'ks_map_view' or ks_model_id == False or (ks_dashboard_item_type == 'ks_list_view' and ks_list_view_type == 'ungrouped')">
+                                                <label for="ks_chart_relation_groupby" string="Group By" class="o_form_label"/>
+                                                <field name="ks_chart_relation_groupby" placeholder="Select Group By"
+                                                       context="{'current_id': id}" nolabel="1"
+                                                       class="form-control form-input-box encapsulated-form-arrow"
+                                                       options="{'no_create': True, 'no_create_edit':True, 'no_open': True}"/>
+                                            </div>
+                                            <!--                                       'required':[('ks_dashboard_item_type','!=','ks_kpi'),('ks_dashboard_item_type','!=','ks_to_do'),('ks_dashboard_item_type','!=','ks_tile'),'|',('ks_dashboard_item_type','!=','ks_list_view'),('ks_list_view_type','=','grouped')]}"/>-->
+                                            <div class="col-6 d-flex flex-column gap-2" invisible="ks_dashboard_item_type != 'ks_map_view' or ks_model_id == False ">
+                                                <label for="ks_map_chart_relation_groupby" string="Map Group By" class="o_form_label"/>
+                                                <field name="ks_map_chart_relation_groupby" placeholder="Select Map Group By"
+                                                       context="{'current_id': id}" nolabel="1"
+                                                       class="form-control form-input-box encapsulated-form-arrow"
+                                                       options="{'no_create': True, 'no_create_edit':True, 'no_open': True}"/>
+                                            </div>
+                                            <!--                                       'required':[('ks_dashboard_item_type','!=','ks_kpi'),('ks_dashboard_item_type','!=','ks_to_do'),('ks_dashboard_item_type','!=','ks_tile'),'|',('ks_dashboard_item_type','!=','ks_list_view'),('ks_list_view_type','=','grouped')]}"/>-->
+
+
+                                            <div class="col-6 d-flex flex-column gap-2" invisible="(ks_dashboard_item_type == 'ks_list_view' and ks_list_view_type == 'ungrouped') or ks_chart_groupby_type !='date_type'">
+                                                <label for="ks_chart_date_groupby" string="Group By Date" class="o_form_label"/>
+                                                <field name="ks_chart_date_groupby" placeholder="Select Group By Date"
+                                                       context="{'current_id': id}" nolabel="1"
+                                                       class="form-control form-input-box encapsulated-form-arrow bg-white"
+                                                       required="(ks_chart_groupby_type == 'date_type') or  ((ks_dashboard_item_type == 'ks_list_view') and (ks_list_view_type == 'grouped'))and (ks_dashboard_item_type != 'ks_kpi') and (ks_dashboard_item_type != 'ks_tile' and ks_dashboard_item_type != 'ks_list_view')"/>
+                                            </div>
+
+                                              <field name="ks_chart_relation_sub_groupby" nolabel="1"
+                                                     class="form-input-box form-control encapsulated-form-arrow" invisible="1"/>
+
+
+                                            <div class="col-6 d-flex flex-column gap-2" invisible="((ks_model_id == False) or (ks_dashboard_item_type == 'ks_list_view') or (ks_dashboard_item_type == 'ks_funnel_chart')or (ks_dashboard_item_type == 'ks_map_view') or (ks_dashboard_item_type == 'ks_bullet_chart'))or((ks_chart_relation_groupby == False) or((ks_chart_groupby_type == 'date_type')and(ks_chart_date_groupby == False)))">
+                                                <label for="ks_chart_relation_sub_groupby" string="Sub Group By" class="o_form_label"/>
+                                                <field name="ks_chart_relation_sub_groupby" nolabel="1" placeholder="Select Sub Group By"
+                                                       class="form-control form-input-box encapsulated-form-arrow"
+                                                       options="{'no_create': True, 'no_create_edit':True, 'no_open': True}"/>
+                                            </div>
+
+
+                                            <div class="col-6 d-flex flex-column gap-2" invisible="(ks_chart_sub_groupby_type != 'date_type')or(ks_dashboard_item_type == 'ks_list_view')or(ks_chart_relation_sub_groupby == False)">
+                                                <label for="ks_chart_date_sub_groupby" string="Sub Group By Date" class="o_form_label"/>
+                                                <field name="ks_chart_date_sub_groupby" string="Sub Group By Date" class="bg-white form-control form-input-box encapsulated-form-arrow" invisible="(ks_chart_sub_groupby_type != 'date_type')or(ks_dashboard_item_type == 'ks_list_view')or(ks_chart_relation_sub_groupby == False)"
+                                                       required="(ks_dashboard_item_type != 'ks_tile')or(ks_chart_sub_groupby_type == 'date_type')or(ks_chart_relation_sub_groupby != False)"/>
+                                            </div>
+
+                                            <div class="col-6 d-flex flex-column gap-2" invisible="(ks_dashboard_item_type == 'ks_scatter_chart')or(ks_dashboard_item_type == 'ks_map_view')or(ks_dashboard_item_type == 'ks_flower_view')or(ks_fill_temporal == True)or((ks_dashboard_item_type == 'ks_funnel_chart') or ((ks_goal_lines != [])and(ks_goal_enable == True)))">
+                                                <label for="ks_sort_by_field" string="Sort By Field" class="o_form_label"/>
+                                                <field name="ks_sort_by_field" placeholder="Select Sort By Field"
+                                                       class="form-input-box form-control encapsulated-form-arrow"
+                                                       context="{'current_id': id}" nolabel="1"
+                                                       options="{'no_create': True, 'no_create_edit':True, 'no_open': True}"/>
+                                            </div>
+
+                                            <!--                                 todo set these two functionalities for bar chart-->
+
+
+                                            <div class="col-6 d-flex gap-2" invisible="(ks_dashboard_item_type in ['ks_list_view','ks_kpi', 'ks_tile']) or (ks_chart_groupby_type != 'date_type') or  (ks_chart_date_groupby in ['minute','hour']) or (ks_chart_relation_sub_groupby != False)">
+                                                <label for="ks_fill_temporal" string="Fill Temporal Value" class="o_form_label"/>
+                                                <field name="ks_fill_temporal" nolabel="1" context="{'current_id': id}"/>
+                                            </div>
+                                            <!--                                <field name="ks_as_of_now"-->
+                                            <!--                                       context="{'current_id': id}"-->
+                                            <!--                                       invisible="(ks_dashboard_item_type in['ks_list_view','ks_kpi', 'ks_tile']) or (ks_chart_groupby_type != 'date_type') or (ks_chart_date_groupby in ['minute','hour']) or (ks_chart_relation_sub_groupby != False)"/>-->
+
+
+
+                                            <div colspan="2"
+                                                 invisible="(ks_dashboard_item_type == 'ks_scatter_chart')or(ks_dashboard_item_type == 'ks_map_view')or(ks_dashboard_item_type == 'ks_flower_view')or(ks_fill_temporal == True)or((ks_dashboard_item_type == 'ks_funnel_chart') or ((ks_goal_lines != [])and(ks_goal_enable == True)))">
+                                                <span name="ks_sort_span" style="font-style: italic; color: #888888;">
+                                                    **Field in sort by column must match atleast one field given in
+                                                    measures column.
+                                                </span>
+                                            </div>
+
+
+                                            <div class="col-6 d-flex flex-column gap-2" invisible="(ks_dashboard_item_type == 'ks_scatter_chart') or (ks_dashboard_item_type == 'ks_map_view') or (ks_dashboard_item_type == 'ks_flower_view') or (ks_fill_temporal == True) or ((ks_dashboard_item_type == 'ks_funnel_chart')or((ks_goal_lines != []) and (ks_goal_enable == True)))">
+                                                <label for="ks_sort_by_order" string="Sort Order" class="o_form_label"/>
+                                                <field name="ks_sort_by_order" nolabel="1" placeholder="Select Sort Order"
+                                                       class="form-input-box form-control encapsulated-form-arrow bg-white"
+                                                       context="{'current_id': id}"/>
+                                            </div>
+
+
+                                            <div class="col-6 d-flex flex-column gap-2" invisible="(ks_goal_lines != []) and  (ks_goal_enable == True)">
+                                                <label for="ks_record_data_limit_visibility" string="Record Limit Data Visibility" class="o_form_label"/>
+                                                <field name="ks_record_data_limit_visibility" nolabel="1"/>
+                                            </div>
+
+
+                                            <div class="d-flex col-6 flex-column gap-2" invisible="(ks_dashboard_item_type not in ['ks_bar_chart','ks_horizontalBar_chart','ks_line_chart','ks_area_chart','ks_funnel_chart',
+                                                        'ks_pie_chart','ks_doughnut_chart','ks_polarArea_chart','ks_radar_view','ks_flower_view','ks_scatter_chart','ks_radialBar_chart','ks_bullet_chart','ks_list_view']) or (ks_record_data_limit_visibility == False) or ((ks_goal_lines != []) and  (ks_goal_enable == True))">
+                                                 <label for="ks_record_data_limit" string="Record Limit" class="o_form_label"/>
+                                                <field name="ks_record_data_limit"
+                                                       context="{'current_id': id}" placeholder="Enter Record Limit"
+                                                       class="form-control form-input-box" nolabel="1"
+                                                       required="ks_record_data_limit_visibility == True"/>
+                                            </div>
+
+
+                                          </div>
+
+                                        </div>
+                                        <div class="col-12">
+                                        <div class="row r-g-16" invisible="ks_dashboard_item_type == 'ks_to_do'">
+                                            <div class="col-12">
+                                                <label for="ks_domain" string="Domain" class="o_form_label"/>
+                                                <field name="ks_domain" widget="domain" class="ks_domain_content"
+                                                       context="{'current_id': id}" nolabel="1" placeholder="Enter Domain"
+                                                       options="{'model': 'ks_model_name', 'in_dialog': True}"/>
+                                            </div>
+                                            <field name="ks_domain_extension" invisible="1"/>
+                                            <div class="col-6 d-flex flex-column gap-2" invisible="ks_model_id == False">
+                                                <label for="ks_date_filter_field" string="Date Filter Field"
+                                                       class="o_form_label"/>
+                                                <field name="ks_date_filter_field" context="{'current_id': id}"
+                                                       nolabel="1" placeholder="Enter Date Filter"
+                                                       class="form-input-box form-control encapsulated-form-arrow"
+                                                       options="{'no_create': True, 'no_create_edit':True, 'no_open': True}"/>
+                                            </div>
+
+
+                                            <div class="col-6 d-flex flex-column gap-2" invisible="(ks_model_id == False) or (ks_date_filter_field == False)">
+                                                <label for="ks_date_filter_selection" string="Default Date Filter"
+                                                       class="o_form_label"/>
+                                                <field class="form-input-box form-control encapsulated-form-arrow bg-white" placeholder="Enter Default Date Filter"
+                                                       name="ks_date_filter_selection" nolabel="1"/>
+                                            </div>
+
+
+                                            <div class="col-6 d-flex flex-column gap-2" invisible="(ks_model_id == False) or (ks_date_filter_selection != 'l_custom')">
+                                                <label for="ks_item_start_date" string="Start Date"
+                                                       class="o_form_label"/>
+                                                <field name="ks_item_start_date" nolabel="1"
+                                                       class="form-control form-input-box start-date" placeholder="Enter Start Date"
+                                                       required="(ks_model_id != False) and (ks_date_filter_selection == 'l_custom')"/>
+                                            </div>
+
+
+                                            <div class="col-6 d-flex flex-column gap-2" invisible="(ks_model_id == False) or (ks_date_filter_selection != 'l_custom')">
+                                                <label for="ks_item_start_date" string="End Date" class="o_form_label"/>
+                                                <field name="ks_item_end_date" nolabel="1"
+                                                       class="form-control form-input-box end-date" placeholder="Enter End Date"
+                                                       required="(ks_model_id != False) and (ks_date_filter_selection == 'l_custom')"/>
+                                            </div>
+
+
+                                            <div class="col-6 d-flex flex-column gap-2" invisible="(ks_model_id == False) or (ks_date_filter_selection in ['ls_past_until_now', 'ls_pastwithout_now', 'n_future_starting_now', 'n_futurestarting_tomorrow','l_none'])">
+                                                <label for="ks_compare_period" string="Include Period"
+                                                       class="o_form_label"/>
+                                                <field class="form-input-box form-control" placeholder="Include Period" name="ks_compare_period" nolabel="1"/>
+                                            </div>
+                                            <div class="col-6 d-flex flex-column gap-2" invisible="(ks_model_id == False) or (ks_date_filter_selection in ['ls_past_until_now', 'ls_pastwithout_now', 'n_future_starting_now', 'n_futurestarting_tomorrow','l_none'])">
+                                                <label for="ks_year_period" string="Same Period Previous Years"
+                                                       class="o_form_label"/>
+                                                <field class="form-control form-input-box" placeholder="Same Period Previous Years" name="ks_year_period" nolabel="1"/>
+                                            </div>
+                                        </div>
+
+                                        </div>
+                                      </div>
+
+                                    </page>
+                                    <page string="Data #2" name="data_model_2"
+                                          invisible="ks_dashboard_item_type != 'ks_kpi' or ks_model_id == False">
+                                        <div class="row r-g-16">
+                                            <field name="ks_model_name_2" invisible="1"/>
+                                            <div class="col-6 d-flex flex-column gap-2">
+                                                <label for="ks_model_id_2" string="Model" class="o_form_label"/>
+                                                <field name="ks_model_id_2" placeholder="Enter Model"
+                                                       class="form-input-box form-control encapsulated-form-arrow"
+                                                       options="{'no_create': True, 'no_create_edit':True, 'no_open': True}"
+                                                       context="{'current_id': id}" nolabel="1"/>
+                                            </div>
+
+
+                                            <div class="col-6 d-flex flex-column gap-2" invisible="ks_model_id_2 ==  False">
+                                                <label for="ks_record_count_type_2" string="Record Type"
+                                                       class="o_form_label"/>
+                                                <field name="ks_record_count_type_2" placeholder="Enter Record Type"
+                                                       class="form-input-box form-control encapsulated-form-arrow bg-white"
+                                                       required="ks_model_id_2 !=  False"
+                                                       context="{'current_id': id}" nolabel="1"/>
+                                            </div>
+                                            <div  class="col-6 d-flex flex-column gap-2" invisible="(ks_model_id_2 == False) or (ks_record_count_type_2 == 'count')">
+                                                <label for="ks_record_field_2" string="Record Field"
+                                                       class="o_form_label"/>
+                                                <field name="ks_record_field_2" placeholder="Enter Record Field"
+                                                       class="form-input-box form-control encapsulated-form-arrow"
+                                                       required="(ks_model_id_2 != False) and (ks_record_count_type_2 != 'count')"
+                                                       options="{'no_create': True, 'no_create_edit':True, 'no_open': True}"
+                                                       context="{'current_id': id}" nolabel="1"/>
+                                            </div>
+                                            <div class="col-6 d-flex flex-column gap-2" invisible="(ks_model_id_2 ==  False)">
+                                                <label for="ks_record_count_2" string="Record Value"
+                                                       class="o_form_label"/>
+                                                <field name="ks_record_count_2" placeholder="Enter Record Value" class="encapsulated-input-common" force_save="True" nolabel="1"/>
+                                            </div>
+                                            <div class="col-6 d-flex flex-column gap-2" invisible="(ks_dashboard_item_type != 'ks_kpi') or (ks_model_id_2 == False)">
+                                                <label for="ks_data_comparison" string="Data Calculation"
+                                                       class="o_form_label"/>
+                                                <field name="ks_data_comparison" placeholder="Enter Data Calculation" class="encapsulated-icons-box" widget="radio" nolabel="1"/>
+                                            </div>
+                                        </div>
+
+
+                                        <div class="row r-g-16 mt-3">
+                                            <h4 class="col-12 filter-heading">Filter</h4>
+                                            <div class="col-12">
+                                                <label for="ks_domain_2" string="Domain" class="o_form_label"/>
+                                                <field name="ks_domain_2" widget="domain"
+                                                       class="ks_domain_content" placeholder="Enter Domain"
+                                                       context="{'current_id': id}"
+                                                       options="{'model': 'ks_model_name_2', 'in_dialog': True}"
+                                                       nolabel="1"/>
+                                            </div>
+                                            <field name="ks_domain_extension_2" invisible="1"
+                                                   string="Domain Extension"/>
+                                            <div class="col-6 d-flex flex-column gap-2" invisible="(ks_model_id_2 == False)">
+                                                <label for="ks_date_filter_field_2" string="Date Filter Field"
+                                                       class="o_form_label"/>
+                                                <field name="ks_date_filter_field_2"
+                                                       context="{'current_id': id}" placeholder="Enter Date Filter"
+                                                       class="form-input-box form-control encapsulated-form-arrow gap-2"
+                                                       options="{'no_create': True, 'no_create_edit':True, 'no_open': True}"
+                                                       nolabel="1"/>
+                                            </div>
+                                            <div class="col-6 d-flex flex-column gap-2" invisible="(ks_model_id_2 == False) or (ks_date_filter_field_2 == False)">
+                                                <label for="ks_date_filter_selection_2" string="Date Filter Selection"
+                                                       class="o_form_label"/>
+                                                <field name="ks_date_filter_selection_2"
+                                                       class="form-input-box form-control encapsulated-form-arrow gap-2 bg-white" placeholder="Date Filter Selection"
+                                                       nolabel="1"/>
+                                            </div>
+                                            <div class="col-6 d-flex flex-column gap-2" invisible="(ks_model_id_2 == False) or (ks_date_filter_selection_2 != 'l_custom')">
+                                                <label for="ks_item_start_date_2" string="Start Date"
+                                                       class="o_form_label"/>
+                                                <field name="ks_item_start_date_2" string="Start Date"
+                                                       class="form-input-box form-control" placeholder="Enter Start Date"
+                                                       required="(ks_model_id_2 != False) and (ks_date_filter_selection_2 == 'l_custom')"
+                                                       nolabel="1"/>
+                                            </div>
+                                            <div class="col-6 d-flex flex-column gap-2" invisible="(ks_model_id_2 == False) or (ks_date_filter_selection_2 != 'l_custom')">
+                                                <label for="ks_item_end_date_2" string="End Date" class="o_form_label"/>
+                                                <field name="ks_item_end_date_2"
+                                                       class="form-input-box form-control" placeholder="Enter End Date"
+                                                       required="(ks_model_id_2 != False) and (ks_date_filter_selection_2 == 'l_custom')"
+                                                       nolabel="1"/>
+                                            </div>
+                                            <div class="col-6 d-flex flex-column gap-2" invisible="(ks_model_id_2 == False) or (ks_date_filter_selection_2 in ['ls_past_until_now', 'ls_pastwithout_now', 'n_future_starting_now', 'n_futurestarting_tomorrow','l_none'])">
+                                                <label for="ks_compare_period_2" string="Include Period"
+                                                       class="o_form_label"/>
+                                                <field class="form-input-box form-control" placeholder="Include Period" name="ks_compare_period_2" nolabel="1"/>
+                                            </div>
+                                            <div class="col-6 d-flex flex-column gap-2" invisible="(ks_model_id_2 == False) or (ks_date_filter_selection_2 in ['ls_past_until_now', 'ls_pastwithout_now', 'n_future_starting_now', 'n_futurestarting_tomorrow','l_none'])">
+                                                <label for="ks_year_period_2" string="Same Period Previous Years"
+                                                       class="o_form_label"/>
+                                                <field name="ks_year_period_2" placeholder="Same Period Previous Years" class="form-input-box form-control" nolabel="1"/>
+                                            </div>
+                                        </div>
+                                    </page>
+
+
+                                    <page string="Display" name="display_settings"
+                                          invisible="(ks_dashboard_item_type in ['ks_map_view', 'ks_list_view'])">
+
+                                        <div name="ks_layouts"
+                                             class="row r-g-16 "
+                                               invisible="(ks_dashboard_item_type != 'ks_tile') and (ks_dashboard_item_type != 'ks_kpi')">
+                                            <div  class="col-6 d-flex flex-column gap-2" invisible="(ks_dashboard_item_type in ['ks_pie_chart', 'ks_doughnut_chart', 'ks_polarArea_chart','ks_radar_view','ks_flower_view','ks_radialBar_chart'])">
+                                                <label for="ks_data_format" string="Number System" class="o_form_label"/>
+                                                <field name="ks_data_format" class="form-control form-input-box encapsulated-form-arrow bg-white"
+                                                       context="{'current_id':id}"
+                                                       nolabel="1"/>
+                                            </div>
+                                            <div class="col-6  d-flex  flex-column gap-2" invisible="(ks_dashboard_item_type != 'ks_tile') and (ks_dashboard_item_type != 'ks_list_view')">
+                                                <label for="ks_layout" string="Layout" class="o_form_label"/>
+                                                <field name="ks_layout" placeholder="Enter Layout"
+                                                       class="form-control form-input-box encapsulated-form-arrow bg-white"
+                                                       nolabel="1"
+                                                       />
+                                            </div>
+
+                                            <div class="col-6 d-flex align-items-center gap-2">
+                                                <label for="ks_unit" string="Show Custom Unit" class="o_form_label w-fit-content"/>
+                                                <field name="ks_unit" placeholder="Show Custom Unit" class="form-control form-input-box w-fit-content mb-0"/>
+                                            </div>
+                                            <div class="col-12">
+                                                <div class="row row-gap-16">
+                                                    <div class="col-6  d-flex  flex-column gap-2" invisible="ks_unit == False">
+                                                <label for="ks_unit_selection" string="Select Unit Type" class="o_form_label"/>
+                                                <field name="ks_unit_selection"
+                                                   required="ks_unit == True" placeholder="Select Unit Type"
+                                                        nolabel="1"
+                                                   class="form-control form-input-box encapsulated-form-arrow bg-white"/>
+
+                                            </div>
+                                            <div class="col-6 d-flex  flex-column gap-2" invisible="(ks_unit_selection != 'custom') or (ks_unit == False)">
+                                                <label for="ks_chart_unit" string="Enter Unit" class="o_form_label"/>
+                                                <field name="ks_chart_unit" placeholder="Enter Unit"
+                                                   required="(ks_unit_selection == 'custom') and (ks_unit == True)"
+                                                       nolabel="1"
+                                                   class="form-control form-input-box w-100"/>
+                                            </div>
+                                                </div>
+
+                                            </div>
+                                               <div class="col-12">
+                                                  <div class="row">
+                                                          <div class="col-6">
+                                                    <div class="d-flex gap-2 flex-column">
+                                                        <label for="ks_icon_select" string="Icon Option"
+                                                               class="o_form_label"/>
+                                                        <field name="ks_icon_select" placeholder="Enter Icon Option" class="encapsulated-icons-box" widget="radio"/>
+                                                    </div>
+                                                    <div class="d-flex flex-column gap-2" invisible="(ks_icon_select == 'Default')">
+                                                        <label for="ks_icon" string="Icon" class="o_form_label"/>
+                                                        <field name="ks_icon"  string="Icon" widget="image" placeholder="Select Icon"
+                                                               class="ks_item_icon "
+                                                        />
+                                                    </div>
+
+                                                    <div invisible="(ks_icon_select == 'Custom')">
+                                                        <label for="ks_default_icon" string="Icon" class="o_form_label"/>
+                                                        <field name="ks_default_icon" widget="ks_image_widget" placeholder="Select Icon"
+                                                               class="ks_item_icon encapsulated-ks-icon"/>
+                                                    </div>
+
+                                                    <div class="d-flex row align-items-center" >
+                                                    <div class="col-6 d-flex flex-column gap-2" invisible="(ks_icon_select == 'Custom') or (ks_default_icon == False)">
+                                                        <label for="ks_default_icon_color" string="Icon Color"
+                                                               class="o_form_label"/>
+                                                        <field name="ks_default_icon_color" placeholder="Select Icon Color"
+                                                               widget="Ks_dashboard_color_picker_owl"/>
+                                                    </div>
+                                                        <div class="col-6 d-flex flex-column gap-2">
+                                                        <label for="ks_button_color" string="Top Button Color"
+                                                               class="o_form_label"/>
+                                                        <field name="ks_button_color" placeholder="Select Top Button Color"
+                                                               widget="Ks_dashboard_color_picker_owl"/>
+                                                    </div>
+                                                    </div>
+
+                                                </div>
+                                                        <div class="col-6">
+                                                        <div class="d-flex flex-column gap-2">
+                                                          <label for="ks_dashboard_item_theme" string="Theme" class="o_form_label"/>
+                                                          <field name="ks_dashboard_item_theme" placeholder="Select Theme" class="mb-3" widget="ks_dashboard_item_theme"/>
+                                                        </div>
+
+
+                                                    <div class="row">
+                                                          <div class="col-6 d-flex flex-column gap-2">
+                                                              <label for="ks_background_color" string="Background Color" class="o_form_label"/>
+                                                              <field name="ks_background_color" placeholder="Select Background Color"
+                                                                     widget="Ks_dashboard_color_picker_owl"/>
+                                                          </div>
+                                                              <div class="col-6 d-flex flex-column gap-2">
+                                                                  <label for="ks_font_color" string="Font Color" class="o_form_label"/>
+                                                                  <field name="ks_font_color" placeholder="Select Font Color"
+                                                                         widget="Ks_dashboard_color_picker_owl"/>
+                                                              </div>
+                                                          </div>
+                                                      </div>
+                                                    </div>
+                                               </div>
+
+
+
+
+
+                                        </div>
+                                        <div class="row r-g-16" name="ks_colors"
+                                               invisible="(ks_dashboard_item_type == 'ks_tile') or (ks_dashboard_item_type == 'ks_to_do') or (ks_dashboard_item_type == 'ks_list_view') or (ks_dashboard_item_type == 'ks_kpi')">
+                                            <div class="col-6 d-flex flex-column gap-2" invisible="(ks_dashboard_item_type in ['ks_list_view', 'ks_pie_chart', 'ks_doughnut_chart', 'ks_polarArea_chart','ks_funnel_chart','ks_flower_view','ks_bullet_chart','ks_radialBar_chart','ks_radar_view'])">
+                                                <label for="ks_data_format" class="o_form_label"/>
+                                                <field name="ks_data_format"
+                                                   class="form-input-box form-control encapsulated-form-arrow bg-white"
+                                                   context="{'current_id':id}"
+                                                   invisible="(ks_dashboard_item_type in ['ks_list_view', 'ks_pie_chart', 'ks_doughnut_chart', 'ks_polarArea_chart','ks_funnel_chart','ks_flower_view','ks_bullet_chart','ks_radialBar_chart','ks_radar_view'])"
+                                                />
+                                            </div>
+                                            <div class="col-6 d-flex flex-column gap-2">
+                                                <label for="ks_chart_item_color" string="Chart Color Palette"
+                                                       class="o_form_label"/>
+                                                <field name="ks_chart_item_color" string="Chart Color Palette"
+                                                   context="{'current_id': id}"
+                                                   class="form-control form-input-box encapsulated-form-arrow bg-white"
+                                                   required="(ks_dashboard_item_type != 'ks_tile') and (ks_dashboard_item_type != 'ks_list_view') and (ks_dashboard_item_type != 'ks_kpi')"
+                                                />
+                                            </div>
+                                            <div class="col-6 d-flex flex-column gap-2" invisible="(ks_dashboard_item_type != 'ks_bar_chart') and (ks_dashboard_item_type != 'ks_horizontalBar_chart')">
+                                                <label for="ks_bar_chart_stacked" string="Stacked Bar Chart"
+                                                       class="o_form_label"/>
+                                                <field name="ks_bar_chart_stacked" string="Stacked Bar Chart"
+                                                   context="{'current_id': id}"
+                                                   invisible="(ks_dashboard_item_type != 'ks_bar_chart') and (ks_dashboard_item_type != 'ks_horizontalBar_chart')"/>
+                                            </div>
+                                            <div class="col-6 d-flex flex-column gap-2" invisible="(ks_dashboard_item_type in ['ks_polarArea_chart','ks_radar_view','ks_flower_view','ks_scatter_chart','ks_radialBar_chart','ks_list_view','ks_map_view'])">
+                                                <label for="ks_show_data_value" class="o_form_label"/>
+                                                <field name="ks_show_data_value"
+                                                   invisible="(ks_dashboard_item_type in ['ks_polarArea_chart','ks_radar_view','ks_flower_view','ks_scatter_chart','ks_radialBar_chart','ks_list_view','ks_map_view'])"/>
+                                            </div>
+
+                                            <div class="col-6 d-flex flex-column gap-2" invisible="(ks_dashboard_item_type in ['ks_bar_chart','ks_horizontalBar_chart','ks_line_chart','ks_area_chart',
+                                               'ks_polarArea_chart','ks_radar_view','ks_flower_view','ks_scatter_chart','ks_radialBar_chart','ks_bullet_chart','ks_list_view','ks_map_view'])or(ks_show_data_value == False)">
+                                                <label for="ks_data_label_type" class="o_form_label"/>
+                                                <field name="ks_data_label_type"
+                                                   class="form-control form-input-box encapsulated-form-arrow bg-white"
+                                                   invisible="(ks_dashboard_item_type in ['ks_bar_chart','ks_horizontalBar_chart','ks_line_chart','ks_area_chart',
+                                               'ks_polarArea_chart','ks_radar_view','ks_flower_view','ks_scatter_chart','ks_radialBar_chart','ks_bullet_chart','ks_list_view','ks_map_view'])or(ks_show_data_value == False)"/>
+                                            </div>
+
+
+                                            <!--                                <field name="ks_unit"-->
+                                            <!--                                invisible="(ks_dashboard_item_type =='ks_dashboard_graphs') or (ks_dashboard_item_type == 'ks_bullet_chart') or (ks_dashboard_item_type == 'ks_radialBar_chart') or (ks_dashboard_item_type == 'ks_flower_view')"/>-->
+                                            <!--                                <field name="ks_unit_selection" invisible="ks_unit == False"-->
+                                            <!--                                                                                required ="ks_unit == True"/>-->
+                                            <!--                                <field name="ks_chart_unit" invisible="(ks_unit_selection != 'custom')or(ks_unit == False)"-->
+                                            <!--                                                                                                                required="(ks_unit_selection == 'custom') and (ks_unit == True)"/>-->
+                                        </div>
+                                        <group style="width: 50% !important;" name="ks_to_colors">
+                                            <field name="ks_header_bg_color" widget="Ks_dashboard_color_picker_owl"
+                                                   invisible="(ks_dashboard_item_type != 'ks_to_do')">
+                                            </field>
+                                            <field name="ks_font_color"
+                                                   widget="Ks_dashboard_color_picker_owl"
+                                                   invisible="(ks_dashboard_item_type != 'ks_to_do')"/>
+                                            <field name="ks_button_color" widget="Ks_dashboard_color_picker_owl"
+                                                   invisible="(ks_dashboard_item_type != 'ks_to_do')"/>
+
+                                        </group>
+                                    </page>
+                                    <!--                        todo  -->
+                                    <page string="Actions" name="action_settings"
+                                          invisible="(ks_data_calculation_type != 'custom') or (ks_dashboard_item_type not in ['ks_tile','ks_kpi','ks_bar_chart','ks_line_chart','ks_area_chart','ks_horizontalBar_chart','ks_pie_chart','ks_doughnut_chart','ks_polarArea_chart','ks_list_view','ks_flower_view','ks_funnel_chart','ks_bullet_chart','ks_radialBar_chart','ks_radar_view','ks_scatter_chart']) or ((ks_list_view_type == 'ungrouped') and (ks_dashboard_item_type == 'ks_list_view'))">
+
+                                        <!--                            <group name="ks_show_messages"-->
+                                        <!--                                   attrs="{'invisible':[('ks_dashboard_item_type','not in',['ks_bar_chart','ks_horizontalBar_chart','ks_line_chart','ks_area_chart','ks_pie_chart','ks_doughnut_chart','ks_polarArea_chart'])]}">-->
+
+                                        <!--                            </group>-->
+
+                                        <field name="ks_action_lines" class="encapsulated-tab-box" required="1"
+                                               invisible="ks_dashboard_item_type not in ['ks_bar_chart','ks_horizontalBar_chart','ks_line_chart','ks_area_chart','ks_pie_chart','ks_doughnut_chart','ks_polarArea_chart','ks_radar_view','ks_flower_view','ks_bullet_chart','ks_funnel_chart','ks_list_view','ks_radialBar_chart','ks_scatter_chart']">
+                                            <list editable="bottom">
+                                                <field name="sequence" widget="handle"/>
+                                                <field name="ks_item_action_field" required="1"
+                                                       options="{'no_create': True, 'no_create_edit':True, 'no_open': True}"/>
+                                                <field name="ks_item_action_date_groupby" force_save="1"
+                                                       required="(ks_item_action_field_type == 'date_type')"
+                                                       readonly="(ks_item_action_field_type !='date_type')"/>
+                                                <field name="ks_item_action_field_type" column_invisible="True"/>
+                                                <field name="ks_action_item_name" column_invisible="True"/>
+                                                <field name="ks_chart_type" required="1"/>
+                                                <field name="ks_dashboard_item_id" column_invisible="True"/>
+                                                <field name="ks_model_id" column_invisible="True"/>
+                                                <field name="ks_sort_by_field"
+                                                       options="{'no_open':True,'no_create':True}"/>
+                                                <field name="ks_sort_by_order" readonly="ks_sort_by_field == False"/>
+                                                <field name="ks_record_limit"/>
+                                            </list>
+                                        </field>
+
+                                        <div class="row">
+                                            <div class="note-para mb-4" invisible="ks_dashboard_item_type not in ['ks_bar_chart','ks_horizontalBar_chart','ks_line_chart','ks_area_chart','ks_pie_chart','ks_doughnut_chart','ks_polarArea_chart']">
+                                                Below action will be performed at the end of the Drill Down Action
+                                            </div>
+                                            <div class="col-6 d-flex gap-2" invisible="1">
+                                                <label for="ks_is_client_action" string="Client Action"
+                                                       class="o_form_label"/>
+                                                <field name="ks_is_client_action" placeholder="Select Client Action" class="mb-0 w-fit-content"/>
+                                            </div>
+                                            <div class="col-6 d-flex flex-column gap-2" invisible="(ks_dashboard_item_type == 'ks_list_view')">
+                                                <label for="ks_actions" string="Item Action" class="o_form_label"/>
+                                                <field name="ks_actions" string="Item Action" placeholder="Select Item Action"
+                                                       class="form-control form-input-box encapsulated-form-arrow"
+                                                       options="{'no_create': True, 'no_create_edit':True, 'no_open': True}"/>
+                                            </div>
+
+                                            <div class="col-6 d-flex flex-column gap-2" invisible="1">
+                                                <label for="ks_client_action" string="Client Action Item"
+                                                       class="o_form_label"/>
+                                                <field name="ks_client_action" placeholder="Client Action Item"
+                                                       options="{'no_create': True, 'no_create_edit':True, 'no_open': True}"
+                                                       class="form-control form-input-box encapsulated-form-arrow"
+                                                       required="(ks_is_client_action == True)"/>
+                                            </div>
+                                        </div>
+                                    </page>
+                                    <page string="Target" name="target_settings"
+                                                invisible="(((ks_dashboard_item_type not in ['ks_bar_chart', 'ks_horizontalBar_chart', 'ks_line_chart', 'ks_area_chart', 'ks_kpi']) or ((ks_chart_groupby_type != 'date_type') and (ks_dashboard_item_type != 'ks_kpi'))) or ((ks_dashboard_item_type == 'ks_list_view')) or ((ks_dashboard_item_type == 'ks_kpi') and (ks_model_id_2 != False) and (ks_data_comparison in ['None', 'Ratio'])))">
+                                        <div class="row r-g-16">
+                                            <div class="col-6 d-flex align-items-center gap-2">
+                                                <label for="ks_goal_enable" string="Enable Target"
+                                                       class="o_form_label"/>
+                                                <field name="ks_goal_enable" placeholder="Enable Target" class="mb-0" context="{'current_id': id}"/>
+                                            </div>
+                                            <div class="col-6 d-flex align-items-center gap-2" invisible="(ks_goal_enable == False) or (ks_dashboard_item_type not in ['ks_bar_chart','ks_horizontalBar_chart'])">
+                                                <label for="ks_goal_bar_line" string="Show Target As Line"
+                                                       class="o_form_label"/>
+                                                <field name="ks_goal_bar_line" placeholder="Show Target As Line"
+                                                       context="{'current_id': id}"/>
+                                            </div>
+                                            <div class="col-6 d-flex flex-column  gap-2" invisible="(ks_goal_enable == False)">
+                                                <label for="ks_standard_goal_value" string="Standard Target"
+                                                       class="o_form_label"/>
+                                                <field name="ks_standard_goal_value" placeholder="Enter Standard Target" class="form-input-box form-control"/>
+                                            </div>
+                                            <div colspan="2" invisible="(ks_goal_enable == False)">
+                                                <span name="ks_target_span" style="font-style: italic; color: #888888;">
+                                                    ** Please enter positive standard target.
+                                                </span>
+                                            </div>
+                                            <div class="col-6 d-flex flex-column gap-2" invisible="(ks_goal_enable == False) or (ks_dashboard_item_type != 'ks_kpi')">
+                                                <label for="ks_target_view" string="View" class="o_form_label"/>
+                                                <field name="ks_target_view" placeholder="Select View" class="encapsulated-icons-box" widget="radio"/>
+                                            </div>
+                                            <div class="col-6 d-flex align-items-center gap-2" invisible="ks_dashboard_item_type != 'ks_kpi'">
+                                                <label for="ks_send_mail" string="Send Mail" class="o_form_label"/>
+                                                <field name="ks_send_mail"
+                                                       class="mb-0" placeholder="Send Mail"
+                                                       required="ks_dashboard_item_type == 'ks_kpi'"/>
+                                            </div>
+                                            <div class="col-6" invisible="(ks_send_mail == False)">
+                                                <label for="ks_email_to_ids" string="Email Address"
+                                                       class="o_form_label"/>
+                                                <field name="ks_email_to_ids" widget="many2many_tags" placeholder="Enter Email Address"
+                                                       class="form-input-box form-control encapsulated-form-arrow  input-full"
+                                                       required="(ks_send_mail == True) and (ks_dashboard_item_type == 'ks_kpi')"/>
+                                            </div>
+                                        </div>
+                                        <div class="col-12" invisible="(ks_goal_enable == False) or (ks_dashboard_item_type == 'ks_kpi') or (ks_chart_relation_sub_groupby != False)">
+                                            All Target Lines Changes Will be reflected on Chart after saving the record
+                                            and
+                                            pagination will be ignore .
+                                        </div>
+                                        <div class="col-12" invisible="(ks_goal_enable == False) or (ks_dashboard_item_type == 'ks_kpi') or (ks_chart_relation_sub_groupby != False)">
+                                            <label for="ks_goal_lines" string="Target Lines" class="o_form_label"/>
+                                            <field name="ks_goal_lines">
+                                                <list string="Goal Lines"
+                                                      editable="top"
+                                                      widget="section_and_note_one2many">
+                                                    <control>
+                                                        <create string="Add a Line"/>
+                                                    </control>
+                                                    <field name="ks_goal_date" required="1"/>
+                                                    <field name="ks_goal_value"/>
+                                                </list>
+                                            </field>
+                                        </div>
+                                    </page>
+
+                                    <page string="Advance Configuration" name="adv_conf"
+                                          invisible="(ks_dashboard_item_type == 'ks_to_do') or (ks_dashboard_item_type == 'ks_map_view')">
+                                      <div class="row r-g-16" invisible="(ks_dashboard_item_type == 'ks_to_do') or (ks_dashboard_item_type == 'ks_tile') or (ks_dashboard_item_type == 'ks_kpi')">
+
+                                          <div class="col-6 encapsulated-configuration-grid" invisible="(ks_dashboard_item_type in ['ks_tile', 'ks_kpi', 'ks_list_view'])">
+                                              <label for="ks_hide_legend" string="Show Legend" class="o_form_label"/>
+                                              <field name="ks_hide_legend" context="{'current_id': id}"
+                                                     class="w-fit-content mb-0" placeholder="Show Legend"
+                                                     />
+                                          </div>
+                                          <div class="col-6 encapsulated-configuration-grid"
+                                               invisible="(ks_data_calculation_type == 'query') or (ks_dashboard_item_type == 'ks_funnel_chart') or (ks_dashboard_item_type == 'ks_bullet_chart')or (ks_dashboard_item_type =='ks_radialBar_chart') or (ks_dashboard_item_type =='ks_scatter_chart')">
+                                              <label for="ks_show_records" string="Show Records" class="o_form_label"/>
+                                              <field name="ks_show_records" force_save="1"
+                                                     class="w-f-content mb-0" placeholder="Show Records"
+                                                     />
+                                          </div>
+
+                                          <div class="col-6 encapsulated-configuration-grid" invisible="((ks_dashboard_item_type == 'ks_list_view')and(ks_list_view_type == 'ungrouped')) or (ks_data_calculation_type == 'query') or ((ks_dashboard_item_type in ['ks_list_view','ks_bar_chart','ks_pie_chart','ks_to_do', 'ks_scatter_chart', 'ks_line_chart', 'ks_area_chart', 'ks_horizontalBar_chart','ks_doughnut_chart','ks_polarArea_chart','ks_radar_view','ks_flower_view', 'ks_radialBar_chart', 'ks_funnel_chart', 'ks_bullet_chart']) and (ks_chart_data_count_type == 'count'))">
+                                              <label for="ks_multiplier_active" string="Apply Multiplier"
+                                                     class="o_form_label"/>
+                                              <field name="ks_multiplier_active" force_save="1"
+                                                     class="w-fit-content mb-0" placeholder="Apply Multiplier"
+                                                     />
+                                          </div>
+
+                                          <div class="col-6 encapsulated-configuration-grid " invisible="(ks_chart_data_count_type == 'count') or (ks_chart_relation_sub_groupby != False) or (ks_model_id == False) or (ks_dashboard_item_type == 'ks_list_view') or (ks_dashboard_item_type not in  ['ks_bar_chart', 'ks_horizontalBar_chart']) or (ks_data_calculation_type != 'custom')">
+                                              <label for="ks_chart_cumulative" string="Cumulative As Line"
+                                                     class="o_form_label"/>
+                                              <field name="ks_chart_cumulative"/>
+                                          </div>
+                                          <div class="col-6 encapsulated-configuration-grid" invisible="(ks_dashboard_item_type != 'ks_list_view')">
+                                              <label for="ks_pagination_limit" string="Pagination Limit" class="o_form_label"/>
+                                              <field name="ks_pagination_limit" class="form-control form-input-box" placeholder="Enter Pagination Limit"
+                                                     invisible="(ks_dashboard_item_type != 'ks_list_view')" required="(ks_dashboard_item_type == 'ks_list_view')"/>
+                                          </div>
+
+                                          <div class="col-6 d-flex flex-column " invisible="(ks_chart_data_count_type == 'count') or (ks_chart_relation_sub_groupby != False) or (ks_model_id == False) or (ks_dashboard_item_type == 'ks_list_view') or (ks_dashboard_item_type not in  ['ks_bar_chart', 'ks_line_chart', 'ks_area_chart', 'ks_horizontalBar_chart']) or (ks_data_calculation_type != 'custom')">
+                                                <label for="ks_chart_cumulative_field" string="Cumulative Fields"
+                                                     class="o_form_label" />
+                                                <field name="ks_chart_cumulative_field" widget='many2many_tags' class="form-control form-input-box encapsulated-form-arrow bg-white encap-custom-input"
+                                                     options="{'no_create': True, 'no_create_edit':True, 'no_open': True}"
+                                                     domain="[('id', 'in', ks_chart_measure_field)]"/>
+                                          </div>
+
+                                          <div class="col-12 flex-column d-flex gap-2" invisible="(ks_multiplier_active == False ) or (((ks_dashboard_item_type == 'ks_list_view')and(ks_list_view_type == 'ungrouped')) or (ks_data_calculation_type == 'query') or ((ks_dashboard_item_type in ['ks_list_view','ks_bar_chart','ks_pie_chart','ks_to_do', 'ks_scatter_chart', 'ks_line_chart', 'ks_area_chart', 'ks_horizontalBar_chart','ks_doughnut_chart','ks_polarArea_chart','ks_radar_view','ks_flower_view', 'ks_radialBar_chart', 'ks_funnel_chart', 'ks_bullet_chart']) and (ks_chart_data_count_type == 'count')))">
+                                              <label for="ks_multiplier_lines" string="Multiplier Lines"
+                                                     class="o_form_label"/>
+                                              <field name="ks_multiplier_lines"
+                                                     class="encapsulated-multiliner"
+
+                                                     style="margin-top:10px">
+                                                  <list editable="bottom" create="0" delete="0">
+                                                      <field name="ks_model_id" column_invisible="True"/>
+                                                      <field name="ks_multiplier_fields" readonly="True"
+                                                             options="{'no_create': True, 'no_create_edit':True, 'no_open': True}"/>
+                                                      <field name="ks_multiplier_value"/>
+                                                  </list>
+                                              </field>
+                                          </div>
+                                      </div>
+
+
+                                        <div class="row" invisible="ks_dashboard_item_type in ['ks_list_view','ks_bar_chart','ks_pie_chart','ks_to_do','ks_line_chart', 'ks_area_chart', 'ks_horizontalBar_chart','ks_doughnut_chart','ks_polarArea_chart','ks_bullet_chart','ks_funnel_chart','ks_radialBar_chart','ks_flower_view','ks_radar_view','ks_scatter_chart']">
+                                            <div class="col-6 d-flex  gap-2">
+                                                <label for="ks_multiplier_active" string="Apply Multiplier"
+                                                       class="o_form_label"/>
+                                                <field name="ks_multiplier_active" placeholder="Apply Multiplier" class="w-fit-content mb-0" force_save="1"/>
+                                            </div>
+                                            <div class="col-6 d-flex flex-column gap-2" invisible="ks_multiplier_active == False">
+                                                <label for="ks_multiplier" string="Multiplier" class="o_form_label"/>
+                                                <field name="ks_multiplier" placeholder="Enter Multiplier" class="form-control form-input-box"/>
+                                            </div>
+
+                                        </div>
+                                    </page>
+                                    <page string="Item Description" name="ks_item_description">
+                                        <group class="encapsulated-textarea-box">
+
+                                            <label for="ks_info" string="Item Description" class="o_form_label"/>
+                                            <field name="ks_info" placeholder="Enter Item Description" class="encapsulated-textarea" nolabel="1"/>
+                                        </group>
+                                    </page>
+                                    <page string="Column Data Type" name="data_type"
+                                          invisible="(upload_excel == False or not ks_group_by_lines) or ks_data_calculation_type == 'query' or data_source != 'excel'">
+                                        <field name="ks_group_by_lines" editable="bottom">
+                                            <list editable="bottom" create="0" delete="0">
+                                                <field name="name" readonly="1"/>
+                                                <field name="ttype"/>
+                                                <field name="ks_dashboard_group_by_id" column_invisible="True"/>
+                                            </list>
+                                        </field>
+                                        <button name="create_table" type="object" string="Create Table"
+                                                class="oe_highlight"
+                                                invisible="upload_excel == False or not ks_group_by_lines  or ks_model_id != False"/>
+
+                                    </page>
+                                    <page string="Column Data Type" name="csv_data_type"
+                                          invisible="(ks_csv_field == False or not ks_csv_group_by_lines) or ks_data_calculation_type == 'query' or data_source != 'csv'">
+                                        <field name="ks_csv_group_by_lines" editable="bottom">
+                                            <list editable="bottom" create="0" delete="0">
+                                                <field name="name" readonly="1"/>
+                                                <field name="ttype"/>
+                                                <field name="ks_dashboard_csv_group_by_id" column_invisible="True"/>
+                                            </list>
+                                        </field>
+                                        <button name="csv_create_table" type="object" string="Create Table"
+                                                class="oe_highlight"
+                                                invisible="ks_csv_field == False or not ks_csv_group_by_lines or ks_model_id != False"/>
+
+                                    </page>
+                                </notebook>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </field>
+        </record>
+
+
+        <!--         Duplicate Button in action menu-->
+        <record model="ir.actions.server" id="ks_duplicate_dashboard">
+            <field name="name">Duplicate</field>
+            <field name="type">ir.actions.server</field>
+            <field name="model_id" ref="model_ks_dashboard_ninja_item"/>
+            <field name="binding_model_id" ref="model_ks_dashboard_ninja_item"/>
+            <field name="state">code</field>
+            <field name="code">
+                action = {
+                'name' : 'Dashboard Item Action',
+                'type': 'ir.actions.act_window',
+                'context': {'default_ks_dashboard_item_ids': records.ids, 'default_ks_action':'duplicate'},
+                'view_mode': 'form',
+                'res_model': 'ks_ninja_dashboard.item_action',
+                'views': [(env.ref('ks_dashboard_ninja.ks_dashboard_ninja_action').id, 'form')],
+                'target':'new'
+                }
+            </field>
+        </record>
+
+        <!--         Move Button in action menu-->
+        <record model="ir.actions.server" id="ks_move_dashboard">
+            <field name="name">Move</field>
+            <field name="type">ir.actions.server</field>
+            <field name="model_id" ref="model_ks_dashboard_ninja_item"/>
+            <field name="binding_model_id" ref="ks_dashboard_ninja.model_ks_dashboard_ninja_item"/>
+            <field name="state">code</field>
+            <field name="binding_view_types">form</field>
+            <field name="code">
+                action = {
+                'type': 'ir.actions.act_window',
+                'name' : 'Dashboard Item Action',
+                'context': {'default_ks_dashboard_item_ids': records.ids, 'default_ks_action':'move'},
+                'view_mode': 'form',
+                'res_model': 'ks_ninja_dashboard.item_action',
+                'views': [(env.ref('ks_dashboard_ninja.ks_dashboard_ninja_action').id, 'form')],
+                'target':'new'
+                }
+            </field>
+        </record>
+
+        <record model="ir.actions.act_window" id="ks_dashboard_ninja.item_action_window">
+            <field name="name">Dashboard Items</field>
+            <field name="res_model">ks_dashboard_ninja.item</field>
+            <field name="view_mode">list,form</field>
+        </record>
+    </data>
+
+</odoo>

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="view_sale_order_form_inherit_ks" model="ir.ui.view">
+            <field name="name">sale.order.form.inherit.ks</field>
+            <field name="model">sale.order</field>
+            <field name="inherit_id" ref="sale.view_order_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='payment_term_id']" position="after">
+                    <field name="stock_decifient"/>
+                </xpath>
+                <xpath expr="//button[@name='action_confirm']" position="after">
+                    <button
+                        name="mail_to_3pl"
+                        string="Mail to 3PL"
+                        invisible="mail_count != 0 or not stock_decifient"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-envelope">
+                    </button>
+                    <button
+                        name="mail_to_3pl"
+                        string="Mail to Account Manager"
+                        invisible="mail_count != 1 or not stock_decifient"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-envelope">
+                    </button>
+                </xpath>
+                <!-- Dubai: highlight cash handling charge line when rate differs from 1.2% -->
+                <xpath expr="//field[@name='order_line']/list" position="attributes">
+                    <attribute name="decoration-warning">state in ['draft', 'sent'] and is_product_archived or is_cash_handling_rate_deviation</attribute>
+                </xpath>
+                <xpath expr="//field[@name='order_line']/list/field[@name='product_id']" position="before">
+                    <field name="is_cash_handling_charge" column_invisible="1"/>
+                    <field name="is_cash_handling_rate_deviation" column_invisible="1"/>
+                </xpath>
+           </field>
+        </record>
+    </data>
+</odoo>

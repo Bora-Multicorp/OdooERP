@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_sb_brc_master_root" name="SB/BRC Master" sequence="100" groups="base.group_user"/>
+    <menuitem id="menu_sb_brc_master_report" name="SB/BRC Master Report" parent="menu_sb_brc_master_root" action="action_sb_brc_master" sequence="10"/>
+</odoo>

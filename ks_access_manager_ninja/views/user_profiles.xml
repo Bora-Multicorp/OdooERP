@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="view_res_user_profiles_form" model="ir.ui.view">
+        <field name="name">res.user.profiles.form</field>
+        <field name="model">user.profiles</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button
+                                name="ks_action_create_user"
+                                type="object"
+                                string="Create User"
+                                class="oe_stat_button"
+                                icon="fa-user"
+                        />
+                        <button
+                                name="ks_show_model_access_ids"
+                                type="object"
+                                class="oe_stat_button"
+                                icon="fa-book"
+                        >
+                            <field
+                                    name="ks_model_access_count"
+                                    widget="statinfo"
+                                    string="Access Rights"
+                            />
+                        </button>
+                        <button
+                                name="ks_show_rule_ids"
+                                type="object"
+                                class="oe_stat_button"
+                                icon="fa-server"
+                        >
+                            <field
+                                    name="ks_rules_count"
+                                    widget="statinfo"
+                                    string="Record Rules"
+                            />
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1>
+                            <field name="name" required="1"/>
+                        </h1>
+                        <group>
+                            <field name="ks_user_ids" options="{'no_create': True}" widget="many2many_tags"
+                                   domain="[('ks_admin_user', '=', False)]"/>
+                            <field name="ks_setting_id" invisible="1"/>
+                            <field name="color" invisible="0" widget="color_picker"/>
+                        </group>
+                    </div>
+                    <notebook>
+                        <page string="Access Rights">
+                            <field name="implied_ids" nolabel="1" domain="[('id', 'not in', [ks_setting_id])]"/>
+                        </page>
+                        <page string="Activate / Deactivate">
+                            <field name="ks_line_ids">
+                                <list
+                                        editable="bottom"
+                                        decoration-muted="not ks_is_enabled"
+                                >
+                                    <field name="ks_user_id" options="{'no_create': True}"
+                                           domain="[('ks_admin_user', '=', False)]"/>
+                                    <field name="ks_date_from"/>
+                                    <field name="ks_date_to"/>
+                                    <field name="ks_is_enabled"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="user_profiles_form_inherit" model="ir.ui.view">
+        <field name="name">user.profiles.form.inherit</field>
+        <field name="model">user.profiles</field>
+        <field name="inherit_id" ref="ks_access_manager_ninja.view_res_user_profiles_form"/>
+        <field name="arch" type="xml">
+            <field name="implied_ids" position="after"/>
+        </field>
+    </record>
+    <record id="view_res_user_profiles_tree" model="ir.ui.view">
+        <field name="name">user.profiles.list.view</field>
+        <field name="model">user.profiles</field>
+        <field name="arch" type="xml">
+            <list duplicate="0">
+                <field name="name"/>
+                <field name="ks_user_ids" widget="many2many_tags" />
+            </list>
+        </field>
+    </record>
+    <record id="view_res_users_profile_search" model="ir.ui.view">
+        <field name="name">user.profiles.search.view</field>
+        <field name="model">user.profiles</field>
+        <field name="arch" type="xml">
+            <search string="Profiles">
+                <field name="name"/>
+                <field name="ks_user_ids"/>
+                <field name="implied_ids"/>
+            </search>
+        </field>
+    </record>
+    <record model="ir.actions.act_window" id="action_res_user_profiles_tree">
+        <field name="name">User Profile</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">user.profiles</field>
+        <field name="view_id" ref="view_res_users_profile_search"/>
+    </record>
+
+</odoo>

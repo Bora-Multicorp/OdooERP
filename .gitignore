@@ -2,6 +2,7 @@
 *.pyc
 *.pyo
 *.pyd
+*.DS_Store
 
 # Bytecode cache directories
 __pycache__/

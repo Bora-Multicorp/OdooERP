@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Wizard-first flow: open wizard, then tree view, then optional Excel export -->
+    <record id="action_purchase_order_otek_report_wizard" model="ir.actions.act_window">
+        <field name="name">Otek Purchase Order Report</field>
+        <field name="res_model">ks.purchase.order.otek.report.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <!-- Legacy: direct Excel download (no date filter, all Otek) -->
+    <record id="action_purchase_order_otek_report_direct_xlsx" model="ir.actions.act_url">
+        <field name="name">Otek Purchase Order Report (Direct Excel)</field>
+        <field name="url">/purchase_order/export_otek_xlsx</field>
+        <field name="target">self</field>
+    </record>
+
+    <menuitem id="menu_purchase_order_otek_report"
+              name="Otek Purchase Order Report"
+              parent="purchase.menu_purchase_root"
+              action="action_purchase_order_otek_report_wizard"
+              sequence="100"/>
+</odoo>

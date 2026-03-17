@@ -1,0 +1,36 @@
+.ks_body_class .o_spinner {
+  padding: 50px;
+  position: relative;
+  text-align: center;
+  img{
+   display : none;
+  }
+}
+
+.ks_body_class .o_spinner:before {
+  content: "";
+  height: 105px;
+  width: 105px;
+  margin: -38px auto auto -23px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  border-radius: 100%;
+  animation: rotation .9s infinite linear;
+  background: conic-gradient(from 180deg at 50% 50%, #E84A5F 0deg, rgba(232, 74, 95, 0) 360deg);
+  mask: radial-gradient(circle, transparent 50%, black 51%);
+  -webkit-mask: radial-gradient(circle, transparent 50%, black 51%);
+}
+
+@keyframes rotation {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(359deg);
+  }
+}
+
+.ks_body_class .o_blockUI {
+    z-index: 1055 !important;
+}

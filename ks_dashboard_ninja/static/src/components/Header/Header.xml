@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<template>
+    <t t-name="ks_dashboard_ninja.Ks_dashboard_ninja_header" owl="1">
+        <section class="screen-info mb-2 container-fluid" t-ref="headerRootRef">
+            <div class="d-flex align-items-center justify-content-between info gap-1 flex-wrap w-100 ks_dashboard_top_menu-new">
+                <div class="d-flex align-items-center gap-2">
+
+                    <div id="ks_dashboard_title" class="user-template-title dash-dd-2">
+                        <t t-if="['manager', 'user', 'layout'].includes(state.mode)" t-call="ks_dashboard_ninja.ks_dn_layout_container"/>
+
+                        <div class="form-input-box form-control ps-4" t-if="['edit'].includes(state.mode)">
+                            <input id="ks_dashboard_title_input" type="text" maxlength="35" t-att-value="defaultLayout.name"
+                                    t-ref="layoutNameRef"/>
+                        </div>
+                    </div>
+                    <t t-if="!isMobile" t-call="ks_dashboard_ninja.ks_header_dropdowns"/>
+                    <KsDateFilter t-if="['manager', 'user', 'custom_date'].includes(state.mode)" update="props.dashboardActions.updateDateFilter"
+                                  dashboardData.alike="props.dashboardData" updateHeaderMode.bind="updateMode"
+                                  data="props.dashboardData.dateFilterData"/>
+                    <DNFilter t-if="['manager', 'user'].includes(state.mode) and !isMobile" update.bind="props.dashboardActions.updateFilter"
+                              dashboardData="props.dashboardData"/>
+
+                    <t t-if="props.dashboardData.ks_dashboard_manager">
+                        <input accept=".json " name="file" class="d-none" type="file" t-ref="importRef" t-on-change="onFileChange"/>
+                    </t>
+               </div>
+
+                <t t-if="['manager'].includes(state.mode) &amp;&amp; !isMobile">
+                    <div class="new-features ks_dashboard_top_settings hide-in-edit d-flex align-items-center ms-auto">
+                        <div class="d-lg-flex d-none">
+                                <div class="dropdown dash-dd-2 magic-star-dd" title="AI Features">
+                                    <a class="text-decoration-none dropdown-toggle img-bg info me-lg-2 me-1" href="#"
+                                        role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <svg width="20" height="21" viewBox="0 0 20 21" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M8.01757 5.03498C8.24044 4.43268 9.09232 4.43268 9.31519 5.03498L10.7982 9.04271C10.8683 9.23208 11.0176 9.38137 11.2069 9.45144L15.2147 10.9344C15.817 11.1573 15.817 12.0092 15.2147 12.2321L11.2069 13.7151C11.0176 13.7851 10.8683 13.9344 10.7982 14.1238L9.31519 18.1315C9.09232 18.7338 8.24044 18.7338 8.01757 18.1315L6.53457 14.1238C6.4645 13.9344 6.31521 13.7851 6.12585 13.7151L2.11811 12.2321C1.51581 12.0092 1.51581 11.1573 2.11811 10.9344L6.12585 9.45144C6.31521 9.38137 6.4645 9.23208 6.53457 9.04271L8.01757 5.03498Z" fill="" stroke="" stroke-width="1.25"/>
+                                            <path d="M17.6239 5L13.6239 5" stroke="" stroke-width="1.25" stroke-linecap="round"/>
+                                            <path d="M15.6244 7L15.6244 3" stroke="" stroke-width="1.25" stroke-linecap="round"/>
+                                        </svg>
+                                    </a>
+
+                                    <ul class="dropdown-menu py-0 ks-dropdown-menu">
+                                        <li>
+                                            <button class="feature-btn dropdown-item" t-on-click="openGenerateAiDialog" title="Generate the charts of a particular model using AI">
+                                                <span>
+                                                    <t t-call="generate_ai_svg"/>
+                                                </span>
+                                                Generate with AI
+                                            </button>
+                                        </li>
+                                        <li>
+                                            <button class="feature-btn dropdown-item" t-on-click="openExplainWithAI">
+                                                <span>
+<!--                                                    <img src="/ks_dashboard_ninja/static/images/dashboardOverview/convertshape.png" alt="convertshape"-->
+<!--                                                        class="img-fluid me-2" loading="lazy"/>-->
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none" class="me-2"><path d="M14.668 3.43325V5.89992C14.668 7.39992 14.068 7.99992 12.568 7.99992H10.768C9.26797 7.99992 8.66797 7.39992 8.66797 5.89992V3.43325C8.66797 1.93325 9.26797 1.33325 10.768 1.33325H12.568C14.068 1.33325 14.668 1.93325 14.668 3.43325Z" fill="#6789C6"></path><path d="M7.33203 10.1V12.5667C7.33203 14.0667 6.73203 14.6667 5.23203 14.6667H3.43203C1.93203 14.6667 1.33203 14.0667 1.33203 12.5667V10.1C1.33203 8.6 1.93203 8 3.43203 8H5.23203C6.73203 8 7.33203 8.6 7.33203 10.1Z" fill="#6789C6"></path><path d="M9.85299 14.6667C9.67299 14.6667 9.50633 14.5667 9.41966 14.4133C9.33299 14.2533 9.33299 14.0667 9.42633 13.9067L10.073 12.8267C10.213 12.5867 10.5197 12.5133 10.7597 12.6533C10.9997 12.7933 11.073 13.1 10.933 13.34L10.813 13.54C12.4597 13.1133 13.673 11.62 13.673 9.84668C13.673 9.57335 13.8997 9.34668 14.173 9.34668C14.4463 9.34668 14.6663 9.57335 14.6663 9.85335C14.6663 12.5067 12.5063 14.6667 9.85299 14.6667Z" fill="#6789C6"></path><path d="M1.83203 6.64659C1.5587 6.64659 1.33203 6.42659 1.33203 6.14659C1.33203 3.49325 3.49203 1.33325 6.14536 1.33325C6.33203 1.33325 6.49203 1.43325 6.58536 1.58659C6.67203 1.74659 6.67203 1.93325 6.5787 2.09325L5.93203 3.16659C5.78536 3.40659 5.4787 3.48659 5.24536 3.33992C5.00536 3.19992 4.93203 2.89325 5.07203 2.65325L5.19203 2.45325C3.55203 2.87992 2.33203 4.37325 2.33203 6.14659C2.33203 6.42659 2.10536 6.64659 1.83203 6.64659Z" fill="#6789C6"></path></svg>
+                                                </span>
+                                                Explain with AI
+                                            </button>
+                                        </li>
+
+                                        <li>
+                                            <button class="feature-btn d-xl-none d-block dark dropdown-item" t-on-click="createNewItem">
+                                                <span>
+<!--                                                    <img src="/ks_dashboard_ninja/static/images/dashboardOverview/Graph 1.svg" alt="Graph" class="img-fluid me-1"-->
+<!--                                                        loading="lazy"/>-->
+                                                    <svg width="25" height="23" viewBox="0 0 20 21" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <mask id="mask0_9094_3795" style="mask-type:luminance" maskUnits="userSpaceOnUse" x="0" y="0" width="20" height="21">
+                                                    <rect y="0.5" width="20" height="20" fill="white"/>
+                                                    </mask>
+                                                    <g mask="url(#mask0_9094_3795)">
+                                                    <path d="M8.54411 5.40375L8.77611 8.85371L8.89128 10.5877C8.89253 10.766 8.92045 10.9432 8.97436 11.1135C9.11345 11.444 9.44811 11.654 9.81219 11.6393L15.3599 11.2764C15.6001 11.2725 15.8321 11.3623 16.0048 11.5262C16.1487 11.6628 16.2416 11.8415 16.2709 12.0336L16.2808 12.1503C16.0512 15.3292 13.7164 17.9807 10.5441 18.6651C7.37174 19.3495 4.11866 17.9037 2.55104 15.1125C2.0991 14.3016 1.81682 13.4104 1.72076 12.491C1.68064 12.2188 1.66297 11.9439 1.66793 11.6689C1.66297 8.26074 4.09 5.31426 7.48739 4.60394C7.89629 4.54026 8.29714 4.75673 8.46111 5.12974C8.50353 5.21612 8.53153 5.30864 8.54411 5.40375Z" fill="#04A9CC"/>
+                                                    <path opacity="0.4" d="M18.3333 8.67687L18.3275 8.70403L18.3107 8.74352L18.313 8.85196C18.3043 8.99554 18.2488 9.13371 18.1533 9.24538C18.0537 9.36163 17.9177 9.44079 17.768 9.47154L17.6767 9.48404L11.276 9.89879C11.0631 9.91979 10.8511 9.85113 10.6928 9.70996C10.5608 9.59221 10.4765 9.43338 10.4527 9.26221L10.0231 2.87084C10.0156 2.84923 10.0156 2.82581 10.0231 2.80419C10.0289 2.62802 10.1065 2.46149 10.2384 2.34182C10.3702 2.22214 10.5456 2.15929 10.725 2.16731C14.5249 2.26398 17.7186 4.99645 18.3333 8.67687Z" fill="#04A9CC"/>
+                                                    </g>
+                                                    </svg>
+                                                </span>
+                                                Create New Chart
+                                            </button>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <button class="feature-btn dark d-xl-block d-none me-0" t-on-click="createNewItem" title="Add the Charts to Dashboard">
+                                    <span>
+                                        <svg width="25" height="23" viewBox="0 0 20 21" fill="none" xmlns="http://www.w3.org/2000/svg" class="">
+                                            <mask id="mask0_9094_3795" style="mask-type:luminance" maskUnits="userSpaceOnUse" x="0" y="0" width="20" height="21">
+                                                <rect y="0.5" width="20" height="20" fill="white"/>
+                                            </mask>
+                                            <g mask="url(#mask0_9094_3795)">
+                                                <path d="M8.54411 5.40375L8.77611 8.85371L8.89128 10.5877C8.89253 10.766 8.92045 10.9432 8.97436 11.1135C9.11345 11.444 9.44811 11.654 9.81219 11.6393L15.3599 11.2764C15.6001 11.2725 15.8321 11.3623 16.0048 11.5262C16.1487 11.6628 16.2416 11.8415 16.2709 12.0336L16.2808 12.1503C16.0512 15.3292 13.7164 17.9807 10.5441 18.6651C7.37174 19.3495 4.11866 17.9037 2.55104 15.1125C2.0991 14.3016 1.81682 13.4104 1.72076 12.491C1.68064 12.2188 1.66297 11.9439 1.66793 11.6689C1.66297 8.26074 4.09 5.31426 7.48739 4.60394C7.89629 4.54026 8.29714 4.75673 8.46111 5.12974C8.50353 5.21612 8.53153 5.30864 8.54411 5.40375Z" fill="#04A9CC"/>
+                                                <path opacity="0.4" d="M18.3333 8.67687L18.3275 8.70403L18.3107 8.74352L18.313 8.85196C18.3043 8.99554 18.2488 9.13371 18.1533 9.24538C18.0537 9.36163 17.9177 9.44079 17.768 9.47154L17.6767 9.48404L11.276 9.89879C11.0631 9.91979 10.8511 9.85113 10.6928 9.70996C10.5608 9.59221 10.4765 9.43338 10.4527 9.26221L10.0231 2.87084C10.0156 2.84923 10.0156 2.82581 10.0231 2.80419C10.0289 2.62802 10.1065 2.46149 10.2384 2.34182C10.3702 2.22214 10.5456 2.15929 10.725 2.16731C14.5249 2.26398 17.7186 4.99645 18.3333 8.67687Z" fill="#04A9CC"/>
+                                            </g>
+                                        </svg>
+
+                                    </span>
+                                    <span class="ellipsis-content max-width-medium-130">Create New Chart</span>
+                                </button>
+
+                        </div>
+                    </div>
+                </t>
+
+                <t t-if="['edit', 'layout'].includes(state.mode) &amp;&amp; !isMobile">
+                    <t t-call="ks_dashboard_ninja.header_mode_buttons">
+                        <t t-set="buttons_condition" t-value="['edit', 'layout'].includes(state.mode)"/>
+                        <t t-set="buttons" t-value="header_mode_buttons[state.mode].buttons"/>
+                    </t>
+                </t>
+            </div>
+        </section>
+    </t>
+
+    <t t-name="ks_dashboard_ninja.ks_header_dropdowns">
+        <t t-foreach="dropdowns" t-as="dropdown" t-key="dropdown_index">
+            <t t-if="dropdown.dropdown_items">
+                <Dropdown menuClass="'ks-dropdown-menu'" t-if="dropdown.modes.includes(state.mode)">
+                    <t t-set-slot="content">
+                        <DropdownItem
+                            t-foreach="dropdown.dropdown_items"
+                            t-as="dropdown_item" t-key="dropdown_item_index"
+                            class="{ '': true }"
+                            t-if="dropdown_item.modes.includes(state.mode)"
+                            onSelected="dropdown_item.func">
+                            <span class="me-2 added-features">
+                                <t t-call="{{ dropdown_item.svg }}"/>
+                            </span>
+                            <t t-esc="dropdown_item.name"/>
+                        </DropdownItem>
+                    </t>
+                    <span class="img-bg info">
+                        <t t-call="{{ dropdown.svg }}"/>
+                    </span>
+
+                </Dropdown>
+            </t>
+            <t t-else="">
+                <DropdownItem class="{
+                    'img-bg info cursor-pointer': true,
+                    'nav-active': dropdown.name === 'Bookmark Dashboard' &amp;&amp; state.isDashboardBookmarked
+                }" onSelected="dropdown.func" t-if="dropdown.modes.includes(state.mode)"
+                  attrs="{ 'data-tooltip': dropdown.name }">
+                    <t t-call="{{ dropdown.svg }}" />
+                </DropdownItem>
+            </t>
+        </t>
+
+    </t>
+
+    <t t-name="ks_dashboard_ninja.header_mode_buttons">
+        <div t-att-class=" 'd-flex gap-2 ' + btn_container_classes " t-if="buttons_condition">
+            <t t-foreach="buttons" t-as="button" t-key="button_index">
+                <button type="button" t-if="button.shouldVisible" t-att-class="button.classes" title="" t-on-click="button.callback">
+                    <span><t t-out="button.name"/></span>
+                </button>
+            </t>
+        </div>
+    </t>
+
+    <t t-name="ks_dashboard_ninja.ks_dn_layout_container">
+        <t t-if="props.dashboardData.gs_layouts_info.multiLayout">
+<!--                TODO: add isDashboardManager in disabled attr-->
+            <Dropdown menuClass="'ks-dropdown-menu'" disabled="isMobile" t-key="state.modeCount">
+                <t t-set-slot="content">
+                    <DropdownItem t-foreach="props.dashboardData.gs_layouts_info.gs_layouts" t-as="gs_layout" t-key="gs_layout_index"
+                              class="{ 'global-active': gs_layout.id === defaultLayout.id }"
+                              onSelected="() => { this.selectGsLayout(gs_layout) } " t-esc="gs_layout.name"/>
+                </t>
+                <div class="bg-transparent">
+                    <span class="ellipsis-content max-width-medium-25vw" t-esc="defaultLayout.name" t-att-data-tooltip="defaultLayout.name"
+                      t-att-class="{ 'ks-dropdown-no--caret': isMobile || !props.dashboardData.ks_dashboard_manager}"/>
+                </div>
+            </Dropdown>
+        </t>
+        <t t-else="">
+            <t t-set="main_layout_name" t-value="props.dashboardData.gs_layouts_info.mainLayout.name"/>
+
+            <span id="ks_dashboard_title_label" class="ks_am_element dash-dd-2 ellipsis-content max-width-medium-25vw"
+                  t-if="['manager', 'user'].includes(state.mode)" t-att-data-tooltip="main_layout_name">
+                <t t-esc="main_layout_name"/>
+            </span>
+        </t>
+    </t>
+
+    <t t-name="generate_ai_svg">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" class="me-2">
+            <path d="M13.3996 4.62671C13.3996 4.98671 13.2063 5.31337 12.8996 5.48004L11.7396 6.10671L10.7529 6.63337L8.70628 7.74004C8.48628 7.86004 8.24628 7.92004 7.99961 7.92004C7.75294 7.92004 7.51294 7.86004 7.29294 7.74004L3.09961 5.48004C2.79294 5.31337 2.59961 4.98671 2.59961 4.62671C2.59961 4.26671 2.79294 3.94004 3.09961 3.77337L4.41294 3.06671L5.45961 2.50004L7.29294 1.51337C7.73294 1.27337 8.26628 1.27337 8.70628 1.51337L12.8996 3.77337C13.2063 3.94004 13.3996 4.26671 13.3996 4.62671Z" fill="#6789C6"/>
+            <path d="M6.59917 8.52664L2.69917 6.57997C2.39917 6.42664 2.0525 6.44664 1.76583 6.61997C1.47917 6.79331 1.3125 7.09997 1.3125 7.4333V11.12C1.3125 11.76 1.66583 12.3333 2.23917 12.62L6.13917 14.5666C6.2725 14.6333 6.41917 14.6666 6.56583 14.6666C6.73917 14.6666 6.9125 14.62 7.06583 14.52C7.3525 14.3466 7.51917 14.04 7.51917 13.7066V10.02C7.52583 9.38664 7.1725 8.8133 6.59917 8.52664Z" fill="#6789C6"/>
+            <path d="M14.686 7.43338V11.12C14.686 11.7534 14.3327 12.3267 13.7593 12.6134L9.85932 14.5667C9.72599 14.6334 9.57932 14.6667 9.43266 14.6667C9.25932 14.6667 9.08599 14.62 8.92599 14.52C8.64599 14.3467 8.47266 14.04 8.47266 13.7067V10.0267C8.47266 9.38671 8.82599 8.81338 9.39932 8.52671L10.8327 7.81338L11.8327 7.31338L13.2993 6.58004C13.5993 6.42671 13.946 6.44004 14.2327 6.62004C14.5127 6.79338 14.686 7.10004 14.686 7.43338Z" fill="#6789C6"/>
+            <path d="M11.7407 6.10667L10.7541 6.63333L4.41406 3.06667L5.46073 2.5L11.5807 5.95333C11.6474 5.99333 11.7007 6.04667 11.7407 6.10667Z" fill="#6789C6"/>
+            <path d="M11.834 7.31335V8.82669C11.834 9.10002 11.6073 9.32669 11.334 9.32669C11.0607 9.32669 10.834 9.10002 10.834 8.82669V7.81335L11.834 7.31335Z" fill="#6789C6"/>
+        </svg>
+    </t>
+
+</template>

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_partner_approval_user_picker_wizard" model="ir.ui.view">
+        <field name="name">partner.approval.user.picker.wizard.form</field>
+        <field name="model">partner.approval.user.picker.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Select Approval Users">
+                <sheet>
+                    <group>
+                        <div class="o_form_label o_text_warning" style="margin-bottom: 10px;">
+                            Vendor approval requires Approver 1 and Approver 2.
+                            Approval will be sequential (Approver 1 first, then Approver 2).
+                        </div>
+                        <field name="partner_id" invisible="1"/>
+                        <field name="approver1_user_ids" invisible="1"/>
+                        <field name="approver2_user_ids" invisible="1"/>
+                        <field name="approver1_user" options="{'no_create': True}" required="1"/>
+                        <field name="approver2_user" options="{'no_create': True}" required="1"/>
+                    </group>
+                </sheet>
+                <footer>
+                    <button string="Confirm" type="object" name="add_users_for_approval" class="btn-primary"
+                            invisible="add_button_disabled == 1"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<templates>
+
+    <t t-inherit="ks_dashboard_ninja.table_header" t-inherit-mode="extension">
+        <xpath expr="//th[contains(@class, 'x_path_table_header')]" position="inside">
+            <t t-if="!props.isFormPreview and state.config.ks_data_calculation_type === 'custom' and state.actions.length lte 1">
+                <t t-if="table_column.store">
+                    <button title="Sort button" aria-expanded="true" type="button" t-if="listViewActionsConfig.listOrderConfig === false"
+                            class="ks_sort_icon ks_dashboard_item_action ks_sort_down ks_list_heder_hover ks_border_aliceblue">
+                        <t t-call="list_view_sorting_svg_1"/>
+                    </button>
+                    <button title="Sort button" aria-expanded="true" type="button" t-if="listViewActionsConfig.listOrderConfig.sortOrder === 'ASC'"
+                            class="ks_sort_icon ks_dashboard_item_action ks_sort_down ks_list_heder_hover ks_border_aliceblue">
+                        <t t-call="list_view_sorting_svg_1"/>
+                    </button>
+                    <button title="Sort button" type="button" aria-expanded="true" t-if="listViewActionsConfig.listOrderConfig.sortOrder === 'DESC'"
+                            class="ks_dashboard_item_action ks_sort_up ks_sort_icon ks_list_heder_hover ks_border_aliceblue">
+                        <t t-call="list_view_sorting_svg_2"/>
+                    </button>
+                </t>
+            </t>
+        </xpath>
+
+        <xpath expr="//th[contains(@class, 'x_path_table_header')]" position="attributes">
+            <attribute name="t-att-class">'cursor-pointer'</attribute>
+        </xpath>
+    </t>
+
+    <t t-name="list_view_sorting_svg_1">
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M5.41043 4.01636L3.55042 2.15637L1.69043 4.01636" stroke="#241C1D" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M3.55029 11.1564V2.15637" stroke="#241C1D" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M6.96045 9.29639L8.82047 11.1564L10.6805 9.29639" stroke="#241C1D" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M8.82031 2.15637V11.1564" stroke="#241C1D" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+    </t>
+
+    <t t-name="list_view_sorting_svg_2">
+        <svg width="10" height="12" viewBox="0 0 10 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M4.72 9.15637L2.85999 11.0164L1 9.15637" stroke="#241C1D" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M2.85986 10.1564V1.15637" stroke="#241C1D" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M5.69971 2.85999L7.55972 1L9.41971 2.85999" stroke="#241C1D" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M7.69971 1V11" stroke="#241C1D" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+    </t>
+
+</templates>

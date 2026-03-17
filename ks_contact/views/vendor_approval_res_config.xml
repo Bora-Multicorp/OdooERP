@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <!-- Vendor Approval Configuration Form View -->
+    <record id="vendor_approval_config_view_form" model="ir.ui.view">
+        <field name="name">vendor.approval.config.view.form</field>
+        <field name="model">vendor.approval.config</field>
+        <field name="arch" type="xml">
+            <form string="Vendor Approval Configuration">
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="Global Vendor Approval Configuration"/>
+                        </h1>
+                    </div>
+                    <div class="alert alert-info" role="alert">
+                        <strong>Global Configuration:</strong> This configuration applies to all companies. Only one active configuration is allowed.
+                    </div>
+                    <group>
+                        <group string="Approval Mode">
+                            <field name="ks_approval_mode" widget="radio"/>
+                        </group>
+                        <group>
+                            <field name="active" widget="boolean_toggle"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Approvers" name="approvers">
+                            <group>
+                                <group string="Approver 1 Users">
+                                    <field name="ks_approver_1_ids" 
+                                           widget="many2many_tags"
+                                           options="{'no_create': True}"
+                                           context="{'show_email': True}"
+                                           placeholder="Select users for Approval 1"/>
+                                </group>
+                                <group string="Approver 2 Users" 
+                                       invisible="ks_approval_mode == 'single'">
+                                    <field name="ks_approver_2_ids" 
+                                           widget="many2many_tags"
+                                           options="{'no_create': True}"
+                                           context="{'show_email': True}"
+                                           placeholder="Select users for Approval 2"/>
+                                </group>
+                            </group>
+                            <div class="alert alert-info" role="alert" 
+                                 invisible="ks_approval_mode != 'single'">
+                                <strong>Single Level Approval:</strong> Only one approver from Approver 1 list is required to approve vendors.
+                                Users will select an approver when requesting approval.
+                            </div>
+                            <div class="alert alert-info" role="alert" 
+                                 invisible="ks_approval_mode != 'two_way'">
+                                <strong>Two Level Approval:</strong> Both Approver 1 and Approver 2 must approve before vendors are approved.
+                                Users will select approvers from each list when requesting approval.
+                                Approver 2 cannot approve until Approver 1 has approved.
+                            </div>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    
+    <!-- Vendor Approval Configuration List View -->
+    <record id="vendor_approval_config_view_list" model="ir.ui.view">
+        <field name="name">vendor.approval.config.view.list</field>
+        <field name="model">vendor.approval.config</field>
+        <field name="arch" type="xml">
+            <list string="Vendor Approval Configurations">
+                <field name="name"/>
+                <field name="active" widget="boolean_toggle"/>
+                <field name="ks_approval_mode"/>
+                <field name="ks_approver_1_ids" widget="many2many_tags"/>
+                <field name="ks_approver_2_ids" widget="many2many_tags" optional="show"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Action (Admin only) -->
+    <record id="action_vendor_approval_config" model="ir.actions.act_window">
+        <field name="name">Vendor Approval Configuration</field>
+        <field name="res_model">vendor.approval.config</field>
+        <field name="view_mode">list,form</field>
+        <field name="groups_id" eval="[(4, ref('base.group_system'))]"/>
+        <field name="target">current</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Configure Vendor Approval Workflow</p>
+            <p>
+                Set up approvers for vendor approval requests.
+                You can choose between single level approval or require both Approver 1 and Approver 2 to approve.
+            </p>
+        </field>
+    </record>
+
+    <!-- Menu item under Contacts > Configuration (Admin only) -->
+    <menuitem id="menu_vendor_approval_config"
+              name="Vendor Approval Configuration"
+              parent="contacts.res_partner_menu_config"
+              action="action_vendor_approval_config"
+              groups="base.group_system"
+              sequence="100"/>
+</odoo>

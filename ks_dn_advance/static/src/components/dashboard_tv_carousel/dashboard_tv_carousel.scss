@@ -1,0 +1,37 @@
+
+.ks-tv-play-svg-visible{
+        .ks-tv-pause-svg{
+                display: none !important;
+            }
+    }
+
+.ks-tv-pause-svg-visible{
+        .ks-tv-play-svg{
+                display: none !important;
+            }
+    }
+
+
+.stroke_class {
+    svg {
+        stroke: var(--color-black);
+        path {
+            stroke: var(--color-black);
+            }
+        }
+    &.active {
+        svg {
+               stroke: var(--color-6789C6);
+               path {
+                   stroke: var(--color-6789C6);
+                   }
+            }
+
+        }
+    }
+
+    .ks-custom-carousel {
+        .ks_dashboarditem_chart_container.ks_ai_chart {
+                justify-content: flex-start !important;
+        }
+    }

@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Funnel Wizard Form View -->
+    <record id="view_margin_analysis_report_wizard_form" model="ir.ui.view">
+        <field name="name">margin.analysis.report.wizard.form</field>
+        <field name="model">margin.analysis.report.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Funnel">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name" string="Report Name"/>
+                            <field name="date_from"/>
+                            <field name="date_to"/>
+                        </group>
+                    </group>
+                </sheet>
+                <footer>
+                    <button name="action_generate_report" string="Generate Report" type="object" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Funnel Wizard Action -->
+    <record id="action_margin_analysis_report_wizard" model="ir.actions.act_window">
+        <field name="name">Funnel</field>
+        <field name="res_model">margin.analysis.report.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <!-- Funnel Report Header - List View (Master: all saved reports; New button creates new report) -->
+    <record id="view_margin_analysis_report_header_list" model="ir.ui.view">
+        <field name="name">margin.analysis.report.header.list</field>
+        <field name="model">margin.analysis.report.header</field>
+        <field name="arch" type="xml">
+            <list string="Funnel Reports" create="1" delete="1" edit="1">
+                <field name="name"/>
+                <field name="date_from"/>
+                <field name="date_to"/>
+                <field name="message_follower_ids" column_invisible="1"/>
+                <field name="activity_ids" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Funnel Report Header - Form View (name, dates, filters; Generate button; lines read-only) -->
+    <record id="view_margin_analysis_report_header_form" model="ir.ui.view">
+        <field name="name">margin.analysis.report.header.form</field>
+        <field name="model">margin.analysis.report.header</field>
+        <field name="arch" type="xml">
+            <form string="Funnel Report">
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_generate_lines" string="Generate" type="object" class="btn-primary"/>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="date_from"/>
+                            <field name="date_to"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Lines" name="lines">
+                            <field name="line_ids" nolabel="1">
+                                <list string="Funnel" default_order="product_id, po_date, mop_date" create="0" delete="0" decoration-info="purchase_actual_qty > 0">
+                                    <field name="product_id" optional="hide"/>
+                                    <field name="item_name" string="Item Name" readonly="1"/>
+                                    <field name="item_alias" string="Item Alias" readonly="1"/>
+                                    <field name="po_date" string="PO Date" readonly="1" optional="show"/>
+                                    <field name="mop_date" string="MOP Date" readonly="1" optional="show"/>
+                                    <field name="purchase_actual_qty" string="Purchase Qty" readonly="1"/>
+                                    <field name="purchase_rate" string="Purchase Rate" readonly="1"/>
+                                    <field name="nlc" string="NLC" readonly="1"/>
+                                    <field name="mop" string="MOP" readonly="1"/>
+                                    <field name="funnal" string="Funnal" sum="Total:" readonly="1"/>
+                                    <field name="funnal_percent" string="%" sum="Total:" readonly="1"/>
+                                    <field name="total_funnal" string="Total Funnal" sum="Total:" readonly="1"/>
+                                    <field name="gst_funnal" string="x GST Funnal" sum="Total:" readonly="1"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- Funnel Report Lines - List View (standalone: all lines, editable) -->
+    <record id="view_margin_analysis_report_tree" model="ir.ui.view">
+        <field name="name">margin.analysis.report.tree</field>
+        <field name="model">margin.analysis.report</field>
+        <field name="arch" type="xml">
+            <list string="Funnel" default_order="product_id, po_date, mop_date" decoration-info="purchase_actual_qty > 0" editable="bottom" create="1" delete="1">
+                <field name="report_id" optional="show"/>
+                <field name="item_name" string="Item Name" readonly="1"/>
+                <field name="item_alias" string="Item Alias" readonly="1"/>
+                <field name="po_date" string="PO Date" optional="show"/>
+                <field name="mop_date" string="MOP Date" optional="show"/>
+                <field name="purchase_actual_qty" string="Purchase Qty" sum="Total:"/>
+                <field name="purchase_rate" string="Purchase Rate" sum="Total:"/>
+                <field name="nlc" string="NLC" sum="Total:"/>
+                <field name="mop" string="MOP" sum="Total:"/>
+                <field name="funnal" string="Funnal" sum="Total:" readonly="1"/>
+                <field name="funnal_percent" string="%" sum="Total:" readonly="1"/>
+                <field name="total_funnal" string="Total Funnal" sum="Total:" readonly="1"/>
+                <field name="gst_funnal" string="x GST Funnal" sum="Total:" readonly="1"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Funnel Report Lines - Search View -->
+    <record id="view_margin_analysis_report_search" model="ir.ui.view">
+        <field name="name">margin.analysis.report.search</field>
+        <field name="model">margin.analysis.report</field>
+        <field name="arch" type="xml">
+            <search string="Funnel">
+                <field name="item_name"/>
+                <field name="item_alias"/>
+                <field name="product_id"/>
+                <field name="report_id"/>
+                <filter string="Report" name="filter_report" context="{'group_by': 'report_id'}"/>
+                <group expand="0" string="Group By">
+                    <filter string="Product" name="group_by_product" context="{'group_by': 'product_id'}"/>
+                    <filter string="Report" name="group_by_report" context="{'group_by': 'report_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Search view for report header (before action that refs it) -->
+    <record id="view_margin_analysis_report_header_search" model="ir.ui.view">
+        <field name="name">margin.analysis.report.header.search</field>
+        <field name="model">margin.analysis.report.header</field>
+        <field name="arch" type="xml">
+            <search string="Funnel Reports">
+                <field name="name"/>
+                <field name="date_from"/>
+                <field name="date_to"/>
+            </search>
+        </field>
+    </record>
+
+    <!-- Funnel Master List Action (saved reports - main entry) -->
+    <record id="action_margin_analysis_report_header" model="ir.actions.act_window">
+        <field name="name">Funnel</field>
+        <field name="res_model">margin.analysis.report.header</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_margin_analysis_report_header_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first Funnel report
+            </p>
+            <p>
+                Click "New" to create a report. Fill report name, dates and filters, then open the record and click "Generate" to create report lines. Lines are read-only.
+            </p>
+        </field>
+    </record>
+
+    <!-- Funnel Lines Action (all lines from all reports) -->
+    <record id="action_margin_analysis_report" model="ir.actions.act_window">
+        <field name="name">Funnel (All Lines)</field>
+        <field name="res_model">margin.analysis.report</field>
+        <field name="view_mode">list</field>
+        <field name="search_view_id" ref="view_margin_analysis_report_search"/>
+    </record>
+
+    <!-- Menu: Funnel -> opens master list of reports -->
+    <menuitem id="menu_margin_analysis_report"
+              name="Funnel"
+              parent="stock.menu_warehouse_report"
+              action="action_margin_analysis_report_header"
+              sequence="100"/>
+    <!-- Generate new Funnel report (wizard) -->
+    <menuitem id="menu_margin_analysis_report_generate"
+              name="Generate Funnel Report"
+              parent="stock.menu_warehouse_report"
+              action="action_margin_analysis_report_wizard"
+              sequence="101"/>
+</odoo>

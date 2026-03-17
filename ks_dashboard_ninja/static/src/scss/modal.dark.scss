@@ -1,0 +1,21 @@
+.ks_body_class .modal-dialog .modal-content .modal-header .btn-close{
+    filter: invert(1) brightness(9);
+}
+.ks_body_class .delete-modal-alert path:nth-child(1),.ks_body_class .delete-modal-alert path:nth-child(2),.ks_body_class .delete-modal-alert path:nth-child(3),.ks_body_class .delete-modal-alert path:nth-child(4),.ks_body_class .delete-modal-alert path:nth-child(5),.ks_body_class .delete-modal-alert path:nth-child(6) {
+        fill: var(--color-white-imp) !important;
+}
+.ks_body_class .modal-dialog .modal-content .modal-body .o_form_view .o_form_view_container .o_content .o_form_renderer {
+    background-color: #222B3F !important;
+}
+.ks_body_class .modal-dialog .modal-content .modal-footer {
+    border-radius: 0 0 16px 16px;
+}
+.ks_body_class .ks-generateAI-body.create-ai {
+    background-color: var(--color-222B3F-imp) !important;
+}
+ .ks-generateAI-body .createAI-card.generate-item img {
+    filter: invert(1);
+}
+ .form-input-box.form-control .o_field_many2one_selection .o_dropdown_button {
+        filter: invert(1);
+}

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Security Group: KS Payment Access -->
+        <!-- Hidden from user form dropdown by using hidden category -->
+        <record id="group_ks_payment_access" model="res.groups">
+            <field name="name">KS Payment Access</field>
+            <field name="category_id" ref="base.module_category_hidden"/>
+            <field name="comment">Users in this group can view the Payments menu and have read/write access to account.payment records. Users not in this group cannot see the Payments menu and cannot access payments via direct URL. This group is hidden from the user form dropdown.</field>
+        </record>
+    </data>
+</odoo>
+

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+        <!-- Purchase Approval Manager Group -->
+        <record id="group_ks_purchase_approval_manager" model="res.groups">
+            <field name="name">Purchase Approval Manager (PM)</field>
+            <field name="category_id" ref="base.module_category_inventory_purchase"/>
+            <field name="implied_ids" eval="[(4, ref('purchase.group_purchase_user'))]"/>
+            <field name="comment">Users with this role can approve or reject Purchase Order confirmation, update, and cancellation requests.</field>
+        </record>
+
+        <!-- Add PM group to Purchase Manager for convenience -->
+        <record id="purchase.group_purchase_manager" model="res.groups">
+            <field name="implied_ids" eval="[(4, ref('group_ks_purchase_approval_manager'))]"/>
+        </record>
+    </data>
+</odoo>
+

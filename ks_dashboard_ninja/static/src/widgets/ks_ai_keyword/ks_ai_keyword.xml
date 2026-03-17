@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates>
+    <t t-name="KsKeywordSelection" owl="1">
+        <div>
+            <div class="ks_input_custom">
+                <input type="text" id="ks_selection_field" placeholder="Search items with AI..."
+                       t-ref="ks_input"
+                       class="o_input input_bar"
+                       t-on-keyup="_onKeyup"
+                />
+            </div>
+             <div class="row row-gap-3" id="ks_keywords_container">
+                <div class="col-12">
+                    <h2 class="recent-title">Choose from the below keywords -</h2>
+                </div>
+                 <t t-foreach="state.values" t-as="val" t-key="val.id">
+                     <t t-if="val.id">
+                        <div class="col-md-4 col-sm-6 col-12">
+                            <div class="searched-content d-flex align-items-center generate-item createAI-card" t-on-click="_onResponseSelect">
+                                <div class="me-2">
+                                    <img src="/ks_dashboard_ninja/static/images/3dcube.svg" alt="searched-icon" class="img-fluid" loading="lazy"/>
+                                </div>
+                                <div class="ai-title searched-title">
+                                    <t t-esc="val['value']"/>
+                                </div>
+
+                                <div class="selected-search-opt">
+                                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path
+                                            d="M8.00001 14.6663C11.6667 14.6663 14.6667 11.6663 14.6667 7.99967C14.6667 4.33301 11.6667 1.33301 8.00001 1.33301C4.33334 1.33301 1.33334 4.33301 1.33334 7.99967C1.33334 11.6663 4.33334 14.6663 8.00001 14.6663Z"
+                                            stroke="" stroke-linecap="round" stroke-linejoin="round" />
+                                        <path d="M5.16666 7.99995L7.05332 9.88661L10.8333 6.11328" stroke="" stroke-linecap="round"
+                                            stroke-linejoin="round" />
+                                    </svg>
+
+                                </div>
+                            </div>
+                        </div>
+                     </t>
+                     <t t-else="">
+                         <div class="col-md-4 col-sm-6 col-12">
+                            <div class="searched-content d-flex flex-column align-items-center createAI-card" t-on-click="_onResponseSelect">
+                                <div class="d-flex align-items-center w-100">
+                                    <div class="ai-thum-img">
+                                        <img src="/ks_dashboard_ninja/static/images/3dcube.svg" alt="searched-icon" class="img-fluid" loading="lazy"/>
+                                    </div>
+                                    <div class="ai-title  searched-title">
+                                    <t t-esc="val['value']"/>
+                                </div>
+                                </div>
+                                <div class="ks_dashboard_option_category w-100 position-absolute bottom-0">
+                                    <span class="ks_dashboard_option w-100 justify-content-center">Generate With AI</span>
+                                </div>
+                            </div>
+                         </div>
+                    </t>
+                 </t>
+            </div>
+
+        </div>
+    </t>
+</templates>

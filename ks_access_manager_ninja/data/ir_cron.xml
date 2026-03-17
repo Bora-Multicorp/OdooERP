@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+        <record id="ir_cron_password_expires" model="ir.cron">
+            <field name="name">User Password Expire</field>
+            <field name="model_id" ref="base.model_res_users"/>
+            <field name="state">code</field>
+            <field name="code">model.ks_cron_password_expire()</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+        </record>
+
+        <record id="ir_cron_export_groups" model="ir.cron">
+            <field name="name">User Groups Export</field>
+            <field name="model_id" ref="base.model_res_groups"/>
+            <field name="state">code</field>
+            <field name="code">model.ks_export_user_groups()</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">months</field>
+            <field name="active" eval="False" />
+        </record>
+</odoo>

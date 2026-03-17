@@ -1,0 +1,95 @@
+.ks_body_class .o_notification_manager {
+    position: fixed !important;
+    left: 0 !important;
+    right: 0 !important;
+    margin: 0 auto !important;
+    width: 50% !important;
+    top: 30px !important;
+
+    .o_notification_title {
+        font-size: $font-18 !important;
+        font-weight: $f-w-600 !important;
+        line-height: 25.2px;
+        text-align: left;
+        padding: 0 8px !important;
+        align-self: end;
+        color: var(--color-black);
+    }
+
+    .o_notification_body {
+        padding: 0 8px !important;
+        margin-top: 4px !important;
+        grid-column: 2 / 3;
+    }
+
+    .o_notification_close {
+        top: 50% !important;
+        left: auto;
+        bottom: auto;
+        right: 20px !important;
+        transform: translateY(-50%);
+     border: 1px solid var(--color-black-white) !important;
+        border-radius: 50% !important;
+        height: 29px !important;
+        width: 29px !important;
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        margin: 0 !important;
+    }
+
+    .border {
+        border: none !important;
+    }
+
+    .o_notification_content {
+        font-size: $font-16 !important;
+        font-weight: $f-w-400 !important;
+        line-height: 22.4px;
+        text-align: left;
+        color: var(--color-4B5563) !important;
+        padding-right: 20px;
+
+        ul {
+            padding-left: 0px !important;
+            display: flex;
+            align-items: center;
+            margin-bottom: 0;
+            flex-wrap: wrap;
+
+            li {
+                list-style: none !important;
+
+                &::after {
+                    content: ",\00a0";
+                }
+
+                &:last-child::after {
+                    content: "";
+                }
+            }
+        }
+    }
+
+    .o_notification {
+        border-radius: 10px !important;
+        padding: 20px !important;
+        background-color: var(--color-white-131B2F) !important;
+        border: none !important;
+         border: 3px solid var(--color-E5E7EB) !important;
+        min-height: 107px;
+        //         display: flex;
+        //         flex-direction: column;
+        justify-content: center;
+        display: grid;
+        width: 100%;
+        grid-template-columns: 1.4fr 8fr;
+        grid-template-rows: 1fr;
+        align-items: center;
+
+        svg {
+            grid-row: 1 / 3;
+        }
+
+    }
+}

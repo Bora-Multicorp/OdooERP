@@ -1,0 +1,43 @@
+<odoo>
+    <data noupdate="1">
+
+        <record id="sale_order_3pl_notification_template" model="mail.template">
+            <field name="name">Sale Order 3pl Notification</field>
+            <field name="email_from">${(user.email_formatted or 'noreply@example.com')|safe}</field>
+            <field name="email_to">logistics@example.com</field>
+            <field name="subject">Sale Order Stock Info</field>
+            <field name="model_id" ref="sale.model_sale_order"/>
+            <field name="body_html" type="html">
+
+                <p>Hello 3PL Team,</p>
+
+                <p><strong>Stock Information for Order <t t-out="object.name"/></strong></p>
+
+                    <table style="border-collapse: collapse; width: 100%;">
+    <tr>
+        <th style="border: 1px solid #000; padding: 5px;">Product</th>
+        <th style="border: 1px solid #000; padding: 5px;">Ordered Qty</th>
+        <th style="border: 1px solid #000; padding: 5px;">On Hand</th>
+        <th style="border: 1px solid #000; padding: 5px;">Forecasted</th>
+    </tr>
+
+    <t t-foreach="object.order_line" t-as="line">
+        <tr>
+            <td style="border: 1px solid #000; padding: 5px;" t-out="line.product_id.display_name"/>
+            <td style="border: 1px solid #000; padding: 5px;" t-out="line.product_uom_qty"/>
+
+            <td style="border: 1px solid #000; padding: 5px;"
+                t-out="line.product_id.qty_available"/>
+            <td style="border: 1px solid #000; padding: 5px;"
+                t-out="line.product_id.virtual_available"/>
+        </tr>
+    </t>
+</table>
+
+                <p>Regards,<br/>Sale Order System</p>
+
+            </field>
+        </record>
+
+    </data>
+</odoo>

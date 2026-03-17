@@ -1,0 +1,178 @@
+.ks_list_view_container,
+.encapsulated-list-preview .card {
+    padding: 5px 16px !important;
+    border-radius: 20px;
+        border: 1px solid var(--color-E5E7EB) !important;
+    height: 100%;
+    background-color: transparent;
+    @include custom-scrollbar;
+
+    .ks_list_item_table {
+        border: 0.66px solid var(--color-EDEDED);
+        border-radius: 12px;
+        position: relative;
+        z-index: 2;
+        @include custom-scrollbar;
+
+            table {
+                margin-bottom: 0;
+                thead {
+                    tr {
+                        th {
+                            background-color: var(--color-secondary-bg) !important;
+                            font-size: $font-14;
+                            font-weight: $f-w-600;
+                            line-height: 13.88px;
+                            text-align: left;
+                            color: var(--color-2C2D35);
+                            top: 0 !important;
+                            white-space: nowrap;
+                           border-right: 1px solid var(--color-FBFBFB) !important;
+                            border-bottom: 1px solid var(--color-FBFBFB) !important;
+                            position: sticky;
+                        }
+                    }
+                }
+
+                tbody {
+                    tr {
+                        // border-bottom: 1px solid #F0F0F0;
+                        &:nth-of-type(odd)>* {
+                            background-color: var(--color-white-24304B) !important;
+                        }
+
+                        &:nth-of-type(even)>* {
+                             background-color: var(--color-secondary-bg) !important;
+                        }
+
+                        td {
+                            font-size: $font-14;
+                            font-weight: $f-w-400;
+                            line-height: 15.86px;
+                            text-align: left;
+                            border-bottom: none !important;
+                            color: var(--color-2C2D35) !important;
+                            border-right: 1px solid var(--color-FBFBFB) !important;
+                            border-bottom: 1px solid var(--color-FBFBFB) !important;
+                            min-height: 41.5px;
+                            height: 100%;
+                            &:last-child {
+                                svg {
+                                    width: 17px;
+                                    height: 17px;
+                                }
+                            }
+
+                        }
+                    }
+                }
+
+                &.ks_list_view_layout_2{
+                    thead {
+                        tr {
+                            th {
+                                color: #bfa829 !important;
+                                background-color: #343a40 !important;
+                                border-right:none !important;
+
+                            }
+                        }
+                    }
+
+                    tbody {
+                        tr {
+                            border-bottom: 1px solid var(--color-FBFBFB) !important;
+                            td {
+                                background-color: #111827 !important;
+                                color: var(--color-white-imp) !important;
+                                border-right:none !important;
+                                border-bottom: none !important;
+                                &:last-child {
+                                    svg {
+                                        path{
+                                            stroke:var(--color-white-imp);
+                                        }
+                                    }
+                                }
+
+                            }
+                        }
+                    }
+                }
+                &.ks_list_view_layout_3{
+                    thead {
+                        tr {
+                            th {
+                                background-color: #324960 !important;
+                                color: var(--color-white-imp) !important;
+                                border-right:1px solid #d8dadd !important;
+                               }
+                        }
+                    }
+
+                    tbody {
+                        tr {
+                            &:nth-of-type(odd)>* {
+                                background-color: transparent !important;
+                            }
+
+                            &:nth-of-type(even)>* {
+                                background-color: #f2f2f2 !important;
+                            }
+
+                            td {
+                                color: #374151 !important;
+                                border-bottom:1px solid #d8dadd !important;
+                                border-right:1px solid #d8dadd !important;
+                            }
+                        }
+                    }
+                }
+                &.ks_list_view_layout_4{
+                    thead {
+                        tr {
+                            th {
+                                background-color: #324960 !important;
+                                color: var(--color-white-imp) !important;
+                                border-right:1px solid #d8dadd !important;
+                                &:nth-child(even) {
+                                    background-color: #4FC3A1 !important;
+                                }
+                               }
+                        }
+                    }
+
+                    tbody {
+                        tr {
+                            td {
+                                color: #374151 !important;
+                                border-bottom:1px solid #d8dadd !important;
+                                border-right:1px solid #d8dadd !important;
+                                background-color: var(--color-white-imp) !important;
+                            }
+                        }
+                    }
+                }
+            }
+    }
+
+    .list-pagination {
+        padding-top: 8px;
+        .total-items {
+        font-weight: 500;
+        font-size: 14px;
+        color: var(--color-727378);
+        }
+        .page-numbers {
+            position: relative;
+            font-weight: 500;
+            font-size: 14px;
+            color: var(--color-727378);
+            span {
+                &:last-child{
+                    margin-left: 8px;
+                }
+            }
+        }
+    }
+}

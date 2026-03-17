@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="ks_request_reason_wizard_form_view" model="ir.ui.view">
+        <field name="name">ks.request.reason.wizard.form</field>
+        <field name="model">ks.request.reason.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Request Reason and Select Approvers">
+                <group>
+                    <field name="ks_purchase_order_id" readonly="1"/>
+                    <field name="ks_request_type" invisible="1"/>
+                    <field name="ks_request_type_label" string="Request Type" readonly="1"/>
+                    <field name="ks_available_approver_1_ids" invisible="1"/>
+                    <field name="ks_available_approver_2_ids" invisible="1"/>
+                </group>
+                <div class="alert alert-info" role="alert" style="margin: 16px;">
+                    <p><strong>Please select approvers for <field name="ks_request_type_label" readonly="1" nolabel="1"/>:</strong></p>
+                    <p>Both approvers are mandatory. Approval process is sequential (Approver 1 must approve before Approver 2).</p>
+                </div>
+                <group>
+                    <field name="ks_approver_1_id" 
+                           string="Approver 1"
+                           options="{'no_create': True}"
+                           domain="[('id', 'in', ks_available_approver_1_ids), ('share', '=', False), ('id', '!=', ks_approver_2_id)]"
+                           required="1"/>
+                    <field name="ks_approver_2_id" 
+                           string="Approver 2"
+                           options="{'no_create': True}"
+                           domain="[('id', 'in', ks_available_approver_2_ids), ('share', '=', False), ('id', '!=', ks_approver_1_id)]"
+                           required="1"/>
+                </group>
+                <group>
+                    <field name="ks_reason" 
+                           placeholder="Please enter a reason for your request (required)..."
+                           required="1"/>
+                </group>
+                <footer>
+                    <button name="action_submit_request" 
+                            string="Submit Request" 
+                            type="object" 
+                            class="btn-primary"/>
+                    <button string="Cancel" 
+                            class="btn-secondary" 
+                            special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

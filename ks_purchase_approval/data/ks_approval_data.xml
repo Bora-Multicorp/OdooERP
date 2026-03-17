@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Mail Subtypes for Approval Actions -->
+        <record id="mt_ks_po_pending_approval" model="mail.message.subtype">
+            <field name="name">PO Pending Approval</field>
+            <field name="res_model">purchase.order</field>
+            <field name="default" eval="False"/>
+            <field name="description">Purchase Order submitted for approval</field>
+        </record>
+
+        <record id="mt_ks_po_update_requested" model="mail.message.subtype">
+            <field name="name">PO Update Requested</field>
+            <field name="res_model">purchase.order</field>
+            <field name="default" eval="False"/>
+            <field name="description">Purchase Order update requested</field>
+        </record>
+
+        <record id="mt_ks_po_cancel_requested" model="mail.message.subtype">
+            <field name="name">PO Cancel Requested</field>
+            <field name="res_model">purchase.order</field>
+            <field name="default" eval="False"/>
+            <field name="description">Purchase Order cancellation requested</field>
+        </record>
+
+        <record id="mt_ks_po_approval_decision" model="mail.message.subtype">
+            <field name="name">PO Approval Decision</field>
+            <field name="res_model">purchase.order</field>
+            <field name="default" eval="True"/>
+            <field name="description">Purchase Order approval decision made</field>
+        </record>
+    </data>
+</odoo>
+

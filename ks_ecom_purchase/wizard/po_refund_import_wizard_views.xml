@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_po_refund_import_wizard_form" model="ir.ui.view">
+        <field name="name">ks.po.refund.import.wizard.form</field>
+        <field name="model">ks.po.refund.import.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Import XLSX Refund Data">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="file_name" placeholder="example.xlsx"/>
+                            <field name="file_data" filename="file_name" widget="binary"
+                                   options="{'accept': '.xlsx'}"/>
+                        </group>
+                    </group>
+                    <div class="alert alert-info" role="alert">
+                        <p><strong>Instructions:</strong></p>
+                        <ul>
+                            <li>Upload an XLSX file containing refund/return data</li>
+                            <li>Required columns: Order ID, ASIN, Quantity (refund quantity)</li>
+                            <li>The system will find the receipt by Order ID and create a Return Picking for the specified ASIN quantities</li>
+                        </ul>
+                    </div>
+                </sheet>
+                <footer>
+                    <button name="action_import_refund_data" string="Import Refund Data"
+                            type="object" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_po_refund_import_wizard" model="ir.actions.act_window">
+        <field name="name">Import XLSX Refund Data</field>
+        <field name="res_model">ks.po.refund.import.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+</odoo>

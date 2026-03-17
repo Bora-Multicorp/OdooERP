@@ -1,0 +1,311 @@
+<odoo>
+<record id="paperformat_luminari_saleorder" model="report.paperformat">
+            <field name="name">US Letter</field>
+            <field name="default" eval="True" />
+            <field name="format">Letter</field>
+            <field name="page_height">0</field>
+            <field name="page_width">0</field>
+            <field name="orientation">Portrait</field>
+            <field name="margin_top">10</field>
+            <field name="margin_bottom">32</field>
+            <field name="margin_left">10</field>
+            <field name="margin_right">10</field>
+            <field name="header_line" eval="False" />
+            <field name="header_spacing">20</field>
+            <field name="dpi">90</field>
+            <field name="css_margins" eval="True" />
+        </record>
+    <!-- Define the new report action for sale order -->
+    <record id="action_report_luminari_dubai" model="ir.actions.report">
+        <field name="name">Commercial Invoice</field>
+        <field name="model">account.move</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">ks_templates.report_luminari_invoice</field>
+        <field name="report_file">ks_templates.report_luminari_invoice</field>
+        <field name="print_report_name">(object.state in ('draft', 'sent') and 'Commercial Invoice - %s' % (object.name)) or 'Commercial Invoice - %s' % (object.name)</field>
+        <field name="binding_model_id" ref="account.model_account_move"/>
+        <field name="paperformat_id" ref="paperformat_luminari_saleorder"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <template id="report_luminari_invoice">
+    <t t-call="web.basic_layout">
+        <t t-foreach="docs" t-as="doc">
+        <main>
+        <!-- TITLE -->
+        <table style="width:100%; border-collapse:collapse;">
+            <tr>
+                <td style="text-align:center;border-color:white; font-weight:bold; font-size:14px;">
+                    Commercial Invoice
+                </td>
+            </tr>
+        </table>
+
+        <!-- HEADER SECTION -->
+        <table style="width:100%; border-collapse:collapse; border:1px solid #000; font-size:11px;">
+            <tr>
+                <!-- LEFT SIDE -->
+                <td style="width:55%; vertical-align:top; border:1px solid #000; padding:6px;">
+                    <strong><t t-esc="doc.company_id.name or 'BORA ELECTRONICS FZCO'"/></strong><br/>
+                    <t t-if="doc.company_id.partner_id.street" t-esc="doc.company_id.partner_id.street"/>
+                    <t t-if="doc.company_id.partner_id.street and doc.company_id.partner_id.street2">, </t>
+                    <t t-if="doc.company_id.partner_id.street2" t-esc="doc.company_id.partner_id.street2"/>
+                    <t t-if="(doc.company_id.partner_id.street or doc.company_id.partner_id.street2) and doc.company_id.partner_id.city">, </t>
+                    <t t-if="doc.company_id.partner_id.city" t-esc="doc.company_id.partner_id.city"/>
+                    <t t-if="doc.company_id.partner_id.city and doc.company_id.partner_id.country_id">, </t>
+                    <t t-if="doc.company_id.partner_id.country_id" t-esc="doc.company_id.partner_id.country_id.name or ''"/>
+                    <t t-if="doc.company_id.partner_id.zip"> P.O.Box <t t-esc="doc.company_id.partner_id.zip"/></t><br/>
+                    <t t-if="doc.company_id.partner_id.state_id">
+                        Emirate : <t t-esc="doc.company_id.partner_id.state_id.name or ''"/><br/>
+                    </t>
+                    <t t-if="doc.company_id.vat">TRN : <t t-esc="doc.company_id.vat"/><br/></t>
+                    <t t-if="doc.company_id.partner_id.email">E-Mail : <t t-esc="doc.company_id.partner_id.email"/></t>
+                    <div style="border-top:1px solid black;height:1px;"/>
+
+                    Consignee<br/>
+                    <t t-set="consignee_partner" t-value="doc.partner_shipping_id or doc.partner_id"/>
+                    <strong><t t-esc="consignee_partner.name or 'Captains Freight Services FZCO'"/></strong><br/>
+                    <t t-if="consignee_partner.street" t-esc="consignee_partner.street"/>
+                    <t t-if="consignee_partner.street and consignee_partner.street2">, </t>
+                    <t t-if="consignee_partner.street2" t-esc="consignee_partner.street2"/>
+                    <t t-if="(consignee_partner.street or consignee_partner.street2) and consignee_partner.city">, </t>
+                    <t t-if="consignee_partner.city" t-esc="consignee_partner.city"/>
+                    <t t-if="consignee_partner.city and consignee_partner.country_id">, </t>
+                    <t t-if="consignee_partner.country_id" t-esc="consignee_partner.country_id.name or ''"/><br/>
+                    <br/>
+                    <br/>
+                    <div style="border-top:1px solid black;height:1px;"/>
+                    Buyer<br/>
+                    <strong><t t-esc="doc.partner_id.name or 'LUMINARI TRADING FZCO'"/></strong><br/>
+                    <t t-if="doc.partner_id.street" t-esc="doc.partner_id.street"/>
+                    <t t-if="doc.partner_id.street and doc.partner_id.street2">, </t>
+                    <t t-if="doc.partner_id.street2" t-esc="doc.partner_id.street2"/>
+                    <t t-if="(doc.partner_id.street or doc.partner_id.street2) and doc.partner_id.city">, </t>
+                    <t t-if="doc.partner_id.city" t-esc="doc.partner_id.city"/>
+                    <t t-if="doc.partner_id.city and doc.partner_id.country_id">, </t>
+                    <t t-if="doc.partner_id.country_id" t-esc="doc.partner_id.country_id.name or ''"/><br/>
+                    <t t-if="doc.partner_id.state_id">
+                        Emirate : <t t-esc="doc.partner_id.state_id.name or ''"/><br/>
+                    </t>
+                    <t t-if="doc.partner_id.country_id">
+                        Country : <t t-esc="doc.partner_id.country_id.name or ''"/>
+                    </t>
+                </td>
+
+                <!-- RIGHT SIDE -->
+                <td style="width:45%;vertical-align:top; padding:0;">
+                            <table style="width:100%; border-collapse:collapse;border-color:white;">
+                                <tr>
+                                    <td style="border-right:1px solid #000;padding:1px;">Invoice No.</td>
+                                    <td style="padding:1px;" colspan="3">Dated</td>
+                                </tr>
+                                <tr>
+                                    <td style="border-right:1px solid #000; padding:1px;"><strong><t t-esc="doc.name or ''"/></strong></td>
+                                    <td style="border-left:1px solid #000; padding:1px;" colspan="3">
+                                        <strong>
+                                            <t t-if="doc.invoice_date" t-esc="doc.invoice_date.strftime('%d-%b-%y')"/>
+                                            <t t-elif="doc.date" t-esc="doc.date.strftime('%d-%b-%y')"/>
+                                        </strong>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="border-right:1px solid #000; padding:1px;border-top:1px solid #000; padding:1px;">
+                                    Delivery Note
+                                    </td>
+                                    <td style="border-left:1px solid #000; padding:1px;border-right:1px solid #000; padding:1px;border-top:1px solid #000; padding:1px;" colspan="3">Mode/Terms of Payment</td>
+                                </tr>
+                                <tr>
+                                    <td style="border-right:1px solid #000; padding:1px;">
+                                        <t t-esc="doc.ks_delivery_note or ''"/>
+                                    </td>
+                                    <td style="border-right:1px solid #000; padding:1px;" colspan="3">
+                                        <strong>
+                                            <t t-if="doc.invoice_payment_term_id" t-esc="doc.invoice_payment_term_id.name or ''"/>
+                                            <t t-else="">FOB DUBAI</t>
+                                        </strong>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="border-right:1px solid #000; padding:1px;border-top:1px solid #000; padding:1px;">Supplier's Ref.</td>
+                                    <td style="border-left:1px solid #000; padding:1px;border-right:1px solid #000; padding:1px;border-top:1px solid #000; padding:1px;" colspan="3">Other Reference(s)</td>
+                                </tr>
+                                <tr>
+                                    <td style="border-right:1px solid #000; padding:1px;"><strong><t t-esc="doc.ks_supplier_reference or ''"/></strong></td>
+                                    <td style="border-right:1px solid #000; padding:1px;" colspan="3"><strong><t t-esc="doc.ref or ''"/></strong></td>
+                                </tr>
+                                 <tr>
+                                    <td style="border-right:1px solid #000; padding:1px;border-top:1px solid #000; padding:1px;">Buyer's Order No.</td>
+                                    <td style="border-left:1px solid #000; padding:1px;border-right:1px solid #000; padding:1px;border-top:1px solid #000; padding:1px;" colspan="3">Dated</td>
+                                </tr>
+                                <tr>
+                                    <td style="border-right:1px solid #000; padding:1px;">
+                                        <t t-set="sale_order" t-value="doc.get_sale_order_info()"/>
+                                        <t t-if="sale_order" t-esc="sale_order.name or ''"/>
+                                    </td>
+                                    <td style="border-right:1px solid #000; padding:1px;" colspan="3">
+                                        <t t-if="sale_order and sale_order.date_order" t-esc="sale_order.date_order.strftime('%d-%b-%y')"/>
+                                        <t t-elif="sale_order and sale_order.create_date" t-esc="sale_order.create_date.strftime('%d-%b-%y')"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="border-right:1px solid #000; padding:1px;border-top:1px solid #000; padding:1px;">Despatch Document No.</td>
+                                    <td style="border-left:1px solid #000; padding:1px;border-right:1px solid #000; padding:1px;border-top:1px solid #000; padding:1px;" colspan="3">Delivery Note Date</td>
+                                </tr>
+                                <tr>
+                                    <td style="border-right:1px solid #000; padding:1px;">
+                                        <t t-esc="doc.ks_despatch_document_no or ''"/>
+                                    </td>
+                                    <td style="border-right:1px solid #000; padding:1px;" colspan="3">
+                                        <t t-if="doc.ks_delivery_note_date" t-esc="doc.ks_delivery_note_date.strftime('%d-%b-%y')"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="border-right:1px solid #000; padding:1px;border-top:1px solid #000; padding:1px;">Despatch through</td>
+                                    <td style="border-left:1px solid #000; padding:1px;border-right:1px solid #000; padding:1px;border-top:1px solid #000; padding:1px;" colspan="3">Destination</td>
+                                </tr>
+                                <tr>
+                                    <td style="border-right:1px solid #000; padding:1px;">
+                                        <t t-esc="doc.ks_despatched_through or ''"/>
+                                    </td>
+                                    <td style="border-right:1px solid #000; padding:1px;" colspan="3">
+                                        <t t-esc="doc.ks_city_port_of_discharge or ''"/>
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <td style="border-top:1px solid #000; padding:1px;" colspan="3">
+                                        <strong>Terms of Delivery</strong>
+                                    </td>
+
+                                </tr>
+                                <tr>
+                                    <td style="border-right:1px solid #000; padding:1px;" colspan="3">
+                                        <strong>Delivery- Dafza to Dafza yes ye sye sg </strong><br/>
+                                        <strong>At- Captains Freight Services</strong>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+
+            </tr>
+        </table>
+
+        <!-- ITEMS TABLE (DYNAMIC DATA) -->
+        <table style="width:100%; border-collapse:collapse; border:1px solid #000; font-size:11px; margin-top:5px;">
+            <tr>
+                <th style="border:1px solid #000;">Sl No.</th>
+                <th style="border:1px solid #000;">Description of Goods</th>
+                <th style="border:1px solid #000;">Quantity</th>
+                <th style="border:1px solid #000;">Rate</th>
+                <th style="border:1px solid #000;">Per</th>
+                <th style="border:1px solid #000;">Amount</th>
+            </tr>
+
+            <!-- Dynamic Data for Invoice Items -->
+            <t t-set="line_num" t-value="0"/>
+            <t t-set="total_qty" t-value="0"/>
+            <t t-foreach="doc.invoice_line_ids.filtered(lambda l: l.display_type not in ('line_section', 'line_note'))" t-as="line">
+                <t t-set="line_num" t-value="line_num + 1"/>
+                <t t-set="total_qty" t-value="total_qty + line.quantity"/>
+                <tr>
+                    <td style="border:1px solid #000; text-align:center;" t-esc="line_num"/>
+                    <td style="border:1px solid #000;">
+                        <strong><t t-esc="line.name or ''"/></strong>
+                        <t t-set="made_in_country" t-value="(line.sale_line_ids and line.sale_line_ids[0].made_in_country_id) or (line.purchase_line_id and line.purchase_line_id.made_in_country_id) or (line.product_id and line.product_id.product_tmpl_id.made_country)"/>
+                        <t t-if="made_in_country">
+                            <br/>(Made <t t-esc="'in ' + (made_in_country.name or '')"/>
+                            <t t-if="line.product_id.product_tmpl_id.ks_unlocked">, Unlocked</t>)
+                        </t>
+                    </td>
+                    <td style="border:1px solid #000; text-align:right;">
+                        <strong><t t-esc="doc.format_number(line.quantity, digits=0)"/> pcs</strong>
+                    </td>
+                    <td style="border:1px solid #000; text-align:right;">
+                        <strong><t t-esc="doc.currency_id.symbol or '$'"/> <t t-esc="doc.format_number(line.price_unit, digits=2)"/></strong>
+                    </td>
+                    <td style="border:1px solid #000; text-align:center;" t-esc="line.product_uom_id.name or 'pcs'"/>
+                    <td style="border:1px solid #000; text-align:right;">
+                        <strong><t t-esc="doc.currency_id.symbol or '$'"/> <t t-esc="doc.format_number(line.price_subtotal, digits=2)"/></strong>
+                    </td>
+                </tr>
+            </t>
+
+            <!-- TOTAL -->
+            <tr>
+                <td colspan="5" style="border:1px solid #000; text-align:right;"><strong>Total</strong></td>
+                <td style="border:1px solid #000; text-align:right;">
+                    <strong><t t-esc="doc.currency_id.symbol or '$'"/> <t t-esc="doc.format_number(doc.amount_total, digits=2)"/></strong>
+                </td>
+            </tr>
+            <!-- Currency Conversion Line -->
+            <tr>
+                <td style="border:1px solid #000; text-align:right; padding:4px;" colspan="6">
+                    <t t-set="invoice_currency" t-value="doc.currency_id"/>
+                    <t t-set="company_currency" t-value="doc.company_id.currency_id"/>
+                    <t t-set="conversion_date" t-value="doc.invoice_date or doc.date or doc.create_date.date()"/>
+                    <t t-set="invoice_currency_rate" t-value="doc.invoice_currency_rate or 1.0"/>
+                    <t t-set="total_invoice_amount" t-value="doc.amount_total"/>
+                    <t t-set="converted_amount" t-value="total_invoice_amount"/>
+                    <t t-set="exchange_rate" t-value="1.0"/>
+                    <t t-set="company_to_invoice_rate" t-value="invoice_currency_rate"/>
+                    <t t-if="invoice_currency and company_currency and invoice_currency != company_currency">
+                        <t t-set="converted_amount" t-value="invoice_currency._convert(total_invoice_amount, company_currency, doc.company_id, conversion_date, round=True)"/>
+                        <t t-set="exchange_rate" t-value="1.0 / invoice_currency_rate"/>
+                    </t>
+                    <strong>
+                        Total Invoice Amount in <t t-esc="invoice_currency.name or 'USD'"/> <t t-esc="doc.format_number(total_invoice_amount, digits=2)"/> @ <t t-esc="company_currency.name or 'AED'"/> <t t-esc="doc.format_number(exchange_rate, digits=3)"/> / 1 <t t-esc="company_currency.name or 'AED'"/> = <t t-esc="doc.format_number(company_to_invoice_rate, digits=4)"/> <t t-esc="invoice_currency.name or 'USD'"/>
+                    </strong>
+                </td>
+            </tr>
+            <tr>
+                <td style="width:60%; border:1px solid #000; border-bottom:1px solid white; padding:6px;" colspan="6">
+                    Amount Chargeable (in words)<br/>
+                    <strong>
+                        <t t-set="exchange_currency_code" t-value="company_currency.name or 'AED'"/>
+                        <t t-set="exchanged_amount" t-value="converted_amount"/>
+                        <t t-set="invoice_amount_words" t-value="doc.get_amount_in_words_currency(total_invoice_amount, invoice_currency)"/>
+                        <t t-esc="invoice_amount_words or ''"/> (<t t-esc="exchange_currency_code + ' ' + doc.format_number(exchanged_amount, digits=2)"/>)
+                    </strong>
+                </td>
+
+            </tr>
+            <tr>
+                <td style="width:40%; border:1px solid white; padding:6px;border-left:1px solid #000;border-bottom:1px solid #000;" colspan="3">
+
+                </td>
+                <td style="width:40%; border:1px solid white;border-right:1px solid #000;border-bottom:1px solid #000; padding:6px;" colspan="3">
+                    <!-- Company's Bank Details from sale order ks_bank_id (via get_company_bank_info) -->
+                    <t t-set="bank_info" t-value="doc.get_company_bank_info()"/>
+                    Company's Bank Details<br/>
+                    1. Bank Name : <strong><t t-esc="bank_info.get('bank_name') or ''"/></strong><br/>
+                    2. Account Number (A/c No.) : <strong><t t-esc="bank_info.get('acc_number') or ''"/></strong><br/>
+                    3. IFSC Code : <strong><t t-esc="bank_info.get('ifsc_code') or ''"/></strong><br/>
+                    4. Branch &amp; SWIFT Code : <strong><t t-esc="bank_info.get('branch') or ''"/><t t-if="bank_info.get('branch') and bank_info.get('swift_code')"> / </t><t t-esc="bank_info.get('swift_code') or ''"/></strong><br/>
+                </td>
+            </tr>
+            <tr>
+                <td style="border:1px solid #000; padding:20px;" colspan="3">
+                    Customer's Seal and Signature
+                </td>
+                <td style="border:1px solid #000; text-align:center; vertical-align:bottom;" colspan="3">
+                    Authorised Signatory<br/><br/>
+                    For <t t-esc="doc.company_id.name or 'BORA ELECTRONICS FZCO'"/>
+                </td>
+            </tr>
+        </table>
+
+        </main>
+        <footer class="pt-0">
+
+                <p style="text-align:center; font-size:10px;">
+                    This is a Computer Generated Invoice
+                </p>
+
+         </footer>
+        </t>
+    </t>
+</template>
+
+
+
+</odoo>

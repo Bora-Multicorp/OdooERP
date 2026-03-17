@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="partner_approve_request_wizard_view_form" model="ir.ui.view">
+        <field name="name">partner.approve.request.wizard.form</field>
+        <field name="model">partner.approve.request.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Approve Request">
+                <group>
+                    <field name="partner_id" readonly="1"/>
+                    <field name="remark"/>
+                </group>
+                <footer>
+                    <button name="action_approve_request" string="Submit" type="object" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+    <record id="partner_approve_request_wizard_action" model="ir.actions.act_window">
+        <field name="name">Approve Request</field>
+        <field name="res_model">partner.approve.request.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="partner_approve_request_wizard_view_form"/>
+        <field name="target">new</field>
+        <field name="binding_model_id" ref="base.model_res_partner"/>
+        <field name="context">{'default_partner_id': active_id}</field>
+    </record>
+</odoo>

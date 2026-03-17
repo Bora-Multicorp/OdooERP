@@ -1,0 +1,376 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+=============================================================================
+  TEST DEMO DATA — KS Insurance Management  (SELF-CONTAINED)
+=============================================================================
+  PURPOSE : Quick testing of all module features.
+  RECORDS : 3 Companies, 2 Agents, 5 Types (demo), 11 Policies, 4 Declarations
+  HOW TO USE:
+    1. 'data/test_demo_data.xml' is already in __manifest__.py
+    2. Upgrade the module: Apps → KS Insurance Management → Upgrade
+    3. Test all features.
+  CLEANUP (when done testing):
+    1. Delete this file: data/test_demo_data.xml
+    2. Remove 'data/test_demo_data.xml' from __manifest__.py → 'data' list
+    3. Delete the demo records from Odoo UI (or restore a DB snapshot)
+=============================================================================
+-->
+<odoo>
+
+    <!-- ================================================================== -->
+    <!--  DEMO INSURANCE TYPES (standalone — no dependency on type_data)     -->
+    <!-- ================================================================== -->
+
+    <record id="demo_type_marine_open" model="insurance.type">
+        <field name="name">Marine Open Cover (Demo)</field>
+        <field name="category_id" ref="ks_insurance_management.cat_marine"/>
+        <field name="is_marine" eval="True"/>
+        <field name="marine_applicability">both</field>
+        <field name="company_id" eval="False"/>
+        <field name="description">Demo: Open cover marine policy for ongoing domestic and EXIM shipments.</field>
+    </record>
+
+    <record id="demo_type_marine_exim" model="insurance.type">
+        <field name="name">Marine EXIM (Demo)</field>
+        <field name="category_id" ref="ks_insurance_management.cat_marine"/>
+        <field name="is_marine" eval="True"/>
+        <field name="marine_applicability">exim</field>
+        <field name="company_id" eval="False"/>
+        <field name="description">Demo: Marine policy covering Export-Import shipments only.</field>
+    </record>
+
+    <record id="demo_type_fire_burglary" model="insurance.type">
+        <field name="name">Fire &amp; Burglary Combined (Demo)</field>
+        <field name="category_id" ref="ks_insurance_management.cat_fire"/>
+        <field name="is_fire_burglary" eval="True"/>
+        <field name="company_id" eval="False"/>
+        <field name="description">Demo: Combined Fire and Burglary policy for warehouse coverage.</field>
+    </record>
+
+    <record id="demo_type_gmc" model="insurance.type">
+        <field name="name">Group Mediclaim GMC (Demo)</field>
+        <field name="category_id" ref="ks_insurance_management.cat_gmc"/>
+        <field name="company_id" eval="False"/>
+        <field name="description">Demo: Group Mediclaim insurance covering employees and dependants.</field>
+    </record>
+
+    <record id="demo_type_vehicle" model="insurance.type">
+        <field name="name">Vehicle Zero Depreciation (Demo)</field>
+        <field name="category_id" ref="ks_insurance_management.cat_vehicle"/>
+        <field name="company_id" eval="False"/>
+        <field name="description">Demo: Zero depreciation vehicle insurance for company vehicles.</field>
+    </record>
+
+    <!-- ================================================================== -->
+    <!--  INSURANCE COMPANIES (3)                                            -->
+    <!-- ================================================================== -->
+
+    <record id="demo_ins_co_1" model="insurance.company">
+        <field name="name">New India Assurance Co. Ltd.</field>
+        <field name="contact_person">Ramesh Patel</field>
+        <field name="phone">+91 22 2270 0500</field>
+        <field name="email">declarations@newindia.co.in</field>
+        <field name="address">87 M.G. Road, Fort, Mumbai - 400001</field>
+        <field name="company_id" eval="False"/>
+    </record>
+
+    <record id="demo_ins_co_2" model="insurance.company">
+        <field name="name">United India Insurance Co. Ltd.</field>
+        <field name="contact_person">Sunita Mehta</field>
+        <field name="phone">+91 44 2852 0161</field>
+        <field name="email">policy@uiic.co.in</field>
+        <field name="address">24 Whites Road, Chennai - 600014</field>
+        <field name="company_id" eval="False"/>
+    </record>
+
+    <record id="demo_ins_co_3" model="insurance.company">
+        <field name="name">ICICI Lombard General Insurance</field>
+        <field name="contact_person">Ankit Sharma</field>
+        <field name="phone">+91 22 4075 7575</field>
+        <field name="email">care@icicilombard.com</field>
+        <field name="address">414, Veer Savarkar Marg, Prabhadevi, Mumbai - 400025</field>
+        <field name="company_id" eval="False"/>
+    </record>
+
+    <!-- ================================================================== -->
+    <!--  INSURANCE AGENTS (2)                                               -->
+    <!-- ================================================================== -->
+
+    <record id="demo_agent_1" model="insurance.agent">
+        <field name="name">Rajesh Kumar</field>
+        <field name="phone">+91 98765 43210</field>
+        <field name="email">rajesh.kumar@insurancebrokers.in</field>
+        <field name="license_no">IRDAI/BRK/CB/12345/2023</field>
+        <field name="insurance_company_id" ref="demo_ins_co_1"/>
+        <field name="company_id" eval="False"/>
+    </record>
+
+    <record id="demo_agent_2" model="insurance.agent">
+        <field name="name">Priya Sharma</field>
+        <field name="phone">+91 87654 32109</field>
+        <field name="email">priya.sharma@globalbrokers.in</field>
+        <field name="license_no">IRDAI/BRK/CB/67890/2023</field>
+        <field name="insurance_company_id" ref="demo_ins_co_2"/>
+        <field name="company_id" eval="False"/>
+    </record>
+
+    <!-- ================================================================== -->
+    <!--  INSURANCE POLICIES (11)                                            -->
+    <!--  Marine (3) · Fire &amp; Burglary (2) · Miscellaneous (6)          -->
+    <!-- ================================================================== -->
+
+    <!-- ── MARINE POLICIES ─────────────────────────────────────────────── -->
+
+    <!-- 1. Marine Open Cover — ACTIVE (has 2 confirmed/sent declarations below) -->
+    <record id="demo_pol_marine_open" model="insurance.policy">
+        <field name="policy_number">NIA/MAR/2025/001234</field>
+        <field name="company_id" ref="base.main_company"/>
+        <field name="insurance_type_id" ref="demo_type_marine_open"/>
+        <field name="insurance_company_id" ref="demo_ins_co_1"/>
+        <field name="agent_id" ref="demo_agent_1"/>
+        <field name="policy_type">individual</field>
+        <field name="sum_insured">50000000</field>
+        <field name="balance_sum_insured">43950000</field>
+        <field name="premium">125000</field>
+        <field name="start_date">2025-04-01</field>
+        <field name="expiry_date">2026-03-31</field>
+        <field name="state">active</field>
+        <field name="notes">Annual Marine Open Cover — EXIM + domestic shipments. Declarations filed monthly by the 10th of following month.</field>
+    </record>
+
+    <!-- 2. Marine EXIM — ACTIVE -->
+    <record id="demo_pol_marine_exim" model="insurance.policy">
+        <field name="policy_number">NIA/MAR/2025/002567</field>
+        <field name="company_id" ref="base.main_company"/>
+        <field name="insurance_type_id" ref="demo_type_marine_exim"/>
+        <field name="insurance_company_id" ref="demo_ins_co_1"/>
+        <field name="agent_id" ref="demo_agent_1"/>
+        <field name="policy_type">individual</field>
+        <field name="sum_insured">75000000</field>
+        <field name="balance_sum_insured">75000000</field>
+        <field name="premium">185000</field>
+        <field name="start_date">2025-04-01</field>
+        <field name="expiry_date">2026-03-31</field>
+        <field name="state">active</field>
+        <field name="notes">EXIM marine policy. Covers all export and import shipments. Declarations filed fortnightly.</field>
+    </record>
+
+    <!-- 3. Marine — EXPIRED (previous year, balance = 0 as per requirement) -->
+    <record id="demo_pol_marine_expired" model="insurance.policy">
+        <field name="policy_number">NIA/MAR/2024/000889</field>
+        <field name="company_id" ref="base.main_company"/>
+        <field name="insurance_type_id" ref="demo_type_marine_open"/>
+        <field name="insurance_company_id" ref="demo_ins_co_1"/>
+        <field name="agent_id" ref="demo_agent_1"/>
+        <field name="policy_type">individual</field>
+        <field name="sum_insured">40000000</field>
+        <field name="balance_sum_insured">0</field>
+        <field name="premium">100000</field>
+        <field name="start_date">2024-04-01</field>
+        <field name="expiry_date">2025-03-31</field>
+        <field name="state">expired</field>
+        <field name="notes">Previous year marine policy — expired. Balance reset to 0 on expiry. Renewed as NIA/MAR/2025/001234.</field>
+    </record>
+
+    <!-- ── FIRE &amp; BURGLARY POLICIES ────────────────────────────────── -->
+
+    <!-- 4. Fire &amp; Burglary Combined — ACTIVE (has 1 declaration) -->
+    <record id="demo_pol_fire_burglary" model="insurance.policy">
+        <field name="policy_number">UIB/FB/2025/003456</field>
+        <field name="company_id" ref="base.main_company"/>
+        <field name="insurance_type_id" ref="demo_type_fire_burglary"/>
+        <field name="insurance_company_id" ref="demo_ins_co_2"/>
+        <field name="agent_id" ref="demo_agent_2"/>
+        <field name="policy_type">individual</field>
+        <field name="sum_insured">25000000</field>
+        <field name="balance_sum_insured">25000000</field>
+        <field name="premium">62500</field>
+        <field name="start_date">2025-04-01</field>
+        <field name="expiry_date">2026-03-31</field>
+        <field name="state">active</field>
+        <field name="notes">Combined Fire &amp; Burglary for main warehouse. Inventory declarations filed monthly.</field>
+    </record>
+
+    <!-- 5. Fire &amp; Burglary — ACTIVE (different period, nearing expiry to test 30-day reminder) -->
+    <record id="demo_pol_fire_only" model="insurance.policy">
+        <field name="policy_number">UIB/FB/2025/004123</field>
+        <field name="company_id" ref="base.main_company"/>
+        <field name="insurance_type_id" ref="demo_type_fire_burglary"/>
+        <field name="insurance_company_id" ref="demo_ins_co_2"/>
+        <field name="agent_id" ref="demo_agent_2"/>
+        <field name="policy_type">individual</field>
+        <field name="sum_insured">15000000</field>
+        <field name="balance_sum_insured">15000000</field>
+        <field name="premium">37500</field>
+        <field name="start_date">2025-04-01</field>
+        <field name="expiry_date">2026-04-05</field>
+        <field name="state">active</field>
+        <field name="notes">Fire &amp; Burglary for factory. Expiry April 2026 — renewal due soon. Good to test 30-day expiry reminder.</field>
+    </record>
+
+    <!-- ── MISCELLANEOUS POLICIES ────────────────────────────────────────── -->
+
+    <!-- 6. GMC — Group Mediclaim -->
+    <record id="demo_pol_gmc" model="insurance.policy">
+        <field name="policy_number">ICICI/GMC/2025/010011</field>
+        <field name="company_id" ref="base.main_company"/>
+        <field name="insurance_type_id" ref="demo_type_gmc"/>
+        <field name="insurance_company_id" ref="demo_ins_co_3"/>
+        <field name="policy_type">individual</field>
+        <field name="sum_insured">500000</field>
+        <field name="balance_sum_insured">500000</field>
+        <field name="premium">2800000</field>
+        <field name="start_date">2025-04-01</field>
+        <field name="expiry_date">2026-03-31</field>
+        <field name="state">active</field>
+        <field name="notes">Group Mediclaim — 120 employees + dependants. Sum insured Rs 5,00,000 per person. TPA: Medi Assist India.</field>
+    </record>
+
+    <!-- 7. GPA — Group Personal Accident (using GMC category for demo) -->
+    <record id="demo_pol_gpa" model="insurance.policy">
+        <field name="policy_number">ICICI/GPA/2025/010022</field>
+        <field name="company_id" ref="base.main_company"/>
+        <field name="insurance_type_id" ref="demo_type_gmc"/>
+        <field name="insurance_company_id" ref="demo_ins_co_3"/>
+        <field name="policy_type">individual</field>
+        <field name="sum_insured">1000000</field>
+        <field name="balance_sum_insured">1000000</field>
+        <field name="premium">360000</field>
+        <field name="start_date">2025-04-01</field>
+        <field name="expiry_date">2026-03-31</field>
+        <field name="state">active</field>
+        <field name="notes">Group Personal Accident — 120 employees. Death and PTD benefit Rs 10,00,000 per person.</field>
+    </record>
+
+    <!-- 8. Vehicle — Zero Depreciation -->
+    <record id="demo_pol_vehicle" model="insurance.policy">
+        <field name="policy_number">UIB/VEH/2025/007891</field>
+        <field name="company_id" ref="base.main_company"/>
+        <field name="insurance_type_id" ref="demo_type_vehicle"/>
+        <field name="insurance_company_id" ref="demo_ins_co_2"/>
+        <field name="agent_id" ref="demo_agent_2"/>
+        <field name="policy_type">individual</field>
+        <field name="sum_insured">1500000</field>
+        <field name="balance_sum_insured">1500000</field>
+        <field name="premium">45000</field>
+        <field name="start_date">2025-06-01</field>
+        <field name="expiry_date">2026-05-31</field>
+        <field name="state">active</field>
+        <field name="notes">Zero depreciation — Toyota Innova Crysta (MH-01-XX-1234). IDV Rs 15,00,000.</field>
+    </record>
+
+    <!-- 9. Vehicle — Third Party -->
+    <record id="demo_pol_vehicle_tp" model="insurance.policy">
+        <field name="policy_number">UIB/VEH/2025/007892</field>
+        <field name="company_id" ref="base.main_company"/>
+        <field name="insurance_type_id" ref="demo_type_vehicle"/>
+        <field name="insurance_company_id" ref="demo_ins_co_2"/>
+        <field name="agent_id" ref="demo_agent_2"/>
+        <field name="policy_type">individual</field>
+        <field name="sum_insured">750000</field>
+        <field name="balance_sum_insured">750000</field>
+        <field name="premium">18000</field>
+        <field name="start_date">2025-06-01</field>
+        <field name="expiry_date">2026-05-31</field>
+        <field name="state">active</field>
+        <field name="notes">Third Party liability policy — Honda City (MH-02-YY-5678).</field>
+    </record>
+
+    <!-- 10. Personal Accident — Key Management -->
+    <record id="demo_pol_personal" model="insurance.policy">
+        <field name="policy_number">NIA/PA/2025/005678</field>
+        <field name="company_id" ref="base.main_company"/>
+        <field name="insurance_type_id" ref="demo_type_gmc"/>
+        <field name="insurance_company_id" ref="demo_ins_co_1"/>
+        <field name="agent_id" ref="demo_agent_1"/>
+        <field name="policy_type">individual</field>
+        <field name="sum_insured">2500000</field>
+        <field name="balance_sum_insured">2500000</field>
+        <field name="premium">12500</field>
+        <field name="start_date">2025-01-01</field>
+        <field name="expiry_date">2025-12-31</field>
+        <field name="state">active</field>
+        <field name="notes">Personal Accident cover for 5 key management personnel. Sum insured Rs 25,00,000 per person.</field>
+    </record>
+
+    <!-- 11. Office Space + HO Assets — Expired (to test Renew Policy button) -->
+    <record id="demo_pol_office_expired" model="insurance.policy">
+        <field name="policy_number">UIB/OFF/2024/009001</field>
+        <field name="company_id" ref="base.main_company"/>
+        <field name="insurance_type_id" ref="demo_type_gmc"/>
+        <field name="insurance_company_id" ref="demo_ins_co_2"/>
+        <field name="policy_type">individual</field>
+        <field name="sum_insured">5000000</field>
+        <field name="balance_sum_insured">5000000</field>
+        <field name="premium">25000</field>
+        <field name="start_date">2024-04-01</field>
+        <field name="expiry_date">2025-03-31</field>
+        <field name="state">expired</field>
+        <field name="notes">Office Space policy — expired. Use the Renew Policy button to create a renewal.</field>
+    </record>
+
+    <!-- ================================================================== -->
+    <!--  INSURANCE DECLARATIONS (4)                                         -->
+    <!--  Tests all 3 states: Draft · Confirmed · Sent                       -->
+    <!-- ================================================================== -->
+
+    <!-- 1. Marine Open — January 2026 — SENT (full cycle complete) -->
+    <record id="demo_decl_marine_jan" model="insurance.declaration">
+        <field name="policy_id" ref="demo_pol_marine_open"/>
+        <field name="company_id" ref="base.main_company"/>
+        <field name="declaration_type">marine</field>
+        <field name="date_from">2026-01-01</field>
+        <field name="date_to">2026-01-31</field>
+        <field name="sales_amount">3200000</field>
+        <field name="declaration_amount">3200000</field>
+        <field name="marine_applicability">both</field>
+        <field name="email_to">declarations@newindia.co.in</field>
+        <field name="state">sent</field>
+        <field name="notes">January 2026 — 28 invoices totalling Rs 32,00,000. Sent to insurer on 10-Feb-2026.</field>
+    </record>
+
+    <!-- 2. Marine Open — February 2026 — CONFIRMED (test Draft Email + Mark as Sent) -->
+    <record id="demo_decl_marine_feb" model="insurance.declaration">
+        <field name="policy_id" ref="demo_pol_marine_open"/>
+        <field name="company_id" ref="base.main_company"/>
+        <field name="declaration_type">marine</field>
+        <field name="date_from">2026-02-01</field>
+        <field name="date_to">2026-02-28</field>
+        <field name="sales_amount">2850000</field>
+        <field name="declaration_amount">2850000</field>
+        <field name="marine_applicability">both</field>
+        <field name="email_to">declarations@newindia.co.in</field>
+        <field name="state">confirmed</field>
+        <field name="notes">February 2026 — confirmed. Click Draft Email then Mark as Sent to complete the cycle.</field>
+    </record>
+
+    <!-- 3. Marine EXIM — March 2026 (1-15) — DRAFT (test Confirm button) -->
+    <record id="demo_decl_marine_mar" model="insurance.declaration">
+        <field name="policy_id" ref="demo_pol_marine_exim"/>
+        <field name="company_id" ref="base.main_company"/>
+        <field name="declaration_type">marine</field>
+        <field name="date_from">2026-03-01</field>
+        <field name="date_to">2026-03-15</field>
+        <field name="sales_amount">4100000</field>
+        <field name="declaration_amount">4100000</field>
+        <field name="marine_applicability">exim</field>
+        <field name="email_to">declarations@newindia.co.in</field>
+        <field name="state">draft</field>
+        <field name="notes">First fortnight March 2026. Click Confirm to deduct balance from marine policy.</field>
+    </record>
+
+    <!-- 4. Fire &amp; Burglary — January 2026 — SENT -->
+    <record id="demo_decl_fb_jan" model="insurance.declaration">
+        <field name="policy_id" ref="demo_pol_fire_burglary"/>
+        <field name="company_id" ref="base.main_company"/>
+        <field name="declaration_type">fire_burglary</field>
+        <field name="date_from">2026-01-01</field>
+        <field name="date_to">2026-01-31</field>
+        <field name="avg_inventory_value">18500000</field>
+        <field name="declaration_amount">18500000</field>
+        <field name="email_to">policy@uiic.co.in</field>
+        <field name="state">sent</field>
+        <field name="notes">January 2026 inventory declaration — main warehouse. Avg stock Rs 1,85,00,000. Sent 05-Feb-2026.</field>
+    </record>
+
+</odoo>

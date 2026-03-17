@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="ks_dn_advance.board_form_inherited" model="ir.ui.view">
+            <field name="name">ks_dashboard_ninja.View</field>
+            <field name="model">ks_dashboard_ninja.board</field>
+            <field name="inherit_id" ref="ks_dashboard_ninja.board_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//div[@id='ks_dashboard_end_date_div']" position="after">
+                    <div class="col-6 d-flex flex-column gap-2">
+                        <label for="ks_croessel_speed" class="form-label">Slide Interval</label>
+                        <field name="ks_croessel_speed" class="form-control form-input-box validation bg-white encapsulated-form-arrow" required="1"/>
+                    </div>
+                </xpath>
+                <xpath expr="//page[@name='advance_setting']" position="after">
+                    <page string="Mail Configuration">
+
+                            <div  class=" row">
+                                <div class="col-6 d-flex flex-column gap-2">
+                                  <label for="ks_mail_to_partner" class="form-label">Dashboard Name</label>
+                                <field class="form-control form-input-box validation" name="ks_mail_to_partner" nolabel="1"/>
+                                </div>
+                                <div class="col-6 d-flex flex-column gap-2">
+                                    <label for="ks_mail_to_cc_partner" class="form-label">Dashboard Name</label>
+                                <field name="ks_mail_to_cc_partner" class="form-control form-input-box encapsulated-form-arrow bg-white encap-custom-input" nolabel="1"
+                                       widget="many2many_tags"/>
+                                </div>
+                                <div class="col-6 d-flex flex-column gap-2">
+                                    <label for="ks_mail_email_cc_value" class="form-label">Dashboard Name</label>
+                                <field name="ks_mail_email_cc_value" class="form-control form-input-box validation" nolabel="1" invisible="1"/>
+                                </div>
+
+                            </div>
+
+                    </page>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>

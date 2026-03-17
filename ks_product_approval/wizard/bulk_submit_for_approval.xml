@@ -1,0 +1,24 @@
+<odoo>
+    <record id="view_product_bulk_submit_for_approval_wizard_form" model="ir.ui.view">
+        <field name="name">product.bulk.submit.for.approval.wizard.form</field>
+        <field name="model">product.bulk.submit.approval.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Confirm Bulk Submit For Approval">
+                <p>
+                    You are about to submit selected product(s) for approval.
+                    Are you sure you want to proceed?
+                </p>
+                <footer>
+                    <button string="Confirm" name="action_submit_for_bulk_approval" type="object" class="oe_highlight"/>
+                    <button string="Cancel" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+    <record id="action_open_product_bulk_submit_for_approval_wizard" model="ir.actions.act_window">
+        <field name="name">Confirm Bulk Submit For Approval</field>
+        <field name="res_model">product.bulk.submit.approval.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+</odoo>

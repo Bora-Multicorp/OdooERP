@@ -1,0 +1,49 @@
+<odoo>
+    <!--Product Creation block from PO form-->
+    <record id="purchase_order_form" model="ir.ui.view">
+        <field name="name">product.purchase.order.form.inherit</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='order_line']/list/field[@name='product_id']" position="replace">
+                <field
+                        name="product_id"
+                        widget="product_label_section_and_note_field"
+                        options="{'no_create': True, 'no_create_edit': True}"
+                        readonly="state in ('purchase', 'to approve', 'done', 'cancel') or is_downpayment"
+                        required="not display_type and not is_downpayment"
+                        context="{'partner_id':parent.partner_id, 'quantity':product_qty, 'company_id': parent.company_id}"
+                        force_save="1"
+                        domain="[('purchase_ok', '=', True), '|', ('company_id', '=', False), ('company_id', 'parent_of', parent.company_id)]"/>
+            </xpath>
+        </field>
+    </record>
+    <!--Product Creation block from sale order form-->
+    <record id="sale_order_form" model="ir.ui.view">
+        <field name="name">product.sale.order.form.inherit</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='order_line']/list/field[@name='product_template_id']" position="replace">
+                <field name="product_template_id"
+                       string="Product"
+                       readonly="id and not product_updatable"
+                       required="not display_type and not is_downpayment"
+                       context="{
+                                        'partner_id': parent.partner_id,
+                                        'quantity': product_uom_qty,
+                                        'pricelist': parent.pricelist_id,
+                                        'uom':product_uom,
+                                        'company_id': parent.company_id,
+                                        'default_list_price': price_unit,
+                                        'default_uom_id': product_uom,
+                                    }"
+                       options="{'no_create': True, 'no_create_edit': True}"
+                       optional="show"
+                       domain="[('sale_ok', '=', True)]"
+                       widget="sol_product_many2one"
+                       placeholder="Type to find a product..."/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

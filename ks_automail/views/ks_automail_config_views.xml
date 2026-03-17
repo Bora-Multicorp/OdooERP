@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- KS Auto Mail Configuration List View -->
+    <record id="view_ks_automail_config_tree" model="ir.ui.view">
+        <field name="name">ks.automail.config.tree</field>
+        <field name="model">ks.automail.config</field>
+        <field name="arch" type="xml">
+            <list string="Email Configurations">
+                <field name="name"/>
+                <field name="zone"/>
+                <field name="company_id"/>
+                <field name="active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- KS Auto Mail Configuration Form View -->
+    <record id="view_ks_automail_config_form" model="ir.ui.view">
+        <field name="name">ks.automail.config.form</field>
+        <field name="model">ks.automail.config</field>
+        <field name="arch" type="xml">
+            <form string="Email Configuration">
+                <header>
+                    <button name="toggle_active" type="object" 
+                            string="Archive" 
+                            class="oe_stat_button"
+                            invisible="not active"/>
+                    <button name="toggle_active" type="object" 
+                            string="Unarchive" 
+                            class="oe_stat_button"
+                            invisible="active"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name" required="1"/>
+                            <field name="zone" required="1"/>
+                            <field name="company_id" 
+                                   options="{'no_create': True}"
+                                   help="Leave empty for global configuration, or specify a company for company-specific settings"/>
+                            <field name="active" widget="boolean_toggle"/>
+                        </group>
+                    </group>
+                    
+                    <notebook>
+                        <page string="Email Templates" name="templates">
+                            <group>
+                                <group string="Templates">
+                                    <field name="email_template_confirmation_id" 
+                                           required="1"
+                                           options="{'no_create': True, 'no_open': True}"
+                                           domain="[('model', '=', 'sale.order')]"/>
+                                    <field name="email_template_packed_id" 
+                                           required="1"
+                                           options="{'no_create': True, 'no_open': True}"
+                                           domain="[('model', '=', 'sale.order')]"/>
+                                    <field name="email_template_shipped_id" 
+                                           required="1"
+                                           options="{'no_create': True, 'no_open': True}"
+                                           domain="[('model', '=', 'sale.order')]"/>
+                                </group>
+                                <group string="Sender">
+                                    <field name="email_from" 
+                                           placeholder="e.g., noreply@company.com"
+                                           help="Leave empty to use template default or company email"/>
+                                </group>
+                            </group>
+                        </page>
+                        
+                        <page string="Recipients" name="recipients">
+                            <group>
+                                <group string="Default Recipients">
+                                    <field name="default_recipient_ids" 
+                                           widget="many2many_tags"
+                                           options="{'no_create': True}"
+                                           placeholder="Select default email recipients..."
+                                           help="Default recipients who will receive automatic emails. Can be overridden per Sale Order."/>
+                                </group>
+                                <group string="Default CC Recipients">
+                                    <field name="default_cc_ids" 
+                                           widget="many2many_tags"
+                                           options="{'no_create': True}"
+                                           placeholder="Select default CC recipients (optional)..."
+                                           help="Default CC recipients. Can be overridden per Sale Order."/>
+                                </group>
+                            </group>
+                        </page>
+                        
+                        <page string="Auto-Send Settings" name="auto_send">
+                            <group>
+                                <group string="Settings">
+                                    <field name="auto_send_confirmation" 
+                                           widget="boolean_toggle"
+                                           help="Automatically send email when order is confirmed"/>
+                                    <field name="auto_send_packed" 
+                                           widget="boolean_toggle"
+                                           help="Automatically send email when order is packed"/>
+                                    <field name="auto_send_shipped" 
+                                           widget="boolean_toggle"
+                                           help="Automatically send email when order is shipped"/>
+                                </group>
+                            </group>
+                            
+                            <div class="alert alert-info mt-3" role="alert">
+                                <h5><i class="fa fa-info-circle me-2"/>How It Works</h5>
+                                <ul class="mb-0">
+                                    <li>These settings define the default behavior for Sale Orders in this zone/company.</li>
+                                    <li>Users can override these settings on individual Sale Orders if needed.</li>
+                                    <li>Only India and Dubai zones support automatic emails.</li>
+                                    <li>Configuration priority: Company-specific > Global (no company)</li>
+                                </ul>
+                            </div>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- KS Auto Mail Configuration Search View -->
+    <record id="view_ks_automail_config_search" model="ir.ui.view">
+        <field name="name">ks.automail.config.search</field>
+        <field name="model">ks.automail.config</field>
+        <field name="arch" type="xml">
+            <search string="Email Configurations">
+                <field name="name"/>
+                <field name="zone"/>
+                <field name="company_id"/>
+                <filter string="Active" name="active" domain="[('active', '=', True)]"/>
+                <filter string="Archived" name="inactive" domain="[('active', '=', False)]"/>
+                <filter string="India" name="india" domain="[('zone', '=', 'india')]"/>
+                <filter string="Dubai" name="dubai" domain="[('zone', '=', 'dubai')]"/>
+                <separator/>
+                <filter string="Global Config" name="global" domain="[('company_id', '=', False)]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Zone" name="group_zone" context="{'group_by': 'zone'}"/>
+                    <filter string="Company" name="group_company" context="{'group_by': 'company_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- KS Auto Mail Configuration Action -->
+    <record id="action_ks_automail_config" model="ir.actions.act_window">
+        <field name="name">Email Configurations</field>
+        <field name="res_model">ks.automail.config</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first Email Configuration
+            </p>
+            <p>
+                Configure global email settings for automatic notifications per zone (India/Dubai) and company.
+                Each configuration defines email templates, recipients, and auto-send behavior.
+            </p>
+        </field>
+    </record>
+
+    <!-- Menu Item -->
+    <menuitem id="menu_ks_automail_config"
+              name="Email Configurations"
+              parent="sale.sale_menu_root"
+              action="action_ks_automail_config"
+              sequence="100"/>
+
+</odoo>
+

@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- List (Tree) view only for ks.purchase.report.detail -->
+        <record id="view_ks_purchase_report_detail_tree" model="ir.ui.view">
+            <field name="name">ks.purchase.report.detail.tree</field>
+            <field name="model">ks.purchase.report.detail</field>
+            <field name="arch" type="xml">
+                <list string="Purchase Report Detail" create="false" edit="false" delete="true">
+                    <field name="purchase_id" widget="many2one"/>
+                    <field name="payment_term_id"/>
+                    <field name="invoice_id" widget="many2one"/>
+                    <field name="invoice_date"/>
+                    <field name="user_id"/>
+                    <field name="company_id"/>
+                    <field name="partner_id"/>
+                    <field name="vendor_gstin"/>
+                    <field name="product_id"/>
+                    <field name="po_qty"/>
+                    <field name="grn_qty"/>
+                    <field name="difference"/>
+                    <field name="rate"/>
+                    <field name="amt"/>
+                    <field name="remarks"/>
+                    <field name="ks_invoice" string="Invoice"/>
+                    <field name="ks_e_invoices" string="E - Invoices"/>
+                    <field name="ks_e_way_bill" string="E-way Bill"/>
+                    <field name="ks_imei_serial_no" string="IMEI/ Serial No"/>
+                    <field name="ks_docket" string="DOCKET"/>
+                    <field name="ks_ewaybill_no" string="EWAYBILL NO"/>
+                    <field name="ks_docket_no" string="DOCKET No"/>
+                    <field name="ks_transporter" string="TRANSPORTER"/>
+                    <field name="ks_vehicle_no" string="Vehicle No."/>
+                    <field name="ks_remarks_po" string="Remarks"/>
+                    <field name="purchase_line_id" column_invisible="1"/>
+                </list>
+            </field>
+        </record>
+
+        <!-- Window action: list only -->
+        <record id="action_ks_purchase_report_detail" model="ir.actions.act_window">
+            <field name="name">Purchase Report Detail</field>
+            <field name="res_model">ks.purchase.report.detail</field>
+            <field name="view_mode">list</field>
+            <field name="search_view_id" eval="False"/>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    No report lines yet.
+                </p>
+                <p>
+                    Use "Sync to Report" on a Purchase Order to sync data here, or run the scheduled sync.
+                </p>
+            </field>
+        </record>
+
+        <!-- Menu under Purchase → Reporting -->
+        <menuitem
+            id="menu_ks_purchase_report_detail"
+            name="Purchase Report Detail"
+            action="action_ks_purchase_report_detail"
+            parent="purchase.purchase_report_main"
+            sequence="20"
+            groups="purchase.group_purchase_user"
+        />
+
+        <!-- Server Action: Export to XLSX - appears in Settings (Action) menu on list view -->
+        <record id="action_ks_purchase_report_detail_xlsx" model="ir.actions.server">
+            <field name="name">Export to XLSX</field>
+            <field name="model_id" ref="ks_reports.model_ks_purchase_report_detail"/>
+            <field name="binding_model_id" ref="ks_reports.model_ks_purchase_report_detail"/>
+            <field name="binding_view_types">list</field>
+            <field name="state">code</field>
+            <field name="code">
+# Use selected records or all records if none selected
+if records:
+    report_records = records
+else:
+    report_records = env['ks.purchase.report.detail'].search([], order='purchase_id, id')
+
+file_content = report_records.generate_xlsx_report()
+
+attachment = env['ir.attachment'].create({
+    'name': 'Purchase_Report_Detail.xlsx',
+    'type': 'binary',
+    'datas': file_content,
+    'res_model': 'ks.purchase.report.detail',
+    'mimetype': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+})
+
+action = {
+    'type': 'ir.actions.act_url',
+    'url': '/web/content/' + str(attachment.id) + '?download=true',
+    'target': 'self',
+}
+            </field>
+        </record>
+    </data>
+</odoo>

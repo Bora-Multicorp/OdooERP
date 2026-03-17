@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+
+    <div t-name="kpiIconSection" t-att-class="classes" t-att-style="styles">
+        <img t-if="this.state.config.ks_icon_select == 'Custom'" t-att-src="this.props.isFormPreview ? this.previewCustomIconUrl : this.customIconUrl" loading="lazy"/>
+        <span t-elif="this.state.config.ks_icon_select == 'Default'" t-att-style="this.iconColorStyle" t-att-class="this.defaultIconClass"/>
+    </div>
+
+    <t t-name="kpiNameSection">
+        <t t-set="name" t-value="this.state.config.name || this.state.config.ks_model_id?.[1] || '-----'"/>
+        <div t-att-class="classes" t-att-style="styles" t-att-data-tooltip="name" t-esc="name"/>
+    </t>
+
+
+    <t t-name="kpiDataValueSection">
+        <div class="ks_dashboard_kpi_count_preview dashboard-item-data" t-att-data-tooltip="t_kpiDisplayValues.tooltip" t-att-style="styles">
+            <span t-esc="t_kpiDisplayValues.formattedValue1 + t_kpiDisplayValues.separator + t_kpiDisplayValues.formattedValue2"/>
+        </div>
+    </t>
+
+    <t t-name="targetSection">
+        <div t-if="this.state.config.ks_target_view === 'Number'" class="dashboard-item-compare">
+            <div class="ks_kpi_target_grey" t-esc="'vs Target'"/>
+            <div class="target_deviation">
+                <span t-att-class="t_kpiDisplayValues.targetDirection ? 'text-success' : 'text-danger'">
+                    <t t-esc="t_kpiDisplayValues.targetFormattedDeviation"/>
+                    <i t-att-class="'fa fa-arrow-' + (t_kpiDisplayValues.targetDirection ? 'up' : 'down')"/>
+                </span>
+            </div>
+        </div>
+        <div t-elif="this.state.config.ks_target_view === 'Progress Bar'" class="text-center ks_progress dashboard-item-compare">
+            <div class="w-75 text-start">
+                <progress class="ks_progressbar" t-att-value="this.isFinite(t_kpiDisplayValues.targetRawDeviation)"
+                          t-att-max="t_kpiDisplayValues.maxProgressBarValue"/>
+            </div>
+            <div class="text-center" t-esc="t_kpiDisplayValues.targetFormattedDeviation"/>
+        </div>
+    </t>
+
+
+
+    <div t-name="periodSection" class="var-prev text-center">
+        <div t-esc="'vs Prev'"/>
+        <div class="pre_deviation fs-5" t-att-class="t_kpiDisplayValues.periodDirection ? 'text-success' : 'text-danger'">
+            <t t-esc="t_kpiDisplayValues.periodFormattedDeviation"/>
+            <i t-att-class="'fa fa-arrow-'+ (t_kpiDisplayValues.periodDirection ? 'up' : 'down')"/>
+        </div>
+    </div>
+
+    <t t-name="ks_dashboard_ninja.kpi_view">
+
+        <!-- INFO: Wrapper for the Explanation and Chart -->
+        <div t-if="state.config" class="ks_dashboarditem_id encapsulated-tile-container ks_explain_ai_view ks_dashboard_item_l5 ks_dashboard_item_hover"
+             t-att-class="props.isAIExplanation ? ' ks_with_explanation' : ''">
+
+            <!-- INFO: Wrapper for the Border and padding -->
+            <div t-att-class="props.isAIExplanation ? 'ks_ai_chart ' : ''">
+
+                <!-- INFO: This is the main div Chart -->
+                <div t-att-style="bgColorStyle" class="w-100 ks_border_radius h-100 kpi-custom" t-on-click.stop="onKpiClick">
+                    <KsItemButton t-if="!props.isPreview" itemComponent.alike="constructor" chartInsightsProps.bind.alike="chartInsightsProps" itemConfig="state.config" rootClasses.alike="''"
+                              fetchOrUpdateItem.bind.alike="() => this.fetchOrUpdateItem(this.props)" isDashboardManager.alike="state.config.ks_dashboard_manager"
+                              allDashboardLists.alike="props.dashboardData.ks_dashboard_list"
+                              itemBasicDataFields.alike="props.dashboardData.item_basic_data_fields" resetChart.alike="resetChart"
+                              dnStore="props.dnStore"/>
+
+                    <t t-set="t_kpiDisplayValues" t-value="kpiDisplayValues"/>
+
+                    <t t-call="kpiIconSection" t-call-context="{ classes: 'ks_dashboard_icon_l5 dashboard-item-icon img-bg bg-white', this: this}"/>
+                    <div class="ks_dashboard_item_main_body_l5 ks_kpi_main_body position-relative">
+                        <t t-call="kpiDataValueSection" t-call-context="{ classes: '', this: this, t_kpiDisplayValues, styles: this.fontStyle }"/>
+                        <t t-if="t_kpiDisplayValues.periodFormattedDeviation"
+                           t-call="periodSection" t-call-context="{ classes: '', this: this, t_kpiDisplayValues }"/>
+                    </div>
+                    <t t-call="kpiNameSection" t-call-context="{ classes: 'ks_dashboard_item_name_l5 dashboard-item-name', this: this, styles: this.fontStyle}"/>
+                    <div t-if="t_kpiDisplayValues.targetFormattedDeviation">
+                        <t t-call="targetSection" t-call-context="{ classes: '', this: this, t_kpiDisplayValues }"/>
+                    </div>
+                </div>
+
+            </div>
+
+            <ExplanationViewer t-if="props.isAIExplanation" itemConfig="state.config" fetchExplanation="fetchExplanation"
+                               explanationText="state.config.ks_ai_analysis"/>
+
+        </div>
+        <t t-else="" t-call="card_skeleton"/>
+    </t>
+
+
+</templates>

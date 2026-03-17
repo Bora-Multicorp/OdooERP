@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Disable adding/deleting attributes and values from product Attributes & Variants tab -->
+    <record id="product_template_form_inherit_ks_sale_order_no_attr_creation" model="ir.ui.view">
+        <field name="name">product.template.form.inherit.ks.sale.order.no.attr.creation</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_only_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='variants']/field[@name='attribute_line_ids']" position="attributes">
+                <attribute name="create">false</attribute>
+                <attribute name="delete">false</attribute>
+            </xpath>
+            <!-- Disable creating new attribute values from the Values field (no "Create '...'" in dropdown) -->
+            <xpath expr="//page[@name='variants']/field[@name='attribute_line_ids']//field[@name='value_ids']" position="attributes">
+                <attribute name="options">{'no_create': True, 'no_create_edit': True, 'no_quick_create': True, 'color_field': 'color'}</attribute>
+            </xpath>
+        </field>
+    </record>
+</odoo>

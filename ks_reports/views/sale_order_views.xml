@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Server Action for Sheet 2 Report - Appears in Action Menu Dropdown -->
+    <record id="action_sale_order_print_sheet_2_report" model="ir.actions.server">
+        <field name="name">Print Sheet 2 Report</field>
+        <field name="model_id" ref="sale.model_sale_order"/>
+        <field name="binding_model_id" ref="sale.model_sale_order"/>
+        <field name="binding_view_types">form</field>
+        <field name="state">code</field>
+        <field name="code">
+# Call the model method for the first record (form view typically has one record)
+if records:
+    action = records[0].action_print_sheet_2_report()
+        </field>
+    </record>
+</odoo>
+

@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates xml:space="preserve">
+    <t t-name="ks_dashboard_ninja.custom_filter">
+        <t t-call="ks_dn.facets_container">
+            <t t-set="filter_data" t-value="facets"/>
+            <t t-set="remove" t-value="onRemoveFacet.bind(this)"/>
+        </t>
+        <div class="d-flex align-items-center mb-3 mt-1">
+            <h4 class="mb-2">Custom Filters</h4>
+            <button class="clear-all-btn ms-auto" t-on-click="clearRows">
+                <img src="/ks_dashboard_ninja/static/images/dashboardOverview/close-circle.svg" alt="cross-icon"
+                    class="img-fluid me-1" loading="lazy"/>
+                Clear All
+            </button>
+        </div>
+        <div>
+            <div class="table-custom mb-2">
+                <t t-foreach="state.rows" t-as="filter_row" t-key="filter_row_index">
+                    <div class="table-row gap-3">
+                        <t t-call="ks_dn.customFilter.filter.select">
+                            <t t-set="row" t-value="filter_row"/>
+                            <t t-set="row_index" t-value="filter_row_index"/>
+                        </t>
+                        <t t-call="ks_dn.customFilter.operator.select">
+                            <t t-set="row" t-value="filter_row"/>
+                            <t t-set="row_index" t-value="filter_row_index"/>
+                        </t>
+
+                        <t t-call="ks_dn.customFilter.value.select">
+                            <t t-set="row" t-value="filter_row"/>
+                            <t t-set="row_index" t-value="filter_row_index"/>
+                        </t>
+
+                        <div t-att-class=" filter_row_index === 0 ? 'table-cell d-none' : 'table-cell'" t-on-click="() => this.deleteRow(filter_row_index)">
+                            <button class="table-dlt-btn">
+                                <t t-call="delete_row_svg"/>
+                            </button>
+                        </div>
+                    </div>
+                </t>
+            </div>
+            <div class="btn-box d-flex justify-content-end align-items-center">
+                <button class="dash-default-btn bg-white" t-on-click="addRow">
+                    <t t-call="ks_dashboard_ninja.add_circle_svg"/>    Add a condition
+                </button>
+                <button class="dash-btn-red ms-2" t-on-click="applyFilters">
+                    Apply Filter
+                </button>
+            </div>
+        </div>
+    </t>
+
+
+
+    <t t-name="ks_dn.customFilter.filter.select">
+        <div class="table-cell">Where</div>
+        <Dropdown menuClass="'table-cell ks-dropdown-menu'">
+            <t t-set-slot="content">
+                <DropdownItem t-foreach="filterLabels" t-as="filterLabel" t-key="filterLabel.filter_id"
+                    class="{ '': true }" onSelected="() => this.selectRowFilter(filterLabel.filter_id, row_index)"
+                    t-esc="filterLabel.filter_name"/>
+            </t>
+            <button class="text-decoration-none bg-transparent " role="button" aria-expanded="false">
+                <t t-out="rowFilter(row.id)"/>
+            </button>
+        </Dropdown>
+    </t>
+
+    <t t-name="ks_dn.customFilter.operator.select">
+        <Dropdown menuClass="'table-cell ks-dropdown-menu'">
+            <t t-set-slot="content">
+                <DropdownItem t-foreach="getOperatorInfo(row.id)" t-as="operator" t-key="operator_index"
+                    class="{ '': true }" t-esc="operator.label" onSelected="() => this.selectRowOperator(operator.operator, row_index)"/>
+            </t>
+            <button class="text-decoration-none bg-transparent " href="#" role="button" aria-expanded="false">
+                <t t-out="rowOperator(row_index)"/>
+            </button>
+        </Dropdown>
+    </t>
+
+    <t t-name="ks_dn.customFilter.value.select">
+        <t t-call="web.TreeEditor.Editor">
+            <t t-set="_classes" t-value="'overflow-hidden table-cell form-control form-input-box'"/>
+            <t t-set="info" t-value="getValueInfo(filter_row)" />
+            <t t-set="value" t-value="filter_row.value" />
+            <t t-set="update" t-value="(value) => this.selectRowValue(row_index, value)"/>
+        </t>
+    </t>
+
+    <t t-name="ks_dn.no-filter-view">
+        <div class="no-data-avilable">
+            <div class="d-flex align-items-center justify-content-center flex-column">
+                <div class="no-data-img">
+                    <img src="/ks_dashboard_ninja/static/images/dashboardOverview/no-data.png" alt="no-data-available" loading="lazy" class="img-fluid"/>
+                </div>
+                <div class="title mb-1">
+                    No Filter Available
+                </div>
+                <p>
+                    No custom filter, Create some from dashboard settings
+                </p>
+            </div>
+        </div>
+    </t>
+
+    <t t-name="delete_row_svg">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M14 3.98665C11.78 3.76665 9.54667 3.65332 7.32 3.65332C6 3.65332 4.68 3.71999 3.36 3.85332L2 3.98665" stroke="" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M5.6665 3.31325L5.81317 2.43992C5.91984 1.80659 5.99984 1.33325 7.1265 1.33325H8.87317C9.99984 1.33325 10.0865 1.83325 10.1865 2.44659L10.3332 3.31325" stroke="" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M12.5664 6.09351L12.1331 12.8068C12.0598 13.8535 11.9998 14.6668 10.1398 14.6668H5.85977C3.99977 14.6668 3.93977 13.8535 3.86644 12.8068L3.43311 6.09351" stroke="" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M6.88672 11H9.10672" stroke="" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M6.3335 8.33325H9.66683" stroke="" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+    </t>
+
+</templates>

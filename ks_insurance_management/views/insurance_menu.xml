@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_insurance_root" name="Insurance" sequence="60"/>
+    <!-- Set icon for main Odoo dashboard / home app tile -->
+    <record id="menu_insurance_root" model="ir.ui.menu">
+        <field name="web_icon">ks_insurance_management,static/description/icon.png</field>
+    </record>
+    <menuitem id="menu_insurance_master" name="Insurance Master"
+              parent="menu_insurance_root"
+              sequence="10"/>
+    <menuitem id="menu_insurance_policy" name="All Policies"
+              parent="menu_insurance_master"
+              action="action_insurance_policy"
+              sequence="10"/>
+    <menuitem id="menu_insurance_declarations" name="Declarations"
+              parent="menu_insurance_root"
+              sequence="20"/>
+    <menuitem id="menu_declaration_list" name="All Declarations"
+              parent="menu_insurance_declarations"
+              action="action_insurance_declaration"
+              sequence="10"/>
+    <menuitem id="menu_bulk_declaration" name="Bulk Declaration Download"
+              parent="menu_insurance_declarations"
+              action="action_bulk_declaration_wizard"
+              sequence="20"/>
+    <menuitem id="menu_insurance_reports" name="Reports"
+              parent="menu_insurance_root"
+              sequence="30"/>
+    <menuitem id="menu_report_fire_burglary" name="Fire &amp; Burglary Report"
+              parent="menu_insurance_reports"
+              action="action_report_fire_burglary_wizard"
+              sequence="10"/>
+    <menuitem id="menu_report_marine" name="Marine Insurance Report"
+              parent="menu_insurance_reports"
+              action="action_report_marine_wizard"
+              sequence="20"/>
+    <menuitem id="menu_report_misc" name="Miscellaneous Insurance Report"
+              parent="menu_insurance_reports"
+              action="action_report_misc_wizard"
+              sequence="30"/>
+    <menuitem id="menu_insurance_config" name="Configuration"
+              parent="menu_insurance_root"
+              sequence="100"
+              groups="ks_insurance_management.group_insurance_admin"/>
+    <menuitem id="menu_config_type" name="Insurance Types"
+              parent="menu_insurance_config"
+              action="action_insurance_type"
+              sequence="10"/>
+    <menuitem id="menu_config_category" name="Insurance Categories"
+              parent="menu_insurance_config"
+              action="action_insurance_category"
+              sequence="20"/>
+    <menuitem id="menu_config_ins_company" name="Insurance Companies"
+              parent="menu_insurance_config"
+              action="action_insurance_company"
+              sequence="30"/>
+    <menuitem id="menu_config_agent" name="Agents"
+              parent="menu_insurance_config"
+              action="action_insurance_agent"
+              sequence="40"/>
+</odoo>

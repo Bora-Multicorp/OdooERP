@@ -1,0 +1,297 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <!-- Category -->
+  <record id="insurance_category_form_view" model="ir.ui.view">
+    <field name="name">insurance.category.form</field>
+    <field name="model">insurance.category</field>
+    <field name="arch" type="xml">
+      <form><sheet><group>
+        <field name="name"/><field name="code"/>
+        <field name="company_id" groups="base.group_multi_company"/>
+        <field name="is_misc"/><field name="active"/>
+      </group></sheet></form>
+    </field>
+  </record>
+  <record id="insurance_category_list_view" model="ir.ui.view">
+    <field name="name">insurance.category.list</field>
+    <field name="model">insurance.category</field>
+    <field name="arch" type="xml">
+      <list><field name="name"/><field name="code"/><field name="company_id" groups="base.group_multi_company"/><field name="is_misc"/></list>
+    </field>
+  </record>
+  <record id="action_insurance_category" model="ir.actions.act_window">
+    <field name="name">Insurance Categories</field>
+    <field name="res_model">insurance.category</field>
+    <field name="view_mode">list,form</field>
+  </record>
+
+  <!-- Type -->
+  <record id="insurance_type_form_view" model="ir.ui.view">
+    <field name="name">insurance.type.form</field>
+    <field name="model">insurance.type</field>
+    <field name="arch" type="xml">
+      <form><sheet><group>
+        <field name="name"/><field name="category_id"/>
+        <field name="company_id" groups="base.group_multi_company"/>
+        <field name="is_marine"/><field name="is_fire_burglary"/>
+        <field name="marine_applicability" invisible="not is_marine"/>
+        <field name="active"/><field name="description"/>
+      </group></sheet></form>
+    </field>
+  </record>
+  <record id="insurance_type_list_view" model="ir.ui.view">
+    <field name="name">insurance.type.list</field>
+    <field name="model">insurance.type</field>
+    <field name="arch" type="xml">
+      <list>
+        <field name="name"/><field name="category_id"/>
+        <field name="is_marine"/><field name="is_fire_burglary"/>
+        <field name="marine_applicability"/>
+      </list>
+    </field>
+  </record>
+  <record id="action_insurance_type" model="ir.actions.act_window">
+    <field name="name">Insurance Types</field>
+    <field name="res_model">insurance.type</field>
+    <field name="view_mode">list,form</field>
+  </record>
+
+  <!-- Insurance Company -->
+  <record id="insurance_company_form_view" model="ir.ui.view">
+    <field name="name">insurance.company.form</field>
+    <field name="model">insurance.company</field>
+    <field name="arch" type="xml">
+      <form><sheet><group>
+        <field name="name"/>
+        <field name="company_id" groups="base.group_multi_company"/>
+        <field name="contact_person"/>
+        <field name="phone"/><field name="email"/>
+        <field name="address"/><field name="active"/>
+      </group></sheet></form>
+    </field>
+  </record>
+  <record id="insurance_company_list_view" model="ir.ui.view">
+    <field name="name">insurance.company.list</field>
+    <field name="model">insurance.company</field>
+    <field name="arch" type="xml">
+      <list>
+        <field name="name"/><field name="company_id" groups="base.group_multi_company"/>
+        <field name="contact_person"/>
+        <field name="phone"/><field name="email"/>
+      </list>
+    </field>
+  </record>
+  <record id="action_insurance_company" model="ir.actions.act_window">
+    <field name="name">Insurance Companies</field>
+    <field name="res_model">insurance.company</field>
+    <field name="view_mode">list,form</field>
+  </record>
+
+  <!-- Agent -->
+  <record id="insurance_agent_form_view" model="ir.ui.view">
+    <field name="name">insurance.agent.form</field>
+    <field name="model">insurance.agent</field>
+    <field name="arch" type="xml">
+      <form><sheet>
+        <group>
+          <field name="name"/><field name="company_id" groups="base.group_multi_company"/>
+          <field name="phone"/>
+          <field name="email"/><field name="license_no"/>
+          <field name="insurance_company_id"/><field name="active"/>
+        </group>
+        <notebook>
+          <page string="Policies">
+            <field name="policy_ids" readonly="1">
+              <list>
+                <field name="name"/><field name="insurance_type_id"/>
+                <field name="sum_insured"/><field name="expiry_date"/>
+                <field name="state" widget="badge"/>
+              </list>
+            </field>
+          </page>
+        </notebook>
+      </sheet></form>
+    </field>
+  </record>
+  <record id="insurance_agent_list_view" model="ir.ui.view">
+    <field name="name">insurance.agent.list</field>
+    <field name="model">insurance.agent</field>
+    <field name="arch" type="xml">
+      <list>
+        <field name="name"/><field name="company_id" groups="base.group_multi_company"/>
+        <field name="phone"/>
+        <field name="email"/><field name="policy_count"/>
+      </list>
+    </field>
+  </record>
+  <record id="action_insurance_agent" model="ir.actions.act_window">
+    <field name="name">Agents</field>
+    <field name="res_model">insurance.agent</field>
+    <field name="view_mode">list,form</field>
+  </record>
+
+  <!-- Payment inherit -->
+  <record id="account_payment_insurance_form_view" model="ir.ui.view">
+    <field name="name">account.payment.insurance.form</field>
+    <field name="model">account.payment</field>
+    <field name="inherit_id" ref="account.view_account_payment_form"/>
+    <field name="arch" type="xml">
+      <xpath expr="//notebook" position="inside">
+        <page string="Insurance Details" name="insurance_details"
+              invisible="not is_insurance_payment">
+          <group>
+            <group>
+              <field name="is_insurance_payment"/>
+              <field name="ins_company_id"/>
+              <field name="ins_type_id"/>
+              <field name="ins_policy_number"/>
+              <field name="ins_sum_insured"/>
+              <field name="ins_sum_insured_words" readonly="1"/>
+            </group>
+            <group>
+              <field name="ins_agent"/>
+              <field name="ins_insurance_company_id"/>
+              <field name="ins_expiry_date"/>
+              <field name="ins_policy_type"/>
+              <field name="ins_floater_location_ids" widget="many2many_tags"
+                     invisible="ins_policy_type != 'floater'"/>
+              <field name="insurance_policy_id" readonly="1"/>
+            </group>
+          </group>
+        </page>
+      </xpath>
+      <xpath expr="//header/button[last()]" position="after">
+        <button name="action_open_insurance_popup" string="Add Insurance Details"
+                type="object" class="btn-secondary"
+                invisible="is_insurance_payment or state != 'draft'"/>
+      </xpath>
+    </field>
+  </record>
+
+  <!-- Popup Wizard View -->
+  <record id="insurance_payment_popup_wizard_form" model="ir.ui.view">
+    <field name="name">insurance.payment.popup.wizard.form</field>
+    <field name="model">insurance.payment.popup.wizard</field>
+    <field name="arch" type="xml">
+      <form string="Insurance Details">
+        <sheet>
+          <group string="Policy Information">
+            <group>
+              <field name="company_id"/><field name="insurance_type_id"/>
+              <field name="policy_number"/><field name="sum_insured"/>
+              <field name="sum_insured_words" readonly="1"/>
+            </group>
+            <group>
+              <field name="premium" readonly="1"/>
+              <field name="agent"/><field name="insurance_company_id"/>
+              <field name="expiry_date"/><field name="policy_type"/>
+            </group>
+          </group>
+          <group invisible="policy_type != 'floater'" string="Floater Locations">
+            <field name="floater_location_ids" widget="many2many_tags" nolabel="1"/>
+          </group>
+        </sheet>
+        <footer>
+          <button name="action_confirm" string="Confirm &amp; Create Policy"
+                  type="object" class="btn-primary"/>
+          <button string="Cancel" class="btn-secondary" special="cancel"/>
+        </footer>
+      </form>
+    </field>
+  </record>
+
+  <!-- Bulk Declaration Wizard View -->
+  <record id="bulk_declaration_wizard_form" model="ir.ui.view">
+    <field name="name">bulk.declaration.wizard.form</field>
+    <field name="model">bulk.declaration.wizard</field>
+    <field name="arch" type="xml">
+      <form string="Generate Bulk Declarations">
+        <sheet>
+          <group>
+            <field name="date_from"/><field name="date_to"/>
+            <field name="declaration_type"/>
+            <field name="company_ids" widget="many2many_tags"/>
+          </group>
+        </sheet>
+        <footer>
+          <button name="action_generate_declarations" string="Generate &amp; Download"
+                  type="object" class="btn-primary"/>
+          <button string="Cancel" class="btn-secondary" special="cancel"/>
+        </footer>
+      </form>
+    </field>
+  </record>
+  <record id="action_bulk_declaration_wizard" model="ir.actions.act_window">
+    <field name="name">Bulk Declaration Download</field>
+    <field name="res_model">bulk.declaration.wizard</field>
+    <field name="view_mode">form</field>
+    <field name="target">new</field>
+  </record>
+
+  <!-- Report Wizard View (shared) -->
+  <record id="insurance_report_wizard_form" model="ir.ui.view">
+    <field name="name">insurance.report.wizard.form</field>
+    <field name="model">insurance.report.wizard</field>
+    <field name="arch" type="xml">
+      <form string="Insurance Report">
+        <sheet>
+          <group>
+            <field name="report_type"/>
+            <field name="date_from"/><field name="date_to"/>
+            <field name="company_ids" widget="many2many_tags"/>
+            <field name="include_expired"/>
+          </group>
+          <group string="Output Format">
+            <div class="o_field_widget" colspan="2">
+              <p class="text-muted mb-0">
+                Use <b>View Report</b> to see data on screen or <b>Download XLSX</b> to export as Excel.
+              </p>
+            </div>
+          </group>
+        </sheet>
+        <footer>
+          <!-- Fire &amp; Burglary -->
+          <button name="action_print_fire_burglary" string="View Report"
+                  type="object" class="btn-primary"
+                  invisible="report_type != 'fire_burglary'"/>
+          <button name="action_download_fire_burglary_xlsx" string="Download XLSX"
+                  type="object" class="btn-success"
+                  invisible="report_type != 'fire_burglary'"/>
+          <!-- Marine -->
+          <button name="action_print_marine" string="View Report"
+                  type="object" class="btn-primary"
+                  invisible="report_type != 'marine'"/>
+          <button name="action_download_marine_xlsx" string="Download XLSX"
+                  type="object" class="btn-success"
+                  invisible="report_type != 'marine'"/>
+          <!-- Miscellaneous -->
+          <button name="action_print_misc" string="View Report"
+                  type="object" class="btn-primary"
+                  invisible="report_type != 'misc'"/>
+          <button name="action_download_misc_xlsx" string="Download XLSX"
+                  type="object" class="btn-success"
+                  invisible="report_type != 'misc'"/>
+          <button string="Cancel" class="btn-secondary" special="cancel"/>
+        </footer>
+      </form>
+    </field>
+  </record>
+  <record id="action_report_fire_burglary_wizard" model="ir.actions.act_window">
+    <field name="name">Fire &amp; Burglary Report</field>
+    <field name="res_model">insurance.report.wizard</field>
+    <field name="view_mode">form</field><field name="target">new</field>
+    <field name="context">{'default_report_type': 'fire_burglary'}</field>
+  </record>
+  <record id="action_report_marine_wizard" model="ir.actions.act_window">
+    <field name="name">Marine Insurance Report</field>
+    <field name="res_model">insurance.report.wizard</field>
+    <field name="view_mode">form</field><field name="target">new</field>
+    <field name="context">{'default_report_type': 'marine'}</field>
+  </record>
+  <record id="action_report_misc_wizard" model="ir.actions.act_window">
+    <field name="name">Miscellaneous Insurance Report</field>
+    <field name="res_model">insurance.report.wizard</field>
+    <field name="view_mode">form</field><field name="target">new</field>
+    <field name="context">{'default_report_type': 'misc'}</field>
+  </record>
+</odoo>

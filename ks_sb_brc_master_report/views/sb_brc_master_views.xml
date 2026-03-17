@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- List view: all columns in image order, editable, scrollable -->
+    <record id="view_sb_brc_master_list" model="ir.ui.view">
+        <field name="name">sb.brc.master.list</field>
+        <field name="model">sb.brc.master</field>
+        <field name="arch" type="xml">
+            <list string="SB/BRC Master Report" editable="top" class="o_sb_brc_list_scrollable" create="1" delete="1">
+                <field name="sr_no" readonly="1"/>
+                <field name="date"/>
+                <field name="invoice_id" options="{'no_create': True}"/>
+                <field name="sb_no"/>
+<!--                <field name="be_no"/>-->
+                <field name="consignee" readonly="1"/>
+                <field name="buyer" readonly="1"/>
+                <field name="awb_number"/>
+                <field name="qty" readonly="1"/>
+                <field name="sb_date"/>
+<!--                <field name="unit_rate" readonly="1"/>-->
+                <field name="currency_id" readonly="1"/>
+<!--                <field name="calendar_date"/>-->
+                <field name="invoice_amount_usd" readonly="1"/>
+                <field name="ex_rate" readonly="1"/>
+                <field name="sb_ex_rate"/>
+                <field name="amount_inr" readonly="1"/>
+                <field name="gst_rate"/>
+                <field name="gst_amount"/>
+                <field name="invoice_value" readonly="1"/>
+                <field name="cha_id"/>
+                <field name="for_calculation"/>
+                <field name="other_charges"/>
+                <field name="freight"/>
+                <field name="agency_charges"/>
+                <field name="doc_charges_fumigation"/>
+                <field name="terminal_handling"/>
+                <field name="drawback_charges"/>
+                <field name="awb_charges"/>
+                <field name="gate_pass"/>
+                <field name="transportation_to_air_cargo"/>
+                <field name="load_unload"/>
+                <field name="pallet_charges"/>
+                <field name="other_charges_2"/>
+                <field name="sai_warehouse"/>
+                <field name="insurance"/>
+                <field name="total_charges" readonly="1"/>
+                <field name="no_of_pallets"/>
+                <field name="weight_as_per_awb"/>
+                <field name="per_piece_costing" readonly="1"/>
+                <field name="average_per_costing" readonly="1"/>
+                <field name="airlines"/>
+                <field name="country_id"/>
+                <field name="port"/>
+                <field name="brc_status"/>
+                <field name="brc_date"/>
+                <field name="brc_no"/>
+                <field name="brc_amount_usd"/>
+                <field name="diff_in_realization" readonly="1"/>
+                <field name="sb_fob_value"/>
+                <field name="fresh"/>
+                <field name="activated"/>
+                <field name="other_country"/>
+                <field name="rodtep_amount" readonly="1"/>
+                <field name="rodtep_amount_per_sb"/>
+<!--                <field name="dbk_percentage"/>-->
+                <field name="dbk_claimed"/>
+                <field name="dbk_as_per_calculation" readonly="1"/>
+                <field name="dbk_amount"/>
+                <field name="application_status"/>
+                <field name="drawback_received"/>
+                <field name="remarks"/>
+                <field name="fob_value_inr"/>
+                <field name="tax_able_amt"/>
+                <field name="gst_amt"/>
+                <field name="tds_amt"/>
+                <field name="net_balance_payable"/>
+<!--                <field name="received_date"/>-->
+            </list>
+        </field>
+    </record>
+
+    <record id="view_sb_brc_master_form" model="ir.ui.view">
+        <field name="name">sb.brc.master.form</field>
+        <field name="model">sb.brc.master</field>
+        <field name="arch" type="xml">
+            <form string="SB/BRC Master Report">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="sr_no" readonly="1"/>
+                            <field name="date"/>
+                            <field name="invoice_id" options="{'no_create': True}"/>
+                            <field name="sb_no"/>
+<!--                            <field name="be_no"/>-->
+                            <field name="awb_number"/>
+                        </group>
+                        <group>
+                            <field name="consignee" readonly="1"/>
+                            <field name="buyer" readonly="1"/>
+                            <field name="currency_id" readonly="1"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Invoice Details" name="invoice_details">
+                            <group>
+                                <group>
+                                    <field name="qty" readonly="1"/>
+<!--                                    <field name="unit_rate" readonly="1"/>-->
+                                    <field name="invoice_amount_usd" readonly="1"/>
+                                    <field name="ex_rate" readonly="1"/>
+<!--                                    <field name="sb_rate"/>-->
+                                    <field name="amount_inr" readonly="1"/>
+                                    <field name="gst_rate"/>
+                                    <field name="gst_amount"/>
+                                    <field name="invoice_value" readonly="1"/>
+<!--                                    <field name="calendar_date"/>-->
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Charges" name="charges">
+                            <group>
+                                <group>
+                                    <field name="cha_id"/>
+                                    <field name="for_calculation"/>
+                                    <field name="other_charges"/>
+                                    <field name="freight"/>
+                                    <field name="agency_charges"/>
+                                    <field name="doc_charges_fumigation"/>
+                                    <field name="terminal_handling"/>
+                                    <field name="drawback_charges"/>
+                                    <field name="awb_charges"/>
+                                    <field name="gate_pass"/>
+                                    <field name="transportation_to_air_cargo"/>
+                                    <field name="load_unload"/>
+                                    <field name="pallet_charges"/>
+                                    <field name="other_charges_2"/>
+                                    <field name="sai_warehouse"/>
+                                    <field name="insurance"/>
+                                    <field name="total_charges" readonly="1"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Shipping &amp; BRC" name="shipping_brc">
+                            <group>
+                                <group>
+                                    <field name="no_of_pallets"/>
+                                    <field name="weight_as_per_awb"/>
+                                    <field name="per_piece_costing" readonly="1"/>
+                                    <field name="average_per_costing" readonly="1"/>
+                                    <field name="airlines"/>
+                                    <field name="country_id"/>
+                                    <field name="port"/>
+                                    <field name="brc_status"/>
+                                    <field name="brc_date"/>
+                                    <field name="brc_no"/>
+                                    <field name="brc_amount_usd"/>
+                                    <field name="diff_in_realization" readonly="1"/>
+                                    <field name="sb_fob_value"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Product / RODTEP / DBK" name="product_rodtep_dbk">
+                            <group>
+                                <group>
+                                    <field name="fresh"/>
+                                    <field name="activated"/>
+                                    <field name="other_country"/>
+                                    <field name="rodtep_amount" readonly="1"/>
+                                    <field name="rodtep_amount_per_sb"/>
+<!--                                    <field name="dbk_percentage"/>-->
+                                    <field name="dbk_claimed"/>
+                                    <field name="dbk_as_per_calculation" readonly="1"/>
+                                    <field name="dbk_amount"/>
+                                    <field name="application_status"/>
+                                    <field name="drawback_received"/>
+<!--                                    <field name="received_date"/>-->
+<!--                                    <field name="received_amount"/>-->
+                                </group>
+                                <group>
+                                    <field name="tax_able_amt"/>
+                                    <field name="gst_amt"/>
+                                    <field name="tds_amt"/>
+                                    <field name="net_balance_payable" readonly="1"/>
+                                    <field name="remarks"/>
+                                    <field name="fob_value_inr"/>
+                                </group>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_sb_brc_master_search" model="ir.ui.view">
+        <field name="name">sb.brc.master.search</field>
+        <field name="model">sb.brc.master</field>
+        <field name="arch" type="xml">
+            <search string="SB/BRC Master">
+                <field name="sr_no"/>
+                <field name="date"/>
+                <field name="invoice_id"/>
+                <field name="sb_no"/>
+<!--                <field name="be_no"/>-->
+                <field name="awb_number"/>
+                <field name="buyer"/>
+                <field name="consignee"/>
+                <field name="brc_no"/>
+                <field name="cha_id"/>
+                <field name="country_id"/>
+                <filter string="BRC Received" name="brc_yes" domain="[('brc_status', '=', 'yes')]"/>
+                <filter string="BRC Pending" name="brc_no" domain="[('brc_status', '=', 'no')]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Date" name="group_date" context="{'group_by': 'date'}"/>
+                    <filter string="BRC Status" name="group_brc" context="{'group_by': 'brc_status'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_sb_brc_master" model="ir.actions.act_window">
+        <field name="name">SB/BRC Master Report</field>
+        <field name="res_model">sb.brc.master</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Create your first SB/BRC Master Report</p>
+            <p>Master report for Shipping Bill (SB) and Bank Realization Certificate (BRC) data.</p>
+        </field>
+    </record>
+</odoo>

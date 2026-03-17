@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- MOP Master List View (manual entry only) -->
+    <record id="view_mop_master_list" model="ir.ui.view">
+        <field name="name">mop.master.list</field>
+        <field name="model">mop.master</field>
+        <field name="arch" type="xml">
+            <list string="MOP Master" default_order="effective_date desc, product_id" create="1" import="1">
+                <field name="product_id" string="SKU" required="1" options="{'no_create': True}"/>
+                <field name="sku_code" string="SKU Code" readonly="1"/>
+                <field name="mop" string="MOP" required="1"/>
+                <field name="effective_date" string="Effective Date" required="1"/>
+                <field name="active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- MOP Master Form View (field changes tracked in chatter below) -->
+    <record id="view_mop_master_form" model="ir.ui.view">
+        <field name="name">mop.master.form</field>
+        <field name="model">mop.master</field>
+        <field name="arch" type="xml">
+            <form string="MOP Master">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="product_id" string="SKU" required="1" options="{'no_create': True}"/>
+                            <field name="sku_code" string="SKU Code" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="mop" string="MOP" required="1"/>
+                            <field name="effective_date" string="Effective Date" required="1"/>
+                            <field name="active"/>
+                        </group>
+                    </group>
+                    <div class="alert alert-info" role="alert">
+                        <strong>Note:</strong> Back date and future date are allowed for effective date. All field changes are tracked in the chatter below.
+                    </div>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- MOP Master Search View -->
+    <record id="view_mop_master_search" model="ir.ui.view">
+        <field name="name">mop.master.search</field>
+        <field name="model">mop.master</field>
+        <field name="arch" type="xml">
+            <search string="MOP Master">
+                <field name="product_id"/>
+                <field name="sku_code"/>
+                <field name="mop"/>
+                <field name="effective_date"/>
+                <filter string="Active" name="active" domain="[('active', '=', True)]"/>
+                <filter string="Inactive" name="inactive" domain="[('active', '=', False)]"/>
+                <filter string="Today" name="today" domain="[('effective_date', '=', context_today().strftime('%Y-%m-%d'))]"/>
+                <filter string="Future" name="future" domain="[('effective_date', '&gt;', context_today().strftime('%Y-%m-%d'))]"/>
+                <filter string="Past" name="past" domain="[('effective_date', '&lt;', context_today().strftime('%Y-%m-%d'))]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Product" name="group_by_product" context="{'group_by': 'product_id'}"/>
+                    <filter string="Effective Date" name="group_by_effective_date" context="{'group_by': 'effective_date'}"/>
+                    <filter string="Active" name="group_by_active" context="{'group_by': 'active'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- MOP Master Action -->
+    <record id="action_mop_master" model="ir.actions.act_window">
+        <field name="name">MOP Master</field>
+        <field name="res_model">mop.master</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_mop_master_search"/>
+        <field name="context">{'search_default_active': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first MOP Master record!
+            </p>
+            <p>
+                MOP Master is for manual entry of Market Operating Prices per product and effective date. Back date and future date are allowed.
+            </p>
+        </field>
+    </record>
+
+    <!-- Menu Item -->
+    <menuitem id="menu_mop_master"
+              name="MOP Master"
+              parent="stock.menu_warehouse_config"
+              action="action_mop_master"
+              sequence="50"/>
+</odoo>
+

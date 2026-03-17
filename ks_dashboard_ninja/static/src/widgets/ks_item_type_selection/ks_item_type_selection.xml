@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<templates xml:space="preserve">
+
+    <t t-name="ks_dashboard_item_view_owl" owl="1">
+        <div class="chart-list mb-3 scrollbar">
+
+            <t t-foreach="state.charts" t-as="val" t-key="val.id">
+                <t t-if="val.Tech_name == props.record.data.ks_dashboard_item_type">
+                    <div class=" active" t-on-click="onselectitemtype">
+                        <div class="chart-card">
+                            <div class="chart-thum">
+                                <t t-call="item_type_svg">
+                                    <t t-set="item_name" t-value="val['name']"/>
+                                </t>
+                            </div>
+                        </div>
+                        <div class="chart-content">
+                            <t t-esc="val['name']"/>
+                        </div>
+                    </div>
+                </t>
+                <t t-else="">
+                    <div  t-on-click="onselectitemtype">
+                        <div class="chart-card">
+                            <div class="chart-thum">
+                                 <t t-call="item_type_svg">
+                                     <t t-set="item_name" t-value="val['name']"/>
+                                 </t>
+                            </div>
+                        </div>
+                         <div class="chart-content">
+                            <t t-esc="val['name']"/>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </div>
+    </t>
+
+    <t t-name="item_type_svg">
+        <t t-if="item_name === 'Tile'">
+            <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M18 44H30C40 44 44 40 44 30V18C44 8 40 4 30 4H18C8 4 4 8 4 18V30C4 40 8 44 18 44Z" stroke="" stroke-width="1.57003" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M35 34.1602H31.3" stroke="" stroke-width="1.57003" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M25.9401 34.1602H13.0001" stroke="" stroke-width="1.57003" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M35 26.6406H23.94" stroke="" stroke-width="1.57003" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M18.5401 26.6406H13.0001" stroke="" stroke-width="1.57003" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </t>
+
+        <t t-elif="item_name === 'Bar'">
+            <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" class="encapsulated-red-stroke">
+                <path d="M6 44H42" stroke="" stroke-width="1.57003" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M11.2 16.7588H8C6.9 16.7588 6 17.6588 6 18.7588V35.9988C6 37.0988 6.9 37.9988 8 37.9988H11.2C12.3 37.9988 13.2 37.0988 13.2 35.9988V18.7588C13.2 17.6588 12.3 16.7588 11.2 16.7588Z" stroke="" stroke-width="1.57003" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M25.6 10.3789H22.4C21.3 10.3789 20.4 11.2789 20.4 12.3789V35.9989C20.4 37.0989 21.3 37.9989 22.4 37.9989H25.6C26.7 37.9989 27.6 37.0989 27.6 35.9989V12.3789C27.6 11.2789 26.7 10.3789 25.6 10.3789Z" stroke="" stroke-width="1.57003" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M40 3.99902H36.8C35.7 3.99902 34.8 4.89902 34.8 5.99902V35.999C34.8 37.099 35.7 37.999 36.8 37.999H40C41.1 37.999 42 37.099 42 35.999V5.99902C42 4.89902 41.1 3.99902 40 3.99902Z" stroke="" stroke-width="1.57003" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </t>
+
+        <t t-elif="item_name === 'Horizontal Bar'">
+            <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" class="encapsulated-red-stroke">
+                <path d="M4 6L4 42" stroke="" stroke-width="1.57003" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M31.24 11.2V8C31.24 6.9 30.34 6 29.24 6L12 6C10.9 6 9.99999 6.9 9.99999 8V11.2C9.99999 12.3 10.9 13.2 12 13.2L29.24 13.2C30.34 13.2 31.24 12.3 31.24 11.2Z" stroke="" stroke-width="1.57003" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M37.62 25.6003V22.4004C37.62 21.3004 36.72 20.4004 35.62 20.4004L12 20.4004C10.9 20.4004 9.99999 21.3004 9.99999 22.4004V25.6003C9.99999 26.7003 10.9 27.6003 12 27.6003L35.62 27.6003C36.72 27.6003 37.62 26.7003 37.62 25.6003Z" stroke="" stroke-width="1.57003" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M44 40.0007V36.8008C44 35.7008 43.1 34.8008 42 34.8008L12 34.8008C10.9 34.8008 9.99999 35.7008 9.99999 36.8008V40.0007C9.99999 41.1007 10.9 42.0007 12 42.0007L42 42.0007C43.1 42.0007 44 41.1007 44 40.0007Z" stroke="" stroke-width="1.57003" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </t>
+
+        <t t-elif="item_name === 'Line'">
+            <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" class="encap-only-stroke">
+                <path d="M4 4V38C4 41.32 6.68 44 10 44H44" stroke="" stroke-width="1.57003" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M10 34L19.18 23.28C20.7 21.52 23.4 21.4 25.04 23.06L26.94 24.96C28.58 26.6 31.28 26.5 32.8 24.74L42 14" stroke="" stroke-width="1.57003" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </t>
+
+        <t t-elif="item_name === 'Area'">
+            <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" >
+                <path d="M18 44.001L30 44.001C40 44.001 44 40.001 44 30.001L44 18.001C44 8.00098 40 4.00098 30 4.00098L18 4.00098C8.00003 4.00098 4.00003 8.00098 4.00003 18.001L4.00003 30.001C4.00003 40.001 8.00003 44.001 18 44.001Z" stroke="" stroke-width="1.57003" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M14.66 28.9805L19.42 22.8005C20.1 21.9205 21.36 21.7605 22.24 22.4405L25.9 25.3205C26.78 26.0005 28.04 25.8405 28.72 24.9805L33.34 19.0205" stroke="" stroke-width="1.57003" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </t>
+
+        <t t-elif="item_name === 'Pie'">
+            <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" class="encap-only-stroke">
+                <path d="M36.64 23.9994C41.84 23.9994 44 21.9994 42.08 15.4394C40.78 11.0194 36.98 7.21938 32.56 5.91938C26 3.99938 24 6.15938 24 11.3594V17.1194C24 21.9994 26 23.9994 30 23.9994H36.64Z" stroke="" stroke-width="1.57003" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M40 29.3995C38.14 38.6595 29.26 45.3795 19.16 43.7395C11.58 42.5195 5.47998 36.4195 4.23998 28.8395C2.61998 18.7795 9.29998 9.89953 18.52 8.01953" stroke="" stroke-width="1.57003" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </t>
+
+        <t t-elif="item_name === 'Doughnut'">
+            <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M23.94 44.001C34.9857 44.001 43.94 35.0467 43.94 24.001C43.94 12.9553 34.9857 4.00098 23.94 4.00098C12.8943 4.00098 3.94003 12.9553 3.94003 24.001C3.94003 35.0467 12.8943 44.001 23.94 44.001Z" stroke="" stroke-width="1.57003" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M24 32.999C28.9706 32.999 33 28.9696 33 23.999C33 19.0285 28.9706 14.999 24 14.999C19.0294 14.999 15 19.0285 15 23.999C15 28.9696 19.0294 32.999 24 32.999Z" stroke="" stroke-width="1.57003" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M9.79999 9.85938L16.88 16.9194" stroke="" stroke-width="1.57003" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M9.79999 38.1401L16.88 31.0801" stroke="" stroke-width="1.57003" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M38.1 38.1401L31.02 31.0801" stroke="" stroke-width="1.57003" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M38.1 9.85938L31.02 16.9194" stroke="" stroke-width="1.57003" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </t>
+
+        <t t-elif="item_name === 'Polar'">
+            <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M16.9998 10.2011L22.3997 15.601C23.1997 16.401 24.7997 16.401 25.5997 15.601L30.9996 10.2011C32.3996 8.80114 31.3996 6.20117 29.3996 6.20117L18.5998 6.20117C16.5998 6.40117 15.5998 8.80114 16.9998 10.2011Z" stroke="" stroke-width="1.57001" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M16.9998 37.7987L22.3997 32.3988C23.1997 31.5988 24.7997 31.5988 25.5997 32.3988L30.9996 37.7987C32.3996 39.1987 31.3996 41.7987 29.3996 41.7987H18.5998C16.5998 41.5987 15.5998 39.1987 16.9998 37.7987Z" stroke="" stroke-width="1.57001" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M4.39995 23.0011L8.79988 16.0012C9.39988 14.8012 10.9999 14.6012 11.9998 15.6012L18.9997 22.6011C19.7997 23.4011 19.7997 24.6011 18.9997 25.4011L11.9998 32.401C10.9999 33.401 9.59987 33.201 8.79988 32.001L4.39995 25.0011C3.79995 24.4011 3.79995 23.6011 4.39995 23.0011Z" stroke="" stroke-width="1.57001" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M43.5995 22.999L39.1995 15.9991C38.5995 14.9991 36.9995 14.7991 35.9996 15.5991L28.9997 22.599C28.1997 23.399 28.1997 24.599 28.9997 25.399L35.9996 32.3989C36.9995 33.3989 38.3995 33.1989 39.1995 31.9989L43.5995 24.999C44.1994 24.399 44.1994 23.599 43.5995 22.999Z" stroke="" stroke-width="1.57001" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </t>
+
+        <t t-elif="item_name === 'Radial'">
+            <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M8.03988 11.9399C5.49992 15.2998 3.99994 19.4798 3.99994 23.9997C3.99994 35.0396 12.9598 43.9995 23.9997 43.9995C35.0395 43.9995 43.9994 35.0396 43.9994 23.9997C43.9994 12.9599 35.0395 4 23.9997 4" stroke="" stroke-width="1.57001" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M9.99988 23.9998C9.99988 31.7397 16.2598 37.9996 23.9997 37.9996C31.7396 37.9996 37.9995 31.7397 37.9995 23.9998C37.9995 16.2599 31.7396 10 23.9997 10" stroke="" stroke-width="1.57001" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M23.9997 31.9998C28.4196 31.9998 31.9996 28.4198 31.9996 23.9999C31.9996 19.58 28.4196 16 23.9997 16" stroke="" stroke-width="1.57001" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </t>
+
+        <t t-elif="item_name === 'Scatter'">
+            <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M31.9991 15.998H15.9995V31.998H31.9991V15.998Z" stroke="" stroke-width="1.57001" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M10 44.002C13.2999 44.002 15.9999 41.302 15.9999 38.002V32.002H10C6.70011 32.002 4.00018 34.702 4.00018 38.002C4.00018 41.302 6.70011 44.002 10 44.002Z" stroke="" stroke-width="1.57001" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M10 15.998H15.9999V9.99805C15.9999 6.69805 13.2999 3.99805 10 3.99805C6.70011 3.99805 4.00018 6.69805 4.00018 9.99805C4.00018 13.298 6.70011 15.998 10 15.998Z" stroke="" stroke-width="1.57001" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M31.9991 15.998H37.9989C41.2988 15.998 43.9988 13.298 43.9988 9.99805C43.9988 6.69805 41.2988 3.99805 37.9989 3.99805C34.699 3.99805 31.9991 6.69805 31.9991 9.99805V15.998Z" stroke="" stroke-width="1.57001" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M37.9989 44.002C41.2988 44.002 43.9988 41.302 43.9988 38.002C43.9988 34.702 41.2988 32.002 37.9989 32.002H31.9991V38.002C31.9991 41.302 34.699 44.002 37.9989 44.002Z" stroke="" stroke-width="1.57001" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </t>
+
+        <t t-elif="item_name === 'Radar'">
+            <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M23.8436 27.817C26.0383 27.817 27.8175 26.0378 27.8175 23.8431C27.8175 21.6483 26.0383 19.8691 23.8436 19.8691C21.6488 19.8691 19.8696 21.6483 19.8696 23.8431C19.8696 26.0378 21.6488 27.817 23.8436 27.817Z" stroke="" stroke-width="1.55979" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M39.7392 35.7654C42.2428 32.4472 43.7132 28.3143 43.7132 23.8436C43.7132 19.373 42.2428 15.2401 39.7392 11.9219" stroke="" stroke-width="1.55979" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M7.94786 11.9219C5.44429 15.2401 3.97394 19.373 3.97394 23.8436C3.97394 28.3143 5.44429 32.4472 7.94786 35.7654" stroke="" stroke-width="1.55979" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M33.3809 30.9975C34.8711 29.0106 35.7653 26.5269 35.7653 23.8445C35.7653 21.1621 34.8711 18.6784 33.3809 16.6914" stroke="" stroke-width="1.55979" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M14.3061 16.6914C12.8159 18.6784 11.9218 21.1621 11.9218 23.8445C11.9218 26.5269 12.8159 29.0106 14.3061 30.9975" stroke="" stroke-width="1.55979" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </t>
+
+        <t t-elif="item_name === 'Flower'">
+            <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M27.8178 31.7916C27.8178 35.3085 26.2878 38.4877 23.8438 40.6535C21.7377 42.5609 18.9559 43.7134 15.896 43.7134C9.31917 43.7134 3.97424 38.3685 3.97424 31.7916C3.97424 26.3076 7.70973 21.6581 12.7566 20.2871C14.1276 23.7444 17.0683 26.4069 20.7045 27.4004C21.6979 27.6786 22.751 27.8177 23.8438 27.8177C24.9367 27.8177 25.9898 27.6786 26.9832 27.4004C27.5197 28.7516 27.8178 30.2418 27.8178 31.7916Z" stroke="" stroke-width="1.55979" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M35.7651 15.8925C35.7651 17.4423 35.4671 18.9325 34.9306 20.2836C33.5596 23.741 30.6189 26.4035 26.9828 27.397C25.9893 27.6751 24.9362 27.8142 23.8434 27.8142C22.7505 27.8142 21.6974 27.6751 20.704 27.397C17.0678 26.4035 14.1271 23.741 12.7561 20.2836C12.2196 18.9325 11.9216 17.4423 11.9216 15.8925C11.9216 9.31563 17.2665 3.9707 23.8434 3.9707C30.4202 3.9707 35.7651 9.31563 35.7651 15.8925Z" stroke="" stroke-width="1.55979" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M43.7131 31.7916C43.7131 38.3685 38.3682 43.7134 31.7914 43.7134C28.7315 43.7134 25.9497 42.5609 23.8435 40.6535C26.2875 38.4877 27.8175 35.3085 27.8175 31.7916C27.8175 30.2418 27.5194 28.7516 26.9829 27.4004C30.6191 26.4069 33.5598 23.7444 34.9308 20.2871C39.9777 21.6581 43.7131 26.3076 43.7131 31.7916Z" stroke="" stroke-width="1.55979" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </t>
+
+        <t t-elif="item_name === 'Funnel'">
+            <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M10.7296 4.17188H36.9575C39.1431 4.17188 40.9314 5.96014 40.9314 8.1458V12.5171C40.9314 14.1067 39.9379 16.0936 38.9444 17.0871L30.4005 24.6376C29.2083 25.631 28.4135 27.618 28.4135 29.2076V37.7515C28.4135 38.9437 27.6188 40.5332 26.6253 41.1293L23.8435 42.9176C21.2605 44.5072 17.684 42.7189 17.684 39.5398V29.0089C17.684 27.618 16.8892 25.8297 16.0944 24.8363L8.54394 16.8884C7.55046 15.8949 6.75568 14.1067 6.75568 12.9145V8.34449C6.75568 5.96014 8.54394 4.17188 10.7296 4.17188Z" stroke="" stroke-width="1.55979" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M21.7175 4.17188L11.9218 19.8689" stroke="" stroke-width="1.55979" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </t>
+
+        <t t-elif="item_name === 'Bullet'">
+            <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M13.7206 21.0508L13.7206 27.323" stroke="" stroke-width="1.49595" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M23.521 17.6396L23.521 30.733" stroke="" stroke-width="1.49595" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M33.3214 21.0508V27.323" stroke="" stroke-width="1.49595" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M17.6408 43.1226L29.4013 43.1226C39.2017 43.1226 43.1219 39.2024 43.1219 29.402L43.1219 17.6415C43.1219 7.84107 39.2017 3.9209 29.4013 3.9209L17.6408 3.9209C7.84036 3.9209 3.9202 7.84107 3.9202 17.6415L3.9202 29.402C3.9202 39.2024 7.84036 43.1226 17.6408 43.1226Z" stroke="" stroke-width="1.49595" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+
+        </t>
+
+        <t t-elif="item_name === 'List'">
+            <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M17.6408 43.1226L29.4013 43.1226C39.2017 43.1226 43.1218 39.2024 43.1218 29.402L43.1218 17.6415C43.1218 7.84107 39.2017 3.9209 29.4013 3.9209L17.6408 3.9209C7.84033 3.9209 3.92017 7.84107 3.92017 17.6415L3.92017 29.402C3.92017 39.2024 7.84033 43.1226 17.6408 43.1226Z" stroke="" stroke-width="1.49595" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M43.1218 19.6016L3.92017 19.6016" stroke="" stroke-width="1.49595" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M23.521 19.6016L23.521 43.1226" stroke="" stroke-width="1.49595" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </t>
+
+        <t t-elif="item_name === 'Map'">
+            <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M4.48859 15.2498L4.48859 34.3214C4.48859 38.0456 7.1347 39.5745 10.3492 37.732L14.9554 35.1055C15.9551 34.5371 17.6211 34.4783 18.66 35.0075L28.9504 40.1625C29.9893 40.6721 31.6553 40.6329 32.655 40.0645L41.1422 35.2035C42.2202 34.5763 43.1218 33.0474 43.1218 31.7929L43.1218 12.7213C43.1218 8.99716 40.4757 7.46829 37.2612 9.31077L32.655 11.9373C31.6553 12.5057 29.9893 12.5645 28.9504 12.0353L18.66 6.89987C17.6211 6.39025 15.9551 6.42945 14.9554 6.99787L6.46827 11.8589C5.37062 12.4861 4.48859 14.015 4.48859 15.2498Z" stroke="" stroke-width="1.49595" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M16.7783 7.84082L16.7783 33.3219" stroke="" stroke-width="1.49595" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M30.832 12.9766L30.832 39.2025" stroke="" stroke-width="1.49595" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </t>
+
+        <t t-elif="item_name === 'To-do'">
+            <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M41.1618 13.7213L41.1618 33.3222C41.1618 39.2024 38.2216 43.1226 31.3613 43.1226L15.6807 43.1226C8.82037 43.1226 5.88025 39.2024 5.88025 33.3222L5.88025 13.7213C5.88025 7.84107 8.82037 3.9209 15.6807 3.9209L31.3613 3.9209C38.2216 3.9209 41.1618 7.84107 41.1618 13.7213Z" stroke="" stroke-width="1.49595" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M28.4212 8.82031V12.7405C28.4212 14.8966 30.1853 16.6606 32.3414 16.6606H36.2615" stroke="" stroke-width="1.49595" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M15.6807 25.4814H23.521" stroke="" stroke-width="1.49595" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M15.6807 33.3223H31.3613" stroke="" stroke-width="1.49595" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </t>
+
+        <t t-elif="item_name === 'KPI'">
+            <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M11.5644 33.3222L35.4579 33.3222C39.182 33.3222 41.1421 31.3621 41.1421 27.6379L41.1421 3.9209L5.8606 3.9209L5.8606 27.6379C5.8802 31.3621 7.84029 33.3222 11.5644 33.3222Z" stroke="" stroke-width="1.49595" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M3.92017 3.9209L43.1218 3.9209" stroke="" stroke-width="1.49595" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M15.6807 43.1227L23.521 39.2025V33.3223" stroke="" stroke-width="1.49595" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M31.3613 43.1223L23.521 39.2021" stroke="" stroke-width="1.49595" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M14.7006 21.5609L20.8749 16.4059C21.3649 15.9943 22.0117 16.1119 22.3449 16.6607L24.6971 20.5809C25.0303 21.1297 25.6771 21.2277 26.1671 20.8357L32.3414 15.6807" stroke="" stroke-width="1.49595" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </t>
+    </t>
+
+
+</templates>

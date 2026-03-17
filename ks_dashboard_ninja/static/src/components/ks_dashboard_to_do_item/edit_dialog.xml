@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates>
+    <t t-name="todoEditDialog">
+        <Dialog size="'md'" title="this.props.title">
+            <div class="form-control form-input-box">
+                <input type="text" class="ks_description w-100" placeholder='Task name ....' t-att-value="props.inputText" t-ref="inputRef"/>
+            </div>
+            <t t-set-slot="footer">
+                <button class=" dash-btn-red" t-on-click="onSave">Save</button>
+                <button class=" dash-default-btn" t-on-click="this.props.close">Close</button>
+            </t>
+        </Dialog>
+    </t>
+
+</templates>

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Inherit account.journal form view to add bank-related fields and change code label -->
+        <record id="view_account_journal_form_inherit_ks_templates" model="ir.ui.view">
+            <field name="name">account.journal.form.ks.templates</field>
+            <field name="model">account.journal</field>
+            <field name="inherit_id" ref="account.view_account_journal_form"/>
+            <field name="arch" type="xml">
+                <!-- Change the label of code field from "Short Code" to "Swift Code" -->
+                <field name="code" position="attributes">
+                    <attribute name="string">Swift Code</attribute>
+                </field>
+                
+                <!-- Add new bank-related fields in the bank_account_number group -->
+                <group name="bank_account_number" position="inside">
+                    <field name="bank_ad_code" placeholder="e.g. 6390532-6200019"/>
+                    <field name="ifsc_code" placeholder="e.g. HDFC0000104"/>
+                    <field name="branch_sol_id" placeholder="e.g. 001 - Sberbank, New Delhi or 1144"/>
+                    <field name="branch" placeholder="e.g. 001 - 675 / KHALED BIN WALEED STREET"/>
+                    <field name="is_cash_credit" widget="boolean_toggle"/>
+                    <field name="ks_cc_limit" invisible="not is_cash_credit"/>
+                    <field name="company_currency_id" column_invisible="1"/>
+                </group>
+            </field>
+        </record>
+    </data>
+</odoo>
+
