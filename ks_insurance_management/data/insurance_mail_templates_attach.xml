@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+
+    <!-- Link Declaration Letter report to the declaration email template (loaded after report exists). -->
+    <record id="email_template_declaration" model="mail.template">
+        <field name="report_template_ids" eval="[(4, ref('ks_insurance_management.action_report_declaration_letter'))]"/>
+    </record>
+
+</odoo>

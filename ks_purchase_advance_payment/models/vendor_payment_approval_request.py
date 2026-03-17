@@ -8,6 +8,7 @@ class VendorPaymentApprovalRequest(models.Model):
     _description = 'Vendor Payment Approval Request'
     _inherit = ['mail.thread', 'mail.activity.mixin']
     _order = 'create_date desc'
+    _rec_name = 'purchase_order_id'
 
     purchase_order_id = fields.Many2one(
         'purchase.order',
@@ -61,48 +62,77 @@ class VendorPaymentApprovalRequest(models.Model):
         related='purchase_order_id.company_id',
         store=True,
     )
+    partner_id = fields.Many2one(
+        'res.partner',
+        related='purchase_order_id.partner_id',
+        string='Vendor',
+        store=True,
+    )
+    po_amount_total = fields.Monetary(
+        related='purchase_order_id.amount_total',
+        string='PO Total',
+        currency_field='currency_id',
+    )
+    currency_id = fields.Many2one(
+        related='purchase_order_id.currency_id',
+        string='Currency',
+    )
+    po_state = fields.Selection(
+        related='purchase_order_id.state',
+        string='PO Status',
+    )
 
     @api.model_create_multi
     def create(self, vals_list):
-        """Set approval_type from PO when PO is set; prevent duplicate draft/pending per PO."""
+        """Set approval_type from PO when not provided; prevent duplicate draft/pending per (PO, approval_type)."""
         for vals in vals_list:
             po_id = vals.get('purchase_order_id')
+            approval_type = vals.get('approval_type')
             if po_id:
                 po = self.env['purchase.order'].browse(po_id)
                 if po.exists():
-                    vals['approval_type'] = 'with_bill' if po.has_vendor_bill else 'without_bill'
+                    if not approval_type:
+                        vals['approval_type'] = 'with_bill' if po.has_vendor_bill else 'without_bill'
+                    approval_type = vals.get('approval_type')
                 existing = self.search([
                     ('purchase_order_id', '=', po_id),
-                    ('state', 'in', ('draft', 'pending_approval')),
+                    ('state', 'in', ('draft', 'pending_approval', 'approved')),
+                    ('approval_type', '=', approval_type),
                 ], limit=1)
                 if existing:
                     raise ValidationError(
                         _(
-                            'A payment approval request is already open for this Purchase Order (%s). '
-                            'Please use the existing request or wait until it is approved or rejected.'
+                            'A payment approval request of this type already exists for Purchase Order %s (status: %s). '
+                            'Each PO can only have one request per approval type.'
                         )
-                        % (existing.purchase_order_id.name,)
+                        % (existing.purchase_order_id.name, dict(existing._fields['state'].selection).get(existing.state, existing.state))
                     )
         return super().create(vals_list)
 
-    @api.constrains('purchase_order_id', 'state')
-    def _check_one_active_request_per_po(self):
-        """Only one draft or pending request per purchase order."""
+    @api.constrains('purchase_order_id', 'approval_type', 'state')
+    def _check_one_active_request_per_po_per_type(self):
+        """Only one non-rejected request per (purchase order, approval_type)."""
         for rec in self:
-            if rec.state not in ('draft', 'pending_approval'):
+            if rec.state == 'rejected':
                 continue
             other = self.search([
                 ('purchase_order_id', '=', rec.purchase_order_id.id),
-                ('state', 'in', ('draft', 'pending_approval')),
+                ('approval_type', '=', rec.approval_type),
+                ('state', '!=', 'rejected'),
                 ('id', '!=', rec.id),
             ], limit=1)
             if other:
                 raise ValidationError(
                     _(
-                        'Only one payment approval request can be open per Purchase Order. '
-                        'An open request already exists for %s.'
+                        'Only one payment approval request of type "%s" can exist per Purchase Order. '
+                        'A request already exists for %s (status: %s). '
+                        'If it was rejected, use "Reset to Draft" to resubmit.'
                     )
-                    % (rec.purchase_order_id.name,)
+                    % (
+                        dict(rec._fields['approval_type'].selection).get(rec.approval_type, rec.approval_type),
+                        rec.purchase_order_id.name,
+                        dict(other._fields['state'].selection).get(other.state, other.state),
+                    )
                 )
 
     def action_submit(self):

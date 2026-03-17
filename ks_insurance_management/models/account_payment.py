@@ -6,33 +6,75 @@ from odoo import api, fields, models
 class AccountPayment(models.Model):
     _inherit = 'account.payment'
 
-    is_insurance_payment = fields.Boolean(string='Insurance Payment')
+    is_insurance_payment = fields.Boolean(
+        string='Insurance Payment',
+        help='Marks this payment as an insurance premium payment. '
+             'When checked, the Insurance Details tab becomes visible '
+             'and the payment is linked to an insurance policy.',
+    )
     insurance_policy_id = fields.Many2one(
         'insurance.policy',
         string='Insurance Policy',
         copy=False,
+        help='The insurance policy created from or linked to this payment. '
+             'Auto-populated after completing the Insurance Details popup.',
     )
-    insurance_popup_done = fields.Boolean(default=False, copy=False)
-    ins_company_id = fields.Many2one('res.company', string='Insured Company')
-    ins_type_id = fields.Many2one('insurance.type', string='Insurance Type')
-    ins_policy_number = fields.Char(string='Policy Number')
-    ins_sum_insured = fields.Float(string='Sum Insured')
+    insurance_popup_done = fields.Boolean(
+        default=False,
+        copy=False,
+        help='Internal flag indicating the Insurance Details popup has been completed '
+             'and the policy has been created.',
+    )
+    ins_company_id = fields.Many2one(
+        'res.company',
+        string='Insured Company',
+        help='The company for which this insurance premium is being paid.',
+    )
+    ins_type_id = fields.Many2one(
+        'insurance.type',
+        string='Insurance Type',
+        help='Type of insurance being paid for (e.g. Marine Open Cover, Fire Insurance).',
+    )
+    ins_policy_number = fields.Char(
+        string='Policy Number',
+        help='Policy number as issued by the insurer. Entered manually after receiving the policy document.',
+    )
+    ins_sum_insured = fields.Float(
+        string='Sum Insured',
+        help='The maximum insured amount (coverage value) for the policy being created from this payment.',
+    )
     ins_sum_insured_words = fields.Char(
         string='Cover Amount (in Words)',
         compute='_compute_ins_words',
         store=True,
+        help='Sum Insured converted to English words (Indian format) for use in letters and certificates.',
     )
-    ins_agent = fields.Char(string='Agent Name')
+    ins_agent = fields.Char(
+        string='Agent Name',
+        help='Name of the insurance agent or broker who arranged the policy. '
+             'If the agent does not exist in the system, a new agent record will be created automatically.',
+    )
     ins_insurance_company_id = fields.Many2one(
         'insurance.company',
         string='Insurance Company',
+        help='The insurer (insurance provider) who issued this policy.',
     )
-    ins_expiry_date = fields.Date(string='Expiry Date')
+    ins_expiry_date = fields.Date(
+        string='Expiry Date',
+        help='Date on which the insurance policy expires. '
+             'The system will send a 30-day advance reminder notification automatically.',
+    )
     ins_policy_type = fields.Selection([
-        ('individual', 'Individual'), ('floater', 'Floater')], string='Policy Type')
+        ('individual', 'Individual'), ('floater', 'Floater')],
+        string='Policy Type',
+        help='Individual: covers a single location.\n'
+             'Floater: one policy covering multiple warehouse locations.',
+    )
     ins_floater_location_ids = fields.Many2many(
         'stock.warehouse',
         string='Covered Locations (Floater)',
+        help='Applicable only for Floater policy type. '
+             'Select all warehouse locations covered under this single floater policy.',
     )
 
     @api.depends('ins_sum_insured')

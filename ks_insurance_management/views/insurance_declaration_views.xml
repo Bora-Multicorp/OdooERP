@@ -11,6 +11,8 @@
                   confirm="This will deduct from the policy balance. Proceed?"/>
           <button name="action_draft_email" string="Draft Email" type="object"
                   invisible="state == 'draft'"/>
+          <button name="action_mark_sent" string="Mark as Sent" type="object"
+                  class="btn-success" invisible="state != 'confirmed'"/>
           <button name="action_print_declaration" string="Print" type="object" class="btn-secondary"/>
           <field name="state" widget="statusbar" statusbar_visible="draft,confirmed,sent"/>
         </header>
@@ -43,7 +45,8 @@
     <field name="model">insurance.declaration</field>
     <field name="arch" type="xml">
       <list>
-        <field name="name"/><field name="policy_id"/><field name="declaration_type"/>
+        <field name="name"/><field name="policy_id"/>
+        <field name="insurance_type_id"/><field name="declaration_type"/>
         <field name="company_id"/><field name="date_from"/><field name="date_to"/>
         <field name="declaration_amount"/>
         <field name="state" widget="badge"
@@ -54,9 +57,34 @@
     </field>
   </record>
 
+  <record id="insurance_declaration_search_view" model="ir.ui.view">
+    <field name="name">insurance.declaration.search</field>
+    <field name="model">insurance.declaration</field>
+    <field name="arch" type="xml">
+      <search>
+        <field name="name"/><field name="policy_id"/>
+        <field name="insurance_type_id"/>
+        <field name="company_id" groups="base.group_multi_company"/>
+        <filter name="marine" string="Marine" domain="[('declaration_type','=','marine')]"/>
+        <filter name="fire_burglary" string="Fire &amp; Burglary" domain="[('declaration_type','=','fire_burglary')]"/>
+        <separator/>
+        <filter name="draft" string="Draft" domain="[('state','=','draft')]"/>
+        <filter name="confirmed" string="Confirmed" domain="[('state','=','confirmed')]"/>
+        <filter name="sent" string="Sent" domain="[('state','=','sent')]"/>
+        <group expand="0" string="Group By">
+          <filter name="grp_policy" string="Policy" context="{'group_by':'policy_id'}"/>
+          <filter name="grp_type" string="Declaration Type" context="{'group_by':'declaration_type'}"/>
+          <filter name="grp_company" string="Company" context="{'group_by':'company_id'}"/>
+          <filter name="grp_state" string="Status" context="{'group_by':'state'}"/>
+        </group>
+      </search>
+    </field>
+  </record>
+
   <record id="action_insurance_declaration" model="ir.actions.act_window">
     <field name="name">Declarations</field>
     <field name="res_model">insurance.declaration</field>
     <field name="view_mode">list,form</field>
+    <field name="search_view_id" ref="insurance_declaration_search_view"/>
   </record>
 </odoo>

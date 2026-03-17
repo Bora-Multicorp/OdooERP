@@ -30,6 +30,7 @@
         'views/sale_order_views.xml',
         'views/purchase_order_views.xml',
         'views/ks_purchase_report_detail_views.xml',
+        'views/stock_report_views.xml'
     ],
     'assets': {
         'web.assets_backend': [

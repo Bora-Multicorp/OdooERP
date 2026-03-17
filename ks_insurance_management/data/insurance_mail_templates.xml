@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<odoo noupdate="1">
+<odoo noupdate="0">
 
     <record id="email_template_declaration" model="mail.template">
         <field name="name">Insurance: Declaration Email</field>
@@ -30,14 +30,10 @@
     Regards,
     <br/>
     <t t-out="object.company_id.name or ''"/>
-    <t t-if="object.company_id.partner_id and object.company_id.partner_id.signature">
-        <br/><br/>
-        <t t-out="object.company_id.partner_id.signature or ''"/>
-    </t>
 </p>
 </div>
         </field>
-        <field name="lang">{{ object.company_id.lang or object.env.lang }}</field>
+        <field name="lang">{{ object.company_id.partner_id.lang or object.env.user.lang }}</field>
         <field name="auto_delete" eval="False"/>
     </record>
 
