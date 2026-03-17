@@ -115,50 +115,49 @@
         <field name="is_marine"/>
         <templates>
           <t t-name="card">
-            <div t-attf-class="oe_kanban_card oe_kanban_global_click #{'border-danger' if record.state.raw_value == 'expired' else 'border-success'}">
-              <div class="row mb-1">
-                <div class="col-8">
-                  <strong><field name="name"/></strong>
-                </div>
-                <div class="col-4 text-right">
-                  <field name="state" widget="badge"
-                         decoration-success="state == 'active'"
-                         decoration-danger="state == 'expired'"/>
-                </div>
+            <t t-set="is_expired" t-value="record.state.raw_value === 'expired'"/>
+            <div t-attf-class="oe_kanban_global_click border-start border-3 #{is_expired ? 'border-danger' : 'border-success'} ps-2">
+              <div class="d-flex justify-content-between align-items-start mb-1">
+                <strong class="text-truncate"><field name="name"/></strong>
+                <field name="state" widget="badge"
+                       decoration-success="state == 'active'"
+                       decoration-danger="state == 'expired'"/>
               </div>
-              <div class="row mb-1">
-                <div class="col-12 text-muted">
-                  <field name="insurance_type_id"/>
-                  <t t-if="record.policy_number.raw_value">
-                    — <field name="policy_number"/>
-                  </t>
-                </div>
+              <div class="text-muted small mb-1">
+                <field name="insurance_type_id"/>
+                <t t-if="record.policy_number.raw_value">
+                  &amp;nbsp;·&amp;nbsp;<field name="policy_number"/>
+                </t>
               </div>
-              <div class="row mb-1">
+              <div class="row g-0 mb-1">
                 <div class="col-6">
-                  <span class="text-muted">Insurer:</span>
-                  <field name="insurance_company_id"/>
+                  <span class="text-muted small">Insurer: </span>
+                  <span class="small"><field name="insurance_company_id"/></span>
                 </div>
                 <div class="col-6">
-                  <span class="text-muted">Agent:</span>
-                  <field name="agent_id"/>
+                  <span class="text-muted small">Agent: </span>
+                  <span class="small"><field name="agent_id"/></span>
                 </div>
               </div>
-              <div class="row mb-1">
+              <div class="row g-0 mb-1">
                 <div class="col-6">
-                  <span class="text-muted">Sum Insured:</span>
-                  <field name="sum_insured" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                  <span class="text-muted small">Sum Insured: </span>
+                  <span class="small fw-bold">
+                    <field name="sum_insured" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                  </span>
                 </div>
-                <div class="col-6" t-if="record.is_marine.raw_value">
-                  <span class="text-muted">Balance:</span>
-                  <field name="balance_sum_insured" widget="monetary" options="{'currency_field': 'currency_id'}"/>
-                </div>
+                <t t-if="record.is_marine.raw_value">
+                  <div class="col-6">
+                    <span class="text-muted small">Balance: </span>
+                    <span class="small fw-bold">
+                      <field name="balance_sum_insured" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                    </span>
+                  </div>
+                </t>
               </div>
-              <div class="row">
-                <div class="col-12">
-                  <span class="text-muted">Expiry:</span>
-                  <field name="expiry_date"/>
-                </div>
+              <div class="small">
+                <span class="text-muted">Expiry: </span>
+                <field name="expiry_date"/>
               </div>
             </div>
           </t>
