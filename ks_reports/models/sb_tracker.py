@@ -2,6 +2,7 @@
 
 import io
 import base64
+import datetime
 from odoo import api, fields, models, _
 from odoo.exceptions import UserError
 
@@ -119,7 +120,11 @@ class SbTracker(models.Model):
 
     def _generate_xlsx_report(self):
         """Generate XLSX file content (base64) for current recordset."""
-        records = self.sorted(key=lambda r: (r.invoice_date or '', r.id))
+        # Use datetime.date.min as a sentinel so that records with no
+        # invoice_date sort first without mixing date and str types, which
+        # would raise: TypeError: '<' not supported between instances of
+        # 'datetime.date' and 'str'.
+        records = self.sorted(key=lambda r: (r.invoice_date or datetime.date.min, r.id))
         output = io.BytesIO()
         workbook = xlsxwriter.Workbook(output, {'in_memory': True})
         sheet = workbook.add_worksheet('SB Tracker')

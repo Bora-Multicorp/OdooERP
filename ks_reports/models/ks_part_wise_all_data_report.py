@@ -1230,21 +1230,21 @@ class PartWiseAllDataReport(models.TransientModel):
             sheet.set_column(col, col, width)
         sheet.freeze_panes(1, 0)
         
-        # Sale orders: selected IDs if provided, otherwise all (except cancel)
+        # Sale orders: selected IDs if provided, otherwise all
         if sale_order_ids:
-            sale_orders = self.env['sale.order'].browse(sale_order_ids).filtered(
-                lambda o: o.state != 'cancel'
-            )
+            all_orders = self.env['sale.order'].browse(sale_order_ids)
+            sale_orders = all_orders.filtered(lambda o: o.state != 'cancel')
         else:
-            sale_orders = self.env['sale.order'].search([
-                ('state', '!=', 'cancel')
-            ], order='partner_id')
-        
+            all_orders = self.env['sale.order'].search([], order='partner_id')
+            sale_orders = all_orders.filtered(lambda o: o.state != 'cancel')
+
         # 2. Unique customers: by commercial partner (so same company = one row)
+        # Collect from ALL orders (any state) so no customer is missed
         commercial_partner_ids = set()
-        for order in sale_orders:
+        for order in all_orders:
             comp = order.partner_id.commercial_partner_id
-            commercial_partner_ids.add(comp.id)
+            if comp:
+                commercial_partner_ids.add(comp.id)
         
         # 3. For each customer, aggregate over ALL their sale orders
         company = self.env.company
@@ -1259,18 +1259,61 @@ class PartWiseAllDataReport(models.TransientModel):
             payment_received = 0.0
             stock_dispatched_amount = 0.0
 
-            for order in partner_orders:
-                # PAYMENT RECEIVED = ks_advance_payment_amount + total_invoice_payment_received (per SO, convert to company currency, then sum)
-                adv = getattr(order, 'ks_advance_payment_amount', 0.0) or 0.0
-                inv_pay = getattr(order, 'total_invoice_payment_received', 0.0) or 0.0
-                order_payment = adv + inv_pay
-                if order_payment:
-                    order_date = order.date_order.date() if order.date_order else fields.Date.context_today(self)
-                    payment_received += _to_company_currency(
-                        order.currency_id, order_payment, company_currency, company, order_date, self
+            # ----------------------------------------------------------------
+            # PAYMENT RECEIVED — deduplicate at customer level.
+            #
+            # Root cause of duplication: one invoice can be linked to multiple
+            # SOs (Odoo allows combined invoicing). Summing per-SO stored fields
+            # (ks_advance_payment_amount + total_invoice_payment_received) then
+            # multiplies the same payment by the number of SOs it touches.
+            #
+            # Fix: collect unique payment IDs directly across all SOs and
+            # invoices for this customer, sum each payment exactly once.
+            # ----------------------------------------------------------------
+
+            # Step 1 – unique advance payments
+            # Use direct search instead of One2many to avoid caching issues.
+            # State filter: exclude only draft/cancel — 'posted' and 'paid' are
+            # both valid (bank-journal payments stay 'posted' until reconciled;
+            # cash-journal payments go straight to 'paid').
+            seen_advance_ids = set()
+            advance_payments = self.env['account.payment'].search([
+                ('ks_sale_order_id', 'in', partner_orders.ids),
+                ('state', 'not in', ['draft', 'cancel']),
+            ])
+            for payment in advance_payments:
+                if payment.id not in seen_advance_ids:
+                    seen_advance_ids.add(payment.id)
+                    payment_received += _payment_to_company_currency(
+                        payment, payment.amount, company_currency, company, self
                     )
 
-                # STOCK DESPATCHED AMOUNT: use qty_delivered * price_unit (reliable); optional move-based for sale_stock
+            # Step 2 – unique invoice payments (excluding advance payments)
+            # No state filter on reconciled_payment_ids — if a payment appears
+            # there it is already reconciled and valid regardless of state label.
+            seen_invoice_ids = set()
+            seen_invoice_payment_ids = set()
+            for order in partner_orders:
+                for inv in order.invoice_ids.filtered(lambda i: i.state == 'posted'):
+                    if inv.id in seen_invoice_ids:
+                        continue  # invoice already processed via another SO
+                    seen_invoice_ids.add(inv.id)
+                    for payment in inv.reconciled_payment_ids:
+                        if payment.id in seen_advance_ids:
+                            continue  # already counted as advance payment
+                        if payment.id in seen_invoice_payment_ids:
+                            continue  # already counted from another invoice
+                        seen_invoice_payment_ids.add(payment.id)
+                        amount = _payment_to_company_currency(
+                            payment, payment.amount, company_currency, company, self
+                        )
+                        if inv.move_type == 'out_invoice':
+                            payment_received += amount
+                        elif inv.move_type == 'out_refund':
+                            payment_received -= amount
+
+            # STOCK DESPATCHED AMOUNT (unchanged — no duplication issue here)
+            for order in partner_orders:
                 order_date = order.date_order.date() if order.date_order else fields.Date.context_today(self)
                 order_currency = order.currency_id
                 for line in order.order_line.filtered(
@@ -1299,7 +1342,7 @@ class PartWiseAllDataReport(models.TransientModel):
                         stock_dispatched_amount += _to_company_currency(
                             order_currency, line_amount, company_currency, company, order_date, self
                         )
-            
+
             party_data[comp_id] = {
                 'party_name': comp.name or '',
                 'payment_received': payment_received,
@@ -2571,18 +2614,19 @@ class PartWiseAllDataReport(models.TransientModel):
     def get_advance_sheet_report_rows(self, sale_order_ids=None):
         """Return list of dicts for Advance Sheet list view (same columns as XLSX)."""
         if sale_order_ids:
-            sale_orders = self.env['sale.order'].browse(sale_order_ids).filtered(
-                lambda o: o.state != 'cancel'
-            )
+            all_orders = self.env['sale.order'].browse(sale_order_ids)
+            sale_orders = all_orders.filtered(lambda o: o.state != 'cancel')
         else:
-            sale_orders = self.env['sale.order'].search([
-                ('state', '!=', 'cancel')
-            ], order='partner_id')
+            all_orders = self.env['sale.order'].search([], order='partner_id')
+            sale_orders = all_orders.filtered(lambda o: o.state != 'cancel')
 
+        # Collect ALL unique commercial partners from ALL sale orders (any state)
+        # so no customer is missed even if they only have cancelled/draft orders
         commercial_partner_ids = set()
-        for order in sale_orders:
+        for order in all_orders:
             comp = order.partner_id.commercial_partner_id
-            commercial_partner_ids.add(comp.id)
+            if comp:
+                commercial_partner_ids.add(comp.id)
 
         company = self.env.company
         company_currency = company.currency_id
@@ -2595,17 +2639,61 @@ class PartWiseAllDataReport(models.TransientModel):
             payment_received = 0.0
             stock_dispatched_amount = 0.0
 
-            for order in partner_orders:
-                # PAYMENT RECEIVED = ks_advance_payment_amount + total_invoice_payment_received (per SO, convert to company currency, then sum)
-                adv = getattr(order, 'ks_advance_payment_amount', 0.0) or 0.0
-                inv_pay = getattr(order, 'total_invoice_payment_received', 0.0) or 0.0
-                order_payment = adv + inv_pay
-                if order_payment:
-                    order_date = order.date_order.date() if order.date_order else fields.Date.context_today(self)
-                    payment_received += _to_company_currency(
-                        order.currency_id, order_payment, company_currency, company, order_date, self
+            # ----------------------------------------------------------------
+            # PAYMENT RECEIVED — deduplicate at customer level.
+            #
+            # Root cause of duplication: one invoice can be linked to multiple
+            # SOs (Odoo allows combined invoicing). Summing per-SO stored fields
+            # (ks_advance_payment_amount + total_invoice_payment_received) then
+            # multiplies the same payment by the number of SOs it touches.
+            #
+            # Fix: collect unique payment IDs directly across all SOs and
+            # invoices for this customer, sum each payment exactly once.
+            # ----------------------------------------------------------------
+
+            # Step 1 – unique advance payments
+            # Use direct search instead of One2many to avoid caching issues.
+            # State filter: exclude only draft/cancel — 'posted' and 'paid' are
+            # both valid (bank-journal payments stay 'posted' until reconciled;
+            # cash-journal payments go straight to 'paid').
+            seen_advance_ids = set()
+            advance_payments = self.env['account.payment'].search([
+                ('ks_sale_order_id', 'in', partner_orders.ids),
+                ('state', 'not in', ['draft', 'cancel']),
+            ])
+            for payment in advance_payments:
+                if payment.id not in seen_advance_ids:
+                    seen_advance_ids.add(payment.id)
+                    payment_received += _payment_to_company_currency(
+                        payment, payment.amount, company_currency, company, self
                     )
 
+            # Step 2 – unique invoice payments (excluding advance payments)
+            # No state filter on reconciled_payment_ids — if a payment appears
+            # there it is already reconciled and valid regardless of state label.
+            seen_invoice_ids = set()
+            seen_invoice_payment_ids = set()
+            for order in partner_orders:
+                for inv in order.invoice_ids.filtered(lambda i: i.state == 'posted'):
+                    if inv.id in seen_invoice_ids:
+                        continue  # invoice already processed via another SO
+                    seen_invoice_ids.add(inv.id)
+                    for payment in inv.reconciled_payment_ids:
+                        if payment.id in seen_advance_ids:
+                            continue  # already counted as advance payment
+                        if payment.id in seen_invoice_payment_ids:
+                            continue  # already counted from another invoice
+                        seen_invoice_payment_ids.add(payment.id)
+                        amount = _payment_to_company_currency(
+                            payment, payment.amount, company_currency, company, self
+                        )
+                        if inv.move_type == 'out_invoice':
+                            payment_received += amount
+                        elif inv.move_type == 'out_refund':
+                            payment_received -= amount
+
+            # Stock dispatched (unchanged — no duplication issue here)
+            for order in partner_orders:
                 order_date = order.date_order.date() if order.date_order else fields.Date.context_today(self)
                 order_currency = order.currency_id
                 for line in order.order_line.filtered(

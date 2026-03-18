@@ -43,27 +43,43 @@ class SaleOrder(models.Model):
     )
 
     @api.depends('invoice_ids', 'invoice_ids.state', 'invoice_ids.reconciled_payment_ids',
-                 'invoice_ids.reconciled_payment_ids.state', 'invoice_ids.reconciled_payment_ids.amount')
+                 'invoice_ids.reconciled_payment_ids.state', 'invoice_ids.reconciled_payment_ids.amount',
+                 'ks_advance_payment_ids')
     def _compute_total_payment_received(self):
         for order in self:
             total = 0.0
 
-            # 1. Retrieve all Posted Invoices and Credit Notes linked to the Sale Order
+            # Advance payment IDs already counted in ks_advance_payment_amount —
+            # must be excluded here to prevent double-counting in the report.
+            advance_payment_ids = set(self.env['account.payment'].search([
+                ('ks_sale_order_id', '=', order.id),
+                ('state', 'not in', ['draft', 'cancel']),
+            ]).ids)
+
+            # Track unique payment IDs across all invoices.
+            # The same payment can be reconciled to multiple invoices; using
+            # payment.amount per-invoice would multiply the value by the number
+            # of invoices it touches (e.g. 30 across 10 invoices = 300).
+            # No state filter on reconciled_payment_ids — presence there already
+            # implies the payment is valid (reconciled entries can't be draft).
+            seen_payment_ids = set()
+
             invoices = order.invoice_ids.filtered(lambda inv: inv.state == 'posted')
 
             for inv in invoices:
-                # 2. Sum the amounts of payment records that are in 'posted' (paid) state
-                # We filter the recordset before mapping the amount
-                valid_payments = inv.reconciled_payment_ids.filtered(lambda p: p.state == 'paid')
-                invoice_payment_sum = sum(valid_payments.mapped('amount'))
+                for payment in inv.reconciled_payment_ids:
+                    # Skip advance payments — already captured in ks_advance_payment_amount
+                    if payment.id in advance_payment_ids:
+                        continue
+                    # Skip payments already counted via an earlier invoice
+                    if payment.id in seen_payment_ids:
+                        continue
+                    seen_payment_ids.add(payment.id)
+                    if inv.move_type == 'out_invoice':
+                        total += payment.amount
+                    elif inv.move_type == 'out_refund':
+                        total -= payment.amount
 
-                # 3. Add to total if it's a standard Invoice, subtract if it's a Credit Note
-                if inv.move_type == 'out_invoice':
-                    total += invoice_payment_sum
-                elif inv.move_type == 'out_refund':
-                    total -= invoice_payment_sum
-
-            # Update the field with the final calculated sum
             order.total_invoice_payment_received = total
 
     @api.depends('ks_advance_payment_ids')
@@ -80,12 +96,14 @@ class SaleOrder(models.Model):
         'amount_total',
     )
     def _compute_ks_advance_payment_amount(self):
-        """Compute the total advance payment amount received (paid/in_process payments only)."""
-        # Odoo 18 account.payment uses 'paid' and 'in_process', not 'posted'
+        """Compute the total advance payment amount received (all non-draft/cancel payments)."""
+        # Use 'not in draft/cancel' rather than '== paid' because bank-journal
+        # payments stay in 'posted' state until bank reconciliation, while
+        # cash-journal payments go to 'paid' immediately after action_post().
         for order in self:
             payments = self.env['account.payment'].search([
                 ('ks_sale_order_id', '=', order.id),
-                ('state', '=', 'paid'),
+                ('state', 'not in', ['draft', 'cancel']),
             ])
             total_advance = sum(payments.mapped('amount')) if payments else 0.0
             order.ks_advance_payment_amount = total_advance
