@@ -1003,7 +1003,16 @@ class PurchaseOrder(models.Model):
             partner_ids.append(self.ks_cancel_pm2_id.partner_id.id)
         if partner_ids:
             self.message_subscribe(partner_ids=partner_ids)
-        
+
+        # Create activity for Approver 1 — mirrors the Confirm flow
+        self._create_approval_activity(
+            user_id=self.ks_cancel_pm1_id.id,
+            summary=_('Approval Request: Cancel PO %s') % self.name,
+            note=_('Purchase Order %s has been submitted for cancellation by %s. Reason: %s. Please review and approve or reject.') % (
+                self.name, self.env.user.name, reason
+            ),
+        )
+
         return True
 
     def ks_action_approve_cancel(self):
@@ -1224,7 +1233,16 @@ class PurchaseOrder(models.Model):
             partner_ids.append(self.ks_edit_pm2_id.partner_id.id)
         if partner_ids:
             self.message_subscribe(partner_ids=partner_ids)
-        
+
+        # Create activity for Approver 1 — mirrors the Confirm flow
+        self._create_approval_activity(
+            user_id=self.ks_edit_pm1_id.id,
+            summary=_('Approval Request: Edit PO %s') % self.name,
+            note=_('Purchase Order %s has been submitted for editing by %s. Reason: %s. Please review and approve or reject.') % (
+                self.name, self.env.user.name, reason
+            ),
+        )
+
         return True
 
     def ks_action_approve_edit(self):

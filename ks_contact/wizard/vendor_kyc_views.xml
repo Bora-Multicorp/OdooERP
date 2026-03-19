@@ -163,7 +163,7 @@
                         </field>
                     </group>
                     <footer>
-                        <button name="action_vendor_kyc_done" string="Submit Re-KYC" type="object" class="btn-primary"/>
+                        <button name="action_vendor_kyc_done" string="Submit" type="object" class="btn-primary"/>
                         <button string="Cancel" class="btn-secondary" special="cancel" data-hotkey="x"/>
                     </footer>
                 </sheet>
