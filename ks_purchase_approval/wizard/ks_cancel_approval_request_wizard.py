@@ -168,23 +168,43 @@ class KsCancelApprovalRequestWizard(models.TransientModel):
         self._compute_filtered_approver_ids()
 
     def action_confirm_request(self):
-        """Proceed with sending the cancellation request - open reason wizard"""
+        """Proceed with sending the cancellation request - open reason wizard.
+
+        When opened via 'Update Cancel Approvals' (ks_is_update=True), cleanup
+        runs here on OK — clicking Cancel in the wizard leaves everything untouched.
+        """
         self.ensure_one()
         if not self.ks_approver1_user:
             raise UserError(_("Please select Approver 1."))
-        
+
         order = self.ks_purchase_order_id
         config = order._get_approval_config()
-        
+
         if self.ks_show_approver2 and not self.ks_approver2_user:
             raise UserError(_("Please select Approver 2 (required for two level approval mode)."))
-        
-        # Store selected approvers on the purchase order
+
+        is_update = self.env.context.get('ks_is_update', False)
+        if is_update:
+            order._ks_cancel_workflow_activities('cancel', mark_done=False)
+            order.write({
+                'state': 'purchase',
+                'ks_cancel_pm1_id': False,
+                'ks_cancel_pm2_id': False,
+                'ks_cancel_pm1_approved': False,
+                'ks_cancel_pm2_approved': False,
+            })
+            order.message_post(
+                body=_("Cancel approval request updated by %s. Previous approvers cancelled.") % self.env.user.name,
+                message_type='notification',
+                subtype_xmlid='mail.mt_note',
+            )
+
+        # Store new approvers on the purchase order
         order.write({
             'ks_cancel_pm1_id': self.ks_approver1_user.id,
             'ks_cancel_pm2_id': self.ks_approver2_user.id if self.ks_approver2_user else False,
         })
-        
+
         # Open reason wizard
         return {
             'name': _('Request Cancellation'),

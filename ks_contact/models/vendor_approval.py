@@ -377,6 +377,70 @@ class ContactKYCApproval(models.Model):
 
 
     # -------------------------------------------------------------------------
+    # Update Approvals (safe: cleanup only on wizard OK, never on Cancel)
+    # -------------------------------------------------------------------------
+
+    def _ks_cancel_pending_kyc_activities(self, mark_done=False, feedback=None):
+        """Cancel pending KYC approval activities on this record.
+
+        Scoped by: res_model + res_id + user_ids of current approval_users_ids
+        + summary keyword — so only KYC-approval activities are touched.
+
+        :param mark_done: True  → action_feedback (leaves chatter entry)
+                          False → unlink (silent, used for 'Update' resets)
+        """
+        self.ensure_one()
+        approver_user_ids = self.approval_users_ids.mapped('user_id').ids
+        domain = [
+            ('res_model', '=', self._name),
+            ('res_id', '=', self.id),
+            ('active', '=', True),
+            ('summary', 'ilike', 'KYC Approval for'),
+        ]
+        if approver_user_ids:
+            domain.append(('user_id', 'in', approver_user_ids))
+
+        activities = self.env['mail.activity'].search(domain)
+        if not activities:
+            return True
+
+        if mark_done:
+            activities.action_feedback(feedback=feedback or '')
+        else:
+            activities.sudo().unlink()
+        return True
+
+    def action_update_approvals(self):
+        """Requester/admin updates KYC approvers while KYC is in 'pending' state.
+
+        Only opens the wizard with ks_is_update=True — ALL cleanup (cancel activities,
+        reset approval_users_ids, reset state) happens inside the wizard's
+        add_users_for_approval ONLY when the user clicks OK.
+        Clicking the wizard Cancel button leaves everything untouched.
+        """
+        self.ensure_one()
+        if self.state != 'pending':
+            raise ValidationError(_("Update Approvals is only available while the KYC is in 'Pending' state."))
+
+        current_user = self.env.user
+        is_admin = current_user.has_group('base.group_system')
+        is_owner = self.kyc_approval_creator and self.kyc_approval_creator == current_user
+        if not (is_admin or is_owner):
+            raise ValidationError(_("Only the original submitter or an administrator can update the approval request."))
+
+        return {
+            'name': _('Update Approval Users'),
+            'type': 'ir.actions.act_window',
+            'res_model': 'vendor.kyc.approval.user.picker.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'default_kyc_id': self.id,
+                'ks_is_update': True,
+            },
+        }
+
+    # -------------------------------------------------------------------------
     # Suspend Approval Process
     # -------------------------------------------------------------------------
     def action_suspend(self):

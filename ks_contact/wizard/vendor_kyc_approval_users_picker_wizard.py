@@ -75,33 +75,46 @@ class POConfirmationApprovalUsersPicker(models.TransientModel):
             self.approver1_user = False
 
     def add_users_for_approval(self):
-        """Add selected users to approval workflow (sequential)"""
+        """Add selected users to approval workflow (sequential).
+
+        When opened via 'Update Approvals' (ks_is_update=True in context), the old
+        activities and approval_users_ids are reset HERE — only after the user clicks OK.
+        Clicking the wizard Cancel button leaves everything completely untouched.
+        """
         if not self.kyc_id:
             raise ValidationError(_("KYC record is missing."))
-        
+
         if not self.approver1_user or not self.approver2_user:
             raise ValidationError(_("Please select both Approver 1 and Approver 2."))
-        
-        # Create approval_users_ids records with sequence
-        # Approver 1 gets sequence 1, Approver 2 gets sequence 2
-        approval_vals = []
-        
-        approval_vals.append((0, 0, {
-            'sequence': 1,
-            'user_id': self.approver1_user.id
-        }))
-        
-        approval_vals.append((0, 0, {
-            'sequence': 2,
-            'user_id': self.approver2_user.id
-        }))
-        
-        if approval_vals:
-            # Write approval users and trigger sequential approval flow
+
+        is_update = self.env.context.get('ks_is_update', False)
+        if is_update:
+            # Silently cancel old activities (scoped to KYC summary + current approver users)
+            self.kyc_id._ks_cancel_pending_kyc_activities(mark_done=False)
+            # Clear old approval lines and reset state to 'draft' so the write below
+            # moves it cleanly back to 'pending' with fresh approvers
             self.kyc_id.write({
-                'approval_users_ids': approval_vals,
-                'state': 'pending',
-                'kyc_approval_creator': self.env.user.id
+                'approval_users_ids': [(5, 0, 0)],
+                'state': 'draft',
+                'assigned_to': False,
             })
-            # Create activity only for first approver (sequential approval)
-            self.kyc_id._schedule_sequential_approval_activities()
+            self.kyc_id.message_post(
+                body=_("Approval request updated by %s. Previous approvers cancelled.") % self.env.user.name,
+                message_type='notification',
+                subtype_xmlid='mail.mt_note',
+            )
+
+        # Build new approval lines: Approver 1 → sequence 1, Approver 2 → sequence 2
+        approval_vals = [
+            (0, 0, {'sequence': 1, 'user_id': self.approver1_user.id}),
+            (0, 0, {'sequence': 2, 'user_id': self.approver2_user.id}),
+        ]
+
+        # Write approval users and trigger sequential approval flow
+        self.kyc_id.write({
+            'approval_users_ids': approval_vals,
+            'state': 'pending',
+            'kyc_approval_creator': self.env.user.id,
+        })
+        # Create activity only for first approver (sequential approval)
+        self.kyc_id._schedule_sequential_approval_activities()

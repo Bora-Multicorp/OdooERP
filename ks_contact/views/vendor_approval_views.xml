@@ -11,6 +11,10 @@
                         <button name="confirm_submit_form" string="Submit for Approval" type="object"
                                 class="oe_highlight"
                                 invisible="state != 'draft' or is_approved or (not is_admin_user and not is_form_owner)"/>
+                        <button name="action_update_approvals" string="Update Approvals" type="object"
+                                class="btn-warning"
+                                invisible="state != 'pending' or is_approved or (not is_admin_user and not is_form_owner)"
+                                confirm="This will cancel the current approval request and let you choose new approvers. Continue?"/>
                         <field name="has_pending_approval" invisible="1"/>
                         <field name="is_approved" invisible="1"/>
                         <field name="is_admin_user" invisible="1"/>

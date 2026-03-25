@@ -26,6 +26,7 @@
         'data/ks_purchase_report_cron.xml',
         'views/ks_report_line_views.xml',
         'views/sb_tracker_views.xml',
+        'views/ks_cn_tracking_report_views.xml',
         'views/menu_views.xml',
         'views/sale_order_views.xml',
         'views/purchase_order_views.xml',

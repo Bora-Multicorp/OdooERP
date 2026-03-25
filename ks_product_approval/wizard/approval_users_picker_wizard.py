@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from odoo import api, fields, models
+from odoo import api, fields, models, _
 
 
 class ApprovalUsersPicker(models.TransientModel):
@@ -106,7 +106,19 @@ class ApprovalUsersPicker(models.TransientModel):
                 'user_id': self.approver2_user.id,
                 'approval_type': 'approver2'
             })
-        
+
+        is_update = self.env.context.get('ks_is_update', False)
+        if is_update and approvers:
+            # Cancel old pending activities ONLY when user clicks OK (not on wizard Cancel)
+            self.product_id._ks_cancel_pending_product_approval_activities()
+            # Clear existing approval lines so assign_users starts fresh
+            self.product_id.write({'approval_users_ids': [(5, 0, 0)], 'assigned_to': False})
+            self.product_id.message_post(
+                body=_("Approval request updated by %s. Previous approvers cancelled.") % self.env.user.name,
+                message_type='notification',
+                subtype_xmlid='mail.mt_note',
+            )
+
         if approvers:
             self.product_id.assign_users(approvers)
 

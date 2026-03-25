@@ -337,6 +337,19 @@ class CustomContact(models.Model):
         help='True if current user is the first pending approver for this contact.',
     )
 
+    ks_is_approver = fields.Boolean(
+        string='Is Approver',
+        compute='_compute_ks_is_approver',
+        help='True if current user is any approver on this vendor approval.',
+    )
+
+    @api.depends('approval_line_ids.user_id', 'approval_line_ids.is_active')
+    @api.depends_context('uid')
+    def _compute_ks_is_approver(self):
+        uid = self.env.uid
+        for record in self:
+            record.ks_is_approver = uid in record.approval_line_ids.filtered('is_active').mapped('user_id').ids
+
     @api.depends('approval_line_ids.user_id', 'approval_line_ids.state', 'approval_line_ids.is_active')
     @api.depends_context('uid')
     def _compute_has_pending_approval(self):
@@ -487,6 +500,68 @@ class CustomContact(models.Model):
                     })
 
         return res
+
+    def _ks_cancel_pending_partner_approval_activities(self, mark_done=False, feedback=None):
+        """Cancel pending vendor-approval activities on this partner.
+
+        Scoped by: res_model + res_id + user_ids of active approval_line_ids
+        + summary keyword — so only vendor-approval activities are touched.
+
+        :param mark_done: True  → action_feedback (leaves chatter entry)
+                          False → unlink (silent, used for 'Update' resets)
+        """
+        self.ensure_one()
+        approver_user_ids = self.approval_line_ids.filtered('is_active').mapped('user_id').ids
+        domain = [
+            ('res_model', '=', self._name),
+            ('res_id', '=', self.id),
+            ('active', '=', True),
+            ('summary', 'ilike', 'Vendor Approval'),
+        ]
+        if approver_user_ids:
+            domain.append(('user_id', 'in', approver_user_ids))
+
+        activities = self.env['mail.activity'].search(domain)
+        if not activities:
+            return True
+        if mark_done:
+            activities.action_feedback(feedback=feedback or '')
+        else:
+            activities.sudo().unlink()
+        return True
+
+    def action_update_approvals(self):
+        """Submitter/admin updates vendor approvers while approval_status is 'to_approve'.
+
+        Only opens the wizard with ks_is_update=True — ALL cleanup (cancel activities,
+        clear approval_line_ids) happens inside the wizard's add_users_for_approval
+        ONLY when the user clicks OK.  Clicking wizard Cancel leaves everything untouched.
+        """
+        self.ensure_one()
+        if self.approval_status != 'to_approve':
+            raise ValidationError(_("Update Approvals is only available while the vendor is in 'To Approve' state."))
+
+        current_user = self.env.user
+        is_admin = current_user.has_group('base.group_system')
+        # Any internal user who can see the button is allowed (admins + managers)
+        if not is_admin and not current_user.has_group('base.group_user'):
+            raise ValidationError(_("You do not have permission to update approval requests."))
+
+        config = self.env['vendor.approval.config'].get_config()
+        if not config:
+            raise ValidationError(_("Please configure Vendor Approval Settings before updating."))
+
+        return {
+            'name': _('Update Approval Users'),
+            'type': 'ir.actions.act_window',
+            'res_model': 'partner.approval.user.picker.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'default_partner_id': self.id,
+                'ks_is_update': True,
+            },
+        }
 
     def action_submit_for_approval(self):
         """

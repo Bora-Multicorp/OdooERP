@@ -16,6 +16,10 @@
                 <xpath expr="//form/header" position="inside">
                     <button name="confirm_submit_form" string="Submit for Approval" type="object" class="oe_highlight"
                             invisible="state != 'draft' or is_approved or (create_uid != uid and not is_admin)"/>
+                    <button name="action_update_approvals" string="Update Approvals" type="object" class="btn-warning"
+                            invisible="state != 'pending' or is_approved or ks_is_approver or (create_uid != uid and not is_admin)"
+                            confirm="This will cancel the current approval request and let you choose new approvers. Continue?"/>
+                    <field name="ks_is_approver" invisible="1"/>
                     <button name="%(approve_product_wizard_action)d" string="Approve" type="action" class="btn-primary"
                             invisible="assigned_to != uid"/>
                     <button name="%(reject_product_wizard_action)d" string="Reject" type="action" class="btn-primary"

@@ -100,7 +100,12 @@
                     <button name="action_submit_for_approval" string="Submit for Approval" type="object"
                             class="btn-primary"
                             invisible="not is_vendor or approval_status != 'draft' or vendor_type == 'regular'"/>
+                    <button name="action_update_approvals" string="Update Approvals" type="object"
+                            class="btn-warning"
+                            invisible="not is_vendor or approval_status != 'to_approve' or is_approved or ks_is_approver"
+                            confirm="This will cancel the current approval request and let you choose new approvers. Continue?"/>
                     <field name="has_pending_approval" invisible="1"/>
+                    <field name="ks_is_approver" invisible="1"/>
                     <button name="%(partner_approve_request_wizard_action)d" string="Approve" type="action"
                             class="btn-primary"
                             invisible="not is_vendor or approval_status != 'to_approve' or not has_pending_approval or is_approved"/>
