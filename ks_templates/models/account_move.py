@@ -162,29 +162,46 @@ class AccountMove(models.Model):
         """Get IGST tax information grouped by HSN code (or any tax if IGST not found)"""
         self.ensure_one()
         tax_info = {}
-        
+
+        # Build a map: invoice_line -> tax_amount from actual journal tax lines (posted invoices)
+        # tax journal lines have display_type == 'tax' and are linked via tax_line_id
+        # We match them back to invoice lines via tax_repartition_line_id -> invoice_line_ids
+        line_tax_amounts = {}  # {invoice_line_id: total_tax_amount}
+
+        tax_journal_lines = self.line_ids.filtered(
+            lambda l: l.display_type == 'tax' and l.tax_line_id
+        )
+        for tl in tax_journal_lines:
+            # amount_currency holds value in invoice currency; balance is in company currency
+            tax_amt = abs(tl.amount_currency) if tl.amount_currency else abs(tl.balance)
+            # Link back to the invoice line via move_id lines with same tax
+            # Best proxy: distribute proportionally or just accumulate per tax
+            # Store keyed by tax_line_id so we can match to invoice lines below
+            tax_key = tl.tax_line_id.id
+            if tax_key not in line_tax_amounts:
+                line_tax_amounts[tax_key] = 0.0
+            line_tax_amounts[tax_key] += tax_amt
+
         # Get all invoice lines with products
-        for line in self.invoice_line_ids.filtered(lambda l: l.display_type not in ('line_section', 'line_note') and l.product_id):
+        for line in self.invoice_line_ids.filtered(
+            lambda l: l.display_type not in ('line_section', 'line_note') and l.product_id
+        ):
             hsn_code = self.get_line_hsn_code(line)
-            
-            # Get taxes from the line - prefer IGST, but use any tax if IGST not found
+
+            # Prefer IGST taxes, fall back to any tax
             line_taxes = line.tax_ids.filtered(lambda t: self._is_igst_tax(t))
             if not line_taxes and line.tax_ids:
-                # If no IGST, use any tax on the line
                 line_taxes = line.tax_ids
-            
+
             if line_taxes:
-                # Get tax rate (percentage)
                 tax_rate = line_taxes[0].amount
                 taxable_amount = line.price_subtotal
-                
-                # Calculate tax amount for this line more accurately
-                # Use the computed tax amount from the line
+
+                # Compute tax amount: use line.price_total - line.price_subtotal
+                # which Odoo computes correctly for both draft and posted invoices
                 line_tax_amount = line.price_total - line.price_subtotal
-                
-                # Group by HSN code and tax rate (in case different rates exist)
+
                 key = f"{hsn_code}_{tax_rate}"
-                
                 if key not in tax_info:
                     tax_info[key] = {
                         'hsn_code': hsn_code,
@@ -192,11 +209,9 @@ class AccountMove(models.Model):
                         'tax_rate': tax_rate,
                         'tax_amount': 0.0,
                     }
-                
                 tax_info[key]['taxable_amount'] += taxable_amount
                 tax_info[key]['tax_amount'] += line_tax_amount
             else:
-                # If no tax but has HSN code, still include in summary
                 if hsn_code:
                     key = f"{hsn_code}_0"
                     if key not in tax_info:
@@ -207,9 +222,25 @@ class AccountMove(models.Model):
                             'tax_amount': 0.0,
                         }
                     tax_info[key]['taxable_amount'] += line.price_subtotal
-        
-        # Convert to list format for easier template access
-        # Group by HSN code only (combine different rates if same HSN)
+
+        # If price_total - price_subtotal gave 0 (can happen on some edge cases),
+        # fall back to actual tax journal lines distributed by taxable ratio
+        total_tax_from_lines = sum(d['tax_amount'] for d in tax_info.values())
+        if total_tax_from_lines == 0.0 and tax_journal_lines:
+            total_taxable = sum(d['taxable_amount'] for d in tax_info.values()) or 1.0
+            total_journal_tax = sum(
+                abs(tl.amount_currency) if tl.amount_currency else abs(tl.balance)
+                for tl in tax_journal_lines
+            )
+            # Get rate from first tax journal line
+            first_tax = tax_journal_lines[0].tax_line_id
+            for key, data in tax_info.items():
+                ratio = data['taxable_amount'] / total_taxable
+                data['tax_amount'] = total_journal_tax * ratio
+                if data['tax_rate'] == 0.0:
+                    data['tax_rate'] = first_tax.amount
+
+        # Group by HSN code (combine if same HSN, different rates)
         final_tax_info = {}
         for key, data in tax_info.items():
             hsn = data['hsn_code']
@@ -221,10 +252,9 @@ class AccountMove(models.Model):
                 }
             final_tax_info[hsn]['taxable_amount'] += data['taxable_amount']
             final_tax_info[hsn]['tax_amount'] += data['tax_amount']
-            # Use the highest tax rate if multiple rates exist for same HSN
             if data['tax_rate'] > final_tax_info[hsn]['tax_rate']:
                 final_tax_info[hsn]['tax_rate'] = data['tax_rate']
-        
+
         return final_tax_info
 
     def get_igst_tax_details(self):

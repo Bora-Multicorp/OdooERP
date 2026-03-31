@@ -10,6 +10,7 @@ class SaleOrder(models.Model):
     ks_other_reference = fields.Char(string='Other Reference(s)')
     ks_despatched_through = fields.Char(string='Despatch through')
     ks_city_port_of_discharge = fields.Char(string='Destination')
+    ks_authorized_signature = fields.Binary(string='Authorized Signature', attachment=True, copy=False)
 
     def get_amount_in_words_aed(self, amount):
         """Convert amount to words in AED currency in the format: UAE Dirham [amount in words] and [fils] fils Only"""

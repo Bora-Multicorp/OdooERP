@@ -79,7 +79,7 @@
                         <tr>
                             <td colspan="2" style="border:1px solid #000; padding:2px;">
                                 <strong>Other Reference (s)</strong><br/>
-                                <t t-esc="doc.ks_other_reference or ''"/>
+                                <t t-esc="doc.sale_id.user_id.name if doc.sale_id and doc.sale_id.user_id else ''"/>
                             </td>
                         </tr>
 
@@ -91,6 +91,9 @@
                                 <t t-esc="consignee_partner.street"/><br/>
                                 <t t-esc="consignee_partner.city"/>
                                 <t t-if="consignee_partner.country_id">, <t t-esc="consignee_partner.country_id.name"/></t>
+                                <t t-if="doc.sale_id and doc.sale_id.ks_zone == 'india' and consignee_partner.l10n_in_pan">
+                                    <br/>PAN : <t t-esc="consignee_partner.l10n_in_pan"/>
+                                </t>
                             </td>
 
                             <td colspan="2" style="border:1px solid #000; vertical-align:top; padding:2px;">
@@ -99,6 +102,9 @@
                                 <t t-esc="buyer_partner.street"/><br/>
                                 <t t-esc="buyer_partner.city"/>
                                 <t t-if="buyer_partner.country_id">, <t t-esc="buyer_partner.country_id.name"/></t>
+                                <t t-if="doc.sale_id and doc.sale_id.ks_zone == 'india' and buyer_partner.l10n_in_pan">
+                                    <br/>PAN : <t t-esc="buyer_partner.l10n_in_pan"/>
+                                </t>
 
                                 <!-- Country moved here -->
                                 <br/><br/>
@@ -122,7 +128,12 @@
 
                             <td rowspan="2" style="border:1px solid #000; vertical-align:top; padding:1px 2px; font-size:10px; line-height:14px;">
                                 <strong>Terms of Delivery &amp; Payment</strong><br/>
-                                <t t-esc="doc.ks_terms_of_delivery_payment or ''"/>
+                                <t t-if="doc.sale_id and doc.sale_id.note">
+                                    <span t-out="doc.sale_id.note"/>
+                                </t>
+                                <t t-else="">
+                                    <t t-esc="doc.ks_terms_of_delivery_payment or ''"/>
+                                </t>
                             </td>
                         </tr>
 
