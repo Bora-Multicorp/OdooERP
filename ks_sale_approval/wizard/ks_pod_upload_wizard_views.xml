@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="ks_pod_upload_wizard_form" model="ir.ui.view">
+        <field name="name">ks.pod.upload.wizard.form</field>
+        <field name="model">ks.pod.upload.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Upload Proof of Delivery">
+                <sheet>
+                    <group>
+                        <group string="Delivery Info">
+                            <field name="ks_picking_id" readonly="1"/>
+                            <field name="ks_partner_id" readonly="1"/>
+                        </group>
+                        <group string="POD File">
+                            <field name="ks_pod_file" filename="ks_pod_filename" required="1"
+                                   widget="binary"
+                                   string="Upload File (PDF/DOC)"/>
+                            <field name="ks_pod_filename" invisible="1"/>
+                        </group>
+                    </group>
+                    <group string="Message to Customer">
+                        <field name="ks_message" nolabel="1" widget="html"
+                               placeholder="Type a message to send to the customer along with the POD..."/>
+                    </group>
+                </sheet>
+                <footer>
+                    <button name="action_send_email"
+                            string="Send Email"
+                            type="object"
+                            class="btn-primary"
+                            confirm="This will send an email with the POD attachment to the customer. Continue?"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

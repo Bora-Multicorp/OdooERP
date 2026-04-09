@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_vendor_payment_approval_submit_wizard_form" model="ir.ui.view">
+        <field name="name">vendor.payment.approval.submit.wizard.form</field>
+        <field name="model">vendor.payment.approval.submit.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Send for Approval">
+                <field name="request_id" invisible="1"/>
+                <field name="available_approver_1_ids" invisible="1"/>
+                <field name="available_approver_2_ids" invisible="1"/>
+                <div class="alert alert-info" role="alert" style="margin:16px;">
+                    <p><strong>Please select approvers for payment approval:</strong></p>
+                    <p>Both approvers are mandatory. Approval process is sequential (Approver 1 must approve before Approver 2).</p>
+                </div>
+                <group>
+                    <field name="approver_1_id"
+                           options="{'no_create': True}"
+                           domain="[('id', 'in', available_approver_1_ids), ('share', '=', False), ('id', '!=', approver_2_id)]"/>
+                    <field name="approver_2_id"
+                           options="{'no_create': True}"
+                           domain="[('id', 'in', available_approver_2_ids), ('share', '=', False), ('id', '!=', approver_1_id)]"/>
+                </group>
+                <footer>
+                    <button name="action_submit" string="Submit for Approval" type="object" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>
