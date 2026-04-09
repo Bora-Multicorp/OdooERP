@@ -1,3 +1,4 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_ks_payment_tracker_user,ks.payment.tracker.user,model_ks_payment_tracker,purchase.group_purchase_user,1,1,1,1
 access_ks_payment_tracker_manager,ks.payment.tracker.manager,model_ks_payment_tracker,purchase.group_purchase_manager,1,1,1,1
+access_ks_add_for_approval_wizard_user,ks.add.for.approval.wizard.user,model_ks_add_for_approval_wizard,purchase.group_purchase_user,1,1,1,1

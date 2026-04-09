@@ -188,6 +188,19 @@
                     </p>
                     <br/>
                     <p style="margin: 0px; padding: 0px; font-size: 13px;">
+                        To update your KYC details, please click the button below. Your existing information has been pre-filled for your convenience:
+                    </p>
+                    <br/>
+                    <p style="margin-top: 16px; margin-bottom: 16px;">
+                        <t t-if="object.rekyc_survey_url">
+                            <a t-att-href="object.rekyc_survey_url"
+                               style="display: inline-block; padding: 10px 24px; background-color: #0d6efd; color: #ffffff !important; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 14px;">
+                                Update KYC
+                            </a>
+                        </t>
+                    </p>
+                    <br/>
+                    <p style="margin: 0px; padding: 0px; font-size: 13px;">
                         Warm regards,<br/>
                         <strong><t t-out="object.company_id.name or user.company_id.name or 'Company'">Company Name</t></strong>
                     </p>

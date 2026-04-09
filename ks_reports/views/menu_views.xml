@@ -246,45 +246,34 @@ action = {'type': 'ir.actions.act_url', 'url': '/web/content/' + str(attachment.
         <field name="binding_view_types">list,form</field>
         <field name="state">code</field>
         <field name="code">
-# Keep data according to Credit Notes only: pass credit note IDs so report shows only CN rows (no sale order dump)
+# Resolve which Credit Note IDs to report on.
+# If the user selected records in the list, use those; otherwise use all non-cancelled CNs.
 credit_note_ids = None
 if records:
     credit_notes = records.filtered(lambda m: m.move_type == 'out_refund')
     if credit_notes:
         credit_note_ids = credit_notes.ids
 else:
-    # No selection: we are in Credit Notes context → use all credit notes so report shows only CN data (e.g. 3 rows for 3 CNs)
     credit_notes = env['account.move'].search([
         ('move_type', '=', 'out_refund'),
-        ('state', '!=', 'cancel')
+        ('state', '!=', 'cancel'),
     ], order='invoice_date, name')
     if credit_notes:
         credit_note_ids = credit_notes.ids
 
-report_model = env['ks.part.wise.all.data.report']
-file_content = report_model.generate_cn_tracking_xlsx_report(credit_note_ids=credit_note_ids)
-
-attachment = env['ir.attachment'].create({
-    'name': 'CN_Tracking_Report.xlsx',
-    'type': 'binary',
-    'datas': file_content,
-    'res_model': 'account.move',
-    'mimetype': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-})
-
-action = {
-    'type': 'ir.actions.act_url',
-    'url': '/web/content/' + str(attachment.id) + '?download=true',
-    'target': 'self',
-}
+# Create a persistent ks.cn.tracking.report record and open its form view
+# instead of returning an immediate XLSX download.
+action = env['ks.part.wise.all.data.report'].action_create_cn_tracking_report(
+    credit_note_ids=credit_note_ids,
+)
         </field>
     </record>
 
-    <!-- CN Tracking menu under Invoicing → Customers (user prints report from here; data according to Credit Notes) -->
+    <!-- CN Tracking menu: opens list view of ks.cn.tracking.report -->
     <menuitem
         id="menu_cn_tracking_credit_notes"
         name="CN Tracking"
-        action="action_cn_tracking_report_from_credit_notes"
+        action="ks_reports.action_ks_cn_tracking_report"
         parent="account.menu_finance_receivables"
         sequence="15"
         groups="account.group_account_invoice,sales_team.group_sale_manager"

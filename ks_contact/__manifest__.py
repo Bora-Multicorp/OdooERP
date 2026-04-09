@@ -40,6 +40,9 @@
         'web.assets_backend': [
             'ks_contact/static/src/css/kyc_form.css',
         ],
+        'survey.survey_assets': [
+            'ks_contact/static/src/js/survey_file_prefill.js',
+        ],
     },
 
 }

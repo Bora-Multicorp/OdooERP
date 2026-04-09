@@ -171,56 +171,60 @@ class CustomContact(models.Model):
                     "Invalid GST Number: '%s'. It must follow the 15-character format (e.g., 27ABCDE1234F1Z5)."
                 ) % rec.vat)
 
-    @api.constrains('mobile', 'country_id')
-    def _check_mobile_number_format(self):
+    @api.constrains('phone', 'mobile', 'country_id')
+    def _check_phone_mobile_format(self):
         for rec in self:
-            if not rec.mobile:
-                continue
+            # Check both fields: mobile and phone
+            for field_name in ['mobile', 'phone']:
+                value = getattr(rec, field_name)
 
-            # 1) First check country is added or not
-            if not rec.country_id or not rec.country_id.phone_code:
-                raise ValidationError(
-                    "Please select a Country before entering the mobile number so we can verify the format."
-                )
+                if not value:
+                    continue
 
-            # 2) Strip non-digits (like +, -, spaces)
-            cleaned_number = re.sub(r'\D', '', rec.mobile)
+                # 1) First check country is added or not
+                if not rec.country_id or not rec.country_id.phone_code:
+                    raise ValidationError(
+                        _("Please select a Country before entering the %s number so we can verify the format.") % field_name
+                    )
 
-            # 3) Remove leading country code
-            code = str(rec.country_id.phone_code)
-            if cleaned_number.startswith(code):
-                cleaned_number = cleaned_number[len(code):]
-            elif cleaned_number.startswith('0') and len(cleaned_number) > 10:
-                # Optional: Handle leading zeros if necessary
-                cleaned_number = cleaned_number[1:]
+                # 2) Strip non-digits (like +, -, spaces)
+                cleaned_number = re.sub(r'\D', '', value)
 
-            # 4) Validate exactly 10 digits
-            if not re.fullmatch(r'\d{10}', cleaned_number):
-                raise ValidationError(
-                    f"After removing the country code (+{code}), the mobile number must be exactly 10 digits. "
-                    f"Currently, it is {len(cleaned_number)} digits."
-                )
-
-    @api.constrains('phone', 'country_id')
-    def _check_phone_number_format(self):
-        for rec in self:
-            if not rec.phone:
-                continue
-
-            # 1) Remove all non-digits
-            cleaned_number = re.sub(r'\D', '', rec.phone)
-
-            # 2) Remove country code if present
-            if rec.country_id and rec.country_id.phone_code:
+                # 3) Remove leading country code
                 code = str(rec.country_id.phone_code)
-                if code and cleaned_number.startswith(code):
+                if cleaned_number.startswith(code):
                     cleaned_number = cleaned_number[len(code):]
+                elif cleaned_number.startswith('0') and len(cleaned_number) > 10:
+                    # Handle leading zeros
+                    cleaned_number = cleaned_number[1:]
 
-            # 3) Validate exactly 10 digits
-            if not re.fullmatch(r'\d{10}', cleaned_number):
-                raise ValidationError(
-                    _("Phone number must be exactly 10 digits after removing the country code.")
-                )
+                # 4) Validate exactly 10 digits
+                if not re.fullmatch(r'\d{10}', cleaned_number):
+                    raise ValidationError(
+                        _("The %s number must be exactly 10 digits after removing the country code (+%s). "
+                          "Currently, it is %s digits.") % (field_name, code, len(cleaned_number))
+                    )
+
+    # @api.constrains('phone', 'country_id')
+    # def _check_phone_number_format(self):
+    #     for rec in self:
+    #         if not rec.phone:
+    #             continue
+    #
+    #         # 1) Remove all non-digits
+    #         cleaned_number = re.sub(r'\D', '', rec.phone)
+    #
+    #         # 2) Remove country code if present
+    #         if rec.country_id and rec.country_id.phone_code:
+    #             code = str(rec.country_id.phone_code)
+    #             if code and cleaned_number.startswith(code):
+    #                 cleaned_number = cleaned_number[len(code):]
+    #
+    #         # 3) Validate exactly 10 digits
+    #         if not re.fullmatch(r'\d{10}', cleaned_number):
+    #             raise ValidationError(
+    #                 _("Phone number must be exactly 10 digits after removing the country code.")
+    #             )
 
     @api.onchange('country_id')
     def _onchange_country_mobile(self):
@@ -318,11 +322,365 @@ class CustomContact(models.Model):
         compute='_compute_kyc_record_url',
         help='Direct link to this contact form in Odoo (for KYC expiry emails).',
     )
+    rekyc_survey_url = fields.Char(
+        string='Re-KYC Survey URL',
+        help='Pre-filled survey link sent to vendor in KYC expiry email.',
+    )
 
     def _compute_kyc_record_url(self):
         base = (self.env['ir.config_parameter'].sudo().get_param('web.base.url') or '').rstrip('/')
         for rec in self:
             rec.kyc_record_url = f"{base}/web#id={rec.id}&model=res.partner&view_type=form" if base else ''
+
+    def _get_rekyc_survey_url(self):
+        """
+        Create (or reuse) a survey.user_input for this partner pre-filled with
+        ALL existing confirmed KYC data (simple fields + bank/director/address
+        matrices), and return the unique start URL.
+        """
+        self.ensure_one()
+        survey = self.env.ref('ks_contact.vendor_kyc_form_survey', raise_if_not_found=False)
+        if not survey:
+            return ''
+        base_url = (self.env['ir.config_parameter'].sudo().get_param('web.base.url') or '').rstrip('/')
+
+        # Reuse existing 'in_progress' input or create a fresh one.
+        # We set state='in_progress' immediately so the vendor lands directly on
+        # the first question with pre-filled data visible (state='new' shows only
+        # the start page and pre-filled lines are not rendered until in_progress).
+        # No partner_id to avoid _check_validity partner-mismatch for public vendors.
+        user_input = self.env['survey.user_input'].sudo().search([
+            ('survey_id', '=', survey.id),
+            ('email', '=', self.email),
+            ('state', '=', 'in_progress'),
+        ], limit=1)
+        if not user_input:
+            user_input = self.env['survey.user_input'].sudo().create({
+                'survey_id': survey.id,
+                'email': self.email or '',
+                'state': 'in_progress',
+                'start_datetime': fields.Datetime.now(),
+            })
+
+        # Remove any stale skipped=True lines left from previous save attempts.
+        # These cause server-side "This question requires an answer" errors even
+        # when pre-filled non-skipped lines exist for the same question.
+        self.env['survey.user_input.line'].sudo().search([
+            ('user_input_id', '=', user_input.id),
+            ('skipped', '=', True),
+        ]).unlink()
+
+        # Pre-fill from the latest confirmed KYC record
+        kyc = self.kyc_details.filtered(lambda k: k.state == 'confirmed')[:1]
+        if not kyc:
+            return '%s%s' % (base_url, user_input.get_start_url())
+
+        Line = self.env['survey.user_input.line'].sudo()
+
+        def _q(xml_id):
+            return self.env.ref(xml_id, raise_if_not_found=False)
+
+        def _upsert(q, vals):
+            """Create or update a single user_input_line for a simple question."""
+            if not q:
+                return
+            line = Line.search([
+                ('user_input_id', '=', user_input.id),
+                ('question_id', '=', q.id),
+            ], limit=1)
+            if line:
+                line.write(vals)
+            else:
+                Line.create({'user_input_id': user_input.id, 'question_id': q.id,
+                             'survey_id': survey.id, **vals})
+
+        def _char(xml_id, value):
+            if not value:
+                return
+            _upsert(_q(xml_id), {'answer_type': 'char_box', 'value_char_box': value, 'skipped': False})
+
+        def _choice(xml_id, value):
+            if not value:
+                return
+            q = _q(xml_id)
+            if not q:
+                return
+            suggested = q.suggested_answer_ids.filtered(lambda a: a.value == value)[:1]
+            if suggested:
+                _upsert(q, {'answer_type': 'suggestion', 'suggested_answer_id': suggested.id, 'skipped': False})
+
+        def _matrix_char(q, col_answer, row_answer, value):
+            """Upsert one cell of a sh_custom_matrix as char_box.
+
+            sh_custom_matrix_template renders 'textbox' columns via
+            answer.value_text_box and 'free_text' columns via answer.value_char_box.
+            We write both to stay safe; answer_type='char_box' satisfies the
+            sh_survey_matrix_adv constraint (skipped==bool(answer_type) must be False).
+            """
+            if not value or not q or not col_answer or not row_answer:
+                return
+            line = Line.search([
+                ('user_input_id', '=', user_input.id),
+                ('question_id', '=', q.id),
+                ('suggested_answer_id', '=', col_answer.id),
+                ('matrix_row_id', '=', row_answer.id),
+            ], limit=1)
+            vals = {
+                'answer_type': 'char_box',
+                'value_char_box': value,
+                'value_text_box': value,   # textbox columns read this field
+                'skipped': False,
+                'suggested_answer_id': col_answer.id,
+                'matrix_row_id': row_answer.id,
+            }
+            if line:
+                line.write(vals)
+            else:
+                Line.create({'user_input_id': user_input.id, 'question_id': q.id,
+                             'survey_id': survey.id, **vals})
+
+        def _matrix_m2o(q, col_answer, row_answer, record_id, record_name):
+            """Upsert one cell of a sh_custom_matrix as ans_sh_many2one (stored as char name)."""
+            if not record_id or not q or not col_answer or not row_answer:
+                return
+            line = Line.search([
+                ('user_input_id', '=', user_input.id),
+                ('question_id', '=', q.id),
+                ('suggested_answer_id', '=', col_answer.id),
+                ('matrix_row_id', '=', row_answer.id),
+            ], limit=1)
+            vals = {'answer_type': 'ans_sh_many2one', 'value_ans_sh_many2one': str(record_name),
+                    'skipped': False, 'suggested_answer_id': col_answer.id, 'matrix_row_id': row_answer.id}
+            if line:
+                line.write(vals)
+            else:
+                Line.create({'user_input_id': user_input.id, 'question_id': q.id,
+                             'survey_id': survey.id, **vals})
+
+        def _file_from_attachment(xml_id, attachment):
+            """Create one user_input_line for a single ir.attachment (file question)."""
+            if not attachment:
+                return
+            q = _q(xml_id)
+            if not q:
+                return
+            # Read binary data; use sudo for ir.attachment, direct access for plain objects
+            try:
+                att_sudo = attachment.sudo() if hasattr(attachment, '_name') else attachment
+                data = att_sudo.datas
+                name = att_sudo.name
+            except Exception:
+                return
+            if not data:
+                return
+            Line.search([('user_input_id', '=', user_input.id),
+                         ('question_id', '=', q.id)]).unlink()
+            Line.create({
+                'user_input_id': user_input.id,
+                'question_id': q.id,
+                'survey_id': survey.id,
+                'answer_type': 'ans_sh_file',
+                'value_ans_sh_file': data,
+                'value_ans_sh_file_fname': name,
+                'skipped': False,
+            })
+
+        def _files_from_m2m(xml_id, attachments):
+            """Create one user_input_line per attachment for a many2many file question."""
+            if not attachments:
+                _logger.info("REKYC_PREFILL [%s] no attachments, skipping", xml_id)
+                return
+            q = _q(xml_id)
+            if not q:
+                _logger.warning("REKYC_PREFILL [%s] question not found", xml_id)
+                return
+            Line.search([('user_input_id', '=', user_input.id),
+                         ('question_id', '=', q.id)]).unlink()
+            created = 0
+            for att in attachments.sudo():
+                try:
+                    data = att.datas
+                    fname = att.name
+                except Exception as e:
+                    _logger.warning("REKYC_PREFILL [%s] att %s read error: %s", xml_id, att.id, e)
+                    continue
+                if not data:
+                    _logger.warning("REKYC_PREFILL [%s] att %s has no data (datas=False)", xml_id, att.id)
+                    continue
+                try:
+                    Line.create({
+                        'user_input_id': user_input.id,
+                        'question_id': q.id,
+                        'survey_id': survey.id,
+                        'answer_type': 'ans_sh_file',
+                        'value_ans_sh_file': data,
+                        'value_ans_sh_file_fname': fname,
+                        'skipped': False,
+                    })
+                    created += 1
+                except Exception as e:
+                    _logger.warning("REKYC_PREFILL [%s] line create failed: %s", xml_id, e)
+            _logger.info("REKYC_PREFILL [%s] created %d file lines from %d attachments",
+                         xml_id, created, len(attachments))
+
+        def _matrix_file(q, col_answer, row_answer, attachment):
+            """Upsert one file cell of a sh_custom_matrix from an ir.attachment."""
+            if not attachment or not q or not col_answer or not row_answer:
+                return
+            # Support both ir.attachment records and simple objects with .datas/.name
+            att_sudo = attachment.sudo() if hasattr(attachment, 'sudo') else attachment
+            try:
+                data = att_sudo.datas
+                fname = att_sudo.name
+            except Exception:
+                return
+            if not data:
+                return
+            Line.search([
+                ('user_input_id', '=', user_input.id),
+                ('question_id', '=', q.id),
+                ('suggested_answer_id', '=', col_answer.id),
+                ('matrix_row_id', '=', row_answer.id),
+            ]).unlink()
+            Line.create({
+                'user_input_id': user_input.id,
+                'question_id': q.id,
+                'survey_id': survey.id,
+                'answer_type': 'ans_sh_file',
+                'value_ans_sh_file': data,
+                'value_ans_sh_file_fname': fname,
+                'skipped': False,
+                'suggested_answer_id': col_answer.id,
+                'matrix_row_id': row_answer.id,
+            })
+
+        # ── Simple char fields ──────────────────────────────────────────────
+        _char('ks_contact.email_kyc_survey',               kyc.email)
+        _char('ks_contact.point_of_contact_kyc_survey',    kyc.point_of_contact)
+        _char('ks_contact.business_name_kyc_survey',       kyc.business_legal_name)
+        _char('ks_contact.business_trade_name_kyc_survey', kyc.business_trade_name)
+        _char('ks_contact.gst_no_kyc_survey',              kyc.gst_no)
+        _char('ks_contact.pan_card_no_kyc_survey',         kyc.pan_no)
+        _char('ks_contact.udyam_certificate_kyc_survey',   kyc.udyam_number)
+        _char('ks_contact.cin_no_kyc_survey',              kyc.cin_no)
+        _char('ks_contact.registration_kyc_survey',        kyc.license_registered)
+        _char('ks_contact.comp_google_loc_kyc_survey',     kyc.comp_google_loc)
+        _char('ks_contact.partnership_llp_kyc_survey',     kyc.partner_llp)
+
+        # ── Selection / choice fields ───────────────────────────────────────
+        _choice('ks_contact.is_same_trade_name_kyc_survey',    kyc.is_same_trade_name)
+        _choice('ks_contact.business_constitution_kyc_survey', kyc.const_business)
+        _choice('ks_contact.aadhaar_pan_link_kyc_survey',      kyc.aadhaar_pan_link)
+        _choice('ks_contact.gst_duration_kyc_survey',          kyc.gst_return_duration)
+        _choice('ks_contact.no_of_director_kyc_survey',        kyc.no_partner_director)
+
+        # ── Document / file fields (many2many → one line per attachment) ────
+        _files_from_m2m('ks_contact.gst_certificate_kyc_survey',         kyc.gst_certificate)
+        _files_from_m2m('ks_contact.shop_act_document_kyc_survey',       kyc.shop_act_document)
+        _files_from_m2m('ks_contact.udyam_document_kyc_survey',          kyc.udyam_document)
+        _files_from_m2m('ks_contact.pan_card_document_kyc_survey',       kyc.pan_card_document)
+        _files_from_m2m('ks_contact.shop_photos_kyc_survey',             kyc.shop_photos)
+        _files_from_m2m('ks_contact.shop_videos_kyc_survey',             kyc.shop_videos)
+        _files_from_m2m('ks_contact.electricity_bill_kyc_survey',        kyc.electricity_bill)
+        _files_from_m2m('ks_contact.incorporation_certificate_kyc_survey', kyc.incorporation_certificate)
+        _files_from_m2m('ks_contact.moa_aoa_kyc_survey',                 kyc.moa_aoa)
+        # partner_llp is Binary (not many2many) — wrap in a single file line
+        if kyc.partner_llp:
+            # Create a temporary attachment-like object from the binary field
+            _file_from_attachment(
+                'ks_contact.partnership_llp_kyc_survey',
+                type('_att', (), {'datas': kyc.partner_llp, 'name': 'partnership_llp.pdf'})()
+            )
+
+        # ── BANK DETAILS matrix ─────────────────────────────────────────────
+        # Columns: col1=Bank Name, col2=Account Number, col3=IFSC Code,
+        #          col4=Bank Address, col5=Cancelled Cheque (file)
+        q_bank = _q('ks_contact.matrix_bank_address_kyc_survey')
+        if q_bank and kyc.bank_detail:
+            col_bank_name    = self.env.ref('ks_contact.matrix_bank_address_kyc_survey_col1', False)
+            col_account_no   = self.env.ref('ks_contact.matrix_bank_address_kyc_survey_col2', False)
+            col_ifsc         = self.env.ref('ks_contact.matrix_bank_address_kyc_survey_col3', False)
+            col_bank_address = self.env.ref('ks_contact.matrix_bank_address_kyc_survey_col4', False)
+            col_cheque       = self.env.ref('ks_contact.matrix_bank_address_kyc_survey_col5', False)
+
+            bank_rows = q_bank.matrix_row_ids.sorted('sequence')
+
+            for idx, bank in enumerate(kyc.bank_detail):
+                if idx >= len(bank_rows):
+                    break
+                row = bank_rows[idx]
+                _matrix_char(q_bank, col_bank_name,    row, bank.bank_name)
+                _matrix_char(q_bank, col_account_no,   row, bank.account_no)
+                _matrix_char(q_bank, col_ifsc,         row, bank.ifsc_code)
+                _matrix_char(q_bank, col_bank_address, row, bank.bank_address)
+                # Cancelled Cheque — use first attachment if available
+                cheque_att = bank.bank_cheque_attachments[:1]
+                if cheque_att:
+                    _matrix_file(q_bank, col_cheque, row, cheque_att)
+
+        # ── DIRECTOR DETAILS matrix ─────────────────────────────────────────
+        # Columns: col1=Designation, col2=Name, col3=Contact Number,
+        #          col4=Email Address, col5=Aadhaar Card (file), col6=PAN Card (file)
+        q_dir = _q('ks_contact.matrix_director_detail_kyc_survey')
+        if q_dir and kyc.directors_detail:
+            col_desig   = self.env.ref('ks_contact.matrix_director_detail_kyc_survey_col1', False)
+            col_name    = self.env.ref('ks_contact.matrix_director_detail_kyc_survey_col2', False)
+            col_contact = self.env.ref('ks_contact.matrix_director_detail_kyc_survey_col3', False)
+            col_email   = self.env.ref('ks_contact.matrix_director_detail_kyc_survey_col4', False)
+            col_aadhaar = self.env.ref('ks_contact.matrix_director_detail_kyc_survey_col5', False)
+            col_pan     = self.env.ref('ks_contact.matrix_director_detail_kyc_survey_col6', False)
+
+            dir_rows = q_dir.matrix_row_ids.sorted('sequence')
+
+            for idx, director in enumerate(kyc.directors_detail):
+                if idx >= len(dir_rows):
+                    break
+                row = dir_rows[idx]
+                _matrix_char(q_dir, col_desig,   row, director.designation)
+                _matrix_char(q_dir, col_name,    row, director.name)
+                _matrix_char(q_dir, col_contact, row, director.contact_no)
+                _matrix_char(q_dir, col_email,   row, director.email)
+                # Aadhaar Card — use first attachment
+                aadhaar_att = director.aadhaar_card_attachments[:1]
+                if aadhaar_att:
+                    _matrix_file(q_dir, col_aadhaar, row, aadhaar_att)
+                # PAN Card — use first attachment
+                pan_att = director.pan_card_attachments[:1]
+                if pan_att:
+                    _matrix_file(q_dir, col_pan, row, pan_att)
+
+        # ── ADDRESS DETAILS matrix ──────────────────────────────────────────
+        # Columns: col1=Address, col2=City Name, col3=Pincode, col4=Contact Number,
+        #          col5=Email, col6=State (m2o), col7=Country (m2o)
+        q_addr = _q('ks_contact.matrix_address_detail_kyc_survey')
+        if q_addr and kyc.address_detail:
+            col_addr    = self.env.ref('ks_contact.matrix_address_detail_kyc_survey_col1', False)
+            col_city    = self.env.ref('ks_contact.matrix_address_detail_kyc_survey_col2', False)
+            col_pin     = self.env.ref('ks_contact.matrix_address_detail_kyc_survey_col3', False)
+            col_phone   = self.env.ref('ks_contact.matrix_address_detail_kyc_survey_col4', False)
+            col_email   = self.env.ref('ks_contact.matrix_address_detail_kyc_survey_col5', False)
+            col_state   = self.env.ref('ks_contact.matrix_address_detail_kyc_survey_col6', False)
+            col_country = self.env.ref('ks_contact.matrix_address_detail_kyc_survey_col7', False)
+
+            addr_rows = q_addr.matrix_row_ids.sorted('sequence')
+
+            for idx, addr in enumerate(kyc.address_detail):
+                if idx >= len(addr_rows):
+                    break
+                row = addr_rows[idx]
+                _matrix_char(q_addr, col_addr,  row, addr.business_street)
+                _matrix_char(q_addr, col_city,  row, addr.business_city)
+                _matrix_char(q_addr, col_pin,   row, addr.business_pincode)
+                _matrix_char(q_addr, col_phone, row, addr.business_phone)
+                _matrix_char(q_addr, col_email, row, addr.business_email)
+                if addr.business_state_id:
+                    _matrix_m2o(q_addr, col_state, row,
+                                addr.business_state_id.id, addr.business_state_id.name)
+                if addr.business_country_id:
+                    _matrix_m2o(q_addr, col_country, row,
+                                addr.business_country_id.id, addr.business_country_id.name)
+
+        return '%s%s' % (base_url, user_input.get_start_url())
 
     # Contact (partner) approval flow — same as KYC but on Contact
     approval_line_ids = fields.One2many(
@@ -336,6 +694,19 @@ class CustomContact(models.Model):
         compute='_compute_has_pending_approval',
         help='True if current user is the first pending approver for this contact.',
     )
+
+    ks_is_approver = fields.Boolean(
+        string='Is Approver',
+        compute='_compute_ks_is_approver',
+        help='True if current user is any approver on this vendor approval.',
+    )
+
+    @api.depends('approval_line_ids.user_id', 'approval_line_ids.is_active')
+    @api.depends_context('uid')
+    def _compute_ks_is_approver(self):
+        uid = self.env.uid
+        for record in self:
+            record.ks_is_approver = uid in record.approval_line_ids.filtered('is_active').mapped('user_id').ids
 
     @api.depends('approval_line_ids.user_id', 'approval_line_ids.state', 'approval_line_ids.is_active')
     @api.depends_context('uid')
@@ -488,6 +859,68 @@ class CustomContact(models.Model):
 
         return res
 
+    def _ks_cancel_pending_partner_approval_activities(self, mark_done=False, feedback=None):
+        """Cancel pending vendor-approval activities on this partner.
+
+        Scoped by: res_model + res_id + user_ids of active approval_line_ids
+        + summary keyword — so only vendor-approval activities are touched.
+
+        :param mark_done: True  → action_feedback (leaves chatter entry)
+                          False → unlink (silent, used for 'Update' resets)
+        """
+        self.ensure_one()
+        approver_user_ids = self.approval_line_ids.filtered('is_active').mapped('user_id').ids
+        domain = [
+            ('res_model', '=', self._name),
+            ('res_id', '=', self.id),
+            ('active', '=', True),
+            ('summary', 'ilike', 'Vendor Approval'),
+        ]
+        if approver_user_ids:
+            domain.append(('user_id', 'in', approver_user_ids))
+
+        activities = self.env['mail.activity'].search(domain)
+        if not activities:
+            return True
+        if mark_done:
+            activities.action_feedback(feedback=feedback or '')
+        else:
+            activities.sudo().unlink()
+        return True
+
+    def action_update_approvals(self):
+        """Submitter/admin updates vendor approvers while approval_status is 'to_approve'.
+
+        Only opens the wizard with ks_is_update=True — ALL cleanup (cancel activities,
+        clear approval_line_ids) happens inside the wizard's add_users_for_approval
+        ONLY when the user clicks OK.  Clicking wizard Cancel leaves everything untouched.
+        """
+        self.ensure_one()
+        if self.approval_status != 'to_approve':
+            raise ValidationError(_("Update Approvals is only available while the vendor is in 'To Approve' state."))
+
+        current_user = self.env.user
+        is_admin = current_user.has_group('base.group_system')
+        # Any internal user who can see the button is allowed (admins + managers)
+        if not is_admin and not current_user.has_group('base.group_user'):
+            raise ValidationError(_("You do not have permission to update approval requests."))
+
+        config = self.env['vendor.approval.config'].get_config()
+        if not config:
+            raise ValidationError(_("Please configure Vendor Approval Settings before updating."))
+
+        return {
+            'name': _('Update Approval Users'),
+            'type': 'ir.actions.act_window',
+            'res_model': 'partner.approval.user.picker.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'default_partner_id': self.id,
+                'ks_is_update': True,
+            },
+        }
+
     def action_submit_for_approval(self):
         """
         Submit for Approval: approval for Contact (same UX as KYC).
@@ -619,7 +1052,7 @@ class CustomContact(models.Model):
         # 2️⃣ Expired contacts (deadline < today): send KYC Expired email once per contact
         expired_partners = partner_model.search([
             ('deadline', '!=', False),
-            ('deadline', '<', today),
+            ('deadline', '<=', today),
             ('email', '!=', False),
         ])
         template = self.env.ref(
@@ -630,7 +1063,11 @@ class CustomContact(models.Model):
         if template:
             for partner in expired_partners:
                 try:
-                    template.send_mail(partner.id, force_send=True,)
+                    # Generate pre-filled survey URL and persist it so the
+                    # email template can read it as object.rekyc_survey_url
+                    survey_url = partner._get_rekyc_survey_url()
+                    partner.sudo().write({'rekyc_survey_url': survey_url})
+                    template.send_mail(partner.id)
                     notified_ids.append(partner.id)
                 except Exception as e:
                     _logger.warning(

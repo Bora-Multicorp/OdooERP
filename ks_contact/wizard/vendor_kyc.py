@@ -287,7 +287,7 @@ class VendorKycWizard(models.TransientModel):
     incorporation_certificate = fields.Many2many('ir.attachment', 'incorportaion_certificate_rel', 'wizard_id',
                                                  'attachment_id',
                                                  string="Incorporation Certificate")
-    comp_google_loc = fields.Char(string="GPS Location of Shop", required=True)
+    comp_google_loc = fields.Char(string="GPS Location of Shop")
 
     partner_llp_filename = fields.Char()
     partner_llp = fields.Binary(string="Partnership Deed or LLP Deed")
@@ -416,7 +416,7 @@ class VendorKycWizard(models.TransientModel):
                                 'bank_name': bank.bank_name,
                                 'account_no': bank.account_no,
                                 'ifsc_code': bank.ifsc_code,
-                                'bank_address': bank.bank_address,
+                                # 'bank_address': bank.bank_address,
                             }
                             if bank.bank_cheque_attachments:
                                 bank_vals['bank_cheque_attachments'] = [(6, 0, bank.bank_cheque_attachments.ids)]
@@ -505,7 +505,7 @@ class VendorKycWizard(models.TransientModel):
                 'bank_name': 'bank_name',
                 'account_no': 'account_no',
                 'ifsc_code': 'ifsc_code',
-                'bank_address': 'bank_address',
+                # 'bank_address': 'bank_address',
             },
             many2many_fields=['bank_cheque_attachments']
         )
@@ -541,7 +541,7 @@ class VendorKycWizard(models.TransientModel):
                 'bank_name': line.bank_name or '',
                 'account_no': line.account_no or '',
                 'ifsc_code': line.ifsc_code or '',
-                'bank_address': line.bank_address or '',
+                # 'bank_address': line.bank_address or '',
                 'bank_cheque_attachments': sorted(line.bank_cheque_attachments.ids),
             })
 
@@ -771,7 +771,7 @@ class BankDetail(models.TransientModel):
     bank_name = fields.Char(string="Bank Name", required=True)
     account_no = fields.Char(string="Account Number", required=True)
     ifsc_code = fields.Char(string="IFSC Code", required=True)
-    bank_address = fields.Char(string="Bank Address",)
+    # bank_address = fields.Char(string="Bank Address",)
     bank_cheque_attachments = fields.Many2many('ir.attachment', 'wizard_bank_detail_cheque_rel', 'kyc_wizard_id',
                                                'attachment_id', string="Cancelled Cheques", required=True)
 

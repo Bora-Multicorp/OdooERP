@@ -14,13 +14,13 @@
                     <p>Your <strong>KYC status has expired</strong>.</p>
                     <p>Please update your documents to maintain an active status and avoid any disruption to our business relationship.</p>
                     <p style="margin-top: 24px;">
-                        <t t-if="object.kyc_record_url">
-                            <a t-att-href="object.kyc_record_url"
+                        <t t-if="object.rekyc_survey_url">
+                            <a t-att-href="object.rekyc_survey_url"
                                style="display: inline-block; padding: 10px 20px; background-color: #0d6efd; color: #ffffff !important; text-decoration: none; border-radius: 4px; font-weight: bold;"
-                               class="btn btn-primary">View KYC / Update Profile</a>
+                               class="btn btn-primary">Update Your KYC Details</a>
                         </t>
                         <t t-else="">
-                            <span>View KYC / Update Profile (link not available)</span>
+                            <span>KYC update link not available. Please contact us.</span>
                         </t>
                     </p>
                     <p style="margin-top: 24px;">Thanks and Regards.</p>

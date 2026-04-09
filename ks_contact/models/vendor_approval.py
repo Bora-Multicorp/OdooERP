@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
+import logging
 
 from datetime import date
+
+_logger = logging.getLogger(__name__)
 import datetime
 from dateutil.relativedelta import relativedelta
 from markupsafe import Markup
@@ -215,7 +218,7 @@ class ContactKYCApproval(models.Model):
 
     directors_detail = fields.One2many('director.details', 'kyc_approval_id', string="KYC Details", tracking=True)
     pan_no = fields.Char("PAN Number", required=True)
-    comp_google_loc = fields.Char("GPS Location of Shop",required=True)
+    comp_google_loc = fields.Char("GPS Location of Shop")
     partner_llp_filename = fields.Char()
     partner_llp = fields.Binary("Partnership/LLP Deed")
 
@@ -377,6 +380,70 @@ class ContactKYCApproval(models.Model):
 
 
     # -------------------------------------------------------------------------
+    # Update Approvals (safe: cleanup only on wizard OK, never on Cancel)
+    # -------------------------------------------------------------------------
+
+    def _ks_cancel_pending_kyc_activities(self, mark_done=False, feedback=None):
+        """Cancel pending KYC approval activities on this record.
+
+        Scoped by: res_model + res_id + user_ids of current approval_users_ids
+        + summary keyword — so only KYC-approval activities are touched.
+
+        :param mark_done: True  → action_feedback (leaves chatter entry)
+                          False → unlink (silent, used for 'Update' resets)
+        """
+        self.ensure_one()
+        approver_user_ids = self.approval_users_ids.mapped('user_id').ids
+        domain = [
+            ('res_model', '=', self._name),
+            ('res_id', '=', self.id),
+            ('active', '=', True),
+            ('summary', 'ilike', 'KYC Approval for'),
+        ]
+        if approver_user_ids:
+            domain.append(('user_id', 'in', approver_user_ids))
+
+        activities = self.env['mail.activity'].search(domain)
+        if not activities:
+            return True
+
+        if mark_done:
+            activities.action_feedback(feedback=feedback or '')
+        else:
+            activities.sudo().unlink()
+        return True
+
+    def action_update_approvals(self):
+        """Requester/admin updates KYC approvers while KYC is in 'pending' state.
+
+        Only opens the wizard with ks_is_update=True — ALL cleanup (cancel activities,
+        reset approval_users_ids, reset state) happens inside the wizard's
+        add_users_for_approval ONLY when the user clicks OK.
+        Clicking the wizard Cancel button leaves everything untouched.
+        """
+        self.ensure_one()
+        if self.state != 'pending':
+            raise ValidationError(_("Update Approvals is only available while the KYC is in 'Pending' state."))
+
+        current_user = self.env.user
+        is_admin = current_user.has_group('base.group_system')
+        is_owner = self.kyc_approval_creator and self.kyc_approval_creator == current_user
+        if not (is_admin or is_owner):
+            raise ValidationError(_("Only the original submitter or an administrator can update the approval request."))
+
+        return {
+            'name': _('Update Approval Users'),
+            'type': 'ir.actions.act_window',
+            'res_model': 'vendor.kyc.approval.user.picker.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'default_kyc_id': self.id,
+                'ks_is_update': True,
+            },
+        }
+
+    # -------------------------------------------------------------------------
     # Suspend Approval Process
     # -------------------------------------------------------------------------
     def action_suspend(self):
@@ -518,7 +585,7 @@ class ContactKYCApproval(models.Model):
                     'bank_name': b.bank_name or '',
                     'account_no': b.account_no or '',
                     'ifsc_code': b.ifsc_code or '',
-                    'bank_address': b.bank_address or '',
+                    # 'bank_address': b.bank_address or '',
                     'bank_cheque_attachments': sorted(b.bank_cheque_attachments.ids),
                 }
                 for b in self.bank_detail
@@ -648,6 +715,14 @@ class ContactKYCApproval(models.Model):
                 raise_if_not_found=False,
             )
             if template:
+                # Generate pre-filled survey URL from current KYC data and store
+                # it on the partner so the email template can use object.rekyc_survey_url
+                try:
+                    survey_url = self.partner_id._get_rekyc_survey_url()
+                    self.partner_id.sudo().write({'rekyc_survey_url': survey_url})
+                except Exception as e:
+                    _logger.exception("Failed to generate Re-KYC survey URL for partner %s: %s",
+                                      self.partner_id.id, e)
                 template.send_mail(self.partner_id.id, force_send=True)
 
     def _rekyc_payload_to_write_vals(self, payload):
@@ -694,7 +769,7 @@ class ContactKYCApproval(models.Model):
                     'bank_name': b.get('bank_name'),
                     'account_no': b.get('account_no'),
                     'ifsc_code': b.get('ifsc_code'),
-                    'bank_address': b.get('bank_address'),
+                    # 'bank_address': b.get('bank_address'),
                     'bank_cheque_attachments': [(6, 0, b.get('bank_cheque_attachments', []))],
                 }) for b in payload.get('bank_detail', [])
             ],

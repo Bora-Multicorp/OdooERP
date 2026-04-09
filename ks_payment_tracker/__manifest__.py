@@ -16,11 +16,12 @@
     """,
     'author': 'Ksolves',
     'website': '',
-    'depends': ['purchase'],
+    'depends': ['purchase', 'ks_purchase_advance_payment'],
     'data': [
         'security/ir.model.access.csv',
         'views/ks_payment_tracker_views.xml',
         'views/purchase_order_views.xml',
+        'wizards/ks_add_for_approval_wizard_views.xml',
     ],
     'installable': True,
     'application': False,

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from odoo import models, fields, api
+from odoo.exceptions import UserError
 
 
 class StockPicking(models.Model):
@@ -29,6 +30,11 @@ class StockPicking(models.Model):
     ks_contact_no = fields.Char(string="Contact No")
     ks_lut_no = fields.Char(string="LUT No")
     ks_lut_date = fields.Date(string="Date")
+
+    def action_print_packing_list(self):
+        if any(p.picking_type_code != 'outgoing' for p in self):
+            raise UserError('Packing List is only available for Sale Deliveries, not Purchase Receipts.')
+        return self.env.ref('ks_templates.action_report_packing_list').report_action(self)
 
     def get_invoice_info(self):
         """Get invoice information from related sale order"""

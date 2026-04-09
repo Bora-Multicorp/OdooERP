@@ -9,6 +9,50 @@ _logger = logging.getLogger(__name__)
 class SurveyUserInput(models.Model):
     _inherit = "survey.user_input"
 
+    def _get_skipped_questions(self):
+        """
+        Override: exclude any que_sh_file question that has at least one line
+        with actual file data (value_ans_sh_file is set), regardless of skipped flag.
+        This is the permanent fix for the 'This question requires an answer' banner
+        appearing on pre-filled file fields.
+        """
+        result = super()._get_skipped_questions()
+        if not result:
+            return result
+        # Questions with real file data are answered — remove from skipped set
+        has_file_data_q_ids = self.user_input_line_ids.filtered(
+            lambda l: l.question_id.question_type == 'que_sh_file' and l.value_ans_sh_file
+        ).mapped('question_id')
+        return result - has_file_data_q_ids
+
+    def save_line_que_sh_file(self, question, old_answers, answer, answer_type):
+        """
+        Override: when no new file is uploaded but answered lines exist,
+        keep the existing lines instead of replacing them with a skipped line.
+        """
+        file_list = answer if isinstance(answer, list) else ([answer] if isinstance(answer, dict) else [])
+        has_new_file = any(isinstance(f, dict) and f.get('datas') for f in file_list)
+
+        if not has_new_file:
+            # Check DB directly for existing non-skipped file lines for this question
+            existing = self.env['survey.user_input.line'].sudo().search([
+                ('user_input_id', '=', self.id),
+                ('question_id', '=', question.id),
+                ('answer_type', '=', 'ans_sh_file'),
+                ('value_ans_sh_file', '!=', False),
+            ])
+            if existing:
+                # Files already exist — do not overwrite with skipped line
+                # Delete any stale skipped lines for this question
+                self.env['survey.user_input.line'].sudo().search([
+                    ('user_input_id', '=', self.id),
+                    ('question_id', '=', question.id),
+                    ('skipped', '=', True),
+                ]).unlink()
+                return existing
+
+        return super().save_line_que_sh_file(question, old_answers, answer, answer_type)
+
     def action_testing(self):
         """Placeholder test method"""
         pass
@@ -184,7 +228,7 @@ class SurveyUserInput(models.Model):
                             'bank_name': row.get('Bank Name'),
                             'account_no': row.get('Account Number'),
                             'ifsc_code': row.get('IFSC Code'),
-                            'bank_address': row.get('Bank Address'),
+                            # 'bank_address': row.get('Bank Address'),
                             'bank_cheque_attachments': cheque_att,
                         }))
 

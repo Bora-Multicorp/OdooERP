@@ -7,6 +7,18 @@
             <field name="model">stock.picking</field>
             <field name="inherit_id" ref="stock.view_picking_form"/>
             <field name="arch" type="xml">
+                <!-- Packing List print button: only visible for Sale Deliveries (outgoing) -->
+                <xpath expr="//header/button[@name='action_cancel']" position="before">
+                    <button name="action_print_packing_list"
+                            string="Packing List"
+                            type="object"
+                            groups="base.group_user"
+                            invisible="picking_type_code != 'outgoing'"/>
+                </xpath>
+                <!-- Invisible field to ensure picking_type_code is loaded for JS filtering -->
+                <xpath expr="//sheet" position="inside">
+                    <field name="picking_type_code" invisible="1"/>
+                </xpath>
                 <!-- Add fields to existing Additional Info tab -->
                 <xpath expr="//page[@name='extra']" position="inside">
                     <group string="Packing List Information">

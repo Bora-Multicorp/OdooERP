@@ -16,8 +16,16 @@
         <field name="inherit_id" ref="stock.view_picking_form"/>
         <field name="arch" type="xml">
             <xpath expr="//field[@name='location_dest_id']" position="after">
-                <field name="specs_made" context="{'no_create_edit': True}" readonly="state == 'done'"/>
-                <field name="made_country" context="{'no_create_edit': True}" readonly="state == 'done'"/>
+                <!-- Visible on Receipts (IN); hidden on Delivery Orders (OUT).
+                     picking_type_code is a native related field on stock.picking. -->
+                <field name="specs_made"
+                       context="{'no_create_edit': True}"
+                       readonly="state == 'done'"
+                       invisible="picking_type_code == 'outgoing'"/>
+                <field name="made_country"
+                       context="{'no_create_edit': True}"
+                       readonly="state == 'done'"
+                       invisible="picking_type_code == 'outgoing'"/>
             </xpath>
         </field>
     </record>

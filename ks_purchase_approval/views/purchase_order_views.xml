@@ -23,6 +23,9 @@
                 <field name="ks_show_approve_edit_button" invisible="1"/>
                 <field name="ks_show_reject_edit_button" invisible="1"/>
                 <field name="ks_show_complete_edit_button" invisible="1"/>
+                <field name="ks_show_update_approval_button" invisible="1"/>
+                <field name="ks_show_update_cancel_approval_button" invisible="1"/>
+                <field name="ks_show_update_edit_approval_button" invisible="1"/>
                 <field name="ks_pm1_approved" invisible="1"/>
                 <field name="ks_pm2_approved" invisible="1"/>
                 <field name="ks_cancel_pm1_approved" invisible="1"/>
@@ -84,6 +87,30 @@
                         data-hotkey="l"/>
 
                 <!-- ====== NORMAL USER BUTTONS ====== -->
+
+                <!-- Update Approval Button (requester, while pending_approval) -->
+                <button name="action_update_approvals"
+                        type="object"
+                        string="Update Approvals"
+                        class="btn-warning"
+                        invisible="not ks_show_update_approval_button"
+                        confirm="This will cancel the current approval request and let you choose new approvers. Continue?"/>
+
+                <!-- Update Cancel Approval Button (requester, while cancel_pending) -->
+                <button name="action_update_cancel_approvals"
+                        type="object"
+                        string="Update Cancel Approvals"
+                        class="btn-warning"
+                        invisible="not ks_show_update_cancel_approval_button"
+                        confirm="This will cancel the current cancel-approval request and let you choose new approvers. Continue?"/>
+
+                <!-- Update Edit Approval Button (requester, while edit_pending) -->
+                <button name="action_update_edit_approvals"
+                        type="object"
+                        string="Update Edit Approvals"
+                        class="btn-warning"
+                        invisible="not ks_show_update_edit_approval_button"
+                        confirm="This will cancel the current edit-approval request and let you choose new approvers. Continue?"/>
 
                 <!-- Request Cancel Button (Normal Users only, when PO is confirmed) -->
                 <button name="action_cancel"

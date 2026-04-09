@@ -81,6 +81,27 @@ class VendorPaymentApprovalRequest(models.Model):
         related='purchase_order_id.state',
         string='PO Status',
     )
+    assigned_approver_id = fields.Many2one(
+        'res.users',
+        string='Assigned Approver',
+        copy=False,
+        tracking=True,
+        help='The user responsible for approving this request. Only this user can click Approve.',
+    )
+    amount_for_approval = fields.Monetary(
+        string='Amount for Approval',
+        currency_field='currency_id',
+        required=True,
+        tracking=True,
+        help='The amount that needs to be paid. Used when creating the vendor bill.',
+    )
+    vendor_bill_id = fields.Many2one(
+        'account.move',
+        string='Vendor Bill',
+        copy=False,
+        readonly=True,
+        ondelete='set null',
+    )
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -134,6 +155,23 @@ class VendorPaymentApprovalRequest(models.Model):
                         dict(other._fields['state'].selection).get(other.state, other.state),
                     )
                 )
+
+    def action_submit_and_open_wizard(self):
+        """Open the submit wizard so the user picks Approver 1 and Approver 2 before submitting."""
+        self.ensure_one()
+        if self.state != 'draft':
+            raise UserError(_('Only draft requests can be submitted.'))
+        return {
+            'name': _('Send for Approval'),
+            'type': 'ir.actions.act_window',
+            'res_model': 'vendor.payment.approval.submit.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'active_id': self.id,
+                'default_request_id': self.id,
+            },
+        }
 
     def action_submit(self):
         """Submit for approval: create lines from config and set state to pending."""
@@ -200,7 +238,13 @@ class VendorPaymentApprovalRequest(models.Model):
             )
 
     def action_approve_wizard(self):
-        """Open approve wizard (single or bulk)."""
+        """Open approve wizard. If assigned_approver_id is set, only that user may proceed."""
+        for rec in self:
+            if rec.assigned_approver_id and rec.assigned_approver_id != self.env.user:
+                raise UserError(
+                    _('Only %s is allowed to approve this request.')
+                    % rec.assigned_approver_id.name
+                )
         return {
             'name': _('Approve Payment Request'),
             'type': 'ir.actions.act_window',
@@ -258,6 +302,8 @@ class VendorPaymentApprovalRequest(models.Model):
                 'approve_reason': reason,
             })
             self.activity_unlink(['mail.mail_activity_data_todo'])
+            self._auto_create_bill()
+            self._notify_banking_team()
         else:
             self.activity_unlink(['mail.mail_activity_data_todo'])
             self._notify_next_approver()
@@ -291,6 +337,106 @@ class VendorPaymentApprovalRequest(models.Model):
         })
         self.activity_unlink(['mail.mail_activity_data_todo'])
         return True
+
+    def _auto_create_bill(self):
+        """Automatically create a draft vendor bill when the request is fully approved.
+        Bill lines mirror the PO product lines. The unit prices are scaled proportionally
+        so that the bill total equals amount_for_approval.
+        The bill is linked back to the originating PO via purchase_id and invoice_origin.
+        Skips silently if a bill already exists or amount is not set.
+        """
+        self.ensure_one()
+        if self.vendor_bill_id or not self.amount_for_approval or self.amount_for_approval <= 0:
+            return
+
+        po = self.purchase_order_id
+        product_lines = po.order_line.filtered(lambda l: not l.display_type and l.product_id)
+        if not product_lines:
+            return
+
+        po_total = sum(product_lines.mapped('price_subtotal'))
+        # Scale factor so that bill total == amount_for_approval
+        scale = (self.amount_for_approval / po_total) if po_total else 1.0
+
+        invoice_line_vals = []
+        for line in product_lines:
+            account = line.product_id.product_tmpl_id.get_product_accounts().get('expense')
+            if not account:
+                account = self.env['account.account'].search([
+                    ('account_type', '=', 'expense'),
+                    ('company_id', '=', po.company_id.id),
+                    ('deprecated', '=', False),
+                ], limit=1)
+            if not account:
+                continue
+            invoice_line_vals.append((0, 0, {
+                'product_id': line.product_id.id,
+                'name': line.name,
+                'quantity': line.product_qty,
+                'product_uom_id': line.product_uom.id,
+                'price_unit': line.price_unit * scale,
+                'account_id': account.id,
+                'purchase_line_id': line.id,
+                'currency_id': self.currency_id.id,
+            }))
+
+        if not invoice_line_vals:
+            return
+
+        bill = self.env['account.move'].create({
+            'move_type': 'in_invoice',
+            'partner_id': self.partner_id.id,
+            'currency_id': self.currency_id.id,
+            'company_id': self.company_id.id,
+            'invoice_origin': po.name,
+            'purchase_id': po.id,
+            'ref': po.name,
+            'invoice_line_ids': invoice_line_vals,
+        })
+        self.vendor_bill_id = bill.id
+
+    def _notify_banking_team(self):
+        """Send an email to all Banking Team users configured in Purchase Settings
+        when the approval request reaches the 'approved' state.
+        """
+        self.ensure_one()
+        param = self.env['ir.config_parameter'].sudo().get_param(
+            'ks_purchase_advance_payment.banking_team_user_ids', ''
+        )
+        user_ids = [int(i) for i in param.split(',') if i.strip().isdigit()]
+        if not user_ids:
+            return
+
+        users = self.env['res.users'].sudo().browse(user_ids).exists()
+        recipients = users.filtered(lambda u: u.email)
+        if not recipients:
+            return
+
+        template = self.env.ref(
+            'ks_purchase_advance_payment.mail_template_banking_team_notification',
+            raise_if_not_found=False,
+        )
+        if not template:
+            return
+
+        base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url', '')
+        for user in recipients:
+            template.with_context(base_url=base_url).send_mail(
+                self.id,
+                email_values={'email_to': user.email, 'email_cc': False},
+                force_send=True,
+            )
+
+    def action_view_vendor_bill(self):
+        """Smart button: open the linked vendor bill."""
+        self.ensure_one()
+        return {
+            'name': _('Vendor Bill'),
+            'type': 'ir.actions.act_window',
+            'res_model': 'account.move',
+            'view_mode': 'form',
+            'res_id': self.vendor_bill_id.id,
+        }
 
     def action_reset_to_draft(self):
         for rec in self:
