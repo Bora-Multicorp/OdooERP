@@ -7,19 +7,16 @@
             <field name="arch" type="xml">
                 <form string="Update Activation Status">
                     <group>
-                        <group string="Upload">
+                        <group string="Upload Excel File">
                             <field name="csv_file" filename="filename"
                                    options="{'accepted_file_extensions': '.xlsx, .xlsm, .xls'}"/>
                             <field name="filename" invisible="1"/>
                         </group>
                     </group>
-                    <group string="Result" invisible="not result_message">
-                        <field name="result_message" nolabel="1" colspan="2"/>
-                    </group>
                     <footer>
-                        <button name="action_process_file" string="Upload" type="object" class="btn-primary"/>
-                        <button string="Close" class="btn-primary" special="cancel" invisible="not result_message" data-hotkey="q"/>
-                        <button string="Cancel" class="btn-secondary" special="cancel" data-hotkey="x" invisible="result_message"/>
+                        <button name="action_process_file" string="Upload" type="object"
+                                class="btn-primary" data-hotkey="u"/>
+                        <button string="Cancel" class="btn-secondary" special="cancel" data-hotkey="x"/>
                     </footer>
                 </form>
             </field>

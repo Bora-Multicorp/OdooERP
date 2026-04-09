@@ -40,7 +40,7 @@
                                     }"
                        options="{'no_create': True, 'no_create_edit': True}"
                        optional="show"
-                       domain="[('sale_ok', '=', True)]"
+                       domain="[('sale_ok', '=', True), '|', ('company_id', '=', False), ('company_id', '=', parent.company_id)]"
                        widget="sol_product_many2one"
                        placeholder="Type to find a product..."/>
             </xpath>

@@ -13,7 +13,7 @@
     'version': '0.1',
 
     # any module necessary for this one to work correctly
-    'depends': ['base', 'product', 'stock', 'stock_account', 'sale_project', 'purchase', 'account', 'mail'],
+    'depends': ['base', 'product', 'stock', 'stock_account', 'sale_project', 'purchase', 'account', 'mail', 'l10n_in_withholding'],
 
     # always loaded
     'data': [
@@ -42,7 +42,8 @@
         'views/margin_analysis_report_views.xml',
         'views/ad_margin_report_views.xml',
         'views/mop_master_views.xml',
-
+        'views/tds_wizard_view_inherit.xml',
+        'views/purchase_order_inherit_view.xml',
     ],
 
     'assets': {

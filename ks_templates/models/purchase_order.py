@@ -1,10 +1,40 @@
 # -*- coding: utf-8 -*-
-from odoo import api, models
+from odoo import api, models, fields
 from odoo.tools import formatLang
 
 
 class PurchaseOrder(models.Model):
     _inherit = 'purchase.order'
+
+    ks_authorised_signatory = fields.Binary(string='Authorised Signatory', attachment=True, copy=False)
+    ks_bank_id = fields.Many2one('res.bank', string='Bank Information')
+    ks_round_off = fields.Float(string='Round Off', digits=(16, 2), default=0.0)
+    amount_total = fields.Monetary(string='Total', store=True, readonly=True, compute='_amount_all')
+    tax_totals = fields.Binary(compute='_compute_tax_totals', exportable=False)
+
+    @api.depends('order_line.price_subtotal', 'company_id', 'currency_id', 'ks_round_off')
+    def _amount_all(self):
+        super()._amount_all()
+        for order in self:
+            order.amount_total = order.amount_untaxed + order.amount_tax - order.ks_round_off
+
+    @api.onchange('ks_round_off')
+    def _onchange_ks_round_off(self):
+        for order in self:
+            order.amount_total = order.amount_untaxed + order.amount_tax - order.ks_round_off
+
+    @api.depends('order_line.price_subtotal', 'currency_id', 'company_id', 'ks_round_off')
+    @api.depends_context('lang')
+    def _compute_tax_totals(self):
+        super()._compute_tax_totals()
+        for order in self:
+            if order.tax_totals and order.ks_round_off:
+                order.tax_totals['total_amount_currency'] -= order.ks_round_off
+                # Update formatted display amount
+                currency = order.currency_id or order.company_id.currency_id
+                order.tax_totals['formatted_amount_total'] = formatLang(
+                    self.env, order.tax_totals['total_amount_currency'], currency_obj=currency
+                )
 
     def get_amount_in_words_aed(self, amount):
         """Convert amount to words in AED currency in the format: UAE Dirham [amount in words] and [fils] fils Only"""

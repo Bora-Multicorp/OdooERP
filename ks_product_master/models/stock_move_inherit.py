@@ -103,6 +103,42 @@ class StockMove(models.Model):
         
         return move_line_vals, taken_quantity
 
+    def _action_done(self, cancel_backorder=False):
+        """After standard validation, write made_country / specs_made onto the quants
+        that Odoo created or updated for every done move line.
+
+        This covers non-lot-tracked products that the existing
+        stock_quant_inherit.create (which relies on lot_id) would otherwise miss.
+        For lot-tracked products it is a harmless no-op when the quant create
+        already set the fields.
+        """
+        res = super()._action_done(cancel_backorder=cancel_backorder)
+        for move in self:
+            if move.state != 'done':
+                continue
+            if not move.made_country and not move.specs_made:
+                continue
+            for line in move.move_line_ids:
+                # Prefer the value on the line itself; fall back to the move header.
+                made_country_id = (line.made_country or move.made_country).id if (line.made_country or move.made_country) else False
+                specs_made_id = (line.specs_made or move.specs_made).id if (line.specs_made or move.specs_made) else False
+                if not made_country_id and not specs_made_id:
+                    continue
+                quants = self.env['stock.quant'].sudo().search([
+                    ('product_id', '=', line.product_id.id),
+                    ('location_id', '=', line.location_dest_id.id),
+                    ('lot_id', '=', line.lot_id.id if line.lot_id else False),
+                ])
+                if not quants:
+                    continue
+                update_vals = {}
+                if made_country_id:
+                    update_vals['made_country'] = made_country_id
+                if specs_made_id:
+                    update_vals['specs_made'] = specs_made_id
+                quants.sudo().write(update_vals)
+        return res
+
     def action_open_upload_csv_wizard(self):
         self.ensure_one()
         return {
@@ -279,12 +315,12 @@ class StockMoveLine(models.Model):
                 specs_made_id = specs_made.id if specs_made else None
                 made_country_id = made_country.id if made_country else None
 
-                if specs_made_id and quant.specs_made and quant.specs_made.id != specs_made_id:
-                    raise ValidationError(_('The selected quant has a different "Spec Made For" (%s) than required (%s).') %
-                                        (quant.specs_made.name, specs_made.name))
-                if made_country_id and quant.made_country and quant.made_country.id != made_country_id:
-                    raise ValidationError(_('The selected quant has a different "Made In" (%s) than required (%s).') %
-                                        (quant.made_country.name, made_country.name))
+                # if specs_made_id and quant.specs_made and quant.specs_made.id != specs_made_id:
+                #     raise ValidationError(_('The selected quant has a different "Spec Made For" (%s) than required (%s).') %
+                #                         (quant.specs_made.name, specs_made.name))
+                # if made_country_id and quant.made_country and quant.made_country.id != made_country_id:
+                #     raise ValidationError(_('The selected quant has a different "Made In" (%s) than required (%s).') %
+                #                         (quant.made_country.name, made_country.name))
         
         res = super().write(vals)
         # When move line is done, update related quants with country fields
@@ -329,12 +365,12 @@ class StockMoveLine(models.Model):
                     made_country = self.env['res.country'].browse(vals['made_country'])
                 
                 # Validate quant matches
-                if specs_made and quant.specs_made and quant.specs_made.id != specs_made.id:
-                    raise ValidationError(_('The selected quant has a different "Spec Made For" (%s) than required (%s).') % 
-                                        (quant.specs_made.name, specs_made.name))
-                if made_country and quant.made_country and quant.made_country.id != made_country.id:
-                    raise ValidationError(_('The selected quant has a different "Made In" (%s) than required (%s).') % 
-                                        (quant.made_country.name, made_country.name))
+                # if specs_made and quant.specs_made and quant.specs_made.id != specs_made.id:
+                #     raise ValidationError(_('The selected quant has a different "Spec Made For" (%s) than required (%s).') %
+                #                         (quant.specs_made.name, specs_made.name))
+                # if made_country and quant.made_country and quant.made_country.id != made_country.id:
+                #     raise ValidationError(_('The selected quant has a different "Made In" (%s) than required (%s).') %
+                #                         (quant.made_country.name, made_country.name))
         
         move_lines = super().create(vals_list)
         for line in move_lines:
@@ -711,13 +747,14 @@ class StockPickingInherit(models.Model):
 
     def button_validate(self):
         """Override to validate country fields, assign matching quants, and propagate before validation"""
-        # Validate that required fields are populated
+        # For Delivery Orders (OUT) only: require Spec Made For before validation.
+        # Receipts (IN) are excluded — made_country is stamped on IN either via
+        # PO auto-sync or by the user; specs_made is optional on receipts.
         for picking in self:
-            if picking.state in ('draft', 'waiting', 'confirmed', 'assigned'):
+            if (picking.picking_type_id.code == 'outgoing'
+                    and picking.state in ('draft', 'waiting', 'confirmed', 'assigned')):
                 if not picking.specs_made:
                     raise ValidationError(_('Please set "Spec Made For" field before validating the delivery order.'))
-                if not picking.made_country:
-                    raise ValidationError(_('Please set "Made In" field before validating the delivery order.'))
         
         # Assign matching quants based on country fields and validate
         for picking in self:

@@ -11,7 +11,9 @@
     'website': 'https://www.ksolves.com/',
     'depends': ['quality', 'sale', 'stock', 'account', 'purchase', 'ks_sale_order', 'sale_stock', 'purchase_stock'],
     'assets': {
-
+        'web.assets_backend': [
+            'ks_templates/static/src/js/hide_packing_list_print.js',
+        ],
     },
     'data': [
         'views/account_move_views.xml',

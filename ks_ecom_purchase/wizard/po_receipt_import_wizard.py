@@ -194,7 +194,7 @@ class KsPoReceiptImportWizard(models.TransientModel):
 
             # Find existing receipt only (do not create new pickings)
             pickings = po.picking_ids.filtered(
-                lambda p: p.picking_type_id.code == "incoming" and p.state in ("assigned", "confirmed", "draft")
+                lambda p: p.picking_type_id.code == "incoming" and p.state in ("assigned", "confirmed", "draft", "done")
             )
 
             if not pickings:

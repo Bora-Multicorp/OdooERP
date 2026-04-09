@@ -37,11 +37,12 @@ class ActivationStatusWizard(models.TransientModel):
         if not rows:
             raise ValidationError('The Excel file is empty.')
 
-        # Optional header row: if first cell looks like "IMEI" or "IEMI", skip it
+        # Optional header row: skip if first cell looks like an IMEI column header
+        _HEADER_VARIANTS = {'IMEI', 'IEMI', 'IMIE', 'IMEI NO', 'IMEI NO.', 'IMEI NUMBER', 'SERIAL', 'SERIAL NO', 'S/N'}
         start = 0
-        if rows and len(rows[0]) >= 2:
-            first_cell = (rows[0][0] or '').strip().upper()
-            if first_cell in ('IMEI', 'IEMI', 'IMEI NO', 'IMEI NO.'):
+        if rows and rows[0] and rows[0][0] is not None:
+            first_cell = str(rows[0][0]).strip().upper()
+            if first_cell in _HEADER_VARIANTS or not any(c.isdigit() for c in first_cell):
                 start = 1
 
         result = []
@@ -72,11 +73,60 @@ class ActivationStatusWizard(models.TransientModel):
             '|', ('imei', '=', imei), ('imei2', '=', imei)
         ])
 
+    def _notify(self, title, message, notif_type='success', sticky=False):
+        """Return a display_notification action that closes the dialog after showing the toast."""
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': title,
+                'message': message,
+                'type': notif_type,   # 'success', 'warning', 'danger', 'info'
+                'sticky': sticky,
+                'next': {'type': 'ir.actions.act_window_close'},
+            },
+        }
+
     def action_process_file(self):
         self.ensure_one()
-        rows = self._parse_excel_rows()
+        try:
+            rows = self._parse_excel_rows()
+        except (ValidationError, UserError) as e:
+            return self._notify(
+                title='Import Failed',
+                message=str(e.args[0] if e.args else e),
+                notif_type='danger',
+                sticky=True,
+            )
+        except Exception as e:
+            return self._notify(
+                title='Import Failed',
+                message='An unexpected error occurred: %s' % str(e),
+                notif_type='danger',
+                sticky=True,
+            )
+
         if not rows:
-            raise ValidationError('No valid IMEI rows found in the file. Expected columns: IMEI, Activation state (Active/Not active).')
+            return self._notify(
+                title='Import Failed',
+                message='No valid IMEI rows found. Expected columns: IMEI, Activation state (Active/Not active).',
+                notif_type='danger',
+                sticky=True,
+            )
+
+        # Reject the entire file if any row tries to set activation to False
+        false_rows = [imei for imei, is_active in rows if not is_active]
+        if false_rows:
+            return self._notify(
+                title='Import Failed',
+                message=(
+                    'Error: Activation Status can only be updated to True. '
+                    'Manual deactivation via import is not permitted.\n'
+                    'Affected IMEI(s): %s'
+                ) % ', '.join(false_rows),
+                notif_type='danger',
+                sticky=True,
+            )
 
         # Duplicate IMEI detection (in file)
         imei_seen = {}
@@ -87,11 +137,15 @@ class ActivationStatusWizard(models.TransientModel):
             imei_seen[imei] = True
         if duplicates:
             unique_dupes = list(dict.fromkeys(duplicates))
-            raise ValidationError(
-                'Duplicate IMEI(s) in the file (each IMEI should appear only once): %s' % ', '.join(unique_dupes)
+            return self._notify(
+                title='Import Failed',
+                message='Duplicate IMEI(s) in the file (each IMEI must appear only once): %s' % ', '.join(unique_dupes),
+                notif_type='danger',
+                sticky=True,
             )
 
         updated = 0
+        already_uptodate = 0
         failed_imeis = []
 
         for imei, is_active in rows:
@@ -99,28 +153,36 @@ class ActivationStatusWizard(models.TransientModel):
             if not quants:
                 failed_imeis.append(imei)
                 continue
-            # Update activation_status (and activation_date) on every matching quant (imei or imei2)
-            quants.write({
-                'activation_status': is_active,
-                'activation_date': fields.Date.today() if is_active else False,
-            })
-            updated += len(quants)
+            # Check if already at the desired state (re-import scenario)
+            needs_update = quants.filtered(lambda q: q.activation_status != is_active)
+            if needs_update:
+                needs_update.write({
+                    'activation_status': is_active,
+                    'activation_date': fields.Date.today() if is_active else False,
+                })
+                updated += 1        # count IMEIs updated, not quant records
+            else:
+                already_uptodate += 1  # count IMEIs already at correct state
 
-        # Build result message and keep wizard open so user sees it
-        failed_list = '<br/>'.join(failed_imeis) if failed_imeis else 'None'
-        msg = (
-            '<p><strong>Updated:</strong> %s</p>'
-            '<p><strong>Failed (IMEI not found):</strong> %s</p>'
-            '<p><strong>Failed IMEI list:</strong></p><p>%s</p>'
-        ) % (updated, len(failed_imeis), failed_list or '-')
-        self.write({'result_message': msg})
-
-        # Reopen the same wizard record so the form stays open and shows the result.
-        return {
-            'type': 'ir.actions.act_window',
-            'res_model': 'activation.status.wizard',
-            'res_id': self.id,
-            'view_mode': 'form',
-            'views': [(False, 'form')],
-            'target': 'new',
-        }
+        if not failed_imeis:
+            # Full success — all IMEIs were found (some may have been already up to date)
+            if updated == 0 and already_uptodate > 0:
+                msg = 'All %d record(s) were already up to date. No changes made.' % already_uptodate
+            elif already_uptodate > 0:
+                msg = 'Updated: %d record(s). Already up to date: %d record(s).' % (updated, already_uptodate)
+            else:
+                msg = 'Updated: %d record(s).' % updated
+            return self._notify(
+                title='Import: Success',
+                message=msg,
+                notif_type='success',
+            )
+        else:
+            return self._notify(
+                title='Import: Completed with Warnings',
+                message='Updated: %d | Already up to date: %d | Not found in system: %d\nMissing IMEIs: %s' % (
+                    updated, already_uptodate, len(failed_imeis), ', '.join(failed_imeis)
+                ),
+                notif_type='warning',
+                sticky=True,
+            )

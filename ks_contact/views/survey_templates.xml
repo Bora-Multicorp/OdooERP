@@ -80,5 +80,72 @@
                        t-att-data-validation-length-max="question.validation_length_max if question.validation_required else False"/>
             </div>
         </template>
+        <!-- Override tmpl_sh_file: attachment-widget style cards + mandatory fix -->
+        <template id="tmpl_sh_file" inherit_id="sh_survey_extra_fields.tmpl_sh_file" name="KS File: integrated prefill">
+            <xpath expr="//input[@type='file']" position="replace">
+                <t t-set="ks_existing" t-value="answer_lines.filtered(lambda l: l.value_ans_sh_file_fname)"/>
+
+                <!-- ── Existing file cards (Odoo attachment-widget style) ── -->
+                <t t-if="ks_existing">
+                    <div class="ks_existing_files d-flex flex-wrap gap-2 mb-2">
+                        <t t-foreach="ks_existing" t-as="line">
+                            <t t-set="ks_fname" t-value="line.value_ans_sh_file_fname or ''"/>
+                            <t t-set="ks_ext" t-value="ks_fname.rsplit('.', 1)[-1].upper() if '.' in ks_fname else 'FILE'"/>
+                            <div style="position:relative;width:200px;border:1px solid #dee2e6;border-radius:6px;overflow:hidden;background:#fff;">
+                                <!-- Clickable area → view file in new tab -->
+                                <a t-att-href="'/web/content/survey.user_input.line/%s/value_ans_sh_file/%s?access_token=%s' % (line.id, ks_fname, answer.access_token)"
+                                   target="_blank"
+                                   style="display:flex;align-items:center;gap:10px;padding:8px 10px;text-decoration:none;color:inherit;">
+                                    <div style="width:36px;height:36px;border-radius:4px;background:#f1f3f4;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                        <span class="fa fa-file-o" style="font-size:18px;color:#5f6368;"/>
+                                    </div>
+                                    <div style="overflow:hidden;">
+                                        <div style="font-size:12px;font-weight:500;color:#212529;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px;" t-esc="ks_fname"/>
+                                        <div style="font-size:11px;color:#6c757d;" t-esc="ks_ext"/>
+                                    </div>
+                                </a>
+                                <!-- Remove × button (top-right corner, handled by JS) -->
+                                <button type="button"
+                                        class="ks_remove_file_btn"
+                                        t-att-data-line-id="line.id"
+                                        t-att-data-access-token="answer.access_token"
+                                        style="position:absolute;top:4px;right:4px;width:20px;height:20px;border-radius:50%;background:#6c757d;border:none;color:#fff;font-size:13px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;"
+                                        title="Remove">×</button>
+                            </div>
+                        </t>
+                    </div>
+
+                    <!--
+                        Hidden sentinel: validation loop checks [data-question-type].
+                        value="existing" is truthy → no mandatory error.
+                        Real file input has no data-question-type so loop skips it,
+                        but sh_file_input class + name keeps _onChangeFileInput working.
+                    -->
+                    <input type="hidden"
+                           t-att-name="question.id"
+                           value="existing"
+                           data-question-type="que_sh_file"
+                           class="ks_file_existing_sentinel"/>
+                    <input type="file"
+                           class="form-control o_survey_question_email_box bg-transparent text-dark rounded-0 p-0 sh_file_input mt-1"
+                           t-att-multiple="question.upload_multiple_file"
+                           t-att-id="question.id"
+                           t-att-name="question.id"
+                           t-att-data-question-code="question.question_code"
+                           t-att-data-cond-req-questions="question.cond_required_answer_ids.ids"
+                           t-att-data-has-existing="1"/>
+                </t>
+                <t t-else="">
+                    <input type="file"
+                           class="form-control o_survey_question_email_box bg-transparent text-dark rounded-0 p-0 sh_file_input"
+                           t-att-multiple="question.upload_multiple_file"
+                           t-att-id="question.id"
+                           t-att-name="question.id"
+                           t-att-data-question-code="question.question_code"
+                           t-att-data-cond-req-questions="question.cond_required_answer_ids.ids"
+                           t-att-data-question-type="question.question_type"/>
+                </t>
+            </xpath>
+        </template>
     </data>
 </odoo>
