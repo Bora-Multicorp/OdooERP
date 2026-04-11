@@ -1,31 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Made In country column in the PO order lines list -->
-    <record id="view_purchase_order_form_made_country" model="ir.ui.view">
-        <field name="name">purchase.order.form.made_country</field>
-        <field name="model">purchase.order</field>
-        <field name="inherit_id" ref="purchase.purchase_order_form"/>
-        <field name="arch" type="xml">
-            <xpath expr="//field[@name='order_line']//list//field[@name='product_qty']" position="after">
-                <field name="made_country"
-                       context="{'no_create_edit': True}"
-                       optional="show"
-                       string="Made In"/>
-            </xpath>
-        </field>
-    </record>
-
-    <!-- Made In country on the standalone PO line form (popup) -->
-    <record id="view_purchase_order_line_form2_made_country" model="ir.ui.view">
-        <field name="name">purchase.order.line.form2.made_country</field>
-        <field name="model">purchase.order.line</field>
-        <field name="inherit_id" ref="purchase.purchase_order_line_form2"/>
-        <field name="arch" type="xml">
-            <xpath expr="//field[@name='product_id']" position="after">
-                <field name="made_country"
-                       context="{'no_create_edit': True}"
-                       string="Made In"/>
-            </xpath>
-        </field>
-    </record>
+    <!-- made_country and made_in_country_id intentionally removed from Purchase Order form.
+         Country of origin is managed at the Receipt (stock.picking) level. -->
 </odoo>

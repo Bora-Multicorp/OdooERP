@@ -10,11 +10,12 @@
                     <field name="show_IMEI_field2" invisible="1"/>
                     <field name="hide_imei_fields" invisible="1"/>
                 </xpath>
-                <xpath expr="//widget[@name='import_lots']" position="after">
+<xpath expr="//widget[@name='import_lots']" position="after">
                     <button name="action_open_upload_csv_wizard" type="object" string="Upload File" class="btn btn-link" invisible="not display_import_lot"/>
                 </xpath>
             </field>
         </record>
+
         <record id="view_transfer_form_inherit_no_create_product" model="ir.ui.view">
           <field name="name">stock.picking.form.inherit.no.create</field>
           <field name="model">stock.picking</field>
@@ -29,7 +30,8 @@
                   <attribute name="options">{'no_create': True, 'no_create_edit': True, 'no_open': True}</attribute>
               </xpath>
           </field>
-      </record>
+        </record>
+
         <record id="view_stock_move_line_operation_tree_inherit" model="ir.ui.view">
             <field name="name">stock.move.line.tree.inherit</field>
             <field name="model">stock.move.line</field>
@@ -40,6 +42,14 @@
                            column_invisible="not parent.hide_imei_fields or not parent.show_IMEI_field" required="1"/>
                     <field name="imei2" placeholder="IMEI No."
                            column_invisible="not parent.hide_imei_fields or not parent.show_IMEI_field2" required="1"/>
+                    <!-- Made In Country — shown in both the picking Detailed Ops tab and
+                         the Stock Move popup. optional="show" means visible by default;
+                         users can hide it via the column toggle menu. -->
+                    <field name="made_in_country_id"
+                           string="Made In"
+                           context="{'no_create_edit': True}"
+                           optional="show"
+                           readonly="state == 'done'"/>
                 </xpath>
             </field>
         </record>
