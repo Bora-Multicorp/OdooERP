@@ -10,6 +10,8 @@
                     <field name="imei2" column_invisible="not context.get('show_IMEI2')"/>
                     <field name="activation_status" column_invisible="not context.get('show_IMEI')" groups="base.group_system"/>
                     <field name="activation_date"/>
+                    <field name="specs_made" optional="show" readonly="1" string="Spec Made For"/>
+                    <field name="made_country" optional="show" readonly="1" string="Made In"/>
                 </xpath>
             </field>
         </record>

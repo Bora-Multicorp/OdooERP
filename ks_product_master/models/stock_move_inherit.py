@@ -49,6 +49,25 @@ class StockMove(models.Model):
         tracking=True
     )
 
+    # Computed from move lines so the Operations tab column auto-fills when lines have a country.
+    made_in_country_id = fields.Many2one(
+        'res.country',
+        string='Made In Country',
+        compute='_compute_made_in_country_id',
+        store=True,
+        readonly=False,
+        help='Country of origin. Auto-filled from move lines.',
+    )
+
+    @api.depends('move_line_ids.made_in_country_id')
+    def _compute_made_in_country_id(self):
+        for move in self:
+            line = move.move_line_ids.filtered(lambda l: l.made_in_country_id)[:1]
+            if line:
+                move.made_in_country_id = line.made_in_country_id
+            else:
+                move.made_in_country_id = move._origin.made_in_country_id
+
     @api.model_create_multi
     def create(self, vals_list):
         """Override to propagate specs_made and made_country from picking to moves"""
@@ -103,6 +122,24 @@ class StockMove(models.Model):
         
         return move_line_vals, taken_quantity
 
+    @api.onchange('made_in_country_id')
+    def _onchange_made_in_country_id_fill_lines(self):
+        """When Made In Country is set on the stock.move popup, bulk-fill all
+        move lines so each Lot/Serial row shows the same country immediately."""
+        for move in self:
+            if not move.made_in_country_id:
+                continue
+            for line in move.move_line_ids:
+                line.made_in_country_id = move.made_in_country_id
+
+    def write(self, vals):
+        res = super().write(vals)
+        if 'made_in_country_id' in vals and vals['made_in_country_id']:
+            if not self.env.context.get('skip_line_cascade'):
+                for move in self:
+                    move.move_line_ids.write({'made_in_country_id': vals['made_in_country_id']})
+        return res
+
     def _action_done(self, cancel_backorder=False):
         """After standard validation, write made_country / specs_made onto the quants
         that Odoo created or updated for every done move line.
@@ -116,13 +153,22 @@ class StockMove(models.Model):
         for move in self:
             if move.state != 'done':
                 continue
-            if not move.made_country and not move.specs_made:
-                continue
+            picking = move.picking_id
             for line in move.move_line_ids:
-                # Prefer the value on the line itself; fall back to the move header.
-                made_country_id = (line.made_country or move.made_country).id if (line.made_country or move.made_country) else False
-                specs_made_id = (line.specs_made or move.specs_made).id if (line.specs_made or move.specs_made) else False
-                if not made_country_id and not specs_made_id:
+                # Resolution order (most specific wins):
+                # 1. move line  — explicit per-line value, e.g. Anguilla
+                # 2. move header — set at move level
+                # 3. picking header — e.g. India set on the receipt form
+                # The picking header is only a fallback; it never overrides a
+                # more-specific value already set on the line or move.
+                made_country = (
+                    line.made_country
+                    or move.made_country
+                    or move.made_in_country_id
+                    or (picking and picking.made_country)
+                )
+                specs_made = line.specs_made or move.specs_made or (picking and picking.specs_made)
+                if not made_country and not specs_made:
                     continue
                 quants = self.env['stock.quant'].sudo().search([
                     ('product_id', '=', line.product_id.id),
@@ -132,10 +178,10 @@ class StockMove(models.Model):
                 if not quants:
                     continue
                 update_vals = {}
-                if made_country_id:
-                    update_vals['made_country'] = made_country_id
-                if specs_made_id:
-                    update_vals['specs_made'] = specs_made_id
+                if made_country:
+                    update_vals['made_country'] = made_country.id
+                if specs_made:
+                    update_vals['specs_made'] = specs_made.id
                 quants.sudo().write(update_vals)
         return res
 
@@ -270,6 +316,12 @@ class StockMoveLine(models.Model):
     imei = fields.Char(string="IMEI 1", compute="_compute_imei", store=True, readonly=False)
     imei2 = fields.Char(string='IMEI 2', compute="_compute_imei", store=True, readonly=False)
 
+    made_in_country_id = fields.Many2one(
+        'res.country',
+        string='Made In',
+        help='Country of origin for this specific lot/serial. Auto-filled from the quant when a lot is selected.',
+    )
+
     specs_made = fields.Many2one(
         'res.country',
         string='Spec Made For',
@@ -323,6 +375,45 @@ class StockMoveLine(models.Model):
                 #                         (quant.made_country.name, made_country.name))
         
         res = super().write(vals)
+
+        # When made_in_country_id is directly set on a move line, propagate up to picking header.
+        if 'made_in_country_id' in vals and vals['made_in_country_id']:
+            for line in self:
+                if line.move_id:
+                    line.move_id.with_context(skip_line_cascade=True).write(
+                        {'made_in_country_id': vals['made_in_country_id']}
+                    )
+                    picking = line.move_id.picking_id
+                    if picking and not picking.made_country:
+                        picking.sudo().write({'made_country': vals['made_in_country_id']})
+
+        # When lot_id is assigned (by Odoo's reservation engine or manually), auto-fill
+        # made_in_country_id on outgoing delivery lines from the matching quant.
+        if 'lot_id' in vals and vals['lot_id']:
+            for line in self:
+                if (not line.made_in_country_id
+                        and line.move_id
+                        and line.move_id.picking_id.picking_type_id.code == 'outgoing'):
+                    quant = self.env['stock.quant'].search([
+                        ('product_id', '=', line.product_id.id),
+                        ('lot_id', '=', line.lot_id.id),
+                        ('location_id', '=', line.location_id.id),
+                        ('made_country', '!=', False),
+                    ], limit=1)
+                    if not quant:
+                        quant = self.env['stock.quant'].search([
+                            ('product_id', '=', line.product_id.id),
+                            ('lot_id', '=', line.lot_id.id),
+                            ('made_country', '!=', False),
+                        ], limit=1)
+                    if quant and quant.made_country:
+                        line.made_in_country_id = quant.made_country.id
+                        if line.move_id:
+                            line.move_id.made_in_country_id = quant.made_country.id
+                            picking = line.move_id.picking_id
+                            if picking and not picking.made_country:
+                                picking.sudo().write({'made_country': quant.made_country.id})
+
         # When move line is done, update related quants with country fields
         if 'state' in vals and vals['state'] == 'done':
             for line in self:
@@ -380,6 +471,22 @@ class StockMoveLine(models.Model):
                     line.specs_made = line.move_id.specs_made.id
                 if not line.made_country and line.move_id.made_country:
                     line.made_country = line.move_id.made_country.id
+                # Populate made_in_country_id for delivery lines from the quant
+                if (not line.made_in_country_id
+                        and line.lot_id
+                        and line.move_id.picking_id.picking_type_id.code == 'outgoing'):
+                    quant = self.env['stock.quant'].search([
+                        ('product_id', '=', line.product_id.id),
+                        ('lot_id', '=', line.lot_id.id),
+                        ('made_country', '!=', False),
+                    ], limit=1)
+                    if quant and quant.made_country:
+                        line.made_in_country_id = quant.made_country.id
+                        if line.move_id:
+                            line.move_id.made_in_country_id = quant.made_country.id
+                            picking = line.move_id.picking_id
+                            if picking and not picking.made_country:
+                                picking.sudo().write({'made_country': quant.made_country.id})
             if line.move_id and not line.imei:
                 # 1️. First try: get IMEI from related incoming PO move lines
                 related_moves = self.env['stock.move.line'].search([
@@ -514,6 +621,50 @@ class StockMoveLine(models.Model):
                 raise ValidationError(
                     _('Serial number must be unique, the Serial number(%s) is already used in another stock item.' % record.lot_name))
 
+    def _synchronize_quant(self, quantity, location, action="available", in_date=False, **quants_value):
+        """Override to stamp made_country / specs_made onto the destination quant
+        immediately after the standard quant move.
+
+        _synchronize_quant is called once per move line during _action_done and is
+        the earliest reliable point where the destination quant (whether newly
+        created or incremented) already exists in the DB.  We only write when
+        moving INTO a location (quantity > 0) so we don't pollute source quants.
+        """
+        result = super()._synchronize_quant(quantity, location, action=action, in_date=in_date, **quants_value)
+
+        # Only propagate when we are adding stock to the destination (incoming direction)
+        if quantity > 0:
+            # Resolution order: line → move.made_country → move.made_in_country_id → picking header
+            # made_in_country_id comes from ks_templates stock.move and carries
+            # country-of-origin data propagated from PO/SO lines.
+            made_country = (
+                self.made_country
+                or (self.move_id and self.move_id.made_country)
+                or (self.move_id and self.move_id.made_in_country_id)
+                or (self.move_id and self.move_id.picking_id and self.move_id.picking_id.made_country)
+            )
+            specs_made = (
+                self.specs_made
+                or (self.move_id and self.move_id.specs_made)
+                or (self.move_id and self.move_id.picking_id and self.move_id.picking_id.specs_made)
+            )
+            if made_country or specs_made:
+                lot = quants_value.get('lot', self.lot_id)
+                quants = self.env['stock.quant'].sudo().search([
+                    ('product_id', '=', self.product_id.id),
+                    ('location_id', '=', location.id),
+                    ('lot_id', '=', lot.id if lot else False),
+                ])
+                if quants:
+                    update_vals = {}
+                    if made_country:
+                        update_vals['made_country'] = made_country.id
+                    if specs_made:
+                        update_vals['specs_made'] = specs_made.id
+                    quants.sudo().write(update_vals)
+
+        return result
+
     @api.onchange('quant_id')
     def _onchange_quant_id_get_imei(self):
         for line in self:
@@ -526,6 +677,39 @@ class StockMoveLine(models.Model):
                 line.specs_made = line.quant_id.specs_made.id
             if line.quant_id.made_country:
                 line.made_country = line.quant_id.made_country.id
+                line.made_in_country_id = line.quant_id.made_country.id
+                if line.move_id:
+                    line.move_id.made_in_country_id = line.quant_id.made_country.id
+
+    @api.onchange('lot_id')
+    def _onchange_lot_id_fill_made_in_country(self):
+        """When a Lot/Serial Number is selected on a delivery line, auto-fill
+        made_in_country_id from the matching stock.quant so the country of origin
+        is immediately visible on the same row."""
+        for line in self:
+            if not line.lot_id:
+                continue
+            quant = self.env['stock.quant'].search([
+                ('product_id', '=', line.product_id.id),
+                ('lot_id', '=', line.lot_id.id),
+                ('location_id', '=', line.location_id.id),
+                ('made_country', '!=', False),
+            ], limit=1)
+            if quant and quant.made_country:
+                line.made_in_country_id = quant.made_country.id
+                if line.move_id:
+                    line.move_id.made_in_country_id = quant.made_country.id
+            elif not quant:
+                # Fallback: search without location restriction
+                quant_any = self.env['stock.quant'].search([
+                    ('product_id', '=', line.product_id.id),
+                    ('lot_id', '=', line.lot_id.id),
+                    ('made_country', '!=', False),
+                ], limit=1)
+                if quant_any and quant_any.made_country:
+                    line.made_in_country_id = quant_any.made_country.id
+                    if line.move_id:
+                        line.move_id.made_in_country_id = quant_any.made_country.id
 
 
 class StockPickingInherit(models.Model):
@@ -541,8 +725,8 @@ class StockPickingInherit(models.Model):
     made_country = fields.Many2one(
         'res.country',
         string='Made In',
+        tracking=True,
         help='Country where the product is manufactured',
-        tracking=True
     )
 
     @api.model_create_multi
@@ -556,14 +740,17 @@ class StockPickingInherit(models.Model):
     def write(self, vals):
         # Prevent changing Spec Made For / Made In once delivery is done (validated)
         if 'specs_made' in vals or 'made_country' in vals:
-            done = self.filtered(lambda p: p.state == 'done')
-            if done:
-                raise ValidationError(_('You cannot change "Spec Made For" or "Made In" after the delivery has been validated.'))
+            if not self.env.context.get('skip_country_validation'):
+                done = self.filtered(
+                    lambda p: p.state == 'done' and p.picking_type_id.code == 'incoming'
+                )
+                if done:
+                    raise ValidationError(_('You cannot change "Spec Made For" or "Made In" after the receipt has been validated.'))
         res = super().write(vals)
         if 'specs_made' in vals or 'made_country' in vals:
             for picking in self:
-                if picking.specs_made and picking.made_country and picking.picking_type_id.code == 'outgoing':
-                    picking._update_move_quantities_by_country_stock()
+                if picking.picking_type_id.code == 'incoming':
+                    picking._propagate_country_fields_to_moves()
         return res
 
     def action_confirm(self):
@@ -572,20 +759,84 @@ class StockPickingInherit(models.Model):
         self._propagate_country_fields_to_moves()
         return res
 
-    def _propagate_country_fields_to_moves(self):
-        """Propagate specs_made and made_country from picking to related moves and move lines"""
+    def action_assign(self):
+        """After reserving stock (assigning lots), sync made_in_country_id from move lines
+        up to picking.made_country for outgoing deliveries."""
+        res = super().action_assign()
+        self._sync_country_from_lines_to_picking()
+        return res
+
+    def _sync_country_from_lines_to_picking(self):
+        """For outgoing pickings: read made_in_country_id from reserved move lines
+        (populated from quants) and set it on the picking header made_country."""
         for picking in self:
-            if picking.specs_made or picking.made_country:
-                # Update all moves
-                picking.move_ids.write({
-                    'specs_made': picking.specs_made.id if picking.specs_made else False,
-                    'made_country': picking.made_country.id if picking.made_country else False,
-                })
-                # Update all move lines
-                picking.move_line_ids.write({
-                    'specs_made': picking.specs_made.id if picking.specs_made else False,
-                    'made_country': picking.made_country.id if picking.made_country else False,
-                })
+            if picking.picking_type_id.code != 'outgoing':
+                continue
+            country = None
+            for move in picking.move_ids:
+                for line in move.move_line_ids:
+                    if line.made_in_country_id:
+                        country = line.made_in_country_id
+                        break
+                if country:
+                    break
+            if country:
+                # bypass write() validation since picking is not done yet
+                picking.sudo().with_context(skip_country_validation=True).write(
+                    {'made_country': country.id}
+                )
+
+    def _propagate_country_fields_to_moves(self):
+        """Propagate specs_made and made_country from picking header to moves and move lines.
+
+        Only fills in blanks — never overwrites a value that was already set at the
+        move or move-line level.  This preserves per-line countries (e.g. Anguilla on
+        a line when the picking header is India).
+        """
+        for picking in self:
+            if not picking.specs_made and not picking.made_country:
+                continue
+
+            if picking.picking_type_id.code == 'incoming':
+                # Incoming receipts: picking.made_country → move.made_in_country_id (the visible
+                # "Made In" column on the Operations tab lines, from ks_templates stock.move).
+                # Also fill move.made_country and move_line.made_country for quant propagation.
+                for move in picking.move_ids:
+                    move_vals = {}
+                    if picking.made_country and not move.made_in_country_id:
+                        move_vals['made_in_country_id'] = picking.made_country.id
+                    if picking.made_country and not move.made_country:
+                        move_vals['made_country'] = picking.made_country.id
+                    if picking.specs_made and not move.specs_made:
+                        move_vals['specs_made'] = picking.specs_made.id
+                    if move_vals:
+                        move.write(move_vals)
+                for line in picking.move_line_ids:
+                    line_vals = {}
+                    if picking.made_country and not line.made_country:
+                        line_vals['made_country'] = picking.made_country.id
+                    if picking.specs_made and not line.specs_made:
+                        line_vals['specs_made'] = picking.specs_made.id
+                    if line_vals:
+                        line.write(line_vals)
+            else:
+                # Outgoing and other types: fill move.made_country / move_line.made_country
+                for move in picking.move_ids:
+                    move_vals = {}
+                    if picking.specs_made and not move.specs_made:
+                        move_vals['specs_made'] = picking.specs_made.id
+                    if picking.made_country and not move.made_country:
+                        move_vals['made_country'] = picking.made_country.id
+                    if move_vals:
+                        move.write(move_vals)
+                for line in picking.move_line_ids:
+                    line_vals = {}
+                    if picking.specs_made and not line.specs_made:
+                        line_vals['specs_made'] = picking.specs_made.id
+                    if picking.made_country and not line.made_country:
+                        line_vals['made_country'] = picking.made_country.id
+                    if line_vals:
+                        line.write(line_vals)
 
     def _update_move_quantities_by_country_stock(self):
         """Update move (product line) quantities to available stock for Spec Made For + Made In.
@@ -739,22 +990,34 @@ class StockPickingInherit(models.Model):
 
     @api.onchange('specs_made', 'made_country')
     def _onchange_specs_made_made_country_update_quantities(self):
-        """When Spec Made For or Made In change, update product line quantities and line serial/IMEI to available stock (in-memory)."""
-        if self.specs_made and self.made_country and self.picking_type_id.code == 'outgoing':
-            for move, assign_qty in self._get_country_stock_assign_quantities():
-                move.product_uom_qty = assign_qty
-            self._assign_move_line_quants_by_country_fields(persist=False)
+        """When Made In / Spec Made For changes on the picking header:
+        - Outgoing: update reserved quantities and assign matching quants (existing behaviour).
+        - Incoming: bulk-fill picking.made_country → move.made_in_country_id on every
+          move line that has no country yet, so the user sets it once for all lines.
+        """
+        if self.picking_type_id.code == 'outgoing':
+            if self.specs_made and self.made_country:
+                for move, assign_qty in self._get_country_stock_assign_quantities():
+                    move.product_uom_qty = assign_qty
+                self._assign_move_line_quants_by_country_fields(persist=False)
+        elif self.picking_type_id.code == 'incoming':
+            # Bulk-fill in memory — persisted on save via write() → _propagate_country_fields_to_moves()
+            for move in self.move_ids:
+                if self.made_country and not move.made_in_country_id:
+                    move.made_in_country_id = self.made_country
+                if self.specs_made and not move.specs_made:
+                    move.specs_made = self.specs_made
 
     def button_validate(self):
         """Override to validate country fields, assign matching quants, and propagate before validation"""
         # For Delivery Orders (OUT) only: require Spec Made For before validation.
         # Receipts (IN) are excluded — made_country is stamped on IN either via
         # PO auto-sync or by the user; specs_made is optional on receipts.
-        for picking in self:
-            if (picking.picking_type_id.code == 'outgoing'
-                    and picking.state in ('draft', 'waiting', 'confirmed', 'assigned')):
-                if not picking.specs_made:
-                    raise ValidationError(_('Please set "Spec Made For" field before validating the delivery order.'))
+        # for picking in self:
+        #     if (picking.picking_type_id.code == 'outgoing'
+        #             and picking.state in ('draft', 'waiting', 'confirmed', 'assigned')):
+        #         if not picking.specs_made:
+        #             raise ValidationError(_('Please set "Spec Made For" field before validating the delivery order.'))
         
         # Assign matching quants based on country fields and validate
         for picking in self:
@@ -772,7 +1035,41 @@ class StockPickingInherit(models.Model):
                 category = product.categ_id
                 if line.picking_type_id.code != 'outgoing' and category != packaging_category:  # dont validate if it's outgoing picking (sales order)
                     line.validate_imei_and_serial_number()
-        return super().button_validate()
+
+        res = super().button_validate()
+
+        # After validation is fully done, push made_country / specs_made from every
+        # move line down to its quant.  This is the definitive propagation step and
+        # covers all cases: new quants, existing quants that were only incremented,
+        # and non-lot-tracked products that _action_done may have missed.
+        for picking in self:
+            if picking.state != 'done':
+                continue
+            for line in picking.move_line_ids:
+                made_country = (
+                    line.made_country
+                    or (line.move_id and line.move_id.made_country)
+                    or (line.move_id and line.move_id.made_in_country_id)
+                    or picking.made_country
+                )
+                specs_made = line.specs_made or (line.move_id and line.move_id.specs_made) or picking.specs_made
+                if not made_country and not specs_made:
+                    continue
+                quants = self.env['stock.quant'].sudo().search([
+                    ('product_id', '=', line.product_id.id),
+                    ('location_id', '=', line.location_dest_id.id),
+                    ('lot_id', '=', line.lot_id.id if line.lot_id else False),
+                ])
+                if not quants:
+                    continue
+                update_vals = {}
+                if made_country:
+                    update_vals['made_country'] = made_country.id
+                if specs_made:
+                    update_vals['specs_made'] = specs_made.id
+                quants.sudo().write(update_vals)
+
+        return res
 
     def _assign_quants_by_country_fields(self):
         """Assign quants to move lines based on specs_made and made_country fields"""

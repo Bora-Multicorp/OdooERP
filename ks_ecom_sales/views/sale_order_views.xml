@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_sale_order_form_ks_ecom_import" model="ir.ui.view">
+        <field name="name">sale.order.form.ks.ecom.import</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook/page[@name='other_information']" position="after">
+                <page string="E-com Information" name="ks_ecom_information">
+                    <group>
+                        <group>
+                            <field name="ks_ecom_imported" readonly="1"/>
+                            <field name="ks_ecom_order_id" readonly="1"/>
+                            <field name="ks_ecom_source_file" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="ks_ecom_tag_ids" widget="many2many_tags" readonly="1"/>
+                        </group>
+                    </group>
+                    <field name="ks_ecom_info_ids" readonly="1">
+                        <list string="Imported Fields" create="false" edit="false" delete="false">
+                            <field name="field_key"/>
+                            <field name="field_value"/>
+                        </list>
+                    </field>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>
