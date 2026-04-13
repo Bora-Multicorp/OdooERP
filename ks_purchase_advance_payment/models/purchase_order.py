@@ -79,23 +79,11 @@ class PurchaseOrder(models.Model):
             order.payment_approval_request_count = len(order.payment_approval_request_ids)
 
     def action_create_payment_approval_request(self):
-        """Create or open the single payment approval request. Type is set from PO (with bill if vendor bill exists, else without bill)."""
+        """Create a new payment approval request. Type is set from PO (with bill if vendor bill exists, else without bill)."""
         self.ensure_one()
         if self.state not in ('purchase', 'done'):
             raise UserError(_('Only confirmed or locked Purchase Orders can request payment approval.'))
         approval_type = 'with_bill' if self.has_vendor_bill else 'without_bill'
-        existing = self.payment_approval_request_ids.filtered(
-            lambda r: r.state in ('draft', 'pending_approval') and r.approval_type == approval_type
-        )[:1]
-        if existing:
-            return {
-                'name': _('Payment Approval Request'),
-                'type': 'ir.actions.act_window',
-                'res_model': 'vendor.payment.approval.request',
-                'view_mode': 'form',
-                'res_id': existing.id,
-                'target': 'current',
-            }
         request = self.env['vendor.payment.approval.request'].create({
             'purchase_order_id': self.id,
             'approval_type': approval_type,
@@ -109,130 +97,37 @@ class PurchaseOrder(models.Model):
             'target': 'current',
         }
 
-    def action_create_payment_approval_request_advance(self):
-        """Create or open payment approval request for advance payment (without bill). Visible only when PO has no vendor bill."""
-        self.ensure_one()
-        if self.state not in ('purchase', 'done'):
-            raise UserError(_('Only confirmed or locked Purchase Orders can request advance payment approval.'))
-        if self.has_vendor_bill:
-            raise UserError(
-                _('Request For Advance Payment is not available when a vendor bill exists for this PO. Use "Request For Payment" for bill payment.')
-            )
-        existing = self.payment_approval_request_ids.filtered(
-            lambda r: r.state in ('draft', 'pending_approval') and r.approval_type == 'without_bill'
-        )[:1]
-        if existing:
-            return {
-                'name': _('Payment Approval Request (Advance)'),
-                'type': 'ir.actions.act_window',
-                'res_model': 'vendor.payment.approval.request',
-                'view_mode': 'form',
-                'res_id': existing.id,
-                'target': 'current',
-            }
-        request = self.env['vendor.payment.approval.request'].create({
-            'purchase_order_id': self.id,
-            'approval_type': 'without_bill',
-        })
-        return {
-            'name': _('Payment Approval Request (Advance)'),
-            'type': 'ir.actions.act_window',
-            'res_model': 'vendor.payment.approval.request',
-            'view_mode': 'form',
-            'res_id': request.id,
-            'target': 'current',
-        }
-
-    def action_create_payment_approval_request_bill(self):
-        """Create or open payment approval request for bill payment (with bill). Visible only when PO has vendor bill."""
-        self.ensure_one()
-        if self.state not in ('purchase', 'done'):
-            raise UserError(_('Only confirmed or locked Purchase Orders can request payment approval.'))
-        if not self.has_vendor_bill:
-            raise UserError(
-                _('Request For Payment is only available when a vendor bill exists for this PO. Create and validate a vendor bill first.')
-            )
-        existing = self.payment_approval_request_ids.filtered(
-            lambda r: r.state in ('draft', 'pending_approval') and r.approval_type == 'with_bill'
-        )[:1]
-        if existing:
-            return {
-                'name': _('Payment Approval Request (Bill)'),
-                'type': 'ir.actions.act_window',
-                'res_model': 'vendor.payment.approval.request',
-                'view_mode': 'form',
-                'res_id': existing.id,
-                'target': 'current',
-            }
-        request = self.env['vendor.payment.approval.request'].create({
-            'purchase_order_id': self.id,
-            'approval_type': 'with_bill',
-        })
-        return {
-            'name': _('Payment Approval Request (Bill)'),
-            'type': 'ir.actions.act_window',
-            'res_model': 'vendor.payment.approval.request',
-            'view_mode': 'form',
-            'res_id': request.id,
-            'target': 'current',
-        }
-
-    def action_bulk_request_advance_payment(self):
-        """Bulk: create advance payment approval requests (without_bill) for selected POs that have no vendor bill."""
-        orders = self.filtered(lambda o: o.state in ('purchase', 'done') and not o.has_vendor_bill)
-        if not orders:
-            raise UserError(
-                _('No Purchase Orders selected without a vendor bill, or selected POs are not in a valid state.')
-            )
-        created = self.env['vendor.payment.approval.request']
-        for order in orders:
-            existing = order.payment_approval_request_ids.filtered(
-                lambda r: r.state in ('draft', 'pending_approval') and r.approval_type == 'without_bill'
-            )[:1]
-            if not existing:
-                req = self.env['vendor.payment.approval.request'].create({
-                    'purchase_order_id': order.id,
-                    'approval_type': 'without_bill',
-                })
-                created |= req
-        if not created:
-            raise UserError(_('All selected POs already have an open advance payment approval request.'))
-        return {
-            'name': _('Payment Approval Requests'),
-            'type': 'ir.actions.act_window',
-            'res_model': 'vendor.payment.approval.request',
-            'view_mode': 'list,form',
-            'domain': [('id', 'in', created.ids)],
-            'context': {'default_approval_type': 'without_bill'},
-        }
-
     def action_bulk_request_payment(self):
-        """Bulk: create bill payment approval requests (with_bill) for selected POs that have a vendor bill."""
-        orders = self.filtered(lambda o: o.state in ('purchase', 'done') and o.has_vendor_bill)
+        """Bulk: create payment approval requests for selected confirmed POs.
+        Approval type is set per PO: 'with_bill' if a posted vendor bill exists, else 'without_bill'.
+        """
+        orders = self.filtered(lambda o: o.state in ('purchase', 'done'))
         if not orders:
-            raise UserError(
-                _('No Purchase Orders selected with a vendor bill, or selected POs are not in a valid state.')
-            )
+            raise UserError(_('No confirmed or locked Purchase Orders selected.'))
         created = self.env['vendor.payment.approval.request']
         for order in orders:
-            existing = order.payment_approval_request_ids.filtered(
-                lambda r: r.state in ('draft', 'pending_approval') and r.approval_type == 'with_bill'
-            )[:1]
-            if not existing:
-                req = self.env['vendor.payment.approval.request'].create({
-                    'purchase_order_id': order.id,
-                    'approval_type': 'with_bill',
-                })
-                created |= req
-        if not created:
-            raise UserError(_('All selected POs already have an open bill payment approval request.'))
+            approval_type = 'with_bill' if order.has_vendor_bill else 'without_bill'
+            req = self.env['vendor.payment.approval.request'].create({
+                'purchase_order_id': order.id,
+                'approval_type': approval_type,
+            })
+            created |= req
+        if len(created) == 1:
+            return {
+                'name': _('Payment Approval Request'),
+                'type': 'ir.actions.act_window',
+                'res_model': 'vendor.payment.approval.request',
+                'view_mode': 'form',
+                'res_id': created.id,
+                'target': 'current',
+            }
         return {
             'name': _('Payment Approval Requests'),
             'type': 'ir.actions.act_window',
             'res_model': 'vendor.payment.approval.request',
             'view_mode': 'list,form',
             'domain': [('id', 'in', created.ids)],
-            'context': {'default_approval_type': 'with_bill'},
+            'target': 'current',
         }
 
     def action_view_payment_approval_requests(self):

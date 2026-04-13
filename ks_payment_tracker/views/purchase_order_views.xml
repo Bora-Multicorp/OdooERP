@@ -1,52 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Add "Add for Approval" button on Purchase Order list view -->
-    <record id="ks_purchase_order_tree_payment_tracker" model="ir.ui.view">
-        <field name="name">purchase.order.tree.ks.payment.tracker</field>
-        <field name="model">purchase.order</field>
-        <field name="inherit_id" ref="purchase.purchase_order_tree"/>
-        <field name="arch" type="xml">
-            <xpath expr="//list" position="inside">
-                <header>
-                    <button name="action_add_for_approval"
-                            type="object"
-                            string="Add for Approval"
-                            class="btn-primary"/>
-<!--                            invisible="not state in ('purchase', 'done')"/>-->
-                </header>
-            </xpath>
-        </field>
-    </record>
-
-    <!-- Also add button to KPIs tree (main dashboard list) -->
-    <record id="ks_purchase_order_kpis_tree_payment_tracker" model="ir.ui.view">
-        <field name="name">purchase.order.kpis.tree.ks.payment.tracker</field>
-        <field name="model">purchase.order</field>
-        <field name="inherit_id" ref="purchase.purchase_order_kpis_tree"/>
-        <field name="arch" type="xml">
-            <xpath expr="//header" position="inside">
-                <button name="action_add_for_approval"
-                        type="object"
-                        string="Add for Approval"
-                        class="btn-primary"/>
-<!--                        invisible="not state in ('purchase', 'done')"/>-->
-            </xpath>
-        </field>
-    </record>
-
-    <!-- Also add to purchase_order_view_tree if used -->
-    <record id="ks_purchase_order_view_tree_payment_tracker" model="ir.ui.view">
-        <field name="name">purchase.order.view.tree.ks.payment.tracker</field>
-        <field name="model">purchase.order</field>
-        <field name="inherit_id" ref="purchase.purchase_order_view_tree"/>
-        <field name="arch" type="xml">
-            <xpath expr="//header" position="inside">
-                <button name="action_add_for_approval"
-                        type="object"
-                        string="Add for Approval"
-                        class="btn-primary"/>
-<!--                        invisible="not state in ('purchase', 'done')"/>-->
-            </xpath>
-        </field>
-    </record>
+    <!-- Remove previously defined "Add for Approval" button view inheritances -->
+    <delete model="ir.ui.view" id="ks_purchase_order_tree_payment_tracker"/>
+    <delete model="ir.ui.view" id="ks_purchase_order_kpis_tree_payment_tracker"/>
+    <delete model="ir.ui.view" id="ks_purchase_order_view_tree_payment_tracker"/>
 </odoo>

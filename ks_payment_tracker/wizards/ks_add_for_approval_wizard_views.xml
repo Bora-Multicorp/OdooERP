@@ -1,20 +1,2 @@
 <?xml version="1.0" encoding="utf-8"?>
-<odoo>
-    <record id="view_ks_add_for_approval_wizard_form" model="ir.ui.view">
-        <field name="name">ks.add.for.approval.wizard.form</field>
-        <field name="model">ks.add.for.approval.wizard</field>
-        <field name="arch" type="xml">
-            <form string="Add for Approval">
-                <group>
-                    <field name="purchase_order_ids" widget="many2many_tags" readonly="1"
-                           string="Selected Purchase Orders"/>
-                    <field name="approver_id" options="{'no_create': True}"/>
-                </group>
-                <footer>
-                    <button name="action_confirm" string="Confirm" type="object" class="btn-primary"/>
-                    <button string="Cancel" class="btn-secondary" special="cancel"/>
-                </footer>
-            </form>
-        </field>
-    </record>
-</odoo>
+<odoo/>

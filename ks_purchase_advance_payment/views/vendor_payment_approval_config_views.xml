@@ -8,7 +8,6 @@
                 <field name="sequence" widget="handle"/>
                 <field name="user_id" string="Approver"/>
                 <field name="approver_type" string="Approver Type"/>
-                <field name="approval_type" string="Approval Type"/>
             </list>
         </field>
     </record>
@@ -19,7 +18,6 @@
             <form string="Vendor Payment Approval Settings">
                 <sheet>
                     <group>
-                        <field name="approval_type"/>
                         <field name="sequence"/>
                         <field name="user_id" string="Approver"/>
                         <field name="approver_type"/>
@@ -38,7 +36,7 @@
                 No approvers configured.
             </p>
             <p>
-                Configure approvers for each approval type: <b>Payment approval without bill</b> (for advance payment) and <b>Payment approval with bill</b> (for payment from vendor bill). Each type needs Approver 1 and Approver 2; both must approve. The same user can be used for both types.
+                Configure one Approver 1 and one Approver 2. Both must approve each payment request in sequence.
             </p>
         </field>
     </record>

@@ -10,6 +10,7 @@ from odoo.exceptions import UserError, ValidationError
 class KsPaymentTracker(models.Model):
     _name = 'ks.payment.tracker'
     _description = 'Payment Tracker (LO-002 – list of open POs whose payment is pending)'
+    _inherit = ['mail.thread', 'mail.activity.mixin']
     _order = 'sn, id'
 
     # ---- System generated ----

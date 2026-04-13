@@ -1,0 +1,29 @@
+<?xml version="1.0" ?>
+<odoo>
+    <record model="ir.ui.view" id="sale_order_line_price_incl_view">
+        <field name="name">sale.order.line price incl. GST column</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+            <!-- Relabel existing column to make tax-exclusive explicit -->
+            <xpath
+                expr="//field[@name='order_line']//list//field[@name='price_unit']"
+                position="attributes"
+            >
+                <attribute name="string">Unit Price (Excl. GST)</attribute>
+            </xpath>
+            <!-- Insert tax-inclusive column immediately after price_unit -->
+            <xpath
+                expr="//field[@name='order_line']//list//field[@name='price_unit']"
+                position="after"
+            >
+                <field
+                    name="price_unit_incl"
+                    string="Unit Price (Incl. GST)"
+                    optional="show"
+                    readonly="qty_invoiced &gt; 0"
+                />
+            </xpath>
+        </field>
+    </record>
+</odoo>

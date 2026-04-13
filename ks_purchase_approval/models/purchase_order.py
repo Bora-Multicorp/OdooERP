@@ -1432,6 +1432,13 @@ class PurchaseOrder(models.Model):
             ),
         )
 
+        # Cancel any open payment approval requests and notify their pending approvers
+        pending_requests = self.payment_approval_request_ids.filtered(
+            lambda r: r.state in ('draft', 'pending_approval')
+        )
+        for req in pending_requests:
+            req._cancel_for_po_edit(self.name)
+
         return True
 
     def ks_action_approve_edit(self):
@@ -1497,7 +1504,7 @@ class PurchaseOrder(models.Model):
                 'state': 'purchase',
                 'ks_edit_approved': True,
             })
-            
+
             if is_two_way:
                 pm1_name = self.ks_edit_pm1_id.name if self.ks_edit_pm1_id else ''
                 pm2_name = self.ks_edit_pm2_id.name if self.ks_edit_pm2_id else ''
@@ -1517,7 +1524,7 @@ class PurchaseOrder(models.Model):
                     message_type='notification',
                     subtype_xmlid='mail.mt_comment',
                 )
-        
+
         return True
 
     def ks_action_reject_edit(self):

@@ -54,13 +54,14 @@ class VendorPaymentApprovalSubmitWizard(models.TransientModel):
         Config = self.env['vendor.payment.approval.config']
         for rec in self:
             if rec.request_id:
-                # All users configured for this approval type (regardless of approver_type)
-                all_users = Config.search([
+                rec.available_approver_1_ids = Config.search([
                     ('active', '=', True),
-                    ('approval_type', '=', rec.request_id.approval_type),
+                    ('approver_type', '=', 'approver1'),
                 ]).mapped('user_id')
-                rec.available_approver_1_ids = all_users
-                rec.available_approver_2_ids = all_users
+                rec.available_approver_2_ids = Config.search([
+                    ('active', '=', True),
+                    ('approver_type', '=', 'approver2'),
+                ]).mapped('user_id')
             else:
                 rec.available_approver_1_ids = False
                 rec.available_approver_2_ids = False

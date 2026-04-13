@@ -16,7 +16,7 @@
     """,
     'author': 'Ksolves',
     'website': '',
-    'depends': ['purchase', 'ks_purchase_advance_payment'],
+    'depends': ['purchase', 'ks_purchase_advance_payment', 'mail'],
     'data': [
         'security/ir.model.access.csv',
         'views/ks_payment_tracker_views.xml',

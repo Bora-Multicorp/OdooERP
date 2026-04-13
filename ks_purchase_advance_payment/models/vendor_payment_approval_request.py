@@ -34,6 +34,7 @@ class VendorPaymentApprovalRequest(models.Model):
             ('pending_approval', 'Pending Approval'),
             ('approved', 'Approved'),
             ('rejected', 'Rejected'),
+            ('cancelled', 'Cancelled'),
         ],
         string='Status',
         default='draft',
@@ -102,57 +103,53 @@ class VendorPaymentApprovalRequest(models.Model):
         readonly=True,
         ondelete='set null',
     )
+    rest_after_payment = fields.Boolean(
+        string='Rest After Payment',
+        default=False,
+        help='If checked, supporting documents are not required for approval.',
+    )
+    document_ids = fields.One2many(
+        'vendor.payment.approval.document',
+        'request_id',
+        string='Documents',
+        copy=False,
+    )
 
     @api.model_create_multi
     def create(self, vals_list):
-        """Set approval_type from PO when not provided; prevent duplicate draft/pending per (PO, approval_type)."""
+        """Set approval_type from PO when not provided."""
         for vals in vals_list:
             po_id = vals.get('purchase_order_id')
-            approval_type = vals.get('approval_type')
-            if po_id:
+            if po_id and not vals.get('approval_type'):
                 po = self.env['purchase.order'].browse(po_id)
                 if po.exists():
-                    if not approval_type:
-                        vals['approval_type'] = 'with_bill' if po.has_vendor_bill else 'without_bill'
-                    approval_type = vals.get('approval_type')
-                existing = self.search([
-                    ('purchase_order_id', '=', po_id),
-                    ('state', 'in', ('draft', 'pending_approval', 'approved')),
-                    ('approval_type', '=', approval_type),
-                ], limit=1)
-                if existing:
-                    raise ValidationError(
-                        _(
-                            'A payment approval request of this type already exists for Purchase Order %s (status: %s). '
-                            'Each PO can only have one request per approval type.'
-                        )
-                        % (existing.purchase_order_id.name, dict(existing._fields['state'].selection).get(existing.state, existing.state))
-                    )
+                    vals['approval_type'] = 'with_bill' if po.has_vendor_bill else 'without_bill'
         return super().create(vals_list)
 
-    @api.constrains('purchase_order_id', 'approval_type', 'state')
-    def _check_one_active_request_per_po_per_type(self):
-        """Only one non-rejected request per (purchase order, approval_type)."""
+    @api.constrains('amount_for_approval', 'purchase_order_id', 'state')
+    def _check_total_amount_within_po_total(self):
+        """Total amount_for_approval across all non-rejected requests for a PO must be less than the PO total."""
         for rec in self:
             if rec.state == 'rejected':
                 continue
-            other = self.search([
-                ('purchase_order_id', '=', rec.purchase_order_id.id),
-                ('approval_type', '=', rec.approval_type),
+            po = rec.purchase_order_id
+            if not po or not po.amount_total:
+                continue
+            all_active = self.search([
+                ('purchase_order_id', '=', po.id),
                 ('state', '!=', 'rejected'),
-                ('id', '!=', rec.id),
-            ], limit=1)
-            if other:
+            ])
+            total_requested = sum(all_active.mapped('amount_for_approval'))
+            if total_requested >= po.amount_total:
                 raise ValidationError(
                     _(
-                        'Only one payment approval request of type "%s" can exist per Purchase Order. '
-                        'A request already exists for %s (status: %s). '
-                        'If it was rejected, use "Reset to Draft" to resubmit.'
-                    )
-                    % (
-                        dict(rec._fields['approval_type'].selection).get(rec.approval_type, rec.approval_type),
-                        rec.purchase_order_id.name,
-                        dict(other._fields['state'].selection).get(other.state, other.state),
+                        'The total amount of payment approval requests for Purchase Order %s '
+                        '(%s %.2f) equals or exceeds the PO total (%s %.2f). '
+                        'Please reduce the requested amount.'
+                    ) % (
+                        po.name,
+                        po.currency_id.symbol, total_requested,
+                        po.currency_id.symbol, po.amount_total,
                     )
                 )
 
@@ -188,27 +185,22 @@ class VendorPaymentApprovalRequest(models.Model):
                 )
             configs = self.env['vendor.payment.approval.config'].search([
                 ('active', '=', True),
-                ('approval_type', '=', rec.approval_type),
             ], order='sequence, approver_type')
             if not configs:
                 raise UserError(
                     _(
-                        'No approvers configured for "%s". '
-                        'Please set up Vendor Payment Approval Settings (Purchase → Configuration) for this approval type.'
+                        'No approvers configured. '
+                        'Please set up Vendor Payment Approval Settings (Purchase → Configuration).'
                     )
-                    % dict(rec._fields['approval_type'].selection).get(rec.approval_type, rec.approval_type)
                 )
             approver_types = configs.mapped('approver_type')
             if set(approver_types) != {'approver1', 'approver2'}:
                 raise UserError(
                     _(
-                        'For "%s" both Approver 1 and Approver 2 must be configured in Vendor Payment Approval Settings. '
+                        'Both Approver 1 and Approver 2 must be configured in Vendor Payment Approval Settings. '
                         'Currently missing: %s'
                     )
-                    % (
-                        dict(rec._fields['approval_type'].selection).get(rec.approval_type, rec.approval_type),
-                        ', '.join({'approver1', 'approver2'} - set(approver_types)),
-                    )
+                    % ', '.join({'approver1', 'approver2'} - set(approver_types))
                 )
             lines = [(5, 0, 0)]
             for cfg in configs:
@@ -245,6 +237,18 @@ class VendorPaymentApprovalRequest(models.Model):
                     _('Only %s is allowed to approve this request.')
                     % rec.assigned_approver_id.name
                 )
+            if not rec.rest_after_payment:
+                required_types = {'vendor_invoice', 'eway_bill', 'lr_docket', 'imei_sheet'}
+                attached = {d.document_type for d in rec.document_ids if d.document_attachment}
+                missing = required_types - attached
+                if missing:
+                    type_labels = dict(
+                        self.env['vendor.payment.approval.document']._fields['document_type'].selection
+                    )
+                    raise UserError(
+                        _('The following documents with attachments are required before approving:\n%s')
+                        % '\n'.join('• ' + type_labels.get(t, t) for t in sorted(missing))
+                    )
         return {
             'name': _('Approve Payment Request'),
             'type': 'ir.actions.act_window',
@@ -438,6 +442,34 @@ class VendorPaymentApprovalRequest(models.Model):
             'res_id': self.vendor_bill_id.id,
         }
 
+    def _cancel_for_po_edit(self, po_name):
+        """Cancel this request because the linked PO has been approved for editing.
+        Sends an activity to each pending approver so they are aware of the cancellation.
+        """
+        self.ensure_one()
+        pending_approvers = self.approval_line_ids.filtered(
+            lambda l: l.state == 'pending'
+        ).mapped('user_id')
+        for user in pending_approvers:
+            self.activity_schedule(
+                'mail.mail_activity_data_todo',
+                user_id=user.id,
+                summary=_('Payment Request Cancelled: %s') % po_name,
+                note=_(
+                    'The payment approval request for Purchase Order %s has been cancelled '
+                    'because the PO has been approved for editing.'
+                ) % po_name,
+            )
+        self.write({'state': 'cancelled'})
+        self.message_post(
+            body=_(
+                'Payment approval request cancelled: Purchase Order <b>%s</b> '
+                'has been approved for editing.'
+            ) % po_name,
+            message_type='notification',
+            subtype_xmlid='mail.mt_note',
+        )
+
     def action_reset_to_draft(self):
         for rec in self:
             if rec.state not in ('pending_approval', 'rejected'):
@@ -485,3 +517,30 @@ class VendorPaymentApprovalLine(models.Model):
     )
     remark = fields.Text(string='Reason')
     action_date = fields.Datetime(string='Date')
+
+
+class VendorPaymentApprovalDocument(models.Model):
+    _name = 'vendor.payment.approval.document'
+    _description = 'Payment Approval Request Document'
+    _order = 'document_type, id'
+
+    request_id = fields.Many2one(
+        'vendor.payment.approval.request',
+        string='Payment Request',
+        required=True,
+        ondelete='cascade',
+    )
+    document_type = fields.Selection(
+        [
+            ('vendor_invoice', 'Vendor Invoice'),
+            ('eway_bill', 'E-Way Bill'),
+            ('lr_docket', 'LR / Docket'),
+            ('imei_sheet', 'IMEI Sheet'),
+            ('other', 'Other'),
+        ],
+        string='Document Type',
+        required=True,
+    )
+    document_number = fields.Char(string='Document Number', required=True)
+    document_attachment = fields.Binary(string='Attachment', attachment=True, required=True)
+    document_filename = fields.Char(string='Filename')

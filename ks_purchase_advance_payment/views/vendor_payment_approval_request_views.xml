@@ -8,11 +8,11 @@
                 <header>
                     <button name="action_submit_and_open_wizard" string="Submit for Approval" type="object" class="btn-primary" invisible="state != 'draft'"/>
                     <button name="action_approve_wizard" string="Approve" type="object" class="btn-primary"
-                            invisible="state != 'pending_approval' or (assigned_approver_id != False and assigned_approver_id != uid)"/>
+                            invisible="state != 'pending_approval'"/>
                     <button name="action_reject_wizard" string="Reject" type="object" class="btn-secondary"
-                            invisible="state != 'pending_approval' or (assigned_approver_id != False and assigned_approver_id != uid)"/>
+                            invisible="state != 'pending_approval'"/>
                     <button name="action_reset_to_draft" string="Reset to Draft" type="object" invisible="state not in ('pending_approval', 'rejected')"/>
-                    <field name="state" widget="statusbar" statusbar_visible="draft,pending_approval,approved"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,pending_approval,approved,cancelled"/>
                 </header>
                 <sheet>
                     <div class="oe_button_box" name="button_box">
@@ -32,7 +32,7 @@
                     <group>
                         <group string="Request Details">
                             <field name="approval_type" readonly="state != 'draft'" options="{'no_create': True}"/>
-                            <field name="assigned_approver_id" readonly="state != 'draft'" options="{'no_create': True}"/>
+<!--                            <field name="assigned_approver_id" readonly="state != 'draft'" options="{'no_create': True}"/>-->
                             <field name="amount_for_approval" widget="monetary" readonly="state != 'draft'"/>
                             <field name="request_user_id"/>
                             <field name="request_date"/>
@@ -54,6 +54,9 @@
                         <field name="reject_user_id" readonly="1"/>
                         <field name="reject_date" readonly="1"/>
                     </group>
+                    <group>
+                        <field name="rest_after_payment"/>
+                    </group>
                     <notebook invisible="state == 'draft'">
                         <page string="Approval Lines" name="approval_lines">
                             <field name="approval_line_ids" readonly="1" nolabel="1">
@@ -67,6 +70,16 @@
                                     <field name="state" widget="badge"/>
                                     <field name="action_date"/>
                                     <field name="remark"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Documents" name="documents">
+                            <field name="document_ids" nolabel="1">
+                                <list editable="bottom">
+                                    <field name="document_type" string="Document Type"/>
+                                    <field name="document_number" string="Document Number"/>
+                                    <field name="document_attachment" string="Attachment" widget="binary" filename="document_filename"/>
+                                    <field name="document_filename" column_invisible="1"/>
                                 </list>
                             </field>
                         </page>
@@ -84,7 +97,8 @@
             <list string="Payment Approval Request"
                   decoration-success="state == 'approved'"
                   decoration-danger="state == 'rejected'"
-                  decoration-warning="state == 'pending_approval'">
+                  decoration-warning="state == 'pending_approval'"
+                  decoration-muted="state == 'cancelled'">
                 <field name="purchase_order_id"/>
                 <field name="partner_id" string="Vendor" optional="show"/>
                 <field name="approval_type"/>
