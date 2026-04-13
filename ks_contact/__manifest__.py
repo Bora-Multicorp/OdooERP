@@ -16,6 +16,7 @@
         'data/kyc_expiry_request_cron.xml',
         'data/kyc_expired_action_required_mail_template.xml',
         'data/vendor_kyc_data.xml',
+        'data/overseas_kyc_data.xml',
         'wizard/vendor_kyc_views.xml',
         'wizard/approve_request_views.xml',
         'wizard/reject_request_views.xml',

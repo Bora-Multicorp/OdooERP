@@ -81,12 +81,29 @@ SurveyFormWidget.include({
     _validateForm: function ($form, formData) {
         const errors = this._super.apply(this, arguments);
 
-        // The sentinel hidden input (value="existing") already satisfies
-        // the `!$input.val()` check in the original loop, so errors should
-        // never be added for those questions. This is a safety net.
+        // ── Top-level que_sh_file: sentinel (value="existing") satisfies the
+        //    validation loop directly, but as a safety net also remove errors
+        //    for questions whose file input carries data-has-existing.
         $form.find('.sh_file_input[data-has-existing]').each(function () {
             const questionId = String($(this).closest('.js_question-wrapper').attr('id'));
             if (questionId && errors[questionId]) {
+                delete errors[questionId];
+            }
+        });
+
+        // ── Matrix que_sh_file cells: if ANY cell in the matrix has a
+        //    pre-filled file sentinel (.ks_matrix_has_existing_file), at
+        //    least one row already has file data — don't block submission.
+        //    This handles both DIR_DETAILS (all-rows scan) and bank/other
+        //    matrices (first-row scan) where pre-filled rows must not be
+        //    re-validated as empty.
+        $form.find('table.o_survey_question_matrix[data-matrix-subtype="sh_custom_matrix"]').each(function () {
+            const $table = $(this);
+            const questionId = String($table.closest('.js_question-wrapper').attr('id'));
+            if (!questionId || !errors[questionId]) {
+                return;
+            }
+            if ($table.find('.ks_matrix_has_existing_file').length) {
                 delete errors[questionId];
             }
         });

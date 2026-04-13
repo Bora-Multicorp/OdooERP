@@ -80,6 +80,30 @@
                        t-att-data-validation-length-max="question.validation_length_max if question.validation_required else False"/>
             </div>
         </template>
+        <!-- Override survey finished page: show KYC error if record creation failed -->
+        <template id="survey_fill_form_done" inherit_id="survey.survey_fill_form_done" name="KYC: show error on finish page">
+            <xpath expr="//div[hasclass('o_survey_finished')]" position="inside">
+                <t t-if="answer.kyc_error_message">
+                    <div class="alert alert-danger mt-4 mb-2" role="alert" style="border-left: 5px solid #dc3545;">
+                        <h5 class="alert-heading">
+                            <i class="fa fa-exclamation-triangle me-2"/>
+                            KYC Registration Incomplete
+                        </h5>
+                        <p class="mb-0" t-esc="answer.kyc_error_message"/>
+                    </div>
+                </t>
+                <t t-else="">
+                    <div class="alert alert-success mt-4 mb-2" role="alert" style="border-left: 5px solid #28a745;">
+                        <h5 class="alert-heading">
+                            <i class="fa fa-check-circle me-2"/>
+                            KYC Submitted Successfully
+                        </h5>
+                        <p class="mb-0">Your KYC details have been received and are pending review by our team.</p>
+                    </div>
+                </t>
+            </xpath>
+        </template>
+
         <!-- Override tmpl_sh_file: attachment-widget style cards + mandatory fix -->
         <template id="tmpl_sh_file" inherit_id="sh_survey_extra_fields.tmpl_sh_file" name="KS File: integrated prefill">
             <xpath expr="//input[@type='file']" position="replace">
@@ -144,6 +168,37 @@
                            t-att-data-question-code="question.question_code"
                            t-att-data-cond-req-questions="question.cond_required_answer_ids.ids"
                            t-att-data-question-type="question.question_type"/>
+                </t>
+            </xpath>
+        </template>
+        <!--
+            Override matrix cell: inject pre-filled file chips + sentinel
+            immediately before the matrix file <input type="file">.
+            Uses a robust XPath on the unique combination of attributes that
+            only the matrix file input has (type=file + t-att-data-row-id +
+            t-att-data-col-id + class sh_file_input inside sh_custom_matrix_template).
+        -->
+        <template id="sh_custom_matrix_file_cell"
+                  inherit_id="sh_survey_matrix_adv.sh_custom_matrix_template"
+                  name="KS Matrix: prefill file cells">
+            <xpath expr="//input[@type='file'][contains(@class,'sh_file_input')][@t-att-data-row-id][@t-att-data-col-id]" position="before">
+                <!-- Only show when filling (not review) and cell has pre-filled data -->
+                <t t-set="ks_cell_existing" t-value="answer.filtered(lambda a: a.value_ans_sh_file_fname) if answer else []"/>
+                <t t-if="ks_cell_existing and not review">
+                    <div class="ks_matrix_existing_files mb-1 d-flex flex-wrap gap-1">
+                        <t t-foreach="ks_cell_existing" t-as="ans">
+                            <span class="badge bg-secondary" style="font-size:11px;">
+                                <span class="fa fa-file-o me-1"/>
+                                <t t-esc="ans.value_ans_sh_file_fname"/>
+                            </span>
+                        </t>
+                    </div>
+                    <!-- Hidden sentinel consumed by JS _validateForm override -->
+                    <input type="hidden"
+                           class="ks_matrix_has_existing_file"
+                           t-att-data-row-id="row_label.id"
+                           t-att-data-col-id="col_label.id"
+                           value="1"/>
                 </t>
             </xpath>
         </template>

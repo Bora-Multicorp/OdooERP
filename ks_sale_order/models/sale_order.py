@@ -242,9 +242,45 @@ class SaleOrder(models.Model):
         # Raise error to block confirmation
         raise UserError(error_msg)
 
+    @api.onchange('partner_id')
+    def _onchange_partner_id_overseas_kyc(self):
+        """
+        Non-blocking warning shown immediately when a salesperson selects an
+        overseas customer whose KYC is not yet approved.
+
+        Vendor partners are skipped — their KYC blocking is handled separately
+        and must remain unchanged.
+        """
+        if not self.partner_id:
+            return
+        # Skip partners that are vendors — existing vendor KYC logic handles them
+        if self.partner_id.supplier_rank > 0 and not self.partner_id.customer_rank:
+            return
+        if self.partner_id._is_overseas_kyc_incomplete():
+            return {
+                'warning': {
+                    'title': _('KYC Incomplete — Overseas Customer'),
+                    'message': _(
+                        'The customer "%s" is marked as an Overseas Customer but '
+                        'their KYC verification has not been approved yet.\n\n'
+                        'You may proceed with this order, but please ensure KYC '
+                        'is completed before dispatching goods or processing payment.'
+                    ) % self.partner_id.name,
+                    'type': 'dialog',
+                }
+            }
+
+    def _ks_get_overseas_kyc_incomplete_partners(self):
+        """
+        Return a recordset of orders (from self) whose partner has incomplete
+        overseas KYC. Used by action_confirm to decide whether to surface a
+        post-confirmation notification.
+        """
+        return self.filtered(lambda o: o.partner_id._is_overseas_kyc_incomplete())
+
     def action_confirm(self):
         """Override action_confirm to check stock availability and trigger alerts.
-        
+
         Stock validation is performed AFTER confirmation:
         - First confirms the order (state changes to 'sale')
         - Then checks all order lines for insufficient stock
@@ -252,18 +288,47 @@ class SaleOrder(models.Model):
         - Shows alert message if any products have insufficient stock
         - Does NOT block confirmation (allows order to be confirmed)
         - Emails are ONLY sent when order is actually confirmed (state = 'sale')
+
+        Additionally, a non-blocking KYC warning is shown after confirmation when
+        the customer is an overseas partner with incomplete KYC. Vendor KYC logic
+        is untouched.
         """
         # First, confirm the order (this changes state to 'sale')
         result = super().action_confirm()
-        
+
         # After confirmation, check stock availability and send notifications
         # Only check orders that were just confirmed (state = 'sale')
         orders_to_check = self.filtered(lambda o: o.state == 'sale')
-        
+
         # Check stock availability for all lines and send notifications
         for order in orders_to_check:
             order._ks_check_and_notify_stock_shortage_on_confirm()
-        
+
+        # Non-blocking KYC warning for overseas customers with incomplete KYC.
+        # The order is already confirmed at this point — this is informational only.
+        incomplete_kyc_orders = self._ks_get_overseas_kyc_incomplete_partners()
+        if incomplete_kyc_orders:
+            partner_names = ', '.join(
+                incomplete_kyc_orders.mapped('partner_id.name')
+            )
+            order_refs = ', '.join(incomplete_kyc_orders.mapped('name'))
+            return {
+                'type': 'ir.actions.client',
+                'tag': 'display_notification',
+                'params': {
+                    'title': _('KYC Warning — Overseas Customer(s)'),
+                    'message': _(
+                        'Order(s) %s confirmed successfully.\n'
+                        'Note: Customer(s) %s are marked as Overseas but KYC '
+                        'approval is pending. Please complete KYC before '
+                        'dispatching goods or processing payment.'
+                    ) % (order_refs, partner_names),
+                    'type': 'warning',
+                    'sticky': True,
+                    'next': result,
+                },
+            }
+
         return result
     
     def _ks_check_and_notify_stock_shortage_on_confirm(self):

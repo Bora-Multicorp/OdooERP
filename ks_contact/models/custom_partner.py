@@ -286,6 +286,13 @@ class CustomContact(models.Model):
         help='Vendor approval workflow. Submit for Approval moves Draft → To Approve.',
     )
     is_customer = fields.Boolean(string="Is Customer?", tracking=True)
+    is_overseas = fields.Boolean(
+        string="Overseas Customer",
+        default=False,
+        tracking=True,
+        help="Enable to apply KYC compliance checks for this overseas customer. "
+             "Incomplete KYC will show a warning (non-blocking) on Sales Orders.",
+    )
     is_kyc = fields.Boolean(string="Is KYC?", tracking=True)
     is_approved = fields.Boolean(string="Is Approved?", tracking=True)
     approval_date = fields.Datetime(string="Approval Date", tracking=True)
@@ -331,6 +338,18 @@ class CustomContact(models.Model):
         base = (self.env['ir.config_parameter'].sudo().get_param('web.base.url') or '').rstrip('/')
         for rec in self:
             rec.kyc_record_url = f"{base}/web#id={rec.id}&model=res.partner&view_type=form" if base else ''
+
+    def _is_overseas_kyc_incomplete(self):
+        """
+        Returns True if this partner is overseas (vendor, customer, or both)
+        and their KYC is not yet approved.
+        """
+        self.ensure_one()
+        if not self.is_overseas:
+            return False
+        if self.customer_rank <= 0 and self.supplier_rank <= 0:
+            return False
+        return not self.is_approved
 
     def _get_rekyc_survey_url(self):
         """
@@ -676,6 +695,300 @@ class CustomContact(models.Model):
                 if addr.business_state_id:
                     _matrix_m2o(q_addr, col_state, row,
                                 addr.business_state_id.id, addr.business_state_id.name)
+                if addr.business_country_id:
+                    _matrix_m2o(q_addr, col_country, row,
+                                addr.business_country_id.id, addr.business_country_id.name)
+
+        return '%s%s' % (base_url, user_input.get_start_url())
+
+    def _get_overseas_rekyc_survey_url(self):
+        """
+        Create (or reuse) a survey.user_input for this overseas partner pre-filled
+        with ALL existing confirmed KYC data (simple fields + bank/director/address
+        matrices) from the overseas KYC survey, and return the unique start URL.
+        """
+        self.ensure_one()
+        survey = self.env.ref('ks_contact.overseas_kyc_form_survey', raise_if_not_found=False)
+        if not survey:
+            return ''
+        base_url = (self.env['ir.config_parameter'].sudo().get_param('web.base.url') or '').rstrip('/')
+
+        user_input = self.env['survey.user_input'].sudo().search([
+            ('survey_id', '=', survey.id),
+            ('email', '=', self.email),
+            ('state', '=', 'in_progress'),
+        ], limit=1)
+        if not user_input:
+            user_input = self.env['survey.user_input'].sudo().create({
+                'survey_id': survey.id,
+                'email': self.email or '',
+                'state': 'in_progress',
+                'start_datetime': fields.Datetime.now(),
+            })
+
+        # Remove stale skipped=True lines from previous attempts
+        self.env['survey.user_input.line'].sudo().search([
+            ('user_input_id', '=', user_input.id),
+            ('skipped', '=', True),
+        ]).unlink()
+
+        kyc = self.kyc_details.filtered(lambda k: k.state == 'confirmed')[:1]
+        if not kyc:
+            return '%s%s' % (base_url, user_input.get_start_url())
+
+        Line = self.env['survey.user_input.line'].sudo()
+
+        def _q(xml_id):
+            return self.env.ref(xml_id, raise_if_not_found=False)
+
+        def _upsert(q, vals):
+            if not q:
+                return
+            line = Line.search([
+                ('user_input_id', '=', user_input.id),
+                ('question_id', '=', q.id),
+            ], limit=1)
+            if line:
+                line.write(vals)
+            else:
+                Line.create({'user_input_id': user_input.id, 'question_id': q.id,
+                             'survey_id': survey.id, **vals})
+
+        def _char(xml_id, value):
+            if not value:
+                return
+            _upsert(_q(xml_id), {'answer_type': 'char_box', 'value_char_box': value, 'skipped': False})
+
+        def _choice(xml_id, value):
+            if not value:
+                return
+            q = _q(xml_id)
+            if not q:
+                return
+            suggested = q.suggested_answer_ids.filtered(lambda a: a.value == value)[:1]
+            if suggested:
+                _upsert(q, {'answer_type': 'suggestion', 'suggested_answer_id': suggested.id, 'skipped': False})
+
+        def _matrix_char(q, col_answer, row_answer, value):
+            if not value or not q or not col_answer or not row_answer:
+                return
+            line = Line.search([
+                ('user_input_id', '=', user_input.id),
+                ('question_id', '=', q.id),
+                ('suggested_answer_id', '=', col_answer.id),
+                ('matrix_row_id', '=', row_answer.id),
+            ], limit=1)
+            vals = {
+                'answer_type': 'char_box',
+                'value_char_box': value,
+                'value_text_box': value,
+                'skipped': False,
+                'suggested_answer_id': col_answer.id,
+                'matrix_row_id': row_answer.id,
+            }
+            if line:
+                line.write(vals)
+            else:
+                Line.create({'user_input_id': user_input.id, 'question_id': q.id,
+                             'survey_id': survey.id, **vals})
+
+        def _matrix_m2o(q, col_answer, row_answer, record_id, record_name):
+            if not record_id or not q or not col_answer or not row_answer:
+                return
+            line = Line.search([
+                ('user_input_id', '=', user_input.id),
+                ('question_id', '=', q.id),
+                ('suggested_answer_id', '=', col_answer.id),
+                ('matrix_row_id', '=', row_answer.id),
+            ], limit=1)
+            vals = {'answer_type': 'ans_sh_many2one', 'value_ans_sh_many2one': str(record_name),
+                    'skipped': False, 'suggested_answer_id': col_answer.id, 'matrix_row_id': row_answer.id}
+            if line:
+                line.write(vals)
+            else:
+                Line.create({'user_input_id': user_input.id, 'question_id': q.id,
+                             'survey_id': survey.id, **vals})
+
+        def _matrix_file(q, col_answer, row_answer, attachment):
+            if not attachment or not q or not col_answer or not row_answer:
+                return
+            att_sudo = attachment.sudo() if hasattr(attachment, 'sudo') else attachment
+            try:
+                data = att_sudo.datas
+                fname = att_sudo.name
+            except Exception:
+                return
+            if not data:
+                return
+            Line.search([
+                ('user_input_id', '=', user_input.id),
+                ('question_id', '=', q.id),
+                ('suggested_answer_id', '=', col_answer.id),
+                ('matrix_row_id', '=', row_answer.id),
+            ]).unlink()
+            Line.create({
+                'user_input_id': user_input.id,
+                'question_id': q.id,
+                'survey_id': survey.id,
+                'answer_type': 'ans_sh_file',
+                'value_ans_sh_file': data,
+                'value_ans_sh_file_fname': fname,
+                'skipped': False,
+                'suggested_answer_id': col_answer.id,
+                'matrix_row_id': row_answer.id,
+            })
+
+        def _files_from_m2m(xml_id, attachments):
+            if not attachments:
+                return
+            q = _q(xml_id)
+            if not q:
+                return
+            Line.search([('user_input_id', '=', user_input.id), ('question_id', '=', q.id)]).unlink()
+            for att in attachments.sudo():
+                try:
+                    data = att.datas
+                    fname = att.name
+                except Exception:
+                    continue
+                if not data:
+                    continue
+                Line.create({
+                    'user_input_id': user_input.id,
+                    'question_id': q.id,
+                    'survey_id': survey.id,
+                    'answer_type': 'ans_sh_file',
+                    'value_ans_sh_file': data,
+                    'value_ans_sh_file_fname': fname,
+                    'skipped': False,
+                })
+
+        def _date(xml_id, value):
+            """Pre-fill a standard date question with an existing date value."""
+            if not value:
+                return
+            _upsert(_q(xml_id), {'answer_type': 'date', 'value_date': value, 'skipped': False})
+
+        def _matrix_date(q, col_answer, row_answer, value):
+            """Pre-fill a matrix date cell."""
+            if not value or not q or not col_answer or not row_answer:
+                return
+            line = Line.search([
+                ('user_input_id', '=', user_input.id),
+                ('question_id', '=', q.id),
+                ('suggested_answer_id', '=', col_answer.id),
+                ('matrix_row_id', '=', row_answer.id),
+            ], limit=1)
+            vals = {
+                'answer_type': 'date',
+                'value_date': value,
+                'skipped': False,
+                'suggested_answer_id': col_answer.id,
+                'matrix_row_id': row_answer.id,
+            }
+            if line:
+                line.write(vals)
+            else:
+                Line.create({'user_input_id': user_input.id, 'question_id': q.id,
+                             'survey_id': survey.id, **vals})
+
+        # ── Simple char fields ──────────────────────────────────────────────
+        _char('ks_contact.overseas_email_kyc_survey',          kyc.email)
+        _char('ks_contact.overseas_poc_kyc_survey',            kyc.point_of_contact)
+        _char('ks_contact.overseas_business_name_kyc_survey',  kyc.business_legal_name)
+        _char('ks_contact.overseas_trade_name_kyc_survey',     kyc.business_trade_name)
+
+        # ── Selection / choice fields ───────────────────────────────────────
+        _choice('ks_contact.overseas_same_trade_name_kyc_survey',  'Yes' if kyc.is_same_trade_name else '')
+        _choice('ks_contact.overseas_const_business_kyc_survey',   kyc.const_business)
+        _choice('ks_contact.overseas_no_directors_kyc_survey',     kyc.no_partner_director)
+
+        # ── POC (que_sh_many2one) — no static suggested_answer_ids; store as ans_sh_many2one ───
+        if kyc.poc_user:
+            q_poc = _q('ks_contact.overseas_company_poc_kyc_survey')
+            if q_poc:
+                _upsert(q_poc, {'answer_type': 'ans_sh_many2one',
+                                'value_ans_sh_many2one': kyc.poc_user.name,
+                                'skipped': False})
+
+        # ── Document files ──────────────────────────────────────────────────
+        _files_from_m2m('ks_contact.overseas_company_reg_doc_kyc_survey',
+                        kyc.company_reg_document)
+        _date('ks_contact.overseas_company_reg_doc_expiry_survey', kyc.company_reg_doc_expiry)
+        _files_from_m2m('ks_contact.overseas_auth_person_id_doc_kyc_survey',
+                        kyc.authorized_person_id_document)
+        _date('ks_contact.overseas_auth_person_id_expiry_survey', kyc.authorized_person_id_expiry)
+
+        # ── BANK DETAILS matrix ─────────────────────────────────────────────
+        q_bank = _q('ks_contact.overseas_matrix_bank_kyc_survey')
+        if q_bank and kyc.bank_detail:
+            col_bank_name  = self.env.ref('ks_contact.overseas_bank_col_name',    False)
+            col_account_no = self.env.ref('ks_contact.overseas_bank_col_account', False)
+            col_swift      = self.env.ref('ks_contact.overseas_bank_col_swift',   False)
+            col_cheque     = self.env.ref('ks_contact.overseas_bank_col_cheque',  False)
+
+            bank_rows = q_bank.matrix_row_ids.sorted('sequence')
+            for idx, bank in enumerate(kyc.bank_detail):
+                if idx >= len(bank_rows):
+                    break
+                row = bank_rows[idx]
+                _matrix_char(q_bank, col_bank_name,  row, bank.bank_name)
+                _matrix_char(q_bank, col_account_no, row, bank.account_no)
+                _matrix_char(q_bank, col_swift,      row, bank.ifsc_code)
+                cheque_att = bank.bank_cheque_attachments[:1]
+                if cheque_att:
+                    _matrix_file(q_bank, col_cheque, row, cheque_att)
+
+        # ── DIRECTOR DETAILS matrix ─────────────────────────────────────────
+        q_dir = _q('ks_contact.overseas_matrix_director_kyc_survey')
+        if q_dir and kyc.directors_detail:
+            col_desig      = self.env.ref('ks_contact.overseas_dir_col_designation',  False)
+            col_name       = self.env.ref('ks_contact.overseas_dir_col_name',         False)
+            col_contact    = self.env.ref('ks_contact.overseas_dir_col_contact',      False)
+            col_email      = self.env.ref('ks_contact.overseas_dir_col_email',        False)
+            col_govt_id    = self.env.ref('ks_contact.overseas_dir_col_govt_id',      False)
+            col_id_expiry  = self.env.ref('ks_contact.overseas_dir_col_govt_id_expiry', False)
+
+            dir_rows = q_dir.matrix_row_ids.sorted('sequence')
+            for idx, director in enumerate(kyc.directors_detail):
+                if idx >= len(dir_rows):
+                    break
+                row = dir_rows[idx]
+                _matrix_char(q_dir, col_desig,   row, director.designation)
+                _matrix_char(q_dir, col_name,    row, director.name)
+                _matrix_char(q_dir, col_contact, row, director.contact_no)
+                _matrix_char(q_dir, col_email,   row, director.email)
+                govt_id_att = director.govt_id_attachments[:1]
+                if govt_id_att:
+                    _matrix_file(q_dir, col_govt_id, row, govt_id_att)
+                if director.govt_id_expiry:
+                    _matrix_date(q_dir, col_id_expiry, row, director.govt_id_expiry)
+
+        # ── ADDRESS DETAILS matrix ──────────────────────────────────────────
+        # State is free-text for overseas; Country is many2one
+        q_addr = _q('ks_contact.overseas_matrix_address_kyc_survey')
+        if q_addr and kyc.address_detail:
+            col_addr    = self.env.ref('ks_contact.overseas_addr_col_street',  False)
+            col_city    = self.env.ref('ks_contact.overseas_addr_col_city',    False)
+            col_pin     = self.env.ref('ks_contact.overseas_addr_col_pincode', False)
+            col_phone   = self.env.ref('ks_contact.overseas_addr_col_phone',   False)
+            col_email   = self.env.ref('ks_contact.overseas_addr_col_email',   False)
+            col_state   = self.env.ref('ks_contact.overseas_addr_col_state',   False)
+            col_country = self.env.ref('ks_contact.overseas_addr_col_country', False)
+
+            addr_rows = q_addr.matrix_row_ids.sorted('sequence')
+            for idx, addr in enumerate(kyc.address_detail):
+                if idx >= len(addr_rows):
+                    break
+                row = addr_rows[idx]
+                _matrix_char(q_addr, col_addr,  row, addr.business_street)
+                _matrix_char(q_addr, col_city,  row, addr.business_city)
+                _matrix_char(q_addr, col_pin,   row, addr.business_pincode)
+                _matrix_char(q_addr, col_phone, row, addr.business_phone)
+                _matrix_char(q_addr, col_email, row, addr.business_email)
+                # State is textbox for overseas (not m2o)
+                state_text = addr.business_state_id.name if addr.business_state_id else ''
+                _matrix_char(q_addr, col_state, row, state_text)
                 if addr.business_country_id:
                     _matrix_m2o(q_addr, col_country, row,
                                 addr.business_country_id.id, addr.business_country_id.name)
@@ -1065,7 +1378,10 @@ class CustomContact(models.Model):
                 try:
                     # Generate pre-filled survey URL and persist it so the
                     # email template can read it as object.rekyc_survey_url
-                    survey_url = partner._get_rekyc_survey_url()
+                    if partner.is_overseas:
+                        survey_url = partner._get_overseas_rekyc_survey_url()
+                    else:
+                        survey_url = partner._get_rekyc_survey_url()
                     partner.sudo().write({'rekyc_survey_url': survey_url})
                     template.send_mail(partner.id)
                     notified_ids.append(partner.id)
@@ -1082,3 +1398,102 @@ class CustomContact(models.Model):
                 )
         else:
             _logger.warning("RE-KYC Follow Up: mail_template_kyc_expired_action_required not found.")
+
+        # 3️⃣ Document-level expiry tracking for overseas partners
+        # Trigger re-KYC when any document has expired or is expiring within 30 days.
+        self._check_overseas_doc_expiry(today, template, partner_model, activity_model, partner_model_id, activity_type, notified_ids)
+
+    @api.model
+    def _check_overseas_doc_expiry(self, today, template, partner_model, activity_model, partner_model_id, activity_type, already_notified_ids):
+        """
+        Check overseas KYC document expiry dates and:
+        - Create follow-up activity when any document expires within 30 days.
+        - Trigger re-KYC email when any document has expired (and partner not already notified).
+        """
+        from dateutil.relativedelta import relativedelta as _rd
+        warning_date = today + _rd(days=30)
+
+        KycModel = self.env['res.partner.kyc.approval']
+        DirectorModel = self.env['director.details']
+
+        # Collect overseas KYC records with expiring/expired documents
+        expiring_kycs = KycModel.search([
+            ('is_overseas', '=', True),
+            ('state', '=', 'confirmed'),
+            '|',
+            ('company_reg_doc_expiry', '!=', False),
+            ('authorized_person_id_expiry', '!=', False),
+        ])
+
+        # Also gather KYC IDs from director records with expiring govt IDs
+        expiring_director_kyc_ids = DirectorModel.search([
+            ('govt_id_expiry', '!=', False),
+            ('kyc_approval_id.state', '=', 'confirmed'),
+            ('kyc_approval_id.is_overseas', '=', True),
+        ]).mapped('kyc_approval_id').ids
+
+        kyc_records = expiring_kycs | KycModel.browse(expiring_director_kyc_ids)
+
+        for kyc in kyc_records:
+            partner = kyc.partner_id
+            if not partner or not partner.email:
+                continue
+
+            # Collect all document expiry dates for this KYC
+            doc_expiries = []
+            if kyc.company_reg_doc_expiry:
+                doc_expiries.append(('Trade License / Company Reg.', kyc.company_reg_doc_expiry))
+            if kyc.authorized_person_id_expiry:
+                doc_expiries.append(('Authorized Person ID', kyc.authorized_person_id_expiry))
+            for director in kyc.directors_detail:
+                if director.govt_id_expiry:
+                    doc_expiries.append(
+                        (f"Govt. ID ({director.name or 'Director'})", director.govt_id_expiry)
+                    )
+
+            if not doc_expiries:
+                continue
+
+            expired_docs = [(label, exp) for label, exp in doc_expiries if exp <= today]
+            warning_docs = [(label, exp) for label, exp in doc_expiries if today < exp <= warning_date]
+
+            # Activity for documents expiring within 30 days (not yet expired)
+            if warning_docs:
+                doc_list = ', '.join(f"{label} (expires {exp})" for label, exp in warning_docs)
+                summary = 'Document Expiry Warning'
+                existing_activity = activity_model.search([
+                    ('res_model_id', '=', partner_model_id),
+                    ('res_id', '=', partner.id),
+                    ('summary', '=', summary),
+                ], limit=1)
+                if not existing_activity:
+                    activity_model.create({
+                        'activity_type_id': activity_type.id,
+                        'summary': summary,
+                        'note': f'Document(s) expiring soon for {partner.name}: {doc_list}',
+                        'date_deadline': min(exp for _, exp in warning_docs),
+                        'user_id': partner.user_id.id or self.env.user.id,
+                        'res_model_id': partner_model_id,
+                        'res_id': partner.id,
+                    })
+
+            # Re-KYC email for expired documents (skip if already notified via main deadline)
+            if expired_docs and partner.id not in already_notified_ids and template:
+                try:
+                    if partner.is_overseas:
+                        survey_url = partner._get_overseas_rekyc_survey_url()
+                    else:
+                        survey_url = partner._get_rekyc_survey_url()
+                    partner.sudo().write({'rekyc_survey_url': survey_url})
+                    template.send_mail(partner.id)
+                    already_notified_ids.append(partner.id)
+                    _logger.info(
+                        "RE-KYC Follow Up: Document expiry re-KYC email sent to %s (%s). Expired docs: %s",
+                        partner.id, partner.name,
+                        [label for label, _ in expired_docs],
+                    )
+                except Exception as e:
+                    _logger.warning(
+                        "RE-KYC Follow Up: Failed to send doc-expiry re-KYC email to %s (%s): %s",
+                        partner.id, partner.name, e,
+                    )

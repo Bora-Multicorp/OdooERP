@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
+import logging
 from odoo import http
 from odoo.http import request
 from odoo.addons.survey.controllers.main import Survey
+
+_logger = logging.getLogger(__name__)
 
 
 class SurveyKsContact(Survey):
@@ -38,6 +41,46 @@ class SurveyKsContact(Survey):
             ensure_token=ensure_token,
             check_partner=check_partner,
         )
+
+    @http.route('/survey/submit/<string:survey_token>/<string:answer_token>', type='json', auth='public', website=True)
+    def survey_submit(self, survey_token, answer_token, **post):
+        """
+        Before running the standard validation loop, replace empty answers for
+        mandatory que_sh_file questions that already have pre-filled file lines
+        with a truthy sentinel ('__ks_existing__').  This prevents the server-side
+        mandatory check from failing when a vendor hasn't re-uploaded an existing file.
+
+        save_line_que_sh_file (in survey_user_input.py) already knows to preserve
+        existing lines when the answer carries no new base64 data.
+        """
+        access_data = self._get_access_data(survey_token, answer_token, ensure_token=True)
+        if access_data['validity_code'] is True:
+            answer_sudo = access_data['answer_sudo']
+            survey_sudo = access_data['survey_sudo']
+            try:
+                questions, _ = survey_sudo._get_survey_questions(
+                    answer=answer_sudo,
+                    page_id=post.get('page_id'),
+                    question_id=post.get('question_id'),
+                )
+                for question in questions:
+                    if question.question_type != 'que_sh_file' or not question.constr_mandatory:
+                        continue
+                    raw = post.get(str(question.id))
+                    if raw:  # new file was uploaded — don't interfere
+                        continue
+                    existing = request.env['survey.user_input.line'].sudo().search([
+                        ('user_input_id', '=', answer_sudo.id),
+                        ('question_id', '=', question.id),
+                        ('answer_type', '=', 'ans_sh_file'),
+                        ('value_ans_sh_file', '!=', False),
+                    ], limit=1)
+                    if existing:
+                        post[str(question.id)] = '__ks_existing__'
+            except Exception:
+                _logger.exception('KS survey_submit prefill-bypass failed; continuing normally')
+
+        return super().survey_submit(survey_token, answer_token, **post)
 
     @http.route('/survey/remove_file_answer/<int:line_id>', type='json', auth='public', website=True, methods=['POST'])
     def remove_file_answer(self, line_id, access_token=None, **kwargs):
