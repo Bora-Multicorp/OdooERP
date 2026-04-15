@@ -43,7 +43,7 @@ class SbTracker(models.Model):
     invoice_date = fields.Date(string='Invoice Date')
     shipping_no = fields.Char(string='SB No')
     shipping_date = fields.Date(string='SB Date')
-    forex_amount = fields.Float(string='Value', digits=(16, 2))
+    forex_amount = fields.Float(string='Forex Amount', digits=(16, 2))
     exchange_rate = fields.Float(string='Ex Rate', digits=(16, 6))
     inr_amount = fields.Float(string='Amount INR', digits=(16, 2))
     brc_date = fields.Date(string='BRC Date')
@@ -146,7 +146,7 @@ class SbTracker(models.Model):
 
         headers = [
             'Sr No', 'Party Name', 'Document Type', 'Invoice No', 'Invoice Date',
-            'SB No', 'SB Date', 'Value', 'Ex Rate', 'Amount INR',
+            'SB No', 'SB Date', 'Forex Amount', 'Ex Rate', 'Amount INR',
             'BRC Date', 'BRC No', 'BRC Amount', 'Bank', 'AD Code',
             'Bank Updation Status',
         ]
