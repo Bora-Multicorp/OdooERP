@@ -323,7 +323,44 @@ class ProductTemplateInternalRef(models.Model):
         return _abbreviate(self.categ_id.name, 3)
 
     def _model_segment(self):
-        return re.sub(r'[^A-Z0-9]', '', (self.name or '').upper())[:6]
+        """
+        Extract a ≤6-char model slug from the product name.
+
+        Strategy
+        --------
+        Split the name on spaces and hyphens, then scan **right-to-left**
+        for the last token that contains BOTH at least one letter and at
+        least one digit — this is almost always the unique model identifier
+        (e.g. P615, S24, V15G4, MBA13).
+
+        Examples
+        --------
+        "Tab S6 Lite LTE SM-P615 4/64 GB" → tokens include S6, P615
+                                             last mixed = P615  → "P615"
+        "Tab S6 Lite LTE SM-P619 4/64 GB" → last mixed = P619  → "P619"  ✓ different
+        "Samsung Galaxy S24 Ultra"         → last mixed = S24   → "S24"
+        "iPhone 15 Pro Max"                → no mixed token     → "IPHONE" (fallback)
+        "GI490"  (toner model)             → last mixed = GI490 → "GI490"
+
+        Fallback: first 6 alnum chars of the full cleaned name when no
+        mixed-case token is found.
+        """
+        name = (self.name or '').upper()
+
+        # Tokenise on spaces and hyphens, strip each token to alnum only
+        tokens = [
+            re.sub(r'[^A-Z0-9]', '', part)
+            for part in re.split(r'[\s\-]+', name)
+        ]
+        tokens = [t for t in tokens if t]   # drop empties
+
+        # Last token with BOTH a letter and a digit = the model identifier
+        for token in reversed(tokens):
+            if re.search(r'[A-Z]', token) and re.search(r'[0-9]', token):
+                return token[:6]
+
+        # Fallback: first 6 alnum chars of the full name
+        return re.sub(r'[^A-Z0-9]', '', name)[:6]
 
     def _group_segment(self):
         grp = getattr(self, 'accessory_group', False)
