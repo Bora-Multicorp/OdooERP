@@ -97,7 +97,8 @@
                             display="always"/>
 <!--                    deadline &lt; DateTime.today()-->
                     <button name="%(rekyc_request_wizard_action)d" string="Re-KYC" type="action"
-                            class="oe_highlight" invisible="not is_kyc and not is_rejected"/>
+                            class="oe_highlight"
+                            invisible="(vendor_type != 'regular' and not (is_customer and is_overseas)) or (not is_expired and not is_rejected and not has_expired_docs)"/>
                     <button name="action_submit_for_approval" string="Submit for Approval" type="object"
                             class="btn-primary"
                             invisible="not is_vendor or approval_status != 'draft' or vendor_type == 'regular'"/>
@@ -106,6 +107,7 @@
                             invisible="not is_vendor or approval_status != 'to_approve' or is_approved or ks_is_approver"
                             confirm="This will cancel the current approval request and let you choose new approvers. Continue?"/>
                     <field name="has_pending_approval" invisible="1"/>
+                    <field name="has_expired_docs" invisible="1"/>
                     <field name="ks_is_approver" invisible="1"/>
                     <button name="%(partner_approve_request_wizard_action)d" string="Approve" type="action"
                             class="btn-primary"

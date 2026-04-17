@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!--
+        Extend the res.partner form view to:
+
+        Sales group  (group name="sale", inside page name="sales_purchases"):
+          - Hide the default Odoo "Salesperson" field (user_id).
+          - Show our custom salesperson_ids (Many2many) in its place.
+
+        Purchase group  (group name="purchase", same tab):
+          - Hide the default Odoo "Buyer" field (buyer_id, added by the
+            purchase module).
+          - Show our custom purchase_executive_ids (Many2many) in its place.
+
+        Priority note:
+          The purchase module adds buyer_id with priority=36.  Our view
+          must have a higher priority number (50) so Odoo applies our
+          xpath AFTER purchase has already inserted buyer_id into the arch.
+          Without this ordering, the buyer_id xpath would fail at install
+          time with "Element not found in arch".
+    -->
+    <record id="res_partner_form_view_inherit_visibility"
+            model="ir.ui.view">
+        <field name="name">res.partner.form.partner.visibility</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="priority">50</field>
+        <field name="arch" type="xml">
+
+            <!-- ── Sales group ─────────────────────────────────────────── -->
+
+            <!-- Hide the standard Odoo "Salesperson" (single user) field -->
+            <xpath expr="//group[@name='sale']/field[@name='user_id']"
+                   position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+
+            <!-- Add our multi-user Sales Executives field in the same group -->
+            <xpath expr="//group[@name='sale']" position="inside">
+                <field name="salesperson_ids"
+                       string="Sales Executives"
+                       widget="many2many_tags"
+                       options="{'no_create': True}"
+                       groups="sales_team.group_sale_salesman"/>
+            </xpath>
+
+            <!-- ── Purchase group ───────────────────────────────────────── -->
+
+            <!--
+                Hide the standard Odoo "Buyer" (single user) field.
+                buyer_id is inserted by the purchase module at priority 36,
+                so our priority-50 view can safely target it here.
+            -->
+            <xpath expr="//field[@name='buyer_id']"
+                   position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+
+            <!-- Add our multi-user Purchase Executives field in the Purchase group -->
+            <xpath expr="//group[@name='purchase']" position="inside">
+                <field name="purchase_executive_ids"
+                       string="Purchase Executives"
+                       widget="many2many_tags"
+                       options="{'no_create': True}"
+                       groups="purchase.group_purchase_user"/>
+            </xpath>
+
+        </field>
+    </record>
+
+</odoo>

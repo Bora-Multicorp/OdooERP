@@ -19,13 +19,34 @@ class CustomContact(models.Model):
     ]
 
     is_expired = fields.Boolean(compute='_compute_is_expired')
+    has_expired_docs = fields.Boolean(compute='_compute_has_expired_docs',
+                                      help="True when any overseas KYC document expiry date has passed.")
 
     @api.depends('deadline')
     def _compute_is_expired(self):
         today = fields.Date.context_today(self)
         for rec in self:
-            # Check if deadline is in the past
-            rec.is_expired = rec.deadline and rec.deadline <= today
+            rec.is_expired = bool(rec.deadline and rec.deadline <= today)
+
+    @api.depends(
+        'kyc_details.company_reg_doc_expiry',
+        'kyc_details.authorized_person_id_expiry',
+        'kyc_details.directors_detail.govt_id_expiry',
+    )
+    def _compute_has_expired_docs(self):
+        today = fields.Date.context_today(self)
+        for rec in self:
+            kyc = rec.kyc_details.filtered(lambda k: k.state == 'confirmed')[:1]
+            if not kyc:
+                rec.has_expired_docs = False
+                continue
+            expired = (
+                (kyc.company_reg_doc_expiry and kyc.company_reg_doc_expiry <= today)
+                or (kyc.authorized_person_id_expiry and kyc.authorized_person_id_expiry <= today)
+                or any(d.govt_id_expiry and d.govt_id_expiry <= today
+                       for d in kyc.directors_detail)
+            )
+            rec.has_expired_docs = bool(expired)
 
     @api.constrains('city', 'zip')
     def _check_city_zip_format(self):
