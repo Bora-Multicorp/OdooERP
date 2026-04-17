@@ -624,6 +624,8 @@ class SaleOrder(models.Model):
             'ks_confirm_pm1_approved': False,
             'ks_confirm_pm2_approved': False,
         })
+        # Lock the SO immediately so it cannot be edited while awaiting approval
+        self.action_lock()
 
         # Determine approval message based on mode
         if config.is_dual_approval():
@@ -839,7 +841,8 @@ class SaleOrder(models.Model):
         if self.ks_confirm_pm2_id and current_user != self.ks_confirm_pm2_id:
             self._mark_activity_done(self.ks_confirm_pm2_id, feedback=_("Request rejected by %s") % current_user.name)
 
-        # Reset to draft state
+        # Reset to draft state and unlock so it can be edited again
+        self.action_unlock()
         self.write({
             'state': 'draft',
             'ks_confirm_pm1_id': False,
@@ -867,7 +870,35 @@ class SaleOrder(models.Model):
     # ===== Cancel Request Methods =====
 
     def write(self, values):
-        """Override write to trigger recomputation of ks_can_edit_price on lines when ks_edit_approved changes"""
+        """Override write to trigger recomputation of ks_can_edit_price on lines when ks_edit_approved changes.
+        Also blocks normal users from changing payment_term_id or user_id on confirmed/locked SOs.
+        """
+        _protected_fields = ['payment_term_id', 'user_id', 'ks_no_tax_allowed', 'stock_decifient']
+        changing_protected = any(f in values for f in _protected_fields)
+
+        if changing_protected:
+            for order in self:
+                if not order.locked:
+                    continue
+                if order._is_admin_user():
+                    continue
+                if not order._has_approval_config():
+                    continue
+                config = order._get_approval_config()
+                if self.env.user in config.get_all_pm_users():
+                    continue
+                # Normal user on a locked order
+                edit_approved = (
+                    order.ks_edit_approved and
+                    order.ks_edit_request_user_id == self.env.user
+                )
+                if not edit_approved:
+                    changed = [f for f in _protected_fields if f in values]
+                    raise UserError(_(
+                        "You cannot modify %s on a confirmed Sale Order. "
+                        "Please use 'Request Edit' to get edit approval first."
+                    ) % ', '.join(changed))
+
         result = super().write(values)
 
         # If ks_edit_approved changed, recompute ks_can_edit_price on order lines
@@ -881,12 +912,10 @@ class SaleOrder(models.Model):
     def action_cancel(self):
         """Override: Normal users must request cancellation for confirmed SOs, PMs can directly cancel"""
         for order in self:
-            # Check if locked
-            if order.locked:
-                raise UserError(_("You cannot cancel a locked order. Please unlock it first."))
-
             # Admin users bypass all approval restrictions
             if order._is_admin_user():
+                if order.locked:
+                    order.action_unlock()
                 return super().action_cancel()
 
             # Check if approval config exists
@@ -898,7 +927,9 @@ class SaleOrder(models.Model):
             is_pm = self.env.user in config.get_all_pm_users()
 
             if is_pm:
-                # PM users can directly cancel
+                # PM users can directly cancel; unlock first if locked
+                if order.locked:
+                    order.action_unlock()
                 return super().action_cancel()
             else:
                 # Normal user
@@ -961,6 +992,8 @@ class SaleOrder(models.Model):
             feedback=_("Approval request cancelled by %s") % self.env.user.name,
         )
 
+        # Unlock so the SO can be edited again after withdrawal
+        self.action_unlock()
         self.write({
             'state': 'draft',
             'ks_confirm_pm1_id': False,
@@ -1426,7 +1459,8 @@ class SaleOrder(models.Model):
             if self.ks_edit_pm2_id:
                 self._mark_activity_done(self.ks_edit_pm2_id,
                                          feedback=_("Approval completed - Edit permission granted"))
-            # Both approved - allow editing
+            # Both approved - unlock the SO so the requester can edit
+            self.action_unlock()
             self.write({
                 'state': 'sale',
                 'ks_edit_approved': True,
@@ -1554,6 +1588,9 @@ class SaleOrder(models.Model):
             'ks_edit_pm1_approved': False,
             'ks_edit_pm2_approved': False,
         })
+
+        # Re-lock the SO after edit is complete
+        self.action_lock()
 
         # Trigger recomputation of ks_can_edit_price on order lines
         if self.order_line:

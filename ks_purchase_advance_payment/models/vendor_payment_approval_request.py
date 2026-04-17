@@ -108,12 +108,41 @@ class VendorPaymentApprovalRequest(models.Model):
         default=False,
         help='If checked, supporting documents are not required for approval.',
     )
+    ks_can_approve = fields.Boolean(
+        compute='_compute_ks_can_approve',
+        help='True only for the current user if it is their turn to approve.',
+    )
     document_ids = fields.One2many(
         'vendor.payment.approval.document',
         'request_id',
         string='Documents',
         copy=False,
     )
+
+    @api.depends('state', 'approval_line_ids.state', 'approval_line_ids.user_id',
+                 'approval_line_ids.approver_type')
+    @api.depends_context('uid')
+    def _compute_ks_can_approve(self):
+        current_user = self.env.user
+        for rec in self:
+            if rec.state != 'pending_approval':
+                rec.ks_can_approve = False
+                continue
+            # Find current user's pending line
+            my_line = rec.approval_line_ids.filtered(
+                lambda l: l.user_id == current_user and l.state == 'pending'
+            )[:1]
+            if not my_line:
+                rec.ks_can_approve = False
+                continue
+            # If approver2, approver1 must have approved first
+            if my_line.approver_type == 'approver2':
+                approver1_done = rec.approval_line_ids.filtered(
+                    lambda l: l.approver_type == 'approver1' and l.state == 'approved'
+                )
+                rec.ks_can_approve = bool(approver1_done)
+            else:
+                rec.ks_can_approve = True
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -230,12 +259,11 @@ class VendorPaymentApprovalRequest(models.Model):
             )
 
     def action_approve_wizard(self):
-        """Open approve wizard. If assigned_approver_id is set, only that user may proceed."""
+        """Open approve wizard. Only the current approver-in-turn may proceed."""
         for rec in self:
-            if rec.assigned_approver_id and rec.assigned_approver_id != self.env.user:
+            if not rec.ks_can_approve:
                 raise UserError(
-                    _('Only %s is allowed to approve this request.')
-                    % rec.assigned_approver_id.name
+                    _('You are not the current approver for this request or it is not your turn yet.')
                 )
             if not rec.rest_after_payment:
                 required_types = {'vendor_invoice', 'eway_bill', 'lr_docket', 'imei_sheet'}

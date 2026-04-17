@@ -3,9 +3,9 @@
     <record id="mail_template_banking_team_notification" model="mail.template">
         <field name="name">Vendor Payment Approved – Banking Team Notification</field>
         <field name="model_id" ref="ks_purchase_advance_payment.model_vendor_payment_approval_request"/>
-        <field name="subject">Action Required: Take Payment for {{ object.purchase_order_id.name }}</field>
-        <field name="email_from">{{ (object.company_id.email or user.email) | safe }}</field>
-        <field name="body_html"><![CDATA[
+        <field name="subject">Action Required: Process Payment for {{ object.purchase_order_id.name }}</field>
+        <field name="email_from">{{ (object.company_id.email_formatted or user.email_formatted) }}</field>
+        <field name="body_html" type="html">
 <div style="margin:0;padding:0;font-family:Arial,sans-serif;font-size:14px;color:#333;">
     <table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;margin:auto;border:1px solid #e0e0e0;border-radius:6px;overflow:hidden;">
         <tr>
@@ -18,42 +18,52 @@
                 <p>Dear Banking Team,</p>
                 <p>
                     A vendor payment approval request has been <strong>fully approved</strong>.
-                    Please proceed to <strong>take the payment</strong> at the earliest.
+                    You can now proceed to <strong>process the payment</strong> for the Purchase Order below.
                 </p>
                 <table cellpadding="6" cellspacing="0" style="width:100%;border-collapse:collapse;margin:16px 0;">
                     <tr style="background:#f5f5f5;">
                         <td style="padding:8px 12px;font-weight:bold;border:1px solid #ddd;width:40%;">Purchase Order</td>
-                        <td style="padding:8px 12px;border:1px solid #ddd;">{{ object.purchase_order_id.name }}</td>
+                        <td style="padding:8px 12px;border:1px solid #ddd;"><t t-out="object.purchase_order_id.name"/></td>
                     </tr>
                     <tr>
                         <td style="padding:8px 12px;font-weight:bold;border:1px solid #ddd;">Vendor</td>
-                        <td style="padding:8px 12px;border:1px solid #ddd;">{{ object.partner_id.name }}</td>
+                        <td style="padding:8px 12px;border:1px solid #ddd;"><t t-out="object.partner_id.name"/></td>
                     </tr>
                     <tr style="background:#f5f5f5;">
                         <td style="padding:8px 12px;font-weight:bold;border:1px solid #ddd;">Amount for Approval</td>
                         <td style="padding:8px 12px;border:1px solid #ddd;">
-                            {{ '{:,.2f}'.format(object.amount_for_approval) }} {{ object.currency_id.name }}
+                            <t t-out="'{:,.2f}'.format(object.amount_for_approval)"/> <t t-out="object.currency_id.name"/>
                         </td>
                     </tr>
                     <tr>
                         <td style="padding:8px 12px;font-weight:bold;border:1px solid #ddd;">Approval Type</td>
-                        <td style="padding:8px 12px;border:1px solid #ddd;">{{ object.approval_type | title }}</td>
+                        <td style="padding:8px 12px;border:1px solid #ddd;">
+                            <t t-if="object.approval_type == 'without_bill'">Advance Payment (Without Bill)</t>
+                            <t t-elif="object.approval_type == 'with_bill'">Payment with Bill</t>
+                            <t t-else=""><t t-out="object.approval_type"/></t>
+                        </td>
                     </tr>
                     <tr style="background:#f5f5f5;">
                         <td style="padding:8px 12px;font-weight:bold;border:1px solid #ddd;">Approved On</td>
-                        <td style="padding:8px 12px;border:1px solid #ddd;">{{ format_datetime(object.write_date) }}</td>
+                        <td style="padding:8px 12px;border:1px solid #ddd;"><t t-out="format_datetime(object.write_date)"/></td>
                     </tr>
-                    % if object.vendor_bill_id:
+                    <t t-if="object.vendor_bill_id">
                     <tr>
                         <td style="padding:8px 12px;font-weight:bold;border:1px solid #ddd;">Vendor Bill</td>
-                        <td style="padding:8px 12px;border:1px solid #ddd;">{{ object.vendor_bill_id.name }}</td>
+                        <td style="padding:8px 12px;border:1px solid #ddd;"><t t-out="object.vendor_bill_id.name"/></td>
                     </tr>
-                    % endif
+                    </t>
+                    <t t-if="object.approve_reason">
+                    <tr style="background:#f5f5f5;">
+                        <td style="padding:8px 12px;font-weight:bold;border:1px solid #ddd;">Approval Reason</td>
+                        <td style="padding:8px 12px;border:1px solid #ddd;"><t t-out="object.approve_reason"/></td>
+                    </tr>
+                    </t>
                 </table>
                 <p style="margin-top:24px;">
-                    <a href="{{ ctx.get('base_url', '') }}/odoo/purchase/payment-approval-request/{{ object.id }}"
+                    <a t-attf-href="{{ base_url }}/web#model=vendor.payment.approval.request&amp;id={{ object.id }}&amp;view_type=form"
                        style="background:#875A7B;color:#fff;padding:10px 20px;border-radius:4px;text-decoration:none;font-weight:bold;">
-                        View Request
+                        Open Payment Approval Request
                     </a>
                 </p>
                 <p style="margin-top:24px;color:#999;font-size:12px;">
@@ -63,7 +73,7 @@
         </tr>
     </table>
 </div>
-        ]]></field>
+        </field>
         <field name="auto_delete" eval="True"/>
     </record>
 </odoo>

@@ -76,14 +76,31 @@
                     <t t-if="doc.company_id.partner_id.city and doc.company_id.partner_id.country_id">, </t>
                     <t t-if="doc.company_id.partner_id.country_id" t-esc="doc.company_id.partner_id.country_id.name or ''"/><br/>
                     <t t-if="doc.company_id.partner_id.zip">P.O.Box <t t-esc="doc.company_id.partner_id.zip"/><br/></t>
-                    <t t-if="doc.company_id.partner_id.state_id">Emirate : <t t-esc="doc.company_id.partner_id.state_id.name or ''"/><br/></t>
-                    <t t-if="doc.company_id.vat">TRN : <t t-esc="doc.company_id.vat"/><br/></t>
+                    <t t-if="doc.company_id.partner_id.state_id">
+                        <t t-if="doc.company_id.partner_id.country_id.code == 'IN'">State : </t>
+                        <t t-else="">Emirate : </t>
+                        <t t-esc="doc.company_id.partner_id.state_id.name or ''"/><br/>
+                    </t>
+                    <t t-if="doc.company_id.vat">
+                        <t t-if="doc.company_id.partner_id.country_id.code == 'IN'">GSTN : </t>
+                        <t t-else="">TRN : </t>
+                        <t t-esc="doc.company_id.vat"/><br/>
+                    </t>
+                    <t t-if="doc.company_id.partner_id.country_id.code == 'IN'">
+                        <t t-set="company_pan" t-value="doc.get_company_pan()"/>
+                        <t t-if="company_pan">PAN : <t t-esc="company_pan"/><br/></t>
+                        <t t-set="company_iec" t-value="doc.get_company_iec()"/>
+                        <t t-if="company_iec">IEC No : <t t-esc="company_iec"/><br/></t>
+                    </t>
                     <t t-if="doc.company_id.partner_id.email">E-Mail : <t t-esc="doc.company_id.partner_id.email"/></t>
                     <div style="border-top:1px solid black; height:1px;"/>
-                    Consignee<br/>
-                    <strong>Crown Logistics</strong><br/>
-                    G12, Row G2, LIU, Dubai Airport Freezone, Dubai, U.A.E.<br/>
-                    TRN: 100562443000003<br/><br/>
+                    Consignee (Ship to)<br/>
+                    <strong t-esc="doc.dest_address_id.name or doc.company_id.name or ''"/><br/>
+                    <t t-if="doc.dest_address_id and doc.dest_address_id.street"><t t-esc="doc.dest_address_id.street"/><br/></t>
+                    <t t-if="doc.dest_address_id and doc.dest_address_id.street2"><t t-esc="doc.dest_address_id.street2"/><br/></t>
+                    <t t-if="doc.dest_address_id and doc.dest_address_id.city"><t t-esc="doc.dest_address_id.city"/><t t-if="doc.dest_address_id.state_id">, <t t-esc="doc.dest_address_id.state_id.name or ''"/></t><br/></t>
+                    <t t-if="doc.dest_address_id and doc.dest_address_id.country_id"><t t-esc="doc.dest_address_id.country_id.name or ''"/><br/></t>
+                    <t t-if="doc.dest_address_id and doc.dest_address_id.vat">TRN: <t t-esc="doc.dest_address_id.vat"/><br/></t>
                     <div style="border-top:1px solid black; height:1px;"/>
                     Supplier<br/>
                     <strong t-esc="doc.partner_id.name or ''"/><br/>
@@ -142,10 +159,9 @@
                         <tr>
                             <td style="padding:1px;" colspan="3">
                                 <strong>
-                                    <t t-if="doc.notes">
-                                        <span t-out="doc.notes"/>
+                                    <t t-if="doc.incoterm_id">
+                                        [<t t-esc="doc.incoterm_id.code or ''"/>] <t t-esc="doc.incoterm_id.name or ''"/>
                                     </t>
-                                    <t t-else="">CIF Dubai, U.A.E.</t>
                                 </strong>
                             </td>
                         </tr>
@@ -221,9 +237,10 @@
             <!-- REMARKS + SIGNATORY ROW -->
             <tr>
                 <td style="border:1px solid #000; padding:6px; vertical-align:top;" colspan="3">
-                    <strong>Remarks:</strong><br/>
-                    all neat &amp; clean stocks will be accepted.<br/>
-                    Dirty, damage will not be accepted and will be retuned back
+                    <t t-if="doc.ks_remarks">
+                        <strong>Remarks</strong><br/>
+                        <t t-esc="doc.ks_remarks"/>
+                    </t>
                 </td>
                 <td style="border:1px solid #000; padding:6px; text-align:center; vertical-align:bottom;" colspan="3">
                     <t t-if="doc.ks_authorised_signatory">

@@ -22,6 +22,7 @@
                 <xpath expr="//page[@name='purchase_delivery_invoice']/group" position="inside">
                     <group string="Bank &amp; Signature">
                         <field name="ks_bank_id" placeholder="Select Bank"/>
+                        <field name="ks_remarks" placeholder="Remarks" colspan="2"/>
                         <field name="ks_authorised_signatory" widget="signature" string="Authorised Signatory"/>
                     </group>
                 </xpath>

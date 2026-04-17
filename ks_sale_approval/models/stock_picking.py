@@ -131,28 +131,28 @@ class StockPicking(models.Model):
     # -------------------------------------------------------------------------
     # Override button_validate + _action_done
     # Flow:
-    #   1. button_validate() calls super() → Odoo runs immediate-transfer / backorder
-    #      dialogs as normal.
-    #   2. When all dialogs are resolved Odoo calls _action_done().
-    #   3. Our _action_done() override intercepts outgoing deliveries that need
-    #      approval: it sets state = 'approval_pending' but does NOT call super()
-    #      (delivery not yet completed).
-    #   4. Control returns to button_validate(); we detect the approval_pending
-    #      state and open the approver-selection wizard.
-    #   5. After PM approval, ks_delivery_approved=True.  User clicks Validate
-    #      again → same flow → this time _action_done() skips our gate →
-    #      super()._action_done() runs → delivery is done.
+    #   1. button_validate() calls super() — Odoo runs all its own dialogs
+    #      (immediate-transfer wizard, serial/lot assignment, backorder) first.
+    #   2. When all dialogs are resolved, Odoo calls _action_done().
+    #      _action_done() intercepts and sets approval_pending, then returns
+    #      the approval wizard action so it opens right after every dialog.
+    #   3. button_validate() also checks for approval_pending as a fallback
+    #      (covers any path where _action_done's return value is not propagated).
+    #   4. After PM approval, ks_delivery_approved=True. User clicks Validate
+    #      again — _action_done() skips our gate → super()._action_done() runs
+    #      → delivery is done.
     # -------------------------------------------------------------------------
     def button_validate(self):
         result = super().button_validate()
 
-        # If result is a dialog action (immediate-transfer or backorder wizard),
-        # just return it — those dialogs still need to be handled.
+        # result is a dict in two cases:
+        #   a) Odoo dialog (immediate-transfer / backorder) — pass through
+        #   b) Our approval wizard returned from _action_done — pass through
         if isinstance(result, dict):
             return result
 
-        # Check whether _action_done set any picking to approval_pending
-        # (ks_validate_pm1_id not yet set means wizard hasn't run yet).
+        # Fallback: _action_done set approval_pending but its return value was
+        # lost somewhere in the call chain.
         pending = self.filtered(
             lambda p: p.state == 'approval_pending' and not p.ks_validate_pm1_id
         )
@@ -162,7 +162,7 @@ class StockPicking(models.Model):
         return result
 
     def _action_done(self, **kwargs):
-        """Intercept AFTER all Odoo quantity/backorder checks for deliveries needing approval."""
+        """Intercept AFTER all Odoo quantity/backorder dialogs for deliveries needing approval."""
         needs_approval = self.env['stock.picking']
         can_proceed = self.env['stock.picking']
 
@@ -178,6 +178,13 @@ class StockPicking(models.Model):
                     continue
             can_proceed |= picking
 
+        # Before showing the approval wizard, validate that all tracked moves
+        # have lot/serial numbers assigned — same checks Odoo runs inside
+        # super()._action_done(). Raising here gives the error BEFORE approval
+        # so the user can fix it in one go.
+        for picking in needs_approval:
+            picking._ks_check_lots_before_approval()
+
         # Set approval_pending for pickings that need it (wizard will fill pm1/pm2)
         for picking in needs_approval:
             picking.write({
@@ -186,8 +193,37 @@ class StockPicking(models.Model):
             })
 
         if can_proceed:
-            return super(StockPicking, can_proceed)._action_done(**kwargs)
+            super(StockPicking, can_proceed)._action_done(**kwargs)
+
+        # Return the approval wizard action so it opens after every dialog path
+        # (immediate-transfer, backorder, or direct validate).
+        if needs_approval:
+            return needs_approval[0]._ks_open_delivery_approval_wizard()
+
         return True
+
+    def _ks_check_lots_before_approval(self):
+        """Raise UserError if any tracked move is missing lot/serial numbers.
+        Mirrors the check inside stock.move._action_done so errors surface
+        before the approval wizard instead of after.
+        """
+        self.ensure_one()
+        for move in self.move_ids.filtered(lambda m: m.state not in ('done', 'cancel')):
+            if move.product_id.tracking == 'none':
+                continue
+            missing = False
+            if not move.move_line_ids:
+                missing = True
+            else:
+                for ml in move.move_line_ids:
+                    if not ml.lot_id and not ml.lot_name:
+                        missing = True
+                        break
+            if missing:
+                raise UserError(
+                    _('You need to supply a Lot/Serial number for products %s.')
+                    % move.product_id.display_name
+                )
 
     def _ks_open_delivery_approval_wizard(self, is_update=False):
         view_id = self.env.ref('ks_sale_approval.ks_delivery_approval_request_wizard_form')
@@ -341,11 +377,11 @@ class StockPicking(models.Model):
             raise UserError(_('You are not authorized to approve this request or have already approved.'))
 
     def _ks_complete_delivery_approval(self):
-        """All required approvals received — restore state and unlock for validation.
+        """All required approvals received — directly complete the delivery.
 
-        We do NOT auto-validate here. Instead we set ks_delivery_approved = True and
-        restore the picking state so the requester can click Validate themselves.
-        This lets Odoo's own quantity/backorder wizards run normally for the user.
+        Sets ks_delivery_approved = True, restores state to 'assigned', then
+        calls _action_done() so the delivery goes to Done automatically without
+        requiring a second Validate click from the user.
         """
         self.ensure_one()
         config = self._get_delivery_approval_config()
@@ -353,17 +389,18 @@ class StockPicking(models.Model):
         # Mark all remaining activities done
         if self.ks_validate_pm1_id:
             self._mark_delivery_activity_done(self.ks_validate_pm1_id,
-                                               feedback=_('Approval complete — delivery unlocked for validation'))
+                                               feedback=_('Approval complete — delivery validated'))
         if self.ks_validate_pm2_id:
             self._mark_delivery_activity_done(self.ks_validate_pm2_id,
-                                               feedback=_('Approval complete — delivery unlocked for validation'))
+                                               feedback=_('Approval complete — delivery validated'))
 
         if config.is_dual_approval():
             approvers = '%s (PM1) and %s (PM2)' % (self.ks_validate_pm1_id.name, self.ks_validate_pm2_id.name)
         else:
             approvers = '%s (PM1)' % self.ks_validate_pm1_id.name
 
-        # Restore the state that was stored before going to approval_pending
+        # Restore state to 'assigned' and set approved flag so _action_done
+        # skips our approval gate and calls super()._action_done() directly.
         pre_state = self.ks_pre_approval_state or 'assigned'
         self.write({
             'state': pre_state,
@@ -371,8 +408,7 @@ class StockPicking(models.Model):
         })
 
         self.message_post(
-            body=_('🎉 Delivery validation approved by <strong>%(approvers)s</strong>. '
-                   'You may now click <strong>Validate</strong> to complete the transfer.') % {
+            body=_('🎉 Delivery validated and approved by <strong>%(approvers)s</strong>.') % {
                 'approvers': approvers},
             message_type='notification', subtype_xmlid='mail.mt_note',
         )
@@ -384,11 +420,15 @@ class StockPicking(models.Model):
                 'simple_notification',
                 {
                     'type': 'success',
-                    'title': _('Delivery Approved: %s') % self.name,
-                    'message': _('Your delivery has been approved. Please click Validate to complete it.'),
+                    'title': _('Delivery Approved & Done: %s') % self.name,
+                    'message': _('Your delivery has been approved and marked as done.'),
                     'sticky': True,
                 },
             )
+
+        # Directly complete the delivery — ks_delivery_approved=True ensures
+        # _action_done() skips our gate and calls super()._action_done().
+        self._action_done()
 
     # -------------------------------------------------------------------------
     # Reject logic (called from reason wizard)

@@ -10,6 +10,7 @@ class SaleOrder(models.Model):
     ks_other_reference = fields.Char(string='Other Reference(s)')
     ks_despatched_through = fields.Char(string='Despatch through')
     ks_city_port_of_discharge = fields.Char(string='Destination')
+    ks_remarks = fields.Text(string='Remarks')
     ks_authorized_signature = fields.Binary(string='Authorized Signature', attachment=True, copy=False)
 
     def get_amount_in_words_aed(self, amount):
@@ -117,6 +118,37 @@ class SaleOrder(models.Model):
                 return f"INR {integer_value} Only"
             else:
                 return f"INR {integer_value} and {fractional_value} Paise Only"
+
+    def get_company_pan(self):
+        """Get company PAN number (Indian localization field)"""
+        self.ensure_one()
+        try:
+            return self.company_id.l10n_in_pan or ''
+        except Exception:
+            return ''
+
+    def get_company_iec(self):
+        """Get company IEC number"""
+        self.ensure_one()
+        try:
+            return self.company_id.iec_no or ''
+        except Exception:
+            return ''
+
+    def get_line_hsn_code(self, line):
+        """Get HSN/SAC code from product template"""
+        try:
+            if line.product_id and line.product_id.product_tmpl_id:
+                if hasattr(line.product_id.product_tmpl_id, 'l10n_in_hsn_code') and line.product_id.product_tmpl_id.l10n_in_hsn_code:
+                    return line.product_id.product_tmpl_id.l10n_in_hsn_code
+        except Exception:
+            pass
+        try:
+            if hasattr(line, 'l10n_in_hsn_code') and line.l10n_in_hsn_code:
+                return line.l10n_in_hsn_code
+        except Exception:
+            pass
+        return ''
 
     def format_number(self, value, digits=2):
         """Format number with specified decimal places"""

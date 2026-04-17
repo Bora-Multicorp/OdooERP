@@ -23,7 +23,7 @@
                         string="Upload POD"
                         type="object"
                         class="btn-info"
-                        invisible="state not in ('waiting', 'assigned', 'done')"/>
+                        invisible="state not in ('waiting', 'assigned', 'done') or ks_pod_sent"/>
             </xpath>
 
             <!-- Hidden computed fields for button visibility -->
@@ -113,11 +113,11 @@
                     </span>
                 </div>
 
-                <!-- Approved — requester may now validate -->
+                <!-- Approved — delivery is being completed automatically -->
                 <div class="alert alert-success mb-0"
-                     invisible="not ks_delivery_approved or ks_is_delivery_admin or ks_is_delivery_pm_user"
+                     invisible="not ks_delivery_approved or state == 'done' or ks_is_delivery_admin or ks_is_delivery_pm_user"
                      role="alert">
-                    ✅ <strong>Approved</strong> — Your delivery has been approved. Click <strong>Validate</strong> to complete the transfer.
+                    ✅ <strong>Approved</strong> — Your delivery has been approved and is being completed.
                 </div>
 
                 <!-- Not yet submitted — normal user, picking in Ready state only -->

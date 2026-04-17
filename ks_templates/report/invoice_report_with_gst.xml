@@ -97,6 +97,10 @@
                                 <t t-if="doc.company_id.partner_id.state_id.code">, Code : <t t-esc="doc.company_id.partner_id.state_id.code or ''"/></t><br/>
                             </t>
                             <t t-if="doc.company_id.company_registry">CIN: <t t-esc="doc.company_id.company_registry"/><br/></t>
+                            <t t-set="company_pan" t-value="doc.get_company_pan()"/>
+                            <t t-if="company_pan">PAN : <t t-esc="company_pan"/><br/></t>
+                            <t t-set="company_iec" t-value="doc.get_company_iec()"/>
+                            <t t-if="company_iec">IEC No : <t t-esc="company_iec"/><br/></t>
                             <t t-if="doc.company_id.partner_id.email">E-Mail : <t t-esc="doc.company_id.partner_id.email"/></t>
                             <hr/>
                             Consignee (Ship to)<br/>
@@ -236,10 +240,10 @@
                                 <tr>
                                     <td style="padding:1px;" colspan="3">
                                         <strong>
-                                            <t t-if="gst_sale and gst_sale.note">
-                                                <span t-out="gst_sale.note"/>
+                                            <t t-if="gst_sale and gst_sale.incoterm">
+                                                [<t t-esc="gst_sale.incoterm.code or ''"/>] <t t-esc="gst_sale.incoterm.name or ''"/>
+                                                <t t-if="gst_sale.incoterm_location">, <t t-esc="gst_sale.incoterm_location or ''"/></t>
                                             </t>
-                                            <t t-else="">FOB Dubai<br/>Delivery - DAFZA to DAFZA<br/>(delivery - monday)</t>
                                         </strong>
                                     </td>
                                 </tr>
@@ -391,30 +395,17 @@
                         </td>
                     </tr>
 
-                    <!-- REMARKS + BANK AD CODE + PAN ROW -->
-                    <tr>
-                        <td style="border:1px solid #000; padding:6px;" colspan="7">
-                            <strong>Remarks:</strong><br/>
-                            BANK AD CODE NO:
-                            <t t-if="bank_info['ad_code']" t-esc="bank_info['ad_code']"/>
-                            <t t-else="">CODE</t>
-                            <t t-if="bank_info['swift_code']">, SWIFT CODE: <t t-esc="bank_info['swift_code']"/></t>
-                            <t t-if="bank_info['branch']">, BRANCH SOL ID: <t t-esc="bank_info['branch']"/> Seal</t>
-                            <br/>
-                            Company's PAN/IEC Code:
-                            <t t-if="doc.company_id.partner_id.vat" t-esc="doc.company_id.partner_id.vat"/>
-                            <t t-elif="doc.company_id.vat" t-esc="doc.company_id.vat"/>
-                        </td>
-                    </tr>
-
-                    <!-- DECLARATION + BANK DETAILS + SIGNATORY ROW -->
+                    <!-- REMARKS + DECLARATION + BANK DETAILS + SIGNATORY ROW -->
                     <tr>
                         <td style="vertical-align:top; padding:6px; border:1px solid #000;" colspan="4">
-                            <ul style="margin:0; padding-left:16px;">
-                                <li>We declare that this invoice shows the actual price of the goods described and that all particulars are true and correct.</li>
-                                <li>Warranty is valid only for inspection before the delivery of goods to ensure proper working of the goods.</li>
-                                <li>After delivery of the goods, warranty and after-sales service for these goods will be to the buyer's account only.</li>
-                            </ul>
+                            <t t-if="gst_sale and gst_sale.ks_remarks">
+                                <strong>Remarks</strong><br/>
+                                <t t-esc="gst_sale.ks_remarks"/><br/><br/>
+                            </t>
+                            <t t-if="gst_sale and gst_sale.note">
+                                <strong>Declaration</strong><br/>
+                                <span t-out="gst_sale.note"/>
+                            </t>
                         </td>
                         <td style="vertical-align:top; padding:6px; border:1px solid #000;" colspan="3">
 

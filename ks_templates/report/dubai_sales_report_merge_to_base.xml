@@ -8,8 +8,9 @@
         </xpath>
     </template>
 
-    <!-- 2) Apply Dubai paperformat to the base report -->
+    <!-- 2) Apply Dubai paperformat and rename the base report -->
     <record id="sale.action_report_saleorder" model="ir.actions.report">
+        <field name="name">PROFORMA INVOICE PDF</field>
         <field name="paperformat_id" ref="ks_templates.paperformat_dubai_saleorder"/>
     </record>
 

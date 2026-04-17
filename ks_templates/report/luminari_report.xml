@@ -41,7 +41,7 @@
 
             <!-- TITLE ROW -->
             <tr>
-                <td style="text-align:center; border:1px solid #000; font-weight:bold; font-size:14px; padding:6px;" colspan="6">
+                <td style="text-align:center; border:1px solid #000; font-weight:bold; font-size:14px; padding:6px;" colspan="7">
                     Commercial Invoice
                 </td>
             </tr>
@@ -49,7 +49,7 @@
             <!-- COMPANY INFO + INVOICE DETAILS ROW -->
             <tr>
                 <!-- LEFT SIDE -->
-                <td style="width:55%; vertical-align:top; border:1px solid #000; padding:6px;" colspan="3">
+                <td style="width:55%; vertical-align:top; border:1px solid #000; padding:6px;" colspan="4">
                     <strong><t t-esc="doc.company_id.name or 'BORA ELECTRONICS FZCO'"/></strong><br/>
                     <t t-if="doc.company_id.partner_id.street" t-esc="doc.company_id.partner_id.street"/>
                     <t t-if="doc.company_id.partner_id.street and doc.company_id.partner_id.street2">, </t>
@@ -60,9 +60,21 @@
                     <t t-if="doc.company_id.partner_id.country_id" t-esc="doc.company_id.partner_id.country_id.name or ''"/>
                     <t t-if="doc.company_id.partner_id.zip"> P.O.Box <t t-esc="doc.company_id.partner_id.zip"/></t><br/>
                     <t t-if="doc.company_id.partner_id.state_id">
-                        Emirate : <t t-esc="doc.company_id.partner_id.state_id.name or ''"/><br/>
+                        <t t-if="doc.company_id.partner_id.country_id.code == 'IN'">State : </t>
+                        <t t-else="">Emirate : </t>
+                        <t t-esc="doc.company_id.partner_id.state_id.name or ''"/><br/>
                     </t>
-                    <t t-if="doc.company_id.vat">TRN : <t t-esc="doc.company_id.vat"/><br/></t>
+                    <t t-if="doc.company_id.vat">
+                        <t t-if="doc.company_id.partner_id.country_id.code == 'IN'">GSTN : </t>
+                        <t t-else="">TRN : </t>
+                        <t t-esc="doc.company_id.vat"/><br/>
+                    </t>
+                    <t t-if="doc.company_id.partner_id.country_id.code == 'IN'">
+                        <t t-set="company_pan" t-value="doc.get_company_pan()"/>
+                        <t t-if="company_pan">PAN : <t t-esc="company_pan"/><br/></t>
+                        <t t-set="company_iec" t-value="doc.get_company_iec()"/>
+                        <t t-if="company_iec">IEC No : <t t-esc="company_iec"/><br/></t>
+                    </t>
                     <t t-if="doc.company_id.partner_id.email">E-Mail : <t t-esc="doc.company_id.partner_id.email"/></t>
                     <div style="border-top:1px solid black;height:1px;"/>
 
@@ -175,11 +187,9 @@
                         <tr>
                             <td style="border-right:1px solid #000; padding:1px;" colspan="3">
                                 <strong>
-                                    <t t-if="lum_sale and lum_sale.note">
-                                        <span t-out="lum_sale.note"/>
-                                    </t>
-                                    <t t-else="">
-                                        Delivery- Dafza to Dafza <br/>At- Captains Freight Services
+                                    <t t-if="lum_sale and lum_sale.incoterm">
+                                        [<t t-esc="lum_sale.incoterm.code or ''"/>] <t t-esc="lum_sale.incoterm.name or ''"/>
+                                        <t t-if="lum_sale.incoterm_location">, <t t-esc="lum_sale.incoterm_location or ''"/></t>
                                     </t>
                                 </strong>
                             </td>
@@ -191,8 +201,9 @@
             <!-- PRODUCT TABLE HEADER (merged — no separate table) -->
             <tr>
                 <th style="border:1px solid #000; padding:4px; text-align:center; background-color:#f0f0f0; width:5%;">Sl No.</th>
-                <th style="border:1px solid #000; padding:4px; text-align:left; background-color:#f0f0f0; width:43%;">Description of Goods</th>
-                <th style="border:1px solid #000; padding:4px; text-align:right; background-color:#f0f0f0; width:13%;">Quantity</th>
+                <th style="border:1px solid #000; padding:4px; text-align:left; background-color:#f0f0f0; width:35%;">Description of Goods</th>
+                <th style="border:1px solid #000; padding:4px; text-align:center; background-color:#f0f0f0; width:10%;">HSN/SAC</th>
+                <th style="border:1px solid #000; padding:4px; text-align:right; background-color:#f0f0f0; width:11%;">Quantity</th>
                 <th style="border:1px solid #000; padding:4px; text-align:right; background-color:#f0f0f0; width:15%;">Rate</th>
                 <th style="border:1px solid #000; padding:4px; text-align:center; background-color:#f0f0f0; width:8%;">Per</th>
                 <th style="border:1px solid #000; padding:4px; text-align:right; background-color:#f0f0f0; width:16%;">Amount</th>
@@ -214,6 +225,7 @@
                             <t t-if="line.product_id.product_tmpl_id.ks_unlocked">, Unlocked</t>)
                         </t>
                     </td>
+                    <td style="border:1px solid #000; padding:4px; text-align:center;"><t t-esc="doc.get_line_hsn_code(line)"/></td>
                     <td style="border:1px solid #000; padding:4px; text-align:right;">
                         <strong><t t-esc="doc.format_number(line.quantity, digits=0)"/> pcs</strong>
                     </td>
@@ -229,7 +241,8 @@
 
             <!-- TOTAL ROW -->
             <tr>
-                <td colspan="5" style="border:1px solid #000; padding:4px; text-align:right;"><strong>Total</strong></td>
+                <td colspan="6" style="border:1px solid #000; padding:4px; text-align:right;"><strong>Total</strong></td>
+
                 <td style="border:1px solid #000; padding:4px; text-align:right;">
                     <strong><t t-esc="doc.currency_id.symbol or '$'"/> <t t-esc="doc.format_number(doc.amount_total, digits=2)"/></strong>
                 </td>
@@ -237,7 +250,7 @@
 
             <!-- CURRENCY CONVERSION LINE -->
             <tr>
-                <td style="border:1px solid #000; padding:4px; text-align:right;" colspan="6">
+                <td style="border:1px solid #000; padding:4px; text-align:right;" colspan="7">
                     <t t-set="invoice_currency" t-value="doc.currency_id"/>
                     <t t-set="company_currency" t-value="doc.company_id.currency_id"/>
                     <t t-set="conversion_date" t-value="doc.invoice_date or doc.date or doc.create_date.date()"/>
@@ -258,7 +271,7 @@
 
             <!-- AMOUNT IN WORDS -->
             <tr>
-                <td style="border:1px solid #000; padding:6px;" colspan="6">
+                <td style="border:1px solid #000; padding:6px;" colspan="7">
                     Amount Chargeable (in words)<br/>
                     <strong>
                         <t t-set="invoice_amount_words" t-value="doc.get_amount_in_words_currency(total_invoice_amount, invoice_currency)"/>
@@ -267,34 +280,38 @@
                 </td>
             </tr>
 
-            <!-- BANK DETAILS ROW -->
+            <!-- REMARKS + DECLARATION + BANK DETAILS + SIGNATORY ROW -->
             <tr>
-                <td style="border:1px solid #000; padding:6px; vertical-align:top;" colspan="6">
-
-                        <t t-set="bank_info" t-value="doc.get_company_bank_info()"/>
-                        Company's Bank Details<br/>
-                        1. Bank Name : <strong><t t-esc="(bank_info.get('bank_name') or '') if bank_info else ''"/></strong><br/>
-                        2. Account Number (A/c No.) : <strong><t t-esc="(bank_info.get('acc_number') or '') if bank_info else ''"/></strong><br/>
-                        3. IFSC Code : <strong><t t-esc="(bank_info.get('ifsc_code') or '') if bank_info else ''"/></strong><br/>
-                        4. Branch &amp; SWIFT Code : <strong>
-                            <t t-esc="(bank_info.get('branch') or '') if bank_info else ''"/>
-                            <t t-if="bank_info and bank_info.get('branch') and bank_info.get('swift_code')"> / </t>
-                            <t t-esc="(bank_info.get('swift_code') or '') if bank_info else ''"/>
-                        </strong><br/>
-
-                </td>
-            </tr>
-            <tr>
-                <td style="border:1px solid #000; padding:20px;" colspan="3">
-                    Customer's Seal and Signature
-                </td>
-                <td style="border:1px solid #000; padding:6px; text-align:center; vertical-align:bottom;" colspan="3">
-                    <t t-if="lum_sale and lum_sale.ks_authorized_signature">
-                        <img t-att-src="image_data_uri(lum_sale.ks_authorized_signature)"
-                             style="max-height:60px; max-width:180px; display:block; margin:0 auto 4px auto;"/>
+                <td style="border:1px solid #000; padding:6px; vertical-align:top;" colspan="4">
+                    <t t-if="lum_sale and lum_sale.ks_remarks">
+                        <strong>Remarks</strong><br/>
+                        <t t-esc="lum_sale.ks_remarks"/><br/><br/>
                     </t>
-                    Authorised Signatory<br/><br/>
-                    For <t t-esc="doc.company_id.name or 'BORA ELECTRONICS FZCO'"/>
+                    <t t-if="lum_sale and lum_sale.note">
+                        <strong>Declaration</strong><br/>
+                        <span t-out="lum_sale.note"/>
+                    </t>
+                </td>
+                <td style="border:1px solid #000; padding:6px; vertical-align:top;" colspan="3">
+                    <t t-set="bank_info" t-value="doc.get_company_bank_info()"/>
+                    <strong>Company's Bank Details</strong><br/>
+                    1. Bank Name : <strong><t t-esc="(bank_info.get('bank_name') or '') if bank_info else ''"/></strong><br/>
+                    2. Account Number (A/c No.) : <strong><t t-esc="(bank_info.get('acc_number') or '') if bank_info else ''"/></strong><br/>
+                    3. IFSC Code : <strong><t t-esc="(bank_info.get('ifsc_code') or '') if bank_info else ''"/></strong><br/>
+                    4. Branch &amp; SWIFT Code : <strong>
+                        <t t-esc="(bank_info.get('branch') or '') if bank_info else ''"/>
+                        <t t-if="bank_info and bank_info.get('branch') and bank_info.get('swift_code')"> / </t>
+                        <t t-esc="(bank_info.get('swift_code') or '') if bank_info else ''"/>
+                    </strong><br/>
+                    <div style="border-top:1px solid #000; margin-top:20px;"/>
+                    <div style="text-align:right; margin-top:10px;">
+                        <t t-if="lum_sale and lum_sale.ks_authorized_signature">
+                            <img t-att-src="image_data_uri(lum_sale.ks_authorized_signature)"
+                                 style="max-height:60px; max-width:180px; display:block; margin:0 0 4px auto;"/>
+                        </t>
+                        Authorised Signatory<br/><br/>
+                        For <strong><t t-esc="doc.company_id.name or 'BORA ELECTRONICS FZCO'"/></strong>
+                    </div>
                 </td>
             </tr>
 

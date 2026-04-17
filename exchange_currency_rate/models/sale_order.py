@@ -47,11 +47,14 @@ class SaleOrder(models.Model):
 
     @api.onchange('is_exchange')
     def _onchange_is_exchange(self):
-        """ Update Rate when is_exchange is Enabled."""
+        """ Update Rate when is_exchange is Enabled.
+        Rate = how many company currency units per 1 foreign currency unit.
+        Example: company=INR, pricelist=USD → rate = 83 means 1 USD = 83 INR.
+        """
         if self.is_exchange:
             self.rate = self.env['res.currency']._get_conversion_rate(
-                from_currency=self.company_currency_id,
-                to_currency=self.currency_id,
+                from_currency=self.currency_id,
+                to_currency=self.company_currency_id,
                 company=self.company_id,
                 date=self.date_order,
             )

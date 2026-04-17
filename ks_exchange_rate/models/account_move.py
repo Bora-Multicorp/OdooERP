@@ -12,8 +12,8 @@ class AccountMove(models.Model):
         compute='_compute_exchanged_amount',
         store=True,
         currency_field='company_currency_id',
-        help='Calculated as: Total Amount / Exchange Rate. '
-             'Example: If total is 200 USD and rate is 50, then exchanged currency amount = 200 / 50 = 4',
+        help='Calculated as: Total Amount × Exchange Rate. '
+             'Example: If total is 200 USD and rate is 50 (1 USD = 50 INR), then exchanged currency amount = 200 × 50 = 10,000 INR',
     )
 
     @api.depends('amount_total', 'rate', 'currency_id', 'company_currency_id', 'is_exchange', 'invoice_line_ids.price_subtotal')
@@ -32,7 +32,7 @@ class AccountMove(models.Model):
                 move.amount_total):
                 # Calculate: document_total / exchange_rate
                 # Example: 200 USD / 50 = 4
-                exchanged_amount = move.amount_total / move.rate
+                exchanged_amount = move.amount_total * move.rate
             move.exchanged_amount = exchanged_amount
 
 
@@ -100,7 +100,7 @@ class AccountMoveLine(models.Model):
             # Calculate exchanged amount: line_total / exchange_rate
             # Example: 200 USD / 100 = 2 (in company currency)
             if line_total and line_total != 0:
-                exchanged_amount = abs(line_total) / move.rate
+                exchanged_amount = abs(line_total) * move.rate
             
             line.exchanged_amount = exchanged_amount
 

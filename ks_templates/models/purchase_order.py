@@ -8,9 +8,26 @@ class PurchaseOrder(models.Model):
 
     ks_authorised_signatory = fields.Binary(string='Authorised Signatory', attachment=True, copy=False)
     ks_bank_id = fields.Many2one('res.bank', string='Bank Information')
+    ks_remarks = fields.Text(string='Remarks')
     ks_round_off = fields.Float(string='Round Off', digits=(16, 2), default=0.0)
     amount_total = fields.Monetary(string='Total', store=True, readonly=True, compute='_amount_all')
     tax_totals = fields.Binary(compute='_compute_tax_totals', exportable=False)
+
+    def get_company_pan(self):
+        """Get company PAN number (Indian localization field)"""
+        self.ensure_one()
+        try:
+            return self.company_id.l10n_in_pan or ''
+        except Exception:
+            return ''
+
+    def get_company_iec(self):
+        """Get company IEC number"""
+        self.ensure_one()
+        try:
+            return self.company_id.iec_no or ''
+        except Exception:
+            return ''
 
     @api.depends('order_line.price_subtotal', 'company_id', 'currency_id', 'ks_round_off')
     def _amount_all(self):

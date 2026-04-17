@@ -6,11 +6,12 @@
         <field name="arch" type="xml">
             <form string="Vendor Payment Approval Request">
                 <header>
+                    <field name="ks_can_approve" invisible="1"/>
                     <button name="action_submit_and_open_wizard" string="Submit for Approval" type="object" class="btn-primary" invisible="state != 'draft'"/>
                     <button name="action_approve_wizard" string="Approve" type="object" class="btn-primary"
-                            invisible="state != 'pending_approval'"/>
+                            invisible="not ks_can_approve"/>
                     <button name="action_reject_wizard" string="Reject" type="object" class="btn-secondary"
-                            invisible="state != 'pending_approval'"/>
+                            invisible="not ks_can_approve"/>
                     <button name="action_reset_to_draft" string="Reset to Draft" type="object" invisible="state not in ('pending_approval', 'rejected')"/>
                     <field name="state" widget="statusbar" statusbar_visible="draft,pending_approval,approved,cancelled"/>
                 </header>

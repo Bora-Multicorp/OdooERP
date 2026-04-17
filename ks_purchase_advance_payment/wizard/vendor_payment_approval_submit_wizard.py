@@ -113,7 +113,6 @@ class VendorPaymentApprovalSubmitWizard(models.TransientModel):
         req.sudo().write({
             'state': 'pending_approval',
             'approval_line_ids': lines,
-            'assigned_approver_id': self.approver_1_id.id,  # first approver is the assigned one
         })
         req._notify_next_approver()
         return {'type': 'ir.actions.act_window_close'}

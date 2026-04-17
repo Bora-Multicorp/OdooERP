@@ -17,6 +17,24 @@ class AccountMove(models.Model):
     ks_place_of_receipt_by_shipper = fields.Char(string='Place of Receipt by Shipper')
     ks_city_port_of_loading = fields.Char(string='City / Port of Loading')
     ks_city_port_of_discharge = fields.Char(string='City / Port of Discharge')
+    ks_zone = fields.Char(string='Zone', compute='_compute_ks_zone', store=False)
+
+    @api.depends('invoice_line_ids.sale_line_ids.order_id.ks_zone')
+    def _compute_ks_zone(self):
+        for move in self:
+            zone = ''
+            try:
+                for line in move.invoice_line_ids:
+                    for sale_line in line.sale_line_ids:
+                        if sale_line.order_id and getattr(sale_line.order_id, 'ks_zone', None):
+                            zone = sale_line.order_id.ks_zone
+                            break
+                    if zone:
+                        break
+            except Exception:
+                pass
+            move.ks_zone = zone
+
     # Bank details for invoice (copied from sale order ks_bank_id when invoice is created from SO)
     ks_bank_id = fields.Many2one(
         'res.bank',
@@ -325,6 +343,22 @@ class AccountMove(models.Model):
             if sale_order:
                 return sale_order
         return False
+
+    def get_company_pan(self):
+        """Get company PAN number (Indian localization field)"""
+        self.ensure_one()
+        try:
+            return self.company_id.l10n_in_pan or ''
+        except Exception:
+            return ''
+
+    def get_company_iec(self):
+        """Get company IEC number"""
+        self.ensure_one()
+        try:
+            return self.company_id.iec_no or ''
+        except Exception:
+            return ''
 
     def get_line_hsn_code(self, line):
         """Get HSN/SAC code from product template"""

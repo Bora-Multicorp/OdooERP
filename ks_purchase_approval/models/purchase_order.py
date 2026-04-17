@@ -1640,7 +1640,35 @@ class PurchaseOrder(models.Model):
         return pos
     
     def write(self, vals):
-        """Override write to automatically update linked Sale Orders"""
+        """Override write to protect header fields on confirmed/locked POs and update linked Sale Orders."""
+        _protected_fields = [
+            'payment_term_id', 'fiscal_position_id',
+            'dest_address_id', 'ks_round_off', 'ks_no_tax_allowed',
+            'picking_type_id', 'ks_linked_sale_order_ids', 'ks_zone', 'partner_ref',
+            'date_planned',
+        ]
+        _locked_states = ('purchase', 'pending_approval', 'cancel_pending', 'edit_pending')
+
+        if any(f in vals for f in _protected_fields):
+            for order in self:
+                if order.state not in _locked_states:
+                    continue
+                if not order._has_approval_config():
+                    continue
+                all_approvers = order._get_approval_config().get_all_approvers()
+                if self.env.user in all_approvers:
+                    continue  # PM/approver users can always edit
+                edit_approved = (
+                    order.ks_edit_approved and
+                    order.ks_edit_request_user_id == self.env.user
+                )
+                if not edit_approved:
+                    changed = [f for f in _protected_fields if f in vals]
+                    raise UserError(_(
+                        "You cannot modify %s on a confirmed Purchase Order. "
+                        "Please use 'Request Edit' to get edit approval first."
+                    ) % ', '.join(changed))
+
         result = super().write(vals)
         
         # If linked_sale_order_ids is being updated, update the reverse relation

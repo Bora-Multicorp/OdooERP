@@ -33,23 +33,43 @@ class KsPodUploadWizard(models.TransientModel):
             'type': 'binary',
         })
 
-        # Compose and send email
-        message_body = self.ks_message or _(
-            '<p>Dear %s,</p>'
-            '<p>Please find attached the Proof of Delivery for your order <strong>%s</strong>.</p>'
-            '<p>Thank you for your business.</p>'
-        ) % (picking.partner_id.name, picking.name)
+        # Render body from template; fall back to a plain default
+        template = self.env.ref(
+            'ks_sale_approval.mail_template_pod_email', raise_if_not_found=False
+        )
+        if self.ks_message:
+            body_html = self.ks_message
+        elif template:
+            body_html = template._render_field('body_html', picking.ids)[picking.id]
+        else:
+            body_html = _(
+                '<p>Dear %(name)s,</p>'
+                '<p>Please find attached the Proof of Delivery for your order '
+                '<strong>%(order)s</strong>.</p>'
+                '<p>Thank you for your business.</p>'
+            ) % {'name': picking.partner_id.name, 'order': picking.name}
 
+        subject = _('Proof of Delivery: %s') % picking.name
+
+        # Send email directly via mail.mail
+        self.env['mail.mail'].sudo().create({
+            'subject': subject,
+            'body_html': body_html,
+            'email_from': picking.company_id.email_formatted or self.env.user.email_formatted,
+            'recipient_ids': [(4, picking.partner_id.id)],
+            'attachment_ids': [(4, attachment.id)],
+            'auto_delete': False,
+        }).send()
+
+        # Log in chatter so there's an audit trail
         picking.message_post(
-            body=message_body,
-            subject=_('Proof of Delivery: %s') % picking.name,
-            message_type='email',
-            subtype_xmlid='mail.mt_comment',
-            partner_ids=[picking.partner_id.id],
-            attachment_ids=[attachment.id],
+            body=_('POD email sent to %s with attachment <em>%s</em>.') % (
+                picking.partner_id.email, self.ks_pod_filename or 'POD.pdf'),
+            message_type='notification',
+            subtype_xmlid='mail.mt_note',
         )
 
-        # Mark POD as sent on the picking
+        # Mark POD as sent
         picking.write({
             'ks_pod_sent': True,
             'ks_pod_attachment_id': attachment.id,
