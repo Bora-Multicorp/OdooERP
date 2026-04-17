@@ -49,6 +49,13 @@
         <t t-set="tax_info" t-value="doc.get_cgst_sgst_info()"/>
         <t t-set="tds_info" t-value="doc.get_tds_info()"/>
         <t t-set="round_off" t-value="doc.ks_round_off"/>
+        <t t-set="svx_inv_currency" t-value="doc.currency_id"/>
+        <t t-set="svx_comp_currency" t-value="doc.company_id.currency_id"/>
+        <t t-set="svx_total_amount" t-value="doc.amount_total"/>
+        <t t-set="svx_rate_info" t-value="doc.get_exchange_rate_info()"/>
+        <t t-set="svx_has_exchange" t-value="svx_rate_info['has_exchange']"/>
+        <t t-set="svx_large_rate" t-value="svx_rate_info['large_rate']"/>
+        <t t-set="svx_small_rate" t-value="svx_rate_info['small_rate']"/>
 
         <!-- TITLE — kept separate -->
         <table style="width:100%; border-collapse:collapse; border-color:white; margin-bottom:4px;">
@@ -232,11 +239,20 @@
                 </td>
             </tr>
 
+            <!-- CURRENCY CONVERSION ROW -->
+            <t t-if="svx_has_exchange">
+            <tr>
+                <td style="border:1px solid #000; padding:4px; text-align:right;" colspan="7">
+                    <strong>Total Invoice Amount in <t t-esc="svx_inv_currency.name or 'USD'"/> <t t-esc="doc.format_number(svx_total_amount, digits=2)"/> @ <t t-esc="svx_comp_currency.name"/> <t t-esc="doc.format_number(svx_large_rate, digits=4)"/> / 1 <t t-esc="svx_comp_currency.name"/> = <t t-esc="doc.format_number(svx_small_rate, digits=4)"/> <t t-esc="svx_inv_currency.name or 'USD'"/></strong>
+                </td>
+            </tr>
+            </t>
+
             <!-- AMOUNT IN WORDS ROW -->
             <tr>
                 <td style="border:1px solid #000; padding:6px;" colspan="7">
                     Amount Chargeable (in words)<br/>
-                    <strong><t t-esc="doc.get_amount_in_words_inr(doc.amount_total)"/> (INR <t t-esc="doc.format_number(doc.amount_total, digits=2)"/>)</strong>
+                    <strong><t t-esc="doc.get_amount_in_words_currency(svx_total_amount, svx_inv_currency)"/></strong>
                 </td>
             </tr>
 

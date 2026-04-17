@@ -330,20 +330,22 @@
                     </tr>
 
                     <!-- CURRENCY CONVERSION ROW -->
+                    <t t-if="invoice_currency and company_currency and invoice_currency != company_currency">
                     <tr>
                         <td style="border:1px solid #000; padding:4px; text-align:right;" colspan="7">
                             <strong>
-                                Total Invoice Amount in <t t-esc="invoice_currency.name or 'USD'"/> <t t-esc="doc.format_number(total_amount, digits=2)"/> @ <t t-esc="company_currency.name or 'AED'"/> <t t-esc="doc.format_number(exchange_rate, digits=3)"/> / 1 <t t-esc="company_currency.name or 'AED'"/> = <t t-esc="doc.format_number(company_to_invoice_rate, digits=4)"/> <t t-esc="invoice_currency.name or 'USD'"/> = <t t-esc="company_currency.name or 'AED'"/> <t t-esc="doc.format_number(converted_amount, digits=2)"/>
+                                Total Invoice Amount in <t t-esc="invoice_currency.name or 'USD'"/> <t t-esc="doc.format_number(total_amount, digits=2)"/> @ <t t-esc="company_currency.name or 'INR'"/> <t t-esc="doc.format_number(company_to_invoice_rate, digits=4)"/> / 1 <t t-esc="company_currency.name or 'INR'"/> = <t t-esc="doc.format_number(exchange_rate, digits=4)"/> <t t-esc="invoice_currency.name or 'USD'"/>
                             </strong>
                         </td>
                     </tr>
+                    </t>
 
                     <!-- AMOUNT IN WORDS ROW -->
                     <tr>
                         <td style="border:1px solid #000; padding:6px;" colspan="7">
                             Amount Chargeable (in words)<br/>
                             <strong>
-                                <t t-esc="invoice_amount_words or ''"/> (<t t-esc="exchange_currency_code + ' ' + doc.format_number(exchanged_amount, digits=2)"/>)
+                                <t t-esc="invoice_amount_words or ''"/>
                             </strong>
                         </td>
                     </tr>

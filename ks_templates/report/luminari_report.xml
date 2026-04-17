@@ -249,33 +249,33 @@
             </tr>
 
             <!-- CURRENCY CONVERSION LINE -->
+            <t t-set="lum_inv_currency" t-value="doc.currency_id"/>
+            <t t-set="lum_comp_currency" t-value="doc.company_id.currency_id"/>
+            <t t-set="lum_conversion_date" t-value="doc.invoice_date or doc.date or doc.create_date.date()"/>
+            <t t-set="lum_invoice_currency_rate" t-value="doc.invoice_currency_rate or 1.0"/>
+            <t t-set="lum_total_amount" t-value="doc.amount_total"/>
+            <t t-set="lum_converted_amount" t-value="lum_total_amount"/>
+            <t t-if="lum_inv_currency and lum_comp_currency and lum_inv_currency != lum_comp_currency">
+                <t t-set="lum_converted_amount" t-value="lum_inv_currency._convert(lum_total_amount, lum_comp_currency, doc.company_id, lum_conversion_date, round=True)"/>
+            </t>
+            <t t-if="lum_inv_currency and lum_comp_currency and lum_inv_currency != lum_comp_currency">
             <tr>
                 <td style="border:1px solid #000; padding:4px; text-align:right;" colspan="7">
-                    <t t-set="invoice_currency" t-value="doc.currency_id"/>
-                    <t t-set="company_currency" t-value="doc.company_id.currency_id"/>
-                    <t t-set="conversion_date" t-value="doc.invoice_date or doc.date or doc.create_date.date()"/>
-                    <t t-set="invoice_currency_rate" t-value="doc.invoice_currency_rate or 1.0"/>
-                    <t t-set="total_invoice_amount" t-value="doc.amount_total"/>
-                    <t t-set="converted_amount" t-value="total_invoice_amount"/>
-                    <t t-set="exchange_rate" t-value="1.0"/>
-                    <t t-set="company_to_invoice_rate" t-value="invoice_currency_rate"/>
-                    <t t-if="invoice_currency and company_currency and invoice_currency != company_currency">
-                        <t t-set="converted_amount" t-value="invoice_currency._convert(total_invoice_amount, company_currency, doc.company_id, conversion_date, round=True)"/>
-                        <t t-set="exchange_rate" t-value="1.0 / invoice_currency_rate"/>
-                    </t>
                     <strong>
-                        Total Invoice Amount in <t t-esc="invoice_currency.name or 'USD'"/> <t t-esc="doc.format_number(total_invoice_amount, digits=2)"/> @ <t t-esc="company_currency.name or 'AED'"/> <t t-esc="doc.format_number(exchange_rate, digits=3)"/> / 1 <t t-esc="company_currency.name or 'AED'"/> = <t t-esc="doc.format_number(company_to_invoice_rate, digits=4)"/> <t t-esc="invoice_currency.name or 'USD'"/>
+                        <t t-set="lum_exchange_rate" t-value="1.0 / lum_invoice_currency_rate if lum_invoice_currency_rate else 1.0"/>
+                        Total Invoice Amount in <t t-esc="lum_inv_currency.name or 'USD'"/> <t t-esc="doc.format_number(lum_total_amount, digits=2)"/> @ <t t-esc="lum_comp_currency.name or 'INR'"/> <t t-esc="doc.format_number(lum_invoice_currency_rate, digits=4)"/> / 1 <t t-esc="lum_comp_currency.name or 'INR'"/> = <t t-esc="doc.format_number(lum_exchange_rate, digits=4)"/> <t t-esc="lum_inv_currency.name or 'USD'"/>
                     </strong>
                 </td>
             </tr>
+            </t>
 
             <!-- AMOUNT IN WORDS -->
             <tr>
                 <td style="border:1px solid #000; padding:6px;" colspan="7">
                     Amount Chargeable (in words)<br/>
                     <strong>
-                        <t t-set="invoice_amount_words" t-value="doc.get_amount_in_words_currency(total_invoice_amount, invoice_currency)"/>
-                        <t t-esc="invoice_amount_words or ''"/> (<t t-esc="(company_currency.name or 'AED') + ' ' + doc.format_number(converted_amount, digits=2)"/>)
+                        <t t-set="invoice_amount_words" t-value="doc.get_amount_in_words_currency(lum_total_amount, lum_inv_currency)"/>
+                        <t t-esc="invoice_amount_words or ''"/>
                     </strong>
                 </td>
             </tr>

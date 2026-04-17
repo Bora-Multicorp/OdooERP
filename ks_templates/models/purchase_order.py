@@ -13,6 +13,38 @@ class PurchaseOrder(models.Model):
     amount_total = fields.Monetary(string='Total', store=True, readonly=True, compute='_amount_all')
     tax_totals = fields.Binary(compute='_compute_tax_totals', exportable=False)
 
+    def get_exchange_rate_info(self):
+        """Returns exchange rate info for PDF display.
+        Reads directly from res.currency.rate — the value user entered in Odoo currency settings.
+        large_rate = what user entered (e.g., 50 = 1 USD = 50 INR)
+        small_rate = 1 / large_rate (e.g., 0.02)
+        """
+        self.ensure_one()
+        inv_currency = self.currency_id
+        comp_currency = self.company_id.currency_id
+        if not inv_currency or not comp_currency or inv_currency == comp_currency:
+            return {'has_exchange': False, 'large_rate': 1.0, 'small_rate': 1.0}
+        try:
+            # Search for the latest rate record for this currency and company
+            rate_record = self.env['res.currency.rate'].search([
+                ('currency_id', '=', inv_currency.id),
+                ('company_id', 'in', [self.company_id.id, False]),
+                ('name', '<=', fields.Date.today()),
+            ], order='company_id nulls last, name desc', limit=1)
+            if rate_record and rate_record.rate:
+                # rate_record.rate = technical rate (small: USD per INR)
+                # 1/rate = large number (INR per USD) = what user entered as Exchange Rate
+                small_rate = rate_record.rate
+                large_rate = 1.0 / small_rate
+            else:
+                large_rate = self.env['res.currency']._get_conversion_rate(
+                    inv_currency, comp_currency, self.company_id, fields.Date.today()
+                )
+                small_rate = 1.0 / large_rate if large_rate else 1.0
+            return {'has_exchange': True, 'large_rate': large_rate, 'small_rate': small_rate}
+        except Exception:
+            return {'has_exchange': False, 'large_rate': 1.0, 'small_rate': 1.0}
+
     def get_company_pan(self):
         """Get company PAN number (Indian localization field)"""
         self.ensure_one()

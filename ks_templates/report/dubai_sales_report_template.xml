@@ -462,7 +462,7 @@
                             <t t-set="invoice_amount_words" t-value="doc.get_amount_in_words_currency(total_invoice_amount, invoice_currency)"/>
                             <strong>Amount Chargeable (in words)</strong><br/>
                             <strong>
-                                <t t-esc="invoice_amount_words or ''"/> (<t t-esc="exchange_currency_code + ' ' + doc.format_number(exchanged_amount, digits=2)"/>)
+                                <t t-esc="invoice_amount_words or ''"/>
                             </strong>
                         </td>
                     </tr>
