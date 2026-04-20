@@ -8,4 +8,5 @@ from . import ks_purchase_report_detail
 from . import sb_tracker
 from . import account_move_sb_tracker
 from . import sb_brc_master_sb_tracker
+from . import ks_cn_tracking_report
 

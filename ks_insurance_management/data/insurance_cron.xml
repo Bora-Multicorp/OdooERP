@@ -21,4 +21,5 @@
         <field name="active">True</field>
         <field name="user_id" ref="base.user_admin"/>
     </record>
+
 </odoo>

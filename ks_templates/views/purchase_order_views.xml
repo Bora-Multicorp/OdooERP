@@ -1,17 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <data>
-        <!-- Add Made In on Purchase Order Line (list and form) -->
-        <record id="view_purchase_order_form_inherit_ks_templates_made_in" model="ir.ui.view">
-            <field name="name">purchase.order.form.ks.templates.made.in</field>
+        <!-- Add Round Off field in totals section -->
+        <record id="view_purchase_order_form_inherit_ks_templates_round_off" model="ir.ui.view">
+            <field name="name">purchase.order.form.ks.templates.round.off</field>
             <field name="model">purchase.order</field>
             <field name="inherit_id" ref="purchase.purchase_order_form"/>
             <field name="arch" type="xml">
-                <xpath expr="//field[@name='order_line']/list/field[@name='name']" position="after">
-                    <field name="made_in_country_id" string="Made In" optional="show"/>
+                <xpath expr="//group[@class='oe_subtotal_footer']/field[@name='tax_totals']" position="before">
+                    <field name="ks_round_off" string="Round Off" widget="monetary"/>
                 </xpath>
-                <xpath expr="//field[@name='order_line']/form/group/group/field[@name='price_unit']" position="after">
-                    <field name="made_in_country_id" string="Made In" placeholder="e.g. Made in India"/>
+            </field>
+        </record>
+
+        <!-- Add Authorised Signatory and Bank fields to Purchase Order -->
+        <record id="view_purchase_order_form_inherit_ks_templates_sign_bank" model="ir.ui.view">
+            <field name="name">purchase.order.form.ks.templates.sign.bank</field>
+            <field name="model">purchase.order</field>
+            <field name="inherit_id" ref="purchase.purchase_order_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//page[@name='purchase_delivery_invoice']/group" position="inside">
+                    <group string="Bank &amp; Signature">
+                        <field name="ks_bank_id" placeholder="Select Bank"/>
+                        <field name="ks_remarks" placeholder="Remarks" colspan="2"/>
+                        <field name="ks_authorised_signatory" widget="signature" string="Authorised Signatory"/>
+                    </group>
                 </xpath>
             </field>
         </record>

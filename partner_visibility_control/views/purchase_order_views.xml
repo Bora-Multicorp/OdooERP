@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!--
+        Inject the 'filter_by_purchase_executive' flag into the partner_id
+        field context on the purchase.order form view.
+
+        This flag is read by ResPartner._search (res_partner.py) to append
+        [('purchase_executive_ids', 'in', [uid])] via expression.AND to
+        every search originating from this field — autocomplete dropdown and
+        "Search More" dialog alike.
+
+        Same design as the Sales override — see sale_order_views.xml for the
+        full explanation.
+
+        Context preservation:
+          res_partner_search_mode → tells the widget to search suppliers
+          show_vat               → controls VAT display in the field
+    -->
+    <record id="purchase_order_form_view_inherit_partner_domain"
+            model="ir.ui.view">
+        <field name="name">purchase.order.form.partner.visibility.context</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_form"/>
+        <field name="arch" type="xml">
+
+            <xpath expr="//field[@name='partner_id'][@widget='res_partner_many2one']"
+                   position="attributes">
+                <attribute name="domain">['|', '&amp;', ('vendor_type', '=', 'regular'), ('kyc_details.state', '=', 'confirmed'), '&amp;', ('vendor_type', '!=', 'regular'), ('is_approved', '=', True)]</attribute>
+                <attribute name="context">{'res_partner_search_mode': 'supplier', 'show_vat': True, 'filter_by_purchase_executive': True}</attribute>
+            </xpath>
+
+        </field>
+    </record>
+
+</odoo>

@@ -5,10 +5,10 @@
             <field name="name">stock.move.upload.csv.wizard.form</field>
             <field name="model">stock.move.upload.csv.wizard</field>
             <field name="arch" type="xml">
-                <form string="Import Serials/Lots from CSV">
+                <form string="Import Serials/Lots from CSV or Excel">
                     <group>
                         <field name="move_id" invisible="1"/>
-                        <field name="csv_file" filename="filename" options="{'accepted_file_extensions': '.csv'}"/>
+                        <field name="csv_file" filename="filename" options="{'accepted_file_extensions': '.csv,.xlsx'}"/>
                         <field name="filename" invisible="1"/>
                         <field name="keep_lines"/>
                     </group>

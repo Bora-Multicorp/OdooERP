@@ -92,15 +92,23 @@
             <xpath expr="//form/sheet" position="before">
                 <header>
                     <button name="%(vendor_kyc_wizard_action)d" string="KYC Form" type="action"
-                            class="btn btn-primary" invisible="is_kyc or (not is_vendor) or (is_expired or is_rejected)"
+                            class="btn btn-primary"
+                            invisible="is_kyc or (not is_vendor and not (is_customer and is_overseas)) or (is_expired or is_rejected)"
                             display="always"/>
 <!--                    deadline &lt; DateTime.today()-->
                     <button name="%(rekyc_request_wizard_action)d" string="Re-KYC" type="action"
-                            class="oe_highlight" invisible="not (is_expired or is_rejected)"/>
+                            class="oe_highlight"
+                            invisible="(vendor_type != 'regular' and not (is_customer and is_overseas)) or (not is_expired and not is_rejected and not has_expired_docs)"/>
                     <button name="action_submit_for_approval" string="Submit for Approval" type="object"
                             class="btn-primary"
                             invisible="not is_vendor or approval_status != 'draft' or vendor_type == 'regular'"/>
+                    <button name="action_update_approvals" string="Update Approvals" type="object"
+                            class="btn-warning"
+                            invisible="not is_vendor or approval_status != 'to_approve' or is_approved or ks_is_approver"
+                            confirm="This will cancel the current approval request and let you choose new approvers. Continue?"/>
                     <field name="has_pending_approval" invisible="1"/>
+                    <field name="has_expired_docs" invisible="1"/>
+                    <field name="ks_is_approver" invisible="1"/>
                     <button name="%(partner_approve_request_wizard_action)d" string="Approve" type="action"
                             class="btn-primary"
                             invisible="not is_vendor or approval_status != 'to_approve' or not has_pending_approval or is_approved"/>
@@ -126,6 +134,7 @@
                 <field name="vendor_type" invisible="not is_vendor" required="is_vendor"/>
                 <field name="approval_status" invisible="not is_vendor" readonly="1"/>
                 <field name="is_customer" readonly="is_kyc" invisible="0"/>
+                <field name="is_overseas" invisible="not is_vendor and not is_customer" widget="boolean_toggle"/>
                 <field name="is_kyc" readonly="1"/>
                 <field name="is_approved" readonly="1" invisible="not is_approved"/>
                 <field name="approval_date" readonly="1" invisible="not approval_date"/>

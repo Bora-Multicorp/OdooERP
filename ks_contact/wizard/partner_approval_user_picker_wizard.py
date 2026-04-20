@@ -63,15 +63,30 @@ class PartnerApprovalUserPickerWizard(models.TransientModel):
             self.approver1_user = False
 
     def add_users_for_approval(self):
-        """Create approval lines on partner and set approval_status to to_approve (same as KYC flow)."""
+        """Create approval lines on partner and set approval_status to to_approve.
+
+        When opened via 'Update Approvals' (ks_is_update=True in context), the old
+        activities are silently cancelled HERE — only after the user clicks OK.
+        Clicking the wizard Cancel button leaves everything completely untouched.
+        """
         self.ensure_one()
         if not self.partner_id:
             raise ValidationError(_("Contact is missing."))
         if not self.approver1_user or not self.approver2_user:
             raise ValidationError(_("Please select both Approver 1 and Approver 2."))
 
+        is_update = self.env.context.get('ks_is_update', False)
+        if is_update:
+            # Silently cancel old activities (scoped: summary 'Vendor Approval' + approver users)
+            self.partner_id._ks_cancel_pending_partner_approval_activities(mark_done=False)
+            self.partner_id.message_post(
+                body=_("Approval request updated by %s. Previous approvers cancelled.") % self.env.user.name,
+                message_type='notification',
+                subtype_xmlid='mail.mt_note',
+            )
+
         from odoo import Command
-        # Replace any previous approval lines (e.g. after reject) with new approvers
+        # Replace approval lines with new approvers (Command.clear() handles old lines)
         self.partner_id.write({
             'approval_line_ids': [
                 Command.clear(),

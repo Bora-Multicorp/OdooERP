@@ -18,6 +18,7 @@ class KSSaleOrder(models.Model):
     mail_count = fields.Integer("mail count", defualt=0, tracking=True)
     stock_decifient = fields.Boolean("Stock Decifient?", default=False, tracking=True)
 
+
     def _ks_get_cash_handling_product(self):
         """Get the Cash handling charges product (for Dubai zone)."""
         template = self.env.ref(
@@ -27,6 +28,7 @@ class KSSaleOrder(models.Model):
         if not template or not template.product_variant_ids:
             return self.env['product.product']
         return template.product_variant_ids[0]
+
 
     def _ks_order_amount_untaxed_without_charge_line(self):
         """Amount untaxed excluding the cash handling charge line (for Dubai)."""
@@ -39,54 +41,37 @@ class KSSaleOrder(models.Model):
         )
         return sum(lines.mapped('price_subtotal'))
 
-    def _ks_ensure_dubai_cash_handling_line(self):
-        """When zone is Dubai, ensure one order line 'Cash handling charges' at 1.2% of (order total excluding that line)."""
+
+    def _ks_recalc_dubai_cash_handling_line(self):
+        """If Dubai zone and the Cash handling charge line already exists, recalculate its amount.
+        Does NOT auto-create the line — user must add it manually via 'Add a product'."""
         for order in self:
             if getattr(order, 'ks_zone', None) != 'dubai':
                 continue
             product = order._ks_get_cash_handling_product()
             if not product:
                 continue
+            charge_line = order.order_line.filtered(lambda l: l.product_id == product)
+            if not charge_line:
+                continue  # Not added yet — do nothing
             base_amount = order._ks_order_amount_untaxed_without_charge_line()
             charge_amount = base_amount * (KS_DUBAI_CASH_HANDLING_PERCENT / 100.0)
-            charge_line = order.order_line.filtered(
-                lambda l: l.product_id == product
-            )
-            if charge_line:
-                # Update existing line: set price so that price_subtotal = charge_amount (qty 1)
-                if abs((charge_line.price_subtotal or 0) - charge_amount) > 0.01:
-                    charge_line.with_context(ks_dubai_charge_update=True).write({
-                        'product_uom_qty': 1,
-                        'price_unit': charge_amount,
-                    })
-            else:
-                # Create new line
-                order.with_context(ks_dubai_charge_update=True).write({
-                    'order_line': [(0, 0, {
-                        'product_id': product.id,
-                        'name': product.name,
-                        'product_uom_qty': 1,
-                        'price_unit': charge_amount,
-                    })],
+            if abs((charge_line.price_subtotal or 0) - charge_amount) > 0.01:
+                charge_line.with_context(ks_dubai_charge_update=True).write({
+                    'product_uom_qty': 1,
+                    'price_unit': charge_amount,
                 })
 
-    @api.model_create_multi
-    def create(self, vals_list):
-        orders = super().create(vals_list)
-        for order in orders:
-            if getattr(order, 'ks_zone', None) == 'dubai':
-                order._ks_ensure_dubai_cash_handling_line()
-        return orders
 
     def write(self, vals):
         res = super().write(vals)
         if self.env.context.get('ks_dubai_charge_update'):
             return res
-        if 'order_line' in vals or vals.get('ks_zone') == 'dubai':
+        if 'order_line' in vals or vals.get('ks_zone'):
             for order in self:
-                if getattr(order, 'ks_zone', None) == 'dubai':
-                    order._ks_ensure_dubai_cash_handling_line()
+                order._ks_recalc_dubai_cash_handling_line()
         return res
+
 
     def mail_to_3pl(self):
         template = self.env.ref('ks_warehouse_extension.sale_order_3pl_notification_template', raise_if_not_found=False)

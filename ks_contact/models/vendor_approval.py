@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
+import logging
 
 from datetime import date
+
+_logger = logging.getLogger(__name__)
 import datetime
 from dateutil.relativedelta import relativedelta
 from markupsafe import Markup
@@ -69,7 +72,8 @@ class ContactKYCApproval(models.Model):
         attachment_fields = [
             'gst_certificate', 'udyam_document', 'shop_act_document',
             'shop_photos', 'shop_videos', 'pan_card_document',
-            'incorporation_certificate', 'moa_aoa', 'electricity_bill'
+            'incorporation_certificate', 'moa_aoa', 'electricity_bill',
+            'company_reg_document', 'authorized_person_id_document',
         ]
 
         for record in res_list:
@@ -151,8 +155,8 @@ class ContactKYCApproval(models.Model):
 
     partner_id = fields.Many2one('res.partner', string="Contact", tracking=True)
     email = fields.Char("Email", tracking=True)
-    point_of_contact = fields.Char("Point of Contact / Purchase Manager (Bora Multicorp)", tracking=True)
-    poc_user = fields.Many2one('res.users', string="Point of Contact to Vendor", tracking=True)
+    point_of_contact = fields.Char("Vendor POC", tracking=True)
+    poc_user = fields.Many2one('res.users', string="Bora Purchase Manager", tracking=True)
     business_legal_name = fields.Char("Business Legal Name", tracking=True)
     is_same_trade_name = fields.Boolean("If Trade Name is same as Legal Name", tracking=True)
     business_trade_name = fields.Char("Business Trade Name", tracking=True)
@@ -179,10 +183,9 @@ class ContactKYCApproval(models.Model):
     other_business = fields.Char("If Other, Specify?", tracking=True)
 
     aadhaar_pan_link = fields.Selection([('yes', 'Yes'), ('no', 'No')],
-                                        string='Aadhar and PAN card linking?',
-                                        required=True)
+                                        string='Aadhar and PAN card linking?')
 
-    gst_no = fields.Char("GST Number", required=True)
+    gst_no = fields.Char("GST Number")
     license_registered = fields.Char("Any licenses registered")
     udyam_number = fields.Char("Udyam Certificate Number")
 
@@ -214,8 +217,8 @@ class ContactKYCApproval(models.Model):
                                            string="No. of Managing Partner / Directors")
 
     directors_detail = fields.One2many('director.details', 'kyc_approval_id', string="KYC Details", tracking=True)
-    pan_no = fields.Char("PAN Number", required=True)
-    comp_google_loc = fields.Char("GPS Location of Shop",required=True)
+    pan_no = fields.Char("PAN Number")
+    comp_google_loc = fields.Char("GPS Location of Shop")
     partner_llp_filename = fields.Char()
     partner_llp = fields.Binary("Partnership/LLP Deed")
 
@@ -228,6 +231,42 @@ class ContactKYCApproval(models.Model):
 
     incorporation_certificate = fields.Many2many('ir.attachment', 'incorportaion_certificate_rels',
                                                  'partner_id', 'attachment_id', string="Incorporation Certificate")
+
+    # ── Overseas flag (drives view visibility on this form) ─────────────────────
+    is_overseas = fields.Boolean(
+        string='Is Overseas',
+        related='partner_id.is_overseas',
+        store=False,
+        help="Mirrors the partner's Overseas Customer flag. Controls which document "
+             "sections are visible on this KYC record.",
+    )
+
+    # ── Overseas KYC Documents ──────────────────────────────────────────────────
+    company_reg_document = fields.Many2many(
+        'ir.attachment', 'kyc_approval_company_reg_rel', 'kyc_id', 'attachment_id',
+        string="Company Registration / Trade License",
+        help="Trade License (UAE/Dubai), Business Registration Certificate (Hong Kong), "
+             "Certificate of Incorporation, or equivalent country-specific document "
+             "proving the legal existence of the company.",
+    )
+    authorized_person_id_document = fields.Many2many(
+        'ir.attachment', 'kyc_approval_auth_person_id_rel', 'kyc_id', 'attachment_id',
+        string="Authorized Person Identity Proof",
+        help="Emirates ID / Passport (UAE), HKID / Passport (Hong Kong), "
+             "or equivalent government-issued photo ID of the authorized signatory / manager.",
+    )
+
+    # ── Overseas document expiry dates ─────────────────────────────────────────
+    company_reg_doc_expiry = fields.Date(
+        string="Trade License / Company Reg. Expiry Date",
+        tracking=True,
+        help="Expiry date of the Company Registration or Trade License document.",
+    )
+    authorized_person_id_expiry = fields.Date(
+        string="Authorized Person ID Expiry Date",
+        tracking=True,
+        help="Expiry date of the Authorized Person's identity document (Emirates ID / HKID / Passport).",
+    )
 
     bank_detail = fields.One2many('bank.details', 'kyc_approval_id', string="Banks Detail")
     address_detail = fields.One2many('address.details', 'kyc_approval_id', string="Address Detail")
@@ -377,6 +416,70 @@ class ContactKYCApproval(models.Model):
 
 
     # -------------------------------------------------------------------------
+    # Update Approvals (safe: cleanup only on wizard OK, never on Cancel)
+    # -------------------------------------------------------------------------
+
+    def _ks_cancel_pending_kyc_activities(self, mark_done=False, feedback=None):
+        """Cancel pending KYC approval activities on this record.
+
+        Scoped by: res_model + res_id + user_ids of current approval_users_ids
+        + summary keyword — so only KYC-approval activities are touched.
+
+        :param mark_done: True  → action_feedback (leaves chatter entry)
+                          False → unlink (silent, used for 'Update' resets)
+        """
+        self.ensure_one()
+        approver_user_ids = self.approval_users_ids.mapped('user_id').ids
+        domain = [
+            ('res_model', '=', self._name),
+            ('res_id', '=', self.id),
+            ('active', '=', True),
+            ('summary', 'ilike', 'KYC Approval for'),
+        ]
+        if approver_user_ids:
+            domain.append(('user_id', 'in', approver_user_ids))
+
+        activities = self.env['mail.activity'].search(domain)
+        if not activities:
+            return True
+
+        if mark_done:
+            activities.action_feedback(feedback=feedback or '')
+        else:
+            activities.sudo().unlink()
+        return True
+
+    def action_update_approvals(self):
+        """Requester/admin updates KYC approvers while KYC is in 'pending' state.
+
+        Only opens the wizard with ks_is_update=True — ALL cleanup (cancel activities,
+        reset approval_users_ids, reset state) happens inside the wizard's
+        add_users_for_approval ONLY when the user clicks OK.
+        Clicking the wizard Cancel button leaves everything untouched.
+        """
+        self.ensure_one()
+        if self.state != 'pending':
+            raise ValidationError(_("Update Approvals is only available while the KYC is in 'Pending' state."))
+
+        current_user = self.env.user
+        is_admin = current_user.has_group('base.group_system')
+        is_owner = self.kyc_approval_creator and self.kyc_approval_creator == current_user
+        if not (is_admin or is_owner):
+            raise ValidationError(_("Only the original submitter or an administrator can update the approval request."))
+
+        return {
+            'name': _('Update Approval Users'),
+            'type': 'ir.actions.act_window',
+            'res_model': 'vendor.kyc.approval.user.picker.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'default_kyc_id': self.id,
+                'ks_is_update': True,
+            },
+        }
+
+    # -------------------------------------------------------------------------
     # Suspend Approval Process
     # -------------------------------------------------------------------------
     def action_suspend(self):
@@ -502,6 +605,11 @@ class ContactKYCApproval(models.Model):
             'shop_act_document': sorted(self.shop_act_document.ids),
             'shop_photos': sorted(self.shop_photos.ids),
             'shop_videos': sorted(self.shop_videos.ids),
+            # Overseas document expiry dates
+            'company_reg_document': sorted(self.company_reg_document.ids),
+            'authorized_person_id_document': sorted(self.authorized_person_id_document.ids),
+            'company_reg_doc_expiry': str(self.company_reg_doc_expiry) if self.company_reg_doc_expiry else '',
+            'authorized_person_id_expiry': str(self.authorized_person_id_expiry) if self.authorized_person_id_expiry else '',
             'directors_detail': [
                 {
                     'designation': d.designation or '',
@@ -510,6 +618,8 @@ class ContactKYCApproval(models.Model):
                     'email': d.email or '',
                     'aadhaar_card_attachments': sorted(d.aadhaar_card_attachments.ids),
                     'pan_card_attachments': sorted(d.pan_card_attachments.ids),
+                    'govt_id_attachments': sorted(d.govt_id_attachments.ids),
+                    'govt_id_expiry': str(d.govt_id_expiry) if d.govt_id_expiry else '',
                 }
                 for d in self.directors_detail
             ],
@@ -518,7 +628,7 @@ class ContactKYCApproval(models.Model):
                     'bank_name': b.bank_name or '',
                     'account_no': b.account_no or '',
                     'ifsc_code': b.ifsc_code or '',
-                    'bank_address': b.bank_address or '',
+                    # 'bank_address': b.bank_address or '',
                     'bank_cheque_attachments': sorted(b.bank_cheque_attachments.ids),
                 }
                 for b in self.bank_detail
@@ -648,6 +758,17 @@ class ContactKYCApproval(models.Model):
                 raise_if_not_found=False,
             )
             if template:
+                # Generate pre-filled survey URL from current KYC data and store
+                # it on the partner so the email template can use object.rekyc_survey_url
+                try:
+                    if self.partner_id.is_overseas:
+                        survey_url = self.partner_id._get_overseas_rekyc_survey_url()
+                    else:
+                        survey_url = self.partner_id._get_rekyc_survey_url()
+                    self.partner_id.sudo().write({'rekyc_survey_url': survey_url})
+                except Exception as e:
+                    _logger.exception("Failed to generate Re-KYC survey URL for partner %s: %s",
+                                      self.partner_id.id, e)
                 template.send_mail(self.partner_id.id, force_send=True)
 
     def _rekyc_payload_to_write_vals(self, payload):
@@ -679,6 +800,11 @@ class ContactKYCApproval(models.Model):
             'shop_act_document': [(6, 0, payload.get('shop_act_document', []))],
             'shop_photos': [(6, 0, payload.get('shop_photos', []))],
             'shop_videos': [(6, 0, payload.get('shop_videos', []))],
+            # Overseas KYC documents
+            'company_reg_document': [(6, 0, payload.get('company_reg_document', []))],
+            'authorized_person_id_document': [(6, 0, payload.get('authorized_person_id_document', []))],
+            'company_reg_doc_expiry': payload.get('company_reg_doc_expiry') or False,
+            'authorized_person_id_expiry': payload.get('authorized_person_id_expiry') or False,
             'directors_detail': [(5, 0, 0)] + [
                 (0, 0, {
                     'designation': d.get('designation'),
@@ -687,6 +813,8 @@ class ContactKYCApproval(models.Model):
                     'email': d.get('email'),
                     'aadhaar_card_attachments': [(6, 0, d.get('aadhaar_card_attachments', []))],
                     'pan_card_attachments': [(6, 0, d.get('pan_card_attachments', []))],
+                    'govt_id_attachments': [(6, 0, d.get('govt_id_attachments', []))],
+                    'govt_id_expiry': d.get('govt_id_expiry') or False,
                 }) for d in payload.get('directors_detail', [])
             ],
             'bank_detail': [(5, 0, 0)] + [
@@ -694,7 +822,7 @@ class ContactKYCApproval(models.Model):
                     'bank_name': b.get('bank_name'),
                     'account_no': b.get('account_no'),
                     'ifsc_code': b.get('ifsc_code'),
-                    'bank_address': b.get('bank_address'),
+                    # 'bank_address': b.get('bank_address'),
                     'bank_cheque_attachments': [(6, 0, b.get('bank_cheque_attachments', []))],
                 }) for b in payload.get('bank_detail', [])
             ],
@@ -1009,7 +1137,8 @@ class ContactKYCApproval(models.Model):
         attachment_fields = [
             'gst_certificate', 'udyam_document', 'shop_act_document',
             'shop_photos', 'shop_videos', 'pan_card_document',
-            'incorporation_certificate', 'moa_aoa', 'electricity_bill'
+            'incorporation_certificate', 'moa_aoa', 'electricity_bill',
+            'company_reg_document', 'authorized_person_id_document',
         ]
 
         for record in self:
@@ -1176,15 +1305,30 @@ class DirectorDetails(models.Model):
         'kyc_approval_id', 'attachment_id'
     )
 
+    # Overseas: government-issued identity document (Passport, Emirates ID, HKID, etc.)
+    govt_id_attachments = fields.Many2many(
+        'ir.attachment', 'director_details_govt_id_rel',
+        'director_id', 'attachment_id',
+        string="Govt. ID (Passport / Emirates ID / HKID)",
+    )
+    govt_id_expiry = fields.Date(
+        string="Govt. ID Expiry Date",
+        help="Expiry date of this director's government-issued identity document.",
+    )
+
     @api.model_create_multi
     def create(self, vals_list):
         """
-        Links Aadhaar / PAN attachments correctly.
+        Links Aadhaar / PAN / Govt ID attachments correctly.
         """
         res_list = super().create(vals_list)
 
         for record in res_list:
-            for attachment in record.aadhaar_card_attachments | record.pan_card_attachments:
+            for attachment in (
+                record.aadhaar_card_attachments
+                | record.pan_card_attachments
+                | record.govt_id_attachments
+            ):
                 attachment.write({
                     'res_model': self._name,
                     'res_id': record.id,

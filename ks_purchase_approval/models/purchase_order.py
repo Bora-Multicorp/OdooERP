@@ -219,6 +219,18 @@ class PurchaseOrder(models.Model):
         string='Show Complete Edit Button',
         compute='_compute_ks_button_visibility',
     )
+    ks_show_update_approval_button = fields.Boolean(
+        string='Show Update Approval Button',
+        compute='_compute_ks_button_visibility',
+    )
+    ks_show_update_cancel_approval_button = fields.Boolean(
+        string='Show Update Cancel Approval Button',
+        compute='_compute_ks_button_visibility',
+    )
+    ks_show_update_edit_approval_button = fields.Boolean(
+        string='Show Update Edit Approval Button',
+        compute='_compute_ks_button_visibility',
+    )
 
     # ===== Payment Status (invoice + advance vs order total) =====
     payment_status = fields.Selection(
@@ -390,6 +402,9 @@ class PurchaseOrder(models.Model):
             order.ks_show_approve_edit_button = False
             order.ks_show_reject_edit_button = False
             order.ks_show_complete_edit_button = False
+            order.ks_show_update_approval_button = False
+            order.ks_show_update_cancel_approval_button = False
+            order.ks_show_update_edit_approval_button = False
 
             if not order._requires_approval():
                 continue
@@ -415,6 +430,18 @@ class PurchaseOrder(models.Model):
                 # Complete Edit button - only when edit is approved and user is the requester
                 if order.state == 'purchase' and order.ks_edit_approved and order.ks_edit_request_user_id == current_user:
                     order.ks_show_complete_edit_button = True
+
+                # Update Approval button - requester can update while pending_approval
+                if order.state == 'pending_approval' and order.ks_approval_request_user_id == current_user:
+                    order.ks_show_update_approval_button = True
+
+                # Update Cancel Approval button - requester can update while cancel_pending
+                if order.state == 'cancel_pending' and order.ks_cancel_request_user_id == current_user:
+                    order.ks_show_update_cancel_approval_button = True
+
+                # Update Edit Approval button - requester can update while edit_pending
+                if order.state == 'edit_pending' and order.ks_edit_request_user_id == current_user:
+                    order.ks_show_update_edit_approval_button = True
 
             # === APPROVER BUTTONS ===
             if is_pm:
@@ -904,11 +931,173 @@ class PurchaseOrder(models.Model):
                     # For confirmed PO, need approval - open wizard
                     return order._action_open_cancel_request_wizard()
                 elif order.state == 'pending_approval':
-                    # Allow cancelling approval pending - reset to draft
+                    # Requester withdrawing their own confirmation request → back to draft
                     return order._ks_cancel_approval_request()
+                elif order.state == 'cancel_pending':
+                    # Requester can withdraw their own cancel request → back to purchase
+                    if order.ks_cancel_request_user_id == self.env.user:
+                        order._ks_cancel_workflow_activities(
+                            'cancel', mark_done=True,
+                            feedback=_("Cancel request withdrawn by %s") % self.env.user.name,
+                        )
+                        order.write({
+                            'state': 'purchase',
+                            'ks_cancel_pm1_id': False,
+                            'ks_cancel_pm2_id': False,
+                            'ks_cancel_pm1_approved': False,
+                            'ks_cancel_pm2_approved': False,
+                            'ks_cancel_request_user_id': False,
+                            'ks_cancel_request_date': False,
+                            'ks_cancel_request_reason': False,
+                        })
+                        order.message_post(
+                            body=_("Cancel request withdrawn by %s.") % self.env.user.name,
+                            message_type='notification',
+                            subtype_xmlid='mail.mt_note',
+                        )
+                        return True
+                    else:
+                        raise UserError(_(
+                            "A cancellation approval is in progress. "
+                            "Only the original requester (%s) can withdraw it."
+                        ) % (order.ks_cancel_request_user_id.name or ''))
+                elif order.state == 'edit_pending':
+                    raise UserError(_(
+                        "An edit approval request is pending. "
+                        "Please wait for the approver to decide before cancelling."
+                    ))
                 else:
                     raise UserError(_("Cannot cancel order in current state."))
         return True
+
+    # -------------------------------------------------------------------------
+    # Update Approvals helpers (safe: cleanup only runs on wizard OK, not Cancel)
+    # -------------------------------------------------------------------------
+
+    # Keyword used in activity summaries to distinguish each workflow type.
+    _APPROVAL_TYPE_KEYWORD = {
+        'confirm': 'PO Approval Request for',
+        'cancel':  'Cancel PO',
+        'edit':    'Edit PO',
+    }
+
+    def _ks_cancel_workflow_activities(self, approval_type, mark_done=False, feedback=None):
+        """Cancel pending activities that belong to one specific approval workflow.
+
+        Scoped by: res_id + res_model + user_id (PMs for that workflow) + summary keyword.
+        This prevents touching unrelated activities even when a user is an approver
+        for multiple workflows.
+
+        :param approval_type: 'confirm' | 'cancel' | 'edit'
+        :param mark_done: True  → action_feedback (leaves chatter entry)
+                          False → unlink (silent, used for 'Update' resets)
+        :param feedback: feedback string when mark_done=True
+        """
+        self.ensure_one()
+        keyword = self._APPROVAL_TYPE_KEYWORD.get(approval_type, '')
+
+        pm_map = {
+            'confirm': (self.ks_approver_1_id, self.ks_approver_2_id),
+            'cancel':  (self.ks_cancel_pm1_id,  self.ks_cancel_pm2_id),
+            'edit':    (self.ks_edit_pm1_id,     self.ks_edit_pm2_id),
+        }
+        pm1, pm2 = pm_map.get(approval_type, (False, False))
+        user_ids = [u.id for u in (pm1, pm2) if u]
+
+        domain = [
+            ('res_model', '=', self._name),
+            ('res_id', '=', self.id),
+            ('active', '=', True),
+        ]
+        if keyword:
+            domain.append(('summary', 'ilike', keyword))
+        if user_ids:
+            domain.append(('user_id', 'in', user_ids))
+
+        activities = self.env['mail.activity'].search(domain)
+        if not activities:
+            return True
+
+        if mark_done:
+            activities.action_feedback(feedback=feedback or '')
+        else:
+            activities.sudo().unlink()
+        return True
+
+    def action_update_approvals(self):
+        """Requester updates confirmation approvers while PO is pending_approval.
+
+        Only opens the wizard — cleanup runs inside the wizard's action_confirm_send
+        ONLY when the user clicks OK.  Clicking wizard Cancel leaves everything untouched.
+        """
+        self.ensure_one()
+        if self.state != 'pending_approval':
+            raise UserError(_("Update Approvals is only available while the PO is in 'Pending Approval' state."))
+        if self.ks_approval_request_user_id and self.ks_approval_request_user_id != self.env.user:
+            raise UserError(_("Only the original requester can update the approval request."))
+
+        config = self._get_approval_config() if self._has_approval_config() else False
+        return {
+            'name': _('Update Approval Request'),
+            'type': 'ir.actions.act_window',
+            'res_model': 'ks.approval.confirmation.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'default_ks_purchase_order_id': self.id,
+                'ks_is_update': True,
+            },
+        }
+
+    def action_update_cancel_approvals(self):
+        """Requester updates cancel approvers while PO is cancel_pending.
+
+        Cleanup runs inside the cancel wizard's action_confirm_request on OK only.
+        """
+        self.ensure_one()
+        if self.state != 'cancel_pending':
+            raise UserError(_("Update Cancel Approvals is only available while the PO is in 'Cancel Pending' state."))
+        if self.ks_cancel_request_user_id and self.ks_cancel_request_user_id != self.env.user:
+            raise UserError(_("Only the original requester can update the cancel approval request."))
+
+        config = self._get_approval_config() if self._has_approval_config() else False
+        return {
+            'name': _('Update Cancel Approval Request'),
+            'type': 'ir.actions.act_window',
+            'res_model': 'ks.purchase.cancel.approval.request.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'default_ks_purchase_order_id': self.id,
+                'ks_approval_mode': config.ks_approval_mode if config else 'single',
+                'ks_is_update': True,
+            },
+        }
+
+    def action_update_edit_approvals(self):
+        """Requester updates edit approvers while PO is edit_pending.
+
+        Cleanup runs inside the edit wizard's action_confirm_request on OK only.
+        """
+        self.ensure_one()
+        if self.state != 'edit_pending':
+            raise UserError(_("Update Edit Approvals is only available while the PO is in 'Edit Approval Pending' state."))
+        if self.ks_edit_request_user_id and self.ks_edit_request_user_id != self.env.user:
+            raise UserError(_("Only the original requester can update the edit approval request."))
+
+        config = self._get_approval_config() if self._has_approval_config() else False
+        return {
+            'name': _('Update Edit Approval Request'),
+            'type': 'ir.actions.act_window',
+            'res_model': 'ks.purchase.edit.approval.request.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'default_ks_purchase_order_id': self.id,
+                'ks_approval_mode': config.ks_approval_mode if config else 'single',
+                'ks_is_update': True,
+            },
+        }
 
     def _ks_cancel_approval_request(self):
         """Cancel an approval request and reset to draft"""
@@ -1003,7 +1192,16 @@ class PurchaseOrder(models.Model):
             partner_ids.append(self.ks_cancel_pm2_id.partner_id.id)
         if partner_ids:
             self.message_subscribe(partner_ids=partner_ids)
-        
+
+        # Create activity for Approver 1 — mirrors the Confirm flow
+        self._create_approval_activity(
+            user_id=self.ks_cancel_pm1_id.id,
+            summary=_('Approval Request: Cancel PO %s') % self.name,
+            note=_('Purchase Order %s has been submitted for cancellation by %s. Reason: %s. Please review and approve or reject.') % (
+                self.name, self.env.user.name, reason
+            ),
+        )
+
         return True
 
     def ks_action_approve_cancel(self):
@@ -1224,7 +1422,23 @@ class PurchaseOrder(models.Model):
             partner_ids.append(self.ks_edit_pm2_id.partner_id.id)
         if partner_ids:
             self.message_subscribe(partner_ids=partner_ids)
-        
+
+        # Create activity for Approver 1 — mirrors the Confirm flow
+        self._create_approval_activity(
+            user_id=self.ks_edit_pm1_id.id,
+            summary=_('Approval Request: Edit PO %s') % self.name,
+            note=_('Purchase Order %s has been submitted for editing by %s. Reason: %s. Please review and approve or reject.') % (
+                self.name, self.env.user.name, reason
+            ),
+        )
+
+        # Cancel any open payment approval requests and notify their pending approvers
+        pending_requests = self.payment_approval_request_ids.filtered(
+            lambda r: r.state in ('draft', 'pending_approval')
+        )
+        for req in pending_requests:
+            req._cancel_for_po_edit(self.name)
+
         return True
 
     def ks_action_approve_edit(self):
@@ -1290,7 +1504,7 @@ class PurchaseOrder(models.Model):
                 'state': 'purchase',
                 'ks_edit_approved': True,
             })
-            
+
             if is_two_way:
                 pm1_name = self.ks_edit_pm1_id.name if self.ks_edit_pm1_id else ''
                 pm2_name = self.ks_edit_pm2_id.name if self.ks_edit_pm2_id else ''
@@ -1310,7 +1524,7 @@ class PurchaseOrder(models.Model):
                     message_type='notification',
                     subtype_xmlid='mail.mt_comment',
                 )
-        
+
         return True
 
     def ks_action_reject_edit(self):
@@ -1426,7 +1640,35 @@ class PurchaseOrder(models.Model):
         return pos
     
     def write(self, vals):
-        """Override write to automatically update linked Sale Orders"""
+        """Override write to protect header fields on confirmed/locked POs and update linked Sale Orders."""
+        _protected_fields = [
+            'payment_term_id', 'fiscal_position_id',
+            'dest_address_id', 'ks_round_off', 'ks_no_tax_allowed',
+            'picking_type_id', 'ks_linked_sale_order_ids', 'ks_zone', 'partner_ref',
+            'date_planned',
+        ]
+        _locked_states = ('purchase', 'pending_approval', 'cancel_pending', 'edit_pending')
+
+        if any(f in vals for f in _protected_fields):
+            for order in self:
+                if order.state not in _locked_states:
+                    continue
+                if not order._has_approval_config():
+                    continue
+                all_approvers = order._get_approval_config().get_all_approvers()
+                if self.env.user in all_approvers:
+                    continue  # PM/approver users can always edit
+                edit_approved = (
+                    order.ks_edit_approved and
+                    order.ks_edit_request_user_id == self.env.user
+                )
+                if not edit_approved:
+                    changed = [f for f in _protected_fields if f in vals]
+                    raise UserError(_(
+                        "You cannot modify %s on a confirmed Purchase Order. "
+                        "Please use 'Request Edit' to get edit approval first."
+                    ) % ', '.join(changed))
+
         result = super().write(vals)
         
         # If linked_sale_order_ids is being updated, update the reverse relation

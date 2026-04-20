@@ -168,23 +168,44 @@ class KsEditApprovalRequestWizard(models.TransientModel):
         self._compute_filtered_approver_ids()
 
     def action_confirm_request(self):
-        """Proceed with sending the edit request - open reason wizard"""
+        """Proceed with sending the edit request - open reason wizard.
+
+        When opened via 'Update Edit Approvals' (ks_is_update=True), cleanup
+        runs here (on OK) — never on wizard Cancel.
+        """
         self.ensure_one()
         if not self.ks_approver1_user:
             raise UserError(_("Please select Approver 1."))
-        
+
         order = self.ks_sale_order_id
         config = order._get_approval_config()
-        
+
         if self.ks_show_approver2 and not self.ks_approver2_user:
             raise UserError(_("Please select Approver 2 (required for dual approval mode)."))
-        
-        # Store selected approvers on the sale order
+
+        is_update = self.env.context.get('ks_is_update', False)
+        if is_update:
+            order._ks_cancel_workflow_activities('edit', mark_done=False)
+            order.write({
+                'state': 'sale',
+                'ks_edit_pm1_id': False,
+                'ks_edit_pm2_id': False,
+                'ks_edit_pm1_approved': False,
+                'ks_edit_pm2_approved': False,
+                'ks_edit_approved': False,
+            })
+            order.message_post(
+                body=_("Edit approval request updated by %s. Previous approvers cancelled.") % self.env.user.name,
+                message_type='notification',
+                subtype_xmlid='mail.mt_note',
+            )
+
+        # Store new approvers on the sale order
         order.write({
             'ks_edit_pm1_id': self.ks_approver1_user.id,
             'ks_edit_pm2_id': self.ks_approver2_user.id if self.ks_approver2_user else False,
         })
-        
+
         # Open reason wizard
         return {
             'name': _('Request Edit Access'),

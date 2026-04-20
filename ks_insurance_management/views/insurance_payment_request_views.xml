@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+  <!-- ══ Payment Approver Master ══════════════════════════════════════════════════════════ -->
+
+  <record id="insurance_payment_approver_form" model="ir.ui.view">
+    <field name="name">insurance.payment.approver.form</field>
+    <field name="model">insurance.payment.approver</field>
+    <field name="arch" type="xml">
+      <form string="Insurance Payment Approver">
+        <sheet>
+          <div class="oe_title"><h1><field name="name"/></h1></div>
+          <group>
+            <group>
+              <field name="user_id"/>
+              <field name="email" readonly="1"/>
+            </group>
+            <group>
+              <field name="company_id" groups="base.group_multi_company"/>
+              <field name="active"/>
+            </group>
+          </group>
+        </sheet>
+      </form>
+    </field>
+  </record>
+
+  <record id="insurance_payment_approver_list" model="ir.ui.view">
+    <field name="name">insurance.payment.approver.list</field>
+    <field name="model">insurance.payment.approver</field>
+    <field name="arch" type="xml">
+      <list string="Insurance Payment Approvers">
+        <field name="name"/>
+        <field name="user_id"/>
+        <field name="email"/>
+        <field name="company_id" groups="base.group_multi_company"/>
+        <field name="active" column_invisible="True"/>
+      </list>
+    </field>
+  </record>
+
+  <record id="action_insurance_payment_approver" model="ir.actions.act_window">
+    <field name="name">Insurance Payment Approvers</field>
+    <field name="res_model">insurance.payment.approver</field>
+    <field name="view_mode">list,form</field>
+  </record>
+
+  <!-- ══ Payment Request Form ══════════════════════════════════════════════════════════════ -->
+
+  <record id="insurance_payment_request_form" model="ir.ui.view">
+    <field name="name">insurance.payment.request.form</field>
+    <field name="model">insurance.payment.request</field>
+    <field name="arch" type="xml">
+      <form string="Insurance Payment Request">
+        <header>
+          <button name="action_submit" string="Submit for Approval" type="object"
+                  class="btn-primary" invisible="state != 'draft'"
+                  confirm="Submit this payment request for approval? The approver will be notified."/>
+          <button name="action_approve" string="Approve" type="object"
+                  class="btn-success" invisible="state != 'submitted'"/>
+          <button name="action_mark_paid" string="Mark as Paid" type="object"
+                  class="btn-primary" invisible="state != 'approved'"
+                  confirm="Mark all payments as posted and close this request?"/>
+          <button name="action_cancel" string="Cancel" type="object"
+                  invisible="state not in ('draft', 'submitted')"
+                  confirm="Cancel this payment request?"/>
+          <button name="action_reset_draft" string="Reset to Draft" type="object"
+                  invisible="state != 'cancelled'"
+                  groups="ks_insurance_management.group_insurance_admin"/>
+          <field name="state" widget="statusbar"
+                 statusbar_visible="draft,submitted,approved,paid"/>
+        </header>
+        <sheet>
+          <div class="oe_button_box" name="button_box">
+            <button class="oe_stat_button" type="object"
+                    name="action_view_payments" icon="fa-credit-card"
+                    invisible="state not in ('approved', 'paid')">
+              <div class="o_stat_info">
+                <span class="o_stat_text">Payments</span>
+              </div>
+            </button>
+          </div>
+          <div class="oe_title"><h1><field name="name" readonly="1"/></h1></div>
+
+          <group>
+            <group string="Request Details">
+              <field name="requested_by" readonly="1"/>
+              <field name="request_date" readonly="1"/>
+              <field name="approver_id" readonly="state != 'draft'"/>
+            </group>
+            <group string="Payment Details">
+              <field name="journal_id" readonly="state != 'draft'"
+                     domain="[('type', 'in', ['bank', 'cash'])]"/>
+              <field name="total_amount" readonly="1" widget="monetary"
+                     options="{'currency_field': 'currency_id'}"/>
+              <field name="currency_id" invisible="1"/>
+            </group>
+          </group>
+
+          <notebook>
+            <page string="Policy Lines">
+              <field name="request_line_ids" readonly="state != 'draft'">
+                <list editable="bottom">
+                  <field name="policy_id"
+                         domain="[('state', '=', 'active')]"
+                         options="{'no_create': True}"/>
+                  <field name="policy_number" readonly="1"/>
+                  <field name="insurance_type_id" readonly="1"/>
+                  <field name="currency_id" readonly="1" column_invisible="True"/>
+                  <field name="amount" widget="monetary"
+                         options="{'currency_field': 'currency_id'}"/>
+                  <field name="payment_id" readonly="1"/>
+                </list>
+              </field>
+            </page>
+            <page string="Notes">
+              <field name="notes" readonly="state not in ('draft',)"
+                     placeholder="Internal remarks…"/>
+            </page>
+          </notebook>
+        </sheet>
+        <chatter/>
+      </form>
+    </field>
+  </record>
+
+  <!-- ══ Payment Request List ══════════════════════════════════════════════════════════════ -->
+
+  <record id="insurance_payment_request_list" model="ir.ui.view">
+    <field name="name">insurance.payment.request.list</field>
+    <field name="model">insurance.payment.request</field>
+    <field name="arch" type="xml">
+      <list decoration-success="state == 'paid'"
+            decoration-warning="state == 'submitted'"
+            decoration-info="state == 'approved'"
+            decoration-muted="state == 'cancelled'">
+        <field name="name"/>
+        <field name="request_date"/>
+        <field name="requested_by"/>
+        <field name="approver_id"/>
+        <field name="journal_id"/>
+        <field name="total_amount" string="Total Amount"/>
+        <field name="state" widget="badge"
+               decoration-success="state == 'paid'"
+               decoration-warning="state == 'submitted'"
+               decoration-info="state == 'approved'"
+               decoration-danger="state == 'cancelled'"/>
+      </list>
+    </field>
+  </record>
+
+  <!-- ══ Action ════════════════════════════════════════════════════════════════════════════ -->
+
+  <record id="action_insurance_payment_request" model="ir.actions.act_window">
+    <field name="name">Insurance Payment Requests</field>
+    <field name="res_model">insurance.payment.request</field>
+    <field name="view_mode">list,form</field>
+  </record>
+
+  <!-- ══ Server Action: Create Payment Request from Policy List ════════════════════════════ -->
+
+  <record id="action_create_payment_request_from_policies" model="ir.actions.server">
+    <field name="name">Create Payment Request</field>
+    <field name="model_id" ref="ks_insurance_management.model_insurance_policy"/>
+    <field name="binding_model_id" ref="ks_insurance_management.model_insurance_policy"/>
+    <field name="binding_view_types">list</field>
+    <field name="state">code</field>
+    <field name="code">
+if records:
+    lines = [(0, 0, {'policy_id': p.id, 'amount': 0.0}) for p in records]
+    action = {
+        'type': 'ir.actions.act_window',
+        'name': 'New Payment Request',
+        'res_model': 'insurance.payment.request',
+        'view_mode': 'form',
+        'target': 'current',
+        'context': {'default_request_line_ids': lines},
+    }
+    </field>
+  </record>
+
+</odoo>

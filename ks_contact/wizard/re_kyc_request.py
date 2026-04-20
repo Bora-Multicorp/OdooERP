@@ -23,7 +23,7 @@ class ReKYCRequestWizard(models.TransientModel):
             subtype_xmlid="mail.mt_note",
         )
 
-        # Open KYC wizard for Re-KYC with existing data pre-filled
+        # Open KYC wizard pre-filled with existing data (works for both Indian and overseas partners)
         return {
             'name': _('Re-KYC Form'),
             'type': 'ir.actions.act_window',
@@ -32,7 +32,7 @@ class ReKYCRequestWizard(models.TransientModel):
             'target': 'new',
             'context': {
                 'default_partner_id': partner.id,
-                'is_rekyc': True,  # Flag to indicate this is Re-KYC
+                'is_rekyc': True,
                 'rekyc_remark': self.remark,
             },
         }

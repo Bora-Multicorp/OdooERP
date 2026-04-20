@@ -23,6 +23,9 @@
                 <field name="ks_show_approve_edit_button" invisible="1"/>
                 <field name="ks_show_reject_edit_button" invisible="1"/>
                 <field name="ks_show_complete_edit_button" invisible="1"/>
+                <field name="ks_show_update_approval_button" invisible="1"/>
+                <field name="ks_show_update_cancel_approval_button" invisible="1"/>
+                <field name="ks_show_update_edit_approval_button" invisible="1"/>
                 <field name="ks_pm1_approved" invisible="1"/>
                 <field name="ks_pm2_approved" invisible="1"/>
                 <field name="ks_cancel_pm1_approved" invisible="1"/>
@@ -84,6 +87,30 @@
                         data-hotkey="l"/>
 
                 <!-- ====== NORMAL USER BUTTONS ====== -->
+
+                <!-- Update Approval Button (requester, while pending_approval) -->
+                <button name="action_update_approvals"
+                        type="object"
+                        string="Update Approvals"
+                        class="btn-warning"
+                        invisible="not ks_show_update_approval_button"
+                        confirm="This will cancel the current approval request and let you choose new approvers. Continue?"/>
+
+                <!-- Update Cancel Approval Button (requester, while cancel_pending) -->
+                <button name="action_update_cancel_approvals"
+                        type="object"
+                        string="Update Cancel Approvals"
+                        class="btn-warning"
+                        invisible="not ks_show_update_cancel_approval_button"
+                        confirm="This will cancel the current cancel-approval request and let you choose new approvers. Continue?"/>
+
+                <!-- Update Edit Approval Button (requester, while edit_pending) -->
+                <button name="action_update_edit_approvals"
+                        type="object"
+                        string="Update Edit Approvals"
+                        class="btn-warning"
+                        invisible="not ks_show_update_edit_approval_button"
+                        confirm="This will cancel the current edit-approval request and let you choose new approvers. Continue?"/>
 
                 <!-- Request Cancel Button (Normal Users only, when PO is confirmed) -->
                 <button name="action_cancel"
@@ -239,6 +266,56 @@
                        decoration-warning="payment_status == 'partial'"
                        decoration-danger="payment_status == 'unpaid'"
                        decoration-info="payment_status == 'no_invoice'"/>
+            </xpath>
+
+            <!-- Lock Payment Terms for normal users after approval -->
+            <xpath expr="//field[@name='payment_term_id']" position="attributes">
+                <attribute name="readonly">not ks_can_edit or invoice_status == 'invoiced' or state == 'done'</attribute>
+            </xpath>
+
+            <!-- Lock Fiscal Position for normal users after approval -->
+            <xpath expr="//field[@name='fiscal_position_id']" position="attributes">
+                <attribute name="readonly">not ks_can_edit or invoice_status == 'invoiced' or state == 'done'</attribute>
+            </xpath>
+
+            <!-- Lock Delivery Address for normal users after approval -->
+            <xpath expr="//field[@name='dest_address_id']" position="attributes">
+                <attribute name="readonly">not ks_can_edit or state in ['cancel', 'done']</attribute>
+            </xpath>
+
+            <!-- Lock Round Off for normal users after approval (field from ks_templates) -->
+            <xpath expr="//field[@name='ks_round_off']" position="attributes">
+                <attribute name="readonly">not ks_can_edit</attribute>
+            </xpath>
+
+            <!-- Lock No Tax checkbox for normal users after approval (field from ks_automail) -->
+            <xpath expr="//field[@name='ks_no_tax_allowed']" position="attributes">
+                <attribute name="readonly">not ks_can_edit</attribute>
+            </xpath>
+
+            <!-- Lock Deliver To / Operation Type for normal users after approval -->
+            <xpath expr="//field[@name='picking_type_id']" position="attributes">
+                <attribute name="readonly">not ks_can_edit or state in ['cancel', 'done']</attribute>
+            </xpath>
+
+            <!-- Lock Linked Sale Orders for normal users after approval -->
+            <xpath expr="//field[@name='ks_linked_sale_order_ids']" position="attributes">
+                <attribute name="readonly">not ks_can_edit or state in ['done', 'cancel']</attribute>
+            </xpath>
+
+            <!-- Lock Zone field for normal users after approval (field from ks_automail) -->
+            <xpath expr="//field[@name='ks_zone']" position="attributes">
+                <attribute name="readonly">not ks_can_edit</attribute>
+            </xpath>
+
+            <!-- Lock Vendor Reference for normal users after approval -->
+            <xpath expr="//field[@name='partner_ref']" position="attributes">
+                <attribute name="readonly">not ks_can_edit</attribute>
+            </xpath>
+
+            <!-- Lock Scheduled Date (header) for normal users after approval -->
+            <xpath expr="//div[@name='date_planned_div']//field[@name='date_planned']" position="attributes">
+                <attribute name="readonly">not ks_can_edit or state not in ('draft', 'sent', 'to approve', 'purchase')</attribute>
             </xpath>
 
         </field>

@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+  <!-- ══ Top-up Wizard ══════════════════════════════════════════════════════════════════ -->
+
+  <record id="insurance_topup_wizard_form" model="ir.ui.view">
+    <field name="name">insurance.topup.wizard.form</field>
+    <field name="model">insurance.topup.wizard</field>
+    <field name="arch" type="xml">
+      <form string="Top Up Addon">
+        <sheet>
+          <div class="oe_title"><h2>Top Up Addon</h2></div>
+          <group>
+            <group string="Policy">
+              <field name="policy_id" readonly="1"/>
+              <field name="current_sum_insured" readonly="1" widget="monetary"
+                     options="{'currency_field': 'currency_id'}"/>
+              <field name="amount" widget="monetary"
+                     options="{'currency_field': 'currency_id'}"/>
+              <field name="new_sum_insured" readonly="1" widget="monetary"
+                     options="{'currency_field': 'currency_id'}"/>
+              <field name="currency_id" invisible="1"/>
+            </group>
+            <group string="Approver &amp; Payment">
+              <field name="approver_id"/>
+              <field name="journal_id"/>
+              <field name="payment_date"/>
+            </group>
+          </group>
+          <group string="Notes">
+            <field name="notes" nolabel="1" placeholder="Optional remarks…"/>
+          </group>
+        </sheet>
+        <footer>
+          <button name="action_create_topup" string="Create Top-up Request"
+                  type="object" class="btn-primary"/>
+          <button string="Cancel" class="btn-secondary" special="cancel"/>
+        </footer>
+      </form>
+    </field>
+  </record>
+
+  <!-- ══ Top-up Request Form ════════════════════════════════════════════════════════════ -->
+
+  <record id="insurance_topup_form" model="ir.ui.view">
+    <field name="name">insurance.topup.form</field>
+    <field name="model">insurance.topup</field>
+    <field name="arch" type="xml">
+      <form string="Top-up Request">
+        <header>
+          <button name="action_submit" string="Submit for Approval" type="object"
+                  class="btn-primary" invisible="state != 'draft'"
+                  confirm="Submit this top-up for approval? The approver will be notified."/>
+          <button name="action_approve" string="Approve" type="object"
+                  class="btn-success" invisible="state != 'pending'"/>
+          <button name="action_reject" string="Reject" type="object"
+                  class="btn-danger" invisible="state != 'pending'"
+                  confirm="Reject this top-up? This will mark the request as rejected."/>
+          <button name="action_reset_draft" string="Reset to Draft" type="object"
+                  invisible="state not in ('pending', 'rejected')"
+                  groups="ks_insurance_management.group_insurance_admin"/>
+          <field name="state" widget="statusbar"
+                 statusbar_visible="draft,pending,approved,rejected"/>
+        </header>
+        <sheet>
+          <div class="oe_button_box" name="button_box">
+            <button class="oe_stat_button" type="object"
+                    name="action_view_payment" icon="fa-credit-card"
+                    invisible="not payment_id">
+              <div class="o_stat_info">
+                <span class="o_stat_text">Payment</span>
+              </div>
+            </button>
+          </div>
+          <div class="oe_title"><h1><field name="name" readonly="1"/></h1></div>
+
+          <div class="alert alert-success" role="alert"
+               invisible="not is_latest or state != 'approved'">
+            This is the most recent approved top-up for this policy.
+          </div>
+
+          <group>
+            <group string="Policy Details">
+              <field name="policy_id" readonly="state != 'draft'"/>
+              <field name="current_sum_insured" readonly="1" widget="monetary"
+                     options="{'currency_field': 'currency_id'}"/>
+              <field name="amount" readonly="state != 'draft'" widget="monetary"
+                     options="{'currency_field': 'currency_id'}"/>
+              <field name="new_sum_insured" readonly="1" widget="monetary"
+                     options="{'currency_field': 'currency_id'}"/>
+              <field name="currency_id" invisible="1"/>
+            </group>
+            <group string="Approver &amp; Payment">
+              <field name="approver_id" readonly="state != 'draft'"/>
+              <field name="journal_id" readonly="state != 'draft'"/>
+              <field name="payment_date" readonly="state != 'draft'"/>
+              <field name="payment_id" readonly="1"/>
+              <field name="approved_by" readonly="1" invisible="state != 'approved'"/>
+              <field name="approved_date" readonly="1" invisible="state != 'approved'"/>
+            </group>
+          </group>
+
+          <notebook>
+            <page string="Notes">
+              <field name="notes" readonly="state != 'draft'"
+                     placeholder="Internal remarks…"/>
+            </page>
+          </notebook>
+        </sheet>
+        <chatter/>
+      </form>
+    </field>
+  </record>
+
+  <!-- ══ Top-up Request List ════════════════════════════════════════════════════════════ -->
+
+  <record id="insurance_topup_list" model="ir.ui.view">
+    <field name="name">insurance.topup.list</field>
+    <field name="model">insurance.topup</field>
+    <field name="arch" type="xml">
+      <list decoration-success="state == 'approved'"
+            decoration-danger="state == 'rejected'"
+            decoration-warning="state == 'pending'"
+            decoration-info="state == 'draft'">
+        <field name="name"/>
+        <field name="policy_id"/>
+        <field name="current_sum_insured" string="Sum Insured Before"/>
+        <field name="amount" string="Top-up Amount"/>
+        <field name="new_sum_insured" string="Sum Insured After"/>
+        <field name="approver_id"/>
+        <field name="is_latest" widget="boolean_favorite" string="Latest"/>
+        <field name="payment_date"/>
+        <field name="approved_by"/>
+        <field name="state" widget="badge"
+               decoration-success="state == 'approved'"
+               decoration-danger="state == 'rejected'"
+               decoration-warning="state == 'pending'"/>
+      </list>
+    </field>
+  </record>
+
+  <!-- ══ Action ═════════════════════════════════════════════════════════════════════════ -->
+
+  <record id="action_insurance_topup" model="ir.actions.act_window">
+    <field name="name">Top-up Requests</field>
+    <field name="res_model">insurance.topup</field>
+    <field name="view_mode">list,form</field>
+  </record>
+
+</odoo>

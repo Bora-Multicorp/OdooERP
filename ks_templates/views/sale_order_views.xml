@@ -13,6 +13,8 @@
                         <field name="ks_other_reference" placeholder="Other Reference(s)"/>
                         <field name="ks_despatched_through" placeholder="Despatch through"/>
                         <field name="ks_city_port_of_discharge" placeholder="Destination"/>
+                        <field name="ks_remarks" placeholder="Remarks" colspan="2"/>
+                        <field name="ks_authorized_signature" widget="signature" string="Authorized Signature"/>
                     </group>
                 </xpath>
                 <!-- Add Made In on Sale Order Line (form) -->

@@ -2,7 +2,7 @@
 
 {
     'name': "Warehouse Extension",
-    'version': "18.0.1.0.0",
+    'version': "18.0.1.0.1",
     'category': 'Extra Tools',
     'summary': 'Extended features of warehouse',
     'description': 'This module is used for attachments of file in Survey Form,'
@@ -11,7 +11,9 @@
     'website': 'https://www.ksolves.com/',
     'depends': ['quality', 'sale', 'stock', 'account', 'purchase', 'ks_sale_order', 'sale_stock', 'purchase_stock'],
     'assets': {
-
+        'web.assets_backend': [
+            'ks_templates/static/src/js/hide_packing_list_print.js',
+        ],
     },
     'data': [
         'views/account_move_views.xml',
@@ -36,6 +38,7 @@
     ],
     'images': [],
     'license': 'LGPL-3',
+    'post_init_hook': 'post_init_hook',
     'installable': True,
     'auto_install': False,
     'application': False,

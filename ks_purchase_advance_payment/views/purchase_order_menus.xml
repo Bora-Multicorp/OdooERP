@@ -7,7 +7,7 @@
         <field name="view_mode">list,form</field>
         <field name="view_id" ref="purchase.purchase_order_kpis_tree"/>
         <field name="domain">[('has_vendor_bill', '=', True), ('state', 'in', ('purchase', 'done'))]</field>
-        <field name="context">{'search_default_purchase': 1}</field>
+        <field name="context">{'search_default_purchase': 1, 'show_payment_buttons': True}</field>
         <field name="help" type="html">
             <p>Purchase orders that have at least one posted vendor bill.</p>
             <p>Use <strong>Request For Payment</strong> to create approval requests for paying vendor bills. Without approval, payment cannot be created.</p>
@@ -26,7 +26,7 @@
         <field name="view_mode">list,form</field>
         <field name="view_id" ref="purchase.purchase_order_kpis_tree"/>
         <field name="domain">[('has_vendor_bill', '=', False), ('state', 'in', ('purchase', 'done'))]</field>
-        <field name="context">{'search_default_purchase': 1}</field>
+        <field name="context">{'search_default_purchase': 1, 'show_payment_buttons': True}</field>
         <field name="help" type="html">
             <p>Purchase orders that do not have a posted vendor bill yet.</p>
             <p>Use <strong>Request For Advance Payment</strong> to create approval requests for advance payment. After approval, use Create Advance Payment. Once a vendor bill is created, use &quot;Request For Payment&quot; for bill payment approval.</p>

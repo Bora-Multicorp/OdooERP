@@ -140,6 +140,57 @@ class ProductApproval(models.Model):
             'state': 'draft'
         })
 
+    ks_is_approver = fields.Boolean(
+        string='Is Approver',
+        compute='_compute_ks_is_approver',
+        help='True if the current user is listed as an approver on this product.',
+    )
+
+    @api.depends('approval_users_ids.user_id')
+    @api.depends_context('uid')
+    def _compute_ks_is_approver(self):
+        uid = self.env.uid
+        for rec in self:
+            rec.ks_is_approver = uid in rec.approval_users_ids.mapped('user_id').ids
+
+    def _ks_cancel_pending_product_approval_activities(self):
+        """Silently remove pending approval activities scoped to this product's approvers."""
+        self.ensure_one()
+        approver_user_ids = self.approval_users_ids.filtered(lambda u: not u.state).mapped('user_id').ids
+        domain = [
+            ('res_model', '=', 'product.template'),
+            ('res_id', '=', self.id),
+            ('active', '=', True),
+            ('summary', 'ilike', 'Product approval for'),
+        ]
+        if approver_user_ids:
+            domain.append(('user_id', 'in', approver_user_ids))
+        self.env['mail.activity'].search(domain).sudo().unlink()
+
+    def action_update_approvals(self):
+        """Open the approval picker wizard to replace current pending approvers.
+
+        Cleanup only runs when user clicks OK in the wizard — not here.
+        """
+        self.ensure_one()
+        if self.state != 'pending':
+            raise ValidationError(_("Update Approvals is only available while the product is in 'Pending Approval' state."))
+
+        approval_users = self.env['product.approval.config'].sudo().search([])
+        if not approval_users:
+            raise ValidationError(_("Please add confirmation approval authority before updating."))
+
+        view_id = self.env.ref("ks_product_approval.view_ks_product_approval_user_picker_wizard")
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Update Approval Users'),
+            'res_model': 'product.approval.user.picker.wizard',
+            'target': 'new',
+            'view_mode': 'form',
+            'view_id': view_id.id,
+            'context': {'default_product_id': self.id, 'ks_is_update': True},
+        }
+
     def confirm_submit_form(self):
         approval_users = self.env['product.approval.config'].sudo().search([])
         if not approval_users:

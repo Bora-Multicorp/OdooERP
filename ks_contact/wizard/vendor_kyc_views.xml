@@ -4,68 +4,88 @@
         <field name="name">vendor.kyc.wizard.form</field>
         <field name="model">vendor.kyc.wizard</field>
         <field name="arch" type="xml">
-            <form string="Vendor KYC">
+            <form string="KYC Form">
                 <sheet>
+                    <!-- Hidden fields used in invisible conditions throughout the form -->
+                    <field name="partner_id" readonly="1" invisible="1"/>
+                    <field name="is_overseas" invisible="1"/>
+
                     <group>
-                        <field name="partner_id" readonly="1" invisible="1"/>
                         <field name="email" placeholder="Your Answer" widget="upper_case"/>
                         <field name="point_of_contact" placeholder="Your Answer" widget="upper_case"/>
                         <field name="poc_user" options="{'no_open': True, 'no_create': True, 'no_create_edit': True}"/>
                     </group>
-                    <group string="KYC Form (Company Details)" name="kyc_company_details">
+
+                    <!-- ══════════════════════════════════════════════════════════
+                         COMPANY DETAILS
+                    ═══════════════════════════════════════════════════════════ -->
+                    <group string="Company Details" name="kyc_company_details">
                         <field name="business_legal_name" placeholder="Your Answer" widget="upper_case"/>
                         <field name="is_same_trade_name"/>
                         <field name="business_trade_name" placeholder="Your Answer" widget="upper_case"/>
+
+                        <!-- Address — no country restriction so overseas partners can pick any country -->
                         <field name="address_detail">
                             <list editable="bottom">
                                 <field name="business_street" placeholder="Your Answer" widget="upper_case"/>
                                 <field name="business_city" placeholder="Your Answer" widget="upper_case"/>
-                                <field name="business_pincode" placeholder="Your Answer"/>
+                                <field name="business_pincode" placeholder="Pincode / Postcode"/>
                                 <field name="business_phone" placeholder="Your Answer"/>
                                 <field name="business_email" placeholder="Your Answer" widget="upper_case"/>
-                                <field name="business_state_id" options="{'no_create': True, 'no_create_edit': True}"  domain="[('country_id', '=', 'India')]"/>
-                                <field name="business_country_id"
-                                       options="{'no_create': True, 'no_create_edit': True}" domain="[('code', '=', 'IN')]"/>
+                                <field name="business_state_id" options="{'no_create': True, 'no_create_edit': True}"/>
+                                <field name="business_country_id" options="{'no_create': True, 'no_create_edit': True}"/>
                             </list>
                             <form>
                                 <field name="business_street" placeholder="Your Answer" widget="upper_case"/>
                                 <field name="business_city" placeholder="Your Answer" widget="upper_case"/>
-                                <field name="business_pincode" placeholder="Your Answer"/>
+                                <field name="business_pincode" placeholder="Pincode / Postcode"/>
                                 <field name="business_phone" placeholder="Your Answer"/>
                                 <field name="business_email" placeholder="Your Answer" widget="upper_case"/>
-                                <field name="business_state_id" options="{'no_create': True, 'no_create_edit': True}"  domain="[('country_id', '=', 'India')]"/>
-                                <field name="business_country_id"
-                                       options="{'no_create': True, 'no_create_edit': True}" domain="[('code', '=', 'IN')]"/>
+                                <field name="business_state_id" options="{'no_create': True, 'no_create_edit': True}"/>
+                                <field name="business_country_id" options="{'no_create': True, 'no_create_edit': True}"/>
                             </form>
                         </field>
+
                         <field name="const_business" placeholder="Your Answer"/>
                         <field name="other_business" string="Please Specify"
                                invisible="const_business != 'Other'"
                                required="const_business == 'Other'"/>
-                        <!--<field name="other_business" string="Please Specify"
-                               placeholder="If Other Please Specify"
-                               invisible="const_business != %(ks_contact.constitution_business_other)d"
-                               required="const_business == %(ks_contact.constitution_business_other)d"/>-->
-                        <!--<field name="no_partner_director" widget="radio"/>-->
                     </group>
-                    <group string="Director/Owner Details" name="kyc_sole_proprietor">
+
+                    <!-- ══════════════════════════════════════════════════════════
+                         DIRECTOR / AUTHORIZED PERSON DETAILS
+                    ═══════════════════════════════════════════════════════════ -->
+                    <group string="Director / Authorized Person Details" name="kyc_director_details">
                         <field name="no_partner_director" widget="radio" options="{'horizontal': true}"/>
-                        <field name="directors_detail" string="Director/Partner" required="1">
+                        <field name="directors_detail" string="Director / Authorized Person" required="1">
                             <list editable="bottom">
                                 <field name="designation" widget="upper_case"/>
                                 <field name="name" widget="upper_case"/>
                                 <field name="contact_no"/>
                                 <field name="email" widget="upper_case"/>
+                                <!-- Indian columns: Aadhaar and PAN (hidden for overseas) -->
                                 <field name="aadhaar_card_filename" column_invisible="1"/>
-                                <field name="aadhaar_card"  filename="aadhaar_card_filename" options="{'accepted_file_extensions': 'image/*, .pdf'}"
-                                      column_invisible="1"/>
+                                <field name="aadhaar_card" filename="aadhaar_card_filename"
+                                       options="{'accepted_file_extensions': 'image/*, .pdf'}"
+                                       column_invisible="1"/>
                                 <field name="pan_card_filename" column_invisible="1"/>
-                                <field name="pan_card" filename="pan_card_filename" options="{'accepted_file_extensions': 'image/*, .pdf'}"
-                                        column_invisible="1"/>
-                                  <field name="aadhaar_card_attachments" widget="many2many_attachment_preview"
-                                       options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 1}"/>
-                                  <field name="pan_card_attachments" widget="many2many_attachment_preview"
-                                       options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 1}"/>
+                                <field name="pan_card" filename="pan_card_filename"
+                                       options="{'accepted_file_extensions': 'image/*, .pdf'}"
+                                       column_invisible="1"/>
+                                <field name="aadhaar_card_attachments" widget="many2many_attachment_preview"
+                                       options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 1}"
+                                       column_invisible="parent.is_overseas"/>
+                                <field name="pan_card_attachments" widget="many2many_attachment_preview"
+                                       options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 1}"
+                                       column_invisible="parent.is_overseas"/>
+                                <!-- Overseas column: Govt. ID (Passport / Emirates ID / HKID) -->
+                                <field name="govt_id_attachments" widget="many2many_attachment_preview"
+                                       string="Govt. ID (Passport / Emirates ID)"
+                                       options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 2}"
+                                       column_invisible="not parent.is_overseas"/>
+                                <field name="govt_id_expiry"
+                                       string="Govt. ID Expiry Date"
+                                       column_invisible="not parent.is_overseas"/>
                             </list>
                             <form>
                                 <field name="designation" widget="upper_case"/>
@@ -73,97 +93,139 @@
                                 <field name="contact_no"/>
                                 <field name="email" widget="upper_case"/>
                                 <field name="aadhaar_card_filename" invisible="1"/>
-                                <field name="aadhaar_card" options="{'accepted_file_extensions': 'image/*, .pdf'}"
-                                       filename="aadhaar_card_filename" column_invisible="1"/>
+                                <field name="aadhaar_card" filename="aadhaar_card_filename"
+                                       options="{'accepted_file_extensions': 'image/*, .pdf'}"
+                                       invisible="1"/>
                                 <field name="pan_card_filename" invisible="1"/>
-                                <field name="pan_card" options="{'accepted_file_extensions': 'image/*, .pdf'}"
-                                       filename="pan_card_filename" column_invisible="1"/>
-                                 <field name="aadhaar_card_attachments" widget="many2many_attachment_preview"
-                                       options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 1}"/>
-                                  <field name="pan_card_attachments" widget="many2many_attachment_preview"
-                                       options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 1}"/>
+                                <field name="pan_card" filename="pan_card_filename"
+                                       options="{'accepted_file_extensions': 'image/*, .pdf'}"
+                                       invisible="1"/>
+                                <!-- Indian attachments -->
+                                <field name="aadhaar_card_attachments" widget="many2many_attachment_preview"
+                                       options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 1}"
+                                       invisible="parent.is_overseas"/>
+                                <field name="pan_card_attachments" widget="many2many_attachment_preview"
+                                       options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 1}"
+                                       invisible="parent.is_overseas"/>
+                                <!-- Overseas: Govt. ID + Expiry -->
+                                <field name="govt_id_attachments" widget="many2many_attachment_preview"
+                                       string="Govt. ID (Passport / Emirates ID / HKID)"
+                                       options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 2}"
+                                       invisible="not parent.is_overseas"/>
+                                <field name="govt_id_expiry"
+                                       string="Govt. ID Expiry Date"
+                                       invisible="not parent.is_overseas"/>
                             </form>
                         </field>
-                        <!--                        <field name="director_name" placeholder="Your Answer"-->
-                        <!--                               required="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"-->
-                        <!--                               invisible="const_business in ['Partnership', 'Pvt Ltd Co.', 'LLP']" widget="upper_case"/>-->
-                        <!--                        <field name="director_phone" placeholder="Your Answer"-->
-                        <!--                               required="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"-->
-                        <!--                               invisible="const_business in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>-->
-                        <!--                        <field name="director_email" placeholder="Your Answer"-->
-                        <!--                               required="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"-->
-                        <!--                               invisible="const_business in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>-->
-                        <!--                        <field name="aadhaar_card_filename" invisible="1"/>-->
-                        <!--                        <field name="aadhaar_card" options="{'accepted_file_extensions': 'image/*, .pdf'}"-->
-                        <!--                               filename="aadhaar_card_filename"-->
-                        <!--                               required="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"-->
-                        <!--                               invisible="const_business in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>-->
-                        <!--                        <field name="pan_card_filename" readonly="1" invisible="1"/>-->
-                        <!--                        <field name="pan_card" options="{'accepted_file_extensions': 'image/*, .pdf'}"-->
-                        <!--                               filename="pan_card_filename"-->
-                        <!--                               required="const_business not in ['Partnership', 'Pvt Ltd Co.', 'LLP']"-->
-                        <!--                               invisible="const_business in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>-->
-                        <field name="pan_no" placeholder="Your Answer" widget="upper_case"/>
+
+                        <!-- ── INDIA-SPECIFIC FIELDS (hidden for overseas) ────────────── -->
+                        <field name="pan_no" placeholder="Your Answer" widget="upper_case"
+                               invisible="is_overseas"
+                               required="not is_overseas"/>
                         <field name="pan_card_document" widget="many2many_attachment_preview"
                                options="{'accepted_file_extensions': 'image/*, .pdf'}"
-                               required="const_business in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
-                        <field name="aadhaar_pan_link" placeholder="Your Answer" options="{'horizontal': true}"/>
-                        <field name="gst_no" placeholder="Your Answer" widget="upper_case"/>
-                        <field name="license_registered" placeholder="Your Answer" widget="upper_case" invisible="const_business in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
-                        <field name="udyam_number" placeholder="Your Answer" widget="upper_case"/>
+                               invisible="is_overseas"
+                               required="not is_overseas and const_business in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
+                        <field name="aadhaar_pan_link" placeholder="Your Answer"
+                               options="{'horizontal': true}"
+                               invisible="is_overseas"
+                               required="not is_overseas"/>
+                        <field name="gst_no" placeholder="Your Answer" widget="upper_case"
+                               invisible="is_overseas"
+                               required="not is_overseas"/>
+                        <field name="license_registered" placeholder="Your Answer" widget="upper_case"
+                               invisible="is_overseas or const_business in ['Partnership', 'Pvt Ltd Co.', 'LLP']"/>
+                        <field name="udyam_number" placeholder="Your Answer" widget="upper_case"
+                               invisible="is_overseas"/>
                         <field name="gst_certificate" widget="many2many_attachment_preview"
-                               options="{'accepted_file_extensions': 'image/*, .pdf'}"/>
+                               options="{'accepted_file_extensions': 'image/*, .pdf'}"
+                               invisible="is_overseas"
+                               required="not is_overseas"/>
                         <field name="incorporation_certificate" widget="many2many_attachment_preview"
                                options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 5}"
-                               required="const_business in ['Pvt Ltd Co.', 'LLP']"  invisible="const_business not in ['Pvt Ltd Co.', 'LLP']"/>
+                               invisible="is_overseas or const_business not in ['Pvt Ltd Co.', 'LLP']"
+                               required="not is_overseas and const_business in ['Pvt Ltd Co.', 'LLP']"/>
                         <field name="udyam_document" widget="many2many_attachment_preview"
                                options="{'accepted_file_extensions': 'image/*, .pdf'}"
-                               required="const_business in ['Sole Proprietor', 'HUF(Karta)']"/>
+                               invisible="is_overseas"
+                               required="not is_overseas and const_business in ['Sole Proprietor', 'HUF(Karta)']"/>
                         <field name="shop_act_document" widget="many2many_attachment_preview"
                                options="{'accepted_file_extensions': 'image/*, .pdf'}"
-                               required="const_business in ['Sole Proprietor', 'HUF(Karta)']"/>
-                        <field name="gst_return_duration" placeholder="Your Answer"/>
+                               invisible="is_overseas"
+                               required="not is_overseas and const_business in ['Sole Proprietor', 'HUF(Karta)']"/>
+                        <field name="gst_return_duration" placeholder="Your Answer"
+                               invisible="is_overseas"/>
                         <field name="shop_photos" widget="many2many_attachment_preview"
-                               options="{'accepted_file_extensions': 'image/*'}"/>
+                               options="{'accepted_file_extensions': 'image/*'}"
+                               invisible="is_overseas"/>
                         <field name="shop_videos" widget="many2many_attachment_preview"
-                               options="{'accepted_file_extensions': 'video/*'}"/>
-                        <p style="margin-left: 110px; font-weight: bold;">You can upload each video upto 64MB</p>
+                               options="{'accepted_file_extensions': 'video/*'}"
+                               invisible="is_overseas"/>
+                        <p style="margin-left: 110px; font-weight: bold;"
+                           invisible="is_overseas">You can upload each video upto 64MB</p>
                         <field name="comp_google_loc" placeholder="eg. Lat : 22.3511148 Long: 78.6677428"
-                               widget="upper_case"/>
+                               widget="upper_case"
+                               invisible="is_overseas"/>
                         <field name="partner_llp_filename" invisible="1"/>
                         <field name="partner_llp" filename="partner_llp_filename"
-                               required="const_business in ['Partnership', 'LLP']"
-                               invisible="const_business not in ['Partnership', 'LLP']"/>
+                               invisible="is_overseas or const_business not in ['Partnership', 'LLP']"
+                               required="not is_overseas and const_business in ['Partnership', 'LLP']"/>
                         <field name="moa_aoa" widget="many2many_attachment_preview"
                                options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 5}"
-                               required="const_business in ['Pvt Ltd Co.']"
-                               invisible="const_business not in ['Pvt Ltd Co.']"/>
+                               invisible="is_overseas or const_business not in ['Pvt Ltd Co.']"
+                               required="not is_overseas and const_business in ['Pvt Ltd Co.']"/>
                         <field name="cin_no" placeholder="Your Answer" widget="upper_case"
-                               invisible="const_business not in ['Pvt Ltd Co.']"/>
+                               invisible="is_overseas or const_business not in ['Pvt Ltd Co.']"/>
                         <field name="electricity_bill" widget="many2many_attachment_preview"
-                               options="{'accepted_file_extensions': 'image/*, .pdf'}"/>
+                               options="{'accepted_file_extensions': 'image/*, .pdf'}"
+                               invisible="is_overseas"/>
+
+                        <!-- ── OVERSEAS-SPECIFIC DOCUMENTS ──────────────────────────── -->
+                        <field name="company_reg_document" widget="many2many_attachment_preview"
+                               options="{'accepted_file_extensions': 'image/*, .pdf'}"
+                               invisible="not is_overseas"
+                               required="is_overseas"
+                               help="Dubai/UAE: Trade License  |  Hong Kong: Business Registration Certificate  |  Other: Certificate of Incorporation or equivalent"/>
+                        <field name="company_reg_doc_expiry"
+                               string="Trade License / Company Reg. Expiry Date"
+                               invisible="not is_overseas"
+                               required="is_overseas"/>
+                        <field name="authorized_person_id_document" widget="many2many_attachment_preview"
+                               options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 2}"
+                               invisible="not is_overseas"
+                               required="is_overseas"
+                               help="Dubai/UAE: Emirates ID or Passport  |  Hong Kong: HKID or Passport  |  Other: Government-issued photo ID of the authorized signatory"/>
+                        <field name="authorized_person_id_expiry"
+                               string="Authorized Person ID Expiry Date"
+                               invisible="not is_overseas"
+                               required="is_overseas"/>
                     </group>
-                    <group string="Bank Details(Please provide all required bank Details Carefully)"
+
+                    <!-- ══════════════════════════════════════════════════════════
+                         BANK DETAILS
+                    ═══════════════════════════════════════════════════════════ -->
+                    <group string="Bank Details (Please provide all required bank details carefully)"
                            name="bank_details">
                         <field name="bank_detail">
                             <list editable="bottom">
                                 <field name="bank_name" placeholder="Your Answer" widget="upper_case"/>
                                 <field name="account_no" placeholder="Your Answer"/>
-                                <field name="ifsc_code" placeholder="Your Answer" widget="upper_case"/>
+                                <field name="ifsc_code" placeholder="IFSC / SWIFT Code" widget="upper_case"/>
                                 <field name="bank_cheque_attachments" widget="many2many_attachment_preview"
                                        options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 1}"/>
                             </list>
                             <form>
                                 <field name="bank_name" placeholder="Your Answer" widget="upper_case"/>
                                 <field name="account_no" placeholder="Your Answer"/>
-                                <field name="ifsc_code" placeholder="Your Answer" widget="upper_case"/>
+                                <field name="ifsc_code" placeholder="IFSC / SWIFT Code" widget="upper_case"/>
                                 <field name="bank_cheque_attachments" widget="many2many_attachment_preview"
                                        options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 1}"/>
                             </form>
                         </field>
                     </group>
+
                     <footer>
-                        <button name="action_vendor_kyc_done" string="Submit Re-KYC" type="object" class="btn-primary"/>
+                        <button name="action_vendor_kyc_done" string="Submit" type="object" class="btn-primary"/>
                         <button string="Cancel" class="btn-secondary" special="cancel" data-hotkey="x"/>
                     </footer>
                 </sheet>

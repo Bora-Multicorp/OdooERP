@@ -145,10 +145,32 @@ class SaleOrderLine(models.Model):
         return line
 
     def write(self, values):
-        """Override write to prevent normal users from changing prices or discounts
-        
-        Admin users can always edit prices (bypass all restrictions).
+        """Override write to prevent normal users from changing prices, discounts, or taxes
+
+        Admin users can always edit (bypass all restrictions).
         """
+        # Block normal users from changing tax_id on confirmed/locked orders
+        if 'tax_id' in values:
+            for line in self:
+                if not line.order_id or not line.order_id.locked:
+                    continue
+                if line.order_id._is_admin_user():
+                    continue
+                if not line.order_id._has_approval_config():
+                    continue
+                config = line.order_id._get_approval_config()
+                if self.env.user in config.get_all_pm_users():
+                    continue
+                edit_approved = (
+                    line.order_id.ks_edit_approved and
+                    line.order_id.ks_edit_request_user_id == self.env.user
+                )
+                if not edit_approved:
+                    raise UserError(_(
+                        "You do not have permission to change taxes on order lines. "
+                        "Please use 'Request Edit' to get edit approval first."
+                    ))
+
         # Check if price_unit or discount is being changed
         price_fields = ['price_unit', 'discount']
         changing_price = any(field in values for field in price_fields)

@@ -25,7 +25,16 @@ class ShowHideProductFields(models.Model):
         tracking=True
     )
 
-    part_code = fields.Char(string='Part Code', help='Unique part code for the apple laptops', tracking=True)
+    part_code = fields.Char(
+        string='Part Code / Manual Ref',
+        help=(
+            'Manually specify the internal reference for this product. '
+            'When filled, this value is used directly as default_code for ALL '
+            'variants, overriding the auto-generated structured code. '
+            'Max 24 characters; uppercase alphanumeric and hyphens only.'
+        ),
+        tracking=True,
+    )
     series_name = fields.Char(string="Series Name", tracking=True)
     ethernet = fields.Char(string="Ethernet", tracking=True)
     mouse = fields.Char(string="Mouse", tracking=True)

@@ -1,10 +1,89 @@
 # -*- coding: utf-8 -*-
-from odoo import api, models
+from odoo import api, models, fields
 from odoo.tools import formatLang
 
 
 class PurchaseOrder(models.Model):
     _inherit = 'purchase.order'
+
+    ks_authorised_signatory = fields.Binary(string='Authorised Signatory', attachment=True, copy=False)
+    ks_bank_id = fields.Many2one('res.bank', string='Bank Information')
+    ks_remarks = fields.Text(string='Remarks')
+    ks_round_off = fields.Float(string='Round Off', digits=(16, 2), default=0.0)
+    amount_total = fields.Monetary(string='Total', store=True, readonly=True, compute='_amount_all')
+    tax_totals = fields.Binary(compute='_compute_tax_totals', exportable=False)
+
+    def get_exchange_rate_info(self):
+        """Returns exchange rate info for PDF display.
+        Reads directly from res.currency.rate — the value user entered in Odoo currency settings.
+        large_rate = what user entered (e.g., 50 = 1 USD = 50 INR)
+        small_rate = 1 / large_rate (e.g., 0.02)
+        """
+        self.ensure_one()
+        inv_currency = self.currency_id
+        comp_currency = self.company_id.currency_id
+        if not inv_currency or not comp_currency or inv_currency == comp_currency:
+            return {'has_exchange': False, 'large_rate': 1.0, 'small_rate': 1.0}
+        try:
+            # Search for the latest rate record for this currency and company
+            rate_record = self.env['res.currency.rate'].search([
+                ('currency_id', '=', inv_currency.id),
+                ('company_id', 'in', [self.company_id.id, False]),
+                ('name', '<=', fields.Date.today()),
+            ], order='company_id nulls last, name desc', limit=1)
+            if rate_record and rate_record.rate:
+                # rate_record.rate = technical rate (small: USD per INR)
+                # 1/rate = large number (INR per USD) = what user entered as Exchange Rate
+                small_rate = rate_record.rate
+                large_rate = 1.0 / small_rate
+            else:
+                large_rate = self.env['res.currency']._get_conversion_rate(
+                    inv_currency, comp_currency, self.company_id, fields.Date.today()
+                )
+                small_rate = 1.0 / large_rate if large_rate else 1.0
+            return {'has_exchange': True, 'large_rate': large_rate, 'small_rate': small_rate}
+        except Exception:
+            return {'has_exchange': False, 'large_rate': 1.0, 'small_rate': 1.0}
+
+    def get_company_pan(self):
+        """Get company PAN number (Indian localization field)"""
+        self.ensure_one()
+        try:
+            return self.company_id.l10n_in_pan or ''
+        except Exception:
+            return ''
+
+    def get_company_iec(self):
+        """Get company IEC number"""
+        self.ensure_one()
+        try:
+            return self.company_id.iec_no or ''
+        except Exception:
+            return ''
+
+    @api.depends('order_line.price_subtotal', 'company_id', 'currency_id', 'ks_round_off')
+    def _amount_all(self):
+        super()._amount_all()
+        for order in self:
+            order.amount_total = order.amount_untaxed + order.amount_tax - order.ks_round_off
+
+    @api.onchange('ks_round_off')
+    def _onchange_ks_round_off(self):
+        for order in self:
+            order.amount_total = order.amount_untaxed + order.amount_tax - order.ks_round_off
+
+    @api.depends('order_line.price_subtotal', 'currency_id', 'company_id', 'ks_round_off')
+    @api.depends_context('lang')
+    def _compute_tax_totals(self):
+        super()._compute_tax_totals()
+        for order in self:
+            if order.tax_totals and order.ks_round_off:
+                order.tax_totals['total_amount_currency'] -= order.ks_round_off
+                # Update formatted display amount
+                currency = order.currency_id or order.company_id.currency_id
+                order.tax_totals['formatted_amount_total'] = formatLang(
+                    self.env, order.tax_totals['total_amount_currency'], currency_obj=currency
+                )
 
     def get_amount_in_words_aed(self, amount):
         """Convert amount to words in AED currency in the format: UAE Dirham [amount in words] and [fils] fils Only"""

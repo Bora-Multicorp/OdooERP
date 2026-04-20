@@ -197,6 +197,18 @@ class SaleOrder(models.Model):
         compute='_compute_ks_is_dual_approval',
         help='True if dual approval mode is enabled in config',
     )
+    ks_show_update_approval_button = fields.Boolean(
+        string='Show Update Approvals Button',
+        compute='_compute_ks_button_visibility',
+    )
+    ks_show_update_cancel_approval_button = fields.Boolean(
+        string='Show Update Cancel Approvals Button',
+        compute='_compute_ks_button_visibility',
+    )
+    ks_show_update_edit_approval_button = fields.Boolean(
+        string='Show Update Edit Approvals Button',
+        compute='_compute_ks_button_visibility',
+    )
 
     @api.depends('company_id')
     def _compute_ks_is_dual_approval(self):
@@ -307,6 +319,9 @@ class SaleOrder(models.Model):
             order.ks_show_reject_edit_button = False
             order.ks_show_request_edit_button = False
             order.ks_show_complete_edit_button = False
+            order.ks_show_update_approval_button = False
+            order.ks_show_update_cancel_approval_button = False
+            order.ks_show_update_edit_approval_button = False
 
             # Admin users bypass all restrictions
             # Admin users should NOT see "Request Cancel" and "Request Edit" buttons
@@ -346,6 +361,21 @@ class SaleOrder(models.Model):
                         order.ks_edit_approved and
                         order.ks_edit_request_user_id == current_user):
                     order.ks_show_complete_edit_button = True
+
+                # Update Approvals button - only the requester can update while pending
+                if (order.state == 'approval_pending' and
+                        order.ks_confirm_request_user_id == current_user):
+                    order.ks_show_update_approval_button = True
+
+                # Update Cancel Approvals - requester can update while cancel_pending
+                if (order.state == 'cancel_pending' and
+                        order.ks_cancel_request_user_id == current_user):
+                    order.ks_show_update_cancel_approval_button = True
+
+                # Update Edit Approvals - requester can update while edit_pending
+                if (order.state == 'edit_pending' and
+                        order.ks_edit_request_user_id == current_user):
+                    order.ks_show_update_edit_approval_button = True
 
             # === PM USER BUTTONS ===
             if is_pm:
@@ -487,6 +517,89 @@ class SaleOrder(models.Model):
             },
         }
 
+    def action_update_approvals(self):
+        """Let the requester update approvers while the SO is still approval_pending.
+
+        Steps:
+        1. Cancel all pending approval activities on this SO.
+        2. Reset approval flags / approver fields so the order is effectively
+           back to 'draft-ready-to-resubmit' state (state stays approval_pending
+           until the wizard re-runs _ks_send_to_approval_pending which moves it
+           to approval_pending again — we briefly set it to 'sent' to satisfy
+           the state guard in that method).
+        3. Open the same approval-request wizard as the first-time flow.
+        """
+        self.ensure_one()
+        if self.state != 'approval_pending':
+            raise UserError(_("Update Approvals is only available while the order is in 'Approval Pending' state."))
+        if self.ks_confirm_request_user_id and self.ks_confirm_request_user_id != self.env.user:
+            if not self._is_admin_user():
+                raise UserError(_("Only the original requester can update the approval request."))
+
+        # Open the wizard with is_update=True flag.
+        # ALL cleanup (cancel activities, reset fields) happens inside the wizard's
+        # action_confirm_request ONLY when the user clicks OK — not here.
+        # This means clicking "Cancel" in the wizard leaves everything untouched.
+        config = self._get_approval_config() if self._has_approval_config() else False
+        return {
+            'name': _('Update Approval Request'),
+            'type': 'ir.actions.act_window',
+            'res_model': 'ks.sale.approval.request.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'default_ks_sale_order_id': self.id,
+                'ks_approval_mode': config.ks_approval_mode if config else 'single',
+                'ks_is_update': True,
+            },
+        }
+
+    def action_update_cancel_approvals(self):
+        """Let the requester update cancel approvers while the SO is in cancel_pending."""
+        self.ensure_one()
+        if self.state != 'cancel_pending':
+            raise UserError(_("Update Cancel Approvals is only available while the order is in 'Cancel Pending' state."))
+        if self.ks_cancel_request_user_id and self.ks_cancel_request_user_id != self.env.user:
+            if not self._is_admin_user():
+                raise UserError(_("Only the original requester can update the cancel approval request."))
+
+        config = self._get_approval_config() if self._has_approval_config() else False
+        return {
+            'name': _('Update Cancel Approval Request'),
+            'type': 'ir.actions.act_window',
+            'res_model': 'ks.sale.cancel.approval.request.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'default_ks_sale_order_id': self.id,
+                'ks_approval_mode': config.ks_approval_mode if config else 'single',
+                'ks_is_update': True,
+            },
+        }
+
+    def action_update_edit_approvals(self):
+        """Let the requester update edit approvers while the SO is in edit_pending."""
+        self.ensure_one()
+        if self.state != 'edit_pending':
+            raise UserError(_("Update Edit Approvals is only available while the order is in 'Edit Approval Pending' state."))
+        if self.ks_edit_request_user_id and self.ks_edit_request_user_id != self.env.user:
+            if not self._is_admin_user():
+                raise UserError(_("Only the original requester can update the edit approval request."))
+
+        config = self._get_approval_config() if self._has_approval_config() else False
+        return {
+            'name': _('Update Edit Approval Request'),
+            'type': 'ir.actions.act_window',
+            'res_model': 'ks.sale.edit.approval.request.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'default_ks_sale_order_id': self.id,
+                'ks_approval_mode': config.ks_approval_mode if config else 'single',
+                'ks_is_update': True,
+            },
+        }
+
     def _ks_send_to_approval_pending(self):
         """Normal user sends SO to approval pending - locks the order"""
         self.ensure_one()
@@ -511,6 +624,8 @@ class SaleOrder(models.Model):
             'ks_confirm_pm1_approved': False,
             'ks_confirm_pm2_approved': False,
         })
+        # Lock the SO immediately so it cannot be edited while awaiting approval
+        self.action_lock()
 
         # Determine approval message based on mode
         if config.is_dual_approval():
@@ -726,7 +841,8 @@ class SaleOrder(models.Model):
         if self.ks_confirm_pm2_id and current_user != self.ks_confirm_pm2_id:
             self._mark_activity_done(self.ks_confirm_pm2_id, feedback=_("Request rejected by %s") % current_user.name)
 
-        # Reset to draft state
+        # Reset to draft state and unlock so it can be edited again
+        self.action_unlock()
         self.write({
             'state': 'draft',
             'ks_confirm_pm1_id': False,
@@ -754,7 +870,35 @@ class SaleOrder(models.Model):
     # ===== Cancel Request Methods =====
 
     def write(self, values):
-        """Override write to trigger recomputation of ks_can_edit_price on lines when ks_edit_approved changes"""
+        """Override write to trigger recomputation of ks_can_edit_price on lines when ks_edit_approved changes.
+        Also blocks normal users from changing payment_term_id or user_id on confirmed/locked SOs.
+        """
+        _protected_fields = ['payment_term_id', 'user_id', 'ks_no_tax_allowed', 'stock_decifient']
+        changing_protected = any(f in values for f in _protected_fields)
+
+        if changing_protected:
+            for order in self:
+                if not order.locked:
+                    continue
+                if order._is_admin_user():
+                    continue
+                if not order._has_approval_config():
+                    continue
+                config = order._get_approval_config()
+                if self.env.user in config.get_all_pm_users():
+                    continue
+                # Normal user on a locked order
+                edit_approved = (
+                    order.ks_edit_approved and
+                    order.ks_edit_request_user_id == self.env.user
+                )
+                if not edit_approved:
+                    changed = [f for f in _protected_fields if f in values]
+                    raise UserError(_(
+                        "You cannot modify %s on a confirmed Sale Order. "
+                        "Please use 'Request Edit' to get edit approval first."
+                    ) % ', '.join(changed))
+
         result = super().write(values)
 
         # If ks_edit_approved changed, recompute ks_can_edit_price on order lines
@@ -768,12 +912,10 @@ class SaleOrder(models.Model):
     def action_cancel(self):
         """Override: Normal users must request cancellation for confirmed SOs, PMs can directly cancel"""
         for order in self:
-            # Check if locked
-            if order.locked:
-                raise UserError(_("You cannot cancel a locked order. Please unlock it first."))
-
             # Admin users bypass all approval restrictions
             if order._is_admin_user():
+                if order.locked:
+                    order.action_unlock()
                 return super().action_cancel()
 
             # Check if approval config exists
@@ -785,7 +927,9 @@ class SaleOrder(models.Model):
             is_pm = self.env.user in config.get_all_pm_users()
 
             if is_pm:
-                # PM users can directly cancel
+                # PM users can directly cancel; unlock first if locked
+                if order.locked:
+                    order.action_unlock()
                 return super().action_cancel()
             else:
                 # Normal user
@@ -796,8 +940,45 @@ class SaleOrder(models.Model):
                     # For confirmed SO, need approval - open wizard
                     return order._action_open_cancel_request_wizard()
                 elif order.state == 'approval_pending':
-                    # Allow cancelling approval pending - reset to draft
+                    # Requester withdrawing their own confirmation request → back to draft
                     return order._ks_cancel_approval_request()
+                elif order.state == 'cancel_pending':
+                    # A cancel-approval is in flight.  The requester can withdraw it
+                    # (returns to sale); other users are blocked to protect history.
+                    if order.ks_cancel_request_user_id == self.env.user:
+                        self._ks_cancel_workflow_activities(
+                            'cancel', mark_done=True,
+                            feedback=_("Cancel request withdrawn by %s") % self.env.user.name,
+                        )
+                        order.write({
+                            'state': 'sale',
+                            'ks_cancel_pm1_id': False,
+                            'ks_cancel_pm2_id': False,
+                            'ks_cancel_pm1_approved': False,
+                            'ks_cancel_pm2_approved': False,
+                            'ks_cancel_request_user_id': False,
+                            'ks_cancel_request_date': False,
+                            'ks_cancel_request_reason': False,
+                        })
+                        order.message_post(
+                            body=_("Cancel request withdrawn by %s.") % self.env.user.name,
+                            message_type='notification',
+                            subtype_xmlid='mail.mt_note',
+                        )
+                        return True
+                    else:
+                        raise UserError(_(
+                            "A cancellation approval is in progress. "
+                            "Only the original requester (%s) can withdraw it."
+                        ) % (order.ks_cancel_request_user_id.name or ''))
+                elif order.state == 'edit_pending':
+                    # An edit-approval is in flight — block standard cancel entirely.
+                    # The requester should use 'Update Edit Approvals' to change approvers
+                    # or wait for the PM to decide.
+                    raise UserError(_(
+                        "An edit approval request is pending. "
+                        "Please wait for the PM to approve or reject it before cancelling."
+                    ))
                 else:
                     raise UserError(_("Cannot cancel order in current state."))
         return True
@@ -805,14 +986,14 @@ class SaleOrder(models.Model):
     def _ks_cancel_approval_request(self):
         """Cancel the approval request and return to draft"""
         self.ensure_one()
-        # Mark all activities as done (request cancelled)
-        if self.ks_confirm_pm1_id:
-            self._mark_activity_done(self.ks_confirm_pm1_id,
-                                     feedback=_("Approval request cancelled by %s") % self.env.user.name)
-        if self.ks_confirm_pm2_id:
-            self._mark_activity_done(self.ks_confirm_pm2_id,
-                                     feedback=_("Approval request cancelled by %s") % self.env.user.name)
+        # Mark confirm-workflow activities as done (leaves chatter entry, type+keyword scoped)
+        self._ks_cancel_workflow_activities(
+            'confirm', mark_done=True,
+            feedback=_("Approval request cancelled by %s") % self.env.user.name,
+        )
 
+        # Unlock so the SO can be edited again after withdrawal
+        self.action_unlock()
         self.write({
             'state': 'draft',
             'ks_confirm_pm1_id': False,
@@ -1278,7 +1459,8 @@ class SaleOrder(models.Model):
             if self.ks_edit_pm2_id:
                 self._mark_activity_done(self.ks_edit_pm2_id,
                                          feedback=_("Approval completed - Edit permission granted"))
-            # Both approved - allow editing
+            # Both approved - unlock the SO so the requester can edit
+            self.action_unlock()
             self.write({
                 'state': 'sale',
                 'ks_edit_approved': True,
@@ -1407,6 +1589,9 @@ class SaleOrder(models.Model):
             'ks_edit_pm2_approved': False,
         })
 
+        # Re-lock the SO after edit is complete
+        self.action_lock()
+
         # Trigger recomputation of ks_can_edit_price on order lines
         if self.order_line:
             self.order_line._compute_ks_can_edit_price()
@@ -1420,6 +1605,66 @@ class SaleOrder(models.Model):
         return True
 
     # ===== Activity Management Methods =====
+
+    # Keyword used in activity summaries for each workflow type.
+    # Changing a summary in _get_approval_activity_summary must be reflected here.
+    _APPROVAL_TYPE_KEYWORD = {
+        'confirm': 'Confirm',
+        'cancel': 'Cancel',
+        'edit': 'Edit',
+    }
+
+    def _ks_cancel_workflow_activities(self, approval_type, mark_done=False, feedback=None):
+        """Cancel pending activities that belong to one specific approval workflow.
+
+        This is the ONLY method that should be called to remove/complete approval
+        activities.  It uses both the activity-type record AND a summary keyword
+        so that — even when the same PM user appears in multiple workflows — only
+        the activities created for *this* workflow are touched.
+
+        :param approval_type: 'confirm' | 'cancel' | 'edit'
+        :param mark_done: True  → action_feedback (leaves a chatter entry, used for
+                                  full cancellations / rejections)
+                          False → unlink (silent removal, used for 'Update' resets)
+        :param feedback: feedback string passed to action_feedback when mark_done=True
+        """
+        self.ensure_one()
+        keyword = self._APPROVAL_TYPE_KEYWORD.get(approval_type, '')
+
+        # Determine which PM IDs were assigned to this workflow
+        pm_map = {
+            'confirm': (self.ks_confirm_pm1_id, self.ks_confirm_pm2_id),
+            'cancel':  (self.ks_cancel_pm1_id,  self.ks_cancel_pm2_id),
+            'edit':    (self.ks_edit_pm1_id,     self.ks_edit_pm2_id),
+        }
+        pm1, pm2 = pm_map.get(approval_type, (False, False))
+        user_ids = [u.id for u in (pm1, pm2) if u]
+
+        # Base domain: this SO, approval activity type, matching summary keyword
+        activity_type_rec = self.env.ref(
+            'ks_sale_approval.mail_activity_data_sale_approval', raise_if_not_found=False
+        )
+        domain = [
+            ('res_model', '=', self._name),
+            ('res_id', '=', self.id),
+            ('active', '=', True),
+        ]
+        if activity_type_rec:
+            domain.append(('activity_type_id', '=', activity_type_rec.id))
+        if keyword:
+            domain.append(('summary', 'ilike', keyword))
+        if user_ids:
+            domain.append(('user_id', 'in', user_ids))
+
+        activities = self.env['mail.activity'].search(domain)
+        if not activities:
+            return True
+
+        if mark_done:
+            activities.action_feedback(feedback=feedback or '')
+        else:
+            activities.sudo().unlink()
+        return True
 
     def _create_approval_activity(self, user_id, summary, note=None, activity_type='mail.mail_activity_data_todo'):
         """Create an activity for approval request
@@ -1456,31 +1701,32 @@ class SaleOrder(models.Model):
         activity = self.env['mail.activity'].create(activity_vals)
         return activity
 
-    def _mark_activity_done(self, user_id, feedback=None):
-        """Mark all pending activities for this user as done
+    def _mark_activity_done(self, user_id, feedback=None, summary_keyword=None):
+        """Mark pending activities for this user as done.
 
-        :param user_id: res.users record - user whose activities to mark done
-        :param feedback: string - optional feedback message
-        :return: True
+        :param user_id: res.users record
+        :param feedback: optional feedback message shown in chatter
+        :param summary_keyword: optional string — when supplied only activities
+               whose summary contains this keyword are matched.  Use the
+               approval_type keyword ('Confirm', 'Cancel', 'Edit') to make the
+               operation type-specific and avoid touching unrelated activities.
         """
         self.ensure_one()
         if not user_id:
             return True
 
-        # Search for active (not done) activities
-        # Activities use 'active' field, not 'done' field
-        activities = self.env['mail.activity'].search([
+        domain = [
             ('res_id', '=', self.id),
             ('res_model', '=', 'sale.order'),
             ('user_id', '=', user_id.id),
             ('active', '=', True),
-        ])
+        ]
+        if summary_keyword:
+            domain.append(('summary', 'ilike', summary_keyword))
 
-        # Use action_feedback() instead of action_done() to pass feedback
-        # action_done() doesn't accept parameters, it's just a wrapper
+        activities = self.env['mail.activity'].search(domain)
         if activities:
             activities.action_feedback(feedback=feedback or '')
-
         return True
 
     def _get_approval_activity_summary(self, approval_type, pm_role=None):

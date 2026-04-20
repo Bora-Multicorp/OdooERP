@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--  No ir.rules needed — company_ids is cleared via post_init_hook SQL.  -->
+</odoo>

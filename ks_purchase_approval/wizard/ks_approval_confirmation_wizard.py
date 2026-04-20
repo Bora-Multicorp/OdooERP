@@ -90,26 +90,47 @@ class KsApprovalConfirmationWizard(models.TransientModel):
                 self.ks_approver_1_id = False
 
     def action_confirm_send(self):
-        """User confirms to send the approval request with selected approvers"""
+        """User confirms to send the approval request with selected approvers.
+
+        When opened via 'Update Approvals' (ks_is_update=True in context), the old
+        activities and fields are reset HERE — only after the user clicks OK.
+        Clicking the wizard Cancel button leaves everything untouched.
+        """
         self.ensure_one()
         if not self.ks_approver_1_id:
             raise UserError(_("Approver 1 is required."))
-        
+
         # Check approval mode
         if self.ks_is_two_way_approval:
-            # Two-way approval: Approver 2 is required
             if not self.ks_approver_2_id:
                 raise UserError(_("Approver 2 is required for Two Level Approval mode."))
             if self.ks_approver_1_id == self.ks_approver_2_id:
                 raise UserError(_("Approver 1 and Approver 2 must be different users."))
             approver_2_id = self.ks_approver_2_id.id
         else:
-            # Single level approval: Approver 2 is optional
             approver_2_id = self.ks_approver_2_id.id if self.ks_approver_2_id else False
-        
-        self.ks_purchase_order_id._ks_send_to_pending_approval(
-            self.ks_approver_1_id.id,
-            approver_2_id
-        )
+
+        order = self.ks_purchase_order_id
+        is_update = self.env.context.get('ks_is_update', False)
+        if is_update:
+            # Cancel old confirm-workflow activities (scoped: keyword + user)
+            order._ks_cancel_workflow_activities('confirm', mark_done=False)
+            # Reset fields and return to 'sent' so _ks_send_to_pending_approval guard passes
+            order.write({
+                'state': 'sent',
+                'ks_approver_1_id': False,
+                'ks_approver_2_id': False,
+                'ks_pm1_approved': False,
+                'ks_pm2_approved': False,
+                'ks_pm1_reason': False,
+                'ks_pm2_reason': False,
+            })
+            order.message_post(
+                body=_("Approval request updated by %s. Previous approvers cancelled.") % self.env.user.name,
+                message_type='notification',
+                subtype_xmlid='mail.mt_note',
+            )
+
+        order._ks_send_to_pending_approval(self.ks_approver_1_id.id, approver_2_id)
         return {'type': 'ir.actions.act_window_close'}
 

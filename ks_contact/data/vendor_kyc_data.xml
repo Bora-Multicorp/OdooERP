@@ -491,7 +491,7 @@
         </record>
         <!-- Company GST Certificate -->
         <record model="survey.question" id="gst_certificate_kyc_survey">
-            <field name="title">Company GST Certificate</field>
+            <field name="title">GST Certificate</field>
             <field name="description" type="html">
                 <p>Upload 1 supported file. Max 10 MB.</p>
             </field>
@@ -537,7 +537,7 @@
         </record>
         <!-- GST Return duration -->
         <record model="survey.question" id="gst_duration_kyc_survey">
-            <field name="title">GST Return duration</field>
+            <field name="title">Filing Frequency</field>
             <field name="survey_id" ref="vendor_kyc_form_survey"/>
             <field name="sequence">31</field>
             <field name="question_type">simple_choice</field>
@@ -712,7 +712,7 @@
         <record model="survey.question.answer" id="matrix_bank_address_kyc_survey_col4">
             <field name="question_id" ref="matrix_bank_address_kyc_survey"/>
             <field name="sequence">4</field>
-            <field name="value">Bank Address</field>
+<!--            <field name="value">Bank Address</field>-->
             <field name="sh_value_type">textbox</field>
         </record>
         <record model="survey.question.answer" id="matrix_bank_address_kyc_survey_col5">

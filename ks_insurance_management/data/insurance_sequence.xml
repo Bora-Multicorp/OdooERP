@@ -14,4 +14,18 @@
         <field name="padding">4</field>
         <field name="number_increment">1</field>
     </record>
+    <record id="seq_insurance_topup" model="ir.sequence">
+        <field name="name">Insurance Top-up</field>
+        <field name="code">insurance.topup</field>
+        <field name="prefix">TOPUP/%(year)s/</field>
+        <field name="padding">4</field>
+        <field name="number_increment">1</field>
+    </record>
+    <record id="seq_insurance_policy_payment" model="ir.sequence">
+        <field name="name">Insurance Policy Payment</field>
+        <field name="code">insurance.policy.payment</field>
+        <field name="prefix">INSPAY/%(year)s/</field>
+        <field name="padding">4</field>
+        <field name="number_increment">1</field>
+    </record>
 </odoo>

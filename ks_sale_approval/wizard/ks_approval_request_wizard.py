@@ -168,23 +168,46 @@ class KsApprovalRequestWizard(models.TransientModel):
         self._compute_filtered_approver_ids()
 
     def action_confirm_request(self):
-        """Proceed with sending the approval request"""
+        """Proceed with sending the approval request.
+
+        When opened via 'Update Approvals' (ks_is_update=True in context), the old
+        activities and approval state are reset HERE — only after the user clicks OK.
+        Clicking the wizard's Cancel button leaves everything untouched.
+        """
         self.ensure_one()
         if not self.ks_approver1_user:
             raise UserError(_("Please select Approver 1."))
-        
+
         order = self.ks_sale_order_id
         config = order._get_approval_config()
-        
+
         if self.ks_show_approver2 and not self.ks_approver2_user:
             raise UserError(_("Please select Approver 2 (required for dual approval mode)."))
-        
-        # Store selected approvers on the sale order
+
+        is_update = self.env.context.get('ks_is_update', False)
+        if is_update:
+            # Cancel old confirm-workflow activities (scoped: type + keyword + PM users)
+            order._ks_cancel_workflow_activities('confirm', mark_done=False)
+            # Reset approval fields and move state back to 'sent' so the
+            # _ks_send_to_approval_pending guard passes
+            order.write({
+                'state': 'sent',
+                'ks_confirm_pm1_id': False,
+                'ks_confirm_pm2_id': False,
+                'ks_confirm_pm1_approved': False,
+                'ks_confirm_pm2_approved': False,
+            })
+            order.message_post(
+                body=_("Approval request updated by %s. Previous approvers cancelled.") % self.env.user.name,
+                message_type='notification',
+                subtype_xmlid='mail.mt_note',
+            )
+
+        # Store new approvers and start the approval flow
         order.write({
             'ks_confirm_pm1_id': self.ks_approver1_user.id,
             'ks_confirm_pm2_id': self.ks_approver2_user.id if self.ks_approver2_user else False,
         })
-        
         order._ks_send_to_approval_pending()
         return {'type': 'ir.actions.act_window_close'}
 

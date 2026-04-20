@@ -4,7 +4,7 @@ import io
 import base64
 import re
 from datetime import date
-from odoo import models, api, fields
+from odoo import models, api, fields, _
 from odoo.exceptions import UserError
 try:
     import xlsxwriter
@@ -1230,21 +1230,21 @@ class PartWiseAllDataReport(models.TransientModel):
             sheet.set_column(col, col, width)
         sheet.freeze_panes(1, 0)
         
-        # Sale orders: selected IDs if provided, otherwise all (except cancel)
+        # Sale orders: selected IDs if provided, otherwise all
         if sale_order_ids:
-            sale_orders = self.env['sale.order'].browse(sale_order_ids).filtered(
-                lambda o: o.state != 'cancel'
-            )
+            all_orders = self.env['sale.order'].browse(sale_order_ids)
+            sale_orders = all_orders.filtered(lambda o: o.state != 'cancel')
         else:
-            sale_orders = self.env['sale.order'].search([
-                ('state', '!=', 'cancel')
-            ], order='partner_id')
-        
+            all_orders = self.env['sale.order'].search([], order='partner_id')
+            sale_orders = all_orders.filtered(lambda o: o.state != 'cancel')
+
         # 2. Unique customers: by commercial partner (so same company = one row)
+        # Collect from ALL orders (any state) so no customer is missed
         commercial_partner_ids = set()
-        for order in sale_orders:
+        for order in all_orders:
             comp = order.partner_id.commercial_partner_id
-            commercial_partner_ids.add(comp.id)
+            if comp:
+                commercial_partner_ids.add(comp.id)
         
         # 3. For each customer, aggregate over ALL their sale orders
         company = self.env.company
@@ -1259,18 +1259,61 @@ class PartWiseAllDataReport(models.TransientModel):
             payment_received = 0.0
             stock_dispatched_amount = 0.0
 
-            for order in partner_orders:
-                # PAYMENT RECEIVED = ks_advance_payment_amount + total_invoice_payment_received (per SO, convert to company currency, then sum)
-                adv = getattr(order, 'ks_advance_payment_amount', 0.0) or 0.0
-                inv_pay = getattr(order, 'total_invoice_payment_received', 0.0) or 0.0
-                order_payment = adv + inv_pay
-                if order_payment:
-                    order_date = order.date_order.date() if order.date_order else fields.Date.context_today(self)
-                    payment_received += _to_company_currency(
-                        order.currency_id, order_payment, company_currency, company, order_date, self
+            # ----------------------------------------------------------------
+            # PAYMENT RECEIVED — deduplicate at customer level.
+            #
+            # Root cause of duplication: one invoice can be linked to multiple
+            # SOs (Odoo allows combined invoicing). Summing per-SO stored fields
+            # (ks_advance_payment_amount + total_invoice_payment_received) then
+            # multiplies the same payment by the number of SOs it touches.
+            #
+            # Fix: collect unique payment IDs directly across all SOs and
+            # invoices for this customer, sum each payment exactly once.
+            # ----------------------------------------------------------------
+
+            # Step 1 – unique advance payments
+            # Use direct search instead of One2many to avoid caching issues.
+            # State filter: exclude only draft/cancel — 'posted' and 'paid' are
+            # both valid (bank-journal payments stay 'posted' until reconciled;
+            # cash-journal payments go straight to 'paid').
+            seen_advance_ids = set()
+            advance_payments = self.env['account.payment'].search([
+                ('ks_sale_order_id', 'in', partner_orders.ids),
+                ('state', 'not in', ['draft', 'cancel']),
+            ])
+            for payment in advance_payments:
+                if payment.id not in seen_advance_ids:
+                    seen_advance_ids.add(payment.id)
+                    payment_received += _payment_to_company_currency(
+                        payment, payment.amount, company_currency, company, self
                     )
 
-                # STOCK DESPATCHED AMOUNT: use qty_delivered * price_unit (reliable); optional move-based for sale_stock
+            # Step 2 – unique invoice payments (excluding advance payments)
+            # No state filter on reconciled_payment_ids — if a payment appears
+            # there it is already reconciled and valid regardless of state label.
+            seen_invoice_ids = set()
+            seen_invoice_payment_ids = set()
+            for order in partner_orders:
+                for inv in order.invoice_ids.filtered(lambda i: i.state == 'posted'):
+                    if inv.id in seen_invoice_ids:
+                        continue  # invoice already processed via another SO
+                    seen_invoice_ids.add(inv.id)
+                    for payment in inv.reconciled_payment_ids:
+                        if payment.id in seen_advance_ids:
+                            continue  # already counted as advance payment
+                        if payment.id in seen_invoice_payment_ids:
+                            continue  # already counted from another invoice
+                        seen_invoice_payment_ids.add(payment.id)
+                        amount = _payment_to_company_currency(
+                            payment, payment.amount, company_currency, company, self
+                        )
+                        if inv.move_type == 'out_invoice':
+                            payment_received += amount
+                        elif inv.move_type == 'out_refund':
+                            payment_received -= amount
+
+            # STOCK DESPATCHED AMOUNT (unchanged — no duplication issue here)
+            for order in partner_orders:
                 order_date = order.date_order.date() if order.date_order else fields.Date.context_today(self)
                 order_currency = order.currency_id
                 for line in order.order_line.filtered(
@@ -1299,7 +1342,7 @@ class PartWiseAllDataReport(models.TransientModel):
                         stock_dispatched_amount += _to_company_currency(
                             order_currency, line_amount, company_currency, company, order_date, self
                         )
-            
+
             party_data[comp_id] = {
                 'party_name': comp.name or '',
                 'payment_received': payment_received,
@@ -2181,6 +2224,255 @@ class PartWiseAllDataReport(models.TransientModel):
         # Return base64 encoded content
         return base64.b64encode(output.read())
 
+    # =========================================================================
+    # CN Tracking – data helper
+    # =========================================================================
+
+    @api.model
+    def _build_cn_tracking_rows(self, sale_order_ids=None, credit_note_ids=None):
+        """
+        Build CN tracking data and return as a list of dicts (one dict per
+        spreadsheet row). Keys match the fields on ks.cn.tracking.report:
+            pi_no, pi_date, pi_amount,
+            commercial_invoice_no, commercial_invoice_date, commercial_invoice_amount,
+            cn_date, cn_no, cn_amount,
+            adjusted_pi_no, adjustment_amount, balance_cn
+
+        Two modes:
+        - credit_note_ids is not None  →  one row per CN (Credit-Notes view)
+        - sale_order_ids / None        →  PI + CI + CN rows per Sale Order
+        """
+        rows = []
+
+        def _to_date(val):
+            """Coerce a datetime or date to date; return None for falsy values."""
+            if not val:
+                return None
+            return val.date() if hasattr(val, 'date') else val
+
+        # -----------------------------------------------------------------
+        # Mode A: Credit Notes view – one row per CN
+        # -----------------------------------------------------------------
+        if credit_note_ids is not None:
+            credit_notes = self.env['account.move'].browse(credit_note_ids).filtered(
+                lambda m: m.move_type == 'out_refund' and m.state != 'cancel'
+            )
+            for cn in credit_notes.sorted(
+                key=lambda m: (
+                    m.invoice_date or (m.create_date.date() if m.create_date else date.min),
+                    m.name or '',
+                )
+            ):
+                # Resolve linked Sale Order (used as Proforma Invoice source)
+                order = False
+                if cn.invoice_origin:
+                    order = self.env['sale.order'].search(
+                        [('name', '=', cn.invoice_origin)], limit=1
+                    )
+                if not order and cn.reversed_entry_id and cn.reversed_entry_id.invoice_origin:
+                    order = self.env['sale.order'].search(
+                        [('name', '=', cn.reversed_entry_id.invoice_origin)], limit=1
+                    )
+
+                pi_no = order.name if order else (cn.invoice_origin or '')
+                pi_date = _to_date(order.date_order or order.create_date) if order else None
+                pi_amount = order.amount_total if order else 0.0
+
+                # Resolve related Commercial Invoice
+                related_invoice = cn.reversed_entry_id
+                if not related_invoice and cn.invoice_origin:
+                    related_invoice = self.env['account.move'].search([
+                        ('invoice_origin', '=', cn.invoice_origin),
+                        ('move_type', '=', 'out_invoice'),
+                        ('state', '!=', 'cancel'),
+                    ], limit=1)
+
+                commercial_invoice_no = related_invoice.name if related_invoice else ''
+                commercial_invoice_date = (
+                    related_invoice.invoice_date if related_invoice else None
+                )
+                commercial_invoice_amount = (
+                    related_invoice.amount_total or 0.0 if related_invoice else 0.0
+                )
+
+                cn_amount = (
+                    abs(cn.amount_total_signed)
+                    if cn.amount_total_signed
+                    else abs(cn.amount_total) if cn.amount_total else 0.0
+                )
+                adjusted_pi_no = (
+                    cn.invoice_origin
+                    or (related_invoice.invoice_origin if related_invoice else '')
+                    or pi_no
+                )
+                adjustment_amount = (
+                    cn_amount
+                    if cn.amount_residual == 0
+                    else cn_amount - abs(cn.amount_residual)
+                )
+                balance_cn = cn_amount - adjustment_amount
+
+                rows.append({
+                    'pi_no': pi_no,
+                    'pi_date': pi_date,
+                    'pi_amount': pi_amount,
+                    'commercial_invoice_no': commercial_invoice_no,
+                    'commercial_invoice_date': commercial_invoice_date,
+                    'commercial_invoice_amount': commercial_invoice_amount,
+                    'cn_date': cn.invoice_date,
+                    'cn_no': cn.name or '',
+                    'cn_amount': cn_amount,
+                    'adjusted_pi_no': adjusted_pi_no,
+                    'adjustment_amount': adjustment_amount,
+                    'balance_cn': balance_cn,
+                })
+            return rows
+
+        # -----------------------------------------------------------------
+        # Mode B: Sale Orders view – PI + CI rows + CN rows per SO
+        # -----------------------------------------------------------------
+        if sale_order_ids:
+            sale_orders = self.env['sale.order'].browse(sale_order_ids).filtered(
+                lambda so: so.state in ['sale', 'done']
+            )
+        else:
+            sale_orders = self.env['sale.order'].search(
+                [('state', 'in', ['sale', 'done'])], order='name'
+            )
+
+        for order in sale_orders:
+            pi_no = order.name or ''
+            pi_date = _to_date(order.date_order or order.create_date)
+            pi_amount = order.amount_total or 0.0
+
+            commercial_invoices = self.env['account.move'].search([
+                ('invoice_origin', '=', order.name),
+                ('move_type', 'in', ['out_invoice']),
+                ('state', '!=', 'cancel'),
+            ], order='name')
+
+            credit_notes = self.env['account.move'].search([
+                '|',
+                ('invoice_origin', '=', order.name),
+                ('reversed_entry_id', 'in', commercial_invoices.ids),
+                ('move_type', '=', 'out_refund'),
+                ('state', '!=', 'cancel'),
+            ], order='name')
+
+            if commercial_invoices or credit_notes:
+                # One row per Commercial Invoice (CN columns blank)
+                for invoice in commercial_invoices:
+                    rows.append({
+                        'pi_no': pi_no,
+                        'pi_date': pi_date,
+                        'pi_amount': pi_amount,
+                        'commercial_invoice_no': invoice.name or '',
+                        'commercial_invoice_date': invoice.invoice_date,
+                        'commercial_invoice_amount': invoice.amount_total or 0.0,
+                        'cn_date': None,
+                        'cn_no': '',
+                        'cn_amount': 0.0,
+                        'adjusted_pi_no': '',
+                        'adjustment_amount': 0.0,
+                        'balance_cn': 0.0,
+                    })
+
+                # One row per Credit Note (PI columns repeated)
+                for cn in credit_notes:
+                    related_invoice = cn.reversed_entry_id or False
+                    if not related_invoice and cn.invoice_origin:
+                        related_invoice = commercial_invoices.filtered(
+                            lambda inv: inv.invoice_origin == cn.invoice_origin
+                        )[:1]
+
+                    commercial_invoice_no = related_invoice.name if related_invoice else ''
+                    commercial_invoice_date = (
+                        related_invoice.invoice_date if related_invoice else None
+                    )
+                    commercial_invoice_amount = (
+                        related_invoice.amount_total or 0.0 if related_invoice else 0.0
+                    )
+
+                    cn_amount = (
+                        abs(cn.amount_total_signed)
+                        if cn.amount_total_signed
+                        else abs(cn.amount_total) if cn.amount_total else 0.0
+                    )
+
+                    if cn.invoice_origin:
+                        adjusted_pi_no = cn.invoice_origin
+                    elif related_invoice and related_invoice.invoice_origin:
+                        adjusted_pi_no = related_invoice.invoice_origin
+                    else:
+                        adjusted_pi_no = pi_no
+
+                    adjustment_amount = (
+                        cn_amount
+                        if cn.amount_residual == 0
+                        else cn_amount - abs(cn.amount_residual)
+                    )
+                    balance_cn = cn_amount - adjustment_amount
+
+                    rows.append({
+                        'pi_no': pi_no,
+                        'pi_date': pi_date,
+                        'pi_amount': pi_amount,
+                        'commercial_invoice_no': commercial_invoice_no,
+                        'commercial_invoice_date': commercial_invoice_date,
+                        'commercial_invoice_amount': commercial_invoice_amount,
+                        'cn_date': cn.invoice_date,
+                        'cn_no': cn.name or '',
+                        'cn_amount': cn_amount,
+                        'adjusted_pi_no': adjusted_pi_no,
+                        'adjustment_amount': adjustment_amount,
+                        'balance_cn': balance_cn,
+                    })
+            else:
+                # PI-only row (no invoices or CNs yet)
+                rows.append({
+                    'pi_no': pi_no,
+                    'pi_date': pi_date,
+                    'pi_amount': pi_amount,
+                    'commercial_invoice_no': '',
+                    'commercial_invoice_date': None,
+                    'commercial_invoice_amount': 0.0,
+                    'cn_date': None,
+                    'cn_no': '',
+                    'cn_amount': 0.0,
+                    'adjusted_pi_no': '',
+                    'adjustment_amount': 0.0,
+                    'balance_cn': 0.0,
+                })
+
+        return rows
+
+    # =========================================================================
+    # CN Tracking – create persistent record and open its form
+    # =========================================================================
+
+    @api.model
+    def action_create_cn_tracking_report(self, sale_order_ids=None, credit_note_ids=None):
+        """
+        Build CN tracking rows, persist them as a ks.cn.tracking.report record,
+        and return a window action that opens the newly created record's form view.
+        Called by the 'CN Tracking' server action so the user lands on a form
+        instead of an immediate XLSX download.
+        """
+        rows = self._build_cn_tracking_rows(
+            sale_order_ids=sale_order_ids,
+            credit_note_ids=credit_note_ids,
+        )
+
+        now = fields.Datetime.now()
+        for row in rows:
+            self.env['ks.cn.tracking.report'].create(dict(row, date_generated=now))
+
+        return self.env.ref('ks_reports.action_ks_cn_tracking_report').read()[0]
+
+    # =========================================================================
+    # CN Tracking – XLSX (legacy direct-download, now delegates to helper)
+    # =========================================================================
+
     @api.model
     def generate_cn_tracking_xlsx_report(self, sale_order_ids=None, credit_note_ids=None):
         """
@@ -2188,376 +2480,77 @@ class PartWiseAllDataReport(models.TransientModel):
         - If credit_note_ids is provided: report shows only rows for those Credit Notes (used when printing from Credit Notes).
         - Otherwise: shows Sale Order level tracking with PI, Commercial Invoice, and CN details.
         Returns base64 encoded file content.
+        Delegates data-building to _build_cn_tracking_rows for a single source of truth.
         """
-        # Create output in memory
         output = io.BytesIO()
         workbook = xlsxwriter.Workbook(output, {'in_memory': True})
-        
-        # Define header style with yellow background and bold text
+
         header_format = workbook.add_format({
-            'bold': True,
-            'bg_color': '#FFFF00',  # Yellow background
-            'border': 1,
-            'align': 'center',
-            'valign': 'vcenter',
-            'text_wrap': True,
+            'bold': True, 'bg_color': '#FFFF00', 'border': 1,
+            'align': 'center', 'valign': 'vcenter', 'text_wrap': True,
         })
-        
-        # Define data row format
-        data_format = workbook.add_format({
-            'border': 1,
-            'valign': 'vcenter',
-        })
-        
-        # Define number format
+        data_format = workbook.add_format({'border': 1, 'valign': 'vcenter'})
         number_format = workbook.add_format({
-            'border': 1,
-            'valign': 'vcenter',
-            'num_format': '#,##0.00',
+            'border': 1, 'valign': 'vcenter', 'num_format': '#,##0.00',
         })
-        
-        # Define date format
         date_format = workbook.add_format({
-            'border': 1,
-            'valign': 'vcenter',
-            'num_format': 'dd-mmm-yy',
+            'border': 1, 'valign': 'vcenter', 'num_format': 'dd-mmm-yy',
         })
-        
-        # Define column headings
+
         headers = [
-            'PROFORMA INVOICE NO',
-            'PROFORMA INVOICE DATE',
-            'PI AMOUNT',
-            'COMMERCIAL INVOICE NO',
-            'COMMERCIAL INVOICE DATE',
-            'COMMERCIAL INVOICE AMOUNT',
-            'CN DATE',
-            'CN NO',
-            'CN AMOUNT',
-            'CN Adjusted Against PI No.',
-            'Adjustment Amount',
-            'Balance CN',
+            'PROFORMA INVOICE NO', 'PROFORMA INVOICE DATE', 'PI AMOUNT',
+            'COMMERCIAL INVOICE NO', 'COMMERCIAL INVOICE DATE', 'COMMERCIAL INVOICE AMOUNT',
+            'CN DATE', 'CN NO', 'CN AMOUNT',
+            'CN Adjusted Against PI No.', 'Adjustment Amount', 'Balance CN',
         ]
-        
-        column_widths = [
-            25, 20, 18, 25, 20, 25, 18, 20, 18, 25, 20, 18,
-        ]
-        
-        # Create worksheet
+        column_widths = [25, 20, 18, 25, 20, 25, 18, 20, 18, 25, 20, 18]
+
         sheet = workbook.add_worksheet('CN Tracking')
         for col, header in enumerate(headers):
             sheet.write(0, col, header, header_format)
         for col, width in enumerate(column_widths):
             sheet.set_column(col, col, width)
         sheet.freeze_panes(1, 0)
-        
-        row = 1
-        
-        # When data is "Credit Notes only": only include these credit note rows (no sale order dump)
-        if credit_note_ids is not None:
-            credit_notes = self.env['account.move'].browse(credit_note_ids).filtered(
-                lambda m: m.move_type == 'out_refund' and m.state != 'cancel'
-            )
-            for cn in credit_notes.sorted(key=lambda m: (m.invoice_date or m.create_date, m.name or '')):
-                order = None
-                if cn.invoice_origin:
-                    order = self.env['sale.order'].search([('name', '=', cn.invoice_origin)], limit=1)
-                if not order and cn.reversed_entry_id and cn.reversed_entry_id.invoice_origin:
-                    order = self.env['sale.order'].search([('name', '=', cn.reversed_entry_id.invoice_origin)], limit=1)
-                pi_no = order.name if order else (cn.invoice_origin or '')
-                pi_date = order.date_order or order.create_date if order else None
-                pi_amount = order.amount_total if order else 0.0
-                related_invoice = cn.reversed_entry_id
-                if not related_invoice and cn.invoice_origin:
-                    related_invoice = self.env['account.move'].search([
-                        ('invoice_origin', '=', cn.invoice_origin),
-                        ('move_type', '=', 'out_invoice'),
-                        ('state', '!=', 'cancel')
-                    ], limit=1)
-                commercial_invoice_no = related_invoice.name if related_invoice else ''
-                cn_amount = abs(cn.amount_total_signed) if cn.amount_total_signed else abs(cn.amount_total) if cn.amount_total else 0.0
-                adjusted_pi_no = cn.invoice_origin or (related_invoice.invoice_origin if related_invoice else '') or pi_no
-                adjustment_amount = 0.0
-                if cn.amount_residual == 0:
-                    adjustment_amount = cn_amount
-                else:
-                    adjustment_amount = cn_amount - abs(cn.amount_residual)
-                balance_cn = cn_amount - adjustment_amount
-                col = 0
-                sheet.write(row, col, pi_no, data_format)
-                col += 1
-                if pi_date:
-                    sheet.write(row, col, pi_date, date_format)
-                else:
-                    sheet.write(row, col, '', data_format)
-                col += 1
-                sheet.write(row, col, pi_amount, number_format)
-                col += 1
-                sheet.write(row, col, commercial_invoice_no, data_format)
-                col += 1
-                if related_invoice and related_invoice.invoice_date:
-                    sheet.write(row, col, related_invoice.invoice_date, date_format)
-                else:
-                    sheet.write(row, col, '', data_format)
-                col += 1
-                if related_invoice:
-                    sheet.write(row, col, related_invoice.amount_total or 0.0, number_format)
-                else:
-                    sheet.write(row, col, '', data_format)
-                col += 1
-                if cn.invoice_date:
-                    sheet.write(row, col, cn.invoice_date, date_format)
-                else:
-                    sheet.write(row, col, '', data_format)
-                col += 1
-                sheet.write(row, col, cn.name or '', data_format)
-                col += 1
-                sheet.write(row, col, cn_amount, number_format)
-                col += 1
-                sheet.write(row, col, adjusted_pi_no, data_format)
-                col += 1
-                sheet.write(row, col, adjustment_amount, number_format)
-                col += 1
-                sheet.write(row, col, balance_cn, number_format)
-                row += 1
-            workbook.close()
-            output.seek(0)
-            return base64.b64encode(output.read())
-        
-        # Get Sale Orders - if IDs provided, use those; otherwise get all confirmed
-        if sale_order_ids:
-            sale_orders = self.env['sale.order'].browse(sale_order_ids).filtered(
-                lambda so: so.state in ['sale', 'done']
-            )
-        else:
-            sale_orders = self.env['sale.order'].search([
-                ('state', 'in', ['sale', 'done'])
-            ], order='name')
-        
-        if not sale_orders:
-            workbook.close()
-            output.seek(0)
-            return base64.b64encode(output.read())
-        
-        # Process Sale Orders
-        for order in sale_orders:
-            # Proforma Invoice details (from Sale Order)
-            pi_no = order.name or ''
-            pi_date = order.date_order or order.create_date
-            pi_amount = order.amount_total or 0.0
-            
-            # Get Commercial Invoices for this Sale Order
-            commercial_invoices = self.env['account.move'].search([
-                ('invoice_origin', '=', order.name),
-                ('move_type', 'in', ['out_invoice']),
-                ('state', '!=', 'cancel')
-            ], order='name')
-            
-            # Get Credit Notes related to this Sale Order or its Commercial Invoices
-            credit_notes = self.env['account.move'].search([
-                '|',
-                ('invoice_origin', '=', order.name),
-                ('reversed_entry_id', 'in', commercial_invoices.ids),
-                ('move_type', '=', 'out_refund'),
-                ('state', '!=', 'cancel')
-            ], order='name')
-            
-            # If there are Commercial Invoices or Credit Notes, create rows for each
-            if commercial_invoices or credit_notes:
-                # Create a row for each Commercial Invoice
-                for invoice in commercial_invoices:
-                    col = 0
-                    
-                    # PROFORMA INVOICE NO
-                    sheet.write(row, col, pi_no, data_format)
-                    col += 1
-                    
-                    # PROFORMA INVOICE DATE
-                    if pi_date:
-                        sheet.write(row, col, pi_date, date_format)
-                    col += 1
-                    
-                    # PI AMOUNT
-                    sheet.write(row, col, pi_amount, number_format)
-                    col += 1
-                    
-                    # COMMERCIAL INVOICE NO
-                    sheet.write(row, col, invoice.name or '', data_format)
-                    col += 1
-                    
-                    # COMMERCIAL INVOICE DATE
-                    if invoice.invoice_date:
-                        sheet.write(row, col, invoice.invoice_date, date_format)
-                    col += 1
-                    
-                    # COMMERCIAL INVOICE AMOUNT
-                    sheet.write(row, col, invoice.amount_total or 0.0, number_format)
-                    col += 1
-                    
-                    # CN DATE - empty for commercial invoice row
-                    sheet.write(row, col, '', data_format)
-                    col += 1
-                    
-                    # CN NO - empty for commercial invoice row
-                    sheet.write(row, col, '', data_format)
-                    col += 1
-                    
-                    # CN AMOUNT - empty for commercial invoice row
-                    sheet.write(row, col, '', data_format)
-                    col += 1
-                    
-                    # CN Adjusted Against PI No. - empty
-                    sheet.write(row, col, '', data_format)
-                    col += 1
-                    
-                    # Adjustment Amount - empty
-                    sheet.write(row, col, '', data_format)
-                    col += 1
-                    
-                    # Balance CN - empty
-                    sheet.write(row, col, '', data_format)
-                    
-                    row += 1
-                
-                # Create a row for each Credit Note
-                for cn in credit_notes:
-                    col = 0
-                    
-                    # PROFORMA INVOICE NO
-                    sheet.write(row, col, pi_no, data_format)
-                    col += 1
-                    
-                    # PROFORMA INVOICE DATE
-                    if pi_date:
-                        sheet.write(row, col, pi_date, date_format)
-                    col += 1
-                    
-                    # PI AMOUNT
-                    sheet.write(row, col, pi_amount, number_format)
-                    col += 1
-                    
-                    # COMMERCIAL INVOICE NO
-                    # Get the commercial invoice this CN is related to
-                    related_invoice = cn.reversed_entry_id if cn.reversed_entry_id else None
-                    if not related_invoice and cn.invoice_origin:
-                        # Try to find invoice by origin
-                        related_invoice = commercial_invoices.filtered(
-                            lambda inv: inv.invoice_origin == cn.invoice_origin
-                        )[:1]
-                    commercial_invoice_no = related_invoice.name if related_invoice else ''
-                    sheet.write(row, col, commercial_invoice_no, data_format)
-                    col += 1
-                    
-                    # COMMERCIAL INVOICE DATE
-                    if related_invoice and related_invoice.invoice_date:
-                        sheet.write(row, col, related_invoice.invoice_date, date_format)
-                    else:
-                        sheet.write(row, col, '', data_format)
-                    col += 1
-                    
-                    # COMMERCIAL INVOICE AMOUNT
-                    if related_invoice:
-                        sheet.write(row, col, related_invoice.amount_total or 0.0, number_format)
-                    else:
-                        sheet.write(row, col, '', data_format)
-                    col += 1
-                    
-                    # CN DATE
-                    if cn.invoice_date:
-                        sheet.write(row, col, cn.invoice_date, date_format)
-                    else:
-                        sheet.write(row, col, '', data_format)
-                    col += 1
-                    
-                    # CN NO
-                    sheet.write(row, col, cn.name or '', data_format)
-                    col += 1
-                    
-                    # CN AMOUNT
-                    cn_amount = abs(cn.amount_total_signed) if cn.amount_total_signed else abs(cn.amount_total) if cn.amount_total else 0.0
-                    sheet.write(row, col, cn_amount, number_format)
-                    col += 1
-                    
-                    # CN Adjusted Against PI No.
-                    # Determine which PI this CN is adjusted against
-                    # If CN has invoice_origin, it's adjusted against that PI
-                    adjusted_pi_no = ''
-                    if cn.invoice_origin:
-                        adjusted_pi_no = cn.invoice_origin
-                    elif related_invoice and related_invoice.invoice_origin:
-                        adjusted_pi_no = related_invoice.invoice_origin
-                    else:
-                        # If CN is linked to current order's invoice, use current PI
-                        adjusted_pi_no = pi_no
-                    sheet.write(row, col, adjusted_pi_no, data_format)
-                    col += 1
-                    
-                    # Adjustment Amount
-                    # Calculate how much of this CN is adjusted against the PI
-                    # If CN is adjusted against current PI, use full CN amount
-                    # Otherwise, check if partially adjusted through reconciliation
-                    adjustment_amount = 0.0
-                    if adjusted_pi_no == pi_no:
-                        # CN is adjusted against current PI
-                        # Check if CN is reconciled (fully or partially)
-                        if cn.amount_residual == 0:
-                            # Fully reconciled/adjusted
-                            adjustment_amount = cn_amount
-                        else:
-                            # Partially adjusted
-                            adjustment_amount = cn_amount - abs(cn.amount_residual)
-                    elif adjusted_pi_no:
-                        # CN is adjusted against a different PI
-                        # Check reconciliation status
-                        if cn.amount_residual == 0:
-                            adjustment_amount = cn_amount
-                        else:
-                            adjustment_amount = cn_amount - abs(cn.amount_residual)
-                    else:
-                        # No PI linked, check if CN is reconciled
-                        if cn.amount_residual == 0:
-                            adjustment_amount = cn_amount
-                        else:
-                            adjustment_amount = cn_amount - abs(cn.amount_residual)
-                    
-                    sheet.write(row, col, adjustment_amount, number_format)
-                    col += 1
-                    
-                    # Balance CN
-                    # Remaining CN amount after adjustment
-                    balance_cn = cn_amount - adjustment_amount
-                    sheet.write(row, col, balance_cn, number_format)
-                    
-                    row += 1
+
+        rows = self._build_cn_tracking_rows(
+            sale_order_ids=sale_order_ids,
+            credit_note_ids=credit_note_ids,
+        )
+
+        for row_idx, r in enumerate(rows, start=1):
+            sheet.write(row_idx, 0, r['pi_no'] or '', data_format)
+            if r['pi_date']:
+                sheet.write(row_idx, 1, r['pi_date'], date_format)
             else:
-                # No Commercial Invoices or Credit Notes - just show PI details
-                col = 0
-                
-                # PROFORMA INVOICE NO
-                sheet.write(row, col, pi_no, data_format)
-                col += 1
-                
-                # PROFORMA INVOICE DATE
-                if pi_date:
-                    sheet.write(row, col, pi_date, date_format)
-                col += 1
-                
-                # PI AMOUNT
-                sheet.write(row, col, pi_amount, number_format)
-                col += 1
-                
-                # Rest of columns empty
-                for _ in range(9):
-                    sheet.write(row, col, '', data_format)
-                    col += 1
-                
-                row += 1
-        
-        # Close workbook
+                sheet.write(row_idx, 1, '', data_format)
+            sheet.write(row_idx, 2, r['pi_amount'] or 0.0, number_format)
+            sheet.write(row_idx, 3, r['commercial_invoice_no'] or '', data_format)
+            if r['commercial_invoice_date']:
+                sheet.write(row_idx, 4, r['commercial_invoice_date'], date_format)
+            else:
+                sheet.write(row_idx, 4, '', data_format)
+            if r['commercial_invoice_no']:
+                sheet.write(row_idx, 5, r['commercial_invoice_amount'] or 0.0, number_format)
+            else:
+                sheet.write(row_idx, 5, '', data_format)
+            if r['cn_date']:
+                sheet.write(row_idx, 6, r['cn_date'], date_format)
+            else:
+                sheet.write(row_idx, 6, '', data_format)
+            sheet.write(row_idx, 7, r['cn_no'] or '', data_format)
+            if r['cn_no']:
+                sheet.write(row_idx, 8, r['cn_amount'] or 0.0, number_format)
+                sheet.write(row_idx, 9, r['adjusted_pi_no'] or '', data_format)
+                sheet.write(row_idx, 10, r['adjustment_amount'] or 0.0, number_format)
+                sheet.write(row_idx, 11, r['balance_cn'] or 0.0, number_format)
+            else:
+                sheet.write(row_idx, 8, '', data_format)
+                sheet.write(row_idx, 9, '', data_format)
+                sheet.write(row_idx, 10, '', data_format)
+                sheet.write(row_idx, 11, '', data_format)
+
         workbook.close()
         output.seek(0)
-        
-        # Return base64 encoded content
         return base64.b64encode(output.read())
 
     # --- List view data (same format as print report) ---
@@ -2566,18 +2559,19 @@ class PartWiseAllDataReport(models.TransientModel):
     def get_advance_sheet_report_rows(self, sale_order_ids=None):
         """Return list of dicts for Advance Sheet list view (same columns as XLSX)."""
         if sale_order_ids:
-            sale_orders = self.env['sale.order'].browse(sale_order_ids).filtered(
-                lambda o: o.state != 'cancel'
-            )
+            all_orders = self.env['sale.order'].browse(sale_order_ids)
+            sale_orders = all_orders.filtered(lambda o: o.state != 'cancel')
         else:
-            sale_orders = self.env['sale.order'].search([
-                ('state', '!=', 'cancel')
-            ], order='partner_id')
+            all_orders = self.env['sale.order'].search([], order='partner_id')
+            sale_orders = all_orders.filtered(lambda o: o.state != 'cancel')
 
+        # Collect ALL unique commercial partners from ALL sale orders (any state)
+        # so no customer is missed even if they only have cancelled/draft orders
         commercial_partner_ids = set()
-        for order in sale_orders:
+        for order in all_orders:
             comp = order.partner_id.commercial_partner_id
-            commercial_partner_ids.add(comp.id)
+            if comp:
+                commercial_partner_ids.add(comp.id)
 
         company = self.env.company
         company_currency = company.currency_id
@@ -2590,17 +2584,61 @@ class PartWiseAllDataReport(models.TransientModel):
             payment_received = 0.0
             stock_dispatched_amount = 0.0
 
-            for order in partner_orders:
-                # PAYMENT RECEIVED = ks_advance_payment_amount + total_invoice_payment_received (per SO, convert to company currency, then sum)
-                adv = getattr(order, 'ks_advance_payment_amount', 0.0) or 0.0
-                inv_pay = getattr(order, 'total_invoice_payment_received', 0.0) or 0.0
-                order_payment = adv + inv_pay
-                if order_payment:
-                    order_date = order.date_order.date() if order.date_order else fields.Date.context_today(self)
-                    payment_received += _to_company_currency(
-                        order.currency_id, order_payment, company_currency, company, order_date, self
+            # ----------------------------------------------------------------
+            # PAYMENT RECEIVED — deduplicate at customer level.
+            #
+            # Root cause of duplication: one invoice can be linked to multiple
+            # SOs (Odoo allows combined invoicing). Summing per-SO stored fields
+            # (ks_dvance_payment_amount + total_invoice_payment_received) then
+            # multiplies the same payment by the number of SOs it touches.
+            #
+            # Fix: collect unique payment IDs directly across all SOs and
+            # invoices for this customer, sum each payment exactly once.
+            # ----------------------------------------------------------------
+
+            # Step 1 – unique advance payments
+            # Use direct search instead of One2many to avoid caching issues.
+            # State filter: exclude only draft/cancel — 'posted' and 'paid' are
+            # both valid (bank-journal payments stay 'posted' until reconciled;
+            # cash-journal payments go straight to 'paid').
+            seen_advance_ids = set()
+            advance_payments = self.env['account.payment'].search([
+                ('ks_sale_order_id', 'in', partner_orders.ids),
+                ('state', 'not in', ['draft', 'cancel']),
+            ])
+            for payment in advance_payments:
+                if payment.id not in seen_advance_ids:
+                    seen_advance_ids.add(payment.id)
+                    payment_received += _payment_to_company_currency(
+                        payment, payment.amount, company_currency, company, self
                     )
 
+            # Step 2 – unique invoice payments (excluding advance payments)
+            # No state filter on reconciled_payment_ids — if a payment appears
+            # there it is already reconciled and valid regardless of state label.
+            seen_invoice_ids = set()
+            seen_invoice_payment_ids = set()
+            for order in partner_orders:
+                for inv in order.invoice_ids.filtered(lambda i: i.state == 'posted'):
+                    if inv.id in seen_invoice_ids:
+                        continue  # invoice already processed via another SO
+                    seen_invoice_ids.add(inv.id)
+                    for payment in inv.reconciled_payment_ids:
+                        if payment.id in seen_advance_ids:
+                            continue  # already counted as advance payment
+                        if payment.id in seen_invoice_payment_ids:
+                            continue  # already counted from another invoice
+                        seen_invoice_payment_ids.add(payment.id)
+                        amount = _payment_to_company_currency(
+                            payment, payment.amount, company_currency, company, self
+                        )
+                        if inv.move_type == 'out_invoice':
+                            payment_received += amount
+                        elif inv.move_type == 'out_refund':
+                            payment_received -= amount
+
+            # Stock dispatched (unchanged — no duplication issue here)
+            for order in partner_orders:
                 order_date = order.date_order.date() if order.date_order else fields.Date.context_today(self)
                 order_currency = order.currency_id
                 for line in order.order_line.filtered(

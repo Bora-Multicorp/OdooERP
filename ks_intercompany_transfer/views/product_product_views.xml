@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Inherit Stock report list view: add Inter-Company Transfer qty after Free to Use -->
+    <record id="product_product_stock_tree_inherit_intercompany" model="ir.ui.view">
+        <field name="name">product.product.stock.list.inherit.intercompany</field>
+        <field name="model">product.product</field>
+        <field name="inherit_id" ref="stock.product_product_stock_tree"/>
+        <field name="arch" type="xml">
+            <field name="free_qty" position="after">
+                <field name="inter_company_transfer_qty" string="Inter-Company Transfer" sum="Total Inter-Company Transfer" optional="show"/>
+            </field>
+        </field>
+    </record>
+
+</odoo>

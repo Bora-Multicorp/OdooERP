@@ -18,7 +18,7 @@
         </record>
     <!-- Define the new report action for sale order -->
     <record id="action_report_saleorder_dubai" model="ir.actions.report">
-        <field name="name">Dubai Quotation / Order</field>
+        <field name="name">PROFORMA INVOICE PDF</field>
         <field name="model">sale.order</field>
         <field name="report_type">qweb-pdf</field>
         <field name="report_name">ks_templates.report_saleorder_dubai</field>
@@ -174,9 +174,26 @@
                             <t t-if="doc.company_id.partner_id.country_id" t-esc="doc.company_id.partner_id.country_id.name or ''"/>
                             <t t-if="doc.company_id.partner_id.zip"> P.O.Box <t t-esc="doc.company_id.partner_id.zip"/></t>
                             <br t-if="doc.company_id.partner_id.state_id"/>
-                            <t t-if="doc.company_id.partner_id.state_id">Emirate : <t t-esc="doc.company_id.partner_id.state_id.name or ''"/></t>
+                            <t t-if="doc.company_id.partner_id.state_id">
+                                <t t-if="doc.company_id.partner_id.country_id.code == 'IN'">State : </t>
+                                <t t-else="">Emirate : </t>
+                                <t t-esc="doc.company_id.partner_id.state_id.name or ''"/>
+                            </t>
                             <br t-if="doc.company_id.vat"/>
-                            <t t-if="doc.company_id.vat">TRN : <t t-esc="doc.company_id.vat"/></t>
+                            <t t-if="doc.company_id.vat">
+                                <t t-if="doc.company_id.partner_id.country_id.code == 'IN'">GSTN : <t t-esc="doc.company_id.vat"/></t>
+                                <t t-else="">TRN : <t t-esc="doc.company_id.vat"/></t>
+                            </t>
+                            <t t-if="doc.company_id.partner_id.country_id.code == 'IN'">
+                                <t t-set="company_pan" t-value="doc.get_company_pan()"/>
+                                <t t-if="company_pan">
+                                    <br/><t t-esc="'PAN : ' + company_pan"/>
+                                </t>
+                                <t t-set="company_iec" t-value="doc.get_company_iec()"/>
+                                <t t-if="company_iec">
+                                    <br/><t t-esc="'IEC No : ' + company_iec"/>
+                                </t>
+                            </t>
                             <br t-if="doc.company_id.partner_id.email"/>
                             <t t-if="doc.company_id.partner_id.email">E-Mail : <t t-esc="doc.company_id.partner_id.email"/></t>
                             <div style="border-top:1px solid black;height:1px; margin-top:5px; margin-bottom:5px;"/>
@@ -193,6 +210,9 @@
                             <t t-if="consignee_partner.city" t-esc="consignee_partner.city"/>
                             <t t-if="consignee_partner.city and consignee_partner.country_id">, </t>
                             <t t-if="consignee_partner.country_id" t-esc="consignee_partner.country_id.name or ''"/>
+                            <t t-if="doc.ks_zone == 'india' and consignee_partner.l10n_in_pan">
+                                <br/>PAN : <t t-esc="consignee_partner.l10n_in_pan"/>
+                            </t>
                             <br/>
                             <br/>
                             <div style="border-top:1px solid black;height:1px; margin-top:5px; margin-bottom:5px;"/>
@@ -212,6 +232,9 @@
                             <t t-if="doc.partner_id.state_id">Emirate : <t t-esc="doc.partner_id.state_id.name or ''"/></t>
                             <br t-if="doc.partner_id.country_id"/>
                             <t t-if="doc.partner_id.country_id">Country : <t t-esc="doc.partner_id.country_id.name or ''"/></t>
+                            <t t-if="doc.ks_zone == 'india' and doc.partner_id.l10n_in_pan">
+                                <br/>PAN : <t t-esc="doc.partner_id.l10n_in_pan"/>
+                            </t>
                         </td>
 
                         <!-- RIGHT COLUMN -->
@@ -236,7 +259,7 @@
                                 </tr>
                                 <tr>
                                     <td style="border-right:1px solid #000; padding:1px;"><strong t-esc="doc.name or ''"/></td>
-                                    <td style="border-right:1px solid #000; padding:1px;" colspan="3"><strong t-esc="doc.ks_other_reference or doc.client_order_ref or ''"/></td>
+                                    <td style="border-right:1px solid #000; padding:1px;" colspan="3"><strong t-esc="doc.user_id.name or ''"/></td>
                                 </tr>
                                 <tr>
                                     <td style="border-right:1px solid #000; padding:1px;border-top:1px solid #000; padding:1px;">Despatch through</td>
@@ -259,10 +282,9 @@
                                     <td style="border-right:1px solid #000; padding:1px;" colspan="4">
                                         <strong>
                                             <t t-if="doc.incoterm">
-                                                <t t-esc="doc.incoterm.code or ''"/>
+                                                [<t t-esc="doc.incoterm.code or ''"/>] <t t-esc="doc.incoterm.name or ''"/>
                                                 <t t-if="doc.incoterm_location">, <t t-esc="doc.incoterm_location or ''"/></t>
                                             </t>
-                                            <t t-else="">FOB Dubai, Delivery - DAFZA to DAFZA</t>
                                         </strong>
                                     </td>
                                 </tr>
@@ -365,6 +387,7 @@
                                     <tr>
                                         <th style="border:1px solid #000; padding:4px; text-align:center; background-color:#f0f0f0; font-weight:bold; font-size:10pt;">Sl No.</th>
                                         <th style="border:1px solid #000; padding:4px; text-align:left; background-color:#f0f0f0; font-weight:bold; font-size:10pt;">Description of Goods</th>
+                                        <th style="border:1px solid #000; padding:4px; text-align:center; background-color:#f0f0f0; font-weight:bold; font-size:10pt;">HSN/SAC</th>
                                         <th style="border:1px solid #000; padding:4px; text-align:right; background-color:#f0f0f0; font-weight:bold; font-size:10pt;">Quantity</th>
                                         <th style="border:1px solid #000; padding:4px; text-align:right; background-color:#f0f0f0; font-weight:bold; font-size:10pt;">Rate</th>
                                         <th style="border:1px solid #000; padding:4px; text-align:center; background-color:#f0f0f0; font-weight:bold; font-size:10pt;">per</th>
@@ -384,6 +407,7 @@
                                                     <br/><span style="margin-left: 1em;"><t t-esc="'Made in ' + (made_in_country.name or '')"/></span>
                                                 </t>
                                             </td>
+                                            <td style="border:1px solid #000; padding:4px; text-align:center;" t-esc="doc.get_line_hsn_code(line)"/>
                                             <td style="border:1px solid #000; padding:4px; text-align:right;" t-esc="doc.format_number(line.product_uom_qty, digits=0)"/>
                                             <td style="border:1px solid #000; padding:4px; text-align:right;">
                                                 <strong><t t-esc="doc.currency_id.symbol or '$'"/> <t t-esc="doc.format_number(line.price_unit, digits=2)"/></strong>
@@ -398,6 +422,7 @@
                                     <tr>
                                         <td style="border:1px solid #000; padding:4px; text-align:center;"></td>
                                         <td style="border:1px solid #000; padding:4px;"><strong>Total</strong></td>
+                                        <td style="border:1px solid #000; padding:4px; text-align:center;"></td>
                                         <td style="border:1px solid #000; padding:4px; text-align:right;"><strong><t t-esc="doc.format_number(total_qty, digits=0)"/> pcs</strong></td>
                                         <td style="border:1px solid #000; padding:4px; text-align:right;"></td>
                                         <td style="border:1px solid #000; padding:4px; text-align:center;"></td>
@@ -410,28 +435,23 @@
 
                     <!-- Totals Summary Row -->
                     <tr>
-                        <td style="border:1px solid #000; padding:6px; text-align:right; font-size:10pt;" colspan="2">
-                            <t t-set="invoice_currency" t-value="doc.currency_id"/>
-                            <t t-set="company_currency" t-value="doc.company_id.currency_id"/>
-                            <t t-set="conversion_date" t-value="doc.date_order or doc.create_date.date()"/>
-                            <t t-set="total_invoice_amount" t-value="total_usd"/>
-                            <t t-set="converted_amount" t-value="total_usd"/>
-                            <t t-set="invoice_currency_rate" t-value="1.0"/>
-                            <t t-set="exchange_rate" t-value="1.0"/>
-                            <t t-set="company_to_invoice_rate" t-value="1.0"/>
-                            <t t-if="invoice_currency and company_currency and invoice_currency != company_currency">
-                                <t t-set="converted_amount" t-value="invoice_currency._convert(total_usd, company_currency, doc.company_id, conversion_date, round=True)"/>
-                                <t t-set="invoice_currency_rate" t-value="doc.env['res.currency']._get_conversion_rate(invoice_currency, company_currency, doc.company_id, conversion_date)"/>
-                                <t t-set="exchange_rate" t-value="invoice_currency_rate"/>
-                                <t t-set="company_to_invoice_rate" t-value="1.0 / invoice_currency_rate if invoice_currency_rate else 1.0"/>
-                            </t>
-                            <div style="margin-top: 5px;">
-                                <strong>Total Invoice Amount in <t t-esc="invoice_currency.name or 'USD'"/> <t t-esc="doc.format_number(total_invoice_amount, digits=2)"/> @ <t t-esc="company_currency.name or 'AED'"/> <t t-esc="doc.format_number(exchange_rate, digits=3)"/> / 1 <t t-esc="company_currency.name or 'AED'"/> = <t t-esc="doc.format_number(company_to_invoice_rate, digits=4)"/> <t t-esc="invoice_currency.name or 'USD'"/> = <t t-esc="company_currency.name or 'AED'"/> <t t-esc="doc.format_number(converted_amount, digits=2)"/></strong>
-                            </div>
-                            <div style="font-size: 9pt; font-style: italic; margin-top: 3px;">
-                                E. &amp; O.E
-                            </div>
-                        </td>
+                        <t t-set="invoice_currency" t-value="doc.currency_id"/>
+                        <t t-set="company_currency" t-value="doc.company_id.currency_id"/>
+                        <t t-set="conversion_date" t-value="doc.date_order or doc.create_date.date()"/>
+                        <t t-set="total_invoice_amount" t-value="total_usd"/>
+                        <t t-set="converted_amount" t-value="total_usd"/>
+                        <t t-set="invoice_currency_rate" t-value="1.0"/>
+                        <t t-set="exchange_rate" t-value="1.0"/>
+                        <t t-set="company_to_invoice_rate" t-value="1.0"/>
+                        <t t-if="invoice_currency and company_currency and invoice_currency != company_currency">
+                            <t t-set="converted_amount"
+                               t-value="invoice_currency._convert(total_usd, company_currency, doc.company_id, conversion_date, round=True)"/>
+                            <t t-set="invoice_currency_rate"
+                               t-value="doc.env['res.currency']._get_conversion_rate(invoice_currency, company_currency, doc.company_id, conversion_date)"/>
+                            <t t-set="exchange_rate" t-value="invoice_currency_rate"/>
+                            <t t-set="company_to_invoice_rate"
+                               t-value="1.0 / invoice_currency_rate if invoice_currency_rate else 1.0"/>
+                        </t>
                     </tr>
 
                     <!-- Amount in Words Row -->
@@ -442,14 +462,26 @@
                             <t t-set="invoice_amount_words" t-value="doc.get_amount_in_words_currency(total_invoice_amount, invoice_currency)"/>
                             <strong>Amount Chargeable (in words)</strong><br/>
                             <strong>
-                                <t t-esc="invoice_amount_words or ''"/> (<t t-esc="exchange_currency_code + ' ' + doc.format_number(exchanged_amount, digits=2)"/>)
+                                <t t-esc="invoice_amount_words or ''"/>
                             </strong>
                         </td>
                     </tr>
 
-                    <!-- Bank Details and Footer Row -->
+                    <!-- Remarks + Declaration + Bank Details Row -->
                     <tr>
-                        <td style="border:1px solid #000; padding:6px; font-size:11px; vertical-align:top;">
+                        <td style="border:1px solid #000; padding:6px; font-size:11px; vertical-align:top; width:55%;">
+                            <!-- Remarks -->
+                            <t t-if="doc.ks_remarks">
+                                <strong>Remarks</strong><br/>
+                                <t t-esc="doc.ks_remarks"/><br/>
+                            </t>
+                            <!-- Declaration (Terms &amp; Conditions) -->
+                            <t t-if="doc.note">
+                                <strong>Declaration</strong><br/>
+                                <span t-out="doc.note"/>
+                            </t>
+                        </td>
+                        <td style="border:1px solid #000; padding:6px; font-size:11px; vertical-align:top; width:45%;">
                             <t t-set="company_bank" t-value="doc.company_id.partner_id.bank_ids[:1]"/>
                             <t t-set="bank_info" t-value="doc.get_company_bank_info()"/>
                             <t t-set="iban_number" t-value="doc.get_company_iban()"/>
@@ -467,7 +499,6 @@
                             <t t-set="bank_name_display" t-value="''"/>
                             <t t-set="acc_number_display" t-value="''"/>
                             <t t-set="iban_display" t-value="iban_number or ''"/>
-                            <!-- When sale order has ks_bank_id, use bank_info (from ks_bank_id) for Company's Bank Details -->
                             <t t-if="doc.ks_bank_id and bank_info">
                                 <t t-set="bank_name_display" t-value="bank_info.get('bank_name') or ''"/>
                                 <t t-set="acc_number_display" t-value="bank_info.get('acc_number') or ''"/>
@@ -482,21 +513,29 @@
                                 <t t-set="acc_number_display" t-value="company_bank.acc_number or ''"/>
                             </t>
                             <strong>Company's Bank Details</strong><br/>
-                            Bank Name : <t t-esc="bank_name_display or ''"/><br/>
-                            A/c No. : <t t-esc="acc_number_display or ''"/><br/>
-                            IBAN : <t t-esc="iban_display or ''"/><br/>
-                            Branch &amp; SWIFT Code : <t t-if="branch_val" t-esc="branch_val"/><t t-if="branch_val and swift_val"> / </t><t t-if="swift_val" t-esc="swift_val"/><br/>
-                            <t t-if="doc.company_id.name">for <t t-esc="doc.company_id.name or ''"/></t>
-                        </td>
-                        <td style="border:1px solid #000; padding:6px; text-align:right; vertical-align:bottom; font-size:10pt;">
-                            Authorised Signatory
+                            Bank Name&#160;&#160;&#160;&#160;&#160;&#160;&#160;: <t t-esc="bank_name_display or ''"/><br/>
+                            A/c No.&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;: <t t-esc="acc_number_display or ''"/><br/>
+                            Branch &amp; IFS Code: <t t-if="branch_val" t-esc="branch_val"/><t t-if="branch_val and swift_val"> &amp; </t><t t-if="swift_val" t-esc="swift_val"/><br/>
+                            SWIFT Code&#160;&#160;&#160;&#160;&#160;&#160;: <t t-if="bank_info" t-esc="bank_info.get('swift_code') or ''"/><br/>
+                            <div style="border-top:1px solid #000; height:1px; margin-top:8px; margin-bottom:4px;"/>
+                            <div style="text-align:right;">
+                                <t t-if="doc.company_id.name">for <strong><t t-esc="doc.company_id.name or ''"/></strong></t>
+                            </div>
+                            <br/><br/><br/>
+                            <div style="text-align:right;">
+                                <t t-if="doc.ks_authorized_signature">
+                                    <img t-att-src="image_data_uri(doc.ks_authorized_signature)"
+                                         style="max-height:60px; max-width:180px; display:block; margin:0 0 4px auto;"/>
+                                </t>
+                                Authorised Signatory
+                            </div>
                         </td>
                     </tr>
 
                     <!-- Footer Row -->
                     <tr>
                         <td style="border:1px solid #000; padding:6px; text-align:center; font-size:9pt;" colspan="2">
-                            <div style="margin-bottom: 5px;">SUBJECT TO DUBAI, U.A.E. JURISDICTION</div>
+                            <div style="margin-bottom: 5px;">SUBJECT TO <t t-esc="(doc.company_id.city or 'DUBAI').upper()"/>, <t t-esc="(doc.company_id.country_id.name or 'U.A.E.').upper()"/> JURISDICTION</div>
                             <div>This is a Computer Generated Document</div>
                         </td>
                     </tr>

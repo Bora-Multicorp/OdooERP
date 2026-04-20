@@ -142,6 +142,8 @@ class VendorKycWizard(models.TransientModel):
     def _check_pincode_format(self):
         pincode_pattern = re.compile(r'^\d{6}$')  # Indian pincode: exactly 6 digits
         for rec in self:
+            if rec.is_overseas:
+                continue  # Overseas addresses use country-specific postcode formats
             for idx, addr in enumerate(rec.address_detail, start=1):
                 if addr.business_pincode and not pincode_pattern.fullmatch(addr.business_pincode):
                     raise ValidationError(_(
@@ -157,6 +159,8 @@ class VendorKycWizard(models.TransientModel):
     def _check_pan_card_no_format(self):
         pan_pattern = re.compile(r'^[A-Z]{5}[0-9]{4}[A-Z]$')
         for rec in self:
+            if rec.is_overseas:
+                continue  # PAN is India-specific; overseas partners don't have PAN
             if rec.pan_no and not pan_pattern.match(rec.pan_no.upper()):
                 raise ValidationError(
                     _("PAN Card Number must be in the format: 5 letters, 4 digits, and 1 letter (e.g., ABCDE1234F).")
@@ -167,6 +171,8 @@ class VendorKycWizard(models.TransientModel):
         udyam_pattern = re.compile(r'^UDYAM-[A-Z]{2}-\d{2}-\d{7}$')
 
         for rec in self:
+            if rec.is_overseas:
+                continue  # Udyam is India-specific
             if rec.udyam_number and not udyam_pattern.match(rec.udyam_number.upper()):
                 raise ValidationError(_(
                     "Invalid Udyam Certificate Number: '%s'.\nExpected format is UDYAM-XX-00-0000000 "
@@ -177,6 +183,8 @@ class VendorKycWizard(models.TransientModel):
     def _check_gst_no_format(self):
         gst_pattern = re.compile(r'^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$')
         for rec in self:
+            if rec.is_overseas:
+                continue  # GST is India-specific
             if rec.gst_no and not gst_pattern.match(rec.gst_no.upper()):
                 raise ValidationError(_(
                     "Invalid GST Number: '%s'. It must follow the 15-character format (e.g., 27ABCDE1234F1Z5)."
@@ -220,10 +228,22 @@ class VendorKycWizard(models.TransientModel):
 
     partner_id = fields.Many2one('res.partner', string='Contact', domain="[('id', '=', active_id)]", tracking=True)
     existing_kyc_id = fields.Many2one('res.partner.kyc.approval', string='Existing KYC Record', readonly=True)
+
+    is_overseas = fields.Boolean(
+        string='Is Overseas',
+        compute='_compute_is_overseas',
+        store=False,
+        help="Mirrors partner's is_overseas flag. Controls which document fields are shown.",
+    )
+
+    @api.depends('partner_id')
+    def _compute_is_overseas(self):
+        for rec in self:
+            rec.is_overseas = rec.partner_id.is_overseas if rec.partner_id else False
+
     email = fields.Char("Email", required=True, tracking=True)
-    point_of_contact = fields.Char("Point of Contact", required=True, tracking=True)
-    poc_user = fields.Many2one('res.users', string="Point of Contact to Vendor", default=lambda self: self.env.user,
-                               readonly=1)
+    point_of_contact = fields.Char("Vendor POC", required=True, tracking=True)
+    poc_user = fields.Many2one('res.users', string="Bora Purchase Manager", default=lambda self: self.env.user)
     business_legal_name = fields.Char("Business Legal Name", required=True)
     is_same_trade_name = fields.Boolean(string="If Trade Name is same as Legal Name",
                                         help="Tick if trade name is same as legal name")
@@ -254,10 +274,31 @@ class VendorKycWizard(models.TransientModel):
     # aadhaar_card_filename = fields.Char(readonly=True)
     # pan_card = fields.Binary(string="PAN Card")
     # pan_card_filename = fields.Char(readonly=True)
-    aadhaar_pan_link = fields.Selection([('yes', 'Yes'), ('no', 'No')], string='Aadhar and PAN card linking?',
-                                        required=True)
-    gst_no = fields.Char(string="GST Number", required=True)
-    udyam_number = fields.Char(string="Udyam Certificate Number", required=True)
+    aadhaar_pan_link = fields.Selection([('yes', 'Yes'), ('no', 'No')], string='Aadhar and PAN card linking?')
+    gst_no = fields.Char(string="GST Number")
+    udyam_number = fields.Char(string="Udyam Certificate Number")
+
+    # ── Overseas KYC document fields ────────────────────────────────────────────
+    company_reg_document = fields.Many2many(
+        'ir.attachment', 'wiz_overseas_company_reg_rel', 'wizard_id', 'attachment_id',
+        string="Company Registration / Trade License",
+        help="Trade License (UAE/Dubai), Business Registration Certificate (Hong Kong), "
+             "or equivalent country-specific proof of company registration.",
+    )
+    company_reg_doc_expiry = fields.Date(
+        string="Trade License / Company Reg. Expiry Date",
+        help="Expiry date of the Company Registration or Trade License document.",
+    )
+    authorized_person_id_document = fields.Many2many(
+        'ir.attachment', 'wiz_overseas_auth_person_id_rel', 'wizard_id', 'attachment_id',
+        string="Authorized Person Identity Proof",
+        help="Emirates ID or Passport (UAE), HKID or Passport (Hong Kong), "
+             "or equivalent government-issued ID of the authorized signatory/manager.",
+    )
+    authorized_person_id_expiry = fields.Date(
+        string="Authorized Person ID Expiry Date",
+        help="Expiry date of the Authorized Person's identity document.",
+    )
     license_registered = fields.Char(string="Any licenses registered (As per Local/State Government requirements)")
     gst_certificate = fields.Many2many('ir.attachment', 'vendor_kyc_gst_cert_rel', 'wizard_id', 'attachment_id',
                                        string="GST Certificate(Latest)", required=True)
@@ -280,14 +321,14 @@ class VendorKycWizard(models.TransientModel):
                                    help="Short Video")
     bank_detail = fields.One2many('bank.detail', 'kyc_wizard_id', string="Bank Detail")
     address_detail = fields.One2many('address.detail', 'kyc_wizard_id', string="Address Detail")
-    pan_no = fields.Char(string="PAN Number(Company)", required=True)
+    pan_no = fields.Char(string="PAN Number(Company)")
     pan_card_document = fields.Many2many('ir.attachment', 'pan_card_company_documents_rel', 'wizard_id',
                                          'attachment_id',
                                          string="PAN Card Document(Company)")
     incorporation_certificate = fields.Many2many('ir.attachment', 'incorportaion_certificate_rel', 'wizard_id',
                                                  'attachment_id',
                                                  string="Incorporation Certificate")
-    comp_google_loc = fields.Char(string="GPS Location of Shop", required=True)
+    comp_google_loc = fields.Char(string="GPS Location of Shop")
 
     partner_llp_filename = fields.Char()
     partner_llp = fields.Binary(string="Partnership Deed or LLP Deed")
@@ -382,15 +423,22 @@ class VendorKycWizard(models.TransientModel):
                     attachment_fields = [
                         'gst_certificate', 'udyam_document', 'shop_act_document',
                         'shop_photos', 'shop_videos', 'pan_card_document',
-                        'incorporation_certificate', 'moa_aoa', 'electricity_bill'
+                        'incorporation_certificate', 'moa_aoa', 'electricity_bill',
+                        'company_reg_document', 'authorized_person_id_document',
                     ]
-                    
+
                     for field in attachment_fields:
                         if field in fields and hasattr(existing_kyc, field):
                             attachments = getattr(existing_kyc, field)
                             if attachments:
                                 values[field] = [(6, 0, attachments.ids)]
-                    
+
+                    # Pre-fill overseas document expiry dates
+                    if existing_kyc.company_reg_doc_expiry:
+                        values['company_reg_doc_expiry'] = existing_kyc.company_reg_doc_expiry
+                    if existing_kyc.authorized_person_id_expiry:
+                        values['authorized_person_id_expiry'] = existing_kyc.authorized_person_id_expiry
+
                     # Pre-fill One2many fields (directors, banks, addresses)
                     if 'directors_detail' in fields and existing_kyc.directors_detail:
                         directors_data = []
@@ -406,6 +454,10 @@ class VendorKycWizard(models.TransientModel):
                                 dir_vals['aadhaar_card_attachments'] = [(6, 0, director.aadhaar_card_attachments.ids)]
                             if director.pan_card_attachments:
                                 dir_vals['pan_card_attachments'] = [(6, 0, director.pan_card_attachments.ids)]
+                            if director.govt_id_attachments:
+                                dir_vals['govt_id_attachments'] = [(6, 0, director.govt_id_attachments.ids)]
+                            if director.govt_id_expiry:
+                                dir_vals['govt_id_expiry'] = director.govt_id_expiry
                             directors_data.append((0, 0, dir_vals))
                         values['directors_detail'] = directors_data
                     
@@ -416,7 +468,7 @@ class VendorKycWizard(models.TransientModel):
                                 'bank_name': bank.bank_name,
                                 'account_no': bank.account_no,
                                 'ifsc_code': bank.ifsc_code,
-                                'bank_address': bank.bank_address,
+                                # 'bank_address': bank.bank_address,
                             }
                             if bank.bank_cheque_attachments:
                                 bank_vals['bank_cheque_attachments'] = [(6, 0, bank.bank_cheque_attachments.ids)]
@@ -493,10 +545,9 @@ class VendorKycWizard(models.TransientModel):
                 'designation': 'designation',
                 'contact_no': 'contact_no',
                 'email': 'email',
-                # 'aadhaar_card': 'aadhaar_card',
-                # 'pan_card': 'pan_card',
+                'govt_id_expiry': 'govt_id_expiry',
             },
-            many2many_fields=['aadhaar_card_attachments', 'pan_card_attachments']
+            many2many_fields=['aadhaar_card_attachments', 'pan_card_attachments', 'govt_id_attachments']
         )
 
         bank_data = prepare_one2many(
@@ -505,7 +556,7 @@ class VendorKycWizard(models.TransientModel):
                 'bank_name': 'bank_name',
                 'account_no': 'account_no',
                 'ifsc_code': 'ifsc_code',
-                'bank_address': 'bank_address',
+                # 'bank_address': 'bank_address',
             },
             many2many_fields=['bank_cheque_attachments']
         )
@@ -533,6 +584,8 @@ class VendorKycWizard(models.TransientModel):
                 'email': line.email or '',
                 'aadhaar_card_attachments': sorted(line.aadhaar_card_attachments.ids),
                 'pan_card_attachments': sorted(line.pan_card_attachments.ids),
+                'govt_id_attachments': sorted(line.govt_id_attachments.ids),
+                'govt_id_expiry': str(line.govt_id_expiry) if line.govt_id_expiry else '',
             })
 
         bank_payload = []
@@ -541,7 +594,7 @@ class VendorKycWizard(models.TransientModel):
                 'bank_name': line.bank_name or '',
                 'account_no': line.account_no or '',
                 'ifsc_code': line.ifsc_code or '',
-                'bank_address': line.bank_address or '',
+                # 'bank_address': line.bank_address or '',
                 'bank_cheque_attachments': sorted(line.bank_cheque_attachments.ids),
             })
 
@@ -597,47 +650,86 @@ class VendorKycWizard(models.TransientModel):
             'shop_photos': [(6, 0, self.shop_photos.ids)] if self.shop_photos else [(5, 0, 0)],
             'shop_videos': [(6, 0, self.shop_videos.ids)] if self.shop_videos else [(5, 0, 0)],
             'bank_detail': bank_data,
+            # Overseas KYC documents (empty for Indian partners)
+            'company_reg_document': [(6, 0, self.company_reg_document.ids)] if self.company_reg_document else [(5, 0, 0)],
+            'company_reg_doc_expiry': self.company_reg_doc_expiry or False,
+            'authorized_person_id_document': [(6, 0, self.authorized_person_id_document.ids)] if self.authorized_person_id_document else [(5, 0, 0)],
+            'authorized_person_id_expiry': self.authorized_person_id_expiry or False,
         }
         
         # Check if this is Re-KYC (update existing record) or new KYC (create new record)
         if self.existing_kyc_id:
-            # Re-KYC: submit changes for approval, do not update old record immediately.
             kyc_record = self.existing_kyc_id
-            payload = {
-                'email': self.email or '',
-                'point_of_contact': self.point_of_contact or '',
-                'poc_user': self.poc_user.id if self.poc_user else False,
-                'business_legal_name': self.business_legal_name or '',
-                'is_same_trade_name': bool(self.is_same_trade_name),
-                'business_trade_name': self.business_trade_name or '',
-                'const_business': self.const_business or '',
-                'other_business': self.other_business or '',
-                'aadhaar_pan_link': self.aadhaar_pan_link or '',
-                'gst_no': self.gst_no or '',
-                'license_registered': self.license_registered or '',
-                'udyam_number': self.udyam_number or '',
-                'gst_return_duration': self.gst_return_duration or '',
-                'pan_no': self.pan_no or '',
-                'comp_google_loc': self.comp_google_loc or '',
-                'partner_llp': self.partner_llp or False,
-                'cin_no': self.cin_no or '',
-                'no_partner_director': self.no_partner_director or '',
-                'moa_aoa': sorted(self.moa_aoa.ids),
-                'electricity_bill': sorted(self.electricity_bill.ids),
-                'pan_card_document': sorted(self.pan_card_document.ids),
-                'incorporation_certificate': sorted(self.incorporation_certificate.ids),
-                'gst_certificate': sorted(self.gst_certificate.ids),
-                'udyam_document': sorted(self.udyam_document.ids),
-                'shop_act_document': sorted(self.shop_act_document.ids),
-                'shop_photos': sorted(self.shop_photos.ids),
-                'shop_videos': sorted(self.shop_videos.ids),
-                'directors_detail': directors_payload,
-                'bank_detail': bank_payload,
-                'address_detail': address_payload,
-            }
 
-            rekyc_remark = self._context.get('rekyc_remark', '')
-            kyc_record.submit_rekyc_payload(payload, rekyc_remark)
+            if self.is_overseas:
+                # ── Overseas Re-KYC: directly write changes to the KYC record ──────
+                # Bypasses the pending-approval flow because:
+                #   1. poc_user may be unset on survey-created records
+                #   2. KYC state may not be 'confirmed'
+                #   3. Overseas-specific fields (company_reg_document, govt_id_attachments)
+                #      are not covered by the India-oriented change-detection logic
+                for director in kyc_record.directors_detail:
+                    director.write({
+                        'aadhaar_card_attachments': [(5,)],
+                        'pan_card_attachments': [(5,)],
+                        'govt_id_attachments': [(5,)],
+                    })
+                for bank in kyc_record.bank_detail:
+                    bank.write({'bank_cheque_attachments': [(5,)]})
+
+                update_vals = dict(kyc_vals)
+                update_vals['directors_detail'] = [(5, 0, 0)] + directors_data
+                update_vals['bank_detail'] = [(5, 0, 0)] + bank_data
+                update_vals['address_detail'] = [(5, 0, 0)] + address_data
+                kyc_record.write(update_vals)
+
+                self.partner_id.write({
+                    'is_kyc': True,
+                    'rejection_date': False,
+                    'rejection_reason': False,
+                    'is_rejected': False,
+                })
+            else:
+                # ── Indian vendor Re-KYC: submit for POC approval ─────────────────
+                payload = {
+                    'email': self.email or '',
+                    'point_of_contact': self.point_of_contact or '',
+                    'poc_user': self.poc_user.id if self.poc_user else False,
+                    'business_legal_name': self.business_legal_name or '',
+                    'is_same_trade_name': bool(self.is_same_trade_name),
+                    'business_trade_name': self.business_trade_name or '',
+                    'const_business': self.const_business or '',
+                    'other_business': self.other_business or '',
+                    'aadhaar_pan_link': self.aadhaar_pan_link or '',
+                    'gst_no': self.gst_no or '',
+                    'license_registered': self.license_registered or '',
+                    'udyam_number': self.udyam_number or '',
+                    'gst_return_duration': self.gst_return_duration or '',
+                    'pan_no': self.pan_no or '',
+                    'comp_google_loc': self.comp_google_loc or '',
+                    'partner_llp': self.partner_llp or False,
+                    'cin_no': self.cin_no or '',
+                    'no_partner_director': self.no_partner_director or '',
+                    'moa_aoa': sorted(self.moa_aoa.ids),
+                    'electricity_bill': sorted(self.electricity_bill.ids),
+                    'pan_card_document': sorted(self.pan_card_document.ids),
+                    'incorporation_certificate': sorted(self.incorporation_certificate.ids),
+                    'gst_certificate': sorted(self.gst_certificate.ids),
+                    'udyam_document': sorted(self.udyam_document.ids),
+                    'shop_act_document': sorted(self.shop_act_document.ids),
+                    'shop_photos': sorted(self.shop_photos.ids),
+                    'shop_videos': sorted(self.shop_videos.ids),
+                    'directors_detail': directors_payload,
+                    'bank_detail': bank_payload,
+                    'address_detail': address_payload,
+                    'company_reg_document': sorted(self.company_reg_document.ids),
+                    'company_reg_doc_expiry': str(self.company_reg_doc_expiry) if self.company_reg_doc_expiry else '',
+                    'authorized_person_id_document': sorted(self.authorized_person_id_document.ids),
+                    'authorized_person_id_expiry': str(self.authorized_person_id_expiry) if self.authorized_person_id_expiry else '',
+                }
+                rekyc_remark = self._context.get('rekyc_remark', '')
+                kyc_record.submit_rekyc_payload(payload, rekyc_remark)
+
             return {'type': 'ir.actions.act_window_close'}
         else:
             # New KYC: Create new record
@@ -718,13 +810,23 @@ class DirectorDetail(models.TransientModel):
     pan_card = fields.Binary(string="PAN Card", required=False)
     pan_card_filename = fields.Char()
     aadhaar_card_attachments = fields.Many2many('ir.attachment', 'wizard_aadhaar_card_rel', 'kyc_wizard_id',
-                                                'attachment_id', string="Aadhaar Card", required=True)
+                                                'attachment_id', string="Aadhaar Card")
     pan_card_attachments = fields.Many2many(
         'ir.attachment',
         'wizard_pan_card_rel', 'kyc_wizard_id',
         'attachment_id',
         string="PAN Card",
-        required=True
+    )
+    # Overseas: government-issued ID (Passport, Emirates ID, HKID, etc.)
+    govt_id_attachments = fields.Many2many(
+        'ir.attachment',
+        'wizard_director_govt_id_rel', 'kyc_wizard_id',
+        'attachment_id',
+        string="Govt. ID (Passport / Emirates ID / HKID)",
+    )
+    govt_id_expiry = fields.Date(
+        string="Govt. ID Expiry Date",
+        help="Expiry date of this director's government-issued identity document.",
     )
 
     @api.constrains('aadhaar_card_attachments', 'pan_card_attachments')
@@ -771,7 +873,7 @@ class BankDetail(models.TransientModel):
     bank_name = fields.Char(string="Bank Name", required=True)
     account_no = fields.Char(string="Account Number", required=True)
     ifsc_code = fields.Char(string="IFSC Code", required=True)
-    bank_address = fields.Char(string="Bank Address",)
+    # bank_address = fields.Char(string="Bank Address",)
     bank_cheque_attachments = fields.Many2many('ir.attachment', 'wizard_bank_detail_cheque_rel', 'kyc_wizard_id',
                                                'attachment_id', string="Cancelled Cheques", required=True)
 
