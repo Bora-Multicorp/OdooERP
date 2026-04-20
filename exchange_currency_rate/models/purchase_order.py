@@ -32,7 +32,7 @@ class PurchaseOrder(models.Model):
         string='Company Currency',
         related='company_id.currency_id', readonly=True, help="To store the Company Currency")
     is_exchange = fields.Boolean(string='Apply Manual Currency', help='allows users to manually apply an exchange rate')
-    rate = fields.Float(string='Exchange Rate', help='specify the rate', default=1)
+    rate = fields.Float(string='Exchange Rate', help='1 [foreign currency] = X [company currency]. Example: 1 USD = 100 INR → enter 100', default=0.0)
 
     @api.constrains('company_currency_id', 'currency_id')
     def _onchange_different_currency(self):
@@ -43,13 +43,6 @@ class PurchaseOrder(models.Model):
 
     @api.onchange('is_exchange')
     def _onchange_is_exchange(self):
-        """ Update Rate when is_exchange is Enabled.
-        Rate = how many company currency units per 1 foreign currency unit.
-        Example: company=INR, pricelist=USD → rate = 83 means 1 USD = 83 INR.
-        """
+        """ Clear rate when is_exchange is toggled so user enters it manually. """
         if self.is_exchange:
-            self.rate = self.env['res.currency']._get_conversion_rate(
-                from_currency=self.currency_id,
-                to_currency=self.company_currency_id,
-                company=self.company_id,
-                date=self.date_order)
+            self.rate = 0.0

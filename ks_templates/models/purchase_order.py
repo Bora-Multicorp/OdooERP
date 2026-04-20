@@ -15,9 +15,10 @@ class PurchaseOrder(models.Model):
 
     def get_exchange_rate_info(self):
         """Returns exchange rate info for PDF display.
-        Reads directly from res.currency.rate — the value user entered in Odoo currency settings.
-        large_rate = what user entered (e.g., 50 = 1 USD = 50 INR)
-        small_rate = 1 / large_rate (e.g., 0.02)
+        large_rate = 1 foreign currency unit = X company currency units (e.g. 1 USD = 100 INR → 100)
+        small_rate = 1 company currency unit = X foreign currency units (e.g. 1 INR = 0.01 USD → 0.01)
+
+        Priority: manual rate (is_exchange=True) → system rate.
         """
         self.ensure_one()
         inv_currency = self.currency_id
@@ -25,18 +26,12 @@ class PurchaseOrder(models.Model):
         if not inv_currency or not comp_currency or inv_currency == comp_currency:
             return {'has_exchange': False, 'large_rate': 1.0, 'small_rate': 1.0}
         try:
-            # Search for the latest rate record for this currency and company
-            rate_record = self.env['res.currency.rate'].search([
-                ('currency_id', '=', inv_currency.id),
-                ('company_id', 'in', [self.company_id.id, False]),
-                ('name', '<=', fields.Date.today()),
-            ], order='company_id nulls last, name desc', limit=1)
-            if rate_record and rate_record.rate:
-                # rate_record.rate = technical rate (small: USD per INR)
-                # 1/rate = large number (INR per USD) = what user entered as Exchange Rate
-                small_rate = rate_record.rate
-                large_rate = 1.0 / small_rate
+            # Use manually entered rate when is_exchange is enabled
+            if self.is_exchange and self.rate and self.rate > 0:
+                large_rate = self.rate
+                small_rate = 1.0 / large_rate
             else:
+                # Fallback to system rate
                 large_rate = self.env['res.currency']._get_conversion_rate(
                     inv_currency, comp_currency, self.company_id, fields.Date.today()
                 )
