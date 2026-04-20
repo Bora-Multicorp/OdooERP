@@ -51,6 +51,7 @@ class ProductProductCode(models.Model):
     def write(self, vals):
         """
         Regenerate codes when a variant's attribute values change.
+
         """
         res = super().write(vals)
         if 'product_template_attribute_value_ids' in vals:
