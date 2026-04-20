@@ -66,13 +66,19 @@ class AccountMove(models.Model):
 
     @api.depends('currency_id', 'company_currency_id', 'company_id', 'invoice_date', 'rate', 'is_exchange')
     def _compute_invoice_currency_rate(self):
-        """Overriding the Default Compute function to include the Manual Rate Also."""
+        """Overriding the Default Compute function to include the Manual Rate Also.
+
+        Odoo's invoice_currency_rate = how many invoice-currency units per 1 company-currency unit.
+        Our manual `rate` means: 1 invoice-currency unit = X company-currency units (e.g. 1 USD = 100 INR).
+        So invoice_currency_rate = 1 / rate.
+        """
         for move in self:
             if move.is_invoice(include_receipts=True):
                 if move.currency_id:
-                    if move.is_exchange:
-                        rate = move.rate if move.rate else 1
-                        move.invoice_currency_rate = rate
+                    if move.is_exchange and move.rate:
+                        # rate = 100 means 1 USD = 100 INR
+                        # invoice_currency_rate = 1/100 = 0.01 (1 INR = 0.01 USD)
+                        move.invoice_currency_rate = 1.0 / move.rate
                         continue
                     move.invoice_currency_rate = self.env['res.currency']._get_conversion_rate(
                         from_currency=move.company_currency_id,
@@ -107,12 +113,7 @@ class AccountMove(models.Model):
             elif move.purchase_order_id:
                 move.rate = move.purchase_order_id.rate
             else:
-                move.rate = move.env['res.currency']._get_conversion_rate(
-                from_currency=move.company_currency_id,
-                to_currency=move.currency_id,
-                company=move.company_id,
-                date=move.date,
-            )
+                move.rate = 0.0
 
     def _inverse_rate(self):
         """ Allow manual editing of rate in account.move """

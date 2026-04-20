@@ -585,6 +585,15 @@ class KsSoImportWizard(models.TransientModel):
             # ── Confirm Sale Order ──
             sale_order.action_confirm()
 
+            # ── Mark outgoing delivery with ks_ecom_order_id ──
+            # Stored directly so delivery import wizard can match by this field.
+            if sale_order.picking_ids:
+                outgoing = sale_order.picking_ids.filtered(
+                    lambda p: p.picking_type_id.code == "outgoing"
+                )
+                if outgoing:
+                    outgoing.write({"ks_ecom_order_id": order_id})
+
             # ── Auto-create Customer Invoice ──
             try:
                 sale_order._create_invoices()

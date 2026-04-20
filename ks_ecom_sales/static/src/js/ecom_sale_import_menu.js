@@ -27,6 +27,16 @@ export class KsEcomSaleImportMenu extends Component {
             },
         });
     }
+
+    async openDeliveryImportWizard() {
+        const { context, resModel } = this.env.searchModel;
+        await this.action.doAction("ks_ecom_sales.action_so_delivery_import_wizard", {
+            additionalContext: {
+                ...context,
+                active_model: resModel,
+            },
+        });
+    }
 }
 
 export const ksEcomSaleImportMenuItem = {

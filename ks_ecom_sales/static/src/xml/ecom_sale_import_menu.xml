@@ -4,5 +4,8 @@
         <DropdownItem class="'o_import_menu'" onSelected.bind="openImportWizard">
             <i class="fa fa-fw fa-file-excel-o me-1"/>Import XLSX Sale Orders
         </DropdownItem>
+        <DropdownItem class="'o_import_menu'" onSelected.bind="openDeliveryImportWizard">
+            <i class="fa fa-fw fa-file-excel-o me-1"/>Import XLSX Delivery Data
+        </DropdownItem>
     </t>
 </templates>

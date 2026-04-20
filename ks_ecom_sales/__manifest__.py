@@ -11,6 +11,7 @@
     "data": [
         "security/ir.model.access.csv",
         "wizard/so_import_wizard_views.xml",
+        "wizard/so_delivery_import_wizard_views.xml",
         "views/sale_order_views.xml",
     ],
     "assets": {
