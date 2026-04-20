@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_so_delivery_import_wizard_form" model="ir.ui.view">
+        <field name="name">ks.so.delivery.import.wizard.form</field>
+        <field name="model">ks.so.delivery.import.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Import Delivery Data">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="file_name" placeholder="example.xlsx"/>
+                            <field name="file_data" filename="file_name" widget="binary"
+                                   options="{'accept': '.xlsx'}"/>
+                        </group>
+                    </group>
+                    <div class="alert alert-info" role="alert">
+                        <p><strong>Instructions:</strong></p>
+                        <ul>
+                            <li>Upload an XLSX file containing delivery data</li>
+                            <li><strong>Required columns:</strong> Order ID, ASIN, Quantity</li>
+                            <li>System will find the Sale Order by Order ID and update delivery quantities by ASIN</li>
+                            <li>Only existing deliveries are updated — no new deliveries are created</li>
+                        </ul>
+                    </div>
+                </sheet>
+                <footer>
+                    <button name="action_import_delivery_data" string="Import Delivery Data"
+                            type="object" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_so_delivery_import_wizard" model="ir.actions.act_window">
+        <field name="name">Import Delivery Data</field>
+        <field name="res_model">ks.so.delivery.import.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+</odoo>
