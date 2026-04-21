@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="ks_purchase_receipt_approval_reason_wizard_form" model="ir.ui.view">
+        <field name="name">ks.purchase.receipt.approval.reason.wizard.form</field>
+        <field name="model">ks.purchase.receipt.approval.reason.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Approval / Rejection Reason">
+                <field name="ks_action_type" invisible="1"/>
+                <field name="ks_is_rejection" invisible="1"/>
+                <group>
+                    <field name="ks_picking_id" readonly="1"/>
+                    <field name="ks_action_label" string="Action" readonly="1"/>
+                    <field name="ks_reason" placeholder="Please enter a reason (required)..."/>
+                </group>
+                <footer>
+                    <button name="action_submit" type="object" class="btn-danger"
+                            string="Confirm Rejection" invisible="not ks_is_rejection"/>
+                    <button name="action_submit" type="object" class="btn-success"
+                            string="Confirm Approval" invisible="ks_is_rejection"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

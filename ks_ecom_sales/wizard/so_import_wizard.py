@@ -289,17 +289,35 @@ class KsSoImportWizard(models.TransientModel):
         if not customer_name or not str(customer_name).strip():
             customer_name = "E-com Customer"
         customer_name = str(customer_name).strip()
-        partner = self.env["res.partner"].search([("name", "=ilike", customer_name)], limit=1)
+        partner = self.env["res.partner"].sudo().search([("name", "=ilike", customer_name)], limit=1)
         if partner:
             if getattr(partner, "customer_rank", 0) < 1:
-                partner.sudo().write({"customer_rank": 1})
+                partner.sudo().with_context(bypass_approval=True).write({"customer_rank": 1})
             return partner
         create_vals = {
             "name": customer_name,
             "company_type": "company",
             "customer_rank": 1,
         }
-        return self.env["res.partner"].sudo().create(create_vals)
+        # ks_contact approval bypass — same pattern as purchase vendor creation
+        for field in ("is_customer", "customer_type", "created_for_ecom", "approval_status", "is_approved"):
+            if field in self.env["res.partner"]._fields:
+                if field == "is_customer":
+                    create_vals[field] = True
+                elif field == "customer_type":
+                    create_vals[field] = "operational"
+                elif field == "created_for_ecom":
+                    create_vals[field] = True
+                elif field == "approval_status":
+                    create_vals[field] = "approved"
+                elif field == "is_approved":
+                    create_vals[field] = True
+        return (
+            self.env["res.partner"]
+            .sudo()
+            .with_context(bypass_approval=True)
+            .create(create_vals)
+        )
 
     @staticmethod
     def _parse_company_branch(company_str):
@@ -551,7 +569,13 @@ class KsSoImportWizard(models.TransientModel):
                 "ks_ecom_tag_ids": [Command.link(ecom_tag.id)],
                 "ks_ecom_info_ids": self._prepare_extra_info_commands(first_row["raw"]),
             }
-            sale_order = self.env["sale.order"].with_company(company).create(so_vals)
+            sale_order = (
+                self.env["sale.order"]
+                .sudo()
+                .with_company(company)
+                .with_context(bypass_approval=True)
+                .create(so_vals)
+            )
 
             # ── Create Order Lines ──
             for row, product in valid_rows:
@@ -579,11 +603,11 @@ class KsSoImportWizard(models.TransientModel):
                     "discount": row["discount"],
                     "tax_id": [Command.set(tax.ids)],
                 }
-                self.env["sale.order.line"].create(line_vals)
+                self.env["sale.order.line"].sudo().with_context(bypass_approval=True).create(line_vals)
                 total_lines_created += 1
 
             # ── Confirm Sale Order ──
-            sale_order.action_confirm()
+            sale_order.sudo().action_confirm()
 
             # ── Mark outgoing delivery with ks_ecom_order_id ──
             # Stored directly so delivery import wizard can match by this field.
