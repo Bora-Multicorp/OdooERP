@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="ks_purchase_receipt_approval_config_form" model="ir.ui.view">
+        <field name="name">ks.purchase.receipt.approval.config.form</field>
+        <field name="model">ks.purchase.receipt.approval.config</field>
+        <field name="arch" type="xml">
+            <form string="Purchase Receipt Approval Configuration">
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="Global Purchase Receipt Approval Configuration"/>
+                        </h1>
+                    </div>
+                    <div class="alert alert-info" role="alert">
+                        <strong>Global Configuration:</strong> This configuration applies to all incoming receipts. Only one active configuration is allowed.
+                    </div>
+                    <group>
+                        <group string="Approval Mode">
+                            <field name="ks_approval_mode" widget="radio"/>
+                        </group>
+                        <group>
+                            <field name="active" widget="boolean_toggle"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Receipt Approvers" name="receipt_approvers">
+                            <group>
+                                <group string="Approver 1 Users">
+                                    <field name="ks_receipt_pm1_ids"
+                                           widget="many2many_tags"
+                                           options="{'no_create': True}"
+                                           context="{'show_email': True}"
+                                           placeholder="Select users for Approver 1"/>
+                                </group>
+                                <group string="Approver 2 Users"
+                                       invisible="ks_approval_mode == 'single'">
+                                    <field name="ks_receipt_pm2_ids"
+                                           widget="many2many_tags"
+                                           options="{'no_create': True}"
+                                           context="{'show_email': True}"
+                                           placeholder="Select users for Approver 2"/>
+                                </group>
+                            </group>
+                            <div class="alert alert-info" role="alert"
+                                 invisible="ks_approval_mode != 'single'">
+                                <strong>Single PM Approval:</strong> Only one approver from Approver 1 list is required to validate Purchase Receipts.
+                                Users will select an approver when requesting validation approval.
+                            </div>
+                            <div class="alert alert-info" role="alert"
+                                 invisible="ks_approval_mode != 'dual'">
+                                <strong>Two PM Approval:</strong> Both Approver 1 and Approver 2 must approve before Purchase Receipts can be validated.
+                                Users will select approvers from each list when requesting approval.
+                                Approver 2 cannot approve until Approver 1 has approved.
+                            </div>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="ks_purchase_receipt_approval_config_list" model="ir.ui.view">
+        <field name="name">ks.purchase.receipt.approval.config.list</field>
+        <field name="model">ks.purchase.receipt.approval.config</field>
+        <field name="arch" type="xml">
+            <list string="Purchase Receipt Approval Configurations">
+                <field name="name"/>
+                <field name="active" widget="boolean_toggle"/>
+                <field name="ks_approval_mode"/>
+                <field name="ks_receipt_pm1_ids" widget="many2many_tags"/>
+                <field name="ks_receipt_pm2_ids" widget="many2many_tags" optional="show"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_ks_purchase_receipt_approval_config" model="ir.actions.act_window">
+        <field name="name">Purchase Receipt Approval Configuration</field>
+        <field name="res_model">ks.purchase.receipt.approval.config</field>
+        <field name="view_mode">list,form</field>
+        <field name="groups_id" eval="[(4, ref('base.group_system'))]"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Configure Purchase Receipt Approval Workflow
+            </p>
+            <p>
+                Set up PM approvers for Purchase Receipt validation requests.
+                Choose between single PM approval or require both PM1 and PM2 to approve.
+            </p>
+        </field>
+    </record>
+
+    <menuitem id="menu_ks_purchase_receipt_approval_config"
+              name="Purchase Receipt Approval"
+              parent="purchase.menu_purchase_config"
+              action="action_ks_purchase_receipt_approval_config"
+              groups="base.group_system"
+              sequence="20"/>
+</odoo>
