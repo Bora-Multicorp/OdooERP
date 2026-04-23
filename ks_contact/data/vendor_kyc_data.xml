@@ -709,12 +709,6 @@
             <field name="sh_value_type">textbox</field>
             <field name="is_ifsc" eval="True"/>
         </record>
-        <record model="survey.question.answer" id="matrix_bank_address_kyc_survey_col4">
-            <field name="question_id" ref="matrix_bank_address_kyc_survey"/>
-            <field name="sequence">4</field>
-<!--            <field name="value">Bank Address</field>-->
-            <field name="sh_value_type">textbox</field>
-        </record>
         <record model="survey.question.answer" id="matrix_bank_address_kyc_survey_col5">
             <field name="question_id" ref="matrix_bank_address_kyc_survey"/>
             <field name="sequence">5</field>
