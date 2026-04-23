@@ -10,7 +10,9 @@ class SaleOrder(models.Model):
     ks_other_reference = fields.Char(string='Other Reference(s)')
     ks_despatched_through = fields.Char(string='Despatch through')
     ks_city_port_of_discharge = fields.Char(string='Destination')
+    ks_delivery_note = fields.Char(string='Delivery Note')
     ks_remarks = fields.Text(string='Remarks')
+    ks_exchange_rate = fields.Float(string='Exchange Rate (to INR)', digits=(16, 4), default=0.0)
     ks_authorized_signature = fields.Binary(string='Authorized Signature', attachment=True, copy=False)
 
     def get_amount_in_words_aed(self, amount):
@@ -135,6 +137,44 @@ class SaleOrder(models.Model):
         except Exception:
             return ''
 
+    def get_inr_conversion_info(self):
+        """Returns INR currency and rate. Uses sale order's rate field if set, else system rate."""
+        self.ensure_one()
+        inr = self.env['res.currency'].search([('name', '=', 'INR')], limit=1)
+        if not inr:
+            return {'currency': self.currency_id, 'rate': 1.0}
+        if self.currency_id == inr:
+            return {'currency': inr, 'rate': 1.0}
+        existing_rate = getattr(self, 'rate', 0.0) or 0.0
+        if existing_rate > 0:
+            return {'currency': inr, 'rate': existing_rate}
+        try:
+            rate = self.env['res.currency']._get_conversion_rate(
+                self.currency_id, inr, self.company_id, fields.Date.today()
+            )
+        except Exception:
+            rate = 1.0
+        return {'currency': inr, 'rate': rate}
+
+    def get_inr_conversion_info(self):
+        """Returns INR currency and rate. Uses sale order's rate field if set, else system rate."""
+        self.ensure_one()
+        inr = self.env['res.currency'].search([('name', '=', 'INR')], limit=1)
+        if not inr:
+            return {'currency': self.currency_id, 'rate': 1.0}
+        if self.currency_id == inr:
+            return {'currency': inr, 'rate': 1.0}
+        existing_rate = getattr(self, 'rate', 0.0) or 0.0
+        if existing_rate > 0:
+            return {'currency': inr, 'rate': existing_rate}
+        try:
+            rate = self.env['res.currency']._get_conversion_rate(
+                self.currency_id, inr, self.company_id, fields.Date.today()
+            )
+        except Exception:
+            rate = 1.0
+        return {'currency': inr, 'rate': rate}
+
     def get_line_hsn_code(self, line):
         """Get HSN/SAC code from product template"""
         try:
@@ -149,6 +189,100 @@ class SaleOrder(models.Model):
         except Exception:
             pass
         return ''
+
+    def _get_tax_type(self, tax):
+        """Return 'cgst', 'sgst', 'igst', or '' for a single tax."""
+        try:
+            tax_type = (tax.l10n_in_tax_type or '').lower()
+        except Exception:
+            tax_type = ''
+        if not tax_type:
+            n = (tax.name or '').lower()
+            if 'cgst' in n:
+                tax_type = 'cgst'
+            elif 'sgst' in n or 'utgst' in n:
+                tax_type = 'sgst'
+            elif 'igst' in n:
+                tax_type = 'igst'
+        return tax_type
+
+    def _resolve_tax_rates(self, taxes):
+        """Return list of (tax_type, rate) tuples, respecting group tax parent type."""
+        result = []
+        for tax in taxes:
+            if tax.amount_type == 'group' and tax.children_tax_ids:
+                parent_type = self._get_tax_type(tax)
+                if parent_type in ('cgst', 'sgst', 'igst'):
+                    # Parent type known: sum all children rates under parent type
+                    total_rate = sum(c.amount for c in tax.children_tax_ids)
+                    result.append((parent_type, total_rate))
+                else:
+                    # Parent type unknown: process each child individually
+                    for child in tax.children_tax_ids:
+                        child_type = self._get_tax_type(child)
+                        if child_type:
+                            result.append((child_type, child.amount))
+            else:
+                tax_type = self._get_tax_type(tax)
+                if tax_type:
+                    result.append((tax_type, tax.amount))
+        return result
+
+    def get_sale_gst_tax_info(self):
+        """Returns GST tax breakdown for domestic India sales.
+        Returns list of dicts with: taxable_amount, cgst_rate, cgst_amount, sgst_rate, sgst_amount, igst_rate, igst_amount
+        Also returns totals: total_taxable, total_cgst, total_sgst, total_igst, subtotal
+        """
+        self.ensure_one()
+        tax_groups = {}  # key: (cgst_rate, sgst_rate, igst_rate)
+
+        for line in self.order_line.filtered(lambda l: l.display_type not in ('line_section', 'line_note')):
+            cgst_rate = 0.0
+            sgst_rate = 0.0
+            igst_rate = 0.0
+            for tax_type, rate in self._resolve_tax_rates(line.tax_id):
+                if tax_type == 'cgst':
+                    cgst_rate += rate
+                elif tax_type == 'sgst':
+                    sgst_rate += rate
+                elif tax_type == 'igst':
+                    igst_rate += rate
+
+            key = (cgst_rate, sgst_rate, igst_rate)
+            if key not in tax_groups:
+                tax_groups[key] = {'taxable_amount': 0.0, 'cgst_rate': cgst_rate,
+                                   'cgst_amount': 0.0, 'sgst_rate': sgst_rate,
+                                   'sgst_amount': 0.0, 'igst_rate': igst_rate, 'igst_amount': 0.0}
+            subtotal = line.price_subtotal
+            tax_groups[key]['taxable_amount'] += subtotal
+            tax_groups[key]['cgst_amount'] += subtotal * cgst_rate / 100.0
+            tax_groups[key]['sgst_amount'] += subtotal * sgst_rate / 100.0
+            tax_groups[key]['igst_amount'] += subtotal * igst_rate / 100.0
+
+        groups = list(tax_groups.values())
+        total_taxable = sum(g['taxable_amount'] for g in groups)
+        total_cgst = sum(g['cgst_amount'] for g in groups)
+        total_sgst = sum(g['sgst_amount'] for g in groups)
+        total_igst = sum(g['igst_amount'] for g in groups)
+        return {
+            'groups': groups,
+            'total_taxable': total_taxable,
+            'total_cgst': total_cgst,
+            'total_sgst': total_sgst,
+            'total_igst': total_igst,
+        }
+
+    def get_line_tax_rates(self, line):
+        """Return (cgst_rate, sgst_rate, igst_rate) for a sale order line."""
+        cgst_rate = sgst_rate = igst_rate = 0.0
+        for tax_type, rate in self._resolve_tax_rates(line.tax_id):
+            if tax_type == 'cgst':
+                cgst_rate += rate
+            elif tax_type == 'sgst':
+                sgst_rate += rate
+            elif tax_type == 'igst':
+                igst_rate += rate
+        return cgst_rate, sgst_rate, igst_rate
 
     def format_number(self, value, digits=2):
         """Format number with specified decimal places"""
@@ -187,67 +321,24 @@ class SaleOrder(models.Model):
         return formatLang(self.env, amount, digits=2)
 
     def get_company_bank_info(self):
-        """Get company bank information: prefer sale order ks_bank_id when set, else company partner bank."""
+        """Get bank info only from ks_bank_id. Returns empty if not set."""
         self.ensure_one()
-        bank_info = {
-            'ad_code': '',
-            'swift_code': '',
-            'branch': '',
-            'bank_name': '',
-            'acc_number': '',
-            'ifsc_code': '',
-            'city': '',
-        }
+        empty = {'ad_code': '', 'swift_code': '', 'branch': '', 'bank_name': '', 'acc_number': '', 'ifsc_code': '', 'city': ''}
         try:
-            # Prefer sale order's selected bank (ks_bank_id) when set
             if getattr(self, 'ks_bank_id', None) and self.ks_bank_id:
                 bank = self.ks_bank_id
-                bank_info['bank_name'] = bank.name or ''
-                bank_info['acc_number'] = getattr(bank, 'bic', None) or ''
-                bank_info['swift_code'] = getattr(bank, 'swift_code', None) or getattr(bank, 'bic', None) or ''
-                bank_info['ad_code'] = getattr(bank, 'bank_ad_code', None) or ''
-                bank_info['ifsc_code'] = getattr(bank, 'ifsc_code', None) or ''
-                bank_info['branch'] = getattr(bank, 'branch', None) or getattr(bank, 'branch_sol_id', None) or ''
-                bank_info['city'] = getattr(bank, 'city', None) or ''
-                return bank_info
+                return {
+                    'bank_name': bank.name or '',
+                    'acc_number': getattr(bank, 'bic', None) or '',
+                    'swift_code': getattr(bank, 'swift_code', None) or getattr(bank, 'bic', None) or '',
+                    'ad_code': getattr(bank, 'bank_ad_code', None) or '',
+                    'ifsc_code': getattr(bank, 'ifsc_code', None) or '',
+                    'branch': getattr(bank, 'branch', None) or getattr(bank, 'branch_sol_id', None) or '',
+                    'city': getattr(bank, 'city', None) or '',
+                }
         except Exception:
             pass
-
-        try:
-            company_bank = self.company_id.partner_id.bank_ids[:1] if self.company_id.partner_id.bank_ids else False
-            if company_bank:
-                # Get AD Code (custom field, may not exist)
-                try:
-                    if hasattr(company_bank, 'ad_code') and company_bank.ad_code:
-                        bank_info['ad_code'] = company_bank.ad_code
-                except:
-                    pass
-                
-                # Get Branch (custom field, may not exist)
-                try:
-                    if hasattr(company_bank, 'branch') and company_bank.branch:
-                        bank_info['branch'] = company_bank.branch
-                except:
-                    pass
-                
-                # Get standard fields
-                if company_bank.bank_id:
-                    bank_info['bank_name'] = company_bank.bank_id.name or ''
-                    bank_info['swift_code'] = company_bank.bank_id.bic or ''
-                    bank_info['city'] = company_bank.bank_id.city or ''
-                    
-                    # Get IFSC Code (custom field, may not exist)
-                    try:
-                        if hasattr(company_bank.bank_id, 'ifsc_code') and company_bank.bank_id.ifsc_code:
-                            bank_info['ifsc_code'] = company_bank.bank_id.ifsc_code
-                    except:
-                        pass
-                
-                bank_info['acc_number'] = company_bank.acc_number or ''
-        except Exception:
-            pass
-        
-        return bank_info
+        return empty
 
     def get_company_iban(self):
         """Get company IBAN safely"""

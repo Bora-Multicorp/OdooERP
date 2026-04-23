@@ -1,40 +1,22 @@
 <odoo>
-    <record id="paperformat_with_gst_invoice" model="report.paperformat">
-        <field name="name">US Letter</field>
-        <field name="default" eval="True"/>
-        <field name="format">Letter</field>
-        <field name="page_height">0</field>
-        <field name="page_width">0</field>
-        <field name="orientation">Portrait</field>
-        <field name="margin_top">5</field>
-        <field name="margin_bottom">10</field>
-        <field name="margin_left">5</field>
-        <field name="margin_right">5</field>
-        <field name="header_line" eval="False"/>
-        <field name="header_spacing">20</field>
-        <field name="dpi">90</field>
-        <field name="css_margins" eval="True"/>
-    </record>
-    <!-- Define the new report action for sale order -->
-    <record id="action_report_with_gst_invoice" model="ir.actions.report">
-        <field name="name">Export Invoice With GST</field>
+
+    <record id="action_report_with_gst_invoice_inr" model="ir.actions.report">
+        <field name="name">Export Invoice With GST INR</field>
         <field name="model">account.move</field>
         <field name="report_type">qweb-pdf</field>
-        <field name="report_name">ks_templates.with_gst_invoice_report</field>
-        <field name="report_file">ks_templates.with_gst_invoice_report</field>
-        <field name="print_report_name">(object.state in ('draft', 'sent') and 'Custom Quotation - %s' % (object.name)) or 'Custom Order - %s' % (object.name)
-        </field>
-        <field name="domain">[('ks_zone', 'in', ['dubai', 'russia', 'sez'])]</field>
+        <field name="report_name">ks_templates.with_gst_invoice_inr_report</field>
+        <field name="report_file">ks_templates.with_gst_invoice_inr_report</field>
+        <field name="print_report_name">'Export Invoice With GST INR - %s' % (object.name)</field>
+        <field name="domain">['&amp;', ('currency_id.name', '!=', 'INR'), ('ks_zone', '!=', 'india')]</field>
         <field name="binding_model_id" ref="account.model_account_move"/>
         <field name="paperformat_id" ref="paperformat_with_gst_invoice"/>
         <field name="binding_type">report</field>
     </record>
 
-    <template id="with_gst_invoice_report">
+    <template id="with_gst_invoice_inr_report">
         <t t-call="web.basic_layout">
             <t t-foreach="docs" t-as="doc">
             <main>
-                <!-- Variables set once at top -->
                 <t t-set="gst_sale" t-value="doc.get_sale_order_info()"/>
                 <t t-set="sale_order" t-value="gst_sale"/>
                 <t t-set="delivery_partner" t-value="doc.partner_shipping_id or doc.partner_id"/>
@@ -46,46 +28,28 @@
                 <t t-set="igst_rate" t-value="igst_details['rate']"/>
                 <t t-set="igst_amount" t-value="igst_details['amount']"/>
                 <t t-set="invoice_currency" t-value="doc.currency_id"/>
-                <t t-set="company_currency" t-value="doc.company_id.currency_id"/>
-                <t t-set="conversion_date" t-value="doc.invoice_date or doc.date or doc.create_date.date()"/>
-                <t t-set="invoice_currency_rate" t-value="doc.invoice_currency_rate or 1.0"/>
-                <t t-set="converted_amount" t-value="total_amount"/>
-                <t t-set="exchange_rate" t-value="1.0"/>
-                <t t-set="company_to_invoice_rate" t-value="invoice_currency_rate"/>
-                <t t-if="invoice_currency and company_currency and invoice_currency != company_currency">
-                    <t t-set="converted_amount" t-value="invoice_currency._convert(total_amount, company_currency, doc.company_id, conversion_date, round=True)"/>
-                    <t t-set="exchange_rate" t-value="1.0 / invoice_currency_rate"/>
-                </t>
-                <t t-set="exchange_currency_code" t-value="company_currency.name or 'AED'"/>
-                <t t-set="exchanged_amount" t-value="converted_amount"/>
-                <t t-set="invoice_amount_words" t-value="doc.get_amount_in_words_currency(total_amount, invoice_currency)"/>
                 <t t-set="tax_info" t-value="doc.get_igst_tax_info()"/>
                 <t t-set="total_taxable" t-value="sum(info['taxable_amount'] for info in tax_info.values())"/>
                 <t t-set="total_tax_amt" t-value="sum(info['tax_amount'] for info in tax_info.values())"/>
                 <t t-set="inv_bank" t-value="doc.ks_bank_id"/>
                 <t t-set="inr_rate" t-value="doc.get_invoice_inr_rate()"/>
+                <t t-set="inr_currency" t-value="env['res.currency'].search([('name', '=', 'INR')], limit=1)"/>
 
-                <!-- TITLE — kept separate -->
                 <table style="width:100%; border-collapse:collapse; border-color:white;">
                     <tr>
-                        <td style="text-align:center; font-weight:bold; font-size:16px;">
-                            EXPORT INVOICE
-                        </td>
+                        <td style="text-align:center; font-weight:bold; font-size:16px;">EXPORT INVOICE</td>
                     </tr>
                     <tr>
                         <td style="text-align:center; font-weight:bold; font-size:11px;">
-                            (SUPPLY MEANT FOR EXPORT/SUPPLY TO SEZ UNIT OR SEZ DEVELOPER FOR AUTHORISED OPERATIONS ON
-                            PAYMENT OF IGST)
+                            (SUPPLY MEANT FOR EXPORT/SUPPLY TO SEZ UNIT OR SEZ DEVELOPER FOR AUTHORISED OPERATIONS ON PAYMENT OF IGST)
                         </td>
                     </tr>
                 </table>
 
-                <!-- SINGLE UNIFIED TABLE (7 columns) -->
                 <table style="width:100%; border-collapse:collapse; border:1px solid #000; font-size:11px;">
 
                     <!-- COMPANY INFO + INVOICE DETAILS ROW -->
                     <tr>
-                        <!-- LEFT SIDE -->
                         <td style="width:55%; vertical-align:top; border:1px solid #000; padding:6px;" colspan="4">
                             <strong t-esc="doc.company_id.name or ''"/><br/>
                             <t t-if="doc.company_id.partner_id.street" t-esc="doc.company_id.partner_id.street"/><br/>
@@ -122,7 +86,6 @@
                                 <br/>PAN : <t t-esc="doc.partner_id.l10n_in_pan"/>
                             </t>
                         </td>
-                        <!-- RIGHT SIDE -->
                         <td style="width:45%; vertical-align:top; padding:0; border:1px solid #000;" colspan="3">
                             <table style="width:100%; border-collapse:collapse; border-color:white;">
                                 <tr>
@@ -282,11 +245,11 @@
                                 <t t-esc="doc.format_number(line.quantity, digits=2)"/> <t t-esc="line.product_uom_id.name or 'pcs'"/>
                             </td>
                             <td style="border:1px solid #000; padding:4px; text-align:right;">
-                                <t t-esc="doc.currency_id.symbol or '$'"/> <t t-esc="doc.format_number(line.price_unit, digits=2)"/>
+                                INR <t t-esc="doc.format_number(line.price_unit * inr_rate, digits=2)"/>
                             </td>
                             <td style="border:1px solid #000; padding:4px; text-align:center;" t-esc="line.product_uom_id.name or 'pcs'"/>
                             <td style="border:1px solid #000; padding:4px; text-align:right;">
-                                <t t-esc="doc.currency_id.symbol or '$'"/> <t t-esc="doc.format_number(line.price_subtotal, digits=2)"/>
+                                INR <t t-esc="doc.format_number(line.price_subtotal * inr_rate, digits=2)"/>
                             </td>
                         </tr>
                     </t>
@@ -295,7 +258,7 @@
                     <tr>
                         <td style="border:1px solid #000; padding:4px;" colspan="6"></td>
                         <td style="border:1px solid #000; padding:4px; text-align:right;">
-                            <t t-esc="doc.format_number(total_untaxed, digits=2)"/>
+                            INR <t t-esc="doc.format_number(total_untaxed * inr_rate, digits=2)"/>
                         </td>
                     </tr>
 
@@ -327,32 +290,21 @@
                         <td style="border:1px solid #000; padding:4px;"></td>
                         <td style="border:1px solid #000; padding:4px;"></td>
                         <td style="border:1px solid #000; padding:4px; text-align:left;">
-                            <strong><t t-esc="doc.currency_id.symbol or '$'"/> <t t-esc="doc.format_number(doc.amount_untaxed + doc.amount_tax, digits=2)"/></strong>
+                            <strong>INR <t t-esc="doc.format_number((doc.amount_untaxed + doc.amount_tax) * inr_rate, digits=2)"/></strong>
                         </td>
                     </tr>
-
-                    <!-- CURRENCY CONVERSION ROW -->
-                    <t t-if="invoice_currency and company_currency and invoice_currency != company_currency">
-                    <tr>
-                        <td style="border:1px solid #000; padding:4px; text-align:right;" colspan="7">
-                            <strong>
-                                Total Invoice Amount in <t t-esc="invoice_currency.name or 'USD'"/> <t t-esc="doc.format_number(total_amount, digits=2)"/> @ <t t-esc="company_currency.name or 'INR'"/> <t t-esc="doc.format_number(company_to_invoice_rate, digits=4)"/> / 1 <t t-esc="company_currency.name or 'INR'"/> = <t t-esc="doc.format_number(exchange_rate, digits=4)"/> <t t-esc="invoice_currency.name or 'USD'"/>
-                            </strong>
-                        </td>
-                    </tr>
-                    </t>
 
                     <!-- AMOUNT IN WORDS ROW -->
                     <tr>
                         <td style="border:1px solid #000; padding:6px;" colspan="7">
                             Amount Chargeable (in words)<br/>
                             <strong>
-                                <t t-esc="invoice_amount_words or ''"/>
+                                <t t-esc="doc.get_amount_in_words_currency(total_amount * inr_rate, inr_currency)"/>
                             </strong>
                         </td>
                     </tr>
 
-                    <!-- TAX SUMMARY ROW (inner table) -->
+                    <!-- TAX SUMMARY ROW -->
                     <tr>
                         <td style="border:1px solid #000; padding:0;" colspan="7">
                             <table style="width:100%; border-collapse:collapse; font-size:11px;">
@@ -380,13 +332,13 @@
                                     </tr>
                                 </t>
                                 <t t-set="total_inr_taxable" t-value="total_taxable * inr_rate"/>
-                                <t t-set="correct_total_tax" t-value="total_untaxed * inr_rate * igst_rate / 100.0"/>
+                                <t t-set="total_inr_tax" t-value="total_untaxed * inr_rate * igst_rate / 100.0"/>
                                 <tr>
                                     <td style="border-top:1px solid #000; border-right:1px solid #000; padding:4px;"><strong>Total</strong></td>
                                     <td style="border-top:1px solid #000; border-right:1px solid #000; padding:4px;"><strong>INR <t t-esc="doc.format_number(total_inr_taxable, digits=2)"/></strong></td>
                                     <td style="border-top:1px solid #000; border-right:1px solid #000; padding:4px;"></td>
-                                    <td style="border-top:1px solid #000; border-right:1px solid #000; padding:4px;"><strong>INR <t t-esc="doc.format_number(correct_total_tax, digits=2)"/></strong></td>
-                                    <td style="border-top:1px solid #000; padding:4px;"><strong>INR <t t-esc="doc.format_number(correct_total_tax, digits=2)"/></strong></td>
+                                    <td style="border-top:1px solid #000; border-right:1px solid #000; padding:4px;"><strong>INR <t t-esc="doc.format_number(total_inr_tax, digits=2)"/></strong></td>
+                                    <td style="border-top:1px solid #000; padding:4px;"><strong>INR <t t-esc="doc.format_number(total_inr_tax, digits=2)"/></strong></td>
                                 </tr>
                             </table>
                         </td>
@@ -397,8 +349,7 @@
                         <td style="border:1px solid #000; padding:6px;" colspan="7">
                             Tax Amount (in words):<br/>
                             <strong>
-                                <t t-set="tax_amount_in_words" t-value="doc.get_amount_in_words_inr(correct_total_tax)"/>
-                                <t t-esc="tax_amount_in_words or ''"/>
+                                <t t-esc="doc.get_amount_in_words_inr(total_inr_tax)"/>
                             </strong>
                         </td>
                     </tr>
@@ -416,14 +367,11 @@
                             </t>
                         </td>
                         <td style="vertical-align:top; padding:6px; border:1px solid #000;" colspan="3">
-
-                                <p style="font-weight:bold; margin:0 0 4px 0;">Company's Bank Details</p>
-                                <span><strong>Bank Name:</strong> <t t-esc="inv_bank.name if inv_bank else ''"/></span><br/>
-                                <span><strong>A/c No.:</strong> <t t-esc="inv_bank.bic if inv_bank else ''"/></span><br/>
-                                <span><strong>Branch &amp; IFS Code:</strong> <t t-esc="inv_bank.city if inv_bank else ''"/><t t-if="inv_bank and inv_bank.ifsc_code"> (<t t-esc="inv_bank.ifsc_code"/>)</t></span><br/>
-                                <span><strong>SWIFT Code:</strong> <t t-esc="(inv_bank.swift_code or inv_bank.bic) if inv_bank else ''"/></span>
-
-                            
+                            <p style="font-weight:bold; margin:0 0 4px 0;">Company's Bank Details</p>
+                            <span><strong>Bank Name:</strong> <t t-esc="inv_bank.name if inv_bank else ''"/></span><br/>
+                            <span><strong>A/c No.:</strong> <t t-esc="inv_bank.bic if inv_bank else ''"/></span><br/>
+                            <span><strong>Branch &amp; IFS Code:</strong> <t t-esc="inv_bank.city if inv_bank else ''"/><t t-if="inv_bank and inv_bank.ifsc_code"> (<t t-esc="inv_bank.ifsc_code"/>)</t></span><br/>
+                            <span><strong>SWIFT Code:</strong> <t t-esc="(inv_bank.swift_code or inv_bank.bic) if inv_bank else ''"/></span>
                             <div style="border-top:1px solid #000; margin-top:20px;"/>
                             <div style="text-align:center; margin-top:10px;">
                                 <t t-if="gst_sale and gst_sale.ks_authorized_signature">
@@ -449,6 +397,5 @@
             </t>
         </t>
     </template>
-
 
 </odoo>

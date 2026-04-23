@@ -22,7 +22,7 @@
         <field name="report_type">qweb-pdf</field>
         <field name="report_name">ks_templates.purchase_order_custom_report</field>
         <field name="report_file">ks_templates.purchase_order_custom_report</field>
-        <field name="print_report_name">(object.state in ('draft', 'sent') and 'Custom Quotation - %s' % (object.name)) or 'Custom Order - %s' % (object.name)</field>
+        <field name="print_report_name">'Purchase Order - %s' % (object.name)</field>
         <field name="binding_model_id" ref="purchase.model_purchase_order"/>
         <field name="paperformat_id" ref="paperformat_custom_purchase_order"/>
         <field name="binding_type">report</field>
@@ -35,7 +35,7 @@
 
         <!-- Variables -->
         <t t-set="total_qty" t-value="sum(line.product_qty for line in doc.order_line.filtered(lambda l: l.display_type not in ('line_section', 'line_note')))"/>
-        <t t-set="total_usd" t-value="doc.amount_total"/>
+        <t t-set="total_usd" t-value="doc.amount_untaxed + doc.amount_tax"/>
         <t t-set="invoice_currency" t-value="doc.currency_id"/>
         <t t-set="company_currency" t-value="doc.company_id.currency_id"/>
         <t t-set="conversion_date" t-value="doc.date_order or doc.create_date.date()"/>
