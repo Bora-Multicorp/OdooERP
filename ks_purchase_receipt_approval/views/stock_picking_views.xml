@@ -24,6 +24,12 @@
 
             <!-- Approval action buttons before Validate -->
             <xpath expr="(//button[@name='button_validate'])[1]" position="before">
+                <!-- Re-open wizard when stuck in receipt_approval_pending with no PM1 (X was clicked) -->
+                <button name="ks_action_request_receipt_approval"
+                        string="Select Approvers"
+                        type="object"
+                        class="btn-primary"
+                        invisible="state != 'receipt_approval_pending' or ks_receipt_pm1_id"/>
                 <button name="action_update_receipt_approvals"
                         string="Update Approvals" type="object"
                         class="btn-warning"

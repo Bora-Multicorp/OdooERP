@@ -30,6 +30,7 @@ class KsDeliveryApprovalRequestWizard(models.TransientModel):
     ks_reason = fields.Text(string='Reason', placeholder='Optional reason for this request...')
     ks_show_approver2 = fields.Boolean(compute='_compute_show_approver2')
     ks_approval_info = fields.Html(compute='_compute_approval_info', readonly=True)
+    ks_is_update_mode = fields.Boolean(string='Is Update Mode', default=False)
 
     @api.depends('ks_picking_id')
     def _compute_show_approver2(self):
@@ -62,14 +63,25 @@ class KsDeliveryApprovalRequestWizard(models.TransientModel):
                 if wiz.ks_approver1_user else wiz.ks_approver2_user_ids
             )
 
-    @api.depends('ks_picking_id', 'ks_approver1_user', 'ks_approver2_user')
+    @api.depends('ks_picking_id', 'ks_approver1_user', 'ks_approver2_user', 'ks_is_update_mode')
     def _compute_approval_info(self):
         for wiz in self:
             if not wiz.ks_picking_id._has_delivery_approval_config():
                 wiz.ks_approval_info = '<p>No delivery approval configuration found.</p>'
                 continue
             config = wiz.ks_picking_id._get_delivery_approval_config()
-            html = '<div class="alert alert-info">'
+            picking = wiz.ks_picking_id
+            html = ''
+
+            if wiz.ks_is_update_mode and picking.ks_validate_pm1_approved and picking.ks_validate_pm1_id:
+                html += (
+                    '<div class="alert alert-success" role="alert">'
+                    '<strong>&#10003; Approver 1 (%s) has already approved this request.</strong>'
+                    ' Keeping the same Approver 1 will preserve their approval.'
+                    '</div>'
+                ) % picking.ks_validate_pm1_id.name
+
+            html += '<div class="alert alert-info">'
             html += '<h5><strong>Delivery Validation Approval Request</strong></h5>'
             html += '<p>You are about to submit this delivery for approval before validation.</p>'
             if config.is_dual_approval():
@@ -98,30 +110,70 @@ class KsDeliveryApprovalRequestWizard(models.TransientModel):
             raise UserError(_('Please select Approver 2 (required for dual approval mode).'))
 
         is_update = self.env.context.get('ks_is_update', False)
+        picking = self.ks_picking_id
+
+        # If PM1 is unchanged and already approved, preserve their approval
+        preserve_pm1 = (
+            is_update
+            and picking.ks_validate_pm1_id
+            and picking.ks_validate_pm1_id == self.ks_approver1_user
+            and picking.ks_validate_pm1_approved
+        )
+
         if is_update:
             # Cleanup only on OK — wizard Cancel leaves everything untouched
-            self.ks_picking_id._ks_cancel_delivery_activities()
-            self.ks_picking_id.write({
+            # PM1's activity is already marked done when PM1 approves; only PM2's will be active
+            picking._ks_cancel_delivery_activities()
+            write_vals = {
                 'ks_validate_pm1_id': False,
                 'ks_validate_pm2_id': False,
-                'ks_validate_pm1_approved': False,
                 'ks_validate_pm2_approved': False,
-            })
-            self.ks_picking_id.message_post(
-                body=_('Approval request updated by %s. Previous approvers cancelled.') % self.env.user.name,
-                message_type='notification',
-                subtype_xmlid='mail.mt_note',
+            }
+            if not preserve_pm1:
+                write_vals['ks_validate_pm1_approved'] = False
+            picking.write(write_vals)
+            msg = (
+                _('Approval request updated by %s. Approver 1 (%s) approval preserved; only Approver 2 updated.')
+                % (self.env.user.name, picking.ks_validate_pm1_id.name)
+                if preserve_pm1
+                else _('Approval request updated by %s. Previous approvers cancelled.') % self.env.user.name
             )
+            picking.message_post(body=msg, message_type='notification', subtype_xmlid='mail.mt_note')
             # Temporarily restore pre-approval state so ks_do_request_delivery_approval guard passes
-            pre_state = self.ks_picking_id.ks_pre_approval_state or 'assigned'
-            self.ks_picking_id.write({'state': pre_state})
+            pre_state = picking.ks_pre_approval_state or 'assigned'
+            picking.write({'state': pre_state})
 
-        self.ks_picking_id.ks_do_request_delivery_approval(
+        picking.ks_do_request_delivery_approval(
             pm1_user=self.ks_approver1_user,
             pm2_user=self.ks_approver2_user if self.ks_approver2_user else None,
             reason=self.ks_reason,
         )
+
+        if preserve_pm1:
+            # ks_do_request_delivery_approval reset pm1_approved — restore it
+            picking.write({'ks_validate_pm1_approved': True})
+            # Remove the fresh PM1 activity (PM1 already approved)
+            self.env['mail.activity'].sudo().search([
+                ('res_model', '=', 'stock.picking'),
+                ('res_id', '=', picking.id),
+                ('user_id', '=', picking.ks_validate_pm1_id.id),
+                ('summary', 'ilike', 'Delivery Approval'),
+            ]).unlink()
+            # Create PM2 activity now (mirrors what happens when PM1 approves)
+            if picking.ks_validate_pm2_id:
+                picking._create_delivery_approval_activity(picking.ks_validate_pm2_id, 'Validate')
+
         return {'type': 'ir.actions.act_window_close'}
 
     def action_cancel(self):
+        # If wizard was opened for a fresh approval (not update) and user cancels before
+        # selecting approvers, reset picking back to its pre-approval state so Validate
+        # button becomes accessible again.
+        picking = self.ks_picking_id
+        if picking and picking.state == 'approval_pending' and not picking.ks_validate_pm1_id:
+            pre_state = picking.ks_pre_approval_state or 'assigned'
+            picking.write({
+                'state': pre_state,
+                'ks_pre_approval_state': False,
+            })
         return {'type': 'ir.actions.act_window_close'}
