@@ -68,8 +68,8 @@ class AccountPayment(models.Model):
         for rec in self:
             if not rec.is_insurance_payment:
                 continue
-            if not rec.partner_id:
-                raise UserError("Customer is required for insurance payments.")
+            # if not rec.partner_id:
+            #     raise UserError("Customer is required for insurance payments.")
             if rec.amount <= 0:
                 raise UserError("Amount must be greater than zero for insurance payments.")
 

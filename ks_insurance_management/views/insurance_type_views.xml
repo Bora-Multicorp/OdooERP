@@ -103,7 +103,7 @@
           <page string="Policies">
             <field name="policy_ids" readonly="1">
               <list>
-                <field name="name"/><field name="insurance_type_id"/>
+                <field name="policy_number"/><field name="insurance_type_id"/>
                 <field name="sum_insured"/><field name="expiry_date"/>
                 <field name="state" widget="badge"/>
               </list>

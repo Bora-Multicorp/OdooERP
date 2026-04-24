@@ -49,43 +49,44 @@
               <field name="payment_count" widget="statinfo" string="Payments"/>
             </button>
           </div>
-          <div class="oe_title"><h1><field name="name" readonly="1"/></h1></div>
+          <div class="oe_title"><h1><field name="policy_number" readonly="state != 'draft'"/></h1></div>
           <group>
             <group string="Policy Information">
-              <field name="policy_number"/>
-              <field name="insurance_type_id"/>
+              <field name="policy_number" readonly="state != 'draft'"/>
+              <field name="insurance_type_id" readonly="state != 'draft'"/>
               <field name="insurance_category_id" readonly="1"/>
-              <field name="policy_type"/>
-              <field name="insurance_company_id"/>
-              <field name="agent_id"/>
-              <field name="company_id" groups="base.group_multi_company"/>
+              <field name="policy_type" readonly="state != 'draft'"/>
+              <field name="insurance_company_id" readonly="state != 'draft'"/>
+              <field name="agent_id" readonly="state != 'draft'"/>
+              <field name="company_id" groups="base.group_multi_company"
+                     readonly="state != 'draft'"/>
             </group>
             <group string="Financial Details">
-              <field name="currency_id"/>
+              <field name="currency_id" readonly="state != 'draft'"/>
               <field name="payment_status" widget="badge"
+                     invisible="payment_count == 0"
                      decoration-muted="payment_status == 'draft'"
                      decoration-warning="payment_status == 'requested'"
                      decoration-info="payment_status == 'approved'"
                      decoration-success="payment_status == 'paid'"/>
               <field name="is_paid" widget="boolean_toggle" readonly="1"/>
               <field name="topup_flag" widget="boolean_toggle" readonly="1"/>
-              <!-- Original policy limit — always editable, never auto-changed -->
-              <field name="initial_sum_insured" string="Sum Insured" required="1"/>
+              <field name="initial_sum_insured" string="Sum Insured" required="1"
+                     readonly="state != 'draft'"/>
               <field name="sum_insured_words" readonly="1"/>
-              <field name="premium" required="1"/>
+              <field name="premium" required="1" readonly="state != 'draft'"/>
               <field name="premium_percentage" readonly="1"/>
-              <!-- Marine: sum_insured reduces as goods are shipped out -->
               <field name="sum_insured" readonly="1"
                      invisible="not is_marine"
                      string="Remaining Sum Insured"/>
-              <!-- Fire &amp; Burglary: balance = sum_insured − current inventory -->
               <field name="balance_sum_insured" readonly="1"
                      invisible="not is_fire_burglary"/>
               <field name="total_premium_paid" readonly="1"/>
-              <field name="start_date"/>
-              <field name="expiry_date"/>
+              <field name="start_date" readonly="state != 'draft'"/>
+              <field name="expiry_date" readonly="state != 'draft'"/>
               <field name="tolerance_percent"
-                     invisible="not is_marine and not is_fire_burglary"/>
+                     invisible="not is_marine and not is_fire_burglary"
+                     readonly="state != 'draft'"/>
               <field name="tolerance_notified" readonly="1"
                      invisible="not is_marine and not is_fire_burglary"
                      widget="boolean_toggle"/>
@@ -93,11 +94,12 @@
           </group>
           <group invisible="policy_type != 'individual' or (not is_marine and not is_fire_burglary)"
                  string="Warehouse Coverage">
-            <field name="warehouse_id"
+            <field name="warehouse_id" readonly="state != 'draft'"
                    help="The warehouse this policy covers. Marine: balance reduces as goods are shipped out. Fire &amp; Burglary: balance = Sum Insured minus current stock value here."/>
           </group>
           <group invisible="policy_type != 'floater'" string="Floater Covered Locations">
-            <field name="floater_location_ids" widget="many2many_tags" nolabel="1"/>
+            <field name="floater_location_ids" widget="many2many_tags" nolabel="1"
+                   readonly="state != 'draft'"/>
           </group>
           <notebook>
             <page string="Declarations">
@@ -147,7 +149,7 @@
     <field name="model">insurance.policy</field>
     <field name="arch" type="xml">
       <list decoration-danger="state == 'expired'" decoration-success="state == 'active'" decoration-muted="state == 'draft'">
-        <field name="name"/><field name="policy_number"/>
+        <field name="policy_number"/>
         <field name="insurance_type_id"/><field name="insurance_category_id"/>
         <field name="policy_type"/><field name="insurance_company_id"/>
         <field name="agent_id"/>
@@ -155,7 +157,9 @@
         <field name="sum_insured" string="Remaining Sum Insured" optional="show"/>
         <field name="balance_sum_insured" optional="show"/>
         <field name="premium"/><field name="start_date"/><field name="expiry_date"/>
+        <field name="payment_count" column_invisible="True"/>
         <field name="payment_status" widget="badge"
+               invisible="payment_count == 0"
                decoration-muted="payment_status == 'draft'"
                decoration-warning="payment_status == 'requested'"
                decoration-info="payment_status == 'approved'"
@@ -174,7 +178,6 @@
     <field name="model">insurance.policy</field>
     <field name="arch" type="xml">
       <kanban default_group_by="insurance_category_id" sample="1">
-        <field name="name"/>
         <field name="policy_number"/>
         <field name="insurance_type_id"/>
         <field name="insurance_category_id"/>
@@ -195,7 +198,7 @@
             <t t-set="is_expired" t-value="record.state.raw_value === 'expired'"/>
             <div t-attf-class="oe_kanban_global_click border-start border-3 #{is_expired ? 'border-danger' : 'border-success'} ps-2">
               <div class="d-flex justify-content-between align-items-start mb-1">
-                <strong class="text-truncate"><field name="name"/></strong>
+                <strong class="text-truncate"><field name="policy_number"/></strong>
                 <field name="state" widget="badge"
                        decoration-success="state == 'active'"
                        decoration-danger="state == 'expired'"/>
@@ -256,7 +259,7 @@
     <field name="model">insurance.policy</field>
     <field name="arch" type="xml">
       <search>
-        <field name="name"/><field name="policy_number"/>
+        <field name="policy_number"/>
         <field name="insurance_type_id"/>
         <field name="insurance_company_id"/>
         <field name="agent_id"/>

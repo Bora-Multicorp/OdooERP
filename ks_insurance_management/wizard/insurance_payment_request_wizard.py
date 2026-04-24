@@ -33,20 +33,20 @@ class InsurancePaymentRequestWizard(models.TransientModel):
         for policy in self.policy_ids:
             if policy.payment_status in ('requested', 'approved'):
                 raise UserError(
-                    f"Policy '{policy.name}' already has a pending payment request."
+                    f"Policy '{policy.policy_number}' already has a pending payment request."
                 )
             if policy.payment_status == 'paid' and not policy.pending_topup_amount:
                 raise UserError(
-                    f"Policy '{policy.name}' is already paid. "
+                    f"Policy '{policy.policy_number}' is already paid. "
                     f"Use 'Top Up Addon' to increase coverage."
                 )
 
             policy.write({'payment_status': 'requested'})
             policy._notify_approver(
                 approver,
-                summary=f'Insurance Payment Approval — {policy.name}',
+                summary=f'Insurance Payment Approval — {policy.policy_number}',
                 note=(
-                    f'Payment request submitted for policy <b>{policy.name}</b> '
+                    f'Payment request submitted for policy <b>{policy.policy_number}</b> '
                     f'({policy.insurance_type_id.name}).<br/>'
                     f'Premium Amount: <b>₹{policy.premium:,.2f}</b><br/>'
                     f'Requested by: <b>{self.env.user.name}</b><br/>'

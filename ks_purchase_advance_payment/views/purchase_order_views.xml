@@ -74,7 +74,7 @@
                 <field name="ks_purchase_order_id"
                        string="Purchase Order"
                        readonly="state != 'draft'"
-                       invisible="not ks_purchase_order_id and state != 'draft'"/>
+                       invisible="is_insurance_payment or (not ks_purchase_order_id and state != 'draft')"/>
             </xpath>
         </field>
     </record>
@@ -86,7 +86,8 @@
         <field name="inherit_id" ref="account.view_account_payment_tree"/>
         <field name="arch" type="xml">
             <xpath expr="//field[@name='partner_id']" position="after">
-                <field name="ks_purchase_order_id" string="Purchase Order" optional="show"/>
+                <field name="ks_purchase_order_id" string="Purchase Order" optional="show"
+                       invisible="is_insurance_payment"/>
             </xpath>
         </field>
     </record>

@@ -14,19 +14,13 @@ class InsurancePolicy(models.Model):
     _description = 'Insurance Policy'
     _inherit = ['mail.thread', 'mail.activity.mixin']
     _order = 'create_date desc'
+    _rec_name = 'policy_number'
 
     _sql_constraints = [
         ('policy_number_unique', 'UNIQUE(policy_number)',
          'Policy Number must be unique. Another policy with this number already exists.'),
     ]
 
-    name = fields.Char(
-        string='Reference',
-        default='New',
-        readonly=True,
-        copy=False,
-        help='Auto-generated unique reference number for this insurance policy (e.g. INS/2025/0001).',
-    )
     policy_number = fields.Char(
         string='Policy Number',
         tracking=True,
@@ -303,10 +297,10 @@ class InsurancePolicy(models.Model):
             payment.activity_schedule(
                 'mail.mail_activity_data_todo',
                 user_id=user.id,
-                summary=f'Insurance Payment to Post — {self.name}',
+                summary=f'Insurance Payment to Post — {self.policy_number}',
                 note=(
                     f'A draft insurance payment has been created for policy '
-                    f'<b>{self.name}</b> ({self.insurance_type_id.name}).<br/>'
+                    f'<b>{self.policy_number}</b> ({self.insurance_type_id.name}).<br/>'
                     f'Amount: <b>₹{payment.amount:,.2f}</b><br/>'
                     f'Please post this payment in the accounting system.'
                 ),
@@ -322,8 +316,8 @@ class InsurancePolicy(models.Model):
             self.activity_schedule(
                 'mail.mail_activity_data_todo',
                 user_id=user.id,
-                summary=f'Insurance Payment Completed — {self.name}',
-                note=f'Payment for policy <b>{self.name}</b> has been posted and confirmed.',
+                summary=f'Insurance Payment Completed — {self.policy_number}',
+                note=f'Payment for policy <b>{self.policy_number}</b> has been posted and confirmed.',
             )
 
     # ── Payment workflow actions ──────────────────────────────────────────────
@@ -375,7 +369,7 @@ class InsurancePolicy(models.Model):
 
         payment_label = (
             f"Insurance {'Top-up' if is_topup else 'Premium'} — "
-            f"{self.policy_number or self.name}"
+            f"{self.policy_number}"
         )
         payment = self.env['account.payment'].create({
             'payment_type': 'outbound',
@@ -605,14 +599,21 @@ class InsurancePolicy(models.Model):
 
     # ── Other computes ───────────────────────────────────────────────────────────────────
 
-    @api.depends('initial_sum_insured')
+    @api.depends('initial_sum_insured', 'currency_id')
     def _compute_sum_insured_words(self):
         for rec in self:
             try:
                 from num2words import num2words
+                if not rec.initial_sum_insured:
+                    rec.sum_insured_words = ''
+                    continue
+                currency_name = rec.currency_id.currency_unit_label or rec.currency_id.name or ''
+                # Use Indian-format words for INR, standard English for all other currencies
+                lang = 'en_IN' if rec.currency_id.name == 'INR' else 'en'
                 rec.sum_insured_words = (
-                    num2words(int(rec.initial_sum_insured), lang='en_IN').title() + ' Rupees Only'
-                ) if rec.initial_sum_insured else ''
+                    num2words(int(rec.initial_sum_insured), lang=lang).title()
+                    + (f' {currency_name} Only' if currency_name else ' Only')
+                )
             except Exception:
                 rec.sum_insured_words = ''
 
@@ -632,11 +633,6 @@ class InsurancePolicy(models.Model):
 
     @api.model_create_multi
     def create(self, vals_list):
-        for vals in vals_list:
-            if vals.get('name', 'New') == 'New':
-                vals['name'] = (
-                    self.env['ir.sequence'].next_by_code('insurance.policy') or 'New'
-                )
         return super().create(vals_list)
 
     # ── ORM overrides ─────────────────────────────────────────────────────────────────────
@@ -649,7 +645,7 @@ class InsurancePolicy(models.Model):
                 new_is_paid = vals.get('is_paid', rec.is_paid)
                 if not new_is_paid:
                     raise UserError(
-                        f"Policy '{rec.name}' cannot be set to Active until the "
+                        f"Policy '{rec.policy_number}' cannot be set to Active until the "
                         f"insurance premium is paid. Please complete the payment "
                         f"request and approval process first."
                     )
@@ -681,7 +677,7 @@ class InsurancePolicy(models.Model):
             pol.message_post(
                 body=(
                     f"<b>Insurance Policy Expiry Reminder</b><br/>"
-                    f"Policy <b>{pol.policy_number or pol.name}</b> "
+                    f"Policy <b>{pol.policy_number}</b> "
                     f"({pol.insurance_type_id.name}) is expiring on "
                     f"<b>{pol.expiry_date}</b> — "
                     f"<b>{days_left} day(s)</b> remaining. Please initiate renewal."
@@ -746,7 +742,7 @@ class InsurancePolicy(models.Model):
 
         body = (
             f"<b>\u26a0\ufe0f Insurance Tolerance Alert</b><br/>"
-            f"Policy <b>{self.policy_number or self.name}</b> "
+            f"Policy <b>{self.policy_number}</b> "
             f"({self.insurance_type_id.name}) has reached the configured tolerance level.<br/><br/>"
             f"<b>{field_label}:</b> \u20b9{remaining:,.2f}<br/>"
             f"<b>Tolerance threshold ({self.tolerance_percent:.1f}% of Sum Insured):</b> "
@@ -756,7 +752,7 @@ class InsurancePolicy(models.Model):
         )
         self.message_post(
             body=body,
-            subject=f"Insurance Tolerance Alert \u2014 {self.policy_number or self.name}",
+            subject=f"Insurance Tolerance Alert \u2014 {self.policy_number}",
             partner_ids=partner_ids,
             message_type='comment',
             subtype_xmlid='mail.mt_comment',
@@ -841,7 +837,7 @@ class InsurancePolicy(models.Model):
             if duplicate:
                 raise UserError(
                     f"Policy Number '{rec.policy_number}' is already used by policy "
-                    f"'{duplicate.name}'. Each policy must have a unique policy number."
+                    f"'{duplicate.policy_number}'. Each policy must have a unique policy number."
                 )
 
     @api.constrains('initial_sum_insured', 'premium')

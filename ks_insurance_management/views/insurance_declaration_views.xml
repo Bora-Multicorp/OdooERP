@@ -29,7 +29,7 @@
               <field name="marine_applicability" invisible="declaration_type != 'marine'"/>
               <field name="warehouse_id" invisible="declaration_type != 'fire_burglary'"/>
               <field name="avg_inventory_value" invisible="declaration_type != 'fire_burglary'"/>
-              <field name="declaration_amount"/>
+              <field name="declaration_amount" readonly="state != 'draft'"/>
               <field name="email_to"/>
             </group>
           </group>
