@@ -37,6 +37,7 @@
         'views/insurance_policy_views.xml',
         'views/insurance_declaration_views.xml',
         'views/insurance_policy_payment_views.xml',
+        'views/insurance_topup_views.xml',
         'views/insurance_menu.xml',
         'report/report_templates.xml',
         # 'data/test_demo_data.xml',      # TESTING ONLY — remove this line and delete the file when done

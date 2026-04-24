@@ -465,7 +465,7 @@ class InsurancePolicy(models.Model):
         return {
             'type': 'ir.actions.act_window',
             'name': 'Top Up Addon',
-            'res_model': 'insurance.policy.payment.wizard',
+            'res_model': 'insurance.topup.wizard',
             'view_mode': 'form',
             'target': 'new',
             'context': {'default_policy_id': self.id},

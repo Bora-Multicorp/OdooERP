@@ -122,15 +122,20 @@
               </field>
             </page>
             <page string="Top-up History">
-              <field name="payment_ids" readonly="1"
-                     domain="[('is_topup', '=', True)]">
-                <list>
+              <field name="topup_ids" readonly="1">
+                <list decoration-success="state == 'approved'"
+                      decoration-danger="state == 'rejected'"
+                      decoration-warning="state == 'pending'">
                   <field name="name"/>
                   <field name="amount" string="Top-up Amount"/>
-                  <field name="date" string="Date"/>
+                  <field name="new_sum_insured" string="Sum Insured After"/>
+                  <field name="approver_id"/>
+                  <field name="payment_date"/>
                   <field name="state" widget="badge"
-                         decoration-success="state == 'posted'"
-                         decoration-warning="state == 'draft'"/>
+                         decoration-success="state == 'approved'"
+                         decoration-danger="state == 'rejected'"
+                         decoration-warning="state == 'pending'"
+                         decoration-info="state == 'draft'"/>
                 </list>
               </field>
             </page>
