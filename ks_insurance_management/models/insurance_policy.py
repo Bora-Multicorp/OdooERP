@@ -15,6 +15,11 @@ class InsurancePolicy(models.Model):
     _inherit = ['mail.thread', 'mail.activity.mixin']
     _order = 'create_date desc'
 
+    _sql_constraints = [
+        ('policy_number_unique', 'UNIQUE(policy_number)',
+         'Policy Number must be unique. Another policy with this number already exists.'),
+    ]
+
     name = fields.Char(
         string='Reference',
         default='New',
@@ -232,6 +237,11 @@ class InsurancePolicy(models.Model):
         help='All premium payments linked to this policy. '
              'New top-up or renewal payments can be linked here.',
     )
+    # topup_ids = fields.One2many(
+    #     'insurance.topup',
+    #     'policy_id',
+    #     string='Top-up History',
+    # )
     total_premium_paid = fields.Float(
         string='Total Premium Paid',
         compute='_compute_total_premium',
@@ -818,3 +828,26 @@ class InsurancePolicy(models.Model):
         for rec in self:
             if rec.start_date and rec.expiry_date and rec.expiry_date < rec.start_date:
                 raise UserError("Expiry Date must be on or after Start Date.")
+
+    @api.constrains('policy_number')
+    def _check_policy_number_unique(self):
+        for rec in self:
+            if not rec.policy_number:
+                continue
+            duplicate = self.search([
+                ('policy_number', '=', rec.policy_number),
+                ('id', '!=', rec.id),
+            ], limit=1)
+            if duplicate:
+                raise UserError(
+                    f"Policy Number '{rec.policy_number}' is already used by policy "
+                    f"'{duplicate.name}'. Each policy must have a unique policy number."
+                )
+
+    @api.constrains('initial_sum_insured', 'premium')
+    def _check_sum_insured_and_premium(self):
+        for rec in self:
+            if rec.initial_sum_insured <= 0:
+                raise UserError("Sum Insured must be greater than zero.")
+            if rec.premium <= 0:
+                raise UserError("Premium must be greater than zero.")
