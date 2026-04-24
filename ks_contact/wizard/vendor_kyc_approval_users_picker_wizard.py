@@ -9,6 +9,8 @@ class POConfirmationApprovalUsersPicker(models.TransientModel):
     _description = 'vendor.kyc.approval users picker'
 
     kyc_id = fields.Many2one('res.partner.kyc.approval', string="Approval for Vendor Kyc Confirmation")
+    ks_is_update_mode = fields.Boolean(string='Is Update Mode', default=False)
+    ks_approval_info = fields.Html(compute='_compute_approval_info', readonly=True)
 
     approver1_user_ids = fields.Many2many(
         comodel_name='res.users',
@@ -42,6 +44,28 @@ class POConfirmationApprovalUsersPicker(models.TransientModel):
         string="Disable Add Button",
         compute='_compute_add_button_disabled'
     )
+
+    @api.depends('kyc_id', 'approver1_user', 'ks_is_update_mode')
+    def _compute_approval_info(self):
+        for wiz in self:
+            html = ''
+            if wiz.ks_is_update_mode and wiz.kyc_id:
+                approver1_line = wiz.kyc_id.approval_users_ids.filtered(
+                    lambda l: l.sequence == 1 and l.state == 'approve'
+                )[:1]
+                if approver1_line:
+                    html += (
+                        '<div class="alert alert-success" role="alert">'
+                        '<strong>&#10003; Approver 1 (%s) has already approved this request.</strong>'
+                        ' Keeping the same Approver 1 will preserve their approval.'
+                        '</div>'
+                    ) % approver1_line.user_id.name
+            html += (
+                '<div class="alert alert-info">'
+                '<p>KYC submission requires approval. Approval will be sequential (Approver 1 first, then Approver 2).</p>'
+                '</div>'
+            )
+            wiz.ks_approval_info = html
 
     @api.depends('kyc_id')
     def _compute_approver_user_ids(self):
@@ -88,6 +112,18 @@ class POConfirmationApprovalUsersPicker(models.TransientModel):
             raise ValidationError(_("Please select both Approver 1 and Approver 2."))
 
         is_update = self.env.context.get('ks_is_update', False)
+
+        # Check if PM1 unchanged and already approved
+        preserve_pm1 = False
+        pm1_action_date = None
+        if is_update and self.approver1_user:
+            existing_pm1 = self.kyc_id.approval_users_ids.filtered(
+                lambda l: l.sequence == 1 and l.state == 'approve'
+            )[:1]
+            if existing_pm1 and existing_pm1.user_id == self.approver1_user:
+                preserve_pm1 = True
+                pm1_action_date = existing_pm1.action_date
+
         if is_update:
             # Silently cancel old activities (scoped to KYC summary + current approver users)
             self.kyc_id._ks_cancel_pending_kyc_activities(mark_done=False)
@@ -98,11 +134,13 @@ class POConfirmationApprovalUsersPicker(models.TransientModel):
                 'state': 'draft',
                 'assigned_to': False,
             })
-            self.kyc_id.message_post(
-                body=_("Approval request updated by %s. Previous approvers cancelled.") % self.env.user.name,
-                message_type='notification',
-                subtype_xmlid='mail.mt_note',
+            msg = (
+                _('Approval request updated by %s. Approver 1 (%s) approval preserved; only Approver 2 updated.')
+                % (self.env.user.name, self.approver1_user.name)
+                if preserve_pm1
+                else _('Approval request updated by %s. Previous approvers cancelled.') % self.env.user.name
             )
+            self.kyc_id.message_post(body=msg, message_type='notification', subtype_xmlid='mail.mt_note')
 
         # Build new approval lines: Approver 1 → sequence 1, Approver 2 → sequence 2
         approval_vals = [
@@ -116,5 +154,21 @@ class POConfirmationApprovalUsersPicker(models.TransientModel):
             'state': 'pending',
             'kyc_approval_creator': self.env.user.id,
         })
-        # Create activity only for first approver (sequential approval)
-        self.kyc_id._schedule_sequential_approval_activities()
+
+        if preserve_pm1:
+            # Restore PM1 approval on the new line
+            new_pm1_line = self.kyc_id.approval_users_ids.filtered(
+                lambda l: l.sequence == 1 and l.user_id == self.approver1_user
+            )[:1]
+            if new_pm1_line:
+                new_pm1_line.write({'state': 'approve', 'action_date': pm1_action_date or fields.Datetime.now()})
+            # Remove PM1 activity (already approved) and schedule PM2 directly
+            self.env['mail.activity'].sudo().search([
+                ('res_model', '=', 'res.partner.kyc.approval'),
+                ('res_id', '=', self.kyc_id.id),
+                ('user_id', '=', self.approver1_user.id),
+            ]).unlink()
+            self.kyc_id._schedule_sequential_approval_activities()
+        else:
+            # Create activity only for first approver (sequential approval)
+            self.kyc_id._schedule_sequential_approval_activities()

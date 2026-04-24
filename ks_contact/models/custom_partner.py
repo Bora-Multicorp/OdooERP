@@ -1252,6 +1252,9 @@ class CustomContact(models.Model):
             'context': {
                 'default_partner_id': self.id,
                 'ks_is_update': True,
+                'default_ks_is_update_mode': True,
+                'default_approver1_user': self.approval_line_ids.filtered(lambda l: l.sequence == 1)[:1].user_id.id or False,
+                'default_approver2_user': self.approval_line_ids.filtered(lambda l: l.sequence == 2)[:1].user_id.id or False,
             },
         }
 

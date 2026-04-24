@@ -175,7 +175,7 @@ class PurchaseAdvancePayment(models.TransientModel):
         )
         if not product_tmpl:
             # Fallback: create product if data file was not loaded (e.g. noupdate skip)
-            product_tmpl = self.env['product.template'].create({
+            product_tmpl = self.env['product.template'].sudo().create({
                 'name': _('Advance Payment Deduction'),
                 'type': 'service',
                 'purchase_ok': True,
@@ -186,17 +186,19 @@ class PurchaseAdvancePayment(models.TransientModel):
                     'Reduces the total amount to be billed.'
                 ),
             })
-            self.env['ir.model.data'].create({
+            self.env['ir.model.data'].sudo().create({
                 'name': 'product_template_advance_deduction',
                 'module': 'ks_purchase_advance_payment',
                 'model': 'product.template',
                 'res_id': product_tmpl.id,
                 'noupdate': True,
             })
+        else:
+            product_tmpl = product_tmpl.sudo()
         product = product_tmpl.product_variant_ids[:1]
         if not product:
             # Template exists but has no variant (e.g. data loaded without create); create one.
-            product = self.env['product.product'].create({
+            product = self.env['product.product'].sudo().create({
                 'product_tmpl_id': product_tmpl.id,
             })
         return product
@@ -217,7 +219,7 @@ class PurchaseAdvancePayment(models.TransientModel):
             'product_id': product.id,
             'name': _('Advance payment made'),
             'product_qty': 1.0,
-            'product_uom': product.uom_id.id,
+            'product_uom': product.sudo().uom_id.id,
             'price_unit': -self.amount_in_order_currency,
             'taxes_id': [(5, 0, 0)],
             'date_planned': date_planned,
