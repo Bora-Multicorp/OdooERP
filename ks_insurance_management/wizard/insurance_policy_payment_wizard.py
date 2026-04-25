@@ -65,10 +65,10 @@ class InsurancePolicyPaymentWizard(models.TransientModel):
         # 3. Notify approver via activity on the policy
         policy._notify_approver(
             approver,
-            summary=f'Top-up Approval Required — {policy.name}',
+            summary=f'Top-up Approval Required — {policy.policy_number}',
             note=(
                 f'A top-up of <b>₹{self.topup_amount:,.2f}</b> has been applied to '
-                f'policy <b>{policy.name}</b>.<br/>'
+                f'policy <b>{policy.policy_number}</b>.<br/>'
                 f'New Sum Insured: <b>₹{policy.initial_sum_insured:,.2f}</b><br/>'
                 f'Requested by: <b>{self.env.user.name}</b><br/>'
                 f'Please approve the corresponding payment.'
