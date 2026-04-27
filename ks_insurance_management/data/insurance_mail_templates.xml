@@ -4,7 +4,7 @@
     <record id="email_template_declaration" model="mail.template">
         <field name="name">Insurance: Declaration Email</field>
         <field name="model_id" ref="ks_insurance_management.model_insurance_declaration"/>
-        <field name="subject">{{ object.company_id.name }} — Declaration Policy {{ object.policy_id.policy_number or object.policy_id.name }} ({{ object.date_from }} to {{ object.date_to }})</field>
+        <field name="subject">{{ object.company_id.name }} — Declaration Policy {{ object.policy_id.policy_number }} ({{ object.date_from }} to {{ object.date_to }})</field>
         <field name="email_from">{{ object.company_id.email_formatted or user.email_formatted }}</field>
         <field name="description">Used when sending an insurance declaration by email (e.g. from Draft Email on a declaration). Attaches the Declaration Letter PDF when available.</field>
         <field name="body_html" type="html">
@@ -14,7 +14,7 @@
     <br/><br/>
     Please find attached the insurance declaration for the period
     <strong><t t-out="object.date_from"/> to <t t-out="object.date_to"/></strong>
-    under Policy No. <strong><t t-out="object.policy_id.policy_number or object.policy_id.name or ''"/></strong>.
+    under Policy No. <strong><t t-out="object.policy_id.policy_number or ''"/></strong>.
     <br/><br/>
     <t t-if="object.declaration_type == 'marine'">
         Declaration type: <strong>Marine</strong> (sales value).

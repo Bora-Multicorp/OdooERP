@@ -382,6 +382,16 @@ class InsurancePolicy(models.Model):
             'is_insurance_payment': True,
             'is_topup': is_topup,
             'insurance_policy_id': self.id,
+            # Populate insurance details from the linked policy
+            'ins_company_id': self.company_id.id,
+            'ins_type_id': self.insurance_type_id.id,
+            'ins_policy_number': self.policy_number,
+            'ins_sum_insured': self.initial_sum_insured,
+            'ins_agent': self.agent_id.name if self.agent_id else False,
+            'ins_insurance_company_id': self.insurance_company_id.id,
+            'ins_expiry_date': self.expiry_date,
+            'ins_policy_type': self.policy_type,
+            'ins_floater_location_ids': [(6, 0, self.floater_location_ids.ids)],
         })
 
         self.write({'payment_status': 'approved'})
@@ -476,6 +486,15 @@ class InsurancePolicy(models.Model):
             'context': {
                 'default_insurance_policy_id': self.id,
                 'default_is_insurance_payment': True,
+                'default_ins_company_id': self.company_id.id,
+                'default_ins_type_id': self.insurance_type_id.id,
+                'default_ins_policy_number': self.policy_number,
+                'default_ins_sum_insured': self.initial_sum_insured,
+                'default_ins_agent': self.agent_id.name if self.agent_id else False,
+                'default_ins_insurance_company_id': self.insurance_company_id.id,
+                'default_ins_expiry_date': str(self.expiry_date) if self.expiry_date else False,
+                'default_ins_policy_type': self.policy_type,
+                'default_ins_floater_location_ids': self.floater_location_ids.ids,
             },
         }
 
@@ -554,7 +573,7 @@ class InsurancePolicy(models.Model):
             for move in picking.move_ids.filtered(lambda m: m.state == 'done'):
                 # Odoo 18: move.quantity is the done qty.
                 done_qty = getattr(move, 'quantity', None) or getattr(move, 'quantity_done', 0.0)
-                total_shipped += done_qty * move.product_id.lst_price
+                total_shipped += done_qty * move.product_id.standard_price
 
         return max(self.initial_sum_insured - total_shipped, 0.0)
 
@@ -593,7 +612,7 @@ class InsurancePolicy(models.Model):
                 continue
             quants = self.env['stock.quant'].sudo().search(
                 [('location_id', 'child_of', wh.lot_stock_id.id)])
-            total_inventory += sum(q.quantity * q.product_id.lst_price for q in quants)
+            total_inventory += sum(q.quantity * q.product_id.standard_price for q in quants)
 
         return max(self.initial_sum_insured - total_inventory, 0.0)
 

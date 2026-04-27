@@ -517,15 +517,17 @@ class PurchaseOrder(models.Model):
             
             # E-com imported POs bypass all approvals; no config = standard behavior
             if not order._requires_approval():
+                order._ks_update_products_latest_purchase_price()
                 return super().button_confirm()
-            
+
             config = order._get_approval_config()
             all_approvers = config.get_all_approvers()
             is_pm = self.env.user in all_approvers
-            
+
             if is_pm:
                 # PM users can directly confirm - call original method
                 if order._approval_allowed():
+                    order._ks_update_products_latest_purchase_price()
                     order.button_approve()
                 else:
                     order.write({'state': 'to approve'})
@@ -535,28 +537,30 @@ class PurchaseOrder(models.Model):
             else:
                 # Normal user - show popup before sending to Pending Approval
                 return order._action_open_approval_confirmation_wizard()
-        
+
         # Multiple records - process each
         for order in self:
             if order.state not in ['draft', 'sent']:
                 continue
-            
+
             # Validate analytic distribution
             order.order_line._validate_analytic_distribution()
             order._add_supplier_to_product()
-            
+
             # E-com imported POs bypass all approvals; no config = standard behavior
             if not order._requires_approval():
+                order._ks_update_products_latest_purchase_price()
                 order.button_confirm()
                 continue
-            
+
             config = order._get_approval_config()
             all_approvers = config.get_all_approvers()
             is_pm = self.env.user in all_approvers
-            
+
             if is_pm:
                 # PM users can directly confirm
                 if order._approval_allowed():
+                    order._ks_update_products_latest_purchase_price()
                     order.button_approve()
                 else:
                     order.write({'state': 'to approve'})
