@@ -707,7 +707,7 @@ class VendorKycWizard(models.TransientModel):
                     'gst_return_duration': self.gst_return_duration or '',
                     'pan_no': self.pan_no or '',
                     'comp_google_loc': self.comp_google_loc or '',
-                    'partner_llp': self.partner_llp or False,
+                    'partner_llp': self.partner_llp.decode() if isinstance(self.partner_llp, bytes) else (self.partner_llp or False),
                     'cin_no': self.cin_no or '',
                     'no_partner_director': self.no_partner_director or '',
                     'moa_aoa': sorted(self.moa_aoa.ids),
