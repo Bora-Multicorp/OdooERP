@@ -124,55 +124,48 @@ class CustomContact(models.Model):
                     _("The email address '%s' is already used by another contact.") % email
                 )
 
-    @api.constrains('l10n_in_pan')
-    def _check_pan_card_no_format(self):
-        """
-        Validate Indian PAN number format and enforce uniqueness.
-
-        PAN Format:
-            - 5 uppercase letters
-            - 4 digits
-            - 1 uppercase letter
-            Example: ABCDE1234F
-
-        Raises
-        ------
-        ValidationError:
-            If PAN format is invalid or duplicate PAN is found.
-        """
-        pan_regex = re.compile(r'^[A-Z]{5}[0-9]{4}[A-Z]$')
-
-        for rec in self:
-            pan = (rec.l10n_in_pan or "").upper()
-
-            # Skip empty PAN
-            if not pan:
-                continue
-
-            # Validate PAN format
-            if not pan_regex.match(pan):
-                raise ValidationError(
-                    _("Invalid PAN format: %s. Expected format: ABCDE1234F.") % rec.l10n_in_pan
-                )
-
-            # Validate uniqueness (case-insensitive)
-            duplicate = self.search([
-                ('l10n_in_pan', '=ilike', pan),
-                ('id', '!=', rec.id)
-            ], limit=1)
-
-            if duplicate:
-                raise ValidationError(
-                    _("PAN number '%s' is already assigned to another contact.") % rec.l10n_in_pan
-                )
-
-    # @api.constrains('is_customer', 'is_vendor')
-    # def _check_customer_vendor_exclusive(self):
+    # @api.constrains('l10n_in_pan')
+    # def _check_pan_card_no_format(self):
+    #     """
+    #     Validate Indian PAN number format and enforce uniqueness.
+    #
+    #     PAN Format:
+    #         - 5 uppercase letters
+    #         - 4 digits
+    #         - 1 uppercase letter
+    #         Example: ABCDE1234F
+    #
+    #     Raises
+    #     ------
+    #     ValidationError:
+    #         If PAN format is invalid or duplicate PAN is found.
+    #     """
+    #     pan_regex = re.compile(r'^[A-Z]{5}[0-9]{4}[A-Z]$')
+    #
     #     for rec in self:
-    #         if rec.is_customer and rec.is_vendor:
+    #         pan = (rec.l10n_in_pan or "").upper()
+    #
+    #         # Skip empty PAN
+    #         if not pan:
+    #             continue
+    #
+    #         # Validate PAN format
+    #         if not pan_regex.match(pan):
     #             raise ValidationError(
-    #                 "A partner cannot be both a Customer and a Vendor. Please uncheck one."
+    #                 _("Invalid PAN format: %s. Expected format: ABCDE1234F.") % rec.l10n_in_pan
     #             )
+    #
+    #         # Validate uniqueness (case-insensitive)
+    #         duplicate = self.search([
+    #             ('l10n_in_pan', '=ilike', pan),
+    #             ('id', '!=', rec.id)
+    #         ], limit=1)
+    #
+    #         if duplicate:
+    #             raise ValidationError(
+    #                 _("PAN number '%s' is already assigned to another contact.") % rec.l10n_in_pan
+    #             )
+
 
     @api.constrains('is_vendor', 'vendor_type')
     def _check_vendor_type_required(self):
@@ -187,10 +180,25 @@ class CustomContact(models.Model):
     def _check_gst_no_format(self):
         gst_pattern = re.compile(r'^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$')
         for rec in self:
-            if rec.vat and not gst_pattern.match(rec.vat.upper()):
+            if not rec.vat:
+                continue
+
+            gst = rec.vat.upper()
+
+            if not gst_pattern.match(gst):
                 raise ValidationError(_(
                     "Invalid GST Number: '%s'. It must follow the 15-character format (e.g., 27ABCDE1234F1Z5)."
                 ) % rec.vat)
+
+            duplicate = self.search([
+                ('vat', '=ilike', gst),
+                ('id', '!=', rec.id),
+            ], limit=1)
+
+            if duplicate:
+                raise ValidationError(
+                    _("GST number '%s' is already assigned to another contact.") % rec.vat
+                )
 
     @api.constrains('phone', 'mobile', 'country_id')
     def _check_phone_mobile_format(self):
