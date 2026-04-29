@@ -130,6 +130,8 @@
                 <attribute name="widget">upper_case</attribute>
             </field>
             <xpath expr="//field[@name='category_id']" position="after">
+                <field name="legal_name_of_business"/>
+                <field name="constitution_of_business"/>
                 <field name="is_vendor" readonly="is_kyc"/>
                 <field name="vendor_type" invisible="not is_vendor" required="is_vendor"/>
                 <field name="approval_status" invisible="not is_vendor" readonly="1"/>

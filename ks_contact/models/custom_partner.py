@@ -289,6 +289,19 @@ class CustomContact(models.Model):
                                           help='Contact Address Type', copy=False)
     tally_name = fields.Char(string="Tally Name", tracking=True)
     purpose = fields.Char(string="Purpose", tracking=True)
+    legal_name_of_business = fields.Char(string="Legal Name of Business", tracking=True)
+    constitution_of_business = fields.Selection(
+        [
+            ('Sole Proprietor', 'Sole Proprietor'),
+            ('Partnership', 'Partnership'),
+            ('Pvt Ltd Co.', 'Pvt Ltd Co.'),
+            ('LLP', 'LLP'),
+            ('HUF(Karta)', 'HUF(Karta)'),
+            ('Other', 'Other'),
+        ],
+        string='Constitution of Business',
+        tracking=True,
+    )
     # Customer/Vendor KYC Details
     is_vendor = fields.Boolean(string="Is Vendor?", tracking=True)
     vendor_type = fields.Selection(
