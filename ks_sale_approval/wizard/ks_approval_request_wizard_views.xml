@@ -13,6 +13,7 @@
                         <field name="ks_approver2_user_ids" invisible="1"/>
                         <field name="ks_approver1_filtered_ids" invisible="1"/>
                         <field name="ks_approver2_filtered_ids" invisible="1"/>
+                        <field name="ks_is_update_mode" invisible="1"/>
                         <field name="ks_approval_info" nolabel="1" readonly="1"/>
                     </group>
                     <group>

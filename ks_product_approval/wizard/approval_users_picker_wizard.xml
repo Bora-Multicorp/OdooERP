@@ -6,18 +6,16 @@
             <form string="Add Users to Approval">
                 <sheet>
                     <group>
-                        <div class="o_form_label o_text_warning" style="margin-bottom: 10px;">
-                            Product requires approval, an approval request will be generated for the selected
-                            authorities. Approver 2 cannot approve until Approver 1 has approved.
-                        </div>
                         <field name="product_id" invisible="1"/>
+                        <field name="ks_is_update_mode" invisible="1"/>
                         <field name="approver1_user_ids" invisible="1"/>
                         <field name="approver2_user_ids" invisible="1"/>
-                        <field name="approver1_user" 
+                        <field name="ks_approval_info" widget="html" readonly="1" nolabel="1"/>
+                        <field name="approver1_user"
                                domain="[('id', 'in', approver1_user_ids)]"
                                options="{'no_create': True, 'no_create_edit': True}"
                                placeholder="Select Approver 1"/>
-                        <field name="approver2_user" 
+                        <field name="approver2_user"
                                domain="[('id', 'in', approver2_user_ids)]"
                                options="{'no_create': True, 'no_create_edit': True}"
                                placeholder="Select Approver 2"/>

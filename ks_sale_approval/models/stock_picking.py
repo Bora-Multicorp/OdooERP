@@ -237,6 +237,9 @@ class StockPicking(models.Model):
             'context': {
                 'default_ks_picking_id': self.id,
                 'ks_is_update': is_update,
+                'default_ks_is_update_mode': is_update,
+                'default_ks_approver1_user': self.ks_validate_pm1_id.id or False if is_update else False,
+                'default_ks_approver2_user': self.ks_validate_pm2_id.id or False if is_update else False,
             },
         }
 
@@ -308,6 +311,11 @@ class StockPicking(models.Model):
             if not self._is_delivery_admin_user():
                 raise UserError(_('Only the original requester can update the approval request.'))
         return self._ks_open_delivery_approval_wizard(is_update=True)
+
+    def ks_action_request_delivery_approval(self):
+        """Re-open approval wizard when stuck in approval_pending with no PM1 (e.g. user closed modal with X)."""
+        self.ensure_one()
+        return self._ks_open_delivery_approval_wizard()
 
     # -------------------------------------------------------------------------
     # Approve / Reject buttons (open reason wizard)

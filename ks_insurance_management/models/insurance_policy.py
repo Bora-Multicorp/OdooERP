@@ -14,14 +14,13 @@ class InsurancePolicy(models.Model):
     _description = 'Insurance Policy'
     _inherit = ['mail.thread', 'mail.activity.mixin']
     _order = 'create_date desc'
+    _rec_name = 'policy_number'
 
-    name = fields.Char(
-        string='Reference',
-        default='New',
-        readonly=True,
-        copy=False,
-        help='Auto-generated unique reference number for this insurance policy (e.g. INS/2025/0001).',
-    )
+    _sql_constraints = [
+        ('policy_number_unique', 'UNIQUE(policy_number)',
+         'Policy Number must be unique. Another policy with this number already exists.'),
+    ]
+
     policy_number = fields.Char(
         string='Policy Number',
         tracking=True,
@@ -232,6 +231,11 @@ class InsurancePolicy(models.Model):
         help='All premium payments linked to this policy. '
              'New top-up or renewal payments can be linked here.',
     )
+    # topup_ids = fields.One2many(
+    #     'insurance.topup',
+    #     'policy_id',
+    #     string='Top-up History',
+    # )
     total_premium_paid = fields.Float(
         string='Total Premium Paid',
         compute='_compute_total_premium',
@@ -293,10 +297,10 @@ class InsurancePolicy(models.Model):
             payment.activity_schedule(
                 'mail.mail_activity_data_todo',
                 user_id=user.id,
-                summary=f'Insurance Payment to Post — {self.name}',
+                summary=f'Insurance Payment to Post — {self.policy_number}',
                 note=(
                     f'A draft insurance payment has been created for policy '
-                    f'<b>{self.name}</b> ({self.insurance_type_id.name}).<br/>'
+                    f'<b>{self.policy_number}</b> ({self.insurance_type_id.name}).<br/>'
                     f'Amount: <b>₹{payment.amount:,.2f}</b><br/>'
                     f'Please post this payment in the accounting system.'
                 ),
@@ -312,8 +316,8 @@ class InsurancePolicy(models.Model):
             self.activity_schedule(
                 'mail.mail_activity_data_todo',
                 user_id=user.id,
-                summary=f'Insurance Payment Completed — {self.name}',
-                note=f'Payment for policy <b>{self.name}</b> has been posted and confirmed.',
+                summary=f'Insurance Payment Completed — {self.policy_number}',
+                note=f'Payment for policy <b>{self.policy_number}</b> has been posted and confirmed.',
             )
 
     # ── Payment workflow actions ──────────────────────────────────────────────
@@ -365,7 +369,7 @@ class InsurancePolicy(models.Model):
 
         payment_label = (
             f"Insurance {'Top-up' if is_topup else 'Premium'} — "
-            f"{self.policy_number or self.name}"
+            f"{self.policy_number}"
         )
         payment = self.env['account.payment'].create({
             'payment_type': 'outbound',
@@ -378,6 +382,16 @@ class InsurancePolicy(models.Model):
             'is_insurance_payment': True,
             'is_topup': is_topup,
             'insurance_policy_id': self.id,
+            # Populate insurance details from the linked policy
+            'ins_company_id': self.company_id.id,
+            'ins_type_id': self.insurance_type_id.id,
+            'ins_policy_number': self.policy_number,
+            'ins_sum_insured': self.initial_sum_insured,
+            'ins_agent': self.agent_id.name if self.agent_id else False,
+            'ins_insurance_company_id': self.insurance_company_id.id,
+            'ins_expiry_date': self.expiry_date,
+            'ins_policy_type': self.policy_type,
+            'ins_floater_location_ids': [(6, 0, self.floater_location_ids.ids)],
         })
 
         self.write({'payment_status': 'approved'})
@@ -472,6 +486,15 @@ class InsurancePolicy(models.Model):
             'context': {
                 'default_insurance_policy_id': self.id,
                 'default_is_insurance_payment': True,
+                'default_ins_company_id': self.company_id.id,
+                'default_ins_type_id': self.insurance_type_id.id,
+                'default_ins_policy_number': self.policy_number,
+                'default_ins_sum_insured': self.initial_sum_insured,
+                'default_ins_agent': self.agent_id.name if self.agent_id else False,
+                'default_ins_insurance_company_id': self.insurance_company_id.id,
+                'default_ins_expiry_date': str(self.expiry_date) if self.expiry_date else False,
+                'default_ins_policy_type': self.policy_type,
+                'default_ins_floater_location_ids': self.floater_location_ids.ids,
             },
         }
 
@@ -550,7 +573,7 @@ class InsurancePolicy(models.Model):
             for move in picking.move_ids.filtered(lambda m: m.state == 'done'):
                 # Odoo 18: move.quantity is the done qty.
                 done_qty = getattr(move, 'quantity', None) or getattr(move, 'quantity_done', 0.0)
-                total_shipped += done_qty * move.product_id.lst_price
+                total_shipped += done_qty * move.product_id.standard_price
 
         return max(self.initial_sum_insured - total_shipped, 0.0)
 
@@ -589,20 +612,27 @@ class InsurancePolicy(models.Model):
                 continue
             quants = self.env['stock.quant'].sudo().search(
                 [('location_id', 'child_of', wh.lot_stock_id.id)])
-            total_inventory += sum(q.quantity * q.product_id.lst_price for q in quants)
+            total_inventory += sum(q.quantity * q.product_id.standard_price for q in quants)
 
         return max(self.initial_sum_insured - total_inventory, 0.0)
 
     # ── Other computes ───────────────────────────────────────────────────────────────────
 
-    @api.depends('initial_sum_insured')
+    @api.depends('initial_sum_insured', 'currency_id')
     def _compute_sum_insured_words(self):
         for rec in self:
             try:
                 from num2words import num2words
+                if not rec.initial_sum_insured:
+                    rec.sum_insured_words = ''
+                    continue
+                currency_name = rec.currency_id.currency_unit_label or rec.currency_id.name or ''
+                # Use Indian-format words for INR, standard English for all other currencies
+                lang = 'en_IN' if rec.currency_id.name == 'INR' else 'en'
                 rec.sum_insured_words = (
-                    num2words(int(rec.initial_sum_insured), lang='en_IN').title() + ' Rupees Only'
-                ) if rec.initial_sum_insured else ''
+                    num2words(int(rec.initial_sum_insured), lang=lang).title()
+                    + (f' {currency_name} Only' if currency_name else ' Only')
+                )
             except Exception:
                 rec.sum_insured_words = ''
 
@@ -622,11 +652,6 @@ class InsurancePolicy(models.Model):
 
     @api.model_create_multi
     def create(self, vals_list):
-        for vals in vals_list:
-            if vals.get('name', 'New') == 'New':
-                vals['name'] = (
-                    self.env['ir.sequence'].next_by_code('insurance.policy') or 'New'
-                )
         return super().create(vals_list)
 
     # ── ORM overrides ─────────────────────────────────────────────────────────────────────
@@ -639,7 +664,7 @@ class InsurancePolicy(models.Model):
                 new_is_paid = vals.get('is_paid', rec.is_paid)
                 if not new_is_paid:
                     raise UserError(
-                        f"Policy '{rec.name}' cannot be set to Active until the "
+                        f"Policy '{rec.policy_number}' cannot be set to Active until the "
                         f"insurance premium is paid. Please complete the payment "
                         f"request and approval process first."
                     )
@@ -671,7 +696,7 @@ class InsurancePolicy(models.Model):
             pol.message_post(
                 body=(
                     f"<b>Insurance Policy Expiry Reminder</b><br/>"
-                    f"Policy <b>{pol.policy_number or pol.name}</b> "
+                    f"Policy <b>{pol.policy_number}</b> "
                     f"({pol.insurance_type_id.name}) is expiring on "
                     f"<b>{pol.expiry_date}</b> — "
                     f"<b>{days_left} day(s)</b> remaining. Please initiate renewal."
@@ -736,7 +761,7 @@ class InsurancePolicy(models.Model):
 
         body = (
             f"<b>\u26a0\ufe0f Insurance Tolerance Alert</b><br/>"
-            f"Policy <b>{self.policy_number or self.name}</b> "
+            f"Policy <b>{self.policy_number}</b> "
             f"({self.insurance_type_id.name}) has reached the configured tolerance level.<br/><br/>"
             f"<b>{field_label}:</b> \u20b9{remaining:,.2f}<br/>"
             f"<b>Tolerance threshold ({self.tolerance_percent:.1f}% of Sum Insured):</b> "
@@ -746,7 +771,7 @@ class InsurancePolicy(models.Model):
         )
         self.message_post(
             body=body,
-            subject=f"Insurance Tolerance Alert \u2014 {self.policy_number or self.name}",
+            subject=f"Insurance Tolerance Alert \u2014 {self.policy_number}",
             partner_ids=partner_ids,
             message_type='comment',
             subtype_xmlid='mail.mt_comment',
@@ -818,3 +843,26 @@ class InsurancePolicy(models.Model):
         for rec in self:
             if rec.start_date and rec.expiry_date and rec.expiry_date < rec.start_date:
                 raise UserError("Expiry Date must be on or after Start Date.")
+
+    @api.constrains('policy_number')
+    def _check_policy_number_unique(self):
+        for rec in self:
+            if not rec.policy_number:
+                continue
+            duplicate = self.search([
+                ('policy_number', '=', rec.policy_number),
+                ('id', '!=', rec.id),
+            ], limit=1)
+            if duplicate:
+                raise UserError(
+                    f"Policy Number '{rec.policy_number}' is already used by policy "
+                    f"'{duplicate.policy_number}'. Each policy must have a unique policy number."
+                )
+
+    @api.constrains('initial_sum_insured', 'premium')
+    def _check_sum_insured_and_premium(self):
+        for rec in self:
+            if rec.initial_sum_insured <= 0:
+                raise UserError("Sum Insured must be greater than zero.")
+            if rec.premium <= 0:
+                raise UserError("Premium must be greater than zero.")

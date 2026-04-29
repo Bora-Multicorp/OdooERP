@@ -293,15 +293,15 @@
                     </t>
                 </td>
                 <td style="border:1px solid #000; padding:6px; vertical-align:top;" colspan="3">
-                    <t t-set="bank_info" t-value="doc.get_company_bank_info()"/>
+                    <t t-set="inv_bank" t-value="doc.ks_bank_id"/>
                     <strong>Company's Bank Details</strong><br/>
-                    1. Bank Name : <strong><t t-esc="(bank_info.get('bank_name') or '') if bank_info else ''"/></strong><br/>
-                    2. Account Number (A/c No.) : <strong><t t-esc="(bank_info.get('acc_number') or '') if bank_info else ''"/></strong><br/>
-                    3. IFSC Code : <strong><t t-esc="(bank_info.get('ifsc_code') or '') if bank_info else ''"/></strong><br/>
+                    1. Bank Name : <strong><t t-esc="inv_bank.name if inv_bank else ''"/></strong><br/>
+                    2. Account Number (A/c No.) : <strong><t t-esc="inv_bank.bic if inv_bank else ''"/></strong><br/>
+                    3. IFSC Code : <strong><t t-esc="inv_bank.ifsc_code if inv_bank else ''"/></strong><br/>
                     4. Branch &amp; SWIFT Code : <strong>
-                        <t t-esc="(bank_info.get('branch') or '') if bank_info else ''"/>
-                        <t t-if="bank_info and bank_info.get('branch') and bank_info.get('swift_code')"> / </t>
-                        <t t-esc="(bank_info.get('swift_code') or '') if bank_info else ''"/>
+                        <t t-esc="inv_bank.city if inv_bank else ''"/>
+                        <t t-if="inv_bank and inv_bank.city and (inv_bank.swift_code or inv_bank.bic)"> / </t>
+                        <t t-esc="(inv_bank.swift_code or inv_bank.bic) if inv_bank else ''"/>
                     </strong><br/>
                     <div style="border-top:1px solid #000; margin-top:20px;"/>
                     <div style="text-align:right; margin-top:10px;">

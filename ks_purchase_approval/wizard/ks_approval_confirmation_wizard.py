@@ -41,6 +41,12 @@ class KsApprovalConfirmationWizard(models.TransientModel):
         string='Available Approver 2 Users',
         compute='_compute_available_approvers',
     )
+    ks_is_update_mode = fields.Boolean(string='Is Update Mode', default=False)
+    ks_pm1_approved_status = fields.Html(
+        string='PM1 Approval Status',
+        compute='_compute_pm1_approved_status',
+        readonly=True,
+    )
 
     @api.depends('ks_purchase_order_id')
     def _compute_available_approvers(self):
@@ -66,6 +72,21 @@ class KsApprovalConfirmationWizard(models.TransientModel):
                 record.ks_is_two_way_approval = config.is_two_way_approval()
             else:
                 record.ks_is_two_way_approval = False
+
+    @api.depends('ks_purchase_order_id', 'ks_is_update_mode')
+    def _compute_pm1_approved_status(self):
+        for wizard in self:
+            order = wizard.ks_purchase_order_id
+            if wizard.ks_is_update_mode and order and order.ks_pm1_approved and order.ks_approver_1_id:
+                name = order.ks_approver_1_id.name
+                wizard.ks_pm1_approved_status = _(
+                    '<div class="alert alert-success" role="alert">'
+                    '<strong>&#10003; Approver 1 (%s) has already approved this request.</strong>'
+                    ' Keeping the same Approver 1 will preserve their approval.'
+                    '</div>'
+                ) % name
+            else:
+                wizard.ks_pm1_approved_status = False
 
     @api.constrains('ks_approver_1_id', 'ks_approver_2_id')
     def _check_approvers_different(self):
@@ -112,25 +133,59 @@ class KsApprovalConfirmationWizard(models.TransientModel):
 
         order = self.ks_purchase_order_id
         is_update = self.env.context.get('ks_is_update', False)
+
+        # If PM1 is unchanged and already approved, preserve their approval
+        preserve_pm1 = (
+            is_update
+            and order.ks_approver_1_id
+            and order.ks_approver_1_id == self.ks_approver_1_id
+            and order.ks_pm1_approved
+        )
+
         if is_update:
-            # Cancel old confirm-workflow activities (scoped: keyword + user)
+            # Cancel old confirm-workflow activities (PM1's activity is already done; only PM2's will be found)
             order._ks_cancel_workflow_activities('confirm', mark_done=False)
             # Reset fields and return to 'sent' so _ks_send_to_pending_approval guard passes
-            order.write({
+            write_vals = {
                 'state': 'sent',
                 'ks_approver_1_id': False,
                 'ks_approver_2_id': False,
-                'ks_pm1_approved': False,
                 'ks_pm2_approved': False,
-                'ks_pm1_reason': False,
                 'ks_pm2_reason': False,
-            })
-            order.message_post(
-                body=_("Approval request updated by %s. Previous approvers cancelled.") % self.env.user.name,
-                message_type='notification',
-                subtype_xmlid='mail.mt_note',
+            }
+            if not preserve_pm1:
+                write_vals['ks_pm1_approved'] = False
+                write_vals['ks_pm1_reason'] = False
+            order.write(write_vals)
+            msg = (
+                _("Approval request updated by %s. Approver 1 (%s) approval preserved; only Approver 2 updated.")
+                % (self.env.user.name, order.ks_approver_1_id.name)
+                if preserve_pm1
+                else _("Approval request updated by %s. Previous approvers cancelled.") % self.env.user.name
             )
+            order.message_post(body=msg, message_type='notification', subtype_xmlid='mail.mt_note')
 
         order._ks_send_to_pending_approval(self.ks_approver_1_id.id, approver_2_id)
+
+        if preserve_pm1:
+            # _ks_send_to_pending_approval reset pm1_approved — restore it
+            order.write({'ks_pm1_approved': True})
+            # Remove the fresh PM1 activity (PM1 already approved)
+            self.env['mail.activity'].sudo().search([
+                ('res_model', '=', order._name),
+                ('res_id', '=', order.id),
+                ('user_id', '=', order.ks_approver_1_id.id),
+                ('summary', 'ilike', 'PO Approval Request for'),
+            ]).unlink()
+            # Create PM2 activity now (mirrors what happens when PM1 approves)
+            if order.ks_approver_2_id:
+                order._create_approval_activity(
+                    user_id=order.ks_approver_2_id.id,
+                    summary=_('PO Approval Request for: %s - Approver 1 Approved') % order.name,
+                    note=_('Purchase Order %s has been approved by Approver 1 (%s). Please review and approve or reject. Reason: %s') % (
+                        order.name, order.ks_approver_1_id.name, order.ks_pm1_reason or '',
+                    ),
+                )
+
         return {'type': 'ir.actions.act_window_close'}
 

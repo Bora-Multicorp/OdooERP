@@ -308,6 +308,101 @@ class PurchaseOrder(models.Model):
             'tds_amount': abs(tds_amount),
         }
 
+    def get_purchase_gst_summary(self):
+        """Returns list of {'name': 'Input IGST @28%', 'amount': X} grouped by tax type."""
+        self.ensure_one()
+
+        def get_tax_type(tax):
+            if hasattr(tax, 'l10n_in_tax_type') and tax.l10n_in_tax_type:
+                return tax.l10n_in_tax_type
+            name = (tax.name or '').lower()
+            if 'igst' in name:
+                return 'igst'
+            elif 'cgst' in name:
+                return 'cgst'
+            elif 'sgst' in name or 'utgst' in name:
+                return 'sgst'
+            return None
+
+        type_labels = {'igst': 'IGST', 'cgst': 'CGST', 'sgst': 'SGST/UTGST'}
+        groups = {}  # key: (type, rate) -> {'name': ..., 'amount': ...}
+
+        for line in self.order_line.filtered(lambda l: l.display_type not in ('line_section', 'line_note')):
+            for tax in line.taxes_id:
+                if tax.amount_type == 'group':
+                    parent_type = get_tax_type(tax)
+                    if parent_type:
+                        total_rate = sum(c.amount for c in tax.children_tax_ids)
+                        key = (parent_type, total_rate)
+                        label = f"Input {type_labels.get(parent_type, parent_type.upper())} @{total_rate:.0f}%"
+                        amount = line.price_subtotal * total_rate / 100.0
+                        if key not in groups:
+                            groups[key] = {'name': label, 'amount': 0.0}
+                        groups[key]['amount'] += amount
+                    else:
+                        for child in tax.children_tax_ids:
+                            child_type = get_tax_type(child)
+                            if child_type:
+                                key = (child_type, child.amount)
+                                label = f"Input {type_labels.get(child_type, child_type.upper())} @{child.amount:.0f}%"
+                                amount = line.price_subtotal * child.amount / 100.0
+                                if key not in groups:
+                                    groups[key] = {'name': label, 'amount': 0.0}
+                                groups[key]['amount'] += amount
+                else:
+                    tax_type = get_tax_type(tax)
+                    if tax_type:
+                        key = (tax_type, tax.amount)
+                        label = f"Input {type_labels.get(tax_type, tax_type.upper())} @{tax.amount:.0f}%"
+                        amount = line.price_subtotal * tax.amount / 100.0
+                        if key not in groups:
+                            groups[key] = {'name': label, 'amount': 0.0}
+                        groups[key]['amount'] += amount
+
+        return list(groups.values())
+
+    def get_purchase_line_tax_info(self, line):
+        """Returns list of tax display strings for a purchase order line.
+        e.g. ['Input IGST @28%'] or ['Input CGST @14%', 'Input SGST @14%']
+        """
+        self.ensure_one()
+        result = []
+
+        def get_tax_type(tax):
+            if hasattr(tax, 'l10n_in_tax_type') and tax.l10n_in_tax_type:
+                return tax.l10n_in_tax_type
+            name = (tax.name or '').lower()
+            if 'igst' in name:
+                return 'igst'
+            elif 'cgst' in name:
+                return 'cgst'
+            elif 'sgst' in name or 'utgst' in name:
+                return 'sgst'
+            return None
+
+        type_labels = {'igst': 'IGST', 'cgst': 'CGST', 'sgst': 'SGST/UTGST'}
+
+        for tax in line.taxes_id:
+            if tax.amount_type == 'group':
+                parent_type = get_tax_type(tax)
+                if parent_type:
+                    total_rate = sum(c.amount for c in tax.children_tax_ids)
+                    label = type_labels.get(parent_type, parent_type.upper())
+                    result.append(f"Input {label} @{total_rate:.0f}%")
+                else:
+                    for child in tax.children_tax_ids:
+                        child_type = get_tax_type(child)
+                        if child_type:
+                            label = type_labels.get(child_type, child_type.upper())
+                            result.append(f"Input {label} @{child.amount:.0f}%")
+            else:
+                tax_type = get_tax_type(tax)
+                if tax_type:
+                    label = type_labels.get(tax_type, tax_type.upper())
+                    result.append(f"Input {label} @{tax.amount:.0f}%")
+
+        return result
+
     def get_line_hsn_code(self, line):
         """Get HSN/SAC code from purchase order line safely"""
         try:

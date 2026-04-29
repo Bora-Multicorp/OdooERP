@@ -120,7 +120,7 @@ class InsurancePolicyPayment(models.Model):
         self.write({'state': 'submitted'})
 
         label = 'Top-up' if self.payment_type == 'topup' else 'Payment'
-        policy_ref = self.policy_id.policy_number or self.policy_id.name
+        policy_ref = self.policy_id.policy_number
         note_lines = [
             f'{label} request <b>{self.name}</b> submitted by <b>{self.requested_by.name}</b> '
             f'requires your approval.<br/>',
@@ -220,7 +220,7 @@ class InsurancePolicyPayment(models.Model):
         if not self.journal_id:
             return False
         label = 'Top-up' if self.payment_type == 'topup' else 'Premium'
-        policy_ref = self.policy_id.policy_number or self.policy_id.name
+        policy_ref = self.policy_id.policy_number
         try:
             payment = self.env['account.payment'].create({
                 'payment_type': 'outbound',
@@ -276,7 +276,7 @@ class InsurancePolicyPayment(models.Model):
             users = self.env.ref('base.user_admin')
 
         label = 'Top-up' if self.payment_type == 'topup' else 'Premium'
-        policy_ref = self.policy_id.policy_number or self.policy_id.name
+        policy_ref = self.policy_id.policy_number
         pay_ref = payment.name or payment.ref or self.name
         note = (
             f'Insurance {label.lower()} request <b>{self.name}</b> has been approved.<br/>'
@@ -300,7 +300,7 @@ class InsurancePolicyPayment(models.Model):
         if not ins_group:
             return
         label = 'Top-up' if self.payment_type == 'topup' else 'Premium'
-        policy_ref = self.policy_id.policy_number or self.policy_id.name
+        policy_ref = self.policy_id.policy_number
         for user in ins_group.users.filtered(lambda u: u.id != self.requested_by.id):
             self.activity_schedule(
                 'mail.mail_activity_data_todo',

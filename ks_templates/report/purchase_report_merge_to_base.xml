@@ -8,9 +8,10 @@
         </xpath>
     </template>
 
-    <!-- 2) Apply custom paperformat to the base purchase report -->
+    <!-- 2) Apply custom paperformat + restrict to non-INR only -->
     <record id="purchase.action_report_purchase_order" model="ir.actions.report">
         <field name="paperformat_id" ref="ks_templates.paperformat_custom_purchase_order"/>
+        <field name="domain">[('currency_id.name', '!=', 'INR')]</field>
     </record>
 
     <!-- 3) Remove "Purchase / Order Custom" from Print menu -->

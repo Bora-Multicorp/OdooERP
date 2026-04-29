@@ -1,0 +1,437 @@
+<odoo>
+
+    <record id="paperformat_domestic_saleorder" model="report.paperformat">
+        <field name="name">Domestic Sale A4</field>
+        <field name="default" eval="False"/>
+        <field name="format">A4</field>
+        <field name="page_height">0</field>
+        <field name="page_width">0</field>
+        <field name="orientation">Portrait</field>
+        <field name="margin_top">10</field>
+        <field name="margin_bottom">10</field>
+        <field name="margin_left">10</field>
+        <field name="margin_right">10</field>
+        <field name="header_line" eval="False"/>
+        <field name="header_spacing">20</field>
+        <field name="dpi">90</field>
+        <field name="css_margins" eval="True"/>
+    </record>
+
+    <record id="action_report_saleorder_domestic" model="ir.actions.report">
+        <field name="name">Domestic Sales - Performa Invoice</field>
+        <field name="model">sale.order</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">ks_templates.report_saleorder_domestic</field>
+        <field name="report_file">ks_templates.report_saleorder_domestic</field>
+        <field name="print_report_name">'Domestic Performa - %s' % object.name</field>
+        <field name="binding_model_id" ref="sale.model_sale_order"/>
+        <field name="paperformat_id" ref="paperformat_domestic_saleorder"/>
+        <field name="binding_type">report</field>
+        <field name="domain">[('currency_id.name', '=', 'INR')]</field>
+    </record>
+
+    <template id="report_saleorder_domestic">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="doc">
+                <t t-set="doc" t-value="doc.with_context(lang=doc.partner_id.lang)"/>
+                <t t-set="gst_info"     t-value="doc.get_sale_gst_tax_info()"/>
+                <t t-set="consignee"    t-value="doc.partner_shipping_id or doc.partner_id"/>
+                <t t-set="total_qty"    t-value="sum(line.product_uom_qty for line in doc.order_line.filtered(lambda l: l.display_type not in ('line_section','line_note')))"/>
+                <t t-set="subtotal"     t-value="doc.amount_untaxed"/>
+                <t t-set="total_cgst"   t-value="gst_info['total_cgst']"/>
+                <t t-set="total_sgst"   t-value="gst_info['total_sgst']"/>
+                <t t-set="total_igst"   t-value="gst_info['total_igst']"/>
+                <t t-set="total_tax"    t-value="total_cgst + total_sgst + total_igst"/>
+                <t t-set="grand_total"  t-value="subtotal + total_tax"/>
+
+                <!-- TITLE -->
+                <div style="text-align:center; font-weight:bold; font-size:15px; font-family:Arial,sans-serif; margin-bottom:2px;">PROFORMA INVOICE</div>
+
+                <!-- MAIN BORDER TABLE -->
+                <table style="width:100%; border-collapse:collapse; border:1px solid #000; font-family:Arial,sans-serif; font-size:10px;">
+
+                    <!-- ROW 1: Company Info (LEFT) | Invoice No. + Dated (RIGHT) -->
+                    <tr>
+                        <td style="width:55%; border-right:1px solid #000; border-bottom:1px solid #000; padding:4px; vertical-align:top;">
+                            <strong><t t-esc="doc.company_id.name or ''"/></strong><br/>
+                            <t t-if="doc.company_id.partner_id.street"><t t-esc="doc.company_id.partner_id.street"/></t><t t-if="doc.company_id.partner_id.street2">, <t t-esc="doc.company_id.partner_id.street2"/></t><br/>
+                            <t t-if="doc.company_id.partner_id.city"><t t-esc="doc.company_id.partner_id.city"/></t><t t-if="doc.company_id.partner_id.state_id">, <t t-esc="doc.company_id.partner_id.state_id.name"/></t><t t-if="doc.company_id.partner_id.zip">, <t t-esc="doc.company_id.partner_id.zip"/></t><br/>
+                            <t t-if="doc.company_id.vat">GSTIN/UIN: <t t-esc="doc.company_id.vat"/><br/></t>
+                            <t t-if="doc.company_id.partner_id.state_id">State Name : <t t-esc="doc.company_id.partner_id.state_id.name"/><t t-if="doc.company_id.partner_id.state_id.code">, Code : <t t-esc="doc.company_id.partner_id.state_id.code"/></t><br/></t>
+                        </td>
+                        <td style="width:45%; vertical-align:top; padding:0;">
+                            <t t-set="inv" t-value="doc.invoice_ids.filtered(lambda i: i.state != 'cancel')[:1]"/>
+                            <table style="width:100%; border-collapse:collapse;">
+                                <tr>
+                                    <td style="border-right:1px solid #000; border-bottom:1px solid #000; padding:3px; width:50%;">
+                                        Invoice No.<br/>
+                                        <strong><t t-esc="inv.name if inv else ''"/></strong>
+                                    </td>
+                                    <td style="border-bottom:1px solid #000; padding:3px;">
+                                        Dated<br/>
+                                        <strong><t t-if="inv and inv.invoice_date" t-esc="inv.invoice_date.strftime('%d-%b-%y')"/></strong>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="border-right:1px solid #000; border-bottom:1px solid #000; padding:3px;">
+                                        Delivery Note<br/>
+                                        <strong><t t-esc="doc.ks_delivery_note or ''"/></strong>
+                                    </td>
+                                    <td style="border-bottom:1px solid #000; padding:3px;">
+                                        Mode/Terms of Payment<br/>
+                                        <strong><t t-esc="doc.payment_term_id.name or ''"/></strong>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="border-right:1px solid #000; border-bottom:1px solid #000; padding:3px;">
+                                        Reference No. &amp; Date.<br/>
+                                        <strong><t t-if="doc.name"><t t-esc="doc.name"/> dt. <t t-if="doc.date_order" t-esc="doc.date_order.strftime('%d-%b-%y')"/></t></strong>
+                                    </td>
+                                    <td style="border-bottom:1px solid #000; padding:3px;">
+                                        Other References<br/>
+                                        <strong><t t-esc="doc.ks_other_reference or ''"/></strong>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- ROW 2: Consignee (LEFT) | Buyer Order No + Dispatch (RIGHT) -->
+                    <tr>
+                        <td style="border-right:1px solid #000; border-bottom:1px solid #000; padding:4px; vertical-align:top;">
+                            Consignee (Ship to)<br/>
+                            <strong t-esc="consignee.name or ''"/><br/>
+                            <t t-if="consignee.street"><t t-esc="consignee.street"/></t><t t-if="consignee.street2">, <t t-esc="consignee.street2"/></t><br/>
+                            <t t-if="consignee.city"><t t-esc="consignee.city"/></t><t t-if="consignee.state_id">, <t t-esc="consignee.state_id.name"/></t><t t-if="consignee.zip">, <t t-esc="consignee.zip"/></t><br/>
+                            <t t-if="consignee.vat">GSTIN/UIN&#160;&#160;: <t t-esc="consignee.vat"/><br/></t>
+                            <t t-if="consignee.state_id">State Name&#160;: <t t-esc="consignee.state_id.name"/><t t-if="consignee.state_id.code">, Code : <t t-esc="consignee.state_id.code"/></t><br/></t>
+                        </td>
+                        <td style="vertical-align:top; padding:0;">
+                            <table style="width:100%; border-collapse:collapse;">
+                                <tr>
+                                    <td style="border-right:1px solid #000; border-bottom:1px solid #000; padding:3px; width:50%;">
+                                        Buyer's Order No.<br/>
+                                        &#160;
+                                    </td>
+                                    <td style="border-bottom:1px solid #000; padding:3px;">
+                                        Dated<br/>
+                                        <strong><t t-if="doc.date_order" t-esc="doc.date_order.strftime('%d-%b-%y')"/></strong>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="border-right:1px solid #000; border-bottom:1px solid #000; padding:3px;">
+                                        Dispatch Doc No.<br/>
+                                        &#160;
+                                    </td>
+                                    <td style="border-bottom:1px solid #000; padding:3px;">
+                                        Delivery Note Date<br/>
+                                        &#160;
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="border-right:1px solid #000; border-bottom:1px solid #000; padding:3px;">
+                                        Dispatched through<br/>
+                                        <strong><t t-esc="doc.ks_despatched_through or ''"/></strong>
+                                    </td>
+                                    <td style="border-bottom:1px solid #000; padding:3px;">
+                                        Destination<br/>
+                                        <strong><t t-esc="doc.ks_city_port_of_discharge or ''"/></strong>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- ROW 3: Buyer (LEFT) | Terms of Delivery (RIGHT) -->
+                    <tr>
+                        <td style="border-right:1px solid #000; border-bottom:1px solid #000; padding:4px; vertical-align:top;">
+                            Buyer (Bill to)<br/>
+                            <strong t-esc="doc.partner_id.name or ''"/><br/>
+                            <t t-if="doc.partner_id.street"><t t-esc="doc.partner_id.street"/></t><t t-if="doc.partner_id.street2">, <t t-esc="doc.partner_id.street2"/></t><br/>
+                            <t t-if="doc.partner_id.city"><t t-esc="doc.partner_id.city"/></t><t t-if="doc.partner_id.state_id">, <t t-esc="doc.partner_id.state_id.name"/></t><t t-if="doc.partner_id.zip">, <t t-esc="doc.partner_id.zip"/></t><br/>
+                            <t t-if="doc.partner_id.vat">GSTIN/UIN&#160;&#160;: <t t-esc="doc.partner_id.vat"/><br/></t>
+                            <t t-if="doc.partner_id.state_id">State Name&#160;: <t t-esc="doc.partner_id.state_id.name"/><t t-if="doc.partner_id.state_id.code">, Code : <t t-esc="doc.partner_id.state_id.code"/></t><br/></t>
+                        </td>
+                        <td style="vertical-align:top; padding:4px;">
+                            Terms of Delivery<br/>
+                            <t t-if="doc.incoterm">
+                                [<t t-esc="doc.incoterm.code or ''"/>] <t t-esc="doc.incoterm.name or ''"/>
+                                <t t-if="doc.incoterm_location">, <t t-esc="doc.incoterm_location"/></t>
+                            </t>
+                        </td>
+                    </tr>
+
+                    <!-- PRODUCT TABLE -->
+                    <tr>
+                        <td colspan="2" style="padding:0; border-bottom:1px solid #000;">
+                            <table style="width:100%; border-collapse:collapse; font-size:10px;">
+                                <thead>
+                                    <tr>
+                                        <th style="border:1px solid #000; padding:3px; text-align:center; width:4%;">Sl<br/>No.</th>
+                                        <th style="border:1px solid #000; padding:3px; text-align:center; width:28%;">Description of Goods</th>
+                                        <th style="border:1px solid #000; padding:3px; text-align:center; width:9%;">HSN/SAC</th>
+                                        <th style="border:1px solid #000; padding:3px; text-align:center; width:10%;">Quantity</th>
+                                        <th style="border:1px solid #000; padding:3px; text-align:center; width:12%;">Rate</th>
+                                        <th style="border:1px solid #000; padding:3px; text-align:center; width:6%;">per</th>
+                                        <th style="border:1px solid #000; padding:3px; text-align:center; width:7%;">Disc. %</th>
+                                        <th style="border:1px solid #000; padding:3px; text-align:right; width:14%;">Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-set="line_num" t-value="0"/>
+                                    <t t-foreach="doc.order_line.filtered(lambda l: l.display_type not in ('line_section','line_note'))" t-as="line">
+                                        <t t-set="line_num" t-value="line_num + 1"/>
+                                        <t t-set="ltr" t-value="doc.get_line_tax_rates(line)"/>
+                                        <t t-set="l_cgst_rate" t-value="ltr[0]"/>
+                                        <t t-set="l_sgst_rate" t-value="ltr[1]"/>
+                                        <t t-set="l_igst_rate" t-value="ltr[2]"/>
+                                        <t t-set="l_cgst_amt"  t-value="line.price_subtotal * l_cgst_rate / 100.0"/>
+                                        <t t-set="l_sgst_amt"  t-value="line.price_subtotal * l_sgst_rate / 100.0"/>
+                                        <t t-set="l_igst_amt"  t-value="line.price_subtotal * l_igst_rate / 100.0"/>
+                                        <!-- Product row -->
+                                        <tr>
+                                            <td style="border-left:1px solid #000; border-right:1px solid #000; padding:3px; text-align:center; vertical-align:top;" t-esc="line_num"/>
+                                            <td style="border-right:1px solid #000; padding:3px; vertical-align:top;">
+                                                <strong><t t-esc="line.product_id.name or line.name or ''"/></strong>
+                                                <!-- CGST sub-row -->
+                                                <t t-if="l_cgst_rate">
+                                                    <br/><br/>
+                                                    <em><strong>Output CGST @ <t t-esc="doc.format_number(l_cgst_rate, digits=0)"/>%</strong></em>
+                                                </t>
+                                                <!-- SGST sub-row -->
+                                                <t t-if="l_sgst_rate">
+                                                    <br/>
+                                                    <em><strong>Output SGST @ <t t-esc="doc.format_number(l_sgst_rate, digits=0)"/>%</strong></em>
+                                                </t>
+                                                <!-- IGST sub-row -->
+                                                <t t-if="l_igst_rate">
+                                                    <br/><br/>
+                                                    <em><strong>Output IGST @ <t t-esc="doc.format_number(l_igst_rate, digits=0)"/>%</strong></em>
+                                                </t>
+                                            </td>
+                                            <td style="border-right:1px solid #000; padding:3px; text-align:center; vertical-align:top;" t-esc="doc.get_line_hsn_code(line)"/>
+                                            <td style="border-right:1px solid #000; padding:3px; text-align:center; vertical-align:top;">
+                                                <t t-esc="doc.format_number(line.product_uom_qty, digits=0)"/> <t t-esc="line.product_uom.name or 'NOS'"/>
+                                            </td>
+                                            <td style="border-right:1px solid #000; padding:3px; text-align:right; vertical-align:top;">
+                                                <t t-esc="doc.format_number(line.price_unit, digits=2)"/>
+                                                <t t-if="l_cgst_rate"><br/><br/><em><strong><t t-esc="doc.format_number(l_cgst_rate, digits=0)"/></strong></em></t>
+                                                <t t-if="l_sgst_rate"><br/><em><strong><t t-esc="doc.format_number(l_sgst_rate, digits=0)"/></strong></em></t>
+                                                <t t-if="l_igst_rate"><br/><br/><em><strong><t t-esc="doc.format_number(l_igst_rate, digits=0)"/></strong></em></t>
+                                            </td>
+                                            <td style="border-right:1px solid #000; padding:3px; text-align:center; vertical-align:top;">
+                                                <t t-esc="line.product_uom.name or 'NOS'"/>
+                                                <t t-if="l_cgst_rate"><br/><br/><em><strong>%</strong></em></t>
+                                                <t t-if="l_sgst_rate"><br/><em><strong>%</strong></em></t>
+                                                <t t-if="l_igst_rate"><br/><br/><em><strong>%</strong></em></t>
+                                            </td>
+                                            <td style="border-right:1px solid #000; padding:3px; text-align:center; vertical-align:top;">
+                                                <t t-if="line.discount"><t t-esc="doc.format_number(line.discount, digits=2)"/></t>
+                                            </td>
+                                            <td style="border-right:1px solid #000; padding:3px; text-align:right; vertical-align:top;">
+                                                INR <t t-esc="doc.format_number(line.price_subtotal, digits=2)"/>
+                                                <t t-if="l_cgst_rate"><br/><br/><em><strong>INR <t t-esc="doc.format_number(l_cgst_amt, digits=2)"/></strong></em></t>
+                                                <t t-if="l_sgst_rate"><br/><em><strong>INR <t t-esc="doc.format_number(l_sgst_amt, digits=2)"/></strong></em></t>
+                                                <t t-if="l_igst_rate"><br/><br/><em><strong>INR <t t-esc="doc.format_number(l_igst_amt, digits=2)"/></strong></em></t>
+                                            </td>
+                                        </tr>
+                                    </t>
+                                    <!-- TOTAL ROW -->
+                                    <tr>
+                                        <td style="border:1px solid #000; padding:3px; text-align:right;" colspan="3"><strong>Total</strong></td>
+                                        <td style="border:1px solid #000; padding:3px; text-align:center;"><strong><t t-esc="doc.format_number(total_qty, digits=0)"/> NOS</strong></td>
+                                        <td style="border:1px solid #000; padding:3px;"></td>
+                                        <td style="border:1px solid #000; padding:3px;"></td>
+                                        <td style="border:1px solid #000; padding:3px;"></td>
+                                        <td style="border:1px solid #000; padding:3px; text-align:right;"><strong>INR <t t-esc="doc.format_number(grand_total, digits=2)"/></strong></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- AMOUNT IN WORDS -->
+                    <tr>
+                        <td colspan="2" style="border-bottom:1px solid #000; padding:4px;">
+                            Amount Chargeable (in words) <span style="float:right; font-style:italic;">E. &amp; O.E</span><br/>
+                            <strong><t t-esc="doc.get_amount_in_words_inr(grand_total)"/></strong>
+                        </td>
+                    </tr>
+
+                    <!-- TAX SUMMARY TABLE (HSN-wise) -->
+                    <tr>
+                        <td colspan="2" style="padding:0; border-bottom:1px solid #000;">
+                            <table style="width:100%; border-collapse:collapse; font-size:10px;">
+                                <thead>
+                                    <tr>
+                                        <th style="border:1px solid #000; padding:3px; text-align:center;" rowspan="2">HSN/SAC</th>
+                                        <th style="border:1px solid #000; padding:3px; text-align:center;" rowspan="2">Taxable<br/>Value</th>
+                                        <th style="border:1px solid #000; padding:3px; text-align:center;" colspan="2">CGST</th>
+                                        <th style="border:1px solid #000; padding:3px; text-align:center;" colspan="2">SGST/UTGST</th>
+                                        <th style="border:1px solid #000; padding:3px; text-align:center;" rowspan="2">Total<br/>Tax Amount</th>
+                                    </tr>
+                                    <tr>
+                                        <th style="border:1px solid #000; padding:3px; text-align:center;">Rate</th>
+                                        <th style="border:1px solid #000; padding:3px; text-align:center;">Amount</th>
+                                        <th style="border:1px solid #000; padding:3px; text-align:center;">Rate</th>
+                                        <th style="border:1px solid #000; padding:3px; text-align:center;">Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="gst_info['groups']" t-as="grp">
+                                        <tr>
+                                            <!-- Collect HSN codes for this group -->
+                                            <td style="border:1px solid #000; padding:3px; text-align:center;">
+                                                <t t-foreach="doc.order_line.filtered(lambda l: l.display_type not in ('line_section','line_note'))" t-as="ln">
+                                                    <t t-set="ltr2" t-value="doc.get_line_tax_rates(ln)"/>
+                                                    <t t-if="ltr2[0] == grp['cgst_rate'] and ltr2[1] == grp['sgst_rate'] and ltr2[2] == grp['igst_rate']">
+                                                        <t t-esc="doc.get_line_hsn_code(ln)"/><br/>
+                                                    </t>
+                                                </t>
+                                            </td>
+                                            <td style="border:1px solid #000; padding:3px; text-align:right;">INR <t t-esc="doc.format_number(grp['taxable_amount'], digits=2)"/></td>
+                                            <td style="border:1px solid #000; padding:3px; text-align:center;"><t t-esc="doc.format_number(grp['cgst_rate'], digits=0)"/>%</td>
+                                            <td style="border:1px solid #000; padding:3px; text-align:right;">INR <t t-esc="doc.format_number(grp['cgst_amount'], digits=2)"/></td>
+                                            <td style="border:1px solid #000; padding:3px; text-align:center;"><t t-esc="doc.format_number(grp['sgst_rate'] or grp['igst_rate'], digits=0)"/>%</td>
+                                            <td style="border:1px solid #000; padding:3px; text-align:right;">INR <t t-esc="doc.format_number(grp['sgst_amount'] + grp['igst_amount'], digits=2)"/></td>
+                                            <td style="border:1px solid #000; padding:3px; text-align:right;">INR <t t-esc="doc.format_number(grp['cgst_amount'] + grp['sgst_amount'] + grp['igst_amount'], digits=2)"/></td>
+                                        </tr>
+                                    </t>
+                                    <!-- Total row -->
+                                    <tr>
+                                        <td style="border:1px solid #000; padding:3px; text-align:right;"><strong>Total</strong></td>
+                                        <td style="border:1px solid #000; padding:3px; text-align:right;"><strong>INR <t t-esc="doc.format_number(subtotal, digits=2)"/></strong></td>
+                                        <td style="border:1px solid #000; padding:3px;"></td>
+                                        <td style="border:1px solid #000; padding:3px; text-align:right;"><strong>INR <t t-esc="doc.format_number(total_cgst, digits=2)"/></strong></td>
+                                        <td style="border:1px solid #000; padding:3px;"></td>
+                                        <td style="border:1px solid #000; padding:3px; text-align:right;"><strong>INR <t t-esc="doc.format_number(total_sgst + total_igst, digits=2)"/></strong></td>
+                                        <td style="border:1px solid #000; padding:3px; text-align:right;"><strong>INR <t t-esc="doc.format_number(total_tax, digits=2)"/></strong></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- TAX AMOUNT IN WORDS -->
+                    <tr>
+                        <td colspan="2" style="border-bottom:1px solid #000; padding:4px;">
+                            Tax Amount (in words) : <strong><t t-esc="doc.get_amount_in_words_inr(grand_total)"/></strong>
+                        </td>
+                    </tr>
+
+                    <!-- DECLARATION + SIGNATORY -->
+                    <tr>
+                        <td style="border-right:1px solid #000; padding:6px; vertical-align:top; width:55%;">
+                            <t t-if="doc.ks_remarks">
+                                <t t-esc="doc.ks_remarks"/><br/><br/>
+                            </t>
+                            <t t-if="doc.note">
+                                Declaration<br/>
+                                <span t-out="doc.note"/>
+                            </t>
+                            <t t-else="">
+                                Declaration
+                            </t>
+                        </td>
+                        <td style="padding:6px; vertical-align:top; text-align:right;">
+                            for <strong><t t-esc="doc.company_id.name or ''"/></strong>
+                            <br/><br/><br/>
+                            <t t-if="doc.ks_authorized_signature">
+                                <img t-att-src="image_data_uri(doc.ks_authorized_signature)"
+                                     style="max-height:60px; max-width:150px; display:block; margin:0 0 4px auto;"/>
+                            </t>
+                            Authorised Signatory
+                        </td>
+                    </tr>
+
+                    <!-- FOOTER -->
+                    <tr>
+                        <td colspan="2" style="border-top:1px solid #000; padding:4px; text-align:center; font-size:10px;">
+                            This is a Computer Generated Invoice
+                        </td>
+                    </tr>
+
+                </table>
+            </t>
+        </t>
+    </template>
+
+    <!-- Restore default Quotation/Order report -->
+    <record id="sale.action_report_saleorder" model="ir.actions.report">
+        <field name="binding_model_id" ref="sale.model_sale_order"/>
+    </record>
+
+    <!-- Proforma Invoice ₹ report action -->
+    <record id="action_report_saleorder_inr" model="ir.actions.report">
+        <field name="name">Proforma Invoice INR</field>
+        <field name="model">sale.order</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">ks_templates.report_saleorder_dubai_inr</field>
+        <field name="report_file">ks_templates.report_saleorder_dubai_inr</field>
+        <field name="print_report_name">'Proforma_Invoice_INR - %s' % object.name</field>
+        <field name="binding_model_id" ref="sale.model_sale_order"/>
+        <field name="domain">[('currency_id.name', '!=', 'INR')]</field>
+        <field name="binding_type">report</field>
+    </record>
+
+    <!-- Inherits Dubai template exactly, converts amounts to ₹ -->
+    <template id="report_saleorder_dubai_inr" inherit_id="ks_templates.report_saleorder_dubai" primary="True">
+
+        <!-- Step 1: Inject ₹ rate variables right after doc is set -->
+        <xpath expr="//t[@t-set='doc']" position="after">
+            <t t-set="inr_rate" t-value="inr_rates[doc.id]['rate']"/>
+            <t t-set="inr_cur"  t-value="inr_rates[doc.id]['currency']"/>
+        </xpath>
+
+        <!-- Step 2: Override total_usd to be ₹-converted amount -->
+        <xpath expr="//t[@t-set='total_usd']" position="replace">
+            <t t-set="total_usd" t-value="doc.amount_total * inr_rate"/>
+        </xpath>
+
+        <!-- Step 3: Replace Rate column (line.price_unit) td with INR value -->
+        <xpath expr="//td[strong/t[@t-esc='doc.format_number(line.price_unit, digits=2)']]" position="replace">
+            <td style="border:1px solid #000; padding:4px; text-align:right;">
+                <strong>
+                    INR
+                    <t t-esc="doc.format_number(line.price_unit * inr_rate, digits=2)"/>
+                </strong>
+            </td>
+        </xpath>
+
+        <!-- Step 4: Replace Amount column (line.price_subtotal) td with INR value -->
+        <xpath expr="//td[strong/t[@t-esc='doc.format_number(line.price_subtotal, digits=2)']]" position="replace">
+            <td style="border:1px solid #000; padding:4px; text-align:right;">
+                <strong>
+                    INR
+                    <t t-esc="doc.format_number(line.price_subtotal * inr_rate, digits=2)"/>
+                </strong>
+            </td>
+        </xpath>
+
+        <!-- Step 5: Replace Total row Amount td with INR value (total_usd is already INR) -->
+        <xpath expr="//td[strong/t[@t-esc='doc.format_number(total_usd, digits=2)']]" position="replace">
+            <td style="border:1px solid #000; padding:4px; text-align:right;">
+                <strong>
+                    INR
+                    <t t-esc="doc.format_number(total_usd, digits=2)"/>
+                </strong>
+            </td>
+        </xpath>
+
+        <!-- Step 6: Override Amount in Words to use ₹ -->
+        <xpath expr="//t[@t-set='invoice_amount_words']" position="replace">
+            <t t-set="invoice_amount_words" t-value="doc.get_amount_in_words_inr(total_usd)"/>
+        </xpath>
+
+        <!-- Step 7: Add exchange rate info in Amount in Words row -->
+        <xpath expr="//t[@t-set='invoice_amount_words']" position="before">
+            <t t-if="doc.currency_id != inr_cur">
+                <em style="font-size:9px; font-weight:normal;">
+                    Exchange Rate: 1 <t t-esc="doc.currency_id.name"/> = INR <t t-esc="doc.format_number(inr_rate, digits=4)"/>
+                </em><br/>
+            </t>
+        </xpath>
+
+    </template>
+
+</odoo>

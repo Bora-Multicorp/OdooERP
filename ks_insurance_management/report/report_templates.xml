@@ -339,13 +339,13 @@
           <div class="page">
             <div class="text-right mb-2"><strong>Date of declaration: </strong><t t-esc="o.date_to"/></div>
             <p><strong>Name of the Client:</strong> <t t-esc="o.company_id.name"/></p>
-            <p><strong>Policy No.:</strong> <t t-esc="o.policy_id.policy_number or o.policy_id.name"/></p>
+            <p><strong>Policy No.:</strong> <t t-esc="o.policy_id.policy_number"/></p>
             <p><strong>To,</strong><br/>
               <strong><t t-esc="o.policy_id.insurance_company_id.name or ''"/></strong>
             </p>
             <p><strong>Policy Period:</strong> <t t-esc="o.date_from"/> to <t t-esc="o.date_to"/></p>
             <p><strong>Subject: Declaration for Policy No.
-              <t t-esc="o.policy_id.policy_number or o.policy_id.name"/> —
+              <t t-esc="o.policy_id.policy_number"/> —
               Period <t t-esc="o.date_from"/> to <t t-esc="o.date_to"/>
             </strong></p>
             <t t-if="o.declaration_type == 'marine'">
@@ -384,7 +384,7 @@
                 for the period <strong><t t-esc="o.date_from"/></strong> to
                 <strong><t t-esc="o.date_to"/></strong> amounts to
                 <strong>&#8377; <t t-esc="'{:,.2f}'.format(o.declaration_amount)"/></strong>
-                under Policy No. <strong><t t-esc="o.policy_id.policy_number or o.policy_id.name"/></strong>.
+                under Policy No. <strong><t t-esc="o.policy_id.policy_number "/></strong>.
               </p>
             </t>
             <p>Kindly acknowledge receipt of this declaration.</p>

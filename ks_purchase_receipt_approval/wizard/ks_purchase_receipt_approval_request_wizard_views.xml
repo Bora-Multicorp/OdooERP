@@ -11,6 +11,7 @@
                 <field name="ks_approver1_filtered_ids" invisible="1"/>
                 <field name="ks_approver2_filtered_ids" invisible="1"/>
                 <field name="ks_show_approver2" invisible="1"/>
+                <field name="ks_is_update_mode" invisible="1"/>
                 <field name="ks_approval_info" widget="html" readonly="1" nolabel="1"/>
                 <group>
                     <field name="ks_approver1_user"

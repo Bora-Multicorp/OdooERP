@@ -344,6 +344,26 @@ class AccountMove(models.Model):
                 return sale_order
         return False
 
+    def get_invoice_inr_rate(self):
+        """Get INR conversion rate from linked sale order's rate field."""
+        self.ensure_one()
+        sale_order = self.get_sale_order_info()
+        if sale_order:
+            rate = getattr(sale_order, 'rate', 0.0) or getattr(sale_order, 'ks_exchange_rate', 0.0) or 0.0
+            if rate > 0:
+                return rate
+        # fallback to system rate
+        inr = self.env['res.currency'].search([('name', '=', 'INR')], limit=1)
+        if inr and self.currency_id and self.currency_id != inr:
+            try:
+                from odoo import fields as ofields
+                return self.env['res.currency']._get_conversion_rate(
+                    self.currency_id, inr, self.company_id, ofields.Date.today()
+                )
+            except Exception:
+                pass
+        return 1.0
+
     def get_company_pan(self):
         """Get company PAN number (Indian localization field)"""
         self.ensure_one()
@@ -380,79 +400,25 @@ class AccountMove(models.Model):
         return ''
 
     def get_company_bank_info(self):
-        """Get company bank information: prefer sale order ks_bank_id, else company partner bank."""
+        """Get bank info only from linked sale order's ks_bank_id. Returns empty if not set."""
         self.ensure_one()
-        bank_info = {
-            'ad_code': '',
-            'swift_code': '',
-            'branch': '',
-            'bank_name': '',
-            'acc_number': '',
-            'ifsc_code': '',
-            'city': '',
-        }
+        empty = {'ad_code': '', 'swift_code': '', 'branch': '', 'bank_name': '', 'acc_number': '', 'ifsc_code': '', 'city': ''}
         try:
-            # Prefer invoice's own ks_bank_id (set from sale order when invoice is created)
-            if getattr(self, 'ks_bank_id', None) and self.ks_bank_id:
-                bank = self.ks_bank_id
-                bank_info['bank_name'] = bank.name or ''
-                bank_info['acc_number'] = getattr(bank, 'bic', None) or ''
-                bank_info['swift_code'] = getattr(bank, 'swift_code', None) or getattr(bank, 'bic', None) or ''
-                bank_info['ad_code'] = getattr(bank, 'bank_ad_code', None) or ''
-                bank_info['ifsc_code'] = getattr(bank, 'ifsc_code', None) or ''
-                bank_info['branch'] = getattr(bank, 'branch', None) or getattr(bank, 'branch_sol_id', None) or ''
-                bank_info['city'] = getattr(bank, 'city', None) or ''
-                return bank_info
-            # Else prefer bank from linked sale order (ks_bank_id)
             sale_order = self.get_sale_order_info()
-            if sale_order and getattr(sale_order, 'ks_bank_id', None):
+            if sale_order and getattr(sale_order, 'ks_bank_id', None) and sale_order.ks_bank_id:
                 bank = sale_order.ks_bank_id
-                bank_info['bank_name'] = bank.name or ''
-                bank_info['acc_number'] = getattr(bank, 'bic', None) or ''  # Account Number in ks_sale_order
-                bank_info['swift_code'] = getattr(bank, 'swift_code', None) or getattr(bank, 'bic', None) or ''
-                bank_info['ad_code'] = getattr(bank, 'bank_ad_code', None) or ''
-                bank_info['ifsc_code'] = getattr(bank, 'ifsc_code', None) or ''
-                bank_info['branch'] = getattr(bank, 'branch', None) or getattr(bank, 'branch_sol_id', None) or ''
-                bank_info['city'] = getattr(bank, 'city', None) or ''
-                return bank_info
+                return {
+                    'bank_name': bank.name or '',
+                    'acc_number': getattr(bank, 'bic', None) or '',
+                    'swift_code': getattr(bank, 'swift_code', None) or getattr(bank, 'bic', None) or '',
+                    'ad_code': getattr(bank, 'bank_ad_code', None) or '',
+                    'ifsc_code': getattr(bank, 'ifsc_code', None) or '',
+                    'branch': getattr(bank, 'branch', None) or getattr(bank, 'branch_sol_id', None) or '',
+                    'city': getattr(bank, 'city', None) or '',
+                }
         except Exception:
             pass
-
-        try:
-            company_bank = self.company_id.partner_id.bank_ids[:1] if self.company_id.partner_id.bank_ids else False
-            if company_bank:
-                # Get AD Code (custom field, may not exist)
-                try:
-                    if hasattr(company_bank, 'ad_code') and company_bank.ad_code:
-                        bank_info['ad_code'] = company_bank.ad_code
-                except:
-                    pass
-                
-                # Get Branch (custom field, may not exist)
-                try:
-                    if hasattr(company_bank, 'branch') and company_bank.branch:
-                        bank_info['branch'] = company_bank.branch
-                except:
-                    pass
-                
-                # Get standard fields
-                if company_bank.bank_id:
-                    bank_info['bank_name'] = company_bank.bank_id.name or ''
-                    bank_info['swift_code'] = company_bank.bank_id.bic or ''
-                    bank_info['city'] = company_bank.bank_id.city or ''
-                    
-                    # Get IFSC Code (custom field, may not exist)
-                    try:
-                        if hasattr(company_bank.bank_id, 'ifsc_code') and company_bank.bank_id.ifsc_code:
-                            bank_info['ifsc_code'] = company_bank.bank_id.ifsc_code
-                    except:
-                        pass
-                
-                bank_info['acc_number'] = company_bank.acc_number or ''
-        except Exception:
-            pass
-        
-        return bank_info
+        return empty
 
     def get_company_iban(self):
         """Get company IBAN safely"""

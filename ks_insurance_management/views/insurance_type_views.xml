@@ -103,7 +103,7 @@
           <page string="Policies">
             <field name="policy_ids" readonly="1">
               <list>
-                <field name="name"/><field name="insurance_type_id"/>
+                <field name="policy_number"/><field name="insurance_type_id"/>
                 <field name="sum_insured"/><field name="expiry_date"/>
                 <field name="state" widget="badge"/>
               </list>
@@ -141,20 +141,21 @@
               invisible="not is_insurance_payment">
           <group>
             <group>
-              <field name="is_insurance_payment"/>
-              <field name="ins_company_id"/>
-              <field name="ins_type_id"/>
-              <field name="ins_policy_number"/>
-              <field name="ins_sum_insured"/>
+              <field name="is_insurance_payment" readonly="insurance_policy_id"/>
+              <field name="ins_company_id" readonly="insurance_policy_id"/>
+              <field name="ins_type_id" readonly="insurance_policy_id"/>
+              <field name="ins_policy_number" readonly="insurance_policy_id"/>
+              <field name="ins_sum_insured" readonly="insurance_policy_id"/>
               <field name="ins_sum_insured_words" readonly="1"/>
             </group>
             <group>
-              <field name="ins_agent"/>
-              <field name="ins_insurance_company_id"/>
-              <field name="ins_expiry_date"/>
-              <field name="ins_policy_type"/>
+              <field name="ins_agent" readonly="insurance_policy_id"/>
+              <field name="ins_insurance_company_id" readonly="insurance_policy_id"/>
+              <field name="ins_expiry_date" readonly="insurance_policy_id"/>
+              <field name="ins_policy_type" readonly="insurance_policy_id"/>
               <field name="ins_floater_location_ids" widget="many2many_tags"
-                     invisible="ins_policy_type != 'floater'"/>
+                     invisible="ins_policy_type != 'floater'"
+                     readonly="insurance_policy_id"/>
               <field name="insurance_policy_id" readonly="1"/>
             </group>
           </group>

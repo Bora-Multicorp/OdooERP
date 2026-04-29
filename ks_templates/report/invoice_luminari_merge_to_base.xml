@@ -12,9 +12,15 @@
     <record id="account.account_invoices_without_payment" model="ir.actions.report">
         <field name="name">Commercial Invoice</field>
         <field name="paperformat_id" ref="ks_templates.paperformat_luminari_saleorder"/>
+        <field name="domain">[('ks_zone', 'in', ['dubai', 'russia', 'sez'])]</field>
     </record>
 
     <!-- 4) Remove separate luminari action from Print menu -->
     <delete model="ir.actions.report" id="ks_templates.action_report_luminari_dubai"/>
+
+    <!-- 5) Hide Original Vendor Bill from Print menu -->
+    <record id="account.action_account_original_vendor_bill" model="ir.actions.report">
+        <field name="binding_model_id" eval="False"/>
+    </record>
 
 </odoo>

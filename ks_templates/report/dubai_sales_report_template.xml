@@ -482,41 +482,12 @@
                             </t>
                         </td>
                         <td style="border:1px solid #000; padding:6px; font-size:11px; vertical-align:top; width:45%;">
-                            <t t-set="company_bank" t-value="doc.company_id.partner_id.bank_ids[:1]"/>
-                            <t t-set="bank_info" t-value="doc.get_company_bank_info()"/>
-                            <t t-set="iban_number" t-value="doc.get_company_iban()"/>
-                            <t t-set="branch_val" t-value="(bank_info.get('branch') or '') if bank_info else ''"/>
-                            <t t-set="swift_val" t-value="''"/>
-                            <t t-if="company_bank and company_bank.journal_id and company_bank.journal_id.code">
-                                <t t-set="swift_val" t-value="company_bank.journal_id.code"/>
-                            </t>
-                            <t t-if="not swift_val and bank_info and bank_info.get('swift_code')">
-                                <t t-set="swift_val" t-value="bank_info.get('swift_code') or ''"/>
-                            </t>
-                            <t t-if="not swift_val and company_bank and company_bank.bank_id and company_bank.bank_id.bic">
-                                <t t-set="swift_val" t-value="company_bank.bank_id.bic or ''"/>
-                            </t>
-                            <t t-set="bank_name_display" t-value="''"/>
-                            <t t-set="acc_number_display" t-value="''"/>
-                            <t t-set="iban_display" t-value="iban_number or ''"/>
-                            <t t-if="doc.ks_bank_id and bank_info">
-                                <t t-set="bank_name_display" t-value="bank_info.get('bank_name') or ''"/>
-                                <t t-set="acc_number_display" t-value="bank_info.get('acc_number') or ''"/>
-                                <t t-set="iban_display" t-value="''"/>
-                            </t>
-                            <t t-elif="company_bank and company_bank.bank_id">
-                                <t t-set="bank_name_display" t-value="(company_bank.bank_id.name or '') + (company_bank.currency_id and (' - ' + company_bank.currency_id.name + ' A/C') or ' - AED A/C')"/>
-                                <t t-set="acc_number_display" t-value="company_bank.acc_number or ''"/>
-                            </t>
-                            <t t-elif="company_bank and company_bank.bank_name">
-                                <t t-set="bank_name_display" t-value="(company_bank.bank_name or '') + (company_bank.currency_id and (' - ' + company_bank.currency_id.name + ' A/C') or ' - AED A/C')"/>
-                                <t t-set="acc_number_display" t-value="company_bank.acc_number or ''"/>
-                            </t>
+                            <t t-set="inv_bank" t-value="doc.ks_bank_id"/>
                             <strong>Company's Bank Details</strong><br/>
-                            Bank Name&#160;&#160;&#160;&#160;&#160;&#160;&#160;: <t t-esc="bank_name_display or ''"/><br/>
-                            A/c No.&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;: <t t-esc="acc_number_display or ''"/><br/>
-                            Branch &amp; IFS Code: <t t-if="branch_val" t-esc="branch_val"/><t t-if="branch_val and swift_val"> &amp; </t><t t-if="swift_val" t-esc="swift_val"/><br/>
-                            SWIFT Code&#160;&#160;&#160;&#160;&#160;&#160;: <t t-if="bank_info" t-esc="bank_info.get('swift_code') or ''"/><br/>
+                            Bank Name: <t t-esc="inv_bank.name if inv_bank else ''"/><br/>
+                            A/c No.: <t t-esc="inv_bank.bic if inv_bank else ''"/><br/>
+                            Branch &amp; IFS Code: <t t-esc="inv_bank.city if inv_bank else ''"/><t t-if="inv_bank and inv_bank.ifsc_code"> (<t t-esc="inv_bank.ifsc_code"/>)</t><br/>
+                            SWIFT Code: <t t-esc="(inv_bank.swift_code or inv_bank.bic) if inv_bank else ''"/><br/>
                             <div style="border-top:1px solid #000; height:1px; margin-top:8px; margin-bottom:4px;"/>
                             <div style="text-align:right;">
                                 <t t-if="doc.company_id.name">for <strong><t t-esc="doc.company_id.name or ''"/></strong></t>
@@ -535,7 +506,7 @@
                     <!-- Footer Row -->
                     <tr>
                         <td style="border:1px solid #000; padding:6px; text-align:center; font-size:9pt;" colspan="2">
-                            <div style="margin-bottom: 5px;">SUBJECT TO <t t-esc="(doc.company_id.city or 'DUBAI').upper()"/>, <t t-esc="(doc.company_id.country_id.name or 'U.A.E.').upper()"/> JURISDICTION</div>
+                            <div style="margin-bottom: 5px;">SUBJECT TO11111 <t t-esc="(doc.company_id.city or 'DUBAI').upper()"/>, <t t-esc="(doc.company_id.country_id.name or 'U.A.E.').upper()"/> JURISDICTION</div>
                             <div>This is a Computer Generated Document</div>
                         </td>
                     </tr>

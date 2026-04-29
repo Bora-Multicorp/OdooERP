@@ -7,13 +7,11 @@
             <form string="Select Approval Users">
                 <sheet>
                     <group>
-                        <div class="o_form_label o_text_warning" style="margin-bottom: 10px;">
-                            Vendor approval requires Approver 1 and Approver 2.
-                            Approval will be sequential (Approver 1 first, then Approver 2).
-                        </div>
                         <field name="partner_id" invisible="1"/>
+                        <field name="ks_is_update_mode" invisible="1"/>
                         <field name="approver1_user_ids" invisible="1"/>
                         <field name="approver2_user_ids" invisible="1"/>
+                        <field name="ks_approval_info" widget="html" readonly="1" nolabel="1"/>
                         <field name="approver1_user" options="{'no_create': True}" required="1"/>
                         <field name="approver2_user" options="{'no_create': True}" required="1"/>
                     </group>

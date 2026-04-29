@@ -188,7 +188,13 @@ class ProductApproval(models.Model):
             'target': 'new',
             'view_mode': 'form',
             'view_id': view_id.id,
-            'context': {'default_product_id': self.id, 'ks_is_update': True},
+            'context': {
+                'default_product_id': self.id,
+                'ks_is_update': True,
+                'default_ks_is_update_mode': True,
+                'default_approver1_user': self.approval_users_ids.filtered(lambda l: l.approval_type == 'approver1')[:1].user_id.id or False,
+                'default_approver2_user': self.approval_users_ids.filtered(lambda l: l.approval_type == 'approver2')[:1].user_id.id or False,
+            },
         }
 
     def confirm_submit_form(self):
@@ -220,10 +226,10 @@ class ProductApproval(models.Model):
                 if not line.state:
                     # If this is Approver 2, check if Approver 1 has approved
                     if line.approval_type == 'approver2':
-                        approver1_line = rec.approval_users_ids.filtered(
-                            lambda l: l.approval_type == 'approver1' and l.state == False
+                        approver1_not_approved = rec.approval_users_ids.filtered(
+                            lambda l: l.approval_type == 'approver1' and l.state != 'approve'
                         )
-                        if approver1_line and approver1_line.state != 'approve':
+                        if approver1_not_approved:
                             # Approver 1 hasn't approved yet, so don't assign Approver 2
                             continue
                     next_user = line.user_id

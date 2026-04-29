@@ -48,6 +48,13 @@
             <!-- ============================================================ -->
             <xpath expr="(//button[@name='button_validate'])[1]" position="before">
 
+                <!-- Re-open wizard when state stuck in approval_pending with no PM1 (X was clicked) -->
+                <button name="ks_action_request_delivery_approval"
+                        string="Select Approvers"
+                        type="object"
+                        class="btn-primary"
+                        invisible="state != 'approval_pending' or ks_validate_pm1_id"/>
+
                 <!-- Normal User: Update Approvals while pending -->
                 <button name="action_update_delivery_approvals"
                         string="Update Approvals"

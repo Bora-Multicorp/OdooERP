@@ -66,6 +66,7 @@ class KsCancelApprovalRequestWizard(models.TransientModel):
         compute='_compute_show_approver2',
         help='True if two level approval mode is enabled',
     )
+    ks_is_update_mode = fields.Boolean(string='Is Update Mode', default=False)
 
     @api.depends('ks_purchase_order_id')
     def _compute_show_approver2(self):
@@ -124,30 +125,40 @@ class KsCancelApprovalRequestWizard(models.TransientModel):
             else:
                 wizard.ks_approver2_filtered_ids = False
 
-    @api.depends('ks_purchase_order_id', 'ks_approver1_user', 'ks_approver2_user')
+    @api.depends('ks_purchase_order_id', 'ks_approver1_user', 'ks_approver2_user', 'ks_is_update_mode')
     def _compute_approval_info(self):
         """Compute approval information message"""
         for wizard in self:
             if not wizard.ks_purchase_order_id:
                 wizard.ks_approval_info = ''
                 continue
-            
+
             order = wizard.ks_purchase_order_id
             if not order._has_approval_config():
                 wizard.ks_approval_info = _('<p>No approval configuration found.</p>')
                 continue
-            
+
             config = order._get_approval_config()
-            info_html = '<div class="alert alert-info">'
+            info_html = ''
+
+            if wizard.ks_is_update_mode and order.ks_cancel_pm1_approved and order.ks_cancel_pm1_id:
+                info_html += (
+                    '<div class="alert alert-success" role="alert">'
+                    '<strong>&#10003; Approver 1 (%s) has already approved this request.</strong>'
+                    ' Keeping the same Approver 1 will preserve their approval.'
+                    '</div>'
+                ) % order.ks_cancel_pm1_id.name
+
+            info_html += '<div class="alert alert-info">'
             info_html += '<h5><strong>Cancellation Request</strong></h5>'
             info_html += '<p>You are about to send a cancellation request for this Purchase Order.</p>'
-            
+
             if config.is_two_way_approval():
                 info_html += '<p><strong>Note:</strong> Both Approver 1 and Approver 2 approval is required. '
                 info_html += 'Approver 2 cannot approve until Approver 1 has approved.</p>'
             else:
                 info_html += '<p><strong>Note:</strong> Approver 1 approval is required.</p>'
-            
+
             info_html += '</div>'
             wizard.ks_approval_info = info_html
 
@@ -184,20 +195,51 @@ class KsCancelApprovalRequestWizard(models.TransientModel):
             raise UserError(_("Please select Approver 2 (required for two level approval mode)."))
 
         is_update = self.env.context.get('ks_is_update', False)
+
+        # If PM1 is unchanged and already approved, preserve their approval
+        preserve_pm1 = (
+            is_update
+            and order.ks_cancel_pm1_id
+            and order.ks_cancel_pm1_id == self.ks_approver1_user
+            and order.ks_cancel_pm1_approved
+        )
+
         if is_update:
-            order._ks_cancel_workflow_activities('cancel', mark_done=False)
-            order.write({
-                'state': 'purchase',
-                'ks_cancel_pm1_id': False,
-                'ks_cancel_pm2_id': False,
-                'ks_cancel_pm1_approved': False,
-                'ks_cancel_pm2_approved': False,
-            })
-            order.message_post(
-                body=_("Cancel approval request updated by %s. Previous approvers cancelled.") % self.env.user.name,
-                message_type='notification',
-                subtype_xmlid='mail.mt_note',
-            )
+            if preserve_pm1:
+                # Only cancel PM2's pending activity; PM1 already approved
+                if order.ks_cancel_pm2_id:
+                    self.env['mail.activity'].sudo().search([
+                        ('res_model', '=', order._name),
+                        ('res_id', '=', order.id),
+                        ('user_id', '=', order.ks_cancel_pm2_id.id),
+                        ('summary', 'ilike', 'Cancel PO'),
+                    ]).unlink()
+                # Update PM2 without resetting PM1 approval or state
+                order.write({
+                    'ks_cancel_pm2_id': self.ks_approver2_user.id if self.ks_approver2_user else False,
+                    'ks_cancel_pm2_approved': False,
+                })
+                order.message_post(
+                    body=_("Cancel approval request updated by %s. Approver 1 (%s) approval preserved; only Approver 2 updated.")
+                    % (self.env.user.name, order.ks_cancel_pm1_id.name),
+                    message_type='notification',
+                    subtype_xmlid='mail.mt_note',
+                )
+                return {'type': 'ir.actions.act_window_close'}
+            else:
+                order._ks_cancel_workflow_activities('cancel', mark_done=False)
+                order.write({
+                    'state': 'purchase',
+                    'ks_cancel_pm1_id': False,
+                    'ks_cancel_pm2_id': False,
+                    'ks_cancel_pm1_approved': False,
+                    'ks_cancel_pm2_approved': False,
+                })
+                order.message_post(
+                    body=_("Cancel approval request updated by %s. Previous approvers cancelled.") % self.env.user.name,
+                    message_type='notification',
+                    subtype_xmlid='mail.mt_note',
+                )
 
         # Store new approvers on the purchase order
         order.write({

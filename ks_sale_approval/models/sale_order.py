@@ -551,6 +551,9 @@ class SaleOrder(models.Model):
                 'default_ks_sale_order_id': self.id,
                 'ks_approval_mode': config.ks_approval_mode if config else 'single',
                 'ks_is_update': True,
+                'default_ks_is_update_mode': True,
+                'default_ks_approver1_user': self.ks_confirm_pm1_id.id or False,
+                'default_ks_approver2_user': self.ks_confirm_pm2_id.id or False,
             },
         }
 
@@ -574,6 +577,9 @@ class SaleOrder(models.Model):
                 'default_ks_sale_order_id': self.id,
                 'ks_approval_mode': config.ks_approval_mode if config else 'single',
                 'ks_is_update': True,
+                'default_ks_is_update_mode': True,
+                'default_ks_approver1_user': self.ks_cancel_pm1_id.id or False,
+                'default_ks_approver2_user': self.ks_cancel_pm2_id.id or False,
             },
         }
 
@@ -597,6 +603,9 @@ class SaleOrder(models.Model):
                 'default_ks_sale_order_id': self.id,
                 'ks_approval_mode': config.ks_approval_mode if config else 'single',
                 'ks_is_update': True,
+                'default_ks_is_update_mode': True,
+                'default_ks_approver1_user': self.ks_edit_pm1_id.id or False,
+                'default_ks_approver2_user': self.ks_edit_pm2_id.id or False,
             },
         }
 

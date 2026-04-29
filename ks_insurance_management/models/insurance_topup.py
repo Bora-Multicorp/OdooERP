@@ -138,7 +138,7 @@ class InsuranceTopup(models.Model):
             note=(
                 f'Top-up request <b>{self.name}</b> submitted by '
                 f'<b>{self.env.user.name}</b> requires your approval.<br/>'
-                f'Policy: <b>{self.policy_id.policy_number or self.policy_id.name}</b><br/>'
+                f'Policy: <b>{self.policy_id.policy_number}</b><br/>'
                 f'Top-up Amount: <b>\u20b9{self.amount:,.2f}</b><br/>'
                 f'New Sum Insured: <b>\u20b9{self.new_sum_insured:,.2f}</b>'
             ),
@@ -268,7 +268,7 @@ class InsuranceTopup(models.Model):
                 'journal_id': self.journal_id.id,
                 'ref': (
                     f'Top-up {self.name} — '
-                    f'Policy {self.policy_id.policy_number or self.policy_id.name}'
+                    f'Policy {self.policy_id.policy_number}'
                 ),
                 'company_id': self.policy_id.company_id.id,
                 'currency_id': self.policy_id.currency_id.id,
@@ -290,7 +290,7 @@ class InsuranceTopup(models.Model):
         pay_ref = payment.name or payment.ref or self.name
         note = (
             f'Top-up request <b>{self.name}</b> has been approved.<br/>'
-            f'Policy: <b>{self.policy_id.policy_number or self.policy_id.name}</b><br/>'
+            f'Policy: <b>{self.policy_id.policy_number}</b><br/>'
             f'Please post the following draft payment and then notify the requestor:<br/>'
             f'• {pay_ref} (\u20b9{self.amount:,.2f})'
         )

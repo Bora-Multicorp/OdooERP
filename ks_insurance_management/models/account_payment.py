@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from odoo import api, fields, models
+from odoo.exceptions import UserError
 
 
 class AccountPayment(models.Model):
@@ -59,6 +60,18 @@ class AccountPayment(models.Model):
                 ) if rec.ins_sum_insured else ''
             except Exception:
                 rec.ins_sum_insured_words = ''
+
+    # ── Validation for insurance payments ────────────────────────────────────
+
+    @api.constrains('is_insurance_payment', 'partner_id', 'amount')
+    def _check_insurance_payment_fields(self):
+        for rec in self:
+            if not rec.is_insurance_payment:
+                continue
+            # if not rec.partner_id:
+            #     raise UserError("Customer is required for insurance payments.")
+            if rec.amount <= 0:
+                raise UserError("Amount must be greater than zero for insurance payments.")
 
     # ── Override action_post to update policy on payment confirmation ─────────
 

@@ -78,8 +78,8 @@ class AccountMove(models.Model):
                 'Please link a confirmed PO to this bill first.'
             ))
 
-        if len(pos) == 1:
-            return pos.action_create_payment_approval_request_bill()
+        # if len(pos) == 1:
+        #     return pos.action_create_payment_approval_request_bill()
 
         # Multiple POs: create/open requests for all of them
         created_or_existing = self.env['vendor.payment.approval.request']

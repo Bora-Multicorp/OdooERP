@@ -8,6 +8,8 @@ class ApprovalUsersPicker(models.TransientModel):
     _description = 'Product approval users picker'
 
     product_id = fields.Many2one('product.template', string="Approval for Product Confirmation")
+    ks_is_update_mode = fields.Boolean(string='Is Update Mode', default=False)
+    ks_approval_info = fields.Html(compute='_compute_approval_info', readonly=True)
     approver1_user_ids = fields.Many2many(
         comodel_name='res.users',
         compute='compute_approver_user_ids',
@@ -38,6 +40,28 @@ class ApprovalUsersPicker(models.TransientModel):
         string="Disable Add Button",
         compute='_compute_add_button_disabled'
     )
+
+    @api.depends('product_id', 'approver1_user', 'ks_is_update_mode')
+    def _compute_approval_info(self):
+        for wiz in self:
+            html = ''
+            if wiz.ks_is_update_mode and wiz.product_id:
+                approver1_line = wiz.product_id.approval_users_ids.filtered(
+                    lambda l: l.approval_type == 'approver1' and l.state == 'approve'
+                )[:1]
+                if approver1_line:
+                    html += (
+                        '<div class="alert alert-success" role="alert">'
+                        '<strong>&#10003; Approver 1 (%s) has already approved this request.</strong>'
+                        ' Keeping the same Approver 1 will preserve their approval.'
+                        '</div>'
+                    ) % approver1_line.user_id.name
+            html += (
+                '<div class="alert alert-info">'
+                '<p>Product requires approval. Approver 2 cannot approve until Approver 1 has approved.</p>'
+                '</div>'
+            )
+            wiz.ks_approval_info = html
 
     @api.depends('product_id')
     def compute_approver_user_ids(self):
@@ -108,19 +132,49 @@ class ApprovalUsersPicker(models.TransientModel):
             })
 
         is_update = self.env.context.get('ks_is_update', False)
+
+        # Check if PM1 is unchanged and already approved
+        preserve_pm1 = False
+        preserved_pm1_line = None
+        if is_update and self.approver1_user:
+            existing_pm1_line = self.product_id.approval_users_ids.filtered(
+                lambda l: l.approval_type == 'approver1' and l.state == 'approve'
+            )[:1]
+            if existing_pm1_line and existing_pm1_line.user_id == self.approver1_user:
+                preserve_pm1 = True
+                preserved_pm1_line = existing_pm1_line
+
         if is_update and approvers:
             # Cancel old pending activities ONLY when user clicks OK (not on wizard Cancel)
             self.product_id._ks_cancel_pending_product_approval_activities()
             # Clear existing approval lines so assign_users starts fresh
             self.product_id.write({'approval_users_ids': [(5, 0, 0)], 'assigned_to': False})
-            self.product_id.message_post(
-                body=_("Approval request updated by %s. Previous approvers cancelled.") % self.env.user.name,
-                message_type='notification',
-                subtype_xmlid='mail.mt_note',
+            msg = (
+                _('Approval request updated by %s. Approver 1 (%s) approval preserved; only Approver 2 updated.')
+                % (self.env.user.name, self.approver1_user.name)
+                if preserve_pm1
+                else _('Approval request updated by %s. Previous approvers cancelled.') % self.env.user.name
             )
+            self.product_id.message_post(body=msg, message_type='notification', subtype_xmlid='mail.mt_note')
 
         if approvers:
             self.product_id.assign_users(approvers)
+
+        if preserve_pm1:
+            # Restore PM1 approval on the new line
+            new_pm1_line = self.product_id.approval_users_ids.filtered(
+                lambda l: l.approval_type == 'approver1' and l.user_id == self.approver1_user
+            )[:1]
+            if new_pm1_line:
+                new_pm1_line.write({'state': 'approve', 'action_date': preserved_pm1_line.action_date if preserved_pm1_line else fields.Datetime.now()})
+            # Remove PM1's pending activity (already approved)
+            self.env['mail.activity'].sudo().search([
+                ('res_model', '=', 'product.template'),
+                ('res_id', '=', self.product_id.id),
+                ('user_id', '=', self.approver1_user.id),
+            ]).unlink()
+            # Trigger next approver assignment (PM2)
+            self.product_id._update_assigned_to()
 
     # @api.model
     # def default_get(self, fields):
