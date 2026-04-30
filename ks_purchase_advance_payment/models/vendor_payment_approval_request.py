@@ -188,6 +188,8 @@ class VendorPaymentApprovalRequest(models.Model):
         self.ensure_one()
         if self.state != 'draft':
             raise UserError(_('Only draft requests can be submitted.'))
+        if self.amount_for_approval <= 0:
+            raise UserError(_('Amount for Approval should be greater than 0.'))
         return {
             'name': _('Send for Approval'),
             'type': 'ir.actions.act_window',
