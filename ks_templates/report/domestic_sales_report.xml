@@ -36,7 +36,7 @@
                 <t t-set="doc" t-value="doc.with_context(lang=doc.partner_id.lang)"/>
                 <t t-set="gst_info"     t-value="doc.get_sale_gst_tax_info()"/>
                 <t t-set="consignee"    t-value="doc.partner_shipping_id or doc.partner_id"/>
-                <t t-set="total_qty"    t-value="sum(line.product_uom_qty for line in doc.order_line.filtered(lambda l: l.display_type not in ('line_section','line_note')))"/>
+                <t t-set="total_qty"    t-value="sum(line.product_uom_qty for line in doc.get_printable_order_lines())"/>
                 <t t-set="subtotal"     t-value="doc.amount_untaxed"/>
                 <t t-set="total_cgst"   t-value="gst_info['total_cgst']"/>
                 <t t-set="total_sgst"   t-value="gst_info['total_sgst']"/>
@@ -111,7 +111,7 @@
                                 <tr>
                                     <td style="border-right:1px solid #000; border-bottom:1px solid #000; padding:3px; width:50%;">
                                         Buyer's Order No.<br/>
-                                        &#160;
+                                        <strong><t t-esc="doc.ks_buyer_order_no or ''"/></strong>
                                     </td>
                                     <td style="border-bottom:1px solid #000; padding:3px;">
                                         Dated<br/>
@@ -121,11 +121,11 @@
                                 <tr>
                                     <td style="border-right:1px solid #000; border-bottom:1px solid #000; padding:3px;">
                                         Dispatch Doc No.<br/>
-                                        &#160;
+                                        <strong><t t-esc="doc.ks_despatch_document_no or ''"/></strong>
                                     </td>
                                     <td style="border-bottom:1px solid #000; padding:3px;">
                                         Delivery Note Date<br/>
-                                        &#160;
+                                        <strong><t t-if="doc.ks_delivery_note_date" t-esc="doc.ks_delivery_note_date.strftime('%d-%b-%y')"/></strong>
                                     </td>
                                 </tr>
                                 <tr>
@@ -179,7 +179,7 @@
                                 </thead>
                                 <tbody>
                                     <t t-set="line_num" t-value="0"/>
-                                    <t t-foreach="doc.order_line.filtered(lambda l: l.display_type not in ('line_section','line_note'))" t-as="line">
+                                    <t t-foreach="doc.get_printable_order_lines()" t-as="line">
                                         <t t-set="line_num" t-value="line_num + 1"/>
                                         <t t-set="ltr" t-value="doc.get_line_tax_rates(line)"/>
                                         <t t-set="l_cgst_rate" t-value="ltr[0]"/>
@@ -282,7 +282,7 @@
                                         <tr>
                                             <!-- Collect HSN codes for this group -->
                                             <td style="border:1px solid #000; padding:3px; text-align:center;">
-                                                <t t-foreach="doc.order_line.filtered(lambda l: l.display_type not in ('line_section','line_note'))" t-as="ln">
+                                                <t t-foreach="doc.get_printable_order_lines()" t-as="ln">
                                                     <t t-set="ltr2" t-value="doc.get_line_tax_rates(ln)"/>
                                                     <t t-if="ltr2[0] == grp['cgst_rate'] and ltr2[1] == grp['sgst_rate'] and ltr2[2] == grp['igst_rate']">
                                                         <t t-esc="doc.get_line_hsn_code(ln)"/><br/>
@@ -315,7 +315,7 @@
                     <!-- TAX AMOUNT IN WORDS -->
                     <tr>
                         <td colspan="2" style="border-bottom:1px solid #000; padding:4px;">
-                            Tax Amount (in words) : <strong><t t-esc="doc.get_amount_in_words_inr(grand_total)"/></strong>
+                            Tax Amount (in words) : <strong><t t-esc="doc.get_amount_in_words_inr(total_tax)"/></strong>
                         </td>
                     </tr>
 

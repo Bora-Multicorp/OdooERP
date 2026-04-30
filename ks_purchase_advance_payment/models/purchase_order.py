@@ -246,7 +246,7 @@ class PurchaseOrder(models.Model):
         )
         adv_variant_ids = set()
         if adv_product_tmpl:
-            adv_variant_ids = set(adv_product_tmpl.product_variant_ids.ids)
+            adv_variant_ids = set(adv_product_tmpl.sudo().product_variant_ids.ids)
         for vals in vals_list:
             order_line = vals.get('order_line') or []
             if not order_line or not adv_variant_ids:

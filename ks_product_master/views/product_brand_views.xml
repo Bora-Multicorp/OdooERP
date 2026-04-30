@@ -1,0 +1,35 @@
+<odoo>
+    <record id="view_brand_master" model="ir.ui.view">
+        <field name="name">product.brand.views</field>
+        <field name="model">product.brand</field>
+        <field name="arch" type="xml">
+            <form string="Brands">
+                <sheet>
+                        <group>
+                            <field name="Name"/>
+                            <field name="sku_code" string="SKU Code" readonly="1"/>
+                        </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_brand_master" model="ir.actions.act_window">
+        <field name="name">Brand Master</field>
+        <field name="res_model">product.brand</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first Brand record!
+            </p>
+        </field>
+    </record>
+
+    <!-- Menu Item -->
+    <menuitem id="menu_brand_master"
+              name="MOP Master"
+              parent="stock.menu_warehouse_config"
+              action="action_brand_master"
+              sequence="49"/>
+</odoo>

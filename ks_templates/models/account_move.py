@@ -399,6 +399,37 @@ class AccountMove(models.Model):
         
         return ''
 
+    def get_printable_invoice_lines(self):
+        """Return invoice lines for printing, excluding advance/downpayment lines."""
+        self.ensure_one()
+        downpayment_product_ids = set()
+        try:
+            dp_product = self.company_id.sale_down_payment_product_id
+            if dp_product:
+                downpayment_product_ids.add(dp_product.id)
+        except Exception:
+            pass
+        try:
+            dp_id = self.env['ir.config_parameter'].sudo().get_param('sale.default_deposit_product_id')
+            if dp_id:
+                downpayment_product_ids.add(int(dp_id))
+        except Exception:
+            pass
+
+        def is_printable(line):
+            if line.display_type in ('line_section', 'line_note'):
+                return False
+            if line.product_id and line.product_id.product_tmpl_id.is_advance_payment_product:
+                return False
+            if line.product_id and line.product_id.id in downpayment_product_ids:
+                return False
+            # Check linked sale line is_downpayment
+            if line.sale_line_ids and line.sale_line_ids[0].is_downpayment:
+                return False
+            return True
+
+        return self.invoice_line_ids.filtered(is_printable)
+
     def get_company_bank_info(self):
         """Get bank info only from linked sale order's ks_bank_id. Returns empty if not set."""
         self.ensure_one()

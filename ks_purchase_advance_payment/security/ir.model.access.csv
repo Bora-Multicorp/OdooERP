@@ -9,3 +9,5 @@ access_vendor_payment_approval_document_user,vendor.payment.approval.document.us
 access_vendor_payment_approval_approve_wizard,vendor.payment.approval.approve.wizard,model_vendor_payment_approval_approve_wizard,purchase.group_purchase_user,1,1,1,1
 access_vendor_payment_approval_reject_wizard,vendor.payment.approval.reject.wizard,model_vendor_payment_approval_reject_wizard,purchase.group_purchase_user,1,1,1,1
 access_vendor_payment_approval_submit_wizard,vendor.payment.approval.submit.wizard,model_vendor_payment_approval_submit_wizard,purchase.group_purchase_user,1,1,1,1
+access_account_payment_purchase_user,account.payment purchase user read,account.model_account_payment,purchase.group_purchase_user,1,0,0,0
+access_account_payment_purchase_manager,account.payment purchase manager read,account.model_account_payment,purchase.group_purchase_manager,1,0,0,0

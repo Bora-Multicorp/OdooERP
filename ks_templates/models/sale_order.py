@@ -12,6 +12,9 @@ class SaleOrder(models.Model):
     ks_city_port_of_discharge = fields.Char(string='Destination')
     ks_delivery_note = fields.Char(string='Delivery Note')
     ks_remarks = fields.Text(string='Remarks')
+    ks_buyer_order_no = fields.Char(string="Buyer's Order No.")
+    ks_despatch_document_no = fields.Char(string='Dispatch Doc No.')
+    ks_delivery_note_date = fields.Date(string='Delivery Note Date')
     ks_exchange_rate = fields.Float(string='Exchange Rate (to INR)', digits=(16, 4), default=0.0)
     ks_authorized_signature = fields.Binary(string='Authorized Signature', attachment=True, copy=False)
 
@@ -319,6 +322,39 @@ class SaleOrder(models.Model):
                 return formatted_amount
         # Fallback without currency
         return formatLang(self.env, amount, digits=2)
+
+    def get_printable_order_lines(self):
+        """Return order lines for printing, excluding all advance/downpayment lines."""
+        self.ensure_one()
+        # Collect downpayment product IDs from multiple sources
+        downpayment_product_ids = set()
+        try:
+            # Odoo 18: stored on res.company
+            dp_product = self.company_id.sale_down_payment_product_id
+            if dp_product:
+                downpayment_product_ids.add(dp_product.id)
+        except Exception:
+            pass
+        try:
+            # Fallback: ir.config_parameter
+            dp_id = self.env['ir.config_parameter'].sudo().get_param('sale.default_deposit_product_id')
+            if dp_id:
+                downpayment_product_ids.add(int(dp_id))
+        except Exception:
+            pass
+
+        def is_printable(line):
+            if line.display_type in ('line_section', 'line_note'):
+                return False
+            if line.is_downpayment:
+                return False
+            if line.product_id and line.product_id.id in downpayment_product_ids:
+                return False
+            if line.product_id and line.product_id.product_tmpl_id.is_advance_payment_product:
+                return False
+            return True
+
+        return self.order_line.filtered(is_printable)
 
     def get_company_bank_info(self):
         """Get bank info only from ks_bank_id. Returns empty if not set."""
