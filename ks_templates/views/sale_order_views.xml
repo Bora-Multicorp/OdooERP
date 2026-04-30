@@ -14,6 +14,9 @@
                         <field name="ks_despatched_through" placeholder="Despatch through"/>
                         <field name="ks_city_port_of_discharge" placeholder="Destination"/>
                         <field name="ks_delivery_note" placeholder="Delivery Note"/>
+                        <field name="ks_buyer_order_no" placeholder="Buyer's Order No."/>
+                        <field name="ks_despatch_document_no" placeholder="Dispatch Doc No."/>
+                        <field name="ks_delivery_note_date"/>
                         <field name="ks_exchange_rate" placeholder="e.g. 83.50 means 1 USD = ₹83.50"/>
                         <field name="ks_remarks" placeholder="Remarks" colspan="2"/>
                         <field name="ks_authorized_signature" widget="signature" string="Authorized Signature"/>

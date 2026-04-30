@@ -20,7 +20,7 @@
                 <t t-set="nogst_sale" t-value="doc.get_sale_order_info()"/>
                 <t t-set="sale_order" t-value="nogst_sale"/>
                 <t t-set="delivery_partner" t-value="doc.partner_shipping_id or doc.partner_id"/>
-                <t t-set="total_qty" t-value="sum(line.quantity for line in doc.invoice_line_ids.filtered(lambda l: l.display_type not in ('line_section', 'line_note')))"/>
+                <t t-set="total_qty" t-value="sum(line.quantity for line in doc.get_printable_invoice_lines())"/>
                 <t t-set="total_amount" t-value="doc.amount_total"/>
                 <t t-set="invoice_currency" t-value="doc.currency_id"/>
                 <t t-set="inr_rate" t-value="doc.get_invoice_inr_rate()"/>
@@ -54,6 +54,7 @@
                                 State Name : <t t-esc="doc.company_id.partner_id.state_id.name or ''"/>
                                 <t t-if="doc.company_id.partner_id.state_id.code">, Code : <t t-esc="doc.company_id.partner_id.state_id.code or ''"/></t><br/>
                             </t>
+                            <t t-if="doc.company_id.partner_id.country_id">Country: <t t-esc="doc.company_id.partner_id.country_id.name or ''"/><br/></t>
                             <t t-if="doc.company_id.company_registry">CIN: <t t-esc="doc.company_id.company_registry"/><br/></t>
                             <t t-set="company_pan" t-value="doc.get_company_pan()"/>
                             <t t-if="company_pan">PAN : <t t-esc="company_pan"/><br/></t>
@@ -197,7 +198,7 @@
 
                     <!-- PRODUCT LINES -->
                     <t t-set="line_num" t-value="0"/>
-                    <t t-foreach="doc.invoice_line_ids.filtered(lambda l: l.display_type not in ('line_section', 'line_note'))" t-as="line">
+                    <t t-foreach="doc.get_printable_invoice_lines()" t-as="line">
                         <t t-set="line_num" t-value="line_num + 1"/>
                         <tr>
                             <td style="border:1px solid #000; padding:4px; text-align:center;" t-esc="line_num"/>

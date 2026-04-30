@@ -212,7 +212,7 @@
             <!-- PRODUCT LINES -->
             <t t-set="line_num" t-value="0"/>
             <t t-set="total_qty" t-value="0"/>
-            <t t-foreach="doc.invoice_line_ids.filtered(lambda l: l.display_type not in ('line_section', 'line_note'))" t-as="line">
+            <t t-foreach="doc.get_printable_invoice_lines()" t-as="line">
                 <t t-set="line_num" t-value="line_num + 1"/>
                 <t t-set="total_qty" t-value="total_qty + line.quantity"/>
                 <tr>

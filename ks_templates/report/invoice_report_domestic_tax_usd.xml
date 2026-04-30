@@ -19,7 +19,7 @@
             <main>
                 <t t-set="sale_order" t-value="doc.get_sale_order_info()"/>
                 <t t-set="delivery_partner" t-value="doc.partner_shipping_id or doc.partner_id"/>
-                <t t-set="total_qty" t-value="sum(line.quantity for line in doc.invoice_line_ids.filtered(lambda l: l.display_type not in ('line_section', 'line_note')))"/>
+                <t t-set="total_qty" t-value="sum(line.quantity for line in doc.get_printable_invoice_lines())"/>
                 <t t-set="total_untaxed" t-value="doc.amount_untaxed"/>
                 <t t-set="total_tax" t-value="doc.amount_tax"/>
                 <t t-set="total_amount" t-value="doc.amount_total"/>
@@ -204,7 +204,7 @@
 
                     <!-- PRODUCT ROWS -->
                     <t t-set="line_num" t-value="0"/>
-                    <t t-foreach="doc.invoice_line_ids.filtered(lambda l: l.display_type not in ('line_section', 'line_note'))" t-as="line">
+                    <t t-foreach="doc.get_printable_invoice_lines()" t-as="line">
                         <t t-set="line_num" t-value="line_num + 1"/>
                         <t t-set="line_tax_rate" t-value="line.tax_ids[0].amount if line.tax_ids else 0.0"/>
                         <tr>

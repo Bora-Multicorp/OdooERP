@@ -403,6 +403,19 @@ class PurchaseOrder(models.Model):
 
         return result
 
+    def get_printable_order_lines(self):
+        """Return purchase order lines for printing, excluding advance/downpayment lines."""
+        self.ensure_one()
+
+        def is_printable(line):
+            if line.display_type in ('line_section', 'line_note'):
+                return False
+            if line.product_id and (line.product_id.name or '').strip().upper() == 'ADVANCE PAYMENT':
+                return False
+            return True
+
+        return self.order_line.filtered(is_printable)
+
     def get_line_hsn_code(self, line):
         """Get HSN/SAC code from purchase order line safely"""
         try:
