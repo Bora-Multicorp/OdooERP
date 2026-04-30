@@ -35,6 +35,7 @@
         'views/product_category_inherit.xml',
         'views/show_hide_product_fields.xml',
         'views/product_context_change.xml',
+        'views/product_brand_views.xml',
         'views/product_template_tree_view.xml',
         'wizards/activation_status_wizard_view.xml',
         'wizards/stock_move_upload_csv_wizard_view.xml',
