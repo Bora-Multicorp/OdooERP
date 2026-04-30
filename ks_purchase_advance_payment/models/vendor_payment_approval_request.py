@@ -92,7 +92,6 @@ class VendorPaymentApprovalRequest(models.Model):
     amount_for_approval = fields.Monetary(
         string='Amount for Approval',
         currency_field='currency_id',
-        required=True,
         tracking=True,
         help='The amount that needs to be paid. Used when creating the vendor bill.',
     )
@@ -159,6 +158,8 @@ class VendorPaymentApprovalRequest(models.Model):
     def _check_total_amount_within_po_total(self):
         """Total amount_for_approval across all non-rejected requests for a PO must be less than the PO total."""
         for rec in self:
+            if rec.amount_for_approval:
+                raise ValidationError(_("Amount for Approval should be greater than 0."))
             if rec.state == 'rejected':
                 continue
             po = rec.purchase_order_id
