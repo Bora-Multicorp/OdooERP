@@ -1,9 +1,6 @@
 # -*- coding: utf-8 -*-
 from odoo import api, fields, models
 
-ADVANCE_PAYMENT_PRODUCT_NAME = 'ADVANCE PAYMENT'
-
-
 class SaleOrderLine(models.Model):
     _inherit = 'sale.order.line'
 
@@ -17,7 +14,7 @@ class SaleOrderLine(models.Model):
         """Check if this line's product is the advance payment product."""
         return (
             self.product_id
-            and (self.product_id.name or '').strip().upper() == ADVANCE_PAYMENT_PRODUCT_NAME
+            and self.product_id.product_tmpl_id.is_advance_payment_product
         )
 
     @api.model_create_multi

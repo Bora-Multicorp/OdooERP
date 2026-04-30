@@ -410,7 +410,7 @@ class PurchaseOrder(models.Model):
         def is_printable(line):
             if line.display_type in ('line_section', 'line_note'):
                 return False
-            if line.product_id and (line.product_id.name or '').strip().upper() == 'ADVANCE PAYMENT':
+            if line.product_id and line.product_id.product_tmpl_id.is_advance_payment_product:
                 return False
             return True
 
