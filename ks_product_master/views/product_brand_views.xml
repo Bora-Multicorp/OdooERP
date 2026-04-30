@@ -6,8 +6,7 @@
             <form string="Brands">
                 <sheet>
                         <group>
-                            <field name="Name"/>
-                            <field name="sku_code" string="SKU Code" readonly="1"/>
+                            <field name="name"/>
                         </group>
                 </sheet>
                 <chatter/>
