@@ -71,8 +71,13 @@
                             <t t-if="doc.company_id.partner_id.email">E-Mail : <t t-esc="doc.company_id.partner_id.email"/></t>
                             <hr/>
                             Consignee (Ship to)<br/>
-                            <strong>CUSTOMER FROM MOSCO: RUSSIA</strong><br/>
-                            CONSIGNEE AS PER GIVEN ON PURCHASE ORDER<br/>
+                            <strong t-esc="delivery_partner.name or ''"/><br/>
+                            <t t-if="delivery_partner.street" t-esc="delivery_partner.street"/><br/>
+                            <t t-if="delivery_partner.street2" t-esc="delivery_partner.street2"/><br/>
+                            <t t-if="delivery_partner.city" t-esc="delivery_partner.city"/>
+                            <t t-if="delivery_partner.city and delivery_partner.country_id">, </t>
+                            <t t-if="delivery_partner.country_id" t-esc="delivery_partner.country_id.name or ''"/><br/>
+                            <t t-if="delivery_partner.state_id">State Name : <t t-esc="delivery_partner.state_id.name or ''"/></t>
                             <br/>
                             <hr/>
                             Buyer (Bill to)<br/>
@@ -178,7 +183,7 @@
                                 </tr>
                                 <tr>
                                     <td style="border-right:1px solid #000; border-bottom:1px solid #000; padding:1px;">
-                                        <strong><t t-esc="doc.ks_vessel_flight_no or 'BY AIR'"/></strong>
+                                        <strong><t t-esc="doc.ks_vessel_flight_no or ''"/></strong>
                                     </td>
                                     <td style="border-left:1px solid #000; border-bottom:1px solid #000; padding:1px;" colspan="3">
                                         <strong><t t-esc="doc.ks_place_of_receipt_by_shipper or ''"/></strong>
@@ -190,10 +195,10 @@
                                 </tr>
                                 <tr>
                                     <td style="border-right:1px solid #000; border-bottom:1px solid #000; padding:1px;">
-                                        <strong><t t-esc="doc.ks_city_port_of_loading or 'SAHAR AIR CARGO'"/></strong>
+                                        <strong><t t-esc="doc.ks_city_port_of_loading or ''"/></strong>
                                     </td>
                                     <td style="border-left:1px solid #000; border-bottom:1px solid #000; padding:1px;" colspan="3">
-                                        <strong><t t-esc="doc.ks_city_port_of_discharge or 'MOSCOW'"/></strong>
+                                        <strong><t t-esc="doc.ks_city_port_of_discharge or ''"/></strong>
                                     </td>
                                 </tr>
                                 <tr>
