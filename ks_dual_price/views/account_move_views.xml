@@ -10,7 +10,7 @@
                 expr="//field[@name='invoice_line_ids']//list//field[@name='price_unit']"
                 position="attributes"
             >
-                <attribute name="string">Unit Price (Excl. GST)</attribute>
+                <attribute name="string">Unit Price (Excl. Tax)</attribute>
             </xpath>
             <!-- Insert tax-inclusive column immediately after price_unit -->
             <xpath
@@ -19,7 +19,7 @@
             >
                 <field
                     name="price_unit_incl"
-                    string="Unit Price (Incl. GST)"
+                    string="Unit Price (Incl. Tax)"
                     optional="show"
                 />
             </xpath>
