@@ -468,6 +468,8 @@ class VendorKycWizard(models.TransientModel):
                                 'bank_name': bank.bank_name,
                                 'account_no': bank.account_no,
                                 'ifsc_code': bank.ifsc_code,
+                                'iban_no': bank.iban_no,
+                                'intermediate_bank_code': bank.intermediate_bank_code,
                                 # 'bank_address': bank.bank_address,
                             }
                             if bank.bank_cheque_attachments:
@@ -556,6 +558,8 @@ class VendorKycWizard(models.TransientModel):
                 'bank_name': 'bank_name',
                 'account_no': 'account_no',
                 'ifsc_code': 'ifsc_code',
+                'iban_no': 'iban_no',
+                'intermediate_bank_code': 'intermediate_bank_code',
                 # 'bank_address': 'bank_address',
             },
             many2many_fields=['bank_cheque_attachments']
@@ -594,6 +598,8 @@ class VendorKycWizard(models.TransientModel):
                 'bank_name': line.bank_name or '',
                 'account_no': line.account_no or '',
                 'ifsc_code': line.ifsc_code or '',
+                'iban_no': line.iban_no or '',
+                'intermediate_bank_code': line.intermediate_bank_code or '',
                 # 'bank_address': line.bank_address or '',
                 'bank_cheque_attachments': sorted(line.bank_cheque_attachments.ids),
             })
@@ -872,7 +878,9 @@ class BankDetail(models.TransientModel):
     kyc_wizard_id = fields.Many2one('vendor.kyc.wizard', string="KYC Approval")
     bank_name = fields.Char(string="Bank Name", required=True)
     account_no = fields.Char(string="Account Number", required=True)
-    ifsc_code = fields.Char(string="IFSC Code", required=True)
+    ifsc_code = fields.Char(string="IFSC / SWIFT Code", required=True)
+    iban_no = fields.Char(string="IBAN No")
+    intermediate_bank_code = fields.Char(string="Intermediate Bank Code")
     # bank_address = fields.Char(string="Bank Address",)
     bank_cheque_attachments = fields.Many2many('ir.attachment', 'wizard_bank_detail_cheque_rel', 'kyc_wizard_id',
                                                'attachment_id', string="Cancelled Cheques", required=True)
@@ -883,6 +891,10 @@ class BankDetail(models.TransientModel):
         ifsc_pattern = re.compile(r'^[A-Z]{4}0[0-9A-Z]{6}$')  # Standard IFSC format
 
         for rec in self:
+            is_overseas = rec.kyc_wizard_id.is_overseas if rec.kyc_wizard_id else False
+            if is_overseas:
+                continue
+
             if not account_pattern.fullmatch(rec.account_no or ''):
                 raise ValidationError(_(
                     "Invalid Bank Account Number:\n"
