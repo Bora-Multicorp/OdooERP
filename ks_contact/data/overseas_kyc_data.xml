@@ -392,8 +392,8 @@
             <field name="constr_mandatory">True</field>
             <field name="description" type="html">
                 <p>
-                    <strong>Dubai / UAE:</strong> Trade License issued by DED or Free Zone Authority<br/>
-                    <strong>Hong Kong:</strong> Business Registration Certificate (BR) issued by IRD<br/>
+                    <strong>Dubai / UAE:</strong> Trade License issued by Government Authority<br/>
+                    <strong>Hong Kong:</strong> Business Registration Certificate (BR) issued by Government Authority<br/>
                     <strong>Other:</strong> Certificate of Incorporation or equivalent government-issued company registration proof
                 </p>
             </field>
@@ -475,13 +475,27 @@
             <field name="question_id" ref="overseas_matrix_bank_kyc_survey"/>
             <field name="matrix_question_id" eval="False"/>
             <field name="sequence">3</field>
-            <field name="value">SWIFT / IFSC Code</field>
+            <field name="value">SWIFT Code</field>
+            <field name="sh_value_type">textbox</field>
+        </record>
+        <record model="survey.question.answer" id="overseas_bank_col_iban">
+            <field name="question_id" ref="overseas_matrix_bank_kyc_survey"/>
+            <field name="matrix_question_id" eval="False"/>
+            <field name="sequence">4</field>
+            <field name="value">IBAN No</field>
+            <field name="sh_value_type">textbox</field>
+        </record>
+        <record model="survey.question.answer" id="overseas_bank_col_intermediate_bank">
+            <field name="question_id" ref="overseas_matrix_bank_kyc_survey"/>
+            <field name="matrix_question_id" eval="False"/>
+            <field name="sequence">5</field>
+            <field name="value">Intermediate Bank Code</field>
             <field name="sh_value_type">textbox</field>
         </record>
         <record model="survey.question.answer" id="overseas_bank_col_cheque">
             <field name="question_id" ref="overseas_matrix_bank_kyc_survey"/>
             <field name="matrix_question_id" eval="False"/>
-            <field name="sequence">4</field>
+            <field name="sequence">6</field>
             <field name="value">Cancelled Cheque</field>
             <field name="sh_value_type">que_sh_file</field>
         </record>

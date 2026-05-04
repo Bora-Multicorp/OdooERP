@@ -480,7 +480,9 @@ class SurveyUserInput(models.Model):
                         values['bank_detail'].append((0, 0, {
                             'bank_name': row.get('Bank Name'),
                             'account_no': row.get('Account Number'),
-                            'ifsc_code': row.get('SWIFT / IFSC Code'),
+                            'ifsc_code': row.get('SWIFT Code'),
+                            'iban_no': row.get('IBAN No') or False,
+                            'intermediate_bank_code': row.get('Intermediate Bank Code') or False,
                             'bank_cheque_attachments': [(0, 0, {'name': cheque_fname, 'type': 'binary', 'datas': cheque_file})] if cheque_file else False,
                         }))
 

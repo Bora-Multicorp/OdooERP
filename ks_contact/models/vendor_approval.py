@@ -631,6 +631,8 @@ class ContactKYCApproval(models.Model):
                     'bank_name': b.bank_name or '',
                     'account_no': b.account_no or '',
                     'ifsc_code': b.ifsc_code or '',
+                    'iban_no': b.iban_no or '',
+                    'intermediate_bank_code': b.intermediate_bank_code or '',
                     # 'bank_address': b.bank_address or '',
                     'bank_cheque_attachments': sorted(b.bank_cheque_attachments.ids),
                 }
@@ -825,6 +827,8 @@ class ContactKYCApproval(models.Model):
                     'bank_name': b.get('bank_name'),
                     'account_no': b.get('account_no'),
                     'ifsc_code': b.get('ifsc_code'),
+                    'iban_no': b.get('iban_no') or False,
+                    'intermediate_bank_code': b.get('intermediate_bank_code') or False,
                     # 'bank_address': b.get('bank_address'),
                     'bank_cheque_attachments': [(6, 0, b.get('bank_cheque_attachments', []))],
                 }) for b in payload.get('bank_detail', [])
@@ -1355,6 +1359,8 @@ class BankDetail(models.Model):
     bank_name = fields.Char()
     account_no = fields.Char()
     ifsc_code = fields.Char()
+    iban_no = fields.Char(string="IBAN No")
+    intermediate_bank_code = fields.Char(string="Intermediate Bank Code")
     bank_address = fields.Char()
 
     bank_cheque_attachments = fields.Many2many(

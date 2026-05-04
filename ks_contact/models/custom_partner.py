@@ -964,19 +964,23 @@ class CustomContact(models.Model):
         # ── BANK DETAILS matrix ─────────────────────────────────────────────
         q_bank = _q('ks_contact.overseas_matrix_bank_kyc_survey')
         if q_bank and kyc.bank_detail:
-            col_bank_name  = self.env.ref('ks_contact.overseas_bank_col_name',    False)
-            col_account_no = self.env.ref('ks_contact.overseas_bank_col_account', False)
-            col_swift      = self.env.ref('ks_contact.overseas_bank_col_swift',   False)
-            col_cheque     = self.env.ref('ks_contact.overseas_bank_col_cheque',  False)
+            col_bank_name       = self.env.ref('ks_contact.overseas_bank_col_name',             False)
+            col_account_no      = self.env.ref('ks_contact.overseas_bank_col_account',          False)
+            col_swift           = self.env.ref('ks_contact.overseas_bank_col_swift',            False)
+            col_iban            = self.env.ref('ks_contact.overseas_bank_col_iban',             False)
+            col_intermediate    = self.env.ref('ks_contact.overseas_bank_col_intermediate_bank', False)
+            col_cheque          = self.env.ref('ks_contact.overseas_bank_col_cheque',           False)
 
             bank_rows = q_bank.matrix_row_ids.sorted('sequence')
             for idx, bank in enumerate(kyc.bank_detail):
                 if idx >= len(bank_rows):
                     break
                 row = bank_rows[idx]
-                _matrix_char(q_bank, col_bank_name,  row, bank.bank_name)
-                _matrix_char(q_bank, col_account_no, row, bank.account_no)
-                _matrix_char(q_bank, col_swift,      row, bank.ifsc_code)
+                _matrix_char(q_bank, col_bank_name,    row, bank.bank_name)
+                _matrix_char(q_bank, col_account_no,   row, bank.account_no)
+                _matrix_char(q_bank, col_swift,        row, bank.ifsc_code)
+                _matrix_char(q_bank, col_iban,         row, bank.iban_no)
+                _matrix_char(q_bank, col_intermediate, row, bank.intermediate_bank_code)
                 cheque_att = bank.bank_cheque_attachments[:1]
                 if cheque_att:
                     _matrix_file(q_bank, col_cheque, row, cheque_att)

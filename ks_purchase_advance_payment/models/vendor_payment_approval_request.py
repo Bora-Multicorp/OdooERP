@@ -158,8 +158,6 @@ class VendorPaymentApprovalRequest(models.Model):
     def _check_total_amount_within_po_total(self):
         """Total amount_for_approval across all non-rejected requests for a PO must be less than the PO total."""
         for rec in self:
-            if rec.amount_for_approval:
-                raise ValidationError(_("Amount for Approval should be greater than 0."))
             if rec.state == 'rejected':
                 continue
             po = rec.purchase_order_id
@@ -188,6 +186,8 @@ class VendorPaymentApprovalRequest(models.Model):
         self.ensure_one()
         if self.state != 'draft':
             raise UserError(_('Only draft requests can be submitted.'))
+        if self.amount_for_approval <= 0:
+            raise UserError(_('Amount for Approval should be greater than 0.'))
         return {
             'name': _('Send for Approval'),
             'type': 'ir.actions.act_window',
