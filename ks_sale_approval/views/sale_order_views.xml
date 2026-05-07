@@ -225,7 +225,7 @@
 
             <!-- Lock tax on order lines for normal users after approval -->
             <xpath expr="//field[@name='order_line']//list//field[@name='tax_id']" position="attributes">
-                <attribute name="readonly">not parent.ks_can_edit or qty_invoiced &gt; 0</attribute>
+                <attribute name="readonly">1</attribute>
             </xpath>
 
             <!-- Lock remaining header/Other Info fields not covered by Odoo's native locked condition -->
