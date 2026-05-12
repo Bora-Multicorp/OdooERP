@@ -6,6 +6,15 @@ from odoo.tools import formatLang
 class SaleOrder(models.Model):
     _inherit = 'sale.order'
 
+    ks_round_off = fields.Float(
+        string='Round Off',
+        digits=(16, 2),
+        compute='_compute_ks_round_off',
+        inverse='_inverse_ks_round_off',
+        store=True,
+        help='Auto-calculated to round the total to the nearest integer. Can be manually overridden.',
+    )
+
     # Additional sale order information fields
     ks_other_reference = fields.Char(string='Other Reference(s)')
     ks_despatched_through = fields.Char(string='Despatch through')
@@ -17,6 +26,39 @@ class SaleOrder(models.Model):
     ks_delivery_note_date = fields.Date(string='Delivery Note Date')
     ks_exchange_rate = fields.Float(string='Exchange Rate (to INR)', digits=(16, 4), default=0.0)
     ks_authorized_signature = fields.Binary(string='Authorized Signature', attachment=True, copy=False)
+
+    @api.depends('order_line.price_subtotal', 'order_line.price_tax')
+    def _compute_ks_round_off(self):
+        for order in self:
+            lines = order.order_line.filtered(lambda l: l.display_type not in ('line_section', 'line_note'))
+            raw_untaxed = sum(lines.mapped('price_subtotal'))
+            raw_tax = sum(lines.mapped('price_tax'))
+            raw_total = raw_untaxed + raw_tax
+            order.ks_round_off = raw_total - round(raw_total)
+
+    def _inverse_ks_round_off(self):
+        # Allow manual override — stored value is kept as-is; amount_total recomputes via _compute_amounts
+        pass
+
+    @api.depends('order_line.price_subtotal', 'currency_id', 'company_id', 'payment_term_id', 'ks_round_off')
+    def _compute_amounts(self):
+        super()._compute_amounts()
+        for order in self:
+            order.amount_total = order.amount_untaxed + order.amount_tax - order.ks_round_off
+
+    @api.depends('order_line.price_subtotal', 'currency_id', 'company_id', 'ks_round_off')
+    @api.depends_context('lang')
+    def _compute_tax_totals(self):
+        super()._compute_tax_totals()
+        for order in self:
+            if not order.tax_totals:
+                continue
+            round_off = order.ks_round_off or 0.0
+            if round_off:
+                # Adjust total displayed by widget
+                order.tax_totals['total_amount_currency'] -= round_off
+                # Inject as the built-in "Rounding" row (renders between tax groups and Total)
+                order.tax_totals['cash_rounding_base_amount_currency'] = -round_off
 
     def get_amount_in_words_aed(self, amount):
         """Convert amount to words in AED currency in the format: UAE Dirham [amount in words] and [fils] fils Only"""
@@ -231,6 +273,20 @@ class SaleOrder(models.Model):
                     result.append((tax_type, tax.amount))
         return result
 
+    def get_printable_amount_untaxed(self):
+        """Return sum of price_subtotal for printable lines (excludes advance deduction lines)."""
+        self.ensure_one()
+        return sum(self.get_printable_order_lines().mapped('price_subtotal'))
+
+    def get_printable_amount_total(self):
+        """Return sum of price_total for printable lines (excludes advance deduction lines)."""
+        self.ensure_one()
+        lines = self.get_printable_order_lines()
+        untaxed = sum(lines.mapped('price_subtotal'))
+        tax = sum(lines.mapped('price_tax'))
+        round_off = getattr(self, 'ks_round_off', 0.0) or 0.0
+        return untaxed + tax - round_off
+
     def get_sale_gst_tax_info(self):
         """Returns GST tax breakdown for domestic India sales.
         Returns list of dicts with: taxable_amount, cgst_rate, cgst_amount, sgst_rate, sgst_amount, igst_rate, igst_amount
@@ -239,7 +295,7 @@ class SaleOrder(models.Model):
         self.ensure_one()
         tax_groups = {}  # key: (cgst_rate, sgst_rate, igst_rate)
 
-        for line in self.order_line.filtered(lambda l: l.display_type not in ('line_section', 'line_note')):
+        for line in self.get_printable_order_lines():
             cgst_rate = 0.0
             sgst_rate = 0.0
             igst_rate = 0.0

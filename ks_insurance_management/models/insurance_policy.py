@@ -256,6 +256,38 @@ class InsurancePolicy(models.Model):
         copy=False,
         help='Internal: stores the top-up amount between wizard confirm and approval.',
     )
+    pending_topup_premium = fields.Float(
+        string='Pending Top-up Premium',
+        default=0.0,
+        copy=False,
+        help='Internal: stores the updated premium between wizard confirm and approval.',
+    )
+    pending_topup_approver_id = fields.Many2one(
+        'insurance.payment.approver',
+        string='Pending Approver',
+        copy=False,
+        help='Internal: stores the approver selected in the top-up wizard.',
+    )
+    pending_payment_approver_id = fields.Many2one(
+        'insurance.payment.approver',
+        string='Pending Payment Approver',
+        copy=False,
+        help='Internal: stores the approver selected in the payment request wizard.',
+    )
+    is_pending_approver = fields.Boolean(
+        compute='_compute_is_pending_approver',
+        store=False,
+    )
+
+    @api.depends('pending_topup_approver_id', 'pending_payment_approver_id')
+    @api.depends_context('uid')
+    def _compute_is_pending_approver(self):
+        for rec in self:
+            approver = rec.pending_topup_approver_id or rec.pending_payment_approver_id
+            rec.is_pending_approver = bool(
+                approver and approver.user_id.id == self.env.uid
+            )
+
     payment_count = fields.Integer(
         string='Payments',
         compute='_compute_payment_count',
@@ -341,7 +373,8 @@ class InsurancePolicy(models.Model):
     def action_approve_payment(self):
         """Approver (or admin) approves: create draft account.payment, notify banking team."""
         self.ensure_one()
-        approver = self._get_approver()
+        # Use the wizard-selected approver if set, otherwise fall back to config
+        approver = self.pending_topup_approver_id or self.pending_payment_approver_id or self._get_approver()
         if not self._is_insurance_admin():
             if not approver or approver.user_id != self.env.user:
                 raise UserError("Only the designated payment approver can approve this request.")
@@ -394,7 +427,11 @@ class InsurancePolicy(models.Model):
             'ins_floater_location_ids': [(6, 0, self.floater_location_ids.ids)],
         })
 
-        self.write({'payment_status': 'approved'})
+        self.write({
+            'payment_status': 'approved',
+            'pending_topup_approver_id': False,
+            'pending_payment_approver_id': False,
+        })
 
         # Mark approver's activity as done
         self.activity_feedback(
@@ -433,19 +470,22 @@ class InsurancePolicy(models.Model):
 
         vals = {}
 
-        # Roll back top-up sum insured increase if this was a top-up request
+        # Roll back top-up if this was a top-up request
         if self.pending_topup_amount > 0:
             completed_topups = self.payment_ids.filtered(
                 lambda p: p.is_topup and p.state == 'posted'
             )
             vals.update({
-                'initial_sum_insured': self.initial_sum_insured - self.pending_topup_amount,
                 'pending_topup_amount': 0.0,
                 'topup_flag': bool(completed_topups),
             })
 
-        # Restore appropriate payment status
-        vals['payment_status'] = 'paid' if self.is_paid else 'draft'
+        vals.update({
+            'payment_status': 'paid' if self.is_paid else 'draft',
+            'pending_topup_approver_id': False,
+            'pending_payment_approver_id': False,
+            'pending_topup_premium': 0.0,
+        })
         self.write(vals)
 
         self.activity_feedback(
@@ -546,7 +586,7 @@ class InsurancePolicy(models.Model):
         """
         self.ensure_one()
         # Build the set of all locations that belong to this warehouse.
-        view_loc = self.warehouse_id.view_location_id
+        view_loc = self.warehouse_id.sudo().view_location_id
         if view_loc:
             same_premises_ids = set(
                 self.env['stock.location'].sudo().search(
@@ -599,11 +639,11 @@ class InsurancePolicy(models.Model):
         """
         self.ensure_one()
         if self.policy_type == 'individual' and self.warehouse_id:
-            warehouses = self.warehouse_id
+            warehouses = self.warehouse_id.sudo()
         elif self.policy_type == 'floater' and self.floater_location_ids:
-            warehouses = self.floater_location_ids
+            warehouses = self.floater_location_ids.sudo()
         else:
-            warehouses = self.env['stock.warehouse'].search(
+            warehouses = self.env['stock.warehouse'].sudo().search(
                 [('company_id', '=', self.company_id.id)])
 
         total_inventory = 0.0
@@ -808,12 +848,12 @@ class InsurancePolicy(models.Model):
         """Used by declaration reports to get current inventory value."""
         self.ensure_one()
         total = 0.0
-        locations = self.floater_location_ids or self.env['stock.warehouse'].search(
+        locations = self.floater_location_ids.sudo() or self.env['stock.warehouse'].sudo().search(
             [('company_id', '=', self.company_id.id)])
         for wh in locations:
             if not wh.lot_stock_id:
                 continue
-            quants = self.env['stock.quant'].search(
+            quants = self.env['stock.quant'].sudo().search(
                 [('location_id', 'child_of', wh.lot_stock_id.id)])
             total += sum(q.quantity * q.product_id.standard_price for q in quants)
         return total

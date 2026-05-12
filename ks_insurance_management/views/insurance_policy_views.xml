@@ -10,14 +10,15 @@
           <button name="action_request_payment" string="Request Payment" type="object"
                   class="btn-primary"
                   invisible="payment_status in ('requested', 'approved', 'paid')"/>
-          <!-- Approval buttons: shown when request is pending -->
+          <field name="is_pending_approver" invisible="1"/>
+          <!-- Approval buttons: shown only to the selected approver when request is pending -->
           <button name="action_approve_payment" string="Approve Payment" type="object"
                   class="btn-success"
-                  invisible="payment_status != 'requested'"
+                  invisible="payment_status != 'requested' or not is_pending_approver"
                   confirm="Approve this payment request and create a draft payment?"/>
           <button name="action_reject_payment" string="Reject" type="object"
                   class="btn-danger"
-                  invisible="payment_status != 'requested'"
+                  invisible="payment_status != 'requested' or not is_pending_approver"
                   confirm="Reject this payment request?"/>
           <!-- Top Up Addon: only on active + paid policies -->
           <button name="action_topup_addon" string="Top Up Addon" type="object"
@@ -128,7 +129,13 @@
                      domain="[('is_topup', '=', True)]">
                 <list>
                   <field name="name"/>
-                  <field name="amount" string="Top-up Amount"/>
+                  <field name="ins_type_id" string="Insurance Type"/>
+                  <field name="ins_company_id" string="Company Name"/>
+                  <field name="ins_insurance_company_id" string="Insurance Company"/>
+                  <field name="ins_sum_insured_words" string="Cover Amount (in words)"/>
+                  <field name="amount" string="Premium (Incl. GST)"/>
+                  <field name="ins_agent" string="Agent"/>
+                  <field name="ins_expiry_date" string="Expiry Date"/>
                   <field name="date" string="Date"/>
                   <field name="state" widget="badge"
                          decoration-success="state == 'posted'"

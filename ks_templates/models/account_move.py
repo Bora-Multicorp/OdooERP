@@ -167,6 +167,93 @@ class AccountMove(models.Model):
         self.ensure_one()
         return formatLang(self.env, value, digits=digits)
 
+    def _get_tax_type(self, tax):
+        """Return 'cgst', 'sgst', 'igst' or None for a tax record."""
+        try:
+            if hasattr(tax, 'l10n_in_tax_type') and tax.l10n_in_tax_type:
+                return tax.l10n_in_tax_type
+        except Exception:
+            pass
+        name = (tax.name or '').lower()
+        if 'igst' in name:
+            return 'igst'
+        if 'cgst' in name:
+            return 'cgst'
+        if 'sgst' in name or 'utgst' in name:
+            return 'sgst'
+        return None
+
+    def _resolve_invoice_tax_rates(self, taxes):
+        """Return list of (tax_type, rate) tuples, respecting group tax parent type."""
+        result = []
+        for tax in taxes:
+            if tax.amount_type == 'group' and tax.children_tax_ids:
+                parent_type = self._get_tax_type(tax)
+                if parent_type in ('cgst', 'sgst', 'igst'):
+                    total_rate = sum(c.amount for c in tax.children_tax_ids)
+                    result.append((parent_type, total_rate))
+                else:
+                    for child in tax.children_tax_ids:
+                        child_type = self._get_tax_type(child)
+                        if child_type:
+                            result.append((child_type, child.amount))
+            else:
+                tax_type = self._get_tax_type(tax)
+                if tax_type:
+                    result.append((tax_type, tax.amount))
+        return result
+
+    def get_invoice_gst_tax_info(self):
+        """Returns GST tax breakdown (CGST/SGST/IGST) for domestic India invoices.
+        Same structure as sale_order.get_sale_gst_tax_info().
+        Returns dict with 'groups' list and totals.
+        """
+        self.ensure_one()
+        tax_groups = {}
+        for line in self.get_printable_invoice_lines():
+            cgst_rate = sgst_rate = igst_rate = 0.0
+            for tax_type, rate in self._resolve_invoice_tax_rates(line.tax_ids):
+                if tax_type == 'cgst':
+                    cgst_rate += rate
+                elif tax_type == 'sgst':
+                    sgst_rate += rate
+                elif tax_type == 'igst':
+                    igst_rate += rate
+            key = (cgst_rate, sgst_rate, igst_rate)
+            if key not in tax_groups:
+                tax_groups[key] = {
+                    'taxable_amount': 0.0,
+                    'cgst_rate': cgst_rate, 'cgst_amount': 0.0,
+                    'sgst_rate': sgst_rate, 'sgst_amount': 0.0,
+                    'igst_rate': igst_rate, 'igst_amount': 0.0,
+                }
+            subtotal = line.price_subtotal
+            tax_groups[key]['taxable_amount'] += subtotal
+            tax_groups[key]['cgst_amount'] += subtotal * cgst_rate / 100.0
+            tax_groups[key]['sgst_amount'] += subtotal * sgst_rate / 100.0
+            tax_groups[key]['igst_amount'] += subtotal * igst_rate / 100.0
+
+        groups = list(tax_groups.values())
+        return {
+            'groups': groups,
+            'total_taxable': sum(g['taxable_amount'] for g in groups),
+            'total_cgst': sum(g['cgst_amount'] for g in groups),
+            'total_sgst': sum(g['sgst_amount'] for g in groups),
+            'total_igst': sum(g['igst_amount'] for g in groups),
+        }
+
+    def get_invoice_line_tax_rates(self, line):
+        """Return (cgst_rate, sgst_rate, igst_rate) for an invoice line."""
+        cgst_rate = sgst_rate = igst_rate = 0.0
+        for tax_type, rate in self._resolve_invoice_tax_rates(line.tax_ids):
+            if tax_type == 'cgst':
+                cgst_rate += rate
+            elif tax_type == 'sgst':
+                sgst_rate += rate
+            elif tax_type == 'igst':
+                igst_rate += rate
+        return cgst_rate, sgst_rate, igst_rate
+
     def _is_igst_tax(self, tax):
         """Check if tax is IGST type safely"""
         try:
@@ -332,7 +419,7 @@ class AccountMove(models.Model):
         }
 
     def get_sale_order_info(self):
-        """Get sales order information from invoice"""
+        """Get sales order information from invoice — returns the first linked SO."""
         self.ensure_one()
         sale_orders = self.line_ids.mapped('sale_line_ids.order_id')
         if sale_orders:
@@ -343,6 +430,23 @@ class AccountMove(models.Model):
             if sale_order:
                 return sale_order
         return False
+
+    def get_all_sale_orders(self):
+        """Return all sale orders linked to this invoice (deduplicated, ordered)."""
+        self.ensure_one()
+        sale_orders = self.line_ids.mapped('sale_line_ids.order_id')
+        if not sale_orders and self.invoice_origin:
+            origins = [o.strip() for o in self.invoice_origin.split(',')]
+            sale_orders = self.env['sale.order'].search([('name', 'in', origins)])
+        return sale_orders
+
+    def get_all_sale_order_names(self):
+        """Return comma-separated names of all sale orders linked to this invoice."""
+        self.ensure_one()
+        sale_orders = self.get_all_sale_orders()
+        if not sale_orders:
+            return ''
+        return ', '.join(sale_orders.mapped('name'))
 
     def get_invoice_inr_rate(self):
         """Get INR conversion rate from linked sale order's rate field."""

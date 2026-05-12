@@ -41,7 +41,7 @@ class InsurancePaymentRequestWizard(models.TransientModel):
                     f"Use 'Top Up Addon' to increase coverage."
                 )
 
-            policy.write({'payment_status': 'requested'})
+            policy.write({'payment_status': 'requested', 'pending_payment_approver_id': approver.id})
             policy._notify_approver(
                 approver,
                 summary=f'Insurance Payment Approval — {policy.policy_number}',

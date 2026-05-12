@@ -9,7 +9,14 @@ class PurchaseOrder(models.Model):
     ks_authorised_signatory = fields.Binary(string='Authorised Signatory', attachment=True, copy=False)
     ks_bank_id = fields.Many2one('res.bank', string='Bank Information')
     ks_remarks = fields.Text(string='Remarks')
-    ks_round_off = fields.Float(string='Round Off', digits=(16, 2), default=0.0)
+    ks_round_off = fields.Float(
+        string='Round Off',
+        digits=(16, 2),
+        compute='_compute_ks_round_off',
+        inverse='_inverse_ks_round_off',
+        store=True,
+        help='Auto-calculated to round the total to the nearest integer. Can be manually overridden.',
+    )
     ks_destination = fields.Char(string='Destination')
     ks_despatched_through = fields.Char(string='Despatched Through')
     amount_total = fields.Monetary(string='Total', store=True, readonly=True, compute='_amount_all')
@@ -58,14 +65,22 @@ class PurchaseOrder(models.Model):
         except Exception:
             return ''
 
+    @api.depends('order_line.price_subtotal', 'order_line.price_tax')
+    def _compute_ks_round_off(self):
+        for order in self:
+            lines = order.order_line.filtered(lambda l: l.display_type not in ('line_section', 'line_note'))
+            raw_untaxed = sum(lines.mapped('price_subtotal'))
+            raw_tax = sum(lines.mapped('price_tax'))
+            raw_total = raw_untaxed + raw_tax
+            order.ks_round_off = raw_total - round(raw_total)
+
+    def _inverse_ks_round_off(self):
+        # Allow manual override — stored value is kept as-is; amount_total recomputes via _amount_all
+        pass
+
     @api.depends('order_line.price_subtotal', 'company_id', 'currency_id', 'ks_round_off')
     def _amount_all(self):
         super()._amount_all()
-        for order in self:
-            order.amount_total = order.amount_untaxed + order.amount_tax - order.ks_round_off
-
-    @api.onchange('ks_round_off')
-    def _onchange_ks_round_off(self):
         for order in self:
             order.amount_total = order.amount_untaxed + order.amount_tax - order.ks_round_off
 
@@ -76,7 +91,6 @@ class PurchaseOrder(models.Model):
         for order in self:
             if order.tax_totals and order.ks_round_off:
                 order.tax_totals['total_amount_currency'] -= order.ks_round_off
-                # Update formatted display amount
                 currency = order.currency_id or order.company_id.currency_id
                 order.tax_totals['formatted_amount_total'] = formatLang(
                     self.env, order.tax_totals['total_amount_currency'], currency_obj=currency

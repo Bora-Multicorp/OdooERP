@@ -156,7 +156,7 @@
                         </tr>
                         <tr>
                             <td style="border-right:1px solid #000; padding:1px;">
-                                <t t-if="sale_order" t-esc="sale_order.name or ''"/>
+                                <t t-esc="doc.get_all_sale_order_names()"/>
                             </td>
                             <td style="border-right:1px solid #000; padding:1px;" colspan="3">
                                 <t t-if="sale_order and sale_order.date_order" t-esc="sale_order.date_order.strftime('%d-%b-%y')"/>
@@ -244,7 +244,7 @@
                 <td colspan="6" style="border:1px solid #000; padding:4px; text-align:right;"><strong>Total</strong></td>
 
                 <td style="border:1px solid #000; padding:4px; text-align:right;">
-                    <strong><t t-esc="doc.currency_id.symbol or '$'"/> <t t-esc="doc.format_number(doc.amount_total, digits=2)"/></strong>
+                    <strong><t t-esc="doc.currency_id.symbol or '$'"/> <t t-esc="doc.format_number(doc.get_printable_amount_total(), digits=2)"/></strong>
                 </td>
             </tr>
 
@@ -253,7 +253,7 @@
             <t t-set="lum_comp_currency" t-value="doc.company_id.currency_id"/>
             <t t-set="lum_conversion_date" t-value="doc.invoice_date or doc.date or doc.create_date.date()"/>
             <t t-set="lum_invoice_currency_rate" t-value="doc.invoice_currency_rate or 1.0"/>
-            <t t-set="lum_total_amount" t-value="doc.amount_total"/>
+            <t t-set="lum_total_amount" t-value="doc.get_printable_amount_total()"/>
             <t t-set="lum_converted_amount" t-value="lum_total_amount"/>
             <t t-if="lum_inv_currency and lum_comp_currency and lum_inv_currency != lum_comp_currency">
                 <t t-set="lum_converted_amount" t-value="lum_inv_currency._convert(lum_total_amount, lum_comp_currency, doc.company_id, lum_conversion_date, round=True)"/>

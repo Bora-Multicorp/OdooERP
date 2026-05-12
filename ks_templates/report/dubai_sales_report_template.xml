@@ -379,7 +379,7 @@
                     <tr>
                         <td style="border:1px solid #000; padding:0;" colspan="2">
                             <t t-set="total_qty" t-value="sum(line.product_uom_qty for line in doc.get_printable_order_lines())"/>
-                            <t t-set="total_usd" t-value="doc.amount_total"/>
+                            <t t-set="total_usd" t-value="doc.get_printable_amount_total()"/>
                             <t t-set="exchange_rate" t-value="3.676"/>
                             <t t-set="total_aed" t-value="total_usd * exchange_rate"/>
                             <table style="width:100%; border-collapse:collapse; border:0;">
@@ -454,14 +454,39 @@
                         </t>
                     </tr>
 
+                    <!-- Conversion Rate Row -->
+                    <t t-if="doc.is_exchange and doc.exchanged_amount and doc.ks_exchange_currency_id">
+                        <tr>
+                            <td style="background-color:#e8f4e8; border:1px solid #000; padding:4px; font-size:10pt; text-align:right; font-weight:bold;" colspan="2">
+                                Total Invoice Amount in <t t-esc="doc.ks_exchange_currency_id.name"/>
+                                &amp;nbsp;
+                                <t t-esc="doc.currency_id.symbol or doc.currency_id.name"/>
+                                <t t-esc="doc.format_number(total_invoice_amount, digits=2)"/>
+                                &amp;nbsp;@&amp;nbsp;
+                                <t t-esc="doc.format_number(doc.rate, digits=2)"/>
+                                <t t-esc="doc.ks_exchange_currency_id.name"/>/<t t-esc="doc.currency_id.symbol or doc.currency_id.name"/>
+                                &amp;nbsp;=&amp;nbsp;
+                                <t t-esc="doc.format_number(doc.exchanged_amount, digits=2)"/>
+                                <t t-esc="doc.ks_exchange_currency_id.name"/>
+                            </td>
+                        </tr>
+                    </t>
+
                     <!-- Amount in Words Row -->
                     <tr>
                         <td style="border:1px solid #000; padding:6px; font-size:10pt;" colspan="2">
-                            <t t-set="exchange_currency_code" t-value="company_currency.name or 'AED'"/>
-                            <t t-set="exchanged_amount" t-value="converted_amount"/>
-                            <t t-set="invoice_amount_words" t-value="doc.get_amount_in_words_currency(total_invoice_amount, invoice_currency)"/>
+                            <t t-if="doc.is_exchange and doc.exchanged_amount and doc.ks_exchange_currency_id">
+                                <t t-set="words_amount" t-value="doc.exchanged_amount"/>
+                                <t t-set="words_currency" t-value="doc.ks_exchange_currency_id"/>
+                            </t>
+                            <t t-else="">
+                                <t t-set="words_amount" t-value="total_invoice_amount"/>
+                                <t t-set="words_currency" t-value="invoice_currency"/>
+                            </t>
+                            <t t-set="invoice_amount_words" t-value="doc.get_amount_in_words_currency(words_amount, words_currency)"/>
                             <strong>Amount Chargeable (in words)</strong><br/>
                             <strong>
+                                <t t-if="words_currency.name == 'HKD'">Hong Kong Dollar </t>
                                 <t t-esc="invoice_amount_words or ''"/>
                             </strong>
                         </td>

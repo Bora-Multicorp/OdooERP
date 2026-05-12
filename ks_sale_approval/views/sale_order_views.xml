@@ -223,7 +223,7 @@
                 <attribute name="readonly">not ks_can_edit</attribute>
             </xpath>
 
-            <!-- Lock tax on order lines for normal users after approval -->
+            <!-- Lock tax on order lines -->
             <xpath expr="//field[@name='order_line']//list//field[@name='tax_id']" position="attributes">
                 <attribute name="readonly">1</attribute>
             </xpath>

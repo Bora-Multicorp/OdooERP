@@ -1,6 +1,37 @@
 # -*- coding: utf-8 -*-
 
 from odoo import api, fields, models, _
+from odoo.exceptions import UserError
+
+
+class SaleOrderLine(models.Model):
+    _inherit = 'sale.order.line'
+
+    ks_is_advance_line = fields.Boolean(
+        string='Is Advance Line',
+        compute='_compute_ks_is_advance_line',
+        store=True,
+    )
+
+    @api.depends('product_id')
+    def _compute_ks_is_advance_line(self):
+        for line in self:
+            line.ks_is_advance_line = bool(
+                line.product_id and line.product_id.product_tmpl_id.is_advance_payment_product
+            )
+
+    _ADVANCE_LINE_LOCKED_FIELDS = {'product_id', 'product_uom_qty', 'price_unit', 'discount', 'tax_id', 'product_uom'}
+
+    def write(self, vals):
+        if set(vals.keys()) & self._ADVANCE_LINE_LOCKED_FIELDS:
+            if self.filtered(lambda l: l.ks_is_advance_line):
+                raise UserError(_('Advance payment deduction lines cannot be modified manually.'))
+        return super().write(vals)
+
+    def unlink(self):
+        if self.filtered(lambda l: l.ks_is_advance_line):
+            raise UserError(_('Advance payment deduction lines cannot be deleted manually.'))
+        return super().unlink()
 
 
 class SaleOrder(models.Model):

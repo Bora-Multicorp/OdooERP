@@ -89,13 +89,14 @@
                     </t>
                     <t t-if="doc.company_id.partner_id.email">E-Mail : <t t-esc="doc.company_id.partner_id.email"/></t>
                     <div style="border-top:1px solid black; height:1px;"/>
+                    <t t-set="consignee" t-value="doc.picking_type_id.warehouse_id.partner_id or doc.dest_address_id"/>
                     Consignee (Ship to)<br/>
-                    <strong t-esc="doc.dest_address_id.name or doc.company_id.name or ''"/><br/>
-                    <t t-if="doc.dest_address_id and doc.dest_address_id.street"><t t-esc="doc.dest_address_id.street"/><br/></t>
-                    <t t-if="doc.dest_address_id and doc.dest_address_id.street2"><t t-esc="doc.dest_address_id.street2"/><br/></t>
-                    <t t-if="doc.dest_address_id and doc.dest_address_id.city"><t t-esc="doc.dest_address_id.city"/><t t-if="doc.dest_address_id.state_id">, <t t-esc="doc.dest_address_id.state_id.name or ''"/></t><br/></t>
-                    <t t-if="doc.dest_address_id and doc.dest_address_id.country_id"><t t-esc="doc.dest_address_id.country_id.name or ''"/><br/></t>
-                    <t t-if="doc.dest_address_id and doc.dest_address_id.vat">TRN: <t t-esc="doc.dest_address_id.vat"/><br/></t>
+                    <strong t-esc="consignee.name or doc.company_id.name or ''"/><br/>
+                    <t t-if="consignee and consignee.street"><t t-esc="consignee.street"/><br/></t>
+                    <t t-if="consignee and consignee.street2"><t t-esc="consignee.street2"/><br/></t>
+                    <t t-if="consignee and consignee.city"><t t-esc="consignee.city"/><t t-if="consignee.state_id">, <t t-esc="consignee.state_id.name or ''"/></t><br/></t>
+                    <t t-if="consignee and consignee.country_id"><t t-esc="consignee.country_id.name or ''"/><br/></t>
+                    <t t-if="consignee and consignee.vat">TRN: <t t-esc="consignee.vat"/><br/></t>
                     <div style="border-top:1px solid black; height:1px;"/>
                     Supplier<br/>
                     <strong t-esc="doc.partner_id.name or ''"/><br/>

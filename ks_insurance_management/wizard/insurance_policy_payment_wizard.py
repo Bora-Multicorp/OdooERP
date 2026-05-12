@@ -23,6 +23,28 @@ class InsurancePolicyPaymentWizard(models.TransientModel):
         related='policy_id.initial_sum_insured',
         readonly=True,
     )
+    insurance_type_id = fields.Many2one(
+        related='policy_id.insurance_type_id', string='Insurance Type', readonly=True)
+    company_id = fields.Many2one(
+        related='policy_id.company_id', string='Company Name', readonly=True)
+    insurance_company_id = fields.Many2one(
+        related='policy_id.insurance_company_id', string='Insurance Company', readonly=True)
+    cover_amount_words = fields.Char(
+        related='policy_id.sum_insured_words', string='Cover Amount (in words)', readonly=True)
+    premium = fields.Float(
+        string='Premium (Incl. GST)',
+        help='Updated premium inclusive of GST. Will be saved to the policy after payment is posted.')
+    agent_id = fields.Many2one(
+        related='policy_id.agent_id', string='Agent', readonly=True)
+    expiry_date = fields.Date(
+        related='policy_id.expiry_date', string='Expiry Date', readonly=True)
+    approver_id = fields.Many2one(
+        'insurance.payment.approver',
+        string='Payment Approver',
+        required=True,
+        domain="[('company_id', '=', company_id)]",
+        help='Select the approver who will approve this top-up payment.',
+    )
     topup_amount = fields.Float(
         string='Top-up Amount',
         required=True,
@@ -39,37 +61,39 @@ class InsurancePolicyPaymentWizard(models.TransientModel):
         for rec in self:
             rec.new_sum_insured = (rec.current_sum_insured or 0.0) + (rec.topup_amount or 0.0)
 
+    @api.onchange('policy_id')
+    def _onchange_policy_id(self):
+        if self.policy_id:
+            self.premium = self.policy_id.premium
+
     def action_confirm(self):
-        """Apply the top-up and trigger the approval workflow."""
+        """Submit top-up for approval. Sum insured and premium are updated only after payment is posted."""
         self.ensure_one()
         if self.topup_amount <= 0:
             raise UserError("Top-up amount must be greater than zero.")
+        if not self.approver_id:
+            raise UserError("Please select a Payment Approver.")
 
         policy = self.policy_id
-        approver = policy._get_approver()
-        if not approver:
-            raise UserError(
-                "No payment approver is configured. "
-                "Please set one in Configuration → Payment Approvers."
-            )
+        approver = self.approver_id
 
-        # 1. Increase insured amount immediately (per spec)
-        # 2. Set topup_flag and store pending amount for payment creation on approval
+        # Store pending topup and premium; actual update happens in account_payment.action_post
         policy.write({
-            'initial_sum_insured': policy.initial_sum_insured + self.topup_amount,
-            'topup_flag': True,
             'pending_topup_amount': self.topup_amount,
+            'pending_topup_premium': self.premium,
+            'pending_topup_approver_id': approver.id,
             'payment_status': 'requested',
         })
 
-        # 3. Notify approver via activity on the policy
+        new_sum_insured = policy.initial_sum_insured + self.topup_amount
         policy._notify_approver(
             approver,
             summary=f'Top-up Approval Required — {policy.policy_number}',
             note=(
-                f'A top-up of <b>₹{self.topup_amount:,.2f}</b> has been applied to '
+                f'A top-up of <b>₹{self.topup_amount:,.2f}</b> has been requested for '
                 f'policy <b>{policy.policy_number}</b>.<br/>'
-                f'New Sum Insured: <b>₹{policy.initial_sum_insured:,.2f}</b><br/>'
+                f'New Sum Insured (after payment): <b>₹{new_sum_insured:,.2f}</b><br/>'
+                f'Updated Premium (Incl. GST): <b>₹{self.premium:,.2f}</b><br/>'
                 f'Requested by: <b>{self.env.user.name}</b><br/>'
                 f'Please approve the corresponding payment.'
             ),
@@ -77,10 +101,9 @@ class InsurancePolicyPaymentWizard(models.TransientModel):
 
         policy.message_post(
             body=(
-                f'Top-up of <b>₹{self.topup_amount:,.2f}</b> applied by '
+                f'Top-up of <b>₹{self.topup_amount:,.2f}</b> requested by '
                 f'<b>{self.env.user.name}</b>. '
-                f'New Sum Insured: <b>₹{policy.initial_sum_insured:,.2f}</b>. '
-                f'Awaiting approval from <b>{approver.name}</b>.'
+                f'Pending approval from <b>{approver.name}</b>.'
             ),
         )
         return {'type': 'ir.actions.act_window_close'}

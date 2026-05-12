@@ -183,9 +183,7 @@ class SaleAdvancePayment(models.TransientModel):
             'price_unit': -self.amount_in_order_currency,
             'tax_id': [(5, 0, 0)],  # No tax on deduction
         }
-        line = self.env['sale.order.line'].create(line_vals)
-        # Ensure price is not overwritten by pricelist
-        line.write({'price_unit': -self.amount_in_order_currency})
+        self.env['sale.order.line'].create(line_vals)
 
     def action_create_payment(self):
         """Create account.payment record directly from sale order"""
@@ -195,6 +193,18 @@ class SaleAdvancePayment(models.TransientModel):
             raise UserError(_('The payment amount must be positive.'))
         if not self.amount_in_order_currency or self.amount_in_order_currency <= 0:
             raise UserError(_('The converted amount in order currency must be positive. Check the payment amount and rate.'))
+
+        order = self.sale_order_id
+        already_paid = (getattr(order, 'ks_advance_payment_amount', 0.0) or 0.0)
+        remaining = order.amount_total - already_paid
+        if self.amount_in_order_currency > remaining:
+            raise UserError(_(
+                'Advance payment amount (%(amount)s) exceeds the remaining balance (%(balance)s) '
+                'of Sale Order %(order)s.',
+                amount=formatLang(self.env, self.amount_in_order_currency, currency_obj=self.order_currency_id),
+                balance=formatLang(self.env, remaining, currency_obj=self.order_currency_id),
+                order=order.name,
+            ))
 
         if not self.journal_id:
             raise UserError(_('Please select a payment journal.'))
@@ -232,10 +242,10 @@ class SaleAdvancePayment(models.TransientModel):
         
         # Post the payment
         payment.action_post()
-        
-        # Update sale order: add a deduction line so SO total is reduced by advance amount (e.g. 100 - 20 = 80)
+
+        # Add advance deduction line on the sale order (visible on SO, excluded from PDFs)
         self._add_advance_deduction_line()
-        
+
         # Log in chatter
         formatted_amount = formatLang(self.env, self.amount_in_order_currency, currency_obj=self.order_currency_id)
         self.sale_order_id.message_post(
