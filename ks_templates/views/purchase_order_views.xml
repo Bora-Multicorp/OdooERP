@@ -13,13 +13,17 @@
             </field>
         </record>
 
-        <!-- Add Authorised Signatory and Bank fields to Purchase Order -->
+        <!-- Add Authorised Signatory, Bank and Extra PO fields to Purchase Order -->
         <record id="view_purchase_order_form_inherit_ks_templates_sign_bank" model="ir.ui.view">
             <field name="name">purchase.order.form.ks.templates.sign.bank</field>
             <field name="model">purchase.order</field>
             <field name="inherit_id" ref="purchase.purchase_order_form"/>
             <field name="arch" type="xml">
                 <xpath expr="//page[@name='purchase_delivery_invoice']/group" position="inside">
+                    <group string="Extra PO Fields">
+                        <field name="ks_destination" placeholder="Destination"/>
+                        <field name="ks_despatched_through" placeholder="Despatched Through"/>
+                    </group>
                     <group string="Bank &amp; Signature">
                         <field name="ks_bank_id" placeholder="Select Bank"/>
                         <field name="ks_remarks" placeholder="Remarks" colspan="2"/>

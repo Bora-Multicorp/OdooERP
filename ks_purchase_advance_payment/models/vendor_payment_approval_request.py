@@ -168,7 +168,7 @@ class VendorPaymentApprovalRequest(models.Model):
                 ('state', '!=', 'rejected'),
             ])
             total_requested = sum(all_active.mapped('amount_for_approval'))
-            if total_requested >= po.amount_total:
+            if total_requested > po.amount_total:
                 raise ValidationError(
                     _(
                         'The total amount of payment approval requests for Purchase Order %s '

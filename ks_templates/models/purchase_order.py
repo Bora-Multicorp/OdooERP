@@ -10,6 +10,8 @@ class PurchaseOrder(models.Model):
     ks_bank_id = fields.Many2one('res.bank', string='Bank Information')
     ks_remarks = fields.Text(string='Remarks')
     ks_round_off = fields.Float(string='Round Off', digits=(16, 2), default=0.0)
+    ks_destination = fields.Char(string='Destination')
+    ks_despatched_through = fields.Char(string='Despatched Through')
     amount_total = fields.Monetary(string='Total', store=True, readonly=True, compute='_amount_all')
     tax_totals = fields.Binary(compute='_compute_tax_totals', exportable=False)
 

@@ -27,7 +27,7 @@
 
     <!-- Menu Item -->
     <menuitem id="menu_brand_master"
-              name="MOP Master"
+              name="Brands"
               parent="stock.menu_warehouse_config"
               action="action_brand_master"
               sequence="49"/>

@@ -9,5 +9,11 @@
         <record id="purchase.menu_purchase_products" model="ir.ui.menu">
             <field name="active" eval="False"/>
         </record>
+        <!-- Add Pricelists under Sales > Configuration visible to all users -->
+        <menuitem id="menu_product_pricelist_config"
+            name="Pricelists"
+            parent="sale.prod_config_main"
+            action="product.product_pricelist_action2"
+            sequence="5"/>
     </data>
 </odoo>
