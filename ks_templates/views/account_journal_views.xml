@@ -8,9 +8,9 @@
             <field name="inherit_id" ref="account.view_account_journal_form"/>
             <field name="arch" type="xml">
                 <!-- Change the label of code field from "Short Code" to "Swift Code" -->
-                <field name="code" position="attributes">
-                    <attribute name="string">Swift Code</attribute>
-                </field>
+<!--                <field name="code" position="attributes">-->
+<!--                    <attribute name="string">Swift Code</attribute>-->
+<!--                </field>-->
                 
                 <!-- Add new bank-related fields in the bank_account_number group -->
                 <group name="bank_account_number" position="inside">
