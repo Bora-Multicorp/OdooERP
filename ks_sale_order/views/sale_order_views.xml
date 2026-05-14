@@ -58,7 +58,7 @@
             <!-- Bank Account Information under Other Info tab -->
             <xpath expr="//page[@name='other_information']" position="inside">
                 <group name="bank_details" string="Bank Account Information">
-                    <field name="ks_bank_id"/>
+                    <field name="ks_bank_id" readonly="not ks_can_edit or ks_qty_only_edit"/>
                 </group>
             </xpath>
         </field>

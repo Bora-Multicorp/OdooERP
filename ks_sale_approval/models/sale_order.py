@@ -154,6 +154,11 @@ class SaleOrder(models.Model):
         string='Can Edit SO',
         compute='_compute_ks_can_edit',
     )
+    ks_qty_only_edit = fields.Boolean(
+        string='Quantity Only Edit',
+        compute='_compute_ks_can_edit',
+        help='True when a normal user has edit approval on confirmed SO — only qty is editable',
+    )
     ks_is_admin_user = fields.Boolean(
         string='Is Admin User',
         compute='_compute_ks_is_admin_user',
@@ -273,30 +278,38 @@ class SaleOrder(models.Model):
             # Admin users can edit ANY state - bypass all restrictions
             if order._is_admin_user():
                 order.ks_can_edit = True
+                order.ks_qty_only_edit = False
                 continue
 
             if order.state in ['draft', 'sent']:
                 # Draft and Sent - everyone can edit
                 order.ks_can_edit = True
+                order.ks_qty_only_edit = False
             elif order.state in ['approval_pending', 'cancel_pending', 'edit_pending']:
                 # All approval states - locked for everyone (except admin, handled above)
                 order.ks_can_edit = False
+                order.ks_qty_only_edit = False
             elif order.state == 'sale':
                 # Confirmed state
                 if order.ks_is_pm_user:
-                    # PM users can always edit confirmed SOs
+                    # PM users can always edit confirmed SOs (full edit)
                     order.ks_can_edit = True
+                    order.ks_qty_only_edit = False
                 elif order.ks_edit_approved and order.ks_edit_request_user_id == current_user:
-                    # Normal user who requested edit AND it was approved
+                    # Normal user with approved edit — qty only
                     order.ks_can_edit = True
+                    order.ks_qty_only_edit = True
                 else:
                     # Normal users cannot edit confirmed SOs
                     order.ks_can_edit = False
+                    order.ks_qty_only_edit = False
             elif order.locked:
                 # Locked state - no one can edit (except admin, handled above)
                 order.ks_can_edit = False
+                order.ks_qty_only_edit = False
             else:
                 order.ks_can_edit = False
+                order.ks_qty_only_edit = False
 
     @api.depends('state', 'ks_is_pm_user', 'ks_is_normal_user',
                  'ks_confirm_pm1_approved', 'ks_confirm_pm2_approved',

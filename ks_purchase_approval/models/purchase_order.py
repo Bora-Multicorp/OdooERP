@@ -173,7 +173,12 @@ class PurchaseOrder(models.Model):
         string='Can Edit PO',
         compute='_compute_ks_can_edit',
     )
-    
+    ks_qty_only_edit = fields.Boolean(
+        string='Quantity Only Edit',
+        compute='_compute_ks_can_edit',
+        help='True when a normal user has edit approval on confirmed PO — only qty is editable',
+    )
+
     # Button visibility fields
     ks_show_request_approval_button = fields.Boolean(
         string='Show Request Approval Button',
@@ -358,25 +363,34 @@ class PurchaseOrder(models.Model):
             if order.state in ['draft', 'sent']:
                 # Draft and Sent - everyone can edit
                 order.ks_can_edit = True
+                order.ks_qty_only_edit = False
             elif order.state in ['pending_approval', 'cancel_pending', 'edit_pending']:
                 # Pending states - locked for everyone
                 order.ks_can_edit = False
+                order.ks_qty_only_edit = False
             elif order.state == 'purchase':
                 # E-com imported POs bypass approvals: always editable
                 if not order._requires_approval():
                     order.ks_can_edit = True
+                    order.ks_qty_only_edit = False
                 # Confirmed state - PM users can edit, or normal users if edit is approved
                 elif order.ks_is_pm_user:
                     order.ks_can_edit = True
+                    order.ks_qty_only_edit = False
                 elif order.ks_edit_approved and order.ks_edit_request_user_id == self.env.user:
+                    # Normal user with approved edit — qty only
                     order.ks_can_edit = True
+                    order.ks_qty_only_edit = True
                 else:
                     order.ks_can_edit = False
+                    order.ks_qty_only_edit = False
             elif order.state == 'done':
                 # Locked state
                 order.ks_can_edit = False
+                order.ks_qty_only_edit = False
             else:
                 order.ks_can_edit = False
+                order.ks_qty_only_edit = False
 
     @api.depends('state', 'ks_is_pm_user', 'ks_is_normal_user',
                  'ks_pm1_approved', 'ks_pm2_approved',

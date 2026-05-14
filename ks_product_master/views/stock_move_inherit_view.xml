@@ -53,5 +53,26 @@
                 </xpath>
             </field>
         </record>
+
+        <!-- Add lot_name, imei, imei2 to the detailed operations list view -->
+        <record id="view_move_line_detailed_op_imei_inherit" model="ir.ui.view">
+            <field name="name">stock.move.line.detailed.op.imei.inherit</field>
+            <field name="model">stock.move.line</field>
+            <field name="inherit_id" ref="stock.view_stock_move_line_detailed_operation_tree"/>
+            <field name="arch" type="xml">
+                <!-- Make lot_name always visible (override context-based column_invisible) -->
+                <xpath expr="//field[@name='lot_name']" position="attributes">
+                    <attribute name="column_invisible">False</attribute>
+                    <attribute name="optional">show</attribute>
+                </xpath>
+                <!-- Add imei and imei2 after lot_name -->
+                <xpath expr="//field[@name='lot_name']" position="after">
+                    <field name="imei" string="IMEI" optional="show"
+                           readonly="state in ('done', 'cancel') and is_locked"/>
+                    <field name="imei2" string="IMEI 2" optional="show"
+                           readonly="state in ('done', 'cancel') and is_locked"/>
+                </xpath>
+            </field>
+        </record>
     </data>
 </odoo>

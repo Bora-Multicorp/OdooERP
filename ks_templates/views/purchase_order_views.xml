@@ -21,13 +21,18 @@
             <field name="arch" type="xml">
                 <xpath expr="//page[@name='purchase_delivery_invoice']/group" position="inside">
                     <group string="Extra PO Fields">
-                        <field name="ks_destination" placeholder="Destination"/>
-                        <field name="ks_despatched_through" placeholder="Despatched Through"/>
+                        <field name="ks_destination" placeholder="Destination"
+                               readonly="state in ('purchase', 'done', 'cancel', 'pending_approval', 'edit_pending', 'cancel_pending')"/>
+                        <field name="ks_despatched_through" placeholder="Despatched Through"
+                               readonly="state in ('purchase', 'done', 'cancel', 'pending_approval', 'edit_pending', 'cancel_pending')"/>
                     </group>
                     <group string="Bank &amp; Signature">
-                        <field name="ks_bank_id" placeholder="Select Bank"/>
-                        <field name="ks_remarks" placeholder="Remarks" colspan="2"/>
-                        <field name="ks_authorised_signatory" widget="signature" string="Authorised Signatory"/>
+                        <field name="ks_bank_id" placeholder="Select Bank"
+                               readonly="state in ('purchase', 'done', 'cancel', 'pending_approval', 'edit_pending', 'cancel_pending')"/>
+                        <field name="ks_remarks" placeholder="Remarks" colspan="2"
+                               readonly="state in ('purchase', 'done', 'cancel', 'pending_approval', 'edit_pending', 'cancel_pending')"/>
+                        <field name="ks_authorised_signatory" widget="signature" string="Authorised Signatory"
+                               readonly="state in ('purchase', 'done', 'cancel', 'pending_approval', 'edit_pending', 'cancel_pending')"/>
                     </group>
                 </xpath>
             </field>

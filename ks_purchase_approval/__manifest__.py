@@ -22,7 +22,7 @@
     'category': 'Inventory/Purchase',
     'author': 'Ksolves',
     'website': '',
-    'depends': ['purchase', 'mail', 'sale', 'ks_sale_order', 'stock','ks_purchase_advance_payment', 'purchase_stock'],
+    'depends': ['purchase', 'mail', 'sale', 'ks_sale_order', 'stock', 'ks_purchase_advance_payment', 'purchase_stock', 'ks_templates', 'project_purchase'],
     'data': [
         'security/security.xml',
         'security/ir.model.access.csv',

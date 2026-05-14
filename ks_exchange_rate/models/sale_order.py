@@ -10,6 +10,7 @@ class SaleOrder(models.Model):
     ks_exchange_currency_id = fields.Many2one(
         'res.currency',
         string='Convert To Currency',
+        default=lambda self: self.env.company.currency_id,
         help='Select the target currency for the exchange rate conversion. Defaults to company currency.',
     )
 
