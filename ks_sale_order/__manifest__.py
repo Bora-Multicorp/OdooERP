@@ -34,7 +34,7 @@ Configuration:
     'website': "https://www.ksolves.com",
     'category': 'Sales/Sales',
     'version': '18.0.1.0.0',
-    'depends': ['sale_stock', 'mail', 'ks_sale_approval', 'purchase', 'ks_automail', 'ks_payment_access_control', 'ks_sale_advance_payment', 'ks_doc', 'product', 'l10n_in'],
+    'depends': ['sale_stock', 'mail', 'purchase', 'ks_automail', 'ks_payment_access_control', 'ks_sale_advance_payment', 'ks_doc', 'product', 'l10n_in', 'ks_exchange_rate'],
     'data': [
         'security/ir.model.access.csv',
         'data/hide_products_menu.xml',
