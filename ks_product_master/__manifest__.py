@@ -13,7 +13,7 @@
     'version': '0.1',
 
     # any module necessary for this one to work correctly
-    'depends': ['base', 'product', 'stock', 'stock_account', 'sale_project', 'purchase', 'account', 'mail', 'l10n_in_withholding'],
+    'depends': ['base', 'product', 'stock', 'stock_account', 'sale_project', 'purchase', 'account', 'mail', 'l10n_in_withholding', 'ks_sale_advance_payment'],
 
     # always loaded
     'data': [
