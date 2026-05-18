@@ -27,6 +27,7 @@
     'author': 'Custom Development',
     'depends': ['sale_management', 'purchase', 'ks_contact'],
     'data': [
+        'security/security_groups.xml',
         'security/ir_rule.xml',
         'views/res_partner_views.xml',
         'views/sale_order_views.xml',
