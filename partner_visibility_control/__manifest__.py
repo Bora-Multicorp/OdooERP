@@ -19,12 +19,15 @@
         - Auto-assigns the current user to the partner on order creation when
           they are not already assigned.
 
-        Visibility is enforced exclusively via view-level domain filters.
-        No global record rules are added or modified.
+        Visibility is enforced via:
+        - A global ir.rule: contacts are visible only when the current user is
+          in salesperson_ids, or when no sales executives are assigned yet.
+        - View-level domain filters for Sales/Purchase order dropdowns.
     """,
     'author': 'Custom Development',
     'depends': ['sale_management', 'purchase', 'ks_contact'],
     'data': [
+        'security/ir_rule.xml',
         'views/res_partner_views.xml',
         'views/sale_order_views.xml',
         'views/purchase_order_views.xml',
