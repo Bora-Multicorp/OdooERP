@@ -8,22 +8,24 @@
         <field name="arch" type="xml">
             <!-- Add exchanged_amount below tax_totals (which shows amount_total) -->
             <xpath expr="//field[@name='tax_totals']" position="after">
-                <field name="exchanged_amount" 
+                <field name="ks_exchange_currency_id" invisible="1"/>
+                <field name="exchanged_amount"
                        digits="[16,2]"
                        readonly="1"
                        invisible="is_exchange == False or currency_id == company_currency_id"
                        widget="monetary"
-                       options="{'currency_field': 'company_currency_id'}"/>
+                       options="{'currency_field': 'ks_exchange_currency_id'}"/>
             </xpath>
             <!-- Add exchanged_amount to order lines - after price_subtotal field -->
             <xpath expr="//field[@name='order_line']//list//field[@name='price_subtotal']" position="after">
                 <field name="company_currency_id" column_invisible="1"/>
-                <field name="exchanged_amount" 
+                <field name="ks_exchange_currency_id" column_invisible="1"/>
+                <field name="exchanged_amount"
                        digits="[16,2]"
                        readonly="1"
                        invisible="order_id.is_exchange == False or order_id.currency_id == company_currency_id"
                        widget="monetary"
-                       options="{'currency_field': 'company_currency_id'}"/>
+                       options="{'currency_field': 'ks_exchange_currency_id'}"/>
             </xpath>
         </field>
     </record>

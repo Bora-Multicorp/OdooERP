@@ -13,6 +13,7 @@
                 <field name="ks_is_normal_user" invisible="1"/>
                 <field name="ks_is_admin_user" invisible="1"/>
                 <field name="ks_can_edit" invisible="1"/>
+                <field name="ks_qty_only_edit" invisible="1"/>
                 <field name="ks_show_approve_confirm_button" invisible="1"/>
                 <field name="ks_show_reject_confirm_button" invisible="1"/>
                 <field name="ks_show_approve_cancel_button" invisible="1"/>
@@ -210,46 +211,100 @@
 
             <!-- Make partner_id readonly when in approval states (admin users can always edit) -->
             <xpath expr="//field[@name='partner_id'][not(ancestor::field)]" position="attributes">
-                <attribute name="readonly">(state in ('cancel', 'sale', 'approval_pending', 'cancel_pending', 'edit_pending') or (state == 'sale' and ks_is_normal_user and not ks_edit_approved)) and not ks_is_admin_user</attribute>
+                <attribute name="readonly">((state in ('cancel', 'sale', 'approval_pending', 'cancel_pending', 'edit_pending') or (state == 'sale' and ks_is_normal_user and not ks_edit_approved)) and not ks_is_admin_user) or ks_qty_only_edit</attribute>
             </xpath>
 
             <!-- Lock payment terms for normal users after approval -->
             <xpath expr="//field[@name='payment_term_id']" position="attributes">
-                <attribute name="readonly">not ks_can_edit</attribute>
+                <attribute name="readonly">not ks_can_edit or ks_qty_only_edit</attribute>
             </xpath>
 
             <!-- Lock salesperson for normal users after approval (targets the form field inside Other Info tab) -->
             <xpath expr="//group[@name='sales_person']//field[@name='user_id']" position="attributes">
-                <attribute name="readonly">not ks_can_edit</attribute>
+                <attribute name="readonly">not ks_can_edit or ks_qty_only_edit</attribute>
             </xpath>
 
-            <!-- Lock tax on order lines for normal users after approval -->
+            <!-- Lock tax on order lines -->
             <xpath expr="//field[@name='order_line']//list//field[@name='tax_id']" position="attributes">
                 <attribute name="readonly">1</attribute>
             </xpath>
 
+            <!-- Lock order line non-qty fields for qty-only edit mode -->
+            <xpath expr="//field[@name='order_line']//list//field[@name='product_id']" position="attributes">
+                <attribute name="readonly">parent.ks_qty_only_edit</attribute>
+            </xpath>
+            <xpath expr="//field[@name='order_line']//list//field[@name='price_unit']" position="attributes">
+                <attribute name="readonly">parent.ks_qty_only_edit</attribute>
+            </xpath>
+            <xpath expr="//field[@name='order_line']//list//field[@name='discount']" position="attributes">
+                <attribute name="readonly">parent.ks_qty_only_edit</attribute>
+            </xpath>
+            <xpath expr="//field[@name='order_line']//list//field[@name='product_uom']" position="attributes">
+                <attribute name="readonly">parent.ks_qty_only_edit</attribute>
+            </xpath>
+            <xpath expr="//field[@name='order_line']//list//field[@name='name']" position="attributes">
+                <attribute name="readonly">parent.ks_qty_only_edit</attribute>
+            </xpath>
+            <!-- Lock Invoice/Delivery address for qty-only edit mode -->
+            <xpath expr="//field[@name='partner_invoice_id']" position="attributes">
+                <attribute name="readonly">not ks_can_edit or ks_qty_only_edit</attribute>
+            </xpath>
+            <xpath expr="//field[@name='partner_shipping_id']" position="attributes">
+                <attribute name="readonly">not ks_can_edit or ks_qty_only_edit</attribute>
+            </xpath>
+
             <!-- Lock remaining header/Other Info fields not covered by Odoo's native locked condition -->
+            <xpath expr="//field[@name='company_id'][not(ancestor::field)][not(@invisible='1')]" position="attributes">
+                <attribute name="readonly">not ks_can_edit or ks_qty_only_edit</attribute>
+            </xpath>
             <xpath expr="//field[@name='team_id']" position="attributes">
-                <attribute name="readonly">not ks_can_edit</attribute>
+                <attribute name="readonly">not ks_can_edit or ks_qty_only_edit</attribute>
             </xpath>
             <xpath expr="//field[@name='client_order_ref']" position="attributes">
-                <attribute name="readonly">not ks_can_edit</attribute>
+                <attribute name="readonly">not ks_can_edit or ks_qty_only_edit</attribute>
             </xpath>
             <xpath expr="//field[@name='tag_ids']" position="attributes">
-                <attribute name="readonly">not ks_can_edit</attribute>
+                <attribute name="readonly">not ks_can_edit or ks_qty_only_edit</attribute>
             </xpath>
             <xpath expr="//field[@name='fiscal_position_id']" position="attributes">
-                <attribute name="readonly">not ks_can_edit</attribute>
+                <attribute name="readonly">not ks_can_edit or ks_qty_only_edit</attribute>
+            </xpath>
+
+            <!-- Lock Project field (from sale_project) -->
+            <xpath expr="//field[@name='project_id']" position="attributes">
+                <attribute name="readonly">not ks_can_edit or ks_qty_only_edit</attribute>
+            </xpath>
+
+            <!-- Lock Incoterm and Incoterm Location (from sale_stock) -->
+            <xpath expr="//field[@name='incoterm']" position="attributes">
+                <attribute name="readonly">not ks_can_edit or ks_qty_only_edit</attribute>
+            </xpath>
+            <xpath expr="//field[@name='incoterm_location']" position="attributes">
+                <attribute name="readonly">not ks_can_edit or ks_qty_only_edit</attribute>
+            </xpath>
+
+            <!-- Lock Tracking section fields (Other Info tab) -->
+            <xpath expr="//group[@name='sale_reporting']//field[@name='origin']" position="attributes">
+                <attribute name="readonly">not ks_can_edit or ks_qty_only_edit</attribute>
+            </xpath>
+            <xpath expr="//group[@name='sale_reporting']//field[@name='campaign_id']" position="attributes">
+                <attribute name="readonly">not ks_can_edit or ks_qty_only_edit</attribute>
+            </xpath>
+            <xpath expr="//group[@name='sale_reporting']//field[@name='medium_id']" position="attributes">
+                <attribute name="readonly">not ks_can_edit or ks_qty_only_edit</attribute>
+            </xpath>
+            <xpath expr="//group[@name='sale_reporting']//field[@name='source_id']" position="attributes">
+                <attribute name="readonly">not ks_can_edit or ks_qty_only_edit</attribute>
             </xpath>
 
             <!-- Lock ks_no_tax_allowed (No Tax checkbox) when SO is locked -->
             <xpath expr="//field[@name='ks_no_tax_allowed']" position="attributes">
-                <attribute name="readonly">not ks_can_edit</attribute>
+                <attribute name="readonly">not ks_can_edit or ks_qty_only_edit</attribute>
             </xpath>
 
             <!-- Lock stock_decifient (Stock Deficient checkbox) when SO is locked -->
             <xpath expr="//field[@name='stock_decifient']" position="attributes">
-                <attribute name="readonly">not ks_can_edit</attribute>
+                <attribute name="readonly">not ks_can_edit or ks_qty_only_edit</attribute>
             </xpath>
 
         </field>
@@ -328,13 +383,13 @@
                 <field name="ks_can_edit_price" column_invisible="1"/>
                 <field name="ks_min_unit_price" optional="hide" string="Min. Price (Purchase)"/>
             </xpath>
-            <!-- Unit price always editable (no readonly) -->
+            <!-- Unit price editable unless qty-only edit mode -->
             <xpath expr="//field[@name='order_line']//list//field[@name='price_unit']" position="attributes">
-                <attribute name="readonly">0</attribute>
+                <attribute name="readonly">parent.ks_qty_only_edit</attribute>
             </xpath>
-            <!-- Discount editable (no readonly from approval) -->
+            <!-- Discount editable unless qty-only edit mode -->
             <xpath expr="//field[@name='order_line']//list//field[@name='discount']" position="attributes">
-                <attribute name="readonly">qty_invoiced &gt; 0</attribute>
+                <attribute name="readonly">qty_invoiced &gt; 0 or parent.ks_qty_only_edit</attribute>
             </xpath>
             <!-- Add computed field to inline form view (min price display only) -->
             <xpath expr="//field[@name='order_line']//form//field[@name='price_unit']" position="before">

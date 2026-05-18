@@ -85,11 +85,12 @@
                     <t t-set="company_iec" t-value="doc.get_company_iec()"/>
                     <t t-if="company_iec"><br/>IEC No : <t t-esc="company_iec"/></t>
                     <div style="border-top:1px solid black; height:1px;"/>
+                    <t t-set="consignee" t-value="doc.picking_type_id.warehouse_id.partner_id or doc.dest_address_id"/>
                     <strong>Consignee (Ship to)</strong><br/>
-                    <strong t-esc="doc.dest_address_id.name or doc.company_id.name or ''"/><br/>
-                    <t t-if="doc.dest_address_id and doc.dest_address_id.street" t-esc="doc.dest_address_id.street"/><br/>
-                    <t t-if="doc.dest_address_id and doc.dest_address_id.city" t-esc="doc.dest_address_id.city"/>
-                    <t t-if="doc.dest_address_id and doc.dest_address_id.state_id">, <t t-esc="doc.dest_address_id.state_id.name or ''"/></t><br/>
+                    <strong t-esc="consignee.name or doc.company_id.name or ''"/><br/>
+                    <t t-if="consignee and consignee.street" t-esc="consignee.street"/><br/>
+                    <t t-if="consignee and consignee.city" t-esc="consignee.city"/>
+                    <t t-if="consignee and consignee.state_id">, <t t-esc="consignee.state_id.name or ''"/></t><br/>
                     <div style="border-top:1px solid black; height:1px;"/>
                     Supplier (Bill from)<br/>
                     <strong t-esc="doc.partner_id.name or ''"/><br/>

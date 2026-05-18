@@ -309,6 +309,21 @@ class StockMove(models.Model):
                         }
         return vals_list
 
+    def write(self, vals):
+        res = super().write(vals)
+        # After saving the move, validate all move lines that have IMEI or lot data
+        if 'move_line_ids' in vals or 'move_line_nosuggest_ids' in vals:
+            for move in self:
+                for line in move.move_line_ids.filtered(
+                    lambda l: l.imei or l.imei2 or l.lot_name
+                ):
+                    line._validate_imei_lot_on_save({
+                        'imei': line.imei,
+                        'imei2': line.imei2,
+                        'lot_name': line.lot_name,
+                    })
+        return res
+
 
 class StockMoveLine(models.Model):
     _inherit = 'stock.move.line'
@@ -513,6 +528,68 @@ class StockMoveLine(models.Model):
 
         return move_lines
 
+    def _validate_imei_lot_on_save(self, vals):
+        """Called from create/write to block saving invalid IMEI or duplicate serial/lot."""
+        record = self[:1] if self else self.browse()
+        imei = vals.get('imei') if 'imei' in vals else (record.imei or None)
+        imei2 = vals.get('imei2') if 'imei2' in vals else (record.imei2 or None)
+        lot_name = vals.get('lot_name') if 'lot_name' in vals else (record.lot_name or None)
+
+        # Validate IMEI 1
+        if imei:
+            if not imei.isdigit() or len(imei) != 15:
+                raise ValidationError(_('IMEI 1 must be a 15-digit number. Got: %s') % imei)
+            exist = self.search([('imei', '=', imei), ('id', 'not in', self.ids)], limit=1)
+            if exist:
+                raise ValidationError(_('IMEI 1 (%s) is already used in another stock line.') % imei)
+            quant = self.env['stock.quant'].search([
+                '|', ('imei', '=', imei), ('imei2', '=', imei)
+            ])
+            if len(quant) > 1:
+                raise ValidationError(_('IMEI 1 (%s) is already used in stock.') % imei)
+
+        # Validate IMEI 2
+        if imei2:
+            if not imei2.isdigit() or len(imei2) != 15:
+                raise ValidationError(_('IMEI 2 must be a 15-digit number. Got: %s') % imei2)
+            exist = self.search([('imei2', '=', imei2), ('id', 'not in', self.ids)], limit=1)
+            if exist:
+                raise ValidationError(_('IMEI 2 (%s) is already used in another stock line.') % imei2)
+            quant = self.env['stock.quant'].search([
+                '|', ('imei', '=', imei2), ('imei2', '=', imei2)
+            ])
+            if len(quant) > 1:
+                raise ValidationError(_('IMEI 2 (%s) is already used in stock.') % imei2)
+
+        # IMEI 1 and IMEI 2 must differ (except Samsung/OnePlus)
+        if imei and imei2 and imei == imei2:
+            product_id = vals.get('product_id') if isinstance(vals.get('product_id'), int) else (self[:1].product_id.id if self else False)
+            product = self.env['product.product'].browse(product_id) if product_id else self.env['product.product']
+            brand_name = (product.product_tmpl_id.brand_id.name or '').lower() if product else ''
+            if brand_name not in ('samsung', 'oneplus'):
+                raise ValidationError(_('IMEI 1 and IMEI 2 must be different.'))
+
+        # Validate Serial/Lot number
+        if lot_name:
+            exist = self.search([('lot_name', '=', lot_name), ('id', 'not in', self.ids)], limit=1)
+            if exist:
+                raise ValidationError(_('Serial number (%s) is already used in another line.') % lot_name)
+            quant = self.env['stock.quant'].search([('lot_id.name', '=', lot_name)])
+            if len(quant) > 0:
+                raise ValidationError(_('Serial number (%s) is already used in stock.') % lot_name)
+
+    def create(self, vals_list):
+        records_vals = [vals_list] if isinstance(vals_list, dict) else vals_list
+        for vals in records_vals:
+            self._validate_imei_lot_on_save(vals)
+        return super().create(vals_list)
+
+    def write(self, vals):
+        if any(f in vals for f in ('imei', 'imei2', 'lot_name')):
+            for record in self:
+                record._validate_imei_lot_on_save(vals)
+        return super().write(vals)
+
     def validate_imei_and_serial_number(self):
         # some time it shows None
         # if self._context.get('active_model') != 'purchase.order':
@@ -620,6 +697,132 @@ class StockMoveLine(models.Model):
             if len(results) > 0:
                 raise ValidationError(
                     _('Serial number must be unique, the Serial number(%s) is already used in another stock item.' % record.lot_name))
+
+    @api.constrains('imei', 'imei2')
+    def _constrains_validate_imei(self):
+        for record in self:
+            if not record.move_id:
+                continue
+
+            if record.move_id.show_IMEI_field2:
+                if record.imei and (not record.imei.isdigit() or len(record.imei) != 15):
+                    raise ValidationError(_('IMEI 1 must be a 15-digit number.'))
+                if record.imei2 and (not record.imei2.isdigit() or len(record.imei2) != 15):
+                    raise ValidationError(_('IMEI 2 must be a 15-digit number.'))
+                if record.imei and record.imei2 and record.imei == record.imei2:
+                    brand_name = (record.product_id.product_tmpl_id.brand_id.name or '').lower()
+                    if brand_name not in ('samsung', 'oneplus'):
+                        raise ValidationError(_('IMEI 1 and IMEI 2 must be different.'))
+                if record.imei:
+                    exist = self.search([('imei', '=', record.imei), ('id', '!=', record.id)], limit=1)
+                    if exist:
+                        raise ValidationError(_('IMEI 1 (%s) is already used in another stock item.') % record.imei)
+                    quant = self.env['stock.quant'].search([
+                        '|', ('imei', '=', record.imei), ('imei2', '=', record.imei)
+                    ])
+                    if len(quant) > 1:
+                        raise ValidationError(_('IMEI 1 (%s) is already used in stock.') % record.imei)
+                if record.imei2:
+                    exist = self.search([('imei2', '=', record.imei2), ('id', '!=', record.id)], limit=1)
+                    if exist:
+                        raise ValidationError(_('IMEI 2 (%s) is already used in another stock item.') % record.imei2)
+                    quant = self.env['stock.quant'].search([
+                        '|', ('imei', '=', record.imei2), ('imei2', '=', record.imei2)
+                    ])
+                    if len(quant) > 1:
+                        raise ValidationError(_('IMEI 2 (%s) is already used in stock.') % record.imei2)
+
+            elif record.move_id.show_IMEI_field:
+                if record.imei and (not record.imei.isdigit() or len(record.imei) != 15):
+                    raise ValidationError(_('IMEI must be a 15-digit number.'))
+                if record.imei:
+                    exist = self.search([('imei', '=', record.imei), ('id', '!=', record.id)], limit=1)
+                    if exist:
+                        raise ValidationError(_('IMEI (%s) is already used in another stock item.') % record.imei)
+                    quant = self.env['stock.quant'].search([
+                        '|', ('imei', '=', record.imei), ('imei2', '=', record.imei)
+                    ])
+                    if len(quant) > 1:
+                        raise ValidationError(_('IMEI (%s) is already used in stock.') % record.imei)
+
+    @api.constrains('lot_name')
+    def _constrains_validate_lot_name(self):
+        for record in self:
+            if not record.lot_name:
+                continue
+            exist = self.search([('lot_name', '=', record.lot_name), ('id', '!=', record.id)], limit=1)
+            if exist:
+                raise ValidationError(
+                    _('Serial number (%s) is already used in another line.') % record.lot_name)
+            quant = self.env['stock.quant'].search([('lot_id.name', '=', record.lot_name)])
+            if len(quant) > 0:
+                raise ValidationError(
+                    _('Serial number (%s) is already used in another stock item.') % record.lot_name)
+
+    @api.onchange('imei', 'imei2')
+    def _onchange_validate_imei(self):
+        warning_msgs = []
+
+        # IMEI 1 validations
+        if self.imei:
+            if not self.imei.isdigit() or len(self.imei) != 15:
+                warning_msgs.append(_('IMEI 1 must be a 15-digit number.'))
+            else:
+                exist = self.search([('imei', '=', self.imei), ('id', '!=', self._origin.id)], limit=1)
+                if exist:
+                    warning_msgs.append(_('IMEI 1 (%s) is already used in another stock item.') % self.imei)
+                if self.move_id.show_IMEI_field2:
+                    quant_exist = self.env['stock.quant'].search([
+                        '|', ('imei', '=', self.imei), ('imei2', '=', self.imei)
+                    ])
+                    if len(quant_exist) > 1:
+                        warning_msgs.append(_('IMEI 1 (%s) is already used in stock.') % self.imei)
+                else:
+                    quant_exist = self.env['stock.quant'].search([
+                        '|', ('imei', '=', self.imei), ('imei2', '=', self.imei)
+                    ])
+                    if len(quant_exist) > 1:
+                        warning_msgs.append(_('IMEI 1 (%s) is already used in stock.') % self.imei)
+
+        # IMEI 2 validations
+        if self.move_id.show_IMEI_field2 and self.imei2:
+            if not self.imei2.isdigit() or len(self.imei2) != 15:
+                warning_msgs.append(_('IMEI 2 must be a 15-digit number.'))
+            else:
+                exist = self.search([('imei2', '=', self.imei2), ('id', '!=', self._origin.id)], limit=1)
+                if exist:
+                    warning_msgs.append(_('IMEI 2 (%s) is already used in another stock item.') % self.imei2)
+                quant_exist = self.env['stock.quant'].search([
+                    '|', ('imei', '=', self.imei2), ('imei2', '=', self.imei2)
+                ])
+                if len(quant_exist) > 1:
+                    warning_msgs.append(_('IMEI 2 (%s) is already used in stock.') % self.imei2)
+
+        # IMEI 1 and IMEI 2 must differ (except Samsung/OnePlus)
+        if self.move_id.show_IMEI_field2 and self.imei and self.imei2 and self.imei == self.imei2:
+            brand_name = (self.product_id.product_tmpl_id.brand_id.name or '').lower()
+            if brand_name not in ('samsung', 'oneplus'):
+                warning_msgs.append(_('IMEI 1 and IMEI 2 must be different.'))
+
+        if warning_msgs:
+            return {'warning': {'title': _('IMEI Validation'), 'message': '\n'.join(warning_msgs)}}
+
+    @api.onchange('lot_name')
+    def _onchange_validate_lot_name(self):
+        if not self.lot_name:
+            return
+        warning_msgs = []
+
+        exist = self.search([('lot_name', '=', self.lot_name), ('id', '!=', self._origin.id)], limit=1)
+        if exist:
+            warning_msgs.append(_('Serial number (%s) is already used in another line.') % self.lot_name)
+
+        quant_exist = self.env['stock.quant'].search([('lot_id.name', '=', self.lot_name)])
+        if len(quant_exist) > 0:
+            warning_msgs.append(_('Serial number (%s) is already used in another stock item.') % self.lot_name)
+
+        if warning_msgs:
+            return {'warning': {'title': _('Serial Number Validation'), 'message': '\n'.join(warning_msgs)}}
 
     def _synchronize_quant(self, quantity, location, action="available", in_date=False, **quants_value):
         """Override to stamp made_country / specs_made onto the destination quant

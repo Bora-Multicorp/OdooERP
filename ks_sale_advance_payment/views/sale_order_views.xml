@@ -23,6 +23,28 @@
                 <field name="ks_advance_payment_balance" invisible="1"/>
             </xpath>
 
+            <!-- Expose ks_is_advance_line in the order line list so readonly conditions can use it -->
+            <xpath expr="//field[@name='order_line']/list/field[@name='product_id']" position="before">
+                <field name="ks_is_advance_line" column_invisible="1"/>
+            </xpath>
+            <!-- Make every editable cell readonly for the advance deduction line -->
+            <xpath expr="//field[@name='order_line']/list/field[@name='product_id']" position="attributes">
+                <attribute name="readonly">ks_is_advance_line</attribute>
+                <attribute name="domain">[('product_tmpl_id.is_advance_payment_product', '=', False)]</attribute>
+            </xpath>
+            <xpath expr="//field[@name='order_line']/list/field[@name='product_uom_qty']" position="attributes">
+                <attribute name="readonly">ks_is_advance_line</attribute>
+            </xpath>
+            <xpath expr="//field[@name='order_line']/list/field[@name='price_unit']" position="attributes">
+                <attribute name="readonly">ks_is_advance_line</attribute>
+            </xpath>
+            <xpath expr="//field[@name='order_line']/list/field[@name='discount']" position="attributes">
+                <attribute name="readonly">ks_is_advance_line</attribute>
+            </xpath>
+            <xpath expr="//field[@name='order_line']/list/field[@name='tax_id']" position="attributes">
+                <attribute name="readonly">ks_is_advance_line</attribute>
+            </xpath>
+
             <!-- Add Advance Payment button in header -->
             <button id="create_invoice" position="after">
                 <button name="action_create_advance_payment"
@@ -58,8 +80,8 @@
             <xpath expr="//field[@name='partner_id']" position="after">
                 <field name="ks_sale_order_id"
                        string="Sale Order"
-                       readonly="state != 'draft'"
-                       invisible="is_insurance_payment or (not ks_sale_order_id and state != 'draft')"/>
+                       readonly="1"
+                       invisible="is_insurance_payment or not ks_sale_order_id"/>
             </xpath>
         </field>
     </record>

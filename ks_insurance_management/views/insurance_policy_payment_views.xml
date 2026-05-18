@@ -78,17 +78,29 @@
         <sheet>
           <div class="oe_title"><h2>Top Up Addon</h2></div>
           <group>
-            <group string="Policy">
+            <group string="Policy Details">
               <field name="policy_id" readonly="1"/>
+              <field name="insurance_type_id" readonly="1"/>
+              <field name="company_id" readonly="1"/>
+              <field name="insurance_company_id" readonly="1"/>
+              <field name="agent_id" readonly="1"/>
+              <field name="expiry_date" readonly="1"/>
+            </group>
+            <group string="Top-up Details">
               <field name="currency_id" invisible="1"/>
               <field name="current_sum_insured" readonly="1" widget="monetary"
                      options="{'currency_field': 'currency_id'}"
                      string="Current Sum Insured"/>
+              <field name="cover_amount_words" readonly="1"/>
               <field name="topup_amount" widget="monetary"
                      options="{'currency_field': 'currency_id'}"/>
               <field name="new_sum_insured" readonly="1" widget="monetary"
                      options="{'currency_field': 'currency_id'}"
                      string="New Sum Insured (Preview)"/>
+              <field name="premium" widget="monetary"
+                     options="{'currency_field': 'currency_id'}"
+                     string="Premium (Incl. GST)"/>
+              <field name="approver_id" options="{'no_create': True}"/>
             </group>
           </group>
         </sheet>

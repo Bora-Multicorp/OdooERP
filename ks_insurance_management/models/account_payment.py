@@ -82,12 +82,17 @@ class AccountPayment(models.Model):
             if not policy:
                 continue
             if payment.is_topup:
-                # Top-up payment confirmed: clear pending amount, restore paid status
-                policy.write({
+                # Top-up payment confirmed: add topup to sum insured, update premium
+                update_vals = {
                     'topup_flag': True,
+                    'initial_sum_insured': policy.initial_sum_insured + policy.pending_topup_amount,
                     'pending_topup_amount': 0.0,
                     'payment_status': 'paid',
-                })
+                }
+                if policy.pending_topup_premium:
+                    update_vals['premium'] = policy.pending_topup_premium
+                    update_vals['pending_topup_premium'] = 0.0
+                policy.write(update_vals)
             else:
                 # Regular premium payment confirmed: mark paid and activate policy
                 policy.write({

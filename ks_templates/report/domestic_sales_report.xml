@@ -37,7 +37,7 @@
                 <t t-set="gst_info"     t-value="doc.get_sale_gst_tax_info()"/>
                 <t t-set="consignee"    t-value="doc.partner_shipping_id or doc.partner_id"/>
                 <t t-set="total_qty"    t-value="sum(line.product_uom_qty for line in doc.get_printable_order_lines())"/>
-                <t t-set="subtotal"     t-value="doc.amount_untaxed"/>
+                <t t-set="subtotal"     t-value="doc.get_printable_amount_untaxed()"/>
                 <t t-set="total_cgst"   t-value="gst_info['total_cgst']"/>
                 <t t-set="total_sgst"   t-value="gst_info['total_sgst']"/>
                 <t t-set="total_igst"   t-value="gst_info['total_igst']"/>
@@ -370,7 +370,7 @@
         <field name="report_file">ks_templates.report_saleorder_dubai_inr</field>
         <field name="print_report_name">'Proforma_Invoice_INR - %s' % object.name</field>
         <field name="binding_model_id" ref="sale.model_sale_order"/>
-        <field name="domain">[('currency_id.name', '!=', 'INR')]</field>
+        <field name="domain">[('currency_id.name', '!=', 'INR'), '|', ('company_id.currency_id.name', '!=', 'HKD'), '|', ('pricelist_id', '=', False), ('pricelist_id.currency_id.name', '!=', 'USD')]</field>
         <field name="binding_type">report</field>
     </record>
 
@@ -385,7 +385,7 @@
 
         <!-- Step 2: Override total_usd to be ₹-converted amount -->
         <xpath expr="//t[@t-set='total_usd']" position="replace">
-            <t t-set="total_usd" t-value="doc.amount_total * inr_rate"/>
+            <t t-set="total_usd" t-value="doc.get_printable_amount_total() * inr_rate"/>
         </xpath>
 
         <!-- Step 3: Replace Rate column (line.price_unit) td with INR value -->

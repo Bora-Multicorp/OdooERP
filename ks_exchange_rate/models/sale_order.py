@@ -7,31 +7,37 @@ class SaleOrder(models.Model):
     """Extend sale.order to add exchanged amount calculation based on exchange rate"""
     _inherit = 'sale.order'
 
+    ks_exchange_currency_id = fields.Many2one(
+        'res.currency',
+        string='Convert To Currency',
+        default=lambda self: self.env.company.currency_id,
+        help='Select the target currency for the exchange rate conversion. Defaults to company currency.',
+    )
+
     exchanged_amount = fields.Monetary(
         string='Exchanged Currency Amount',
         compute='_compute_exchanged_amount',
         store=True,
-        currency_field='company_currency_id',
-        help='Calculated as: Total Amount × Exchange Rate. '
-             'Example: If total is 200 USD and rate is 50 (1 USD = 50 INR), then exchanged currency amount = 200 × 50 = 10,000 INR',
+        currency_field='ks_exchange_currency_id',
+        help='Calculated as: Total Amount × Exchange Rate.',
     )
 
-    @api.depends('amount_total', 'rate', 'currency_id', 'company_currency_id', 'is_exchange', 'order_line.price_subtotal')
+    @api.onchange('is_exchange')
+    def _onchange_is_exchange_currency(self):
+        if self.is_exchange:
+            if not self.ks_exchange_currency_id:
+                self.ks_exchange_currency_id = self.company_currency_id
+        else:
+            self.ks_exchange_currency_id = False
+
+    @api.depends('amount_total', 'rate', 'currency_id', 'company_currency_id', 'ks_exchange_currency_id', 'is_exchange', 'order_line.price_subtotal')
     def _compute_exchanged_amount(self):
-        """Calculate exchanged amount based on total amount and exchange rate
-        
-        Formula: exchanged_amount = amount_total / rate
-        Example: If SO total is 200 USD and rate is 50, then exchanged_amount = 200 / 50 = 4
-        """
         for order in self:
             exchanged_amount = 0.0
-            # Only calculate if currencies are different and exchange is enabled
-            if (order.is_exchange and 
-                order.currency_id != order.company_currency_id and 
-                order.rate and order.rate > 0 and
-                order.amount_total):
-                # Calculate: document_total / exchange_rate
-                # Example: 200 USD / 50 = 4
+            if (order.is_exchange and
+                    order.currency_id != order.company_currency_id and
+                    order.rate and order.rate > 0 and
+                    order.amount_total):
                 exchanged_amount = order.amount_total * order.rate
             order.exchanged_amount = exchanged_amount
 
@@ -45,19 +51,25 @@ class SaleOrderLine(models.Model):
         related='order_id.company_id.currency_id',
         readonly=True,
         store=True,
-        help='Company Currency for exchanged amount calculation'
+    )
+
+    ks_exchange_currency_id = fields.Many2one(
+        'res.currency',
+        string='Convert To Currency',
+        related='order_id.ks_exchange_currency_id',
+        readonly=True,
+        store=True,
     )
 
     exchanged_amount = fields.Monetary(
         string='Exchanged Currency Amount',
         compute='_compute_exchanged_amount',
         store=True,
-        currency_field='company_currency_id',
-        help='Calculated as: Line Total / Exchange Rate. '
-             'Example: If line total is 100 USD and rate is 50, then exchanged currency amount = 100 / 50 = 2',
+        currency_field='ks_exchange_currency_id',
+        help='Calculated as: Line Total × Exchange Rate.',
     )
 
-    @api.depends('price_subtotal', 'price_unit', 'product_uom_qty', 'discount', 'order_id.rate', 'order_id.currency_id', 'order_id.company_currency_id', 'order_id.is_exchange')
+    @api.depends('price_subtotal', 'price_unit', 'product_uom_qty', 'discount', 'order_id.rate', 'order_id.currency_id', 'order_id.company_currency_id', 'order_id.ks_exchange_currency_id', 'order_id.is_exchange')
     def _compute_exchanged_amount(self):
         """Calculate exchanged currency amount for each line based on line total and exchange rate"""
         for line in self:

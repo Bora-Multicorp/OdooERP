@@ -7,9 +7,9 @@
         <field name="inherit_id" ref="sale.view_order_form"/>
         <field name="arch" type="xml">
             <!-- Filter products to current company or no company in sale order lines -->
-            <xpath expr="//field[@name='product_id'][@domain]" position="attributes">
-                <attribute name="domain">[('sale_ok', '=', True), ('company_id', 'in', [parent.company_id, False])]</attribute>
-            </xpath>
+<!--            <xpath expr="//field[@name='product_id'][@domain]" position="attributes">-->
+<!--                <attribute name="domain">[('sale_ok', '=', True), ('company_id', 'in', [parent.company_id, False]), ('product_tmpl_id.is_advance_payment_product', '=', False)]</attribute>-->
+<!--            </xpath>-->
             <!-- Add computed fields -->
             <xpath expr="//field[@name='state']" position="before">
                 <field name="ks_has_insufficient_stock" invisible="1"/>
@@ -58,7 +58,7 @@
             <!-- Bank Account Information under Other Info tab -->
             <xpath expr="//page[@name='other_information']" position="inside">
                 <group name="bank_details" string="Bank Account Information">
-                    <field name="ks_bank_id"/>
+                    <field name="ks_bank_id" readonly="not ks_can_edit or ks_qty_only_edit"/>
                 </group>
             </xpath>
         </field>

@@ -9,7 +9,14 @@ class PurchaseOrder(models.Model):
     ks_authorised_signatory = fields.Binary(string='Authorised Signatory', attachment=True, copy=False)
     ks_bank_id = fields.Many2one('res.bank', string='Bank Information')
     ks_remarks = fields.Text(string='Remarks')
-    ks_round_off = fields.Float(string='Round Off', digits=(16, 2), default=0.0)
+    ks_round_off = fields.Float(
+        string='Round Off',
+        digits=(16, 2),
+        compute='_compute_ks_round_off',
+        inverse='_inverse_ks_round_off',
+        store=True,
+        help='Auto-calculated to round the total to the nearest integer. Can be manually overridden.',
+    )
     ks_destination = fields.Char(string='Destination')
     ks_despatched_through = fields.Char(string='Despatched Through')
     amount_total = fields.Monetary(string='Total', store=True, readonly=True, compute='_amount_all')
@@ -58,14 +65,22 @@ class PurchaseOrder(models.Model):
         except Exception:
             return ''
 
+    @api.depends('order_line.price_subtotal', 'order_line.price_tax')
+    def _compute_ks_round_off(self):
+        for order in self:
+            lines = order.order_line.filtered(lambda l: l.display_type not in ('line_section', 'line_note'))
+            raw_untaxed = sum(lines.mapped('price_subtotal'))
+            raw_tax = sum(lines.mapped('price_tax'))
+            raw_total = raw_untaxed + raw_tax
+            order.ks_round_off = raw_total - round(raw_total)
+
+    def _inverse_ks_round_off(self):
+        # Allow manual override — stored value is kept as-is; amount_total recomputes via _amount_all
+        pass
+
     @api.depends('order_line.price_subtotal', 'company_id', 'currency_id', 'ks_round_off')
     def _amount_all(self):
         super()._amount_all()
-        for order in self:
-            order.amount_total = order.amount_untaxed + order.amount_tax - order.ks_round_off
-
-    @api.onchange('ks_round_off')
-    def _onchange_ks_round_off(self):
         for order in self:
             order.amount_total = order.amount_untaxed + order.amount_tax - order.ks_round_off
 
@@ -76,7 +91,6 @@ class PurchaseOrder(models.Model):
         for order in self:
             if order.tax_totals and order.ks_round_off:
                 order.tax_totals['total_amount_currency'] -= order.ks_round_off
-                # Update formatted display amount
                 currency = order.currency_id or order.company_id.currency_id
                 order.tax_totals['formatted_amount_total'] = formatLang(
                     self.env, order.tax_totals['total_amount_currency'], currency_obj=currency
@@ -311,7 +325,9 @@ class PurchaseOrder(models.Model):
         }
 
     def get_purchase_gst_summary(self):
-        """Returns list of {'name': 'Input IGST @28%', 'amount': X} grouped by tax type."""
+        """Returns list of {'name': ..., 'amount': X}.
+        CGST+SGST at same rate are combined: 'Input SGST/UTGST @2.5% + Input CGST @2.5%'
+        """
         self.ensure_one()
 
         def get_tax_type(tax):
@@ -326,8 +342,14 @@ class PurchaseOrder(models.Model):
                 return 'sgst'
             return None
 
-        type_labels = {'igst': 'IGST', 'cgst': 'CGST', 'sgst': 'SGST/UTGST'}
-        groups = {}  # key: (type, rate) -> {'name': ..., 'amount': ...}
+        def fmt_rate(r):
+            return f"{r:.1f}".rstrip('0').rstrip('.') if r % 1 else f"{r:.0f}"
+
+        raw = {}  # key: (type, rate) -> amount
+
+        def add(tax_type, rate, amount):
+            key = (tax_type, rate)
+            raw[key] = raw.get(key, 0.0) + amount
 
         for line in self.order_line.filtered(lambda l: l.display_type not in ('line_section', 'line_note')):
             for tax in line.taxes_id:
@@ -335,33 +357,26 @@ class PurchaseOrder(models.Model):
                     parent_type = get_tax_type(tax)
                     if parent_type:
                         total_rate = sum(c.amount for c in tax.children_tax_ids)
-                        key = (parent_type, total_rate)
-                        label = f"Input {type_labels.get(parent_type, parent_type.upper())} @{total_rate:.0f}%"
-                        amount = line.price_subtotal * total_rate / 100.0
-                        if key not in groups:
-                            groups[key] = {'name': label, 'amount': 0.0}
-                        groups[key]['amount'] += amount
+                        add(parent_type, total_rate, line.price_subtotal * total_rate / 100.0)
                     else:
                         for child in tax.children_tax_ids:
                             child_type = get_tax_type(child)
                             if child_type:
-                                key = (child_type, child.amount)
-                                label = f"Input {type_labels.get(child_type, child_type.upper())} @{child.amount:.0f}%"
-                                amount = line.price_subtotal * child.amount / 100.0
-                                if key not in groups:
-                                    groups[key] = {'name': label, 'amount': 0.0}
-                                groups[key]['amount'] += amount
+                                add(child_type, child.amount, line.price_subtotal * child.amount / 100.0)
                 else:
                     tax_type = get_tax_type(tax)
                     if tax_type:
-                        key = (tax_type, tax.amount)
-                        label = f"Input {type_labels.get(tax_type, tax_type.upper())} @{tax.amount:.0f}%"
-                        amount = line.price_subtotal * tax.amount / 100.0
-                        if key not in groups:
-                            groups[key] = {'name': label, 'amount': 0.0}
-                        groups[key]['amount'] += amount
+                        add(tax_type, tax.amount, line.price_subtotal * tax.amount / 100.0)
 
-        return list(groups.values())
+        result = []
+        for (t, rate), amt in sorted(raw.items(), key=lambda x: (x[0][0], x[0][1])):
+            if t == 'sgst':
+                result.append({'name': f"Input SGST/UTGST @{fmt_rate(rate)}%", 'amount': amt})
+            elif t == 'cgst':
+                result.append({'name': f"Input CGST @{fmt_rate(rate)}%", 'amount': amt})
+            elif t == 'igst':
+                result.append({'name': f"Input IGST @{fmt_rate(rate)}%", 'amount': amt})
+        return result
 
     def get_purchase_line_tax_info(self, line):
         """Returns list of tax display strings for a purchase order line.

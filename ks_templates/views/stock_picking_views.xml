@@ -19,7 +19,7 @@
                 <xpath expr="//sheet" position="inside">
                     <field name="picking_type_code" invisible="1"/>
                 </xpath>
-                <!-- Add fields to existing Additional Info tab -->
+                <!-- Add fields to existing Additional Info Tab -->
                 <xpath expr="//page[@name='extra']" position="inside">
                     <group string="Packing List Information">
                         <group>
