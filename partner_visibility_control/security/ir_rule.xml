@@ -15,19 +15,19 @@
         -->
 
 
-        <!--        &lt;!&ndash; Rule 2: All res.users partners always visible (prevents system breakage) &ndash;&gt;-->
-        <!--        <record id="rule_user_partners_always_visible" model="ir.rule">-->
-        <!--            <field name="name">Contact: all user partners always visible</field>-->
-        <!--            <field name="model_id" ref="base.model_res_partner"/>-->
-        <!--            <field name="domain_force">-->
-        <!--                [('user_ids', '!=', False)]-->
-        <!--            </field>-->
-        <!--            <field name="groups" eval="[(4, ref('base.group_user'))]"/>-->
-        <!--            <field name="perm_read" eval="True"/>-->
-        <!--            <field name="perm_write" eval="False"/>-->
-        <!--            <field name="perm_create" eval="False"/>-->
-        <!--            <field name="perm_unlink" eval="False"/>-->
-        <!--        </record>-->
+                <!-- Rule 2: All res.users partners always visible (prevents system breakage) -->
+                <record id="rule_user_partners_always_visible" model="ir.rule">
+                    <field name="name">Contact: all user partners always visible</field>
+                    <field name="model_id" ref="base.model_res_partner"/>
+                    <field name="domain_force">
+                        [('user_ids', '!=', False)]
+                    </field>
+                    <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+                    <field name="perm_read" eval="True"/>
+                    <field name="perm_write" eval="False"/>
+                    <field name="perm_create" eval="False"/>
+                    <field name="perm_unlink" eval="False"/>
+                </record>
 
         <!-- Rule 2: Bypass rule - See All Contacts group sees everything -->
         <record id="rule_contact_visibility_bypass" model="ir.rule">
