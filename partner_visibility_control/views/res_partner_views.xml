@@ -20,6 +20,11 @@
           Without this ordering, the buyer_id xpath would fail at install
           time with "Element not found in arch".
     -->
+    <!-- Contacts action: apply sales executive restriction via _search context -->
+    <record id="contacts.action_contacts" model="ir.actions.act_window">
+        <field name="context">{'restrict_by_sales_executive': 1}</field>
+    </record>
+
     <record id="res_partner_form_view_inherit_visibility"
             model="ir.ui.view">
         <field name="name">res.partner.form.partner.visibility</field>

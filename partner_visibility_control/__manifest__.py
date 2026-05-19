@@ -25,7 +25,7 @@
         - View-level domain filters for Sales/Purchase order dropdowns.
     """,
     'author': 'Custom Development',
-    'depends': ['sale_management', 'purchase', 'ks_contact'],
+    'depends': ['sale_management', 'purchase', 'ks_contact', 'contacts'],
     'data': [
         'security/security_groups.xml',
         'security/ir_rule.xml',

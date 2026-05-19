@@ -248,9 +248,9 @@
             <xpath expr="//field[@name='order_line']//list//field[@name='name']" position="attributes">
                 <attribute name="readonly">parent.ks_qty_only_edit</attribute>
             </xpath>
-            <xpath expr="//field[@name='order_line']//list//field[@name='taxes_id']" position="attributes">
-                <attribute name="readonly">parent.ks_qty_only_edit</attribute>
-            </xpath>
+<!--            <xpath expr="//field[@name='order_line']//list//field[@name='taxes_id']" position="attributes">-->
+<!--                <attribute name="readonly">parent.ks_qty_only_edit</attribute>-->
+<!--            </xpath>-->
             <xpath expr="//field[@name='order_line']//list//field[@name='date_planned']" position="attributes">
                 <attribute name="readonly">parent.ks_qty_only_edit</attribute>
             </xpath>

@@ -2,34 +2,7 @@
 <odoo>
     <data noupdate="0">
 
-        <!--
-            Record Rule: Contact visible only to assigned Sales Executives.
-
-            For non-admin internal users a contact is readable only when:
-              - The current user is listed in salesperson_ids  (assigned), OR
-              - No sales executives have been assigned yet     (unassigned contacts
-                remain visible to everyone so they can be picked up).
-
-            Admin / Technical users (base.group_system) are deliberately excluded
-            from this rule's group list so they always see all contacts.
-        -->
-
-
-                <!-- Rule 2: All res.users partners always visible (prevents system breakage) -->
-                <record id="rule_user_partners_always_visible" model="ir.rule">
-                    <field name="name">Contact: all user partners always visible</field>
-                    <field name="model_id" ref="base.model_res_partner"/>
-                    <field name="domain_force">
-                        [('user_ids', '!=', False)]
-                    </field>
-                    <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-                    <field name="perm_read" eval="True"/>
-                    <field name="perm_write" eval="False"/>
-                    <field name="perm_create" eval="False"/>
-                    <field name="perm_unlink" eval="False"/>
-                </record>
-
-        <!-- Rule 2: Bypass rule - See All Contacts group sees everything -->
+        <!-- Bypass rule: "See All Contacts" group always sees everything -->
         <record id="rule_contact_visibility_bypass" model="ir.rule">
             <field name="name">Contact: see all contacts (authority bypass)</field>
             <field name="model_id" ref="base.model_res_partner"/>
@@ -40,38 +13,6 @@
             <field name="perm_create" eval="False"/>
             <field name="perm_unlink" eval="False"/>
         </record>
-        <record id="rule_contact_sales_executive_visibility" model="ir.rule">
-            <field name="name">Contact: visible to assigned Sales Executives only</field>
-            <field name="model_id" ref="base.model_res_partner"/>
-            <field name="domain_force">
-                ['|', '|', '|',
-                    ('user_ids', '!=', False),
-                    ('salesperson_ids', 'in', [user.id]),
-                    ('sale_order_ids.user_id', '=', user.id),
-                    ('purchase_order_ids.user_id', '=', user.id)
-                ]
-            </field>
-            <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-            <field name="perm_read" eval="True"/>
-            <field name="perm_write" eval="False"/>
-            <field name="perm_create" eval="False"/>
-            <field name="perm_unlink" eval="False"/>
-        </record>
-
-        <!-- Rule 3: Global company filter (AND with all rules above).
-             If contact has a company set, only users belonging to that
-             company can see it. Contacts with no company are visible to all. -->
-        <!--        <record id="rule_contact_company_filter" model="ir.rule">-->
-        <!--            <field name="name">Contact: filter by active company</field>-->
-        <!--            <field name="model_id" ref="base.model_res_partner"/>-->
-        <!--            <field name="domain_force">-->
-        <!--                ['|', ('company_id', '=', False), ('company_id', 'in', user.company_ids.ids)]-->
-        <!--            </field>-->
-        <!--            <field name="perm_read" eval="True"/>-->
-        <!--            <field name="perm_write" eval="False"/>-->
-        <!--            <field name="perm_create" eval="False"/>-->
-        <!--            <field name="perm_unlink" eval="False"/>-->
-        <!--        </record>-->
 
     </data>
 </odoo>

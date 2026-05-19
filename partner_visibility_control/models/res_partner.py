@@ -62,22 +62,6 @@ class ResPartner(models.Model):
 
     @api.model
     def _search(self, domain, offset=0, limit=None, order=None) -> 'Query':
-        """Append the user-assignment filter for non-admin users.
-
-        Static conditions (customer_rank, KYC gate, is_approved) live in the
-        view domain attributes — not here — so they only restrict the dropdown
-        and never raise access errors when loading existing order records.
-
-        This override appends only the user-scoped check:
-          filter_by_salesperson        → salesperson_ids must include current user
-          filter_by_purchase_executive → purchase_executive_ids must include current user
-
-        Both are skipped for admin users (env.is_admin() covers uid=1 and
-        users in the base.group_system / Settings-Technical group).
-
-        expression.AND is used for safe domain combination — avoids the
-        prefix-notation orphaned-operator bug.
-        """
         ctx = self.env.context
 
         if not self.env.is_admin():
@@ -90,6 +74,17 @@ class ResPartner(models.Model):
                 domain = expression.AND([
                     domain,
                     [('purchase_executive_ids', 'in', [self.env.uid])],
+                ])
+            elif ctx.get('restrict_by_sales_executive'):
+                # Hard filter for Contacts list view: only assigned contacts
+                domain = expression.AND([
+                    domain,
+                    ['|',
+                        ('user_ids', '!=', False),
+                        '|',
+                        ('salesperson_ids', 'in', [self.env.uid]),
+                        ('purchase_executive_ids', 'in', [self.env.uid]),
+                    ],
                 ])
 
         return super()._search(domain, offset=offset, limit=limit, order=order)
