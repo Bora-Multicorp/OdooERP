@@ -36,6 +36,12 @@ class ResPartner(models.Model):
         ),
     )
 
+    purchase_order_ids = fields.One2many(
+        comodel_name='purchase.order',
+        inverse_name='partner_id',
+        string='Purchase Orders',
+    )
+
     # Users responsible for this contact on the Purchase side.
     purchase_executive_ids = fields.Many2many(
         comodel_name='res.users',
