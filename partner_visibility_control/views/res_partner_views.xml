@@ -22,6 +22,7 @@
     -->
     <!-- Contacts action: apply sales executive restriction via _search context -->
     <record id="contacts.action_contacts" model="ir.actions.act_window">
+        <field name="domain">[('parent_id', '=', False)]</field>
         <field name="context">{'restrict_by_sales_executive': 1}</field>
     </record>
 
