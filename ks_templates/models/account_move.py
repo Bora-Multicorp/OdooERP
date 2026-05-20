@@ -503,6 +503,11 @@ class AccountMove(models.Model):
         
         return ''
 
+    def get_printable_amount_total(self):
+        """Return the total amount for printable lines (excluding advance/downpayment lines)."""
+        self.ensure_one()
+        return sum(line.price_total for line in self.get_printable_invoice_lines())
+
     def get_printable_invoice_lines(self):
         """Return invoice lines for printing, excluding advance/downpayment lines."""
         self.ensure_one()
