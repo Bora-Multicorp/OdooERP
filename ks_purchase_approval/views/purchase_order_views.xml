@@ -47,7 +47,7 @@
             <!-- Hide original Cancel button based on state and user type -->
             <xpath expr="//button[@name='button_cancel']" position="attributes">
                 <attribute name="invisible">
-                    state in ('cancel', 'draft') or (ks_is_normal_user and state in ('pending_approval', 'purchase', 'done'))
+                    state in ('cancel', 'draft') or (not ks_is_pm_user and state in ('pending_approval', 'purchase', 'done', 'cancel_pending', 'edit_pending'))
                 </attribute>
             </xpath>
 
