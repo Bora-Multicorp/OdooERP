@@ -26,6 +26,13 @@ class SaleOrder(models.Model):
     ks_delivery_note_date = fields.Date(string='Delivery Note Date')
     ks_exchange_rate = fields.Float(string='Exchange Rate (to INR)', digits=(16, 4), default=0.0)
     ks_authorized_signature = fields.Binary(string='Authorized Signature', attachment=True, copy=False)
+    ks_can_edit = fields.Boolean(compute='_compute_ks_can_edit')
+    ks_qty_only_edit = fields.Boolean(default=False)
+
+    @api.depends('state')
+    def _compute_ks_can_edit(self):
+        for order in self:
+            order.ks_can_edit = order.state in ('draft', 'sent')
 
     @api.depends('order_line.price_subtotal', 'order_line.price_tax')
     def _compute_ks_round_off(self):
