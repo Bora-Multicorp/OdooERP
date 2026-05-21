@@ -234,59 +234,131 @@ class ProductTemplateInternalRef(models.Model):
 
         if not variants:
             code = self._generate_sku(self.id)
+            code = self._resolve_cross_product_conflict(code, set(), self.name)
             self.with_context(skip_sku_duplicate_check=True).default_code = code
-            self._check_cross_product_unique({self.id: code})
             return
 
         # Step 1 — generate all codes first (no writes)
         new_codes = {v.id: self._generate_sku(v.id) for v in variants}
 
-        # Step 2 — intra-template uniqueness check
-        seen = {}
-        for vid, code in new_codes.items():
+        # Step 2 — intra-template collision resolution (auto-disambiguate)
+        seen = {}   # code → vid of first variant that claimed it
+        for vid in list(new_codes.keys()):
+            code = new_codes[vid]
             if not code:
                 continue
             if code in seen:
                 va = self.env['product.product'].browse(seen[code])
                 vb = self.env['product.product'].browse(vid)
-                raise ValidationError(
-                    _("Cannot generate a unique Internal Reference for all "
-                      "variants of '%(product)s'.\n\n"
-                      "Variants '%(a)s' and '%(b)s' both produce '%(code)s'.\n\n"
-                      "Their distinguishing attribute values abbreviate to the "
-                      "same string.  Rename one value so its first characters "
-                      "differ (e.g. '256GB' vs '512GB').")
-                    % {'product': self.name, 'a': va.display_name,
-                       'b': vb.display_name, 'code': code}
+                if self._variants_have_same_attributes(va, vb):
+                    raise ValidationError(
+                        _("Variants '%(a)s' and '%(b)s' of '%(product)s' have "
+                          "identical attribute values — they are duplicates. "
+                          "Please remove one of them.")
+                        % {'product': self.name,
+                           'a': va.display_name, 'b': vb.display_name}
+                    )
+                new_codes[vid] = self._disambiguate_intra(
+                    code, vb, set(new_codes.values())
                 )
-            seen[code] = vid
+            seen[new_codes[vid]] = vid
 
-        # Step 3 — write all codes, per-row constraint suppressed
+        # Step 3 — cross-product collision resolution
+        taken_globally = set()
+        name_words = (self.name or '').split()
+        for vid in sorted(new_codes.keys()):
+            code = new_codes[vid]
+            if not code:
+                continue
+            resolved = self._resolve_cross_product_conflict(
+                code, taken_globally, self.name, own_ids=list(new_codes.keys())
+            )
+            new_codes[vid] = resolved
+            taken_globally.add(resolved)
+
+        # Step 4 — write all codes, per-row constraint suppressed
         ctx = dict(self.env.context, skip_sku_duplicate_check=True)
         for variant in variants:
             variant.with_context(**ctx).default_code = new_codes[variant.id]
 
-        # Step 4 — cross-product uniqueness check
-        self._check_cross_product_unique(new_codes)
+    def _disambiguate_intra(self, base_code, variant, all_codes):
+        """
+        Make base_code unique within all_codes by appending more attribute chars.
+        Tries progressively wider prefixes of combined attribute values, then
+        falls back to a numeric suffix.  Never raises.
+        """
+        taken = set(all_codes) - {base_code}
+
+        # Collect all non-colour attribute values concatenated
+        frags = []
+        for ptav in variant.product_template_attribute_value_ids:
+            attr_name = ptav.attribute_id.name.lower().strip()
+            if not self._is_colour_ptav(ptav, attr_name):
+                clean = re.sub(r'[^A-Z0-9]', '', ptav.name.upper())
+                if clean:
+                    frags.append(clean)
+        combined = ''.join(frags)
+
+        for suffix_len in range(2, max(len(combined) + 1, 3)):
+            suffix = combined[:suffix_len]
+            candidate = (base_code + suffix)[:MAX_REF_LENGTH].rstrip('-')
+            if candidate not in taken and candidate != base_code:
+                return candidate
+
+        # Numeric fallback
+        n = 2
+        while True:
+            candidate = (base_code + str(n))[:MAX_REF_LENGTH].rstrip('-')
+            if candidate not in taken:
+                return candidate
+            n += 1
+
+    @staticmethod
+    def _variants_have_same_attributes(va, vb):
+        """Return True if both variants carry exactly the same attribute value ids."""
+        a_vals = set(va.product_template_attribute_value_ids.mapped('product_attribute_value_id').ids)
+        b_vals = set(vb.product_template_attribute_value_ids.mapped('product_attribute_value_id').ids)
+        return a_vals == b_vals
+
+    def _resolve_cross_product_conflict(self, code, taken_locally, product_name, own_ids=None):
+        """
+        Ensure code doesn't clash with any other product's default_code.
+        Tries word fragments from product_name first, then numeric suffixes.
+        Never raises.
+        """
+        own_ids = own_ids or []
+
+        def _is_taken(c):
+            if c in taken_locally:
+                return True
+            dup = self.env['product.product'].with_context(active_test=False).search(
+                [('default_code', '=', c), ('id', 'not in', own_ids)], limit=1
+            )
+            return bool(dup)
+
+        if not _is_taken(code):
+            return code
+
+        # Try word fragments from product name
+        words = re.sub(r'[^A-Z0-9 ]', '', (product_name or '').upper()).split()
+        for word in words:
+            frag = word[:3]
+            if frag and frag.upper() not in code.upper():
+                candidate = (code + frag)[:MAX_REF_LENGTH].rstrip('-')
+                if not _is_taken(candidate):
+                    return candidate
+
+        # Numeric fallback
+        n = 2
+        while True:
+            candidate = (code + str(n))[:MAX_REF_LENGTH].rstrip('-')
+            if not _is_taken(candidate):
+                return candidate
+            n += 1
 
     def _check_cross_product_unique(self, code_map):
-        own_ids = list(code_map.keys())
-        for vid, code in code_map.items():
-            if not code:
-                continue
-            dup = self.env['product.product'].with_context(
-                active_test=False
-            ).search(
-                [('default_code', '=', code), ('id', 'not in', own_ids)],
-                limit=1,
-            )
-            if dup:
-                raise ValidationError(
-                    _("Internal Reference '%(code)s' is already assigned to "
-                      "'%(other)s'.\nChange the product name, brand, category, "
-                      "or attribute values so the generated reference is unique.")
-                    % {'code': code, 'other': dup.display_name}
-                )
+        # Kept for backward compatibility — no longer raises, just a no-op stub.
+        pass
 
     # ------------------------------------------------------------------ #
     #  Per-variant SKU builder                                            #
