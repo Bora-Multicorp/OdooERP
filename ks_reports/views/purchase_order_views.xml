@@ -13,18 +13,18 @@
                 <xpath expr="//page[@name='purchase_delivery_invoice']/group" position="after">
                     <group string="Extra PO Field">
                         <group>
-                            <field name="ks_remarks" placeholder="Remarks"/>
-                            <field name="ks_invoice" placeholder="Invoice"/>
-                            <field name="ks_e_invoices" placeholder="E - Invoices"/>
-                            <field name="ks_e_way_bill" placeholder="E-way Bill"/>
-                            <field name="ks_imei_serial_no" placeholder="IMEI/ Serial No"/>
+                            <field name="ks_remarks" placeholder="Remarks" readonly="not ks_can_edit or ks_qty_only_edit"/>
+                            <field name="ks_invoice" placeholder="Invoice" readonly="not ks_can_edit or ks_qty_only_edit"/>
+                            <field name="ks_e_invoices" placeholder="E - Invoices" readonly="not ks_can_edit or ks_qty_only_edit"/>
+                            <field name="ks_e_way_bill" placeholder="E-way Bill" readonly="not ks_can_edit or ks_qty_only_edit"/>
+                            <field name="ks_imei_serial_no" placeholder="IMEI/ Serial No" readonly="not ks_can_edit or ks_qty_only_edit"/>
                         </group>
                         <group>
-                            <field name="ks_docket" placeholder="DOCKET"/>
-                            <field name="ks_ewaybill_no" placeholder="EWAYBILL NO"/>
-                            <field name="ks_docket_no" placeholder="DOCKET No"/>
-                            <field name="ks_vehicle_no" placeholder="Vehicle No."/>
-                            <field name="ks_transporter" placeholder="TRANSPORTER"/>
+                            <field name="ks_docket" placeholder="DOCKET" readonly="not ks_can_edit or ks_qty_only_edit"/>
+                            <field name="ks_ewaybill_no" placeholder="EWAYBILL NO" readonly="not ks_can_edit or ks_qty_only_edit"/>
+                            <field name="ks_docket_no" placeholder="DOCKET No" readonly="not ks_can_edit or ks_qty_only_edit"/>
+                            <field name="ks_vehicle_no" placeholder="Vehicle No." readonly="not ks_can_edit or ks_qty_only_edit"/>
+                            <field name="ks_transporter" placeholder="TRANSPORTER" readonly="not ks_can_edit or ks_qty_only_edit"/>
                         </group>
                     </group>
                 </xpath>

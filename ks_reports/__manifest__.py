@@ -19,7 +19,7 @@
     'category': 'Sales/Reporting',
     'author': 'Ksolves',
     'website': '',
-    'depends': ['sale', 'sale_stock', 'account', 'web', 'ks_sale_advance_payment', 'purchase', 'ks_sale_order', 'ks_sb_brc_master_report'],
+    'depends': ['sale', 'sale_stock', 'account', 'web', 'ks_sale_advance_payment', 'purchase', 'ks_sale_order', 'ks_sb_brc_master_report', 'ks_purchase_approval'],
     'data': [
         'security/ir.model.access.csv',
         'data/sb_tracker_sequence.xml',

@@ -1277,6 +1277,22 @@ class PurchaseOrder(models.Model):
             subtype_xmlid='mail.mt_note',
         )
         
+        # In two-way mode: after PM1 approves, create activity for PM2
+        if is_two_way and current_user == self.ks_cancel_pm1_id and self.ks_cancel_pm1_approved and not self.ks_cancel_pm2_approved:
+            self.env['mail.activity'].search([
+                ('res_model', '=', self._name),
+                ('res_id', '=', self.id),
+                ('user_id', '=', self.ks_cancel_pm1_id.id),
+                ('summary', 'ilike', 'Cancel PO'),
+            ]).action_feedback(feedback=reason)
+            self._create_approval_activity(
+                user_id=self.ks_cancel_pm2_id.id,
+                summary=_('Approval Request: Cancel PO %s') % self.name,
+                note=_('Purchase Order %s cancel request has been approved by %s (Approver 1). Please review and approve or reject.') % (
+                    self.name, self.ks_cancel_pm1_id.name
+                ),
+            )
+
         # Check if approval is complete based on mode
         approval_complete = False
         if is_two_way:
@@ -1287,7 +1303,7 @@ class PurchaseOrder(models.Model):
             # Single level approval - Approver 1 approval is enough
             if self.ks_cancel_pm1_approved:
                 approval_complete = True
-        
+
         if approval_complete:
             # Cancel the PO
             self.write({'state': 'cancel'})
@@ -1450,6 +1466,9 @@ class PurchaseOrder(models.Model):
         if partner_ids:
             self.message_subscribe(partner_ids=partner_ids)
 
+        # Clear any stale edit activities before creating new ones
+        self._ks_cancel_workflow_activities('edit', mark_done=False)
+
         # Create activity for Approver 1 — mirrors the Confirm flow
         self._create_approval_activity(
             user_id=self.ks_edit_pm1_id.id,
@@ -1514,6 +1533,24 @@ class PurchaseOrder(models.Model):
             subtype_xmlid='mail.mt_note',
         )
         
+        # In two-way mode: after PM1 approves, create activity for PM2
+        if is_two_way and current_user == self.ks_edit_pm1_id and self.ks_edit_pm1_approved and not self.ks_edit_pm2_approved:
+            # Mark PM1 activity as done
+            self.env['mail.activity'].search([
+                ('res_model', '=', self._name),
+                ('res_id', '=', self.id),
+                ('user_id', '=', self.ks_edit_pm1_id.id),
+                ('summary', 'ilike', 'Edit PO'),
+            ]).action_feedback(feedback=reason)
+            # Create activity for PM2
+            self._create_approval_activity(
+                user_id=self.ks_edit_pm2_id.id,
+                summary=_('Approval Request: Edit PO %s') % self.name,
+                note=_('Purchase Order %s edit request has been approved by %s (Approver 1). Please review and approve or reject.') % (
+                    self.name, self.ks_edit_pm1_id.name
+                ),
+            )
+
         # Check if approval is complete based on mode
         approval_complete = False
         if is_two_way:

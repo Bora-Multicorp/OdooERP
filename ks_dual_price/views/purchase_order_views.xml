@@ -21,7 +21,7 @@
                     name="price_unit_incl"
                     string="Unit Price (Incl. Tax)"
                     optional="show"
-                    readonly="qty_invoiced != 0"
+                    readonly="qty_invoiced != 0 or parent.ks_qty_only_edit"
                 />
             </xpath>
         </field>

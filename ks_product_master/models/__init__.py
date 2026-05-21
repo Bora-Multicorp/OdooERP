@@ -12,3 +12,4 @@ from . import margin_analysis_report
 from . import ad_margin_report
 from . import mop_master
 from . import purchase_order_inherit
+from . import product_variant_inherit
