@@ -27,6 +27,14 @@
                        widget="monetary"
                        options="{'currency_field': 'ks_exchange_currency_id'}"/>
             </xpath>
+            <xpath expr="//field[@name='payment_term_id']" position='after'>
+                <field name="ks_exchange_currency_id"
+                       readonly="state in ['cancel', 'sale']"
+                       invisible="is_exchange == False or currency_id == company_currency_id"
+                       options="{'no_create': True}"
+                       string="Convert To"/>
+            </xpath>
+
         </field>
     </record>
 </odoo>
