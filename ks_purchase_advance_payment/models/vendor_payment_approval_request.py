@@ -397,7 +397,7 @@ class VendorPaymentApprovalRequest(models.Model):
             if not account:
                 account = self.env['account.account'].search([
                     ('account_type', '=', 'expense'),
-                    ('company_id', '=', po.company_id.id),
+                    ('company_ids', 'in', [po.company_id.id]),
                     ('deprecated', '=', False),
                 ], limit=1)
             if not account:
