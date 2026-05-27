@@ -23,6 +23,14 @@ class KsPaymentTracker(models.Model):
         help='Company name from which PO is generated',
     )
 
+    # ---- Linked approval request ----
+    payment_approval_request_id = fields.Many2one(
+        'vendor.payment.approval.request',
+        string='Payment Approval Request',
+        ondelete='cascade',
+        index=True,
+    )
+
     # ---- From PO ----
     purchase_order_id = fields.Many2one(
         'purchase.order',

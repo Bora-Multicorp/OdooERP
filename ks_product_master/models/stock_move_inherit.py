@@ -12,6 +12,18 @@ class StockMove(models.Model):
         store=False, tracking=True
     )
 
+    @api.depends('has_tracking', 'picking_type_id.use_create_lots', 'picking_type_id.use_existing_lots', 'product_id', 'origin_returned_move_id', 'state')
+    def _compute_display_assign_serial(self):
+        for move in self:
+            move.display_import_lot = (
+                move.has_tracking != 'none'
+                and move.product_id
+                and (move.picking_type_id.use_create_lots or move.picking_type_id.use_existing_lots)
+                and not move.origin_returned_move_id.id
+                and move.state not in ('done', 'cancel')
+            )
+            move.display_assign_serial = move.display_import_lot
+
     @api.depends('product_id.categ_id')
     def _compute_show_imei_column(self):
         for move in self:
@@ -202,7 +214,7 @@ class StockMove(models.Model):
         if not self.product_id:
             raise UserError(_("No product found to generate Serials/Lots for."))
         if not self.location_dest_id:
-            raise UserError(_("The stock move has no Destination Location set. Please set the Destination Location on the receipt before importing serials."))
+            raise UserError(_("The stock move has no Destination Location set. Please set the Destination Location before importing serials."))
         context = {
             "default_product_id": self.product_id.id,
             "default_location_dest_id": self.location_dest_id.id,
