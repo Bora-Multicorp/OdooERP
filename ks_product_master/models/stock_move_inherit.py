@@ -12,6 +12,18 @@ class StockMove(models.Model):
         store=False, tracking=True
     )
 
+    @api.depends('has_tracking', 'picking_type_id.use_create_lots', 'picking_type_id.use_existing_lots', 'product_id', 'origin_returned_move_id', 'state')
+    def _compute_display_assign_serial(self):
+        for move in self:
+            move.display_import_lot = (
+                move.has_tracking != 'none'
+                and move.product_id
+                and (move.picking_type_id.use_create_lots or move.picking_type_id.use_existing_lots)
+                and not move.origin_returned_move_id.id
+                and move.state not in ('done', 'cancel')
+            )
+            move.display_assign_serial = move.display_import_lot
+
     @api.depends('product_id.categ_id')
     def _compute_show_imei_column(self):
         for move in self:
@@ -201,6 +213,8 @@ class StockMove(models.Model):
         self.ensure_one()
         if not self.product_id:
             raise UserError(_("No product found to generate Serials/Lots for."))
+        if not self.location_dest_id:
+            raise UserError(_("The stock move has no Destination Location set. Please set the Destination Location before importing serials."))
         context = {
             "default_product_id": self.product_id.id,
             "default_location_dest_id": self.location_dest_id.id,
@@ -233,14 +247,17 @@ class StockMove(models.Model):
                 continue
             imei = (row.get("imei") or row.get("imei1") or "").strip() or False
             imei2 = (row.get("imei2") or "").strip() or False
-            loc_dest = self.env["stock.location"].browse(default_vals["location_dest_id"])
+            original_loc_dest_id = default_vals["location_dest_id"]
+            loc_dest = self.env["stock.location"].browse(original_loc_dest_id)
             product = self.env["product.product"].browse(default_vals["product_id"])
-            loc_dest = loc_dest._get_putaway_strategy(product, 1)
+            putaway_loc = loc_dest._get_putaway_strategy(product, 1)
+            # Fall back to original location if putaway returns empty/invalid record
+            resolved_loc_dest_id = putaway_loc.id if putaway_loc and putaway_loc.id else original_loc_dest_id
             line_vals = {
                 **default_vals,
                 "lot_name": lot_name,
                 "quantity": 1,
-                "location_dest_id": loc_dest.id,
+                "location_dest_id": resolved_loc_dest_id,
                 "product_uom_id": product.uom_id.id,
                 "imei": imei,
                 "imei2": imei2,
@@ -279,14 +296,16 @@ class StockMove(models.Model):
                 continue
             imei = (row.get('imei') or row.get('imei1') or '').strip()
             imei2 = (row.get('imei2') or '').strip()
-            loc_dest = self.env['stock.location'].browse(default_vals['location_dest_id'])
+            original_loc_dest_id = default_vals['location_dest_id']
+            loc_dest = self.env['stock.location'].browse(original_loc_dest_id)
             product = self.env['product.product'].browse(default_vals['product_id'])
-            loc_dest = loc_dest._get_putaway_strategy(product, 1)
+            putaway_loc = loc_dest._get_putaway_strategy(product, 1)
+            resolved_loc_dest_id = putaway_loc.id if putaway_loc and putaway_loc.id else original_loc_dest_id
             line_vals = {
                 **default_vals,
                 'lot_name': lot_name,
                 'quantity': 1,
-                'location_dest_id': loc_dest.id,
+                'location_dest_id': resolved_loc_dest_id,
                 'product_uom_id': product.uom_id.id,
                 'imei': imei or False,
                 'imei2': imei2 or False,
@@ -535,31 +554,42 @@ class StockMoveLine(models.Model):
         imei2 = vals.get('imei2') if 'imei2' in vals else (record.imei2 or None)
         lot_name = vals.get('lot_name') if 'lot_name' in vals else (record.lot_name or None)
 
+        picking_type_code = None
+        if record and record.move_id and record.move_id.picking_id:
+            picking_type_code = record.move_id.picking_id.picking_type_id.code
+        elif vals.get('move_id'):
+            move = self.env['stock.move'].browse(vals['move_id'])
+            if move.picking_id:
+                picking_type_code = move.picking_id.picking_type_id.code
+        is_outgoing = picking_type_code == 'outgoing'
+
         # Validate IMEI 1
         if imei:
             if not imei.isdigit() or len(imei) != 15:
                 raise ValidationError(_('IMEI 1 must be a 15-digit number. Got: %s') % imei)
-            exist = self.search([('imei', '=', imei), ('id', 'not in', self.ids)], limit=1)
-            if exist:
-                raise ValidationError(_('IMEI 1 (%s) is already used in another stock line.') % imei)
-            quant = self.env['stock.quant'].search([
-                '|', ('imei', '=', imei), ('imei2', '=', imei)
-            ])
-            if len(quant) > 1:
-                raise ValidationError(_('IMEI 1 (%s) is already used in stock.') % imei)
+            if not is_outgoing:
+                exist = self.search([('imei', '=', imei), ('id', 'not in', self.ids)], limit=1)
+                if exist:
+                    raise ValidationError(_('IMEI 1 (%s) is already used in another stock line.') % imei)
+                quant = self.env['stock.quant'].search([
+                    '|', ('imei', '=', imei), ('imei2', '=', imei)
+                ])
+                if len(quant) > 1:
+                    raise ValidationError(_('IMEI 1 (%s) is already used in stock.') % imei)
 
         # Validate IMEI 2
         if imei2:
             if not imei2.isdigit() or len(imei2) != 15:
                 raise ValidationError(_('IMEI 2 must be a 15-digit number. Got: %s') % imei2)
-            exist = self.search([('imei2', '=', imei2), ('id', 'not in', self.ids)], limit=1)
-            if exist:
-                raise ValidationError(_('IMEI 2 (%s) is already used in another stock line.') % imei2)
-            quant = self.env['stock.quant'].search([
-                '|', ('imei', '=', imei2), ('imei2', '=', imei2)
-            ])
-            if len(quant) > 1:
-                raise ValidationError(_('IMEI 2 (%s) is already used in stock.') % imei2)
+            if not is_outgoing:
+                exist = self.search([('imei2', '=', imei2), ('id', 'not in', self.ids)], limit=1)
+                if exist:
+                    raise ValidationError(_('IMEI 2 (%s) is already used in another stock line.') % imei2)
+                quant = self.env['stock.quant'].search([
+                    '|', ('imei', '=', imei2), ('imei2', '=', imei2)
+                ])
+                if len(quant) > 1:
+                    raise ValidationError(_('IMEI 2 (%s) is already used in stock.') % imei2)
 
         # IMEI 1 and IMEI 2 must differ (except Samsung/OnePlus)
         if imei and imei2 and imei == imei2:
@@ -704,6 +734,12 @@ class StockMoveLine(models.Model):
             if not record.move_id:
                 continue
 
+            picking_type_code = (
+                record.move_id.picking_id.picking_type_id.code
+                if record.move_id.picking_id else None
+            )
+            is_outgoing = picking_type_code == 'outgoing'
+
             if record.move_id.show_IMEI_field2:
                 if record.imei and (not record.imei.isdigit() or len(record.imei) != 15):
                     raise ValidationError(_('IMEI 1 must be a 15-digit number.'))
@@ -713,29 +749,30 @@ class StockMoveLine(models.Model):
                     brand_name = (record.product_id.product_tmpl_id.brand_id.name or '').lower()
                     if brand_name not in ('samsung', 'oneplus'):
                         raise ValidationError(_('IMEI 1 and IMEI 2 must be different.'))
-                if record.imei:
-                    exist = self.search([('imei', '=', record.imei), ('id', '!=', record.id)], limit=1)
-                    if exist:
-                        raise ValidationError(_('IMEI 1 (%s) is already used in another stock item.') % record.imei)
-                    quant = self.env['stock.quant'].search([
-                        '|', ('imei', '=', record.imei), ('imei2', '=', record.imei)
-                    ])
-                    if len(quant) > 1:
-                        raise ValidationError(_('IMEI 1 (%s) is already used in stock.') % record.imei)
-                if record.imei2:
-                    exist = self.search([('imei2', '=', record.imei2), ('id', '!=', record.id)], limit=1)
-                    if exist:
-                        raise ValidationError(_('IMEI 2 (%s) is already used in another stock item.') % record.imei2)
-                    quant = self.env['stock.quant'].search([
-                        '|', ('imei', '=', record.imei2), ('imei2', '=', record.imei2)
-                    ])
-                    if len(quant) > 1:
-                        raise ValidationError(_('IMEI 2 (%s) is already used in stock.') % record.imei2)
+                if not is_outgoing:
+                    if record.imei:
+                        exist = self.search([('imei', '=', record.imei), ('id', '!=', record.id)], limit=1)
+                        if exist:
+                            raise ValidationError(_('IMEI 1 (%s) is already used in another stock item.') % record.imei)
+                        quant = self.env['stock.quant'].search([
+                            '|', ('imei', '=', record.imei), ('imei2', '=', record.imei)
+                        ])
+                        if len(quant) > 1:
+                            raise ValidationError(_('IMEI 1 (%s) is already used in stock.') % record.imei)
+                    if record.imei2:
+                        exist = self.search([('imei2', '=', record.imei2), ('id', '!=', record.id)], limit=1)
+                        if exist:
+                            raise ValidationError(_('IMEI 2 (%s) is already used in another stock item.') % record.imei2)
+                        quant = self.env['stock.quant'].search([
+                            '|', ('imei', '=', record.imei2), ('imei2', '=', record.imei2)
+                        ])
+                        if len(quant) > 1:
+                            raise ValidationError(_('IMEI 2 (%s) is already used in stock.') % record.imei2)
 
             elif record.move_id.show_IMEI_field:
                 if record.imei and (not record.imei.isdigit() or len(record.imei) != 15):
                     raise ValidationError(_('IMEI must be a 15-digit number.'))
-                if record.imei:
+                if not is_outgoing and record.imei:
                     exist = self.search([('imei', '=', record.imei), ('id', '!=', record.id)], limit=1)
                     if exist:
                         raise ValidationError(_('IMEI (%s) is already used in another stock item.') % record.imei)
@@ -763,32 +800,31 @@ class StockMoveLine(models.Model):
     def _onchange_validate_imei(self):
         warning_msgs = []
 
+        picking_type_code = (
+            self.move_id.picking_id.picking_type_id.code
+            if self.move_id and self.move_id.picking_id else None
+        )
+        is_outgoing = picking_type_code == 'outgoing'
+
         # IMEI 1 validations
         if self.imei:
             if not self.imei.isdigit() or len(self.imei) != 15:
                 warning_msgs.append(_('IMEI 1 must be a 15-digit number.'))
-            else:
+            elif not is_outgoing:
                 exist = self.search([('imei', '=', self.imei), ('id', '!=', self._origin.id)], limit=1)
                 if exist:
                     warning_msgs.append(_('IMEI 1 (%s) is already used in another stock item.') % self.imei)
-                if self.move_id.show_IMEI_field2:
-                    quant_exist = self.env['stock.quant'].search([
-                        '|', ('imei', '=', self.imei), ('imei2', '=', self.imei)
-                    ])
-                    if len(quant_exist) > 1:
-                        warning_msgs.append(_('IMEI 1 (%s) is already used in stock.') % self.imei)
-                else:
-                    quant_exist = self.env['stock.quant'].search([
-                        '|', ('imei', '=', self.imei), ('imei2', '=', self.imei)
-                    ])
-                    if len(quant_exist) > 1:
-                        warning_msgs.append(_('IMEI 1 (%s) is already used in stock.') % self.imei)
+                quant_exist = self.env['stock.quant'].search([
+                    '|', ('imei', '=', self.imei), ('imei2', '=', self.imei)
+                ])
+                if len(quant_exist) > 1:
+                    warning_msgs.append(_('IMEI 1 (%s) is already used in stock.') % self.imei)
 
         # IMEI 2 validations
         if self.move_id.show_IMEI_field2 and self.imei2:
             if not self.imei2.isdigit() or len(self.imei2) != 15:
                 warning_msgs.append(_('IMEI 2 must be a 15-digit number.'))
-            else:
+            elif not is_outgoing:
                 exist = self.search([('imei2', '=', self.imei2), ('id', '!=', self._origin.id)], limit=1)
                 if exist:
                     warning_msgs.append(_('IMEI 2 (%s) is already used in another stock item.') % self.imei2)

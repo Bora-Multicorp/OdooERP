@@ -152,7 +152,9 @@ class VendorPaymentApprovalRequest(models.Model):
                 po = self.env['purchase.order'].browse(po_id)
                 if po.exists():
                     vals['approval_type'] = 'with_bill' if po.has_vendor_bill else 'without_bill'
-        return super().create(vals_list)
+        requests = super().create(vals_list)
+        requests._create_payment_tracker_records()
+        return requests
 
     @api.constrains('amount_for_approval', 'purchase_order_id', 'state')
     def _check_total_amount_within_po_total(self):
@@ -337,10 +339,55 @@ class VendorPaymentApprovalRequest(models.Model):
             self.activity_unlink(['mail.mail_activity_data_todo'])
             self._auto_create_bill()
             self._notify_banking_team()
+            self._create_payment_tracker_records()
         else:
             self.activity_unlink(['mail.mail_activity_data_todo'])
             self._notify_next_approver()
         return True
+
+    def _create_payment_tracker_records(self):
+        """Called on request creation — always create fresh tracker records (approved=False).
+        Called again after both approvals — update approved=True on this request's records only.
+        """
+        if 'ks.payment.tracker' not in self.env:
+            return
+
+        for req in self:
+            po = req.purchase_order_id
+            if not po:
+                continue
+
+            fully_approved = req.state == 'approved'
+
+            if fully_approved:
+                existing = self.env['ks.payment.tracker'].search([
+                    ('payment_approval_request_id', '=', req.id)
+                ])
+                if existing:
+                    existing.write({'approved': True})
+                continue
+
+            product_lines = po.order_line.filtered(lambda l: l.product_id)
+            if not product_lines:
+                continue
+
+            vals_list = []
+            for line in product_lines:
+                vals_list.append({
+                    'company_id': po.company_id.id,
+                    'purchase_order_id': po.id,
+                    'purchase_line_id': line.id,
+                    'payment_approval_request_id': req.id,
+                    'user_id': po.user_id.id or False,
+                    'product_id': line.product_id.id,
+                    'product_qty': line.product_qty,
+                    'price_unit': line.price_unit,
+                    'price_subtotal': line.price_subtotal,
+                    'purchase_date': po.date_order.date() if po.date_order else False,
+                    'approved': False,
+                })
+
+            self.env['ks.payment.tracker'].create(vals_list)
 
     def _do_reject(self, reason):
         """Reject this request (called from wizard)."""
@@ -397,7 +444,7 @@ class VendorPaymentApprovalRequest(models.Model):
             if not account:
                 account = self.env['account.account'].search([
                     ('account_type', '=', 'expense'),
-                    ('company_id', '=', po.company_id.id),
+                    ('company_ids', 'in', [po.company_id.id]),
                     ('deprecated', '=', False),
                 ], limit=1)
             if not account:

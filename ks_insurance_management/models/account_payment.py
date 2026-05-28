@@ -61,6 +61,16 @@ class AccountPayment(models.Model):
             except Exception:
                 rec.ins_sum_insured_words = ''
 
+    # ── Prevent deletion of insurance-linked payments ────────────────────────
+
+    def unlink(self):
+        for payment in self:
+            if payment.insurance_policy_id or payment.is_insurance_payment:
+                raise UserError(
+                    "Payment '%s' is linked to an insurance policy and cannot be deleted." % payment.name
+                )
+        return super().unlink()
+
     # ── Validation for insurance payments ────────────────────────────────────
 
     @api.constrains('is_insurance_payment', 'partner_id', 'amount')

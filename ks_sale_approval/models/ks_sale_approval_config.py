@@ -128,8 +128,7 @@ class KsSaleApprovalConfig(models.Model):
     @api.model
     def get_config(self, company_id=None):
         """Get the global approval configuration (applies to all companies)"""
-        # Return the active global configuration regardless of company
-        config = self.search([('active', '=', True)], limit=1)
+        config = self.sudo().search([('active', '=', True)], limit=1)
         return config
 
     def get_all_pm_users(self):
