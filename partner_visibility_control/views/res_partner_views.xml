@@ -72,7 +72,7 @@
                         context="{'group_by': 'company_ids'}"/>
             </xpath>
 
-            <!-- Add separator + quick filters for exec assignment -->
+            <!-- Add separator+quick filters for exec assignment -->
             <xpath expr="//group[@name='group_by']" position="before">
                 <separator/>
                 <filter name="filter_my_sales"
