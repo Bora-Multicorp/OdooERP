@@ -74,5 +74,17 @@
                 </xpath>
             </field>
         </record>
+        <!-- Add imei and imei2 to stock.view_move_line_tree (Move Lines history list) -->
+        <record id="view_move_line_tree_imei_inherit" model="ir.ui.view">
+            <field name="name">stock.move.line.tree.imei.inherit</field>
+            <field name="model">stock.move.line</field>
+            <field name="inherit_id" ref="stock.view_move_line_tree"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='lot_id']" position="after">
+                    <field name="imei" string="IMEI 1" optional="show"/>
+                    <field name="imei2" string="IMEI 2" optional="show"/>
+                </xpath>
+            </field>
+        </record>
     </data>
 </odoo>

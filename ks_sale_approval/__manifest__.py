@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'KS Sale Order Approval Workflow',
-    'version': '18.0.1.0.0',
+    'version': '18.0.1.1.0',
     'summary': 'Multi-level approval workflow for Sale Orders with PM approvers',
     'description': """
         Custom Approval Workflow for Sale Orders

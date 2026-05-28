@@ -9,12 +9,14 @@ class ProductProduct(models.Model):
         string='Latest Purchase Price (Base)',
         currency_field='ks_latest_purchase_currency_id',
         copy=False,
+        company_dependent=True,
         help='Last purchase unit price in base (company) currency, updated when a Purchase Order is confirmed.',
     )
     ks_latest_purchase_currency_id = fields.Many2one(
         comodel_name='res.currency',
         string='Latest Purchase Currency',
         copy=False,
+        company_dependent=True,
         help='Currency of the latest purchase price (base/company currency at time of purchase).',
     )
 
@@ -37,6 +39,7 @@ class ProductTemplate(models.Model):
     )
 
     @api.depends('product_variant_ids.ks_latest_purchase_price', 'product_variant_ids.ks_latest_purchase_currency_id')
+    @api.depends_context('company')
     def _compute_ks_latest_purchase_price(self):
         """Show minimum latest purchase price across variants for display on template."""
         for tmpl in self:
