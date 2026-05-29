@@ -26,6 +26,18 @@
                 <field name="purchase_date"/>
                 <field name="transporter_id"/>
                 <field name="at_warehouse"/>
+                <field name="ks_destination" optional="show"/>
+                <field name="ks_despatched_through" optional="show"/>
+                <field name="ks_remarks" optional="show"/>
+                <field name="ks_invoice" optional="show"/>
+                <field name="ks_e_invoices" optional="show"/>
+                <field name="ks_e_way_bill" optional="show"/>
+                <field name="ks_imei_serial_no" optional="show"/>
+                <field name="ks_docket" optional="show"/>
+                <field name="ks_ewaybill_no" optional="show"/>
+                <field name="ks_docket_no" optional="show"/>
+                <field name="ks_vehicle_no" optional="show"/>
+                <field name="ks_transporter" optional="show"/>
                 <field name="approved" widget="boolean"/>
             </list>
         </field>
@@ -69,6 +81,20 @@
                             <field name="at_warehouse"/>
                             <field name="approved"/>
                             <field name="approved_notes"/>
+                        </group>
+                        <group string="Extra PO Fields">
+                            <field name="ks_destination"/>
+                            <field name="ks_despatched_through"/>
+                            <field name="ks_remarks"/>
+                            <field name="ks_invoice"/>
+                            <field name="ks_e_invoices"/>
+                            <field name="ks_e_way_bill"/>
+                            <field name="ks_imei_serial_no"/>
+                            <field name="ks_docket"/>
+                            <field name="ks_ewaybill_no"/>
+                            <field name="ks_docket_no"/>
+                            <field name="ks_vehicle_no"/>
+                            <field name="ks_transporter"/>
                         </group>
                     </group>
                 </sheet>

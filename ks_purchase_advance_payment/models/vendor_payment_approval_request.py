@@ -384,6 +384,18 @@ class VendorPaymentApprovalRequest(models.Model):
                     'price_unit': line.price_unit,
                     'price_subtotal': line.price_subtotal,
                     'purchase_date': po.date_order.date() if po.date_order else False,
+                    'ks_destination': getattr(po, 'ks_destination', False) or False,
+                    'ks_despatched_through': getattr(po, 'ks_despatched_through', False) or False,
+                    'ks_remarks': getattr(po, 'ks_remarks', False) or False,
+                    'ks_invoice': getattr(po, 'ks_invoice', False) or False,
+                    'ks_e_invoices': getattr(po, 'ks_e_invoices', False) or False,
+                    'ks_e_way_bill': getattr(po, 'ks_e_way_bill', False) or False,
+                    'ks_imei_serial_no': getattr(po, 'ks_imei_serial_no', False) or False,
+                    'ks_docket': getattr(po, 'ks_docket', False) or False,
+                    'ks_ewaybill_no': getattr(po, 'ks_ewaybill_no', False) or False,
+                    'ks_docket_no': getattr(po, 'ks_docket_no', False) or False,
+                    'ks_vehicle_no': getattr(po, 'ks_vehicle_no', False) or False,
+                    'ks_transporter': getattr(po, 'ks_transporter', False) or False,
                     'approved': False,
                 })
 

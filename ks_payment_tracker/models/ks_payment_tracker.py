@@ -139,6 +139,25 @@ class KsPaymentTracker(models.Model):
         string='At Warehouse',
         help='Mark as received after GRN',
     )
+    # ---- Extra PO Fields ----
+    ks_destination = fields.Char(string='Destination')
+    ks_despatched_through = fields.Char(string='Despatched Through')
+    ks_remarks = fields.Char(string='Remarks')
+    ks_invoice = fields.Char(string='Invoice')
+    ks_e_invoices = fields.Char(string='E-Invoices')
+    ks_e_way_bill = fields.Char(string='E-way Bill')
+    ks_imei_serial_no = fields.Selection(
+        [('yes', 'Yes'), ('no', 'No')],
+        string='IMEI/Serial No',
+        required=True,
+        default='no',
+    )
+    ks_docket = fields.Char(string='Docket')
+    ks_ewaybill_no = fields.Char(string='E-Way Bill No')
+    ks_docket_no = fields.Char(string='Docket No')
+    ks_vehicle_no = fields.Char(string='Vehicle No.')
+    ks_transporter = fields.Char(string='Transporter')
+
     approved = fields.Boolean(
         string='Approved',
         default=False,

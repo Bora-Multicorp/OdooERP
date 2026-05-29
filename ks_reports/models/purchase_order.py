@@ -28,7 +28,12 @@ class PurchaseOrder(models.Model):
     ks_invoice = fields.Char(string='Invoice')
     ks_e_invoices = fields.Char(string='E - Invoices')
     ks_e_way_bill = fields.Char(string='E-way Bill')
-    ks_imei_serial_no = fields.Char(string='IMEI/ Serial No')
+    ks_imei_serial_no = fields.Selection(
+        [('yes', 'Yes'), ('no', 'No')],
+        string='IMEI/ Serial No',
+        required=True,
+        default='no',
+    )
     ks_docket = fields.Char(string='DOCKET')
     ks_ewaybill_no = fields.Char(string='EWAYBILL NO')
     ks_docket_no = fields.Char(string='DOCKET No')
