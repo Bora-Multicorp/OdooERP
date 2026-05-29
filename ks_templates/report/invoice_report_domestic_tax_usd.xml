@@ -29,6 +29,7 @@
                 <t t-set="total_sgst" t-value="gst_info['total_sgst']"/>
                 <t t-set="total_igst" t-value="gst_info['total_igst']"/>
                 <t t-set="total_tax_amt" t-value="total_cgst + total_sgst + total_igst"/>
+                <t t-set="is_igst_only" t-value="total_igst > 0 and total_cgst == 0 and total_sgst == 0"/>
                 <t t-set="inv_bank" t-value="doc.ks_bank_id"/>
                 <t t-set="inv_currency" t-value="doc.currency_id"/>
                 <t t-set="curr_symbol" t-value="inv_currency.symbol or '$'"/>
@@ -215,15 +216,15 @@
                             <td style="border:1px solid #000; padding:4px; text-align:center;" t-esc="line_num"/>
                             <td style="border:1px solid #000; padding:4px;">
                                 <t t-esc="line.name or ''"/>
-                                <t t-if="l_cgst_rate"><br/><em><strong>Output CGST @ <t t-esc="doc.format_number(l_cgst_rate, digits=0)"/>%</strong></em></t>
-                                <t t-if="l_sgst_rate"><br/><em><strong>Output SGST @ <t t-esc="doc.format_number(l_sgst_rate, digits=0)"/>%</strong></em></t>
-                                <t t-if="l_igst_rate"><br/><em><strong>Output IGST @ <t t-esc="doc.format_number(l_igst_rate, digits=0)"/>%</strong></em></t>
+                                <t t-if="l_cgst_rate"><br/><em><strong>Output CGST @ <t t-esc="doc.format_rate(l_cgst_rate)"/>%</strong></em></t>
+                                <t t-if="l_sgst_rate"><br/><em><strong>Output SGST @ <t t-esc="doc.format_rate(l_sgst_rate)"/>%</strong></em></t>
+                                <t t-if="l_igst_rate"><br/><em><strong>Output IGST @ <t t-esc="doc.format_rate(l_igst_rate)"/>%</strong></em></t>
                             </td>
                             <td style="border:1px solid #000; padding:4px; text-align:right;">
                                 <t t-esc="doc.get_line_hsn_code(line)"/>
                             </td>
                             <td style="border:1px solid #000; padding:4px; text-align:right;">
-                                <t t-if="line_total_gst"><t t-esc="doc.format_number(line_total_gst, digits=0)"/>%</t>
+                                <t t-if="line_total_gst"><t t-esc="doc.format_rate(line_total_gst)"/>%</t>
                             </td>
                             <td style="border:1px solid #000; padding:4px; text-align:right;">
                                 <t t-esc="doc.format_number(line.quantity, digits=2)"/> <t t-esc="line.product_uom_id.name or 'pcs'"/>
@@ -251,11 +252,11 @@
                         <t t-if="grp['cgst_rate']">
                             <tr>
                                 <td style="border:1px solid #000; padding:4px;"></td>
-                                <td style="border:1px solid #000; padding:4px;">Output CGST @ <t t-esc="doc.format_number(grp['cgst_rate'], digits=0)"/>%</td>
+                                <td style="border:1px solid #000; padding:4px;">Output CGST @ <t t-esc="doc.format_rate(grp['cgst_rate'])"/>%</td>
                                 <td style="border:1px solid #000; padding:4px;"></td>
                                 <td style="border:1px solid #000; padding:4px;"></td>
                                 <td style="border:1px solid #000; padding:4px;"></td>
-                                <td style="border:1px solid #000; padding:4px; text-align:right;"><t t-esc="doc.format_number(grp['cgst_rate'], digits=0)"/></td>
+                                <td style="border:1px solid #000; padding:4px; text-align:right;"><t t-esc="doc.format_rate(grp['cgst_rate'])"/></td>
                                 <td style="border:1px solid #000; padding:4px; text-align:center;">%</td>
                                 <td style="border:1px solid #000; padding:4px; text-align:right;">INR <t t-esc="doc.format_number(grp['cgst_amount'] * inr_rate, digits=2)"/></td>
                             </tr>
@@ -263,11 +264,11 @@
                         <t t-if="grp['sgst_rate']">
                             <tr>
                                 <td style="border:1px solid #000; padding:4px;"></td>
-                                <td style="border:1px solid #000; padding:4px;">Output SGST @ <t t-esc="doc.format_number(grp['sgst_rate'], digits=0)"/>%</td>
+                                <td style="border:1px solid #000; padding:4px;">Output SGST @ <t t-esc="doc.format_rate(grp['sgst_rate'])"/>%</td>
                                 <td style="border:1px solid #000; padding:4px;"></td>
                                 <td style="border:1px solid #000; padding:4px;"></td>
                                 <td style="border:1px solid #000; padding:4px;"></td>
-                                <td style="border:1px solid #000; padding:4px; text-align:right;"><t t-esc="doc.format_number(grp['sgst_rate'], digits=0)"/></td>
+                                <td style="border:1px solid #000; padding:4px; text-align:right;"><t t-esc="doc.format_rate(grp['sgst_rate'])"/></td>
                                 <td style="border:1px solid #000; padding:4px; text-align:center;">%</td>
                                 <td style="border:1px solid #000; padding:4px; text-align:right;">INR <t t-esc="doc.format_number(grp['sgst_amount'] * inr_rate, digits=2)"/></td>
                             </tr>
@@ -275,11 +276,11 @@
                         <t t-if="grp['igst_rate']">
                             <tr>
                                 <td style="border:1px solid #000; padding:4px;"></td>
-                                <td style="border:1px solid #000; padding:4px;">Output IGST @ <t t-esc="doc.format_number(grp['igst_rate'], digits=0)"/>%</td>
+                                <td style="border:1px solid #000; padding:4px;">Output IGST @ <t t-esc="doc.format_rate(grp['igst_rate'])"/>%</td>
                                 <td style="border:1px solid #000; padding:4px;"></td>
                                 <td style="border:1px solid #000; padding:4px;"></td>
                                 <td style="border:1px solid #000; padding:4px;"></td>
-                                <td style="border:1px solid #000; padding:4px; text-align:right;"><t t-esc="doc.format_number(grp['igst_rate'], digits=0)"/></td>
+                                <td style="border:1px solid #000; padding:4px; text-align:right;"><t t-esc="doc.format_rate(grp['igst_rate'])"/></td>
                                 <td style="border:1px solid #000; padding:4px; text-align:center;">%</td>
                                 <td style="border:1px solid #000; padding:4px; text-align:right;">INR <t t-esc="doc.format_number(grp['igst_amount'] * inr_rate, digits=2)"/></td>
                             </tr>
@@ -320,13 +321,19 @@
                                 <tr>
                                     <td style="width:20%; border-right:1px solid #000; border-bottom:1px solid #000; padding:4px;" rowspan="2">HSN/SAC</td>
                                     <td style="width:15%; border-right:1px solid #000; border-bottom:1px solid #000; padding:4px;" rowspan="2">Taxable Value</td>
-                                    <td style="width:20%; border-right:1px solid #000; border-bottom:1px solid #000; padding:4px; text-align:center;" colspan="2">CGST</td>
-                                    <td style="width:20%; border-right:1px solid #000; border-bottom:1px solid #000; padding:4px; text-align:center;" colspan="2">SGST/UTGST</td>
+                                    <t t-if="not is_igst_only">
+                                        <td style="width:20%; border-right:1px solid #000; border-bottom:1px solid #000; padding:4px; text-align:center;" colspan="2">CGST</td>
+                                    </t>
+                                    <td style="width:20%; border-right:1px solid #000; border-bottom:1px solid #000; padding:4px; text-align:center;" colspan="2">
+                                        <t t-if="is_igst_only">IGST</t><t t-else="">SGST/UTGST</t>
+                                    </td>
                                     <td style="width:25%; border-bottom:1px solid #000; padding:4px;" rowspan="2">Total Tax Amount</td>
                                 </tr>
                                 <tr>
-                                    <td style="border-right:1px solid #000; border-bottom:1px solid #000; padding:4px;">Rate</td>
-                                    <td style="border-right:1px solid #000; border-bottom:1px solid #000; padding:4px;">Amount</td>
+                                    <t t-if="not is_igst_only">
+                                        <td style="border-right:1px solid #000; border-bottom:1px solid #000; padding:4px;">Rate</td>
+                                        <td style="border-right:1px solid #000; border-bottom:1px solid #000; padding:4px;">Amount</td>
+                                    </t>
                                     <td style="border-right:1px solid #000; border-bottom:1px solid #000; padding:4px;">Rate</td>
                                     <td style="border-right:1px solid #000; border-bottom:1px solid #000; padding:4px;">Amount</td>
                                 </tr>
@@ -346,9 +353,11 @@
                                     <tr>
                                         <td style="border-right:1px solid #000; padding:4px;"><t t-esc="grp_hsn"/></td>
                                         <td style="border-right:1px solid #000; padding:4px;">INR <t t-esc="doc.format_number(grp_inr_taxable, digits=2)"/></td>
-                                        <td style="border-right:1px solid #000; padding:4px; text-align:center;"><t t-esc="doc.format_number(grp['cgst_rate'], digits=0)"/>%</td>
-                                        <td style="border-right:1px solid #000; padding:4px; text-align:right;">INR <t t-esc="doc.format_number(grp_inr_cgst, digits=2)"/></td>
-                                        <td style="border-right:1px solid #000; padding:4px; text-align:center;"><t t-esc="doc.format_number(grp['sgst_rate'] or grp['igst_rate'], digits=0)"/>%</td>
+                                        <t t-if="not is_igst_only">
+                                            <td style="border-right:1px solid #000; padding:4px; text-align:center;"><t t-esc="doc.format_rate(grp['cgst_rate'])"/>%</td>
+                                            <td style="border-right:1px solid #000; padding:4px; text-align:right;">INR <t t-esc="doc.format_number(grp_inr_cgst, digits=2)"/></td>
+                                        </t>
+                                        <td style="border-right:1px solid #000; padding:4px; text-align:center;"><t t-esc="doc.format_rate(grp['sgst_rate'] or grp['igst_rate'])"/>%</td>
                                         <td style="border-right:1px solid #000; padding:4px; text-align:right;">INR <t t-esc="doc.format_number(grp_inr_sgst_igst, digits=2)"/></td>
                                         <td style="padding:4px; text-align:right;">INR <t t-esc="doc.format_number(grp_inr_total, digits=2)"/></td>
                                     </tr>
@@ -360,8 +369,10 @@
                                 <tr>
                                     <td style="border-top:1px solid #000; border-right:1px solid #000; padding:4px;"><strong>Total</strong></td>
                                     <td style="border-top:1px solid #000; border-right:1px solid #000; padding:4px;"><strong>INR <t t-esc="doc.format_number(total_inr_taxable, digits=2)"/></strong></td>
-                                    <td style="border-top:1px solid #000; border-right:1px solid #000; padding:4px;"></td>
-                                    <td style="border-top:1px solid #000; border-right:1px solid #000; padding:4px;"><strong>INR <t t-esc="doc.format_number(total_inr_cgst, digits=2)"/></strong></td>
+                                    <t t-if="not is_igst_only">
+                                        <td style="border-top:1px solid #000; border-right:1px solid #000; padding:4px;"></td>
+                                        <td style="border-top:1px solid #000; border-right:1px solid #000; padding:4px;"><strong>INR <t t-esc="doc.format_number(total_inr_cgst, digits=2)"/></strong></td>
+                                    </t>
                                     <td style="border-top:1px solid #000; border-right:1px solid #000; padding:4px;"></td>
                                     <td style="border-top:1px solid #000; border-right:1px solid #000; padding:4px;"><strong>INR <t t-esc="doc.format_number(total_inr_sgst_igst, digits=2)"/></strong></td>
                                     <td style="border-top:1px solid #000; padding:4px;"><strong>INR <t t-esc="doc.format_number(total_inr_tax, digits=2)"/></strong></td>
