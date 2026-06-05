@@ -31,6 +31,19 @@ class KsDeliveryApprovalRequestWizard(models.TransientModel):
     ks_show_approver2 = fields.Boolean(compute='_compute_show_approver2')
     ks_approval_info = fields.Html(compute='_compute_approval_info', readonly=True)
     ks_is_update_mode = fields.Boolean(string='Is Update Mode', default=False)
+    ks_pm1_already_approved = fields.Boolean(string='PM1 Already Approved', default=False)
+
+    @api.model
+    def default_get(self, fields_list):
+        res = super().default_get(fields_list)
+        is_update = self.env.context.get('ks_is_update', False)
+        picking_id = self.env.context.get('default_ks_picking_id') or res.get('ks_picking_id')
+        if is_update and picking_id:
+            picking = self.env['stock.picking'].browse(picking_id)
+            if picking.ks_validate_pm1_approved and picking.ks_validate_pm1_id:
+                res['ks_pm1_already_approved'] = True
+                res['ks_approver1_user'] = picking.ks_validate_pm1_id.id
+        return res
 
     @api.depends('ks_picking_id')
     def _compute_show_approver2(self):
@@ -111,6 +124,12 @@ class KsDeliveryApprovalRequestWizard(models.TransientModel):
 
         is_update = self.env.context.get('ks_is_update', False)
         picking = self.ks_picking_id
+
+        if is_update and picking.ks_validate_pm1_approved and picking.ks_validate_pm1_id:
+            if picking.ks_validate_pm1_id != self.ks_approver1_user:
+                raise UserError(_(
+                    "Approver 1 (%s) has already approved this request and cannot be changed."
+                ) % picking.ks_validate_pm1_id.name)
 
         # If PM1 is unchanged and already approved, preserve their approval
         preserve_pm1 = (

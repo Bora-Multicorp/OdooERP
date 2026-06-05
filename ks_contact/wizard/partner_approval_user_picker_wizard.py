@@ -10,6 +10,7 @@ class PartnerApprovalUserPickerWizard(models.TransientModel):
 
     partner_id = fields.Many2one('res.partner', string='Contact (Vendor)', required=True)
     ks_is_update_mode = fields.Boolean(string='Is Update Mode', default=False)
+    ks_pm1_already_approved = fields.Boolean(string='PM1 Already Approved', default=False)
     ks_approval_mode = fields.Selection(
         [('single', 'Single Level Approval'), ('two_way', 'Two Level Approval')],
         string='Approval Mode',
@@ -25,6 +26,19 @@ class PartnerApprovalUserPickerWizard(models.TransientModel):
         mode = config.ks_approval_mode if config else 'two_way'
         res['ks_approval_mode'] = mode
         res['ks_is_two_way'] = (mode == 'two_way')
+
+        # Lock Approver 1 if PM1 has already approved
+        is_update = self.env.context.get('ks_is_update', False)
+        partner_id = self.env.context.get('default_partner_id') or res.get('partner_id')
+        if is_update and partner_id:
+            partner = self.env['res.partner'].browse(partner_id)
+            existing_pm1 = partner.approval_line_ids.filtered(
+                lambda l: l.sequence == 1 and l.state == 'approve'
+            )[:1]
+            if existing_pm1:
+                res['ks_pm1_already_approved'] = True
+                res['approver1_user'] = existing_pm1.user_id.id
+
         return res
 
     approver1_user_ids = fields.Many2many(
@@ -127,6 +141,16 @@ class PartnerApprovalUserPickerWizard(models.TransientModel):
             raise ValidationError(_("Please select both Approver 1 and Approver 2."))
 
         is_update = self.env.context.get('ks_is_update', False)
+
+        # Block changing Approver 1 if PM1 has already approved
+        if is_update:
+            existing_pm1 = self.partner_id.approval_line_ids.filtered(
+                lambda l: l.sequence == 1 and l.state == 'approve'
+            )[:1]
+            if existing_pm1 and existing_pm1.user_id != self.approver1_user:
+                raise ValidationError(_(
+                    "Approver 1 (%s) has already approved this request and cannot be changed."
+                ) % existing_pm1.user_id.name)
 
         # Check if PM1 unchanged and already approved
         preserve_pm1 = False

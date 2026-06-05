@@ -10,6 +10,7 @@
                     <field name="ks_available_approver_1_ids" invisible="1"/>
                     <field name="ks_available_approver_2_ids" invisible="1"/>
                     <field name="ks_is_update_mode" invisible="1"/>
+                    <field name="ks_pm1_already_approved" invisible="1"/>
                 </group>
                 <field name="ks_pm1_approved_status" widget="html" nolabel="1" readonly="1"
                        invisible="not ks_pm1_approved_status"/>
@@ -20,10 +21,11 @@
                 </div>
                 <group>
                     <field name="ks_is_two_way_approval" invisible="1"/>
-                    <field name="ks_approver_1_id" 
+                    <field name="ks_approver_1_id"
                            options="{'no_create': True}"
                            domain="[('id', 'in', ks_available_approver_1_ids), ('share', '=', False), ('id', '!=', ks_approver_2_id)]"
-                           required="1"/>
+                           required="1"
+                           readonly="ks_pm1_already_approved"/>
                     <field name="ks_approver_2_id" 
                            options="{'no_create': True}"
                            domain="[('id', 'in', ks_available_approver_2_ids), ('share', '=', False), ('id', '!=', ks_approver_1_id)]"

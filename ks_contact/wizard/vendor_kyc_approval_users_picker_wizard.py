@@ -10,6 +10,8 @@ class POConfirmationApprovalUsersPicker(models.TransientModel):
 
     kyc_id = fields.Many2one('res.partner.kyc.approval', string="Approval for Vendor Kyc Confirmation")
     ks_is_update_mode = fields.Boolean(string='Is Update Mode', default=False)
+    ks_pm1_already_approved = fields.Boolean(string='PM1 Already Approved', default=False)
+    ks_is_two_way = fields.Boolean(string='Is Two Way', compute='_compute_ks_is_two_way')
     ks_approval_info = fields.Html(compute='_compute_approval_info', readonly=True)
 
     approver1_user_ids = fields.Many2many(
@@ -18,7 +20,7 @@ class POConfirmationApprovalUsersPicker(models.TransientModel):
         string="Available Approver 1 Users",
         store=False
     )
-    
+
     approver2_user_ids = fields.Many2many(
         comodel_name='res.users',
         compute='_compute_approver_user_ids',
@@ -36,7 +38,7 @@ class POConfirmationApprovalUsersPicker(models.TransientModel):
     approver2_user = fields.Many2one(
         comodel_name='res.users',
         string="Approver 2",
-        required=True,
+        required=False,
         domain="[('id', 'in', approver2_user_ids)]"
     )
 
@@ -45,7 +47,33 @@ class POConfirmationApprovalUsersPicker(models.TransientModel):
         compute='_compute_add_button_disabled'
     )
 
-    @api.depends('kyc_id', 'approver1_user', 'ks_is_update_mode')
+    @api.model
+    def default_get(self, fields_list):
+        res = super().default_get(fields_list)
+        config = self.env['vendor.approval.config'].get_config()
+        mode = config.ks_approval_mode if config else 'two_way'
+        res['ks_is_two_way'] = (mode == 'two_way')
+
+        is_update = self.env.context.get('ks_is_update', False)
+        kyc_id = self.env.context.get('default_kyc_id') or res.get('kyc_id')
+        if is_update and kyc_id:
+            kyc = self.env['res.partner.kyc.approval'].browse(kyc_id)
+            existing_pm1 = kyc.approval_users_ids.filtered(
+                lambda l: l.sequence == 1 and l.state == 'approve'
+            )[:1]
+            if existing_pm1:
+                res['ks_pm1_already_approved'] = True
+                res['approver1_user'] = existing_pm1.user_id.id
+        return res
+
+    @api.depends('kyc_id')
+    def _compute_ks_is_two_way(self):
+        config = self.env['vendor.approval.config'].get_config()
+        is_two_way = config.ks_approval_mode == 'two_way' if config else True
+        for rec in self:
+            rec.ks_is_two_way = is_two_way
+
+    @api.depends('kyc_id', 'approver1_user', 'ks_is_update_mode', 'ks_is_two_way')
     def _compute_approval_info(self):
         for wiz in self:
             html = ''
@@ -60,11 +88,18 @@ class POConfirmationApprovalUsersPicker(models.TransientModel):
                         ' Keeping the same Approver 1 will preserve their approval.'
                         '</div>'
                     ) % approver1_line.user_id.name
-            html += (
-                '<div class="alert alert-info">'
-                '<p>KYC submission requires approval. Approval will be sequential (Approver 1 first, then Approver 2).</p>'
-                '</div>'
-            )
+            if wiz.ks_is_two_way:
+                html += (
+                    '<div class="alert alert-info">'
+                    '<p>KYC submission requires approval. Approval will be sequential (Approver 1 first, then Approver 2).</p>'
+                    '</div>'
+                )
+            else:
+                html += (
+                    '<div class="alert alert-info">'
+                    '<p>KYC submission requires Approver 1 only (Single Level Approval).</p>'
+                    '</div>'
+                )
             wiz.ks_approval_info = html
 
     @api.depends('kyc_id')
@@ -73,18 +108,19 @@ class POConfirmationApprovalUsersPicker(models.TransientModel):
         for rec in self:
             config = self.env['vendor.approval.config'].get_config()
             if config:
-                # Get users configured as Approver 1
                 rec.approver1_user_ids = config.ks_approver_1_ids
-                # Get users configured as Approver 2
                 rec.approver2_user_ids = config.ks_approver_2_ids
             else:
                 rec.approver1_user_ids = False
                 rec.approver2_user_ids = False
 
-    @api.depends('approver1_user', 'approver2_user')
+    @api.depends('approver1_user', 'approver2_user', 'ks_is_two_way')
     def _compute_add_button_disabled(self):
         for rec in self:
-            rec.add_button_disabled = not (rec.approver1_user and rec.approver2_user)
+            if rec.ks_is_two_way:
+                rec.add_button_disabled = not (rec.approver1_user and rec.approver2_user)
+            else:
+                rec.add_button_disabled = not rec.approver1_user
 
     @api.onchange('approver1_user')
     def _onchange_approver1_user(self):
@@ -108,10 +144,21 @@ class POConfirmationApprovalUsersPicker(models.TransientModel):
         if not self.kyc_id:
             raise ValidationError(_("KYC record is missing."))
 
-        if not self.approver1_user or not self.approver2_user:
+        if not self.approver1_user:
+            raise ValidationError(_("Please select Approver 1."))
+        if self.ks_is_two_way and not self.approver2_user:
             raise ValidationError(_("Please select both Approver 1 and Approver 2."))
 
         is_update = self.env.context.get('ks_is_update', False)
+
+        if is_update:
+            existing_pm1 = self.kyc_id.approval_users_ids.filtered(
+                lambda l: l.sequence == 1 and l.state == 'approve'
+            )[:1]
+            if existing_pm1 and existing_pm1.user_id != self.approver1_user:
+                raise ValidationError(_(
+                    "Approver 1 (%s) has already approved this request and cannot be changed."
+                ) % existing_pm1.user_id.name)
 
         # Check if PM1 unchanged and already approved
         preserve_pm1 = False
@@ -142,11 +189,12 @@ class POConfirmationApprovalUsersPicker(models.TransientModel):
             )
             self.kyc_id.message_post(body=msg, message_type='notification', subtype_xmlid='mail.mt_note')
 
-        # Build new approval lines: Approver 1 → sequence 1, Approver 2 → sequence 2
+        # Build new approval lines
         approval_vals = [
             (0, 0, {'sequence': 1, 'user_id': self.approver1_user.id}),
-            (0, 0, {'sequence': 2, 'user_id': self.approver2_user.id}),
         ]
+        if self.ks_is_two_way and self.approver2_user:
+            approval_vals.append((0, 0, {'sequence': 2, 'user_id': self.approver2_user.id}))
 
         # Write approval users and trigger sequential approval flow
         self.kyc_id.write({

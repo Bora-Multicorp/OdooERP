@@ -9,6 +9,34 @@ class ApprovalUsersPicker(models.TransientModel):
 
     product_id = fields.Many2one('product.template', string="Approval for Product Confirmation")
     ks_is_update_mode = fields.Boolean(string='Is Update Mode', default=False)
+    ks_pm1_already_approved = fields.Boolean(string='PM1 Already Approved', default=False)
+    ks_is_two_way = fields.Boolean(string='Is Two Way', compute='_compute_ks_is_two_way')
+
+    def _is_two_way_approval(self):
+        return bool(self.env['product.approval.config'].search(
+            [('approver_type', '=', 'approver2')], limit=1
+        ))
+
+    @api.depends('product_id')
+    def _compute_ks_is_two_way(self):
+        is_two_way = self._is_two_way_approval()
+        for rec in self:
+            rec.ks_is_two_way = is_two_way
+
+    @api.model
+    def default_get(self, fields_list):
+        res = super().default_get(fields_list)
+        is_update = self.env.context.get('ks_is_update', False)
+        product_id = self.env.context.get('default_product_id') or res.get('product_id')
+        if is_update and product_id:
+            product = self.env['product.template'].browse(product_id)
+            existing_pm1 = product.approval_users_ids.filtered(
+                lambda l: l.approval_type == 'approver1' and l.state == 'approve'
+            )[:1]
+            if existing_pm1:
+                res['ks_pm1_already_approved'] = True
+                res['approver1_user'] = existing_pm1.user_id.id
+        return res
     ks_approval_info = fields.Html(compute='_compute_approval_info', readonly=True)
     approver1_user_ids = fields.Many2many(
         comodel_name='res.users',
@@ -33,7 +61,7 @@ class ApprovalUsersPicker(models.TransientModel):
     approver2_user = fields.Many2one(
         comodel_name='res.users',
         string="Approver 2",
-        required=True
+        required=False
     )
 
     add_button_disabled = fields.Boolean(
@@ -41,7 +69,7 @@ class ApprovalUsersPicker(models.TransientModel):
         compute='_compute_add_button_disabled'
     )
 
-    @api.depends('product_id', 'approver1_user', 'ks_is_update_mode')
+    @api.depends('product_id', 'approver1_user', 'ks_is_update_mode', 'ks_is_two_way')
     def _compute_approval_info(self):
         for wiz in self:
             html = ''
@@ -56,11 +84,18 @@ class ApprovalUsersPicker(models.TransientModel):
                         ' Keeping the same Approver 1 will preserve their approval.'
                         '</div>'
                     ) % approver1_line.user_id.name
-            html += (
-                '<div class="alert alert-info">'
-                '<p>Product requires approval. Approver 2 cannot approve until Approver 1 has approved.</p>'
-                '</div>'
-            )
+            if wiz.ks_is_two_way:
+                html += (
+                    '<div class="alert alert-info">'
+                    '<p>Product requires approval. Approver 2 cannot approve until Approver 1 has approved.</p>'
+                    '</div>'
+                )
+            else:
+                html += (
+                    '<div class="alert alert-info">'
+                    '<p>Product requires Approver 1 approval only (Single Level Approval).</p>'
+                    '</div>'
+                )
             wiz.ks_approval_info = html
 
     @api.depends('product_id')
@@ -77,10 +112,13 @@ class ApprovalUsersPicker(models.TransientModel):
             ])
             rec.approver2_user_ids = approver2_configs.mapped('user_id')
 
-    @api.depends('approver1_user', 'approver2_user')
+    @api.depends('approver1_user', 'approver2_user', 'ks_is_two_way')
     def _compute_add_button_disabled(self):
         for rec in self:
-            rec.add_button_disabled = not (rec.approver1_user or rec.approver2_user)
+            if rec.ks_is_two_way:
+                rec.add_button_disabled = not (rec.approver1_user and rec.approver2_user)
+            else:
+                rec.add_button_disabled = not rec.approver1_user
 
     @api.onchange('approver1_user')
     def _onchange_approver1_user(self):
@@ -119,19 +157,27 @@ class ApprovalUsersPicker(models.TransientModel):
             #     }
 
     def add_users_for_approval(self):
-        approvers = []
-        if self.approver1_user:
-            approvers.append({
-                'user_id': self.approver1_user.id,
-                'approval_type': 'approver1'
-            })
-        if self.approver2_user:
-            approvers.append({
-                'user_id': self.approver2_user.id,
-                'approval_type': 'approver2'
-            })
+        from odoo.exceptions import ValidationError as VE
+        if not self.approver1_user:
+            raise VE(_("Please select Approver 1."))
+        if self.ks_is_two_way and not self.approver2_user:
+            raise VE(_("Please select both Approver 1 and Approver 2."))
+
+        approvers = [{'user_id': self.approver1_user.id, 'approval_type': 'approver1'}]
+        if self.ks_is_two_way and self.approver2_user:
+            approvers.append({'user_id': self.approver2_user.id, 'approval_type': 'approver2'})
 
         is_update = self.env.context.get('ks_is_update', False)
+
+        if is_update and self.approver1_user:
+            existing_pm1 = self.product_id.approval_users_ids.filtered(
+                lambda l: l.approval_type == 'approver1' and l.state == 'approve'
+            )[:1]
+            if existing_pm1 and existing_pm1.user_id != self.approver1_user:
+                from odoo.exceptions import ValidationError
+                raise ValidationError(_(
+                    "Approver 1 (%s) has already approved this request and cannot be changed."
+                ) % existing_pm1.user_id.name)
 
         # Check if PM1 is unchanged and already approved
         preserve_pm1 = False
