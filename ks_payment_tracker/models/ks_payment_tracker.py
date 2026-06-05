@@ -31,6 +31,25 @@ class KsPaymentTracker(models.Model):
         index=True,
     )
 
+    # ---- Linked payment ----
+    ks_account_payment_id = fields.Many2one(
+        'account.payment',
+        string='Payment',
+        ondelete='set null',
+        index=True,
+        readonly=True,
+        help='The actual payment record linked to this tracker entry',
+    )
+
+    ks_requested_amount = fields.Monetary(
+        string='Requested Amount',
+        related='payment_approval_request_id.amount_for_approval',
+        store=True,
+        readonly=True,
+        currency_field='currency_id',
+        help='Amount For Approval from the linked Payment Approval Request',
+    )
+
     # ---- From PO ----
     purchase_order_id = fields.Many2one(
         'purchase.order',
@@ -103,10 +122,12 @@ class KsPaymentTracker(models.Model):
         digits='Account',
         help='TDS amount',
     )
-    amt_to_be_paid = fields.Float(
+    amt_to_be_paid = fields.Monetary(
         string='Amt To Be Paid',
-        digits='Account',
-        help='Calculations as per formula or from PO lines',
+        compute='_compute_amt_to_be_paid',
+        store=False,
+        currency_field='currency_id',
+        help='Requested amount minus total paid amount for this PO',
     )
 
     # ---- Status / purpose ----
@@ -171,6 +192,45 @@ class KsPaymentTracker(models.Model):
         store=True,
         readonly=True,
     )
+
+    ks_total_paid_amount = fields.Monetary(
+        string='Total Paid Amount',
+        compute='_compute_ks_total_paid_amount',
+        currency_field='currency_id',
+        help='Total amount paid (posted + paid payments) for this Purchase Order',
+    )
+
+    @api.depends('purchase_order_id')
+    def _compute_ks_total_paid_amount(self):
+        for rec in self:
+            if not rec.purchase_order_id:
+                rec.ks_total_paid_amount = 0.0
+                continue
+            payments = self.env['account.payment'].search([
+                ('ks_purchase_order_id', '=', rec.purchase_order_id.id),
+                ('state', 'in', ('posted', 'paid')),
+                ('payment_type', '=', 'outbound'),
+            ])
+            rec.ks_total_paid_amount = sum(payments.mapped('amount'))
+
+    @api.depends(
+        'price_subtotal',
+        'purchase_order_id',
+        'purchase_order_id.ks_advance_payment_ids',
+        'purchase_order_id.ks_advance_payment_ids.amount',
+        'purchase_order_id.ks_advance_payment_ids.state',
+    )
+    def _compute_amt_to_be_paid(self):
+        for rec in self:
+            paid = 0.0
+            if rec.purchase_order_id:
+                payments = self.env['account.payment'].search([
+                    ('ks_purchase_order_id', '=', rec.purchase_order_id.id),
+                    ('state', 'in', ('posted', 'paid')),
+                    ('payment_type', '=', 'outbound'),
+                ])
+                paid = sum(payments.mapped('amount'))
+            rec.amt_to_be_paid = (rec.price_subtotal or 0.0) - paid
 
     def _get_next_sn(self):
         last = self.search([], order='sn desc', limit=1)

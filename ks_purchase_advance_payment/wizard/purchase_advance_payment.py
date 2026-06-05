@@ -253,6 +253,29 @@ class PurchaseAdvancePayment(models.TransientModel):
                 )
             )
 
+        # Restrict payment to approved advance amount minus what has already been paid
+        order = self.purchase_order_id
+        approved_requests = order.payment_approval_request_ids.filtered(
+            lambda r: r.state == 'approved' and r.approval_type == 'without_bill'
+        )
+        total_approved = sum(approved_requests.mapped('amount_for_approval'))
+        already_paid = order.ks_advance_payment_amount+order.ks_advance_payment_in_payment_amount or 0.0
+        remaining_approved = total_approved - already_paid
+
+        if self.amount_in_order_currency > remaining_approved:
+            raise UserError(_(
+                'Payment amount (%(amount)s) exceeds the approved advance limit.\n'
+                'Total approved: %(approved)s\n'
+                'Already paid: %(paid)s\n'
+                'Amount In Payment State: %(in_payment)s\n'
+                'Remaining allowed: %(remaining)s',
+                amount=formatLang(self.env, self.amount_in_order_currency, currency_obj=order.currency_id),
+                approved=formatLang(self.env, total_approved, currency_obj=order.currency_id),
+                paid=formatLang(self.env, already_paid, currency_obj=order.currency_id),
+                remaining=formatLang(self.env, remaining_approved, currency_obj=order.currency_id),
+                in_payment=formatLang(self.env, order.ks_advance_payment_in_payment_amount , currency_obj=order.currency_id),
+            ))
+
         partner = self.purchase_order_id.partner_id
         accounting_partner = self.env['res.partner']._find_accounting_partner(
             partner

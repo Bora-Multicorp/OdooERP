@@ -929,6 +929,15 @@ class SaleOrder(models.Model):
                 if order.order_line:
                     order.order_line._compute_ks_can_edit_price()
 
+        # Re-validate line prices when exchange rate settings change
+        if any(f in values for f in ('is_exchange', 'rate', 'currency_id')):
+            for order in self:
+                lines = order.order_line.filtered(
+                    lambda l: not l.display_type and l.product_id
+                )
+                if lines:
+                    lines._check_sale_price_not_below_latest_purchase()
+
         return result
 
     def action_cancel(self):

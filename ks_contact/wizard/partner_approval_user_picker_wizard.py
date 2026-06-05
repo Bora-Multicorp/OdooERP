@@ -10,7 +10,22 @@ class PartnerApprovalUserPickerWizard(models.TransientModel):
 
     partner_id = fields.Many2one('res.partner', string='Contact (Vendor)', required=True)
     ks_is_update_mode = fields.Boolean(string='Is Update Mode', default=False)
+    ks_approval_mode = fields.Selection(
+        [('single', 'Single Level Approval'), ('two_way', 'Two Level Approval')],
+        string='Approval Mode',
+        default='two_way',
+    )
+    ks_is_two_way = fields.Boolean(string='Is Two Way', default=True)
     ks_approval_info = fields.Html(compute='_compute_approval_info', readonly=True)
+
+    @api.model
+    def default_get(self, fields_list):
+        res = super().default_get(fields_list)
+        config = self.env['vendor.approval.config'].get_config()
+        mode = config.ks_approval_mode if config else 'two_way'
+        res['ks_approval_mode'] = mode
+        res['ks_is_two_way'] = (mode == 'two_way')
+        return res
 
     approver1_user_ids = fields.Many2many(
         comodel_name='res.users',
@@ -33,12 +48,12 @@ class PartnerApprovalUserPickerWizard(models.TransientModel):
     approver2_user = fields.Many2one(
         'res.users',
         string='Approver 2',
-        required=True,
+        required=False,
         domain="[('id', 'in', approver2_user_ids)]",
     )
     add_button_disabled = fields.Boolean(compute='_compute_add_button_disabled')
 
-    @api.depends('partner_id', 'approver1_user', 'ks_is_update_mode')
+    @api.depends('partner_id', 'approver1_user', 'ks_is_update_mode', 'ks_is_two_way')
     def _compute_approval_info(self):
         for wiz in self:
             html = ''
@@ -53,11 +68,18 @@ class PartnerApprovalUserPickerWizard(models.TransientModel):
                         ' Keeping the same Approver 1 will preserve their approval.'
                         '</div>'
                     ) % approver1_line.user_id.name
-            html += (
-                '<div class="alert alert-info">'
-                '<p>Vendor approval requires Approver 1 and Approver 2. Approval will be sequential (Approver 1 first, then Approver 2).</p>'
-                '</div>'
-            )
+            if wiz.ks_is_two_way:
+                html += (
+                    '<div class="alert alert-info">'
+                    '<p>Vendor approval requires Approver 1 and Approver 2. Approval will be sequential (Approver 1 first, then Approver 2).</p>'
+                    '</div>'
+                )
+            else:
+                html += (
+                    '<div class="alert alert-info">'
+                    '<p>Vendor approval requires Approver 1 only (Single Level Approval).</p>'
+                    '</div>'
+                )
             wiz.ks_approval_info = html
 
     @api.depends('partner_id')
@@ -71,10 +93,13 @@ class PartnerApprovalUserPickerWizard(models.TransientModel):
                 rec.approver1_user_ids = False
                 rec.approver2_user_ids = False
 
-    @api.depends('approver1_user', 'approver2_user')
+    @api.depends('approver1_user', 'approver2_user', 'ks_is_two_way')
     def _compute_add_button_disabled(self):
         for rec in self:
-            rec.add_button_disabled = not (rec.approver1_user and rec.approver2_user)
+            if rec.ks_is_two_way:
+                rec.add_button_disabled = not (rec.approver1_user and rec.approver2_user)
+            else:
+                rec.add_button_disabled = not rec.approver1_user
 
     @api.onchange('approver1_user')
     def _onchange_approver1_user(self):
@@ -96,7 +121,9 @@ class PartnerApprovalUserPickerWizard(models.TransientModel):
         self.ensure_one()
         if not self.partner_id:
             raise ValidationError(_("Contact is missing."))
-        if not self.approver1_user or not self.approver2_user:
+        if not self.approver1_user:
+            raise ValidationError(_("Please select Approver 1."))
+        if self.ks_is_two_way and not self.approver2_user:
             raise ValidationError(_("Please select both Approver 1 and Approver 2."))
 
         is_update = self.env.context.get('ks_is_update', False)
@@ -124,13 +151,14 @@ class PartnerApprovalUserPickerWizard(models.TransientModel):
             self.partner_id.message_post(body=msg, message_type='notification', subtype_xmlid='mail.mt_note')
 
         from odoo import Command
-        # Replace approval lines with new approvers (Command.clear() handles old lines)
+        approval_lines = [
+            Command.clear(),
+            Command.create({'sequence': 1, 'user_id': self.approver1_user.id}),
+        ]
+        if self.ks_is_two_way and self.approver2_user:
+            approval_lines.append(Command.create({'sequence': 2, 'user_id': self.approver2_user.id}))
         self.partner_id.write({
-            'approval_line_ids': [
-                Command.clear(),
-                Command.create({'sequence': 1, 'user_id': self.approver1_user.id}),
-                Command.create({'sequence': 2, 'user_id': self.approver2_user.id}),
-            ],
+            'approval_line_ids': approval_lines,
             'approval_status': 'to_approve',
             'is_rejected': False,
         })

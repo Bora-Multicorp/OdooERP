@@ -27,6 +27,7 @@
             <!-- Add hidden fields for visibility logic -->
             <xpath expr="//field[@name='partner_id']" position="before">
                 <field name="ks_advance_payment_amount" invisible="1"/>
+                <field name="ks_advance_payment_in_payment_amount" invisible="1"/>
                 <field name="ks_advance_payment_balance" invisible="1"/>
                 <field name="has_approved_advance_payment_request" invisible="1"/>
                 <field name="payment_approval_request_count" invisible="1"/>
