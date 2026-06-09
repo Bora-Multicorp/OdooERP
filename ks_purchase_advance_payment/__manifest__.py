@@ -20,6 +20,7 @@
         'wizard/vendor_payment_approval_approve_wizard_views.xml',
         'wizard/vendor_payment_approval_reject_wizard_views.xml',
         'wizard/vendor_payment_approval_submit_wizard_views.xml',
+        'wizard/vendor_payment_approval_update_wizard_views.xml',
     ],
     'installable': True,
     'application': False,

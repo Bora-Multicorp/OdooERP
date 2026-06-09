@@ -111,12 +111,22 @@ class VendorPaymentApprovalRequest(models.Model):
         compute='_compute_ks_can_approve',
         help='True only for the current user if it is their turn to approve.',
     )
+    ks_is_requester = fields.Boolean(
+        compute='_compute_ks_is_requester',
+        help='True if the current user is the one who requested this approval.',
+    )
     document_ids = fields.One2many(
         'vendor.payment.approval.document',
         'request_id',
         string='Documents',
         copy=False,
     )
+
+    @api.depends('request_user_id')
+    @api.depends_context('uid')
+    def _compute_ks_is_requester(self):
+        for rec in self:
+            rec.ks_is_requester = rec.request_user_id == self.env.user
 
     @api.depends('state', 'approval_line_ids.state', 'approval_line_ids.user_id',
                  'approval_line_ids.approver_type')
@@ -206,6 +216,22 @@ class VendorPaymentApprovalRequest(models.Model):
                         po.currency_id.symbol, total_requested,
                     )
                 )
+
+    def action_update_approvals(self):
+        """Open the Update Approvals wizard. Only the requester can call this."""
+        self.ensure_one()
+        if self.state != 'pending_approval':
+            raise UserError(_('Update Approvals is only available for pending requests.'))
+        if self.request_user_id != self.env.user:
+            raise UserError(_('Only the user who requested this approval can update the approvers.'))
+        return {
+            'name': _('Update Approvers'),
+            'type': 'ir.actions.act_window',
+            'res_model': 'vendor.payment.approval.update.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {'default_request_id': self.id},
+        }
 
     def action_submit_and_open_wizard(self):
         """Open the submit wizard so the user picks Approver 1 and Approver 2 before submitting."""
