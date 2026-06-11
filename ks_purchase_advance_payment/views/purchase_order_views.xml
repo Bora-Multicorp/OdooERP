@@ -62,6 +62,35 @@
                     </group>
                 </group>
             </xpath>
+
+        </field>
+    </record>
+
+    <!-- Advance deduction lines: make all editable columns readonly for saved lines -->
+    <record id="view_purchase_order_form_advance_line_readonly" model="ir.ui.view">
+        <field name="name">purchase.order.form.advance.line.readonly</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_form"/>
+        <field name="priority">20</field>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='order_line']//field[@name='display_type']" position="after">
+                <field name="ks_is_advance_line" column_invisible="1"/>
+            </xpath>
+            <xpath expr="//field[@name='order_line']//field[@name='product_id']" position="attributes">
+                <attribute name="readonly">state in ('purchase', 'to approve', 'done', 'cancel') or is_downpayment or ks_is_advance_line</attribute>
+            </xpath>
+            <xpath expr="//field[@name='order_line']//field[@name='product_qty']" position="attributes">
+                <attribute name="readonly">is_downpayment or ks_is_advance_line</attribute>
+            </xpath>
+            <xpath expr="//field[@name='order_line']//field[@name='price_unit']" position="attributes">
+                <attribute name="readonly">qty_invoiced != 0 or ks_is_advance_line</attribute>
+            </xpath>
+            <xpath expr="//field[@name='order_line']//field[@name='product_uom']" position="attributes">
+                <attribute name="readonly">state in ('purchase', 'done', 'cancel') or is_downpayment or ks_is_advance_line</attribute>
+            </xpath>
+            <xpath expr="//field[@name='order_line']//field[@name='date_planned']" position="attributes">
+                <attribute name="readonly">is_downpayment or ks_is_advance_line</attribute>
+            </xpath>
         </field>
     </record>
 

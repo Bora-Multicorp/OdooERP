@@ -376,6 +376,26 @@ class PurchaseOrder(models.Model):
             'target': 'current',
         }
 
+    def write(self, vals):
+        if 'order_line' in vals and not self.env.context.get('skip_advance_line_check'):
+            adv_product_tmpl = self.env.ref(
+                'ks_purchase_advance_payment.product_template_advance_deduction',
+                raise_if_not_found=False,
+            )
+            adv_variant_ids = set(
+                adv_product_tmpl.sudo().product_variant_ids.ids
+            ) if adv_product_tmpl else set()
+            if adv_variant_ids:
+                for cmd in vals['order_line']:
+                    # cmd[0]==1 is UPDATE (write) on existing line
+                    if cmd[0] == 1 and cmd[2]:
+                        line = self.env['purchase.order.line'].browse(cmd[1])
+                        if line.exists() and line.product_id.id in adv_variant_ids:
+                            raise UserError(_(
+                                'Advance payment deduction lines cannot be edited.'
+                            ))
+        return super().write(vals)
+
     def action_view_advance_payments(self):
         """View all advance payments linked to this Purchase Order"""
         self.ensure_one()

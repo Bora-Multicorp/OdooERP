@@ -105,6 +105,9 @@ class KsPaymentTracker(models.Model):
     product_qty = fields.Float(
         string='Qty',
         digits='Product Unit of Measure',
+        compute='_compute_product_qty',
+        store=True,
+        readonly=True,
         help='Total quantity of that model',
     )
     price_unit = fields.Float(
@@ -113,7 +116,7 @@ class KsPaymentTracker(models.Model):
         help='Rate (incl GST)',
     )
     price_subtotal = fields.Float(
-        string='Amount',
+        string='Amount With Tax',
         digits='Product Price',
         help='Total amount (incl TDS)',
     )
@@ -199,6 +202,19 @@ class KsPaymentTracker(models.Model):
         currency_field='currency_id',
         help='Total amount paid (posted + paid payments) for this Purchase Order',
     )
+    ks_po_total_amount = fields.Monetary(
+        string='Total Amount',
+        related='purchase_order_id.amount_total',
+        store=True,
+        readonly=True,
+        currency_field='currency_id',
+        help='Total amount of the linked Purchase Order',
+    )
+
+    @api.depends('purchase_line_id', 'purchase_line_id.product_qty')
+    def _compute_product_qty(self):
+        for rec in self:
+            rec.product_qty = rec.purchase_line_id.product_qty if rec.purchase_line_id else 0.0
 
     @api.depends('purchase_order_id')
     def _compute_ks_total_paid_amount(self):
@@ -230,7 +246,7 @@ class KsPaymentTracker(models.Model):
                     ('payment_type', '=', 'outbound'),
                 ])
                 paid = sum(payments.mapped('amount'))
-            rec.amt_to_be_paid = (rec.price_subtotal or 0.0) - paid
+            rec.amt_to_be_paid = (rec.price_subtotal*rec.product_qty or 0.0) - paid
 
     def _get_next_sn(self):
         last = self.search([], order='sn desc', limit=1)

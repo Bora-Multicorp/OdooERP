@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from odoo import api, fields, models
+from odoo import api, fields, models, _
+from odoo.exceptions import UserError
 
 
 class AccountPayment(models.Model):
@@ -123,6 +124,11 @@ class AccountPayment(models.Model):
         return res
 
     def unlink(self):
+        for payment in self:
+            if payment.ks_purchase_order_id:
+                raise UserError(_(
+                    'You cannot delete payment "%s" because it is linked to Purchase Order %s.'
+                ) % (payment.name, payment.ks_purchase_order_id.name))
         orders = self.mapped('ks_purchase_order_id').filtered('id')
         res = super().unlink()
         if orders:
