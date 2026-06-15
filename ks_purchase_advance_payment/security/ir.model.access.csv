@@ -11,3 +11,4 @@ access_vendor_payment_approval_reject_wizard,vendor.payment.approval.reject.wiza
 access_vendor_payment_approval_submit_wizard,vendor.payment.approval.submit.wizard,model_vendor_payment_approval_submit_wizard,purchase.group_purchase_user,1,1,1,1
 access_account_payment_purchase_user,account.payment purchase user read,account.model_account_payment,purchase.group_purchase_user,1,0,0,0
 access_account_payment_purchase_manager,account.payment purchase manager read,account.model_account_payment,purchase.group_purchase_manager,1,0,0,0
+access_vendor_payment_approval_update_wizard,vendor.payment.approval.update.wizard,model_vendor_payment_approval_update_wizard,purchase.group_purchase_user,1,1,1,1

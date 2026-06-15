@@ -8,15 +8,19 @@
                     <group>
                         <field name="kyc_id" invisible="1"/>
                         <field name="ks_is_update_mode" invisible="1"/>
+                        <field name="ks_pm1_already_approved" invisible="1"/>
+                        <field name="ks_is_two_way" invisible="1"/>
                         <field name="approver1_user_ids" invisible="1"/>
                         <field name="approver2_user_ids" invisible="1"/>
                         <field name="ks_approval_info" widget="html" readonly="1" nolabel="1"/>
                         <field name="approver1_user"
                                options="{'no_create': True}"
-                               required="1"/>
+                               required="1"
+                               readonly="ks_pm1_already_approved"/>
                         <field name="approver2_user"
                                options="{'no_create': True}"
-                               required="1"/>
+                               required="ks_is_two_way"
+                               invisible="not ks_is_two_way"/>
                     </group>
                 </sheet>
                 <footer>

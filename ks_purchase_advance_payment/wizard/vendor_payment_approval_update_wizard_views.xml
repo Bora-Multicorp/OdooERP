@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_vendor_payment_approval_update_wizard_form" model="ir.ui.view">
+        <field name="name">vendor.payment.approval.update.wizard.form</field>
+        <field name="model">vendor.payment.approval.update.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Update Approvers">
+                <field name="request_id" invisible="1"/>
+                <field name="available_approver_1_ids" invisible="1"/>
+                <field name="available_approver_2_ids" invisible="1"/>
+                <field name="ks_pm1_already_approved" invisible="1"/>
+                <field name="ks_approval_info" widget="html" readonly="1" nolabel="1"/>
+                <group>
+                    <field name="approver_1_id"
+                           options="{'no_create': True}"
+                           domain="[('id', 'in', available_approver_1_ids), ('share', '=', False), ('id', '!=', approver_2_id)]"
+                           readonly="ks_pm1_already_approved"/>
+                    <field name="approver_2_id"
+                           options="{'no_create': True}"
+                           domain="[('id', 'in', available_approver_2_ids), ('share', '=', False), ('id', '!=', approver_1_id)]"/>
+                </group>
+                <footer>
+                    <button name="action_update" string="Update Approvals" type="object" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

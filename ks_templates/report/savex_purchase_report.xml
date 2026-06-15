@@ -88,7 +88,7 @@
                     <t t-set="consignee" t-value="doc.picking_type_id.warehouse_id.partner_id or doc.dest_address_id"/>
                     <strong>Consignee (Ship to)</strong><br/>
                     <strong t-esc="consignee.name or doc.company_id.name or ''"/><br/>
-                    <t t-if="consignee and consignee.street" t-esc="consignee.street"/><br/>
+                    <t t-if="consignee and consignee.street and consignee.street != consignee.name" t-esc="consignee.street"/><br/>
                     <t t-if="consignee and consignee.city" t-esc="consignee.city"/>
                     <t t-if="consignee and consignee.state_id">, <t t-esc="consignee.state_id.name or ''"/></t><br/>
                     <div style="border-top:1px solid black; height:1px;"/>

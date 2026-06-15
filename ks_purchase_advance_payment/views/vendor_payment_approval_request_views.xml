@@ -7,7 +7,12 @@
             <form string="Vendor Payment Approval Request">
                 <header>
                     <field name="ks_can_approve" invisible="1"/>
+                    <field name="ks_is_requester" invisible="1"/>
                     <button name="action_submit_and_open_wizard" string="Submit for Approval" type="object" class="btn-primary" invisible="state != 'draft'"/>
+                    <button name="action_update_approvals" string="Update Approvals" type="object"
+                            class="btn-warning"
+                            invisible="state != 'pending_approval' or not ks_is_requester"
+                            confirm="This will cancel the current approval request and let you choose new approvers. Continue?"/>
                     <button name="action_approve_wizard" string="Approve" type="object" class="btn-primary"
                             invisible="not ks_can_approve"/>
                     <button name="action_reject_wizard" string="Reject" type="object" class="btn-secondary"

@@ -161,6 +161,13 @@ class PurchaseOrder(models.Model):
         store=True,
         help='Total amount of advance payments made for this Purchase Order',
     )
+    ks_advance_payment_in_payment_amount = fields.Monetary(
+        string='Advance Payment In Payment Amount',
+        compute='_compute_ks_advance_payment_amount',
+        currency_field='currency_id',
+        store=True,
+        help='Total in_payment amount of advance payments made for this Purchase Order',
+    )
     ks_advance_payment_balance = fields.Monetary(
         string='Balance Due',
         compute='_compute_ks_advance_payment_amount',
@@ -215,6 +222,13 @@ class PurchaseOrder(models.Model):
                 ('ks_purchase_order_id', '=', order.id),
                 ('state', '=', 'paid'),
             ])
+            in_payments = self.env['account.payment'].search([
+                ('ks_purchase_order_id', '=', order.id),
+                ('state', 'in', ['in_process', 'draft']),
+            ])
+            total_in_payment_advance = sum(in_payments.mapped('amount')) if in_payments else 0.0
+            order.ks_advance_payment_in_payment_amount = total_in_payment_advance
+
             total_advance = sum(payments.mapped('amount')) if payments else 0.0
             order.ks_advance_payment_amount = total_advance
             order.ks_advance_payment_balance = (order.amount_total or 0.0) - total_advance
@@ -265,6 +279,122 @@ class PurchaseOrder(models.Model):
                 new_lines.append(cmd)
             vals['order_line'] = new_lines
         return vals_list
+
+    def action_create_invoice(self):
+        """Override bill creation for POs with advance payment deductions.
+
+        When advance deduction lines exist on the PO, the standard flow only bills
+        the service deduction lines (qty_to_invoice=1) but skips product lines that
+        haven't been received yet (qty_to_invoice=0). This produces a wrong credit-note
+        for just the deduction amount.
+
+        Correct behaviour: bill = product lines (at ordered qty) + deduction lines (negative)
+        → net amount = PO total after deductions.
+        """
+        self.ensure_one()
+
+        adv_product_tmpl = self.env.ref(
+            'ks_purchase_advance_payment.product_template_advance_deduction',
+            raise_if_not_found=False,
+        )
+        if not adv_product_tmpl:
+            return super().action_create_invoice()
+
+        adv_variant_ids = set(adv_product_tmpl.sudo().product_variant_ids.ids)
+        deduction_lines = self.order_line.filtered(
+            lambda l: l.product_id and l.product_id.id in adv_variant_ids
+        )
+        if not deduction_lines:
+            return super().action_create_invoice()
+
+        # Build bill lines manually so we can include un-received product lines at ordered qty
+        product_lines = self.order_line.filtered(
+            lambda l: not l.display_type and l.product_id
+                      and l.product_id.id not in adv_variant_ids
+        )
+
+        invoice_line_vals = []
+        for line in product_lines:
+            accounts = line.product_id.product_tmpl_id.get_product_accounts()
+            account = accounts.get('expense')
+            if not account:
+                account = self.env['account.account'].search([
+                    ('account_type', '=', 'expense'),
+                    ('company_ids', 'in', [self.company_id.id]),
+                    ('deprecated', '=', False),
+                ], limit=1)
+            if not account:
+                continue
+            invoice_line_vals.append((0, 0, {
+                'product_id': line.product_id.id,
+                'name': line.name or line.product_id.display_name,
+                'quantity': line.product_qty,
+                'product_uom_id': line.product_uom.id,
+                'price_unit': line.price_unit,
+                'tax_ids': [(6, 0, line.taxes_id.ids)],
+                'account_id': account.id,
+                'purchase_line_id': line.id,
+            }))
+
+        for line in deduction_lines:
+            accounts = line.product_id.product_tmpl_id.get_product_accounts()
+            account = accounts.get('expense')
+            if not account:
+                account = self.env['account.account'].search([
+                    ('account_type', '=', 'expense'),
+                    ('company_ids', 'in', [self.company_id.id]),
+                    ('deprecated', '=', False),
+                ], limit=1)
+            if not account:
+                continue
+            invoice_line_vals.append((0, 0, {
+                'product_id': line.product_id.id,
+                'name': line.name or line.product_id.display_name,
+                'quantity': abs(line.product_qty),
+                'product_uom_id': line.product_uom.id,
+                'price_unit': line.price_unit,  # already negative
+                'tax_ids': [(5, 0, 0)],
+                'account_id': account.id,
+                'purchase_line_id': line.id,
+            }))
+
+        if not invoice_line_vals:
+            return super().action_create_invoice()
+
+        invoice_vals = self._prepare_invoice()
+        invoice_vals['invoice_line_ids'] = invoice_line_vals
+
+        bill = self.env['account.move'].sudo().create(invoice_vals)
+        self.message_post(body=_('Vendor Bill Created'))
+
+        return {
+            'name': _('Vendor Bill'),
+            'type': 'ir.actions.act_window',
+            'res_model': 'account.move',
+            'view_mode': 'form',
+            'res_id': bill.id,
+            'target': 'current',
+        }
+
+    def write(self, vals):
+        if 'order_line' in vals and not self.env.context.get('skip_advance_line_check'):
+            adv_product_tmpl = self.env.ref(
+                'ks_purchase_advance_payment.product_template_advance_deduction',
+                raise_if_not_found=False,
+            )
+            adv_variant_ids = set(
+                adv_product_tmpl.sudo().product_variant_ids.ids
+            ) if adv_product_tmpl else set()
+            if adv_variant_ids:
+                for cmd in vals['order_line']:
+                    # cmd[0]==1 is UPDATE (write) on existing line
+                    if cmd[0] == 1 and cmd[2]:
+                        line = self.env['purchase.order.line'].browse(cmd[1])
+                        if line.exists() and line.product_id.id in adv_variant_ids:
+                            raise UserError(_(
+                                'Advance payment deduction lines cannot be edited.'
+                            ))
+        return super().write(vals)
 
     def action_view_advance_payments(self):
         """View all advance payments linked to this Purchase Order"""

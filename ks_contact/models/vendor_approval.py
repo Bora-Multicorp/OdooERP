@@ -320,6 +320,19 @@ class ContactKYCApproval(models.Model):
     rejection_reason = fields.Text('Rejection Reason', tracking=True)
     kyc_approval_creator = fields.Many2one('res.users',string='KYC Approval Creator')
 
+    ks_is_kyc_requester = fields.Boolean(
+        compute='_compute_ks_is_kyc_requester',
+        string='Is KYC Requester',
+    )
+
+    @api.depends_context('uid')
+    @api.depends('kyc_approval_creator')
+    def _compute_ks_is_kyc_requester(self):
+        for rec in self:
+            rec.ks_is_kyc_requester = bool(
+                rec.kyc_approval_creator and rec.kyc_approval_creator == self.env.user
+            )
+
     can_set_draft = fields.Boolean(
         compute="_compute_can_set_draft", string="Can Set Draft"
     )

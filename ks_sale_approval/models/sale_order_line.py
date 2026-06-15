@@ -30,24 +30,25 @@ class SaleOrderLine(models.Model):
         Converts product's latest purchase price (e.g. INR) to order currency (e.g. USD) for display.
         """
         for line in self:
-            if not line.product_id or not line.product_id.ks_latest_purchase_currency_id:
-                line.ks_min_unit_price = 0.0
-                continue
             order = line.order_id
-            if not order or not order.company_id or not order.currency_id:
+            if not line.product_id or not order or not order.company_id or not order.currency_id:
                 line.ks_min_unit_price = 0.0
                 continue
-            from_cur = line.product_id.ks_latest_purchase_currency_id
-            to_cur = order.currency_id
             company = order.company_id
+            product = line.product_id.with_company(company)
+            if not product.ks_latest_purchase_currency_id:
+                line.ks_min_unit_price = 0.0
+                continue
+            from_cur = product.ks_latest_purchase_currency_id
+            to_cur = order.currency_id
             date = order.date_order.date() if order.date_order else fields.Date.today()
-            amount = line.product_id.ks_latest_purchase_price
+            amount = product.ks_latest_purchase_price
             if from_cur == to_cur:
                 line.ks_min_unit_price = amount
                 continue
             try:
-                if order.is_exchange:
-                    line.ks_min_unit_price = amount * order.rate
+                if order.is_exchange and order.rate:
+                    line.ks_min_unit_price = amount / order.rate
                 else:
                     line.ks_min_unit_price = from_cur._convert(
                         amount,
@@ -110,11 +111,15 @@ class SaleOrderLine(models.Model):
         # Admin users can always set custom prices - bypass all restrictions
         if line.order_id and line.order_id._is_admin_user():
             return line
-        
+
+        # Advance payment deduction lines are managed by the system — always allow
+        if line.product_id and line.product_id.product_tmpl_id.is_advance_payment_product:
+            return line
+
         # In draft/sent, all users can set unit price
         if line.order_id and line.order_id.state in ('draft', 'sent'):
             return line
-        
+
         # Check if user tried to set a custom price and is not a PM
         if line.order_id and line.order_id._has_approval_config():
             config = line.order_id._get_approval_config()
@@ -174,12 +179,15 @@ class SaleOrderLine(models.Model):
         # Check if price_unit or discount is being changed
         price_fields = ['price_unit', 'discount']
         changing_price = any(field in values for field in price_fields)
-        
+
         if changing_price:
             for line in self:
                 # Admin users can always edit prices - bypass all restrictions
                 if line.order_id and line.order_id._is_admin_user():
-                    continue  # Allow admin to edit
+                    continue
+                # Advance payment deduction lines are managed by the system — always allow
+                if line.product_id and line.product_id.product_tmpl_id.is_advance_payment_product:
+                    continue
                 # In draft/sent, all users can edit unit price
                 if line.order_id and line.order_id.state in ('draft', 'sent'):
                     continue
@@ -251,21 +259,22 @@ class SaleOrderLine(models.Model):
         Handles multi-currency: latest purchase in INR, SO in USD → converts INR to USD.
         """
         self.ensure_one()
-        if not self.product_id or not self.product_id.ks_latest_purchase_currency_id:
-            return None
         order = self.order_id
-        if not order or not order.currency_id:
+        if not self.product_id or not order or not order.currency_id or not order.company_id:
             return None
-        from_cur = self.product_id.ks_latest_purchase_currency_id
-        to_cur = order.currency_id
         company = order.company_id
+        product = self.product_id.with_company(company)
+        if not product.ks_latest_purchase_currency_id:
+            return None
+        from_cur = product.ks_latest_purchase_currency_id
+        to_cur = order.currency_id
         date = order.date_order.date() if order.date_order else fields.Date.today()
-        amount = self.product_id.ks_latest_purchase_price
+        amount = product.ks_latest_purchase_price
         if from_cur == to_cur:
             return amount
         try:
-            if order.is_exchange:
-                return amount * order.rate
+            if order.is_exchange and order.rate:
+                return amount / order.rate
             else:
                 return from_cur._convert(
                     amount,

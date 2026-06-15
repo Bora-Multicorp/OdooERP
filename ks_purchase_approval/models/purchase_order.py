@@ -1911,7 +1911,7 @@ class PurchaseOrder(models.Model):
                     order_company,
                     date,
                 )
-                line.product_id.sudo().write({
+                line.product_id.with_company(order_company).sudo().write({
                     'ks_latest_purchase_price': price_base,
                     'ks_latest_purchase_currency_id': base_currency.id,
                 })

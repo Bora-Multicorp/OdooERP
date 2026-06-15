@@ -6,3 +6,4 @@ from . import purchase_order
 from . import vendor_payment_approval_config
 from . import vendor_payment_approval_request
 from . import res_config_settings
+from . import purchase_order_line

@@ -111,12 +111,22 @@ class VendorPaymentApprovalRequest(models.Model):
         compute='_compute_ks_can_approve',
         help='True only for the current user if it is their turn to approve.',
     )
+    ks_is_requester = fields.Boolean(
+        compute='_compute_ks_is_requester',
+        help='True if the current user is the one who requested this approval.',
+    )
     document_ids = fields.One2many(
         'vendor.payment.approval.document',
         'request_id',
         string='Documents',
         copy=False,
     )
+
+    @api.depends('request_user_id')
+    @api.depends_context('uid')
+    def _compute_ks_is_requester(self):
+        for rec in self:
+            rec.ks_is_requester = rec.request_user_id == self.env.user
 
     @api.depends('state', 'approval_line_ids.state', 'approval_line_ids.user_id',
                  'approval_line_ids.approver_type')
@@ -158,30 +168,70 @@ class VendorPaymentApprovalRequest(models.Model):
 
     @api.constrains('amount_for_approval', 'purchase_order_id', 'state')
     def _check_total_amount_within_po_total(self):
-        """Total amount_for_approval across all non-rejected requests for a PO must be less than the PO total."""
+        """Total amount_for_approval across all non-rejected requests must not exceed the original PO total.
+
+        We use the sum of actual product lines (excluding advance deduction lines) as the
+        reference total, because po.amount_total decreases each time an advance deduction
+        line is added and would produce false positives.
+        """
+        adv_product_tmpl = self.env.ref(
+            'ks_purchase_advance_payment.product_template_advance_deduction',
+            raise_if_not_found=False,
+        )
+        adv_variant_ids = set(
+            adv_product_tmpl.sudo().product_variant_ids.ids
+        ) if adv_product_tmpl else set()
+
         for rec in self:
             if rec.state == 'rejected':
                 continue
             po = rec.purchase_order_id
-            if not po or not po.amount_total:
+            if not po:
                 continue
+
+            # Original PO total = product lines only, excluding advance deduction lines
+            original_lines = po.order_line.filtered(
+                lambda l: not l.display_type
+                          and l.product_id
+                          and l.product_id.id not in adv_variant_ids
+            )
+            original_total = sum(original_lines.mapped('price_total'))
+            if not original_total:
+                continue
+
             all_active = self.search([
                 ('purchase_order_id', '=', po.id),
                 ('state', '!=', 'rejected'),
             ])
             total_requested = sum(all_active.mapped('amount_for_approval'))
-            if total_requested > po.amount_total:
+            if total_requested >= original_total:
                 raise ValidationError(
                     _(
-                        'The total amount of payment approval requests for Purchase Order %s '
-                        '(%s %.2f) equals or exceeds the PO total (%s %.2f). '
-                        'Please reduce the requested amount.'
+                        'Payment approval request cannot be created for Purchase Order %s.\n'
+                        'The full PO amount (%s %.2f) has already been requested for approval.\n'
+                        'Total already requested: %s %.2f.'
                     ) % (
                         po.name,
+                        po.currency_id.symbol, original_total,
                         po.currency_id.symbol, total_requested,
-                        po.currency_id.symbol, po.amount_total,
                     )
                 )
+
+    def action_update_approvals(self):
+        """Open the Update Approvals wizard. Only the requester can call this."""
+        self.ensure_one()
+        if self.state != 'pending_approval':
+            raise UserError(_('Update Approvals is only available for pending requests.'))
+        if self.request_user_id != self.env.user:
+            raise UserError(_('Only the user who requested this approval can update the approvers.'))
+        return {
+            'name': _('Update Approvers'),
+            'type': 'ir.actions.act_window',
+            'res_model': 'vendor.payment.approval.update.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {'default_request_id': self.id},
+        }
 
     def action_submit_and_open_wizard(self):
         """Open the submit wizard so the user picks Approver 1 and Approver 2 before submitting."""
@@ -337,7 +387,6 @@ class VendorPaymentApprovalRequest(models.Model):
                 'approve_reason': reason,
             })
             self.activity_unlink(['mail.mail_activity_data_todo'])
-            self._auto_create_bill()
             self._notify_banking_team()
             self._create_payment_tracker_records()
         else:
@@ -382,8 +431,20 @@ class VendorPaymentApprovalRequest(models.Model):
                     'product_id': line.product_id.id,
                     'product_qty': line.product_qty,
                     'price_unit': line.price_unit,
-                    'price_subtotal': line.price_subtotal,
+                    'price_subtotal': line.price_unit_incl,
                     'purchase_date': po.date_order.date() if po.date_order else False,
+                    'ks_destination': getattr(po, 'ks_destination', False) or False,
+                    'ks_despatched_through': getattr(po, 'ks_despatched_through', False) or False,
+                    'ks_remarks': getattr(po, 'ks_remarks', False) or False,
+                    'ks_invoice': getattr(po, 'ks_invoice', False) or False,
+                    'ks_e_invoices': getattr(po, 'ks_e_invoices', False) or False,
+                    'ks_e_way_bill': getattr(po, 'ks_e_way_bill', False) or False,
+                    'ks_imei_serial_no': getattr(po, 'ks_imei_serial_no', False) or False,
+                    'ks_docket': getattr(po, 'ks_docket', False) or False,
+                    'ks_ewaybill_no': getattr(po, 'ks_ewaybill_no', False) or False,
+                    'ks_docket_no': getattr(po, 'ks_docket_no', False) or False,
+                    'ks_vehicle_no': getattr(po, 'ks_vehicle_no', False) or False,
+                    'ks_transporter': getattr(po, 'ks_transporter', False) or False,
                     'approved': False,
                 })
 

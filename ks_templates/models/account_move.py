@@ -167,6 +167,13 @@ class AccountMove(models.Model):
         self.ensure_one()
         return formatLang(self.env, value, digits=digits)
 
+    def format_rate(self, value):
+        """Format a tax rate: show decimals only when needed (e.g. 2.5 → '2.5', 9.0 → '9')."""
+        self.ensure_one()
+        if value != int(value):
+            return formatLang(self.env, value, digits=2).rstrip('0').rstrip('.')
+        return formatLang(self.env, value, digits=0)
+
     def _get_tax_type(self, tax):
         """Return 'cgst', 'sgst', 'igst' or None for a tax record."""
         try:

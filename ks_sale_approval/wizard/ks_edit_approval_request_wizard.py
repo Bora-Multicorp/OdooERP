@@ -67,6 +67,19 @@ class KsEditApprovalRequestWizard(models.TransientModel):
         help='True if dual approval mode is enabled',
     )
     ks_is_update_mode = fields.Boolean(string='Is Update Mode', default=False)
+    ks_pm1_already_approved = fields.Boolean(string='PM1 Already Approved', default=False)
+
+    @api.model
+    def default_get(self, fields_list):
+        res = super().default_get(fields_list)
+        is_update = self.env.context.get('ks_is_update', False)
+        order_id = self.env.context.get('default_ks_sale_order_id') or res.get('ks_sale_order_id')
+        if is_update and order_id:
+            order = self.env['sale.order'].browse(order_id)
+            if order.ks_edit_pm1_approved and order.ks_edit_pm1_id:
+                res['ks_pm1_already_approved'] = True
+                res['ks_approver1_user'] = order.ks_edit_pm1_id.id
+        return res
 
     @api.depends('ks_sale_order_id')
     def _compute_show_approver2(self):
@@ -195,6 +208,12 @@ class KsEditApprovalRequestWizard(models.TransientModel):
             raise UserError(_("Please select Approver 2 (required for dual approval mode)."))
 
         is_update = self.env.context.get('ks_is_update', False)
+
+        if is_update and order.ks_edit_pm1_approved and order.ks_edit_pm1_id:
+            if order.ks_edit_pm1_id != self.ks_approver1_user:
+                raise UserError(_(
+                    "Approver 1 (%s) has already approved this request and cannot be changed."
+                ) % order.ks_edit_pm1_id.name)
 
         # If PM1 is unchanged and already approved, preserve their approval
         preserve_pm1 = (
