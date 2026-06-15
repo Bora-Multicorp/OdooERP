@@ -12,7 +12,7 @@
                 <field name="exchanged_amount"
                        digits="[16,2]"
                        readonly="1"
-                       invisible="is_exchange == False or currency_id == company_currency_id"
+                       invisible="currency_id == company_currency_id"
                        widget="monetary"
                        options="{'currency_field': 'ks_exchange_currency_id'}"/>
             </xpath>
@@ -23,14 +23,14 @@
                 <field name="exchanged_amount"
                        digits="[16,2]"
                        readonly="1"
-                       invisible="order_id.is_exchange == False or order_id.currency_id == company_currency_id"
+                       invisible="order_id.currency_id == company_currency_id"
                        widget="monetary"
                        options="{'currency_field': 'ks_exchange_currency_id'}"/>
             </xpath>
             <xpath expr="//field[@name='payment_term_id']" position='after'>
                 <field name="ks_exchange_currency_id"
                        readonly="state in ['cancel', 'sale']"
-                       invisible="is_exchange == False or currency_id == company_currency_id"
+                       invisible="currency_id == company_currency_id"
                        options="{'no_create': True}"
                        string="Convert To"/>
             </xpath>

@@ -43,6 +43,23 @@ class PurchaseOrder(models.Model):
 
     @api.onchange('is_exchange')
     def _onchange_is_exchange(self):
-        """ Clear rate when is_exchange is toggled so user enters it manually. """
-        if self.is_exchange:
+        if not self.is_exchange:
+            self._fetch_rate_from_currency()
+
+    @api.onchange('currency_id', 'date_order')
+    def _onchange_currency_id_fetch_rate(self):
+        self._fetch_rate_from_currency()
+
+    def _fetch_rate_from_currency(self):
+        if self.currency_id and self.company_currency_id and self.currency_id != self.company_currency_id:
+            try:
+                self.rate = self.env['res.currency']._get_conversion_rate(
+                    from_currency=self.currency_id,
+                    to_currency=self.company_currency_id,
+                    company=self.company_id,
+                    date=self.date_order or fields.Date.context_today(self),
+                )
+            except Exception:
+                self.rate = 0.0
+        else:
             self.rate = 0.0
