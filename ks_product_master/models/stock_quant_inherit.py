@@ -32,7 +32,6 @@ class StockQuantInherit(models.Model):
         string='Made In',
         help='Country where the product is manufactured',
         tracking=True,
-        readonly=True
     )
 
     @api.model
