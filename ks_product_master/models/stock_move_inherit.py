@@ -554,6 +554,10 @@ class StockMoveLine(models.Model):
         imei2 = vals.get('imei2') if 'imei2' in vals else (record.imei2 or None)
         lot_name = vals.get('lot_name') if 'lot_name' in vals else (record.lot_name or None)
 
+        # Fetch current product ID
+        product_id = vals.get('product_id') if isinstance(vals.get('product_id'), int) else (
+            record.product_id.id if record else False)
+
         picking_type_code = None
         if record and record.move_id and record.move_id.picking_id:
             picking_type_code = record.move_id.picking_id.picking_type_id.code
@@ -567,33 +571,54 @@ class StockMoveLine(models.Model):
         if imei:
             if not imei.isdigit() or len(imei) != 15:
                 raise ValidationError(_('IMEI 1 must be a 15-digit number. Got: %s') % imei)
-            if not is_outgoing:
+
+            # Check stock existence and product mismatch
+            quant = self.env['stock.quant'].search([
+                '|', ('imei', '=', imei), ('imei2', '=', imei)
+            ])
+
+            if is_outgoing:
+                if not quant:
+                    raise ValidationError(_('IMEI 1 (%s) does not exist in stock.') % imei)
+                if product_id and any(q.product_id.id != product_id for q in quant):
+                    matched_product = quant[0].product_id.display_name
+                    raise ValidationError(
+                        _('IMEI 1 (%s) is not valid for this product. It belongs to: %s.') % (imei, matched_product))
+            else:
+                # Incoming/Internal duplicate checks
                 exist = self.search([('imei', '=', imei), ('id', 'not in', self.ids)], limit=1)
                 if exist:
                     raise ValidationError(_('IMEI 1 (%s) is already used in another stock line.') % imei)
-                quant = self.env['stock.quant'].search([
-                    '|', ('imei', '=', imei), ('imei2', '=', imei)
-                ])
                 if len(quant) > 1:
-                    raise ValidationError(_('IMEI 1 (%s) is already used in stock.') % imei)
+                    raise ValidationError(_('IMEI 1 (%s) is already allocated in stock.') % imei)
 
         # Validate IMEI 2
         if imei2:
             if not imei2.isdigit() or len(imei2) != 15:
                 raise ValidationError(_('IMEI 2 must be a 15-digit number. Got: %s') % imei2)
-            if not is_outgoing:
+
+            # Check stock existence and product mismatch
+            quant = self.env['stock.quant'].search([
+                '|', ('imei', '=', imei2), ('imei2', '=', imei2)
+            ])
+
+            if is_outgoing:
+                if not quant:
+                    raise ValidationError(_('IMEI 2 (%s) does not exist in stock.') % imei2)
+                if product_id and any(q.product_id.id != product_id for q in quant):
+                    matched_product = quant[0].product_id.display_name
+                    raise ValidationError(
+                        _('IMEI 2 (%s) is not valid for this product. It belongs to: %s.') % (imei2, matched_product))
+            else:
+                # Incoming/Internal duplicate checks
                 exist = self.search([('imei2', '=', imei2), ('id', 'not in', self.ids)], limit=1)
                 if exist:
                     raise ValidationError(_('IMEI 2 (%s) is already used in another stock line.') % imei2)
-                quant = self.env['stock.quant'].search([
-                    '|', ('imei', '=', imei2), ('imei2', '=', imei2)
-                ])
                 if len(quant) > 1:
-                    raise ValidationError(_('IMEI 2 (%s) is already used in stock.') % imei2)
+                    raise ValidationError(_('IMEI 2 (%s) is already allocated in stock.') % imei2)
 
         # IMEI 1 and IMEI 2 must differ (except Samsung/OnePlus)
         if imei and imei2 and imei == imei2:
-            product_id = vals.get('product_id') if isinstance(vals.get('product_id'), int) else (self[:1].product_id.id if self else False)
             product = self.env['product.product'].browse(product_id) if product_id else self.env['product.product']
             brand_name = (product.product_tmpl_id.brand_id.name or '').lower() if product else ''
             if brand_name not in ('samsung', 'oneplus'):
@@ -606,7 +631,7 @@ class StockMoveLine(models.Model):
                 raise ValidationError(_('Serial number (%s) is already used in another line.') % lot_name)
             quant = self.env['stock.quant'].search([('lot_id.name', '=', lot_name)])
             if len(quant) > 0:
-                raise ValidationError(_('Serial number (%s) is already used in stock.') % lot_name)
+                raise ValidationError(_('Serial number (%s) is already registered in stock.') % lot_name)
 
     def create(self, vals_list):
         records_vals = [vals_list] if isinstance(vals_list, dict) else vals_list
