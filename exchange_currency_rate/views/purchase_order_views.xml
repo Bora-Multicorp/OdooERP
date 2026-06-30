@@ -11,7 +11,7 @@
                 <field name="is_exchange" invisible="currency_id == company_currency_id"
                        readonly="state in ['cancel', 'done', 'purchase']"/>
                 <field name="rate" digits="[12,6]"
-                       invisible="is_exchange == False or currency_id == company_currency_id"
+                       invisible="currency_id == company_currency_id"
                        readonly="state in ['cancel', 'done', 'purchase']"/>
             </xpath>
         </field>

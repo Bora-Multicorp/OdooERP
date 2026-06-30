@@ -47,10 +47,11 @@ class AccountPayment(models.Model):
         return super().action_draft()
 
     def unlink(self):
-        if self.filtered(lambda p: p.ks_sale_order_id and p.state == 'posted'):
-            raise UserError(_(
-                'Posted advance payments linked to a Sale Order cannot be deleted.'
-            ))
+        for payment in self:
+            if payment.ks_sale_order_id:
+                raise UserError(_(
+                    'You cannot delete payment "%s" because it is linked to Sale Order %s.'
+                ) % (payment.name, payment.ks_sale_order_id.name))
         orders = self.mapped('ks_sale_order_id').filtered('id')
         res = super().unlink()
         if orders:
