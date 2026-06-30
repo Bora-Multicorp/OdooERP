@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_layered_coa_reclassify_wizard_manager,Layered COA Reclassify Wizard (Accounting Manager),model_layered_coa_reclassify_wizard,account.group_account_manager,1,1,1,1
+access_layered_coa_reclassify_wizard_user,Layered COA Reclassify Wizard (Accountant),model_layered_coa_reclassify_wizard,account.group_account_user,1,1,1,0

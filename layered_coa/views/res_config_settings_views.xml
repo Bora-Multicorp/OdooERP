@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- UC-A01: Add "Limit Layered COA" depth setting to Accounting > Configuration > Settings -->
+    <record id="res_config_settings_view_form_layered_coa" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.layered.coa</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="account.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@id='account_configuration']" position="after">
+                <div id="layered_coa_configuration" class="o_setting_box">
+                    <div class="o_setting_left_pane"/>
+                    <div class="o_setting_right_pane">
+                        <div class="o_setting_box">
+                            <div class="o_setting_left_pane"/>
+                            <div class="o_setting_right_pane">
+                                <label for="layered_coa_max_depth" string="Layered Chart of Accounts"/>
+                                <div class="text-muted">
+                                    Configure multi-level parent-child account hierarchy.
+                                    Set 0 for unlimited depth.
+                                </div>
+                                <div class="content-group mt-2">
+                                    <div class="row mt16">
+                                        <label for="layered_coa_max_depth"
+                                               class="col-lg-4 o_light_label"
+                                               string="Limit Layered COA (Max Depth Levels)"/>
+                                        <field name="layered_coa_max_depth"
+                                               class="col-lg-3"
+                                               widget="integer"
+                                               attrs="{'help': 'Maximum number of parent-child levels. 0 = unlimited.'}"/>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>
