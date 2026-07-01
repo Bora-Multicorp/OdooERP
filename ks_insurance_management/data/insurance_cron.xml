@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="ir_cron_auto_expire_policies" model="ir.cron">
+        <field name="name">Insurance: Auto-Expire Policies</field>
+        <field name="model_id" ref="ks_insurance_management.model_insurance_policy"/>
+        <field name="state">code</field>
+        <field name="code">model.action_check_expiry()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="active">True</field>
+        <field name="user_id" ref="base.user_admin"/>
+    </record>
+
+    <record id="ir_cron_expiry_alert" model="ir.cron">
+        <field name="name">Insurance: Expiry Reminder (30 days)</field>
+        <field name="model_id" ref="ks_insurance_management.model_insurance_policy"/>
+        <field name="state">code</field>
+        <field name="code">model.action_send_expiry_reminders()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="active">True</field>
+        <field name="user_id" ref="base.user_admin"/>
+    </record>
+
+</odoo>

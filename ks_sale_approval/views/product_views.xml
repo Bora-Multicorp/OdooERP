@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Product form: show latest purchase price (stored on variant, computed on template) -->
+    <record id="ks_product_template_form_latest_purchase" model="ir.ui.view">
+        <field name="name">product.template.form.ks.latest.purchase</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="ks_product_master.view_product_template_form_inherit2"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='supplier_taxes_id']" position="after">
+                <field name="ks_latest_purchase_price" readonly="1"/>
+                <field name="ks_latest_purchase_currency_id"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

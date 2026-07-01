@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <!-- ============================================================ -->
+        <!--  product.template  –  make part_code visible for ALL        -->
+        <!--  categories and update its label / help text                -->
+        <!-- ============================================================ -->
+
+        <record id="view_product_template_part_code_global" model="ir.ui.view">
+            <field name="name">product.template.part_code.global</field>
+            <field name="model">product.template</field>
+            <!--
+                Inherit the show/hide view defined in ks_product_master.
+                We replace the part_code field node with one that has no
+                invisible condition – making it visible for every category.
+            -->
+            <field name="inherit_id" ref="ks_product_master.view_show_hide_category_fields"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='part_code']" position="replace">
+                    <field name="part_code"
+                           string="Part Code / Manual Ref"
+                           help="Enter a manual internal reference. When filled, this value is used directly as the Internal Reference (default_code) for ALL variants, overriding the auto-generated code. Max 24 characters; uppercase alphanumeric and hyphens only."/>
+                </xpath>
+            </field>
+        </record>
+
+    </data>
+</odoo>

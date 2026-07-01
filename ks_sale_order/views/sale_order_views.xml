@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Inherit Sale Order Form View -->
+    <record id="sale_order_form_inherit_ks_stock_po" model="ir.ui.view">
+        <field name="name">sale.order.form.inherit.ks.stock.po</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+            <!-- Filter products to current company or no company in sale order lines -->
+<!--            <xpath expr="//field[@name='product_id'][@domain]" position="attributes">-->
+<!--                <attribute name="domain">[('sale_ok', '=', True), ('company_id', 'in', [parent.company_id, False]), ('product_tmpl_id.is_advance_payment_product', '=', False)]</attribute>-->
+<!--            </xpath>-->
+            <!-- Add computed fields -->
+            <xpath expr="//field[@name='state']" position="before">
+                <field name="ks_has_insufficient_stock" invisible="1"/>
+                <field name="ks_po_created_for_stock" invisible="1"/>
+                <field name="ks_created_po_id" invisible="1"/>
+                <field name="ks_created_po_ids" invisible="1"/>
+                <field name="ks_created_po_count" invisible="1"/>
+            </xpath>
+            <!-- Payment Status under Payment Terms (right column) -->
+            <xpath expr="//field[@name='payment_term_id']" position="after">
+                <field name="payment_status"
+                       widget="badge"
+                       decoration-success="payment_status == 'paid'"
+                       decoration-warning="payment_status == 'partial'"
+                       decoration-danger="payment_status == 'unpaid'"
+                       decoration-info="payment_status == 'no_invoice'"/>
+            </xpath>
+            <xpath expr="//button[@name='action_view_invoice']" position="before">
+                <button name="action_view_created_purchase_orders"
+                        type="object"
+                        invisible="not ks_created_po_count or state in ('done', 'cancel')"
+                        class="oe_stat_button"
+                        icon="fa-shopping-cart">
+                    <field name="ks_created_po_count" widget="statinfo" string="Purchase Orders"/>
+                </button>
+            </xpath>
+
+
+            <!-- Create Purchase Order button removed -->
+            
+            <!-- Add Purchase Orders section in form -->
+            <xpath expr="//notebook" position="inside">
+                <page string="Purchase Orders" name="purchase_orders" invisible="not ks_created_po_count">
+                    <field name="ks_created_po_ids" nolabel="1">
+                        <list>
+                            <field name="name"/>
+                            <field name="partner_id"/>
+                            <field name="state"/>
+                            <field name="amount_total"/>
+                            <field name="date_order"/>
+                        </list>
+                    </field>
+                </page>
+            </xpath>
+
+            <!-- Bank Account Information under Other Info tab -->
+            <xpath expr="//page[@name='other_information']" position="inside">
+                <group name="bank_details" string="Bank Account Information">
+                    <field name="ks_bank_id"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+    
+    <!-- Inherit Purchase Order Form View to show Source Sale Order -->
+    <record id="purchase_order_form_inherit_ks_sale_order" model="ir.ui.view">
+        <field name="name">purchase.order.form.inherit.ks.sale.order</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_form"/>
+        <field name="arch" type="xml">
+            <!-- Add Source Sale Order field -->
+            <xpath expr="//field[@name='origin']" position="after">
+                <field name="ks_source_sale_order_id"
+                       options="{'no_create': True}"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>
+

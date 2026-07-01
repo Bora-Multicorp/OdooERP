@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+
+        <record id="group_contact_visibility_all" model="res.groups">
+            <field name="name">See All Contacts</field>
+            <field name="category_id" ref="base.module_category_hidden"/>
+            <field name="comment">Users in this group can see all contacts regardless of Sales Executive assignment.</field>
+        </record>
+
+    </data>
+</odoo>

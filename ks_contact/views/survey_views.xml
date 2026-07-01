@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Inherit Survey Form View -->
+        <record id="inherit_survey_survey_view_form" model="ir.ui.view">
+            <field name="name">survey.survey.view.form.inherit</field>
+            <field name="model">survey.survey</field>
+            <field name="inherit_id" ref="survey.survey_survey_view_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//form" position="attributes">
+                    <attribute name="create">False</attribute>
+                </xpath>
+                <xpath expr="//list" position="attributes">
+                    <attribute name="create">False</attribute>
+                </xpath>
+
+                <xpath expr="//button[@name='action_result_survey']" position="replace">
+                    <button name="action_result_survey" string="See responses" type="object" class="oe_highlight"
+                            invisible="answer_done_count &lt;= 0"/>
+                </xpath>
+                <xpath expr="//button[@name='action_start_session']" position="replace">
+                    <button name="action_start_session" string="Create Live Session" type="object"
+                            class="d-none d-sm-block"
+                            invisible="1"/>
+                </xpath>
+                <xpath expr="//button[@name='action_open_session_manager']" position="replace">
+                    <button name="action_open_session_manager" string="Open Session Manager" type="object"
+                            class="d-none d-sm-block"
+                            invisible="1"/>
+                </xpath>
+                <xpath expr="//button[@name='action_end_session']" position="replace">
+                    <button name="action_end_session" string="Close Live Session" type="object"
+                            class="d-none d-sm-block"
+                            invisible="1"/>
+                </xpath>
+
+
+                <xpath expr="//button[@name='copy']" position="attributes">
+                    <attribute name="column_invisible">1</attribute>
+                </xpath>
+
+                <xpath expr="//field[@name='survey_type']" position="replace">
+                    <field name="survey_type" widget="radio" options="{'horizontal': True}" invisible="1"/>
+                </xpath>
+                <xpath expr="//field[@name='background_image']" position="replace">
+                    <field name="background_image" widget="image" class="oe_avatar" invisible="1"/>
+                </xpath>
+
+
+                <xpath expr="//field[@name='user_id']" position="after">
+                    <field name="vendor_reg_url"/>
+                </xpath>
+                <xpath expr="//field[@name='question_and_page_ids']/list/field[@name='question_type']"
+                       position="attributes">
+                    <attribute name="column_invisible">1</attribute>
+                </xpath>
+
+
+                <xpath expr="//page[@name='description']" position="after">
+                    <page name="sms_history" string="Sms History">
+                        <field name="sms_history">
+                            <list editable="bottom" create="False" edit="False" delete="False">
+                                <field name="message_id"/>
+                                <field name="contact_number"/>
+                                <field name="create_date" string="Sent On"/>
+                                <field name="create_uid" string="Sent By"/>
+                            </list>
+                        </field>
+                    </page>
+                </xpath>
+            </field>
+        </record>
+        <!-- Inherit Survey Kanban View -->
+        <record id="inherit_survey_survey_view_kanban" model="ir.ui.view">
+            <field name="name">survey.survey.view.kanban.inherit</field>
+            <field name="model">survey.survey</field>
+            <field name="inherit_id" ref="survey.survey_survey_view_kanban"/>
+            <field name="arch" type="xml">
+                <xpath expr="//button[@name='action_start_session']" position="replace">
+                    <button name="action_start_session" string="Start Live Session" type="object"
+                            class="btn btn-secondary" invisible="1">Start Live Session
+                    </button>
+                </xpath>
+                <xpath expr="//kanban" position="attributes">
+                    <attribute name="create">False</attribute>
+                </xpath>
+                <xpath expr="//button[@name='action_end_session']" position="replace">
+                    <button name="action_end_session" string="End Live Session" type="object"
+                            class="btn btn-secondary" invisible="1">End Live Session
+                    </button>
+                </xpath>
+                <xpath expr="//div[@class='col-lg-1 col-sm-4 col-6 py-0 my-2']" position="attributes">
+                    <attribute name="invisible">1</attribute>
+                </xpath>
+                <xpath expr="//a[@class='dropdown-item' and text()='Edit Survey']" position="replace">
+                    <a role="menuitem" type="edit" class="dropdown-item">Edit Form</a>
+                </xpath>
+            </field>
+        </record>
+        <!-- Inherit Survey Tree View -->
+        <record id="inherit_survey_survey_view_tree" model="ir.ui.view">
+            <field name="name">survey.survey.view.tree.inherit</field>
+            <field name="model">survey.survey</field>
+            <field name="inherit_id" ref="survey.survey_survey_view_tree"/>
+            <field name="arch" type="xml">
+                <xpath expr="//list" position="attributes">
+                    <attribute name="create">0</attribute>
+                    <attribute name="delete">0</attribute>
+                </xpath>
+                <xpath expr="//field[@name='answer_duration_avg']" position="attributes">
+                    <attribute name="column_invisible">1</attribute>
+                </xpath>
+                <xpath expr="//field[@name='success_ratio']" position="attributes">
+                    <attribute name="column_invisible">1</attribute>
+                </xpath>
+                <xpath expr="//field[@name='answer_score_avg']" position="attributes">
+                    <attribute name="column_invisible">1</attribute>
+                </xpath>
+            </field>
+        </record>
+
+        <!-- Inherit Survey search View -->
+        <record id="inherit_survey_survey_view_search" model="ir.ui.view">
+            <field name="name">survey.survey.view.search.inherit</field>
+            <field name="model">survey.survey</field>
+            <field name="inherit_id" ref="survey.survey_survey_view_search"/>
+            <field name="arch" type="xml">
+                <filter name="certification" position="replace"/>
+                <filter name="not_certification" position="replace"/>
+
+                <xpath expr="//field[@name='question_and_page_ids']" position="attributes">
+                    <attribute name="invisible">1</attribute>
+                </xpath>
+            </field>
+        </record>
+
+
+        <!-- Inherit USER INPUTS Form View -->
+        <record id="inherit_survey_user_input_view_form" model="ir.ui.view">
+            <field name="name">survey.user_input.view.form.inherit</field>
+            <field name="model">survey.user_input</field>
+            <field name="inherit_id" ref="survey.survey_user_input_view_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='survey_id']" position="replace">
+                    <field name="survey_id" string="Form"/>
+                </xpath>
+                <xpath expr="//field[@name='test_entry']" position="attributes">
+                    <attribute name="invisible">1</attribute>
+                </xpath>
+                <xpath expr="//field[@name='access_token']" position="attributes">
+                    <attribute name="invisible">1</attribute>
+                </xpath>
+            </field>
+        </record>
+
+        <!-- Inherit USER INPUTS Tree View -->
+        <record id="inherit_survey_user_input_view_tree" model="ir.ui.view">
+            <field name="name">survey.user_input.view.tree.inherit</field>
+            <field name="model">survey.user_input</field>
+            <field name="inherit_id" ref="survey.survey_user_input_view_tree"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='survey_id']" position="replace">
+                    <field name="survey_id" string="Form"/>
+                </xpath>
+                <xpath expr="//field[@name='attempts_number']" position="attributes">
+                    <attribute name="column_invisible">1</attribute>
+                </xpath>
+                <xpath expr="//field[@name='scoring_success']" position="attributes">
+                    <attribute name="column_invisible">1</attribute>
+                </xpath>
+                <xpath expr="//field[@name='scoring_percentage']" position="attributes">
+                    <attribute name="column_invisible">1</attribute>
+                </xpath>
+                <xpath expr="//field[@name='deadline']" position="attributes">
+                    <attribute name="column_invisible">1</attribute>
+                </xpath>
+            </field>
+        </record>
+
+        <!-- Inherit USER INPUTS Search View -->
+        <record id="survey_management_view_search_inherit" model="ir.ui.view">
+            <field name="name">survey.management.search.inherit</field>
+            <field name="model">survey.user_input</field>
+            <field name="inherit_id" ref="survey.survey_user_input_view_search"/>
+            <field name="arch" type="xml">
+                <xpath expr="//filter[@name='group_by_survey']" position="replace">
+                    <filter name="group_by_survey" string="Forms" domain="[]"
+                            context="{'group_by': 'survey_id'}"/>
+                </xpath>
+            </field>
+        </record>
+
+        <!-- QUESTIONS -->
+        <record id="inherit_survey_management_question_form" model="ir.ui.view">
+            <field name="name">inherit.survey.management.questino.form</field>
+            <field name="model">survey.question</field>
+            <field name="inherit_id" ref="survey.survey_question_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='constr_mandatory']" position="after">
+                    <field name="is_pan" invisible="question_type != 'char_box'"/>
+                    <field name="is_gstin" invisible="question_type != 'char_box'"/>
+                    <field name="is_udyam" invisible="question_type != 'char_box'"/>
+                    <field name="is_cin" invisible="question_type != 'char_box'"/>
+                </xpath>
+            </field>
+        </record>
+
+        <!-- Create New Vendor Registration Survey Action -->
+        <record model="ir.actions.act_window" id="vendor_registration_action_survey_form">
+            <field name="name">Vendor Registration Form</field>
+            <field name="res_model">survey.survey</field>
+            <field name="view_mode">kanban,list,form,activity</field>
+            <!--<field name="domain">[('survey_category.is_claim','=',True)]</field>-->
+            <field name="help" type="html">
+                <p>
+                    No Survey Found
+                </p>
+                <p>
+                    Ready to test? Pick a sample or create one from scratch...
+                </p>
+            </field>
+        </record>
+
+        <!-- Vendor Registration Form Menu -->
+        <menuitem name="Vendor Registration Form" id="menu_vendor_registration_survey_form"
+                  action="vendor_registration_action_survey_form"
+                  parent="contacts.menu_contacts" sequence="4"/>
+
+        <!-- Create New Vendor Registration Response Action  -->
+        <record model="ir.actions.act_window" id="vendor_registration_action_survey_user_input">
+            <field name="name">Vendor Registration Response</field>
+            <field name="res_model">survey.user_input</field>
+            <field name="view_mode">list,kanban,form</field>
+            <!--<field name="domain">[('survey_id.survey_category.is_claim','=',True)]</field>-->
+            <field name="context">{'search_default_group_by_survey': True}</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_empty_folder">
+                    No answers yet!
+                </p>
+                <p>
+                    You can share your links through different means: email, invite shortcut, live presentation, ...
+                </p>
+            </field>
+        </record>
+
+
+    </data>
+</odoo>

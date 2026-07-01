@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="global_tracking_form" model="ir.ui.view">
+        <field name="name">global.tracking.first.form</field>
+        <field name="model">global.tracking.first</field>
+        <field name="arch" type="xml">
+            <form duplicate="0">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Model">
+                            <field name="global_tracking_line">
+                                <list editable="bottom">
+                                    <field name="g_model_id"/>
+                                    <field name="g_field_ids" widget="many2many_tags" options="{'no_create': True}"
+                                           domain="[('model_id','=',g_model_id)]"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="view_global_tracking_first_tree" model="ir.ui.view">
+        <field name="name">global.tracking.first.list</field>
+        <field name="model">global.tracking.first</field>
+        <field name="arch" type="xml">
+            <list string="Global Tracking">
+                <field name="name"/>
+            </list>
+        </field>
+    </record>
+    <record id="action_global_tracking_first_form" model="ir.actions.act_window">
+        <field name="name">Global Tracking</field>
+        <field name="res_model">global.tracking.first</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+</odoo>

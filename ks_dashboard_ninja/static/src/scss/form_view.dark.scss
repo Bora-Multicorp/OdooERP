@@ -1,0 +1,26 @@
+.ks_body_class .form-input-box.form-control input,.ks_body_class .form-input-box.form-control select,.ks_body_class .form-input-box.form-control select#ks_date_filter_selection_0,.ks_body_class .form-input-box.form-control select#ks_croessel_speed_0,.ks_body_class .form-input-box.form-control select#ks_set_interval_0
+{
+        background-color: var(--color-1A2438-imp) !important;
+}
+.ks_body_class{
+    .o_form_sheet {
+        background-color: transparent !important;
+    }
+    
+     .ks_domain_content,.ks_body_class .fa-trash-o {
+        color: var(--color-white-imp) !important;
+    }
+    select > option {
+           background-color: var(--color-2E3E61-imp) !important;
+   }
+   .encap-custom-input {
+          background-color: var(--color-1A2438-imp) !important;
+  }
+  .bg-white {
+   --background-color: transparen !important;
+     background-color: var(--background-color) !important;
+ }
+ .encapsulated-form-arrow::after {
+    filter: invert(1);
+ }
+}

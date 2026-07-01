@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates xml:space="preserve">
+    <t t-name="ks_dn.facets_container">
+        <t t-foreach="Object.keys(filter_data)" t-as="model" t-key="model_index">
+            <t t-call="ks_dn.model_facets_container">
+                <t t-set="model_data" t-value="filter_data[model]"/>
+                <t t-set="ks_model" t-value="model"/>
+                <t t-set="remove" t-value="remove"/>
+            </t>
+        </t>
+    </t>
+
+    <t t-name="ks_dn.model_facets_container">
+        <div t-att-data-ks-model-selector="ks_model" class="mt-1">
+            <h4 class="">
+                <t t-esc="model_data.model_name"/>
+            </h4>
+            <t t-call="ks_dn.model_facets_renderer">
+                <t t-set="model_data" t-value="model_data"/>
+                <t t-set="ks_model" t-value="ks_model"/>
+                <t t-set="remove" t-value="remove"/>
+            </t>
+        </div>
+    </t>
+
+    <t t-name="ks_dn.model_facets_renderer">
+        <div class="dropdown dash-dd-2 me-lg-2 me-1 w-100 p-0 border-0">
+            <div class="dropdown-toggle d-flex encapsulated-link ks-dropdown-no--caret w-100">
+                <t t-foreach="Object.keys(model_data.groups)" t-as="group" t-key="group_index">
+                    <div class="position-relative pe-2 me-2" t-att-ksmodel="ks_model" t-att-kscateg="group">
+                        <div class="selcted-opt opted">
+                            <div class="opt-title">
+                                <t t-esc="model_data.groups[group].label"/>
+                            </div>
+                            <div t-on-click="() => { remove(ks_model, group) }" t-att-data-group="group" class="ms-1" t-att-data-model="ks_model">
+                                <img src="/ks_dashboard_ninja/static/images/dashboardOverview/close-circle-two.svg"
+                                     alt="close-img" loading="lazy" class="img-fluid encapsulated-cross"/>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+                <div t-if="ks_model === 'Select Filter'" class="placeholder-custom">Select Multiple Filters</div>
+            </div>
+        </div>
+    </t>
+</templates>

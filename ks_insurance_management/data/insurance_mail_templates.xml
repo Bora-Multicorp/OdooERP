@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="0">
+
+    <record id="email_template_declaration" model="mail.template">
+        <field name="name">Insurance: Declaration Email</field>
+        <field name="model_id" ref="ks_insurance_management.model_insurance_declaration"/>
+        <field name="subject">{{ object.company_id.name }} — Declaration Policy {{ object.policy_id.policy_number }} ({{ object.date_from }} to {{ object.date_to }})</field>
+        <field name="email_from">{{ object.company_id.email_formatted or user.email_formatted }}</field>
+        <field name="description">Used when sending an insurance declaration by email (e.g. from Draft Email on a declaration). Attaches the Declaration Letter PDF when available.</field>
+        <field name="body_html" type="html">
+<div style="margin: 0px; padding: 0px;">
+<p style="margin: 0px; padding: 0px; font-size: 13px;">
+    Dear Sir/Madam,
+    <br/><br/>
+    Please find attached the insurance declaration for the period
+    <strong><t t-out="object.date_from"/> to <t t-out="object.date_to"/></strong>
+    under Policy No. <strong><t t-out="object.policy_id.policy_number or ''"/></strong>.
+    <br/><br/>
+    <t t-if="object.declaration_type == 'marine'">
+        Declaration type: <strong>Marine</strong> (sales value).
+    </t>
+    <t t-else="">
+        Declaration type: <strong>Fire &amp; Burglary</strong> (average inventory value).
+    </t>
+    <br/><br/>
+    Declaration amount: <strong><t t-out="format_amount(object.declaration_amount, object.policy_id.currency_id) or ''"/></strong>
+    <br/><br/>
+    Kindly acknowledge receipt of this declaration.
+    <br/><br/>
+    Regards,
+    <br/>
+    <t t-out="object.company_id.name or ''"/>
+</p>
+</div>
+        </field>
+        <field name="lang">{{ object.company_id.partner_id.lang or object.env.user.lang }}</field>
+        <field name="auto_delete" eval="False"/>
+    </record>
+
+</odoo>

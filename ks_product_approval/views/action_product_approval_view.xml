@@ -1,0 +1,112 @@
+<odoo>
+    <data>
+        <record id="pending_approval_products_list_action" model="ir.actions.act_window">
+            <field name="name">Product Approval Queue</field>
+            <field name="res_model">product.template</field>
+            <field name="view_mode">kanban,list,form</field>
+            <field name="search_view_id" ref="stock.product_template_search_form_view_stock"/>
+            <field name="domain">[('active','=', False), ('is_hidden_for_approval', '=', True),('state', '=',
+                'pending')]
+            </field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    No pending approval product found!
+                </p>
+            </field>
+        </record>
+
+        <record id="view_product_template_search_inherit_for_approval" model="ir.ui.view">
+            <field name="name">product.template.search.inherit.for.approval</field>
+            <field name="model">product.template</field>
+            <field name="inherit_id" ref="stock.product_template_search_form_view_stock"/>
+            <field name="arch" type="xml">
+                <xpath expr="//filter[@name='inactive']" position="after">
+                    <filter string="Rejected" name="filter_state_rejected" domain="[('state', '=', 'rejected')]"/>
+                </xpath>
+            </field>
+        </record>
+
+        <record id="draft_products_list_action" model="ir.actions.act_window">
+            <field name="name">Product In Draft</field>
+            <field name="res_model">product.template</field>
+            <field name="view_mode">kanban,list,form</field>
+            <field name="search_view_id" ref="stock.product_template_search_form_view_stock"/>
+            <field name="context">{"search_default_goods": 1, 'default_is_storable': True}</field>
+            <field name="domain">[('active', '=', False),('is_hidden_for_approval', '=', True),('state', '=',
+                'draft'),('create_uid', '=', uid)]
+            </field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    No product in draft found. Let's create one!
+                </p>
+            </field>
+        </record>
+
+
+        <record id="pending_approval_products_list_action" model="ir.actions.act_window">
+            <field name="name">Product Approval Pending By You</field>
+            <field name="res_model">product.template</field>
+            <field name="view_mode">kanban,list,form</field>
+            <field name="search_view_id" ref="stock.product_template_search_form_view_stock"/>
+            <field name="domain">[('active','=', False), ('is_hidden_for_approval', '=', True),('state', '=',
+                'pending'), ('assigned_to', '=', uid)]
+            </field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    No pending approval product found!
+                </p>
+            </field>
+        </record>
+
+        <record id="pending_approval_by_others_products_list_action" model="ir.actions.act_window">
+            <field name="name">Product Approval Pending By Others</field>
+            <field name="res_model">product.template</field>
+            <field name="view_mode">kanban,list,form</field>
+            <field name="search_view_id" ref="stock.product_template_search_form_view_stock"/>
+            <field name="domain">[('active','=', False), ('is_hidden_for_approval', '=', True),('state', '=',
+                'pending'), ('assigned_to', '!=', uid)]
+            </field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    No pending approval product found!
+                </p>
+            </field>
+        </record>
+
+        <record id="rejected_products_list_action" model="ir.actions.act_window">
+            <field name="name">Product Rejected</field>
+            <field name="res_model">product.template</field>
+            <field name="view_mode">kanban,list,form</field>
+            <field name="search_view_id" ref="stock.product_template_search_form_view_stock"/>
+            <field name="domain">[('active','=', False), ('is_hidden_for_approval', '=', True),('state', '=',
+                'rejected')]
+            </field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    No pending approval product found!
+                </p>
+            </field>
+        </record>
+
+        <menuitem id="ks_product_approval_group_header_menu"
+                  name="Product Approval" parent="stock.menu_stock_inventory_control"
+                  sequence="198"/>
+        <menuitem id="pending_in_draft_product_menu"
+                  name="In Draft"
+                  action="draft_products_list_action"
+                  parent="ks_product_approval_group_header_menu" sequence="10"/>
+        <menuitem id="pending_approval_product_menu"
+                  name="Pending By You"
+                  action="pending_approval_products_list_action"
+                  parent="ks_product_approval_group_header_menu" sequence="20"/>
+        <menuitem id="pending_approval_by_other_product_menu"
+                  name="Pending By Others"
+                  action="pending_approval_by_others_products_list_action"
+                  parent="ks_product_approval_group_header_menu" sequence="20"/>
+        <menuitem id="rejected_product_menu"
+                  name="Rejected"
+                  action="rejected_products_list_action"
+                  parent="ks_product_approval_group_header_menu" sequence="20"/>
+
+    </data>
+</odoo>

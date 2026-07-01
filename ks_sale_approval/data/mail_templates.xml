@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Email Template: Sales Order Cancellation Approved (sent to user who requested cancellation) -->
+        <record id="mail_template_sale_order_cancellation_approved" model="mail.template">
+            <field name="name">Sales Order Cancellation Approved</field>
+            <field name="model_id" ref="sale.model_sale_order"/>
+            <field name="subject">Sales Order Cancellation Approved – {{ object.name }}</field>
+            <field name="email_from">{{ (object.company_id.email_formatted or user.email_formatted) }}</field>
+            <field name="email_to">{{ object.ks_cancel_request_user_id.email if object.ks_cancel_request_user_id else '' }}</field>
+            <field name="partner_to">{{ object.ks_cancel_request_user_id.partner_id.id if object.ks_cancel_request_user_id else '' }}</field>
+            <field name="body_html" type="html">
+<div style="margin: 0px; padding: 0px; font-size: 13px;">
+    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+        Dear <t t-out="object.create_uid.name or 'User'">User</t>,
+    </p>
+    <br/>
+    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+        Your request to cancel Sales Order <strong><t t-out="object.name">SO/001</t></strong> has been approved.
+    </p>
+    <br/>
+    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+        The order has now been marked as cancelled in the system.
+    </p>
+    <br/>
+    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+        Regards,<br/>
+        <strong><t t-out="object.company_id.name">Company Name</t></strong>
+    </p>
+</div>
+            </field>
+            <field name="lang">{{ object.ks_cancel_request_user_id.lang if object.ks_cancel_request_user_id else '' }}</field>
+            <field name="auto_delete" eval="False"/>
+        </record>
+
+        <!-- Email Template: Sales Order Update Request Approved (sent to user who requested the update) -->
+        <record id="mail_template_sale_order_update_approved" model="mail.template">
+            <field name="name">Sales Order Update Request Approved</field>
+            <field name="model_id" ref="sale.model_sale_order"/>
+            <field name="subject">Sales Order Update Approved – {{ object.name }}</field>
+            <field name="email_from">{{ (object.company_id.email_formatted or user.email_formatted) }}</field>
+            <field name="email_to">{{ object.ks_edit_request_user_id.email if object.ks_edit_request_user_id else '' }}</field>
+            <field name="partner_to">{{ object.ks_edit_request_user_id.partner_id.id if object.ks_edit_request_user_id else '' }}</field>
+            <field name="body_html" type="html">
+<div style="margin: 0px; padding: 0px; font-size: 13px;">
+    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+        Dear <t t-out="object.create_uid.name or 'User'">User</t>,
+    </p>
+    <br/>
+    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+        The requested update to Sales Order <strong><t t-out="object.name">SO/001</t></strong> has been approved.
+    </p>
+    <br/>
+    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+        You may now proceed with making the required changes to the order.
+    </p>
+    <br/>
+    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+        Regards,<br/>
+        <strong><t t-out="object.company_id.name">Company Name</t></strong>
+    </p>
+</div>
+            </field>
+            <field name="lang">{{ object.ks_edit_request_user_id.lang if object.ks_edit_request_user_id else '' }}</field>
+            <field name="auto_delete" eval="False"/>
+        </record>
+        <!-- Email Template: Proof of Delivery (POD) sent to customer -->
+        <record id="mail_template_pod_email" model="mail.template">
+            <field name="name">Proof of Delivery - Customer Notification</field>
+            <field name="model_id" ref="stock.model_stock_picking"/>
+            <field name="subject">Proof of Delivery: {{ object.name }}</field>
+            <field name="email_from">{{ (object.company_id.email_formatted or user.email_formatted) }}</field>
+            <field name="partner_to">{{ object.partner_id.id }}</field>
+            <field name="body_html" type="html">
+<div style="margin: 0px; padding: 0px; font-size: 13px; font-family: Arial, sans-serif;">
+    <p style="margin: 0px 0px 12px 0px; font-size: 13px;">
+        Dear <t t-out="object.partner_id.name or 'Customer'">Customer</t>,
+    </p>
+    <p style="margin: 0px 0px 12px 0px; font-size: 13px;">
+        Please find attached the <strong>Proof of Delivery</strong> for your order
+        <strong><t t-out="object.name">WH/OUT/00001</t></strong>.
+    </p>
+    <t t-if="object.origin">
+    <p style="margin: 0px 0px 12px 0px; font-size: 13px;">
+        Source Reference: <strong><t t-out="object.origin">SO/001</t></strong>
+    </p>
+    </t>
+    <p style="margin: 0px 0px 12px 0px; font-size: 13px;">
+        If you have any questions regarding this delivery, please feel free to contact us.
+    </p>
+    <p style="margin: 0px 0px 4px 0px; font-size: 13px;">
+        Thank you for your business.
+    </p>
+    <br/>
+    <p style="margin: 0px; font-size: 13px;">
+        Regards,<br/>
+        <strong><t t-out="object.company_id.name">Company Name</t></strong>
+    </p>
+</div>
+            </field>
+            <field name="lang">{{ object.partner_id.lang }}</field>
+            <field name="auto_delete" eval="False"/>
+        </record>
+    </data>
+</odoo>

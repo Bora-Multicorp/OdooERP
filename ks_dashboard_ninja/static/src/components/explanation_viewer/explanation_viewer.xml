@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<templates>
+    <t t-name="ks_dashboard_ninja.explanation_viewer">
+        <audio class="d-none" t-ref="audioRef"/>
+
+        <div class="h-100 ks_ai_explanation" t-if="state.explanation !== false">
+            <div class="charts-content-box">
+                <p><t t-esc="state.explanation"/></p>
+            </div>
+            <div class="voice-button" t-on-click="speakText" data-tooltip="Text to speech">
+                <div class="voice-cricle" t-if="!state.isPlay">
+                    <img src="/ks_dashboard_ninja/static/images/voice-cricle.svg" height="24" width="24"
+                         alt="voice-img" loading="lazy" class="img-fluid"/>
+                </div>
+                <div class="comp-gif" t-if="state.isPlay">
+                    <img src="/ks_dashboard_ninja/static/images/Comp.gif" alt="loading gif" height="24"
+                         width="24" loading="lazy" class="img-fluid"/>
+                </div>
+            </div>
+        </div>
+        <div class="h-100 ks_ai_explanation" t-else="">
+            <t t-call="ai_explanation_skeleton"/>
+        </div>
+    </t>
+</templates>

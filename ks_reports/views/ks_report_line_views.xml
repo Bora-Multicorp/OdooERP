@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Advance Sheet: list view same columns as print report -->
+    <record id="view_advance_sheet_line_list" model="ir.ui.view">
+        <field name="name">ks.advance.sheet.line.list</field>
+        <field name="model">ks.advance.sheet.line</field>
+        <field name="arch" type="xml">
+            <list string="Advance Sheet" create="false" edit="false" delete="false">
+                <header>
+                    <button name="action_download_xlsx" string="Download XLSX" type="object" class="btn-primary" icon="fa-download"/>
+                </header>
+                <field name="sr_no"/>
+                <field name="party_name"/>
+                <field name="payment_received"/>
+                <field name="stock_dispatched_amount"/>
+                <field name="balance_display" string="Balance Available With Us"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Part Wise All Data: list view same columns as print report; only Monthly Plan Qty/Amount editable -->
+    <record id="view_part_wise_report_line_list" model="ir.ui.view">
+        <field name="name">ks.part.wise.report.line.list</field>
+        <field name="model">ks.part.wise.report.line</field>
+        <field name="arch" type="xml">
+            <list string="Part Wise All Data" create="false" delete="false" editable="bottom">
+                <header>
+                    <button name="action_download_xlsx" string="Download XLSX" type="object" class="btn-primary" icon="fa-download"/>
+                </header>
+                <field name="sn" readonly="1"/>
+                <field name="pi_no" readonly="1"/>
+                <field name="party_name" readonly="1"/>
+                <field name="products" readonly="1"/>
+                <field name="total_pi_quantity" readonly="1"/>
+                <field name="total_pi_amount" readonly="1"/>
+                <field name="dispatched_quantity" readonly="1"/>
+                <field name="dispatched_amount" readonly="1"/>
+                <field name="balance_qty" readonly="1"/>
+                <field name="remaining_amount_against_pi" readonly="1"/>
+                <field name="monthly_plan_quantity"/>
+                <field name="monthly_plan_amount"/>
+                <field name="export_inv_qty_this_month" readonly="1"/>
+                <field name="export_inv_amount_this_month" readonly="1"/>
+                <field name="unit_price" readonly="1"/>
+                <field name="gst" readonly="1"/>
+                <field name="deviation_from_plan_1" readonly="1"/>
+                <field name="deviation_from_plan_2" readonly="1"/>
+                <field name="net_remaining_qty" readonly="1"/>
+                <field name="net_remaining_amount" readonly="1"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Exchange GL: list view same columns as print report -->
+    <record id="view_exchange_gl_line_list" model="ir.ui.view">
+        <field name="name">ks.exchange.gl.line.list</field>
+        <field name="model">ks.exchange.gl.line</field>
+        <field name="arch" type="xml">
+            <list string="Exchange GL" create="false" edit="false" delete="false">
+                <header>
+                    <button name="action_download_xlsx" string="Download XLSX" type="object" class="btn-primary" icon="fa-download"/>
+                </header>
+                <field name="invoice_id" optional="show"/>
+                <field name="proforma_invoice_no"/>
+                <field name="proforma_invoice_date"/>
+                <field name="currency"/>
+                <field name="exchange_rate_pi_date"/>
+                <field name="qty"/>
+                <field name="total_qty"/>
+                <field name="rate_inr"/>
+                <field name="pi_amount"/>
+                <field name="total_amount"/>
+                <field name="commercial_invoice_no"/>
+                <field name="commercial_invoice_date"/>
+                <field name="commercial_invoice_amount"/>
+                <field name="shipping_bill_no"/>
+                <field name="shipping_bill_date"/>
+                <field name="shipping_bill_value"/>
+                <field name="shipping_bill_exchange_rate"/>
+                <field name="shipping_bill_value_inr"/>
+                <field name="total_amount_received"/>
+                <field name="bank_charges"/>
+                <field name="net_amount_received"/>
+                <field name="exchange_rate_remittance_date"/>
+                <field name="payment_received_inr"/>
+                <field name="exchange_gain_loss"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Window actions: open report line list (used by server actions with domain) -->
+    <record id="action_advance_sheet_line_list" model="ir.actions.act_window">
+        <field name="name">Advance Sheet</field>
+        <field name="res_model">ks.advance.sheet.line</field>
+        <field name="view_mode">list</field>
+        <field name="search_view_id" eval="False"/>
+    </record>
+
+    <record id="action_part_wise_report_line_list" model="ir.actions.act_window">
+        <field name="name">Russia Report 1</field>
+        <field name="res_model">ks.part.wise.report.line</field>
+        <field name="view_mode">list</field>
+        <field name="search_view_id" eval="False"/>
+    </record>
+
+    <record id="action_exchange_gl_line_list" model="ir.actions.act_window">
+        <field name="name">Exchange GL</field>
+        <field name="res_model">ks.exchange.gl.line</field>
+        <field name="view_mode">list</field>
+        <field name="search_view_id" eval="False"/>
+    </record>
+</odoo>

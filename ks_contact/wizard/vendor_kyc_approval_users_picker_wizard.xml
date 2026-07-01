@@ -1,0 +1,45 @@
+<odoo>
+    <record id="view_kyc_vendor_approval_user_picker_wizard" model="ir.ui.view">
+        <field name="name">view.kyc.vendor.approval.user.picker.wizard</field>
+        <field name="model">vendor.kyc.approval.user.picker.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Select Approval Users">
+                <sheet>
+                    <group>
+                        <field name="kyc_id" invisible="1"/>
+                        <field name="ks_is_update_mode" invisible="1"/>
+                        <field name="ks_pm1_already_approved" invisible="1"/>
+                        <field name="ks_is_two_way" invisible="1"/>
+                        <field name="approver1_user_ids" invisible="1"/>
+                        <field name="approver2_user_ids" invisible="1"/>
+                        <field name="ks_approval_info" widget="html" readonly="1" nolabel="1"/>
+                        <field name="approver1_user"
+                               options="{'no_create': True}"
+                               required="1"
+                               readonly="ks_pm1_already_approved"/>
+                        <field name="approver2_user"
+                               options="{'no_create': True}"
+                               required="ks_is_two_way"
+                               invisible="not ks_is_two_way"/>
+                    </group>
+                </sheet>
+                <footer>
+                    <button string="Confirm" type="object" name="add_users_for_approval" class="btn-primary"
+                            invisible="add_button_disabled == 1"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_kyc_vendor_approval_user_picker_wizard" model="ir.actions.act_window">
+        <field name="name">KYC Vendor Approval User Picker</field>
+        <field name="res_model">vendor.kyc.approval.user.picker.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="context">{
+            'default_kyc_id': active_id,
+            }
+        </field>
+    </record>
+</odoo>

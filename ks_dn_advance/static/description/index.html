@@ -1,0 +1,2103 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Odoo Dashboard Ninja | Descrition</title>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1" name="viewport">
+    <link href="https://fonts.googleapis.com" rel="preconnect">
+    <link crossorigin href="https://fonts.gstatic.com" rel="preconnect">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+        rel="stylesheet">
+    <!-- Bootstrap 5 CSS cdn -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .card-header .card-title img {
+            transform: rotate(180deg);
+        }
+
+        .card-header.collapsed .card-title img {
+            transform: rotate(0deg);
+        }
+    </style>
+</head>
+
+<body>
+    <section>
+        <div class="container shadow px-0" style="background-color: #ffffff; border-radius: 8px;">
+            <div class="px-md-5 p-2" style="border-radius: 20px; font-family: 'Inter', sans-serif;">
+                <div class="d-lg-none d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center">
+                        <div class="me-1">
+                            <img height="44" width="44" src="./img/DN-advance/Dashboard-Ninja-Advance.svg" alt="">
+                        </div>
+                        <div style="font-weight: 500; font-family: 'poppins'; font-size: 16px; line-height: 19px; color: #241C1D;">
+                            Dashboard <br class="d-xl-block d-none"> Ninja  Advance
+                        </div>
+                    </div>
+                    <a class="d-flex align-items-center justify-content-center px-4 py-3 text-center" href="tel:+91-8527471031" style="padding:12px 15px;font-family: Inter; text-decoration: none; background-color:#E84A5F;border-radius: 8px;font-style: normal; font-weight: 600; font-size: 14px; line-height: 18.6px; text-transform: capitalize; color: #fff;">
+                        <img class="me-2" width="14" height="14" src="./img/new-add-img/call.png" alt="">
+                        +91-8527471031
+                    </a>
+                </div>
+                <div class="pt-4 d-flex position-relative justify-content-lg-between justify-content-center align-items-center pb-1" style="z-index: 10;">
+                    <div class="d-lg-flex d-none align-items-center">
+                        <div class="me-1">
+                            <img height="44" width="44" src="./img/DN-advance/Dashboard-Ninja-Advance.svg" alt="">
+                        </div>
+                        <div style="font-weight: 500; font-family: 'poppins'; font-size: 16px; line-height: 19px; color: #241C1D;">
+                            Dashboard <br class="d-xl-block d-none"> Ninja  Advance
+                        </div>
+                    </div>
+                    <ul class="nav nav-tabs justify-content-center bg-white " id="myTab" role="tablist" "="">
+                        <li class=" nav-item" role="presentation">
+                        <a aria-controls="overview" aria-bs-selected="true" class="nav-link active" data-bs-toggle="tab" href="#overview" id="overview-tab" role="tab" style="font-weight: 400; font-size: 14px; color: #171618;" aria-selected="true">
+                            Overview</a>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <a aria-controls="why-ks" aria-bs-selected="false" class="nav-link py-2" data-bs-toggle="tab" href="#why-ks" id="why-ks-tab" role="tab" style="font-weight: 400; font-size: 14px;color: #171618;" aria-selected="false" tabindex="-1">Why Ksolves</a>
+                        </li>
+
+                        <li class="nav-item" role="presentation">
+                            <a aria-controls="faq" aria-bs-selected="false" class="nav-link" data-bs-toggle="tab" href="#faq" id="faq-tab" role="tab" style="font-weight: 400; font-size: 14px; color: #171618;" aria-selected="false" tabindex="-1">
+                                FAQ</a>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <a aria-controls="releases" aria-bs-selected="false" class="nav-link" data-bs-toggle="tab" href="#releases" id="releases-tab" role="tab" style="font-weight: 400; font-size: 14px; color: #171618;" aria-selected="false" tabindex="-1">Releases</a>
+                        </li>
+                    </ul>
+                    <a class="d-lg-flex d-none align-items-center justif-content-center px-4 py-3 text-center" href="tel:+91-8527471031" style="padding:12px 15px;font-family: Inter; text-decoration: none; background-color:#E84A5F;border-radius: 8px;font-style: normal; font-weight: 600; font-size: 14px; line-height: 18.6px; text-transform: capitalize; color: #fff;">
+                        <img class="me-2" width="14" height="14" src="./img/new-add-img/call.png" alt="">
+                        +91-8527471031 </a>
+                </div>
+
+                <!-- new-description-section -->
+                <!-- <div class="row justify-content-center">
+                    <h1 class="mb-2 col-12"
+                        style="font-weight: 700; font-size: 50px; line-height: 60px;text-align: center;color: #171618;">
+                        <span style="color: #E84A5F;">Dashboard Ninja </span>
+                        with AI
+                    </h1>
+                    <p style="text-align: center; font-weight: 400; font-size: 16px; line-height: 25px; color: #171618;"
+                        class="mb-4 col-lg-7 col-12">
+                        Create amazing reports with the powerful & smart Odoo Dashboard Ninja app with a refreshed,
+                        modern user interface for effortless navigation and enhanced user experience. Enjoy the
+                        simplified workflow that makes everything easy, from generating dashboards to collaborating with
+                        your team members.
+                    </p>
+                    <div class="d-flex justify-content-center align-items-center col-12 ">
+                        <a class="d-flex align-items-center justif-content-center px-4 py-3 text-center me-2"
+                            href="#features"
+                            style="padding:10px 25px;font-family: Inter; text-decoration: none; background-color:#E84A5F;border-radius: 8px;font-style: normal; font-weight: 600; font-size: 16px; line-height: 19.6px; text-transform: capitalize; color: #fff;">
+                            <img alt="" class="me-2" loading="lazy"
+                                src="./img/new-add-img/clipboard-text.svg">
+                            User
+                            Guide</a>
+                        <a class="d-flex align-items-center justif-content-center px-4 py-3 text-center"
+                            href="#features"
+                            style="padding:10px 25px;font-family: Inter; text-decoration: none; background-color:#fff;border-radius: 8px;font-style: normal; font-weight: 600; font-size: 16px; line-height: 18.6px; text-transform: capitalize; color: #E84A5F;border: 2px solid #E84A5F;">
+                            <img alt="" height="24" width="24" class="me-2" loading="lazy"
+                                src="./img/new-add-img/video-circle.png">
+                            Watch
+                            a Demo </a>
+                    </div>
+                </div> -->
+                <!-- new-description-section-end -->
+            </div>
+            <div class="mb-4" style="border-radius: 20px; font-family: 'Inter', sans-serif;">
+
+                <div class="tab-content py-2" id="myTabContent">
+                    <div aria-labelledby="overview-tab" class="tab-pane fade active show" id="overview" role="tabpanel">
+                        <div class="position-relative">
+                            <img src="./img/new-add-img/main-screen-bg.png" class="position-absolute w-100" alt="main-bg" style="
+    object-fit: contain;">
+    <div class="container py-3 position-relative">
+            <h2 class="text-center mb-4" style="font-weight: 600; font-size: 40px">
+              Book Your
+              <span style="color: #e84a5f">Personalised Demo</span> Right Away
+            </h2>
+            <div class="mb-5 text-center">
+              <img src="./odoo-best-partner.png" class="img-fluid" width="860" height="75" loa="" alt="">
+            </div>
+            <div class="row text-center justify-content-lg-around justify-content-center position-relative flex-md-row flex-column">
+              <!-- Email -->
+              <div class="col-md-3 mb-4 col-12" style="">
+                <div class="h-100" style="
+                    padding: 16px;
+                    border: 2px solid #acb7d5;
+                    border-radius: 8px;
+                    background-color: #acb7d5;
+                  ">
+                  <p style="font-weight: 700; font-size: 18px; line-height: 19px" class="d-flex align-items-center justify-content-center">
+                    <span>
+                      <img src="//apps.odoocdn.com/apps/assets/19.0/ks_dashboard_ninja/img/mail-icon.png?fd194c5" height="30" width="30" class="img-fluid" style="margin-right: 6px">
+                    </span>
+                    Connect Via Email
+                  </p>
+                  <div style="
+                      background-color: white;
+                      display: flex;
+                      border-radius: 6px;
+                    ">
+                    <span>
+                      <img class="img-fluid" src="./email-dn.png" loading="lazy" style="">
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- WhatsApp -->
+              <div class="col-md-3 mb-4 col-12">
+                <div class="h-100" style="
+                    padding: 16px;
+                    border: 2px solid #d5d5ad;
+                    border-radius: 8px;
+                    height: revert-layer;
+                    background-color: #d5d5ad;
+                  ">
+                  <p style="
+                      font-weight: 700;
+                      font-size: 18px;
+                      line-height: 19px;
+                      white-space: nowrap;
+                    " class="d-flex align-items-center justify-content-center">
+                    <span>
+                      <img src="//apps.odoocdn.com/apps/assets/19.0/ks_dashboard_ninja/img/w-icon.png?fd194c5" height="30" width="30" class="img-fluid" style="margin-right: 6px">
+                    </span>
+                    Connect Via WhatsApp
+                  </p>
+                  <div style="
+                      background-color: white;
+                      display: flex;
+                      border-radius: 6px;
+                    ">
+                    <span>
+                      <img class="img-fluid" src="./wp-dn.png" loading="lazy" style="">
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- TidyCal -->
+              <div class="col-md-3 mb-4 col-12">
+                <div class="h-100" style="
+                    padding: 16px;
+                    border: 2px solid #b4d9c2;
+                    border-radius: 8px;
+                    background-color: #b4d9c2;
+                  ">
+                  <p style="font-weight: 700; font-size: 18px; line-height: 19px" class="d-flex align-items-center justify-content-center">
+                    <span>
+                      <img src="//apps.odoocdn.com/apps/assets/19.0/ks_dashboard_ninja/img/meet-icon.png?fd194c5" height="30" width="30" class="img-fluid" style="margin-right: 6px">
+                      <span>Book A Meeting</span></span>
+                  </p>
+                  <div style="
+                      display: flex;
+                      border-radius: 6px;
+                      background-color: #f8f8f8;
+                    ">
+                    <span>
+                      <img class="img-fluid" src="./tidy-dn.png" loading="lazy" style="">
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+                            <div class="row position-relative justify-content-center">
+                                <h1 class="mb-2 col-12" style="font-weight: 700; font-size: 50px; line-height: 60px;text-align: center;color: #171618;">
+                                    <span style="color: #E84A5F;">Dashboard Ninja </span>
+                                    Advance
+                                </h1>
+                                <p style="text-align: center; font-weight: 400; font-size: 16px; line-height: 25px; color: #171618;" class="mb-4 col-lg-7 col-12">
+                                    Dashboard Ninja Advance breaks all the limitations of productivity by simplifying
+                                    complex data into attractive charts. Make better decisions by transforming your
+                                    sensitive business data into secured and impactful Dashboard Ninja Charts.
+                                </p>
+                                <div class="d-flex flex-column justify-content-center align-items-center col-12 mb-lg-2 mb-3">
+                    <a class="d-flex justif-content-center align-items-center mb-3" target="_blank" style="font-family:Inter; text-decoration:none; border-radius:8px; font-style:normal; font-size:16px; line-height:19.6px">
+                      <img src="//apps.odoocdn.com/apps/assets/18.0/ks_dashboard_ninja/img/new-add-img/copy.svg?96cdf96" loading="lazy" alt="" style="">
+                      <span style="color:#060506; border-radius:5px; font-size:16px; font-weight:500; margin-left:10px">ksolves.com/user-guide/odoo-dashboard-ninja/</span>
+                    </a>
+                    <a class="d-flex align-items-center justif-content-center px-4 py-3 text-center" target="_blank" href="https://www.youtube.com/playlist?list=PLhMLMIKkNp0DFDBzS84ggUl0jKfJFuad3" style="padding:10px 25px; font-family:Inter; text-decoration:none; background-color:#e84a5f; border-radius:8px; font-style:normal; font-weight:500; font-size:16px; line-height:18.6px; text-transform:capitalize; color:#ffffff; border:2px solid #e84a5f">
+                      <img alt="" height="24" width="24" class="me-2" loading="lazy" src="//apps.odoocdn.com/apps/assets/18.0/ks_dashboard_ninja/img/new-add-img/video-circle.svg?96cdf96" style="">
+                      Watch a Demo
+                    </a>
+                  </div>
+                                <!-- <div class="d-flex justify-content-center align-items-center col-12 mb-lg-2 mb-3 ">
+                                    <a class="d-flex align-items-center justif-content-center px-4 py-3 text-center me-2" target="_blank" href="https://www.ksolves.com/user-guide/odoo-dashboard-ninja" style="padding:10px 25px;font-family: Inter; text-decoration: none; background-color:#E84A5F;border-radius: 8px;font-style: normal; font-weight: 600; font-size: 16px; line-height: 19.6px; text-transform: capitalize; color: #fff;">
+                                        <img alt="" class="me-2" loading="lazy" src="./img/new-add-img/clipboard-text.svg">
+                                        User
+                                        Guide</a>
+                                    <a class="d-flex align-items-center justif-content-center px-4 py-3 text-center" target="_blank" href="https://www.youtube.com/watch?v=Kcye9yHu4rY&amp;ab_channel=KsolvesIndiaLimited" style="padding:10px 25px;font-family: Inter; text-decoration: none; background-color:#fff;border-radius: 8px;font-style: normal; font-weight: 600; font-size: 16px; line-height: 18.6px; text-transform: capitalize; color: #E84A5F;border: 2px solid #E84A5F;">
+                                        <img alt="" height="24" width="24" class="me-2" loading="lazy" src="./img/new-add-img/video-circle.png">
+                                        Watch
+                                        a Demo </a>
+                                </div> -->
+                            </div>
+                            <div class="ks-top-logos position-relative mb-2 px-md-5 p-1 pt-lg-5 mt-lg-4">
+                                <div class="text-center">
+                                    <img src="img/Ksolves.png" class="img-fluid" alt="ks-logo" height="83" width="400" loading="lazy">
+                                </div>
+                            </div>
+                            <div class="position-relative ps-lg-5 pe-lg-4 px-3 w-100 d-flex flex-sm-row flex-column align-items-center justify-content-between">
+                                <img src="./img/nse-logo.png" class="mb-sm-0 mb-3" alt="nse-logo" width="176" height="48">
+                                <img src="./img/odoo-logo.png" class="mb-sm-0 mb-3" alt="odoo-logo" width="242" height="36">
+                            </div>
+                            <div class="position-relative">
+                                <img src="./img/DN-advance/DN-advance-main.png" alt="" class="img-fluid">
+                            </div>
+                            <div class="position-relative text-center" style="margin-top: -60px;">
+                                <div class="d-flex mx-auto justify-content-center align-items-center" style="box-shadow: 0px 2.96px 17.75px 0px #00000005;
+border: 1.48px solid #E5E7EB;background-color: #F5EFFF; border-radius: 12px;padding: 10px 20px; width: fit-content;">
+                                    <div class="me-2">
+                                        <img src="./img/new-add-img/tinified/latest-release.png" class="img-fluid" height="36" width="36" alt="">
+                                    </div>
+                                    <div>
+                                        <h4 class="mb-0" style="font-weight: 500; font-size: 12px; color: #000000;">
+                                            Latest
+                                            Release 1.1.6</h4>
+                                        <p class="mt-1 mb-0 text-start" style="font-weight: 400; font-size: 8px; color: #000000;">
+                                            5th
+                                            December, 2025</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- <div class="my-2 position-relative" style="height: 451px; border-radius: 40px;">
+                            <img alt="" class="position-absolute d-block d-xl-none img-fluid w-100 h-100 left_0"
+                                style="border-radius: 40px;" src="./img/new-add-img/new-banner.gif" />
+                            <video class="position-absolute d-xl-block d-none img-fluid"
+                                style="border-radius: 40px; width: 100%;" autoplay muted loop>
+                                <source src="./img/new-add-img/banner-new.mp4" type="video/mp4">
+                                Your browser does not support the video tag.
+                            </video>
+                            <div class="row py-md-4 py-3 position-relative">
+                                <div class="col-md-12 py-2 text-center">
+                                    <h1 class="mb-0 mt-4 pt-md-4"
+                                        style="font-family: 'Inter', sans-serif; font-style: normal; font-weight: bold; word-wrap: break-word;line-height: 124%;color: #00FFFF;">
+                                        <span class="d-md-block d-none" style="font-size: 48px;"> Dashboard Ninja with
+                                            AI</span>
+                                        <span class="d-md-none d-block" style="font-size: 25px;"> Dashboard Ninja with
+                                            AI</span>
+                                    </h1>
+                                </div>
+                                <div class="col-9 mx-auto py-2 text-center">
+                                    <p class="pb-0 px-md-4 px-2"
+                                        style="font-style: normal; font-weight: normal; font-size: 16px; line-height: 160%; letter-spacing: 0.02em; text-indent: 2px; color: #FFFFFF;">
+                                        Create amazing reports with the powerful & smart Odoo Dashboard Ninja app with a
+                                        refreshed, modern user interface for effortless navigation and enhanced user
+                                        experience.
+                                        Enjoy the simplified workflow that makes everything easy, from generating
+                                        dashboards to
+                                        collaborating with your team members.See
+                                        your
+                                        business from a 360-degree angle with an interactive, engaging, and beautiful
+                                        dashboard.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row position-relative" style="margin-top: -13%">
+                            <div class="col-md-10 offset-md-1 text-center">
+                                <img alt="" class="img-fluid" loading="lazy" src="./img/dashboard.png">
+                            </div>
+                        </div> -->
+
+                        <!-- one-stop-solution-section -->
+                        <div class="d-flex mt-4" style="background-color: #F5EFFF; position: relative; height: 400px;">
+                            <!-- Set the desired height -->
+                            <div class="row px-5 mx-4 py-4 w-100 h-100 position-relative">
+                                <div class="col-xl-8 d-flex flex-column justify-content-center">
+                                    <h3 class="mb-3" style="font-weight: 700; font-size: 45px; line-height: 60px; color: #060506;">
+                                        Ksolves - Your <br class="d-lg-block d-none">one-stop solution
+                                    </h3>
+                                    <p class="mb-4" style="color: #5C5F6E; font-weight: 500; font-size: 20px; line-height: 30px;">
+                                        We are available 24/7 for your service. Contact us today!
+                                    </p>
+                                    <div class="d-flex align-iems-center">
+                                        <a class="d-flex align-items-center me-2 justif-content-center px-4 py-3 text-center" href="tel:+91-8527471031" style="padding:15px !important; width: fit-content;font-family: Inter; text-decoration: none; background-color:#E84A5F;border-radius: 8px;font-style: normal; font-weight: 600; font-size: 14px; line-height: 18.6px; text-transform: capitalize; color: #fff;">
+                                            <img class="me-2" width="14" height="14" src="./img/new-add-img/call.png" alt="">
+                                            +91-8527471031 </a>
+                                        <a class="d-flex align-items-center justif-content-center px-4 py-3 text-center" href="mailto:sales@ksolves.com" style="padding:15px !important;font-family: Inter; text-decoration: none; background-color:transparent;border-radius: 8px;font-style: normal; font-weight: 600; font-size: 14px; width: fit-content; line-height: 18.6px; text-transform: capitalize; color: #E84A5F;border: 2px solid #E84A5F;">
+                                            <img alt="" class="me-2 img-fluid" height="18" width="18" loading="lazy" src="./img/new-add-img/sms-notification.png">
+                                            Mail Us </a>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 d-xl-block d-none position-relative">
+                                    <div class="position-absolute top-0 d-flex justify-content-center align-items-center" style="top: 0; right: 0; height: 100%;">
+                                        <img src="./img/new-add-img/Digital-transformation-bro 1.png" class="img-fluid" alt="" style="object-fit: cover;">
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+
+
+
+
+
+
+                        <div class="row pt-5 justify-content-center mx-auto">
+                            <div class="col-12 d-flex flex-column justify-content-center align-items-center">
+                                <p class="col-xl-11 col-12" style="font-size: 20px; font-weight: 500; line-height: 30px; color: #5C5F6E; text-align: center;">
+                                    If you need to strengthen your Dashboard Ninja application, add <br class="d-lg-block d-none"> the advanced version
+                                    with the following powerful features:
+                                </p>
+                                <h1 class="mb-2 col-12" style="font-weight: 700; font-size: 30px; line-height: 60px;text-align: center;color: #171618;">
+                                    <span style="color: #E84A5F;">Dashboard Ninja Advance </span>
+                                </h1>
+
+                                <!-- tabs-&-pill -->
+                                <div class="row mt-5 w-100">
+                                    <div class="col-4">
+                                        <div class="d-flex  position-relative" style="padding: 20px;background-color: #ffffff;border-radius: 22px;min-height: 237px;">
+
+                                            <div class="d-flex flex-column justify-content-center align-items-center" style="
+    width: 100%;
+    padding-top:53px ;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+">
+                                                <img src="./img/DN-advance/dn-logo.png" class="img-fluid" alt="">
+                                                <p style="font-weight: 500; font-size: 24px; color:#241C1D; margin-top: 28px;">
+                                                    Dashboard Ninja</p>
+                                            </div>
+                                            <div class="d-flex align-items-center">
+                                                <div class="d-flex justify-content-center align-items-center">
+                                                    <img src="./img/DN-advance/add-square.png" alt="">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- 2 -->
+                                    <div class="col-4">
+                                        <div class="d-flex  position-relative" style="padding: 20px;background-color: #F5EFFF;border-radius: 22px;min-height: 237px;">
+                                            <div class="d-flex align-items-baseline position-absolute">
+                                                <div style="height: 50px;width: 50px;border-radius: 50%;border: 1px solid #E5E7EB;background-color: #FFFFFF; font-size: 24px;font-weight: 500;color: #241C1D;" class="d-flex justify-content-center align-items-center">
+                                                    1
+                                                </div>
+                                            </div>
+                                            <div class="d-flex flex-column justify-content-center align-items-center" style="
+    width: 100%;
+    padding-top:53px ;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+">
+                                                <img src="./img/DN-advance/slide-1.png" class="img-fluid" alt="">
+                                                <p style="font-weight: 500; font-size: 24px; color:#241C1D; margin-top: 28px;">
+                                                    TV Mode
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!--3  -->
+                                    <div class="col-4">
+                                        <div class="d-flex  position-relative" style="padding: 20px;background-color: #FAFAFA;border-radius: 22px;min-height: 237px;">
+                                            <div class="d-flex align-items-baseline position-absolute">
+                                                <div style="height: 50px;width: 50px;border-radius: 50%;border: 1px solid #E5E7EB;background-color: #FFFFFF; font-size: 24px;font-weight: 500;color: #241C1D;" class="d-flex justify-content-center align-items-center">
+                                                    2
+                                                </div>
+                                            </div>
+                                            <div class="d-flex flex-column justify-content-center align-items-center" style="
+    width: 100%;
+    padding-top:53px ;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+">
+                                                <img src="./img/DN-advance/slide-2.png" class="img-fluid" alt="">
+                                                <p style="font-weight: 500; font-size: 24px; color:#241C1D; margin-top: 28px;">
+                                                    List-View Layouts</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- 4 -->
+                                    <div class="col-4">
+                                        <div class="d-flex  position-relative" style="padding: 20px;background-color: #F5EFFF;border-radius: 22px;min-height: 237px;">
+                                            <div class="d-flex align-items-baseline position-absolute">
+                                                <div style="height: 50px;width: 50px;border-radius: 50%;border: 1px solid #E5E7EB;background-color: #FFFFFF; font-size: 24px;font-weight: 500;color: #241C1D;" class="d-flex justify-content-center align-items-center">
+                                                    3
+                                                </div>
+                                            </div>
+                                            <div class="d-flex flex-column justify-content-center align-items-center" style="
+    width: 100%;
+    padding-top:53px ;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+">
+                                                <img src="./img/DN-advance/slide-3.png" class="img-fluid" alt="">
+                                                <p style="font-weight: 500; font-size: 24px; color:#241C1D; margin-top: 28px;">
+                                                    Custom SQL Query</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- 5 -->
+                                    <div class="col-4">
+                                        <div class="d-flex  position-relative" style="padding: 20px;background-color: #FAFAFA;border-radius: 22px;min-height: 237px;">
+                                            <div class="d-flex align-items-baseline position-absolute">
+                                                <div style="height: 50px;width: 50px;border-radius: 50%;border: 1px solid #E5E7EB;background-color: #FFFFFF; font-size: 24px;font-weight: 500;color: #241C1D;" class="d-flex justify-content-center align-items-center">
+                                                    4
+                                                </div>
+                                            </div>
+                                            <div class="d-flex flex-column justify-content-center align-items-center" style="
+    width: 100%;
+    padding-top:53px ;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+">
+                                                <img src="./img/DN-advance/slide-4.png" class="img-fluid" alt="">
+                                                <p style="font-weight: 500; font-size: 24px; color:#241C1D; margin-top: 28px;">
+                                                    Print Dashboard</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- 6 -->
+                                    <div class="col-4">
+                                        <div class="d-flex  position-relative" style="padding: 20px;background-color: #F5EFFF;border-radius: 22px;min-height: 237px;">
+                                            <div class="d-flex align-items-baseline position-absolute">
+                                                <div style="height: 50px;width: 50px;border-radius: 50%;border: 1px solid #E5E7EB;background-color: #FFFFFF; font-size: 24px;font-weight: 500;color: #241C1D;" class="d-flex justify-content-center align-items-center">
+                                                    5
+                                                </div>
+                                            </div>
+                                            <div class="d-flex flex-column justify-content-center align-items-center" style="
+    width: 100%;
+    padding-top:53px ;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+">
+                                                <img src="./img/DN-advance/slde-5.png" class="img-fluid" alt="">
+                                                <p style="font-weight: 500; font-size: 24px; color:#241C1D; margin-top: 28px;">
+                                                    Send Email</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- tabs-&-pills-end -->
+                            </div>
+
+                            <div class="row mx-auto my-lg-4 px-md-5 px-2 my-2 py-5" style="background-color: #FAFAFA;">
+                                <div class="col-12">
+                                    <h2 style="color: #171618; text-align: center; font-size: calc(1.1rem + 1vw); font-weight: 600; line-height: 45px;">
+                                        TV&nbsp;Mode
+                                    </h2>
+                                    <p style="text-align: center;">
+                                        TV Mode feature helps a user to display the charts during office presentations
+                                        over television or <br class="d-lg-block d-none"> wallboard. Use the Play button
+                                        to rotate the dashboard items at certain intervals of time.
+                                    </p>
+                                </div>
+                                <div class="col-12">
+                                    <div style="padding: 20px 25px; border-radius: 10px;">
+                                        <div class="row  p-3 justify-content-center" style="
+                                    ">
+
+                                            <div id="featureCarouselNew" class="carousel slide" data-bs-ride="carousel" style=" overflow: hidden;">
+                                                <div class="carousel-inner">
+                                                    <div class="carousel-item">
+                                                        <img alt="" height="574px" style="" class="img-fluid" loading="lazy" src="./img/DN-advance/Chart-one.png">
+                                                    </div>
+                                                    <div class="carousel-item">
+                                                        <img alt="" height="574px" style="" class="img-fluid" loading="lazy" src="./img/DN-advance/chart-two.png">
+                                                    </div>
+                                                    <div class="carousel-item active">
+                                                        <img alt="" height="574px" style="" class="img-fluid" loading="lazy" src="./img/DN-advance/chart-three.png">
+                                                    </div>
+                                                    <div class="carousel-item">
+                                                        <img alt="" height="574px" style="" class="img-fluid" loading="lazy" src="./img/DN-advance/chart-four.png">
+                                                    </div>
+                                                </div>
+
+                                                <!-- Carousel Controls -->
+                                                <a class="carousel-control-prev text-dark" data-bs-slide="prev" href="#featureCarouselNew" role="button">
+                                                    <span aria-hidden="true" class="carousel-control-prev-icon" style="width: 30px; height: 30px;">
+                                                        <img alt="arrow" width="30" height="30" class="img-fluid" loading="lazy" src="./img/new-add-img/lefty.png">
+                                                    </span>
+                                                    <!-- <span class="sr-only">Previous</span> -->
+                                                </a>
+
+                                                <a class="carousel-control-next text-dark" data-bs-slide="next" href="#featureCarouselNew" role="button">
+                                                    <span aria-hidden="true" class="carousel-control-next-icon" style="width: 30px; height: 30px;">
+                                                        <img alt="arrow" width="30" height="30" class="img-fluid" loading="lazy" src="./img/new-add-img/righty.png">
+                                                    </span>
+                                                    <span class="visually-hidden">Next</span>
+                                                </a>
+
+                                            </div>
+                                        </div>
+                                        <!-- -->
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row mx-auto my-lg-4 px-md-5 px-2 my-2 py-5">
+                                <div class="col-lg-6">
+                                    <div class="d-flex justify-content-center align-items-center flex-column">
+                                        <div class="mb-3 w-100 text-center d-flex justify-content-center align-items-center" style="min-height: 300px; padding: 24px; background-color: #E0F7FA; border-radius: 15px;">
+                                            <img alt="gif" style="height: 258px;" class="img-fluid" height="258" width="448" loading="lazy" src="./img/DN-advance/dn-advance-1.png">
+                                        </div>
+
+                                        <h2 class="text-start w-100 mb-0" style="color: #060506; font-size: calc(1.1rem + 1vw); font-weight: 500;">
+                                            Enhanced Connectivity
+                                        </h2>
+                                        <p class="mt-3 text-start" style="color: #5C5F6E; font-size: 16px; font-weight: 400;line-height: 24px">
+                                            With our latest update, you can effortlessly fetch data from external
+                                            PostgreSQL and MySQL databases by establishing secure connections and
+                                            external API(Beta Version). Streamline your data access and make informed
+                                            decisions with ease.
+                                        </p>
+                                    </div>
+
+                                </div>
+
+                                <div class="col-lg-6">
+                                    <div class="d-flex justify-content-center align-items-center flex-column" style="min-height: 300px;">
+                                        <div class="mb-3 w-100 text-center d-flex justify-content-center align-items-center" style="min-height: 300px; padding: 24px; background-color: #E0F7FA; border-radius: 15px;">
+                                            <img alt="gif" class="img-fluid" loading="lazy" height="250" width="448" style="height: 258px;" src="./img/DN-advance/dn-advance-2.png">
+                                        </div>
+
+                                        <h2 class="text-start w-100" style="color: #060506; font-size: calc(1.1rem + 1vw); font-weight: 500;">
+                                            Print Dashboard&nbsp;PDF
+                                        </h2>
+                                        <p class="mt-3 text-start" style="color: #5C5F6E; font-size: 16px; font-weight: 400;line-height: 24px">
+                                            To club the data of Multiple models in a single dashboard item, a user can
+                                            use the Custom SQL Query. Create unlimited data combinations, configure
+                                            stacked charts, and filter the data using the Dynamic Date Filter option.
+                                        </p>
+                                    </div>
+
+                                </div>
+
+                                <div class="row mx-auto px-md-5 mt-2 pt-2 justify-content-center">
+                                    <div class="col-12">
+                                        <h2 style="color: #171618; text-align: center; font-size: calc(1.1rem + 1vw); font-weight: 600; line-height: 45px;">
+                                            New Layouts For ListView
+                                        </h2>
+                                        <p style="text-align: center;">
+                                            New Layouts for ListView allows a user to present vertically stacked data
+                                            with an engaging User
+                                            <br class="d-lg-block d-none"> Interface. Sort and Filter the collected data
+                                            into multiple columns with 3 amazing layouts.
+                                        </p>
+                                    </div>
+                                    <div class="row">
+
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div style="padding: 20px; border-radius: 10px; border: 1px solid #E5E7EB;margin-bottom: 16px;">
+                                            <!-- <img alt="gif" class="img-fluid w-100" loading="lazy"
+                        src="./ai-img/generate_item.gif"> -->
+                                            <!-- <video class="img-fluid w-100 h-100" style="left: 0; box-shadow: 0px 0px 25px 0px #00000040;
+                    border: 5px solid #4C5562;
+                    border-radius: 20px;" autoplay="" muted="" loop="">
+                                                <source src="./img/new-add-img/generate-ai-modal.mp4" type="video/mp4">
+                                                Your browser does not support the video tag.
+                                            </video> -->
+                                            <img src="./img/DN-advance/layout-one.png" loading="lazy" class="img-fluid" alt="">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div style="padding: 20px; border-radius: 10px; border: 1px solid #E5E7EB;margin-bottom: 16px;">
+                                        <img src="./img/DN-advance/layout-two.png" loading="lazy" class="img-fluid" alt="">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div style="padding: 20px; border-radius: 10px; border: 1px solid #E5E7EB;">
+                                            <img src="./img/DN-advance/layout-three.png" loading="lazy" class="img-fluid" alt="">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row mx-auto my-lg-4 px-md-5 px-2 my-2 py-5" style="background-color: #FAFAFA;">
+                                <div class="col-12">
+                                    <h2 style="color: #171618; text-align: center; font-size: calc(1.1rem + 1vw); font-weight: 600; line-height: 45px;">
+                                        Custom SQL Query
+                                    </h2>
+                                    <p style="text-align: center;">
+                                        To club the data of Multiple models in a single dashboard item, a user can use
+                                        the Custom SQL Query. Create <br class="d-lg-block d-none">unlimited data
+                                        combinations, configure stacked charts, and filter the data using the Dynamic
+                                        Date Filter option.
+                                    </p>
+                                </div>
+                                <div class="col-12">
+                                    <div style="padding: 20px 25px; border-radius: 10px;">
+                                        <img alt="gif" style="border-radius: 20px;" class="img-fluid w-100" loading="lazy" src="./img/DN-advance/new-query.png">
+                                    </div>
+                                </div>
+                            </div>
+
+                            
+
+                        <div class="row mx-auto my-lg-4 px-md-5 px-2 my-2 py-5" style="background-color: #FAFAFA;">
+                            <div class="col-12">
+                                <h2 class="text-center" style="color: #171618; font-size: calc(1.1rem + 1vw); font-weight: 600; line-height: 45px;">
+                                    Send Email
+                                </h2>
+                                <p class="text-center">
+                                    Send Email is a unique feature that makes it easy for users to share their
+                                    dashboards with Pre-specified users via <br class="d-lg-block d-none">email. This
+                                    feature allows users to send dashboard snapshots PDFs as email to selected
+                                    recipients.
+                                </p>
+                            </div>
+                            <div class="col-12">
+                                <div style="padding: 20px 25px; border-radius: 10px;">
+                                    <img alt="gif" class="img-fluid w-100" loading="lazy" src="./img/DN-advance/Send-email.png">
+                                </div>
+                            </div>
+                        </div>
+
+
+                    </div>
+                    <!-- commented for future use -->
+                    <div class=" pt-lg-3 pb-1" id="free_support" style=" border-radius: 20px;">
+                        <div class="row px-md-5 p-2 mx-auto d-flex align-items-center justify-content-center">
+                            <div class="col-lg-6 mb-lg-0 mb-4">
+                                <h3 class="mb-3" style="font-weight: 600; font-size: 30px; line-height: 45px; color: #171618;">
+                                    Free <span style="color: #E84A5F;">90 Days</span> Support</h3>
+                                <p style="color: #5C5F6E;font-size: 16px;font-weight: 500;line-height: 24px;font-family: 'Poppins', sans-serif;">
+                                    Ksolves will provide FREE 90 days support for any doubt, queries, and bug fixing
+                                    (excluding data recovery) or any type of issues related to this module. This is
+                                    applicable from the date of purchase.
+                                </p>
+                                <div class="mt-4" style=" width:fit-content;background-color: #E0F7FA; border-radius: 10px;padding: 8px; color:#5C5F6E; font-weight: 500; font-size: 16px;">
+                                    <span style="font-weight: 700;">Note:</span> Extensively Tested on Odoo Vanilla
+                                    with Ubuntu OS
+                                </div>
+                            </div>
+                            <div class="col-lg-6 d-flex justify-content-center">
+                                <img src="./img/DN-advance/dn-support.png" class="img-fluid" alt="">
+                            </div>
+                        </div>
+                        <!-- <div class="row d-flex align-items-center justify-content-center m-0">
+                                <div class="col-12 p-0 pt-4 overflow-hidden text-center">
+                                    <p
+                                        style="font-style: normal;font-weight: 500;font-size: 18px;line-height: 28px;letter-spacing: 0.01em;color: #535456;margin: 0;">
+                                        <span
+                                            style="font-style: normal;font-weight: 600;font-size: 24px;line-height: 28px;letter-spacing: 0.01em;color: #283C63;margin: 0 10px 0 0;">Note</span>
+                                        Extensively Tested on Odoo Vanilla with Ubuntu OS
+                                    </p>
+                                </div>
+                            </div> -->
+                    </div>
+
+                </div>
+                <div aria-labelledby="why-ks-tab" class="tab-pane fade py-1" id="why-ks" role="tabpanel">
+                    <div class="position-relative d-flex flex-column justify-content-center align-items-center" style="border-radius: 30px;height: 279px;display: flex;justify-content: center;align-items: center;flex-direction: column;">
+                        <img src="./img/new-add-img/why-ksolves-bg.png" alt="why-ksolves" class="img-fluid w-100 h-100 position-absolute">
+                        <h5 class="position-relative " style=" font-family: 'Inter', sans-serif; font-weight: 600;font-size: 30px;line-height: 45px;color: #171618; text-align: center;  font-family: 'Inter', sans-serif; font-size: calc(0.93rem + 1vw);">
+                            Why
+                            <span style="color: #E84A5F;">Ksolves</span>
+                        </h5>
+                        <p class="position-relative d-lg-block d-none" style="
+ font-weight: 500;
+ font-size: 20px;
+ line-height: 155.19%;
+ text-align: center;
+ /* margin-bottom: 95px; */
+ font-family: 'Poppins', sans-serif;
+ color: #5C5F6E;
+ ">
+                            You know us as the&nbsp;makers of the Odoo "Dashboard Ninja"&nbsp;.
+                            .
+                        </p>
+                        <p class="position-relative d-lg-none d-block" style="font-weight: 500;font-size: 20px;line-height: 155.19%;text-align: center; margin-bottom: 20px; font-family: 'Poppins', sans-serif;
+                            color: #5C5F6E;">
+                            You know us as the&nbsp;makers of the Odoo "Dashboard Ninja"&nbsp;.
+                            .
+                        </p>
+
+
+                    </div>
+
+                    <div class="row px-0 pt-5 pb-2 justify-content-center d-lg-flex d-none" style="">
+                        <div class="col-10">
+
+
+                           <div class="row px-0 py-5">
+                <div class="col-lg-3 col-sm-6">
+                  <div>
+                    <img src="//apps.odoocdn.com/apps/assets/18.0/ks_dashboard_ninja/img/new-add-img/tinified/CMMI.png?96cdf96" class="img-fluid" alt="">
+                  </div>
+                </div>
+                <div class="col-lg-3 col-sm-6">
+                  <div>
+                    <img src="//apps.odoocdn.com/apps/assets/18.0/ks_dashboard_ninja/img/new-add-img/tinified/odoo-gold.png?96cdf96" class="img-fluid" alt="">
+                  </div>
+                </div>
+                <div class="col-lg-3 col-sm-6">
+                  <div>
+                    <img src="//apps.odoocdn.com/apps/assets/18.0/ks_dashboard_ninja/img/new-add-img/tinified/expert.png?96cdf96" class="img-fluid" alt="">
+                  </div>
+                </div>
+                <div class="col-lg-3 col-sm-6">
+                  <div>
+                    <img src="//apps.odoocdn.com/apps/assets/18.0/ks_dashboard_ninja/img/new-add-img/tinified/12-years.png?96cdf96" class="img-fluid" alt="">
+                  </div>
+                </div>
+                <div class="col-lg-3 col-sm-6">
+                  <div>
+                    <img src="//apps.odoocdn.com/apps/assets/18.0/ks_dashboard_ninja/img/new-add-img/tinified/client-retention.png?96cdf96" class="img-fluid" alt="">
+                  </div>
+                </div>
+                <div class="col-lg-3 col-sm-6">
+                  <div>
+                    <img src="//apps.odoocdn.com/apps/assets/18.0/ks_dashboard_ninja/img/new-add-img/tinified/ecom-development.png?96cdf96" class="img-fluid" alt="">
+                  </div>
+                </div>
+                <div class="col-lg-3 col-sm-6">
+                  <div>
+                    <img src="//apps.odoocdn.com/apps/assets/18.0/ks_dashboard_ninja/img/new-add-img/tinified/odoo-customization.png?96cdf96" class="img-fluid" alt="">
+                  </div>
+                </div>
+                <div class="col-lg-3 col-sm-6">
+                  <div>
+                    <img src="//apps.odoocdn.com/apps/assets/18.0/ks_dashboard_ninja/img/new-add-img/tinified/odoo-mobile.png?96cdf96" class="img-fluid" alt="">
+                  </div>
+                </div>
+                <div class="col-lg-3 col-sm-6">
+                  <div>
+                    <img src="//apps.odoocdn.com/apps/assets/18.0/ks_dashboard_ninja/img/new-add-img/tinified/24-7-support.png?96cdf96" class="img-fluid" alt="">
+                  </div>
+                </div>
+              </div>
+                        </div>
+
+                    </div>
+
+                    <div class="row px-0 py-5 justify-content-center d-lg-none d-flex">
+
+                        <div class="col-md-6">
+                            <div>
+                                <img src="./img/new-add-img/tinified/nse-bse.png" class="img-fluid" alt="">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+
+                            <div>
+                                <img src="./img/new-add-img/tinified/CMMI.png" class="img-fluid" alt="">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div>
+                                <img src="./img/new-add-img/tinified/odoo-gold.png" class="img-fluid" alt="">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div>
+                                <img src="./img/new-add-img/tinified/expert.png" class="img-fluid" alt="">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+
+                            <div>
+                                <img src="./img/new-add-img/tinified/12-years.png" class="img-fluid" alt="">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+
+                            <div>
+                                <img src="./img/new-add-img/tinified/client-retention.png" class="img-fluid" alt="">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+
+                            <div>
+                                <img src="./img/new-add-img/tinified/ecom-development.png" class="img-fluid" alt="">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div>
+                                <img src="./img/new-add-img/tinified/odoo-customization.png" class="img-fluid" alt="">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div>
+                                <img src="./img/new-add-img/tinified/odoo-mobile.png" class="img-fluid" alt="">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div>
+                                <img src="./img/new-add-img/tinified/24-7-support.png" class="img-fluid" alt="">
+                            </div>
+                        </div>
+
+
+
+
+
+                    </div>
+
+
+
+
+
+                    <div class="my-3 px-lg-5 p-3">
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="row">
+                                    <div class="col-12 mb-4 pb-1">
+                                        <h3 class="mb-2 text-center" style="font-weight: 600; font-size: 30px; color: #171618;">
+                                            <span style="color: #E84A5F;">Client</span> Success
+                                        </h3>
+                                        <p class="text-center" style="font-size: 16px; font-weight: 500; color: #5C5F6E;
+                                            ">
+                                            Invest your trust like our elite clientele did!
+                                        </p>
+                                    </div>
+                                    <div class="col-xl-3 col-lg-4 col-6 mb-4">
+                                        <div class="d-flex justify-content-center align-items-center h-100" style="box-shadow: 0px 2.73px 16.38px 0px #00000005;
+border: 1px solid #E5E7EB;border-radius: 8px; min-height: 127px; background-color: #FAFAFA;">
+                                            <img height="105" width="187" src="./img/new-add-img/tinified/cs-1.png" class="img-fluid" alt="">
+                                        </div>
+                                    </div>
+                                    <div class="col-xl-3 col-lg-4 col-6 mb-4">
+                                        <div class="d-flex justify-content-center align-items-center  h-100" style="box-shadow: 0px 2.73px 16.38px 0px #00000005;
+border: 1px solid #E5E7EB;border-radius: 8px; min-height: 127px; background-color: #FAFAFA;">
+                                            <img height="80" width="209" src="./img/new-add-img/tinified/cs-2.png" class="img-fluid" alt="">
+                                        </div>
+                                    </div>
+                                    <div class="col-xl-3 col-lg-4 col-6 mb-4">
+                                        <div class="d-flex justify-content-center align-items-center  h-100" style="box-shadow: 0px 2.73px 16.38px 0px #00000005;
+border: 1px solid #E5E7EB;border-radius: 8px; min-height: 127px; background-color: #FAFAFA;">
+                                            <img height="80" width="209" src="./img/new-add-img/tinified/cs-3.png" class="img-fluid" alt="">
+                                        </div>
+                                    </div>
+                                    <div class="col-xl-3 col-lg-4 col-6 mb-4">
+                                        <div class="d-flex justify-content-center align-items-center h-100" style="box-shadow: 0px 2.73px 16.38px 0px #00000005;
+border: 1px solid #E5E7EB;border-radius: 8px; min-height: 127px; background-color: #FAFAFA;">
+                                            <img height="80" width="209" src="./img/new-add-img/tinified/cs-4.png" class="img-fluid" alt="">
+                                        </div>
+                                    </div>
+                                    <div class="col-xl-3 col-lg-4 col-6 mb-4">
+                                        <div class="d-flex justify-content-center align-items-center  h-100" style="box-shadow: 0px 2.73px 16.38px 0px #00000005;
+border: 1px solid #E5E7EB;border-radius: 8px; min-height: 127px; background-color: #FAFAFA;">
+                                            <img height="80" width="209" src="./img/new-add-img/tinified/cs-5.png" class="img-fluid" alt="">
+                                        </div>
+                                    </div>
+                                    <div class="col-xl-3 col-lg-4 col-6 mb-4">
+                                        <div class="d-flex justify-content-center align-items-center h-100" style="box-shadow: 0px 2.73px 16.38px 0px #00000005;
+border: 1px solid #E5E7EB;border-radius: 8px; min-height: 127px; background-color: #FAFAFA;">
+                                            <img height="80" width="209" src="./img/new-add-img/tinified/cs-6.png" class="img-fluid" alt="">
+                                        </div>
+                                    </div>
+                                    <div class="col-xl-3 col-lg-4 col-6 mb-4">
+                                        <div class="d-flex justify-content-center align-items-center h-100" style="box-shadow: 0px 2.73px 16.38px 0px #00000005;
+border: 1px solid #E5E7EB;border-radius: 8px; min-height: 127px; background-color: #FAFAFA;">
+                                            <img height="80" width="209" src="./img/new-add-img/tinified/cs-7.png" class="img-fluid" alt="">
+                                        </div>
+                                    </div>
+                                    <div class="col-xl-3 col-lg-4 col-6 mb-4">
+                                        <div class="d-flex justify-content-center align-items-center h-100" style="box-shadow: 0px 2.73px 16.38px 0px #00000005;
+border: 1px solid #E5E7EB;border-radius: 8px; min-height: 127px; background-color: #FAFAFA;">
+                                            <img height="80" width="209" src="./img/new-add-img/tinified/cs-8.png" class="img-fluid" alt="">
+                                        </div>
+                                    </div>
+                                    <div class="col-xl-3 col-lg-4 col-6 mb-4">
+                                        <div class="d-flex justify-content-center align-items-center h-100" style="box-shadow: 0px 2.73px 16.38px 0px #00000005;
+border: 1px solid #E5E7EB;border-radius: 8px; min-height: 127px; background-color: #FAFAFA;">
+                                            <img height="80" width="209" src="./img/new-add-img/tinified/cs-9.png" class="img-fluid" alt="">
+                                        </div>
+                                    </div>
+                                    <div class="col-xl-3 col-lg-4 col-6 mb-4">
+                                        <div class="d-flex justify-content-center align-items-center h-100" style="box-shadow: 0px 2.73px 16.38px 0px #00000005;
+border: 1px solid #E5E7EB;border-radius: 8px; min-height: 127px; background-color: #FAFAFA;">
+                                            <img height="80" width="209" src="./img/new-add-img/tinified/cs-10.png" class="img-fluid" alt="">
+                                        </div>
+                                    </div>
+                                    <div class="col-xl-3 col-lg-4 col-6 mb-4">
+                                        <div class="d-flex justify-content-center align-items-center h-100" style="box-shadow: 0px 2.73px 16.38px 0px #00000005;
+border: 1px solid #E5E7EB;border-radius: 8px; min-height: 127px; background-color: #FAFAFA;">
+                                            <img height="80" width="209" src="./img/new-add-img/tinified/cs-11.png" class="img-fluid" alt="">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="position-relative" style="background-color: #FAFAFA; border-radius: 30px;">
+                        <img src="./img/new-add-img/product-blend.png" alt="product-blens" class="img-fluid w-100 h-100 position-absolute">
+                        <h1 class="position-relative pt-lg-5 pt-3" style="font-weight: 600;font-size: 30px;line-height: 155.19%;color: #252525; text-align: center;   font-size: calc(0.93rem + 1vw);  font-family: 'Inter', sans-serif;color: #171618;">
+                            <span style="color: #E84A5F;">Products</span> That Blends Together
+                        </h1>
+                        <p class="position-relative" style="font-weight: 500;font-size: 16px;line-height: 155.19%;text-align: center; margin-bottom: 30px; font-family: 'Inter', sans-serif;color: #5C5F6E;">
+                            Related Products You May Be Interested In!
+                        </p>
+                        <div class="d-xl-flex d-none position-relative row mx-auto" style="
+                            justify-content: center;
+                        ">
+                            <div class="col-4 offset-xl-6 mb-4 px-0"><img src="./img/new-add-img/arrow.png" height="87" width="280" alt="indicator"></div>
+
+                        </div>
+                        <div class="position-relative row justify-content-center mb-lg-4 mb-3 pb-3">
+                            <div class="table-responsive col-lg-9 col-10">
+                                <table class="table w-100" style="--bs-body-bg:transparent !important;">
+                                    <tbody><tr>
+                                        <!--  -->
+                                        <td style="border:none;">
+                                            <div style="border: 2px solid #B98D8D;border-radius: 16px; background-color: #fff; overflow: hidden;">
+                                                <table class="w-100">
+                                                    <tbody>
+                                                        <tr>
+                                                            <td class="text-center" style="padding: 0.5rem; border: none;">
+                                                                <a class="d-block bg-white p-4 text-center mx-auto" href="https://apps.odoo.com/apps/modules/15.0/ks_dashboard_ninja/" style="border-radius: 10px;width: 180px;min-height: 248px; text-decoration: none;" target="_blank">
+                                                                    <img alt="logo" src="./img/new-add-img/slide-1.png" height="119" width="119" class="img-fluid" style="border-radius: 10px;">
+                                                                    <div class="mt-3" style="color: #171618;font-size: 16px;font-weight: 600;">
+                                                                        Dashboard <br> Ninja with AI
+                                                                    </div>
+                                                                </a>
+                                                            </td>
+                                                            <td class="text-center" style="padding: 0.5rem;  border: none; vertical-align: middle;font-size: 20px;color: #333;font-weight: 700;">
+                                                                <img src="./img/new-add-img/square.png" width="30" height="30" alt="add">
+                                                            </td>
+                                                            <td class="text-center" style="padding: 0.5rem;border: none;">
+                                                                <a class="d-block bg-white p-4 text-center mx-auto" href="https://apps.odoo.com/apps/themes/14.0/ks_curved_backend_theme/" style="border-radius: 10px;width: 180px;min-height: 248px; text-decoration: none;" target="_blank">
+                                                                    <img alt="logo" height="119" src="./img/new-add-img/slide-2.png" style="border-radius: 10px;" width="119">
+                                                                    <div class="mt-3" style="color: #333;font-size: 16px;font-weight: 600;">
+                                                                        Arc Theme <br> Backend
+                                                                    </div>
+                                                                </a>
+                                                            </td>
+                                                            <td class="text-center" style="padding: 0.5rem; vertical-align: middle;font-size: 20px;color: #333;font-weight: 700;border: none;">
+                                                                <img src="./img/new-add-img/square.png" width="30" height="30" alt="add">
+                                                            </td>
+                                                            <td class="text-center" style="padding: 0.5rem;border: none;">
+                                                                <a class="d-block bg-white p-4 text-center mx-auto" href="https://apps.odoo.com/apps/modules/15.0/ks_gantt_view_base/" style="border-radius: 10px;width: 180px;min-height: 195px; text-decoration: none;" target="_blank">
+                                                                    <img alt="logo" height="119" src="./img/new-add-img/product-3.png" style="border-radius: 10px;" width="119">
+                                                                    <div class="mt-3" style="color: #171618;font-size: 16px;font-weight: 600;">
+                                                                        Odoo Gantt <br> View Base
+                                                                    </div>
+                                                                </a>
+                                                            </td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </td>
+                                        <!--  -->
+                                        <td class="text-center" style="padding: 0.5rem; vertical-align: middle;font-size: 20px;color:  #333;font-weight: 700;border: none;">
+                                            <img class="img-fluid" src="./img/new-add-img/equals-to.png" alt="" height="8" width="24">
+                                        </td>
+                                        <td class="text-center" style="padding: 0.5rem; border: none;">
+                                            <div class="d-block bg-white p-4 text-center mx-auto" style="border-radius: 16px;width: 180px;min-height: 264px;border: 2px solid #B98D8D;">
+                                                <img alt="logo" height="120" width="120" src="./img/new-add-img/slide-3.png" style="border-radius: 10px;">
+                                                <div class="mt-3" style="color: #171618;font-size: 16px;font-weight: 600;">
+                                                    Perfect Combo
+                                                </div>
+                                            </div>
+                                        </td>
+
+                                    </tr>
+                                </tbody></table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mx-auto px-md-5 py-lg-5 p-2">
+                        <div class="col-xl-6 col-12 mb-3">
+                            <div class="d-flex flex-column justify-content-center h-100">
+                                <h3 class="mb-3" style="font-weight: 600;font-size: 30px;color: #0B0D0E;line-height: 50px;">
+                                    <span style="color: #E84A5F;">Ksolves</span> Suggested Apps
+                                </h3>
+                                <p style="font-size: 16px;color: #838696;font-weight: 400; line-height: 25px;">
+                                    Take a look at our other Odoo apps designed to <br class="d-xl-block d-none">
+                                    make your life easier with a
+                                    smooth workflow. Don’t <br class="d-xl-block d-none"> miss the chance to uplift
+                                    your Odoo ERP experience <br class="d-xl-block d-none"> with
+                                    our apps!
+                                </p>
+                            </div>
+                        </div>
+                        <!-- 1 -->
+                        <div class="col-xl-3 col-lg-4 col-md-6 col-12 mb-3">
+                            <div class="flex-column h-100 d-flex" style="box-shadow: 0px 3.69px 22.12px 0px #00000005;
+border: 2px solid #E5E7EB;border-radius: 22px; padding: 28px 20px; background-color: #FAFAFA;min-height: 243px">
+                                <div class="mb-3 d-flex align-items-center justify-content-between">
+                                    <h4 class="me-3 mb-0" style="font-weight: 600;font-size: 16px; line-height: 24px; color: #171618;">
+                                        Dashboard Ninja <br class="d-lg-block d-none"> Advance
+                                    </h4>
+                                    <div>
+                                        <img src="./img/new-add-img/tinified/suggest-1.png" class="img-fluid" height="61" width="61" alt="">
+                                    </div>
+                                </div>
+                                <p class="mb-2 flex-grow-1" style="color: #838696; font-size: 12px; font-weight: 400;line-height: 20px; ">
+                                    Dashboard Ninja Advance breaks all the limitations of productivity by
+                                    simplifying
+                                    complex data into attractive charts... </p>
+                                <a href="https://apps.odoo.com/apps/modules/18.0/ks_dn_advance" target="_blank" style="font-size: 14px;font-weight: 500;color: #E84A5F; line-height: 21px;text-decoration: none;">Learn
+                                    More
+                                    <span><img src="./img/new-add-img/arrow-right.png" alt="arrow-right" height="14" width="14"></span>
+                                </a>
+                            </div>
+                        </div>
+                        <!-- 2 -->
+                        <div class="col-xl-3 col-lg-4 col-md-6 col-12 mb-3">
+                            <div class="flex-column h-100 d-flex " style="box-shadow: 0px 3.69px 22.12px 0px #00000005;
+border: 2px solid #E5E7EB;border-radius: 22px; padding: 28px 20px; background-color: #FAFAFA;">
+                                <div class="mb-3 d-flex align-items-center justify-content-between">
+                                    <h4 class="me-3 mb-0" style="font-weight: 600;font-size: 16px; line-height: 24px; color: #171618;">
+                                        List View <br class="d-lg-block d-none"> Manager
+                                    </h4>
+                                    <div>
+                                        <img src="./img/new-add-img/tinified/suggest-2.png" class="img-fluid" height="61" width="61" alt="">
+                                    </div>
+                                </div>
+                                <p class="mb-2 flex-grow-1" style="color: #838696; font-size: 12px; font-weight: 400;line-height: 20px; min-height: 100px;">
+                                    An app which manages the List Views on the fly and endeavor a quick and
+                                    effortless way to view/manage the desired data, where you’ve multifarious
+                                    options to... </p>
+                                <a href="https://apps.odoo.com/apps/modules/17.0/ks_list_view_manager" target="_blank" style="font-size: 14px;font-weight: 500;color: #E84A5F; line-height: 21px;text-decoration: none;">Learn
+                                    More
+                                    <span><img src="./img/new-add-img/arrow-right.png" alt="arrow-right" height="14" width="14"></span>
+                                </a>
+                            </div>
+                        </div>
+                        <!-- 3 -->
+                        <div class="col-xl-3 col-lg-4 col-md-6 col-12 mb-3">
+                            <div class="flex-column h-100 d-flex" style="box-shadow: 0px 3.69px 22.12px 0px #00000005;
+border: 2px solid #E5E7EB;border-radius: 22px; padding: 28px 20px; background-color: #FAFAFA;">
+                                <div class="mb-3 d-flex align-items-center justify-content-between">
+                                    <h4 class="me-3 mb-0" style="font-weight: 600;font-size: 16px; line-height: 24px; color: #171618;">
+                                        Odoo <br class="d-lg-block d-none"> Wocommerce <br class="d-lg-block d-none">
+                                        Connector
+                                    </h4>
+                                    <div>
+                                        <img src="./img/new-add-img/tinified/suggest-3.png" class="img-fluid" height="61" width="61" alt="">
+                                    </div>
+                                </div>
+                                <p class="mb-2 flex-grow-1" style="color: #838696; font-size: 12px; font-weight: 400;line-height: 20px; min-height: 100px;">
+                                    Connect multiple WooCommerce stores to the Odoo ERP and reach more customers
+                                    with our high-end WooCommerce Connector. </p>
+                                <a href="https://apps.odoo.com/apps/modules/17.0/ks_list_view_manager" target="_blank" style="font-size: 14px;font-weight: 500;color: #E84A5F; line-height: 21px;text-decoration: none;">Learn
+                                    More
+                                    <span><img src="./img/new-add-img/arrow-right.png" alt="arrow-right" height="14" width="14"></span>
+                                </a>
+                            </div>
+                        </div>
+                        <!-- 4 -->
+                        <div class="col-xl-3 col-lg-4 col-md-6 col-12 mb-3">
+                            <div class="flex-column h-100 d-flex" style="box-shadow: 0px 3.69px 22.12px 0px #00000005;
+border: 2px solid #E5E7EB;border-radius: 22px; padding: 28px 20px; background-color: #FAFAFA;">
+                                <div class="mb-3 d-flex align-items-center justify-content-between">
+                                    <h4 class="me-3 mb-0" style="font-weight: 600;font-size: 16px; line-height: 24px; color: #171618;">
+                                        Arc Backend <br class="d-lg-block d-none"> Theme
+                                    </h4>
+                                    <div>
+                                        <img src="./img/new-add-img/tinified/suggest-4.png" class="img-fluid" height="61" width="61" alt="">
+                                    </div>
+                                </div>
+                                <p class="mb-2 flex-grow-1" style="color: #838696; font-size: 12px; font-weight: 400;line-height: 20px; min-height: 100px;">
+                                    Bring productivity and enthusiasm into your work by applying the Odoo Arc
+                                    Backend Theme. </p>
+                                <a href="https://apps.odoo.com/apps/themes/14.0/ks_curved_backend_theme" target="_blank" style="font-size: 14px;font-weight: 500;color: #E84A5F; line-height: 21px;text-decoration: none;">Learn
+                                    More
+                                    <span><img src="./img/new-add-img/arrow-right.png" alt="arrow-right" height="14" width="14"></span>
+                                </a>
+                            </div>
+                        </div>
+                        <!-- 5 -->
+                        <div class="col-xl-3 col-lg-4 col-md-6 col-12 mb-3">
+                            <div class="flex-column h-100 d-flex" style="box-shadow: 0px 3.69px 22.12px 0px #00000005;
+border: 2px solid #E5E7EB;border-radius: 22px; padding: 28px 20px; background-color: #FAFAFA;">
+                                <div class="mb-3 d-flex align-items-center justify-content-between">
+                                    <h4 class="me-3 mb-0" style="font-weight: 600;font-size: 16px; line-height: 24px; color: #171618;">
+                                        Odoo Gantt <br class="d-lg-block d-none"> View Base
+                                    </h4>
+                                    <div>
+                                        <img src="./img/new-add-img/tinified/suggest-5.png" class="img-fluid" height="61" width="61" alt="">
+                                    </div>
+                                </div>
+                                <p class="mb-2 flex-grow-1" style="color: #838696; font-size: 12px; font-weight: 400;line-height: 20px; min-height: 100px;">
+                                    Gantt View Base is the fundamental framework that creates the groundwork for
+                                    using Gantt View. It works as a prerequisite for using... </p>
+                                <a href="https://apps.odoo.com/apps/modules/15.0/ks_gantt_view_base" target="_blank" style="font-size: 14px;font-weight: 500;color: #E84A5F; line-height: 21px;text-decoration: none;">Learn
+                                    More
+                                    <span><img src="./img/new-add-img/arrow-right.png" alt="arrow-right" height="14" width="14"></span>
+                                </a>
+                            </div>
+                        </div>
+                        <!-- 6 -->
+                        <div class="col-xl-3 col-lg-4 col-md-6 col-12 mb-3">
+                            <div class="flex-column h-100 d-flex" style="box-shadow: 0px 3.69px 22.12px 0px #00000005;
+border: 2px solid #E5E7EB;border-radius: 22px; padding: 28px 20px; background-color: #FAFAFA;">
+                                <div class="mb-3 d-flex align-items-center justify-content-between">
+                                    <h4 class="me-3 mb-0" style="font-weight: 600;font-size: 16px; line-height: 24px; color: #171618;">
+                                        Report <br class="d-lg-block d-none"> Mate
+                                    </h4>
+                                    <div>
+                                        <img src="./img/new-add-img/tinified/suggest-6.png" class="img-fluid" height="61" width="61" alt="">
+                                    </div>
+                                </div>
+                                <p class="mb-2 flex-grow-1" style="color: #838696; font-size: 12px; font-weight: 400;line-height: 20px; min-height: 100px;">
+                                    ReportMate extracts all the needed information for all the fields of any Odoo
+                                    Model and displays complex data in a single view...</p>
+                                <a href="https://apps.odoo.com/apps/modules/13.0/ks_custom_report" target="_blank" style="font-size: 14px;font-weight: 500;color: #E84A5F; line-height: 21px;text-decoration: none;">Learn
+                                    More
+                                    <span><img src="./img/new-add-img/arrow-right.png" alt="arrow-right" height="14" width="14"></span>
+                                </a>
+                            </div>
+                        </div>
+                        <!-- 7 -->
+                        <div class="col-xl-3 col-lg-4 col-md-6 col-12 mb-3">
+                            <div class="flex-column h-100 d-flex" style="box-shadow: 0px 3.69px 22.12px 0px #00000005;
+border: 2px solid #E5E7EB;border-radius: 22px; padding: 28px 20px; background-color: #FAFAFA;">
+                                <div class="mb-3 d-flex align-items-center justify-content-between">
+                                    <h4 class="me-3 mb-0" style="font-weight: 600;font-size: 16px; line-height: 24px; color: #171618;">
+                                        Dynamic <br class="d-lg-block d-none"> Financial <br class="d-lg-block d-none">
+                                        Report
+                                    </h4>
+                                    <div>
+                                        <img src="./img/new-add-img/tinified/suggest-7.png" class="img-fluid" height="61" width="61" alt="">
+                                    </div>
+                                </div>
+                                <p class="mb-2 flex-grow-1" style="color: #838696; font-size: 12px; font-weight: 400;line-height: 20px; min-height: 100px;">
+                                    With a comprehensive list of financial reports, Dynamic Financial Report has
+                                    carved out its niche among the elite bookkeeping...</p>
+                                <a href="https://apps.odoo.com/apps/modules/12.0/ks_dynamic_financial_report" target="_blank" style="font-size: 14px;font-weight: 500;color: #E84A5F; line-height: 21px;text-decoration: none;">Learn
+                                    More
+                                    <span><img src="./img/new-add-img/arrow-right.png" alt="arrow-right" height="14" width="14"></span>
+                                </a>
+                            </div>
+                        </div>
+                        <!-- 8 -->
+                        <div class="col-xl-3 col-lg-4 col-md-6 col-12 mb-3">
+                            <div class="flex-column h-100 d-flex" style="box-shadow: 0px 3.69px 22.12px 0px #00000005;
+border: 2px solid #E5E7EB;border-radius: 22px; padding: 28px 20px; background-color: #FAFAFA;">
+                                <div class="mb-3 d-flex align-items-center justify-content-between">
+                                    <h4 class="me-3 mb-0" style="font-weight: 600;font-size: 16px; line-height: 24px; color: #171618;">
+                                        Odoo Shopify <br class="d-lg-block d-none"> Connector
+                                    </h4>
+                                    <div>
+                                        <img src="./img/new-add-img/tinified/suggest-9.png" class="img-fluid" height="61" width="61" alt="">
+                                    </div>
+                                </div>
+                                <p class="mb-2 flex-grow-1" style="color: #838696; font-size: 12px; font-weight: 400;line-height: 20px; min-height: 100px;">
+                                    Keep hurdles away from the way of your business with a highly effective
+                                    eCommerce management solution...</p>
+                                <a href="https://apps.odoo.com/apps/modules/15.0/ks_shopify" target="_blank" style="font-size: 14px;font-weight: 500;color: #E84A5F; line-height: 21px;text-decoration: none;">Learn
+                                    More
+                                    <span><img src="./img/new-add-img/arrow-right.png" alt="arrow-right" height="14" width="14"></span>
+                                </a>
+                            </div>
+                        </div>
+                        <!-- 9 -->
+                        <div class="col-xl-3 col-lg-4 col-md-6 col-12 mb-3">
+                            <div class="flex-column h-100 d-flex" style="box-shadow: 0px 3.69px 22.12px 0px #00000005;
+border: 2px solid #E5E7EB;border-radius: 22px; padding: 28px 20px; background-color: #FAFAFA;">
+                                <div class="mb-3 d-flex align-items-center justify-content-between">
+                                    <h4 class="me-3 mb-0" style="font-weight: 600;font-size: 16px; line-height: 24px; color: #171618;">
+                                        Access Manager <br class="d-lg-block d-none"> Ninja
+                                    </h4>
+                                    <div>
+                                        <img src="./img/new-add-img/tinified/suggest-10.png" class="img-fluid" height="61" width="61" alt="">
+                                    </div>
+                                </div>
+                                <p class="mb-2 flex-grow-1" style="color: #838696; font-size: 12px; font-weight: 400;line-height: 20px; min-height: 100px;">
+                                    Streamline your workflow and save valuable time and effort by implementing
+                                    Instant Access, a cutting-edge management application...</p>
+                                <a href="https://apps.odoo.com/apps/modules/18.0/ks_access_manager_ninja" target="_blank" style="font-size: 14px;font-weight: 500;color: #E84A5F; line-height: 21px;text-decoration: none;">Learn
+                                    More
+                                    <span><img src="./img/new-add-img/arrow-right.png" alt="arrow-right" height="14" width="14"></span>
+                                </a>
+                            </div>
+                        </div>
+                        <!-- 10 -->
+                        <div class="col-xl-3 col-lg-4 col-md-6 col-12 mb-3">
+                            <div class="flex-column d-flex h-100" style="box-shadow: 0px 3.69px 22.12px 0px #00000005;
+border: 2px solid #E5E7EB;border-radius: 22px; padding: 28px 20px; background-color: #FAFAFA;">
+                                <div class="mb-3 d-flex align-items-center justify-content-between">
+                                    <h4 class="me-3 mb-0" style="font-weight: 600;font-size: 16px; line-height: 24px; color: #171618;">
+                                        Odoo Gmail <br class="d-lg-block d-none"> Connector
+                                    </h4>
+                                    <div>
+                                        <img src="./img/new-add-img/tinified/suggest-11.png" class="img-fluid" height="61" width="61" alt="">
+                                    </div>
+                                </div>
+                                <p class="mb-2 flex-grow-1" style="color: #838696; font-size: 12px; font-weight: 400;line-height: 20px; min-height: 100px;">
+                                    Sync all your Google mails in your Odoo account without any hassle by using the
+                                    Ksolves Gmail Connector! This integration allows you to manage emails...</p>
+                                <a href="https://apps.odoo.com/apps/modules/18.0/ks_odoo_gmail_connector" target="_blank" style="font-size: 14px;font-weight: 500;color: #E84A5F; line-height: 21px;text-decoration: none;">Learn
+                                    More
+                                    <span><img src="./img/new-add-img/arrow-right.png" alt="arrow-right" height="14" width="14"></span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mx-auto px-md-5 py-lg-5 p-2" style="background-color: #F5EFFF;">
+                        <div class="col-12 mb-lg-5 pb-lg-4 mb-3 pb-2 ">
+                            <h1 class="position-relative pt-3" style="font-weight: 600;font-size: 30px;line-height: 155.19%;color: #252525; text-align: center;   font-size: calc(0.93rem + 1vw);  font-family: 'Inter', sans-serif;color: #171618;">
+                                <span style="color: #E84A5F;">Ksolves </span> Odoo Services
+                            </h1>
+                            <p class="position-relative" style="font-weight: 500;font-size: 16px;line-height: 155.19%;text-align: center; margin-bottom: 30px; font-family: 'Inter', sans-serif;color: #5C5F6E;">
+                                Upscale your business with expert services from an Odoo Gold Partner.
+                            </p>
+                        </div>
+                        <div class="col-12">
+                            <div class="row mx-auto" style="row-gap: 24x;">
+                                <!-- 1 -->
+                                <div class="col-lg-4 col-md-6 col-12">
+                                    <div class="d-flex flex-column justify-content-center align-items-center">
+                                        <img src="./img/new-add-img/tinified/s1.png" alt="" height="178" width="184" class="img-fluid" loading="lazy">
+                                        <p class="text-center mt-3" style="font-weight: 500; font-size: 18px; color: #000000; line-height: 30px;">
+                                            Website Application <br> Development
+                                        </p>
+                                    </div>
+                                </div>
+                                <!-- 2 -->
+                                <div class="col-lg-4 col-md-6 col-12">
+                                    <div class="d-flex flex-column justify-content-center align-items-center">
+                                        <img src="./img/new-add-img/tinified/s2.png" alt="" height="178" width="184" class="img-fluid" loading="lazy">
+                                        <p class="text-center mt-3" style="font-weight: 500; font-size: 18px; color: #000000; line-height: 30px;">
+                                            Module Development
+                                        </p>
+                                    </div>
+                                </div>
+                                <!-- 3 -->
+                                <div class="col-lg-4 col-md-6 col-12">
+                                    <div class="d-flex flex-column justify-content-center align-items-center">
+                                        <img src="./img/new-add-img/tinified/s3.png" alt="" height="178" width="184" class="img-fluid" loading="lazy">
+                                        <p class="text-center mt-3" style="font-weight: 500; font-size: 18px; color: #000000; line-height: 30px;">
+                                            Theme Development
+                                        </p>
+                                    </div>
+                                </div>
+                                <!-- 4 -->
+                                <div class="col-lg-4 col-md-6 col-12">
+                                    <div class="d-flex flex-column justify-content-center align-items-center">
+                                        <img src="./img/new-add-img/tinified/s4.png" alt="" height="178" width="184" class="img-fluid" loading="lazy">
+                                        <p class="text-center mt-3" style="font-weight: 500; font-size: 18px; color: #000000; line-height: 30px;">
+                                            Implementation
+                                        </p>
+                                    </div>
+                                </div>
+                                <!-- 5 -->
+                                <div class="col-lg-4 col-md-6 col-12">
+                                    <div class="d-flex flex-column justify-content-center align-items-center">
+                                        <img src="./img/new-add-img/tinified/s5.png" alt="" height="178" width="184" class="img-fluid" loading="lazy">
+                                        <p class="text-center mt-3" style="font-weight: 500; font-size: 18px; color: #000000; line-height: 30px;">
+                                            Customization
+                                        </p>
+                                    </div>
+                                </div>
+                                <!-- 6 -->
+                                <div class="col-lg-4 col-md-6 col-12">
+                                    <div class="d-flex flex-column justify-content-center align-items-center">
+                                        <img src="./img/new-add-img/tinified/s6.png" alt="" height="178" width="184" class="img-fluid" loading="lazy">
+                                        <p class="text-center mt-3" style="font-weight: 500; font-size: 18px; color: #000000; line-height: 30px;">
+                                            Integration
+                                        </p>
+                                    </div>
+                                </div>
+                                <!-- 7 -->
+                                <div class="col-lg-4 col-md-6 col-12">
+                                    <div class="d-flex flex-column justify-content-center align-items-center">
+                                        <img src="./img/new-add-img/tinified/s7.png" alt="" height="178" width="184" class="img-fluid" loading="lazy">
+                                        <p class="text-center mt-3" style="font-weight: 500; font-size: 18px; color: #000000; line-height: 30px;">
+                                            Migration
+                                        </p>
+                                    </div>
+                                </div>
+                                <!-- 8 -->
+                                <div class="col-lg-4 col-md-6 col-12">
+                                    <div class="d-flex flex-column justify-content-center align-items-center">
+                                        <img src="./img/new-add-img/tinified/s8.png" alt="" height="178" width="184" class="img-fluid" loading="lazy">
+                                        <p class="text-center mt-3" style="font-weight: 500; font-size: 18px; color: #000000; line-height: 30px;">
+                                            Support &amp; <br> Maintenance
+                                        </p>
+                                    </div>
+                                </div>
+                                <!-- 9 -->
+                                <div class="col-lg-4 col-md-6 col-12">
+                                    <div class="d-flex flex-column justify-content-center align-items-center">
+                                        <img src="./img/new-add-img/tinified/s9.png" alt="" height="178" width="184" class="img-fluid" loading="lazy">
+                                        <p class="text-center mt-3" style="font-weight: 500; font-size: 18px; color: #000000; line-height: 30px;">
+                                            Consulting
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mx-auto px-md-5 py-lg-5 p-2">
+                        <div class="col-12 mb-lg-4 mb-2 ">
+                            <h1 class="position-relative pt-3" style="font-weight: 600;font-size: 30px;line-height: 155.19%;color: #252525; text-align: center;   font-size: calc(0.93rem + 1vw);  font-family: 'Inter', sans-serif;color: #171618;">
+                                What our
+                                <span style="color: #E84A5F;"> Clients </span> say
+                            </h1>
+                            <p class="position-relative" style="font-weight: 500;font-size: 16px;line-height: 155.19%;text-align: center; margin-bottom: 30px; font-family: 'Inter', sans-serif;color: #5C5F6E;">
+                                Our clients love us! Hear from those who have made data-driven decisions with
+                                Dashboard Ninja.
+                            </p>
+                        </div>
+                        <!-- new-carousel -->
+                        <div class="col-12 mb-3 pb-3">
+                  <div class="row px-3">
+                    <div class="col-lg-6">
+                      <div class="testimonial-card d-flex flex-column" style="background-color:#fafafa; padding:32px 24px; border-radius:22px; border:1px solid #e5e7eb; min-height:295px">
+                        <h4 class="mb-3" style="font-size:22px; line-height:29px; color:#171618; font-weight:600; font-family:'poppins', sans-serif">
+                          Satisfy with support
+                        </h4>
+                        <p style="font-size:16px; font-weight:400; font-family:'poppins', sans-serif; color:#5c5f6e" class="flex-grow-1">
+                          Exceptional application and outstanding customer care
+                          indeed. My experience with them was truly remarkable,
+                          and I highly recommend their services to anyone
+                          looking for top-tier solutions.
+                        </p>
+                        <div class="d-flex align-items-center justify-content-between">
+                          <div style="font-family:'poppins', sans-serif; font-size:20px; font-weight:500; color:#0b0d0e">
+                            kashif aziz
+                          </div>
+                          <div>
+                            <img src="//apps.odoocdn.com/apps/assets/18.0/ks_dashboard_ninja/img/new-add-img/tinified/ratings-new.png?69e9f73?96cdf96" alt="">
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-lg-6">
+                      <div class="testimonial-card d-flex flex-column" style="background-color:#fafafa; padding:32px 24px; border-radius:22px; border:1px solid #e5e7eb; min-height:295px">
+                        <h4 class="mb-3" style="font-size:22px; line-height:29px; color:#171618; font-weight:600; font-family:'poppins', sans-serif">
+                          Very helpful and patient
+                        </h4>
+                        <p style="font-size:16px; font-weight:400; font-family:'poppins', sans-serif; color:#5c5f6e" class="flex-grow-1">
+                          They were very easy to schedule time with and when I
+                          got on the call, they answered all my questions. They
+                          also understood beyond my questions and showed me some
+                          features that would help me.
+                        </p>
+                        <div class="d-flex align-items-center justify-content-between">
+                          <div style="font-family:'poppins', sans-serif; font-size:20px; font-weight:500; color:#0b0d0e">
+                            Ryan Felps
+                          </div>
+                          <div>
+                            <img src="//apps.odoocdn.com/apps/assets/18.0/ks_dashboard_ninja/img/new-add-img/tinified/ratings-new.png?69e9f73?96cdf96" alt="">
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                        <!-- end -->
+                    </div>
+                    <div class="row mx-auto px-md-5 p-2 py-lg-5" style="background-color: #FAFAFA;">
+                        <div class="text-center py-1">
+
+                            <h3 style="
+              font-size: 30px;
+              line-height: 45px;
+              color: #171618;
+              margin-bottom: 18px;
+              font-weight: 600;
+              font-family: 'poppins', sans-serif;
+              text-align: center;
+            ">
+                                Connect with us for <span style="color: #E84A5F;">free demo</span> today!
+                            </h3>
+                            <p style="font-family: 'Inter', sans-serif;font-weight: 400;font-size: 20px;line-height: 30px;text-align: center;">
+                                Ksolves is 24/7 open to discuss your thoughts and queries!
+                            </p>
+                            <img alt="" class="img-fluid mb-3" loading="lazy" src="./img/new-add-img/updated-map.png">
+                            <div class="text-center">
+                                <div class="row d-flex align-items-center justify-content-center" style="margin-top: 10px">
+                                    <div class="col-lg-4 col-md-5 col-sm-9 col-11">
+                                        <div class="d-flex flex-column align-items-center">
+                                            <h5 style="font-size: 20px; font-weight: 500; color: #1F2A37; line-height: 30px;" class="mb-2">Support</h5>
+                                            <p style="font-weight: 400; font-size: 16px;color: #475467;line-height: 24px;" class="mb-3">
+                                                Our friendly team is here to help.</p>
+                                            <a class="d-flex align-items-center justify-content-center px-2 py-3" href="mailto:sales@ksolves.com" style="
+                            text-decoration: none;
+                            font-style: normal;
+                            font-weight: 600;
+                            line-height: 24px;
+                            font-size: 16px;
+                            color: #285D54;
+                            height: 45px;
+                          ">
+                                                support@ksolves.com</a>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-4 col-md-5 col-sm-9 col-11">
+                                        <div class="d-flex flex-column align-items-center">
+                                            <h5 style="font-size: 20px; font-weight: 500; color: #1F2A37; line-height: 30px;" class="mb-2">Sales</h5>
+                                            <p style="font-weight: 400; font-size: 16px;color: #475467;line-height: 24px;" class="mb-3">
+                                                Questions or queries? Get in touch!</p>
+                                            <a class="d-flex align-items-center justify-content-center px-2 py-3" href="mailto:sales@ksolves.com" style="
+                            text-decoration: none;
+                            font-style: normal;
+                            font-weight: 600;
+                            line-height: 24px;
+                            font-size: 16px;
+                            color: #285D54;
+                            height: 45px;
+                          ">
+                                                <!-- <img alt="mail-icon"
+                                                        class="img-fluid pe-2 ps-2 me-xl-2 me-lg-0 me-2"
+                                                        loading="lazy"
+                                                        src="./img/mail.png" /> -->
+                                                sales@ksolves.com</a>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-4 col-md-5 col-sm-9 col-11 mt-md-0 mt-2">
+                                        <div class="d-flex flex-column align-items-center">
+                                            <h5 style="font-size: 20px; font-weight: 500; color: #1F2A37; line-height: 30px;" class="mb-2">Phone</h5>
+                                            <p style="font-weight: 400; font-size: 16px;color: #475467;line-height: 24px;" class="mb-3">
+                                                Mon-Fri from 9am to 6:30pm.</p>
+                                            <a class="d-flex align-items-center justify-content-center px-2 py-3" href="tel:+91-8527471031" style="
+                            text-decoration: none;
+                            font-style: normal;
+                            font-weight: 600;
+                            line-height: 24px;
+                            font-size: 16px;
+                            color: #285D54;
+                            height: 45px;
+                          ">
+                                                <!-- <img alt="mail-icon"
+                                                        class="img-fluid pe-2 ps-2 me-xl-2 me-lg-0 me-2"
+                                                        loading="lazy"
+                                                        src="./img/mail.png" /> -->
+                                                +91-8527471031</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div aria-labelledby="faq-tab" class="tab-pane fade show" id="faq" role="tabpanel">
+                    <div class="position-relative d-flex flex-column justify-content-center align-items-center" style="border-radius: 30px; height: 279px; display: flex; justify-content: center; align-items: center;flex-direction: column;">
+                        <img src="./img/new-add-img/why-ksolves-bg.png" alt="why-ksolves" class="img-fluid w-100 h-100 position-absolute">
+                        <h5 class="position-relative" style=" font-family: 'Inter', sans-serif; font-weight: 600;font-size: 30px;line-height: 45px;color: #171618; text-align: center;  font-family: 'Inter', sans-serif; font-size: calc(0.93rem + 1vw);">
+                            Frequently Asked Questions
+                        </h5>
+                        <p class="position-relative" style="font-weight: 500;font-size: 20px;line-height: 155.19%;text-align: center; margin-bottom: 30px; font-family: 'Poppins', sans-serif;
+ color: #5C5F6E;">
+                            Sometimes you need a quick answer to your <br> question. You can get it right away here.
+                        </p>
+
+
+                    </div>
+                    <div class="row px-md-5 p-2">
+                        <div class="col-12">
+                            <div class="d-flex align-items-start justify-content-start flex-column" style="gap: 23px;">
+                                <div class="tab-content w-100 mb-3">
+                                    <!-- General FAQ -->
+                                    <div class="tab-pane fade active show" id="faq-1" role="tabpanel" aria-labelledby="general-tab" style="padding: 34px 39px; border: 1px solid #E5E7EB; background-color: #FAFAFA; border-radius: 22px;">
+                                        <div class="w-100">
+                                            <div aria-expanded="false" class="card-header collapsed" data-bs-toggle="collapse" href="#collapseFAQOne" style="background-color:transparent; border:none; border-top:1px solid #E8E8E8">
+                                                <a class="card-title text-decoration-none d-flex align-content-center justify-content-between mb-0 cursor-pointer" style="font-size:18px; line-height:30px; font-weight:500; color: #4F4F4F;">
+
+                                                    Is this app compatible with Odoo Enterprise?
+
+                                                    <img alt="" class="float-right pt-2" src="./img/new-add-img/down-arrow.svg">
+                                                </a>
+                                            </div>
+                                            <div id="collapseFAQOne" class="accordion-collapse collapse" style="background-color: rgb(244, 245, 246);" aria-labelledby="headingOne" data-bs-parent="#accordion6">
+                                                <div class="accordion-body" style="font-size: 14px; font-weight: 400; line-height: 21px; letter-spacing: -0.04em; text-align: left; color: #0B0D0E; padding: 5px 24px 12px 26px;">
+
+                                                    Yes, our app works with Odoo Enterprise as well as Community.
+
+                                                </div>
+                                            </div>
+
+
+                                            <div aria-expanded="false" class="card-header collapsed" data-bs-toggle="collapse" href="#collapseFAQTwo" style="background-color:transparent; border:none; border-top:1px solid #E8E8E8">
+                                                <a class="card-title text-decoration-none d-flex align-content-center justify-content-between mb-0 cursor-pointer" style="font-size:18px; line-height:30px; font-weight:500; color: #4F4F4F;">
+
+                                                    Need some customization in this app, whom to contact?
+
+                                                    <img alt="" class="float-right pt-2" src="./img/new-add-img/down-arrow.svg">
+                                                </a>
+                                            </div>
+                                            <div id="collapseFAQTwo" class="accordion-collapse collapse" style="background-color: rgb(244, 245, 246);" aria-labelledby="headingTwo" data-bs-parent="#accordion6">
+                                                <div class="accordion-body" style=" font-size: 14px; font-weight: 400; line-height: 21px; letter-spacing: -0.04em; text-align: left; color: #0B0D0E; padding: 5px 24px 12px 26px;">
+
+                                                    Please drop email at sales@ksolves.com or raise a ticket through
+                                                    Odoo store itself.
+
+                                                </div>
+                                            </div>
+
+
+                                            <div aria-expanded="false" class="card-header collapsed" data-bs-toggle="collapse" href="#collapseFAQThree" style="background-color:transparent; border:none; border-top:1px solid #E8E8E8">
+                                                <a class="card-title text-decoration-none d-flex align-content-center justify-content-between mb-0 cursor-pointer" style="font-size:18px; line-height:30px; font-weight:500; color: #4F4F4F;">
+
+                                                    Do you provide any free support?
+
+                                                    <img alt="" class="float-right pt-2" src="./img/new-add-img/down-arrow.svg">
+                                                </a>
+                                            </div>
+                                            <div id="collapseFAQThree" class="accordion-collapse collapse" style="background-color: rgb(244, 245, 246);" aria-labelledby="headingThree" data-bs-parent="#accordion6">
+                                                <div class="accordion-body" style=" font-size: 14px; font-weight: 400; line-height: 21px; letter-spacing: -0.04em; text-align: left; color: #0B0D0E; padding: 5px 24px 12px 26px;">
+
+                                                    Yes, we do provide free support for 90 days for any queries or any
+                                                    bug/issue
+                                                    fixing.
+                                                </div>
+                                            </div>
+
+
+                                            <div aria-expanded="false" class="card-header collapsed" data-bs-toggle="collapse" href="#collapseFAQFour" style="background-color:transparent; border:none; border-top:1px solid #E8E8E8">
+                                                <a class="card-title text-decoration-none d-flex align-content-center justify-content-between mb-0 cursor-pointer" style="font-size:18px; line-height:30px; font-weight:500; color: #4F4F4F;">
+
+                                                    Is it possible to create Dashboard item from data of two or more
+                                                    models?
+
+                                                    <img alt="" class="float-right pt-2" src="./img/new-add-img/down-arrow.svg">
+                                                </a>
+                                            </div>
+                                            <div id="collapseFAQFour" class="accordion-collapse collapse" style="background-color: rgb(244, 245, 246);" aria-labelledby="headingFour" data-bs-parent="#accordion6">
+                                                <div class="accordion-body" style=" font-size: 14px; font-weight: 400; line-height: 21px; letter-spacing: -0.04em; text-align: left; color: #0B0D0E; padding: 5px 24px 12px 26px;">
+
+                                                    Yes, It is possible to create Dashboard item from data of two
+                                                    different models
+                                                    with Sql Query feature
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- <div class="d-flex align-items-start justify-content-start flex-wrap gap-3 mb-4">
+                                        <a href="#faq-1" class="gap-1 d-flex align-items-center justify-content-center"
+                                            style="padding: 14px 15px; font-family: Poppins; font-size: 16.99px; font-weight: 500; line-height: 22.66px; letter-spacing: -0.04em; text-decoration: none; color: #0B0D0E; border-radius: 11px;">
+                                            <img src="./img/new-add-img/tinified/icons-black-file.png" alt="icon"
+                                                width="19" height="17">
+                                            General
+                                        </a>
+                                        <a href="#faq-2" class="gap-1 d-flex align-items-center justify-content-center"
+                                            style="padding: 14px 15px; font-family: Poppins; font-size: 16.99px; font-weight: 500; line-height: 22.66px; letter-spacing: -0.04em; text-decoration: none; color: #0B0D0E; border-radius: 11px;">
+                                            <img src="./img/new-add-img/tinified/icons-black-file.png" alt="icon"
+                                                width="19" height="17">
+                                            Artificial Intelligence
+                                        </a>
+                                        <a href="#faq-3" class="gap-1 d-flex align-items-center justify-content-center"
+                                            style="padding: 14px 15px; font-family: Poppins; font-size: 16.99px; font-weight: 500; line-height: 22.66px; letter-spacing: -0.04em; text-decoration: none; color: #0B0D0E; border-radius: 11px;">
+                                            <img src="./img/new-add-img/tinified/icons-black-file.png" alt="icon"
+                                                width="19" height="17">
+                                            Charts
+                                        </a>
+                                        <a href="#faq-4" class="gap-1 d-flex align-items-center justify-content-center"
+                                            style="padding: 14px 15px; font-family: Poppins; font-size: 16.99px; font-weight: 500; line-height: 22.66px; letter-spacing: -0.04em; text-decoration: none; color: #0B0D0E; border-radius: 11px;">
+                                            <img src="./img/new-add-img/tinified/icons-black-file.png" alt="icon"
+                                                width="19" height="17">
+                                            Data Sources
+                                        </a>
+                                        <a href="#faq-5" class="gap-1 d-flex align-items-center justify-content-center"
+                                            style="padding: 14px 15px; font-family: Poppins; font-size: 16.99px; font-weight: 500; line-height: 22.66px; letter-spacing: -0.04em; text-decoration: none; color: #0B0D0E; border-radius: 11px;">
+                                            <img src="./img/new-add-img/tinified/icons-black-file.png" alt="icon"
+                                                width="19" height="17">
+                                            Filters &amp; Group By
+                                        </a>
+                                        <a href="#faq-6" class="gap-1 d-flex align-items-center justify-content-center"
+                                            style="padding: 14px 15px; font-family: Poppins; font-size: 16.99px; font-weight: 500; line-height: 22.66px; letter-spacing: -0.04em; text-decoration: none; color: #0B0D0E; border-radius: 11px;">
+                                            <img src="./img/new-add-img/tinified/icons-black-file.png" alt="icon"
+                                                width="19" height="17">
+                                            Access Rights
+                                        </a>
+                                    </div> -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div aria-labelledby="releases-tab" class="tab-pane fade show" id="releases" role="tabpanel">
+                    <div class="position-relative mb-4 d-flex flex-column justify-content-center align-items-center" style="border-radius: 30px; height: 279px; display: flex; justify-content: center; align-items: center;flex-direction: column;">
+                        <img src="./img/new-add-img/why-ksolves-bg.png" alt="why-ksolves" class="img-fluid w-100 h-100 position-absolute">
+                        <h5 class="position-relative" style=" font-family: 'Inter', sans-serif; font-weight: 600;font-size: 30px;line-height: 45px;color: #171618; text-align: center;  font-family: 'Inter', sans-serif; font-size: calc(0.93rem + 1vw);">
+                            Dashboard Ninja Releases
+                        </h5>
+                        <p class="position-relative" style="font-weight: 500;font-size: 20px;line-height: 155.19%;text-align: center; margin-bottom: 30px; font-family: 'Poppins', sans-serif;
+ color: #5C5F6E;">
+                            Every update brings new capabilities. Keep track of the latest features and <br class="d-lg-block d-none"> enhancements
+                            designed to visualize and analyze your data like a pro.
+                        </p>
+
+
+                    </div>
+                    <div class="py-2 px-md-5 p-2">
+                        <div style="background-color: #FAFAFA; border: 2px solid #E5E7EB;box-shadow: 0px 3.68px 22.05px 0px rgba(0, 0, 0, 0.02); padding: 20px 31px; border-radius: 22px; margin-bottom: 37px;">
+                            <div class="row">
+                                <div class="col-1">
+                                </div>
+                                <div class="col-11">
+                                    <div style="margin-top: -35px; margin-right: 60px;">
+                                        <div style="background-color: #6789C6;
+                                            font-size: 18px;
+                                            font-weight: 500;
+                                            line-height: 27px;
+                                            letter-spacing: -0.05em;
+                                            text-align: left; color: #FFFFFF; display: inline;
+                                            padding: 5px 15px;
+                                            border-radius: 30px;
+                                            ">
+
+                                          Fix
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-lg-1">
+                                    <div class="w-100">
+                                        <img src="./img/new-add-img/tinified/file-img.png" alt="img" width="100" height="100" class="img-fluid" loading="lazy">
+                                    </div>
+                                </div>
+                                <div class="col-lg-11">
+                                    <h5 class="mt-2" style="
+                                        font-size: 22px;
+                                        font-weight: 500;
+                                        line-height: 33px;
+                                        letter-spacing: -0.05em;
+                                        text-align: left; color: #0B0D0E;
+                                        ">
+                                        Latest Release 1.1.6 <span style="color: #7A7979;
+                                            font-size: 16px;
+                                            font-weight: 500;
+                                            line-height: 24px;
+                                            letter-spacing: -0.05em;
+                                            text-align: left;
+                                            ">(5th December, 2025)</span>
+                                    </h5>
+                                    <ul style="color: #5C5F6E;
+                                        font-size: 14.7px;
+                                        font-weight: 400;
+                                        line-height: 22.05px;
+                                        letter-spacing: -0.02em;
+                                        text-align: left;
+                                        ">
+                                        <li>
+                                            Custom Date Filter issue was fixed.
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="background-color: #FAFAFA; border: 2px solid #E5E7EB;box-shadow: 0px 3.68px 22.05px 0px rgba(0, 0, 0, 0.02); padding: 20px 31px; border-radius: 22px; margin-bottom: 37px;">
+                            <div class="row">
+                                <div class="col-1">
+                                </div>
+                                <div class="col-11">
+                                    <div style="margin-top: -35px; margin-right: 60px;">
+                                        <div style="background-color: #6789C6;
+                                            font-size: 18px;
+                                            font-weight: 500;
+                                            line-height: 27px;
+                                            letter-spacing: -0.05em;
+                                            text-align: left; color: #FFFFFF; display: inline;
+                                            padding: 5px 15px;
+                                            border-radius: 30px;
+                                            ">
+
+                                          Improvements & Fixes
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-lg-1">
+                                    <div class="w-100">
+                                        <img src="./img/new-add-img/tinified/file-img.png" alt="img" width="100" height="100" class="img-fluid" loading="lazy">
+                                    </div>
+                                </div>
+                                <div class="col-lg-11">
+                                    <h5 class="mt-2" style="
+                                        font-size: 22px;
+                                        font-weight: 500;
+                                        line-height: 33px;
+                                        letter-spacing: -0.05em;
+                                        text-align: left; color: #0B0D0E;
+                                        ">
+                                       Release 1.1.5 <span style="color: #7A7979;
+                                            font-size: 16px;
+                                            font-weight: 500;
+                                            line-height: 24px;
+                                            letter-spacing: -0.05em;
+                                            text-align: left;
+                                            ">(29th September, 2025)</span>
+                                    </h5>
+                                    <ul style="color: #5C5F6E;
+                                        font-size: 14.7px;
+                                        font-weight: 400;
+                                        line-height: 22.05px;
+                                        letter-spacing: -0.02em;
+                                        text-align: left;
+                                        ">
+                                        <li>
+
+                                            Code refactored.
+
+                                        </li>
+                                        <li>
+                                            Date range issue was fixed.
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="background-color: #FAFAFA; border: 2px solid #E5E7EB;box-shadow: 0px 3.68px 22.05px 0px rgba(0, 0, 0, 0.02); padding: 20px 31px; border-radius: 22px; margin-bottom: 37px;">
+                            <div class="row">
+                                <div class="col-1">
+                                </div>
+                                <div class="col-11">
+                                    <div style="margin-top: -35px; margin-right: 60px;">
+                                        <div style="background-color: #6789C6;
+                                            font-size: 18px;
+                                            font-weight: 500;
+                                            line-height: 27px;
+                                            letter-spacing: -0.05em;
+                                            text-align: left; color: #FFFFFF; display: inline;
+                                            padding: 5px 15px;
+                                            border-radius: 30px;
+                                            ">
+
+                                          Improvements
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-lg-1">
+                                    <div class="w-100">
+                                        <img src="./img/new-add-img/tinified/file-img.png" alt="img" width="100" height="100" class="img-fluid" loading="lazy">
+                                    </div>
+                                </div>
+                                <div class="col-lg-11">
+                                    <h5 class="mt-2" style="
+                                        font-size: 22px;
+                                        font-weight: 500;
+                                        line-height: 33px;
+                                        letter-spacing: -0.05em;
+                                        text-align: left; color: #0B0D0E;
+                                        ">
+                                        Release 1.1.3 <span style="color: #7A7979;
+                                            font-size: 16px;
+                                            font-weight: 500;
+                                            line-height: 24px;
+                                            letter-spacing: -0.05em;
+                                            text-align: left;
+                                            ">(14th February, 2025)</span>
+                                    </h5>
+                                    <ul style="color: #5C5F6E;
+                                        font-size: 14.7px;
+                                        font-weight: 400;
+                                        line-height: 22.05px;
+                                        letter-spacing: -0.02em;
+                                        text-align: left;
+                                        ">
+                                        <li>
+
+                                            Code restructured based on odoo-owl standards and code break fixes.
+
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="background-color: #FAFAFA; border: 2px solid #E5E7EB;box-shadow: 0px 3.68px 22.05px 0px rgba(0, 0, 0, 0.02); padding: 20px 31px; border-radius: 22px; margin-bottom: 37px;">
+                            <div class="row">
+                                <div class="col-1">
+                                </div>
+                                <div class="col-11">
+                                    <div style="margin-top: -35px; margin-right: 60px;">
+                                        <div style="background-color: #6789C6;
+                                            font-size: 18px;
+                                            font-weight: 500;
+                                            line-height: 27px;
+                                            letter-spacing: -0.05em;
+                                            text-align: left; color: #FFFFFF; display: inline;
+                                            padding: 5px 15px;
+                                            border-radius: 30px;
+                                            ">
+
+                                            New Version
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-lg-1">
+                                    <div class="w-100">
+                                        <img src="./img/new-add-img/tinified/file-img.png" alt="img" width="100" height="100" class="img-fluid" loading="lazy">
+                                    </div>
+                                </div>
+                                <div class="col-lg-11">
+                                    <h5 class="mt-2" style="
+                                        font-size: 22px;
+                                        font-weight: 500;
+                                        line-height: 33px;
+                                        letter-spacing: -0.05em;
+                                        text-align: left; color: #0B0D0E;
+                                        ">
+                                        Release 1.0.0 <span style="color: #7A7979;
+                                            font-size: 16px;
+                                            font-weight: 500;
+                                            line-height: 24px;
+                                            letter-spacing: -0.05em;
+                                            text-align: left;
+                                            ">(21st October, 2024)</span>
+                                    </h5>
+                                    <ul style="color: #5C5F6E;
+                                        font-size: 14.7px;
+                                        font-weight: 400;
+                                        line-height: 22.05px;
+                                        letter-spacing: -0.02em;
+                                        text-align: left;
+                                        ">
+                                        <li>
+
+                                            Latest version 18 release of Dashboard ninja advance.
+
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- <div class="p-md-4 p-2 mb-3" id="features" style="border-radius: 20px; font-family: 'Inter', sans-serif;">
+
+
+            </div> -->
+        <section>
+
+
+            <!-- <div class="" id="all_suggested-app"
+                    style="margin-top: 42px; border-radius: 20px;  padding-top: 41px; padding-bottom: 30px;">
+                    <h5 class="text-center"
+                        style="color: #2B5FB2; font-weight: 700; font-size: 32px; line-height:43px; margin-bottom: 25px; font-size: calc(1.5rem + 0.4vw); font-family: 'Inter', sans-serif;">
+                        <span style="color:#333333; font-family: 'Inter', sans-serif;">Ksolves Suggested Apps</span>
+                    </h5>
+                    <div class="row d-flex align-items-center justify-content-center">
+                        <div class="col-11 pt-lg-3 px-lg-5 pb-lg-2 p-md-4 p-3 position-relative overflow-hidden"
+                            style="border-radius: 10px; background-color: #fffefd;">
+                            <div class="row position-relative"
+                                style="color: #333333; font-weight: 500; font-size: 16px; ">
+
+                                <div class="col-sm-6 col-lg-4 col-xl-4 mb-3 pe-lg-0 pe-sm-1">
+                                    <a href="https://apps.odoo.com/apps/modules/15.0/ks_dashboard_ninja/"
+                                        style="text-decoration:none" target="_blanck">
+                                        <div class="d-flex  align-items-center h-100 bg-white px-3 py-3"
+                                            style="border: 1px solid #EFECEC;border-radius: 8px;">
+                                            <div style="width:100px;">
+                                                <img alt="icon" height="100" loading="lazy"
+                                                    src="./img/support/Dashboard-Ninja.png" width="100">
+                                            </div>
+                                            <div class="w-100 ps-3">
+                                                <p class="mb-0"
+                                                    style="font-style: normal;font-weight: 500;font-size: 15px;line-height: 150%;text-indent: 2px;color: #535456;">
+                                                    Dashboard Ninja
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </div>
+
+                                <div class="col-sm-6 col-lg-4 col-xl-4 mb-3 pe-lg-0 pe-sm-1">
+                                    <a href="https://apps.odoo.com/apps/modules/15.0/ks_dn_advance/"
+                                        style="text-decoration:none" target="_blanck">
+                                        <div class="d-flex  align-items-center h-100 bg-white px-3 py-3"
+                                            style="border: 1px solid #EFECEC;border-radius: 8px;">
+                                            <div style="width:100px;">
+                                                <img alt="icon" height="100" loading="lazy"
+                                                    src="./img/support/Dashboard-Ninja-Advance.png" width="100">
+                                            </div>
+                                            <div class="w-100 ps-3">
+                                                <p class="mb-0"
+                                                    style="font-style: normal;font-weight: 500;font-size: 15px;line-height: 150%;text-indent: 2px;color: #535456;">
+                                                    Dashboard Ninja Advance
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </div>
+
+                                <div class="col-sm-6 col-lg-4 col-xl-4 mb-3 pe-lg-0 pe-sm-1">
+                                    <a href="https://apps.odoo.com/apps/modules/15.0/ks_woocommerce/"
+                                        style="text-decoration:none" target="_blanck">
+                                        <div class="d-flex  align-items-center h-100 bg-white px-3 py-3"
+                                            style="border: 1px solid #EFECEC;border-radius: 8px;">
+                                            <div style="width:100px;">
+                                                <img alt="icon" height="100" loading="lazy"
+                                                    src="./img/support/Odoo-WooCommerce.png" width="100">
+                                            </div>
+                                            <div class="w-100 ps-3">
+                                                <p class="mb-0"
+                                                    style="font-style: normal;font-weight: 500;font-size: 15px;line-height: 150%;text-indent: 2px;color: #535456;">
+                                                    Odoo WooCommerce Connector
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </div>
+
+                                <div class="col-sm-6 col-lg-4 col-xl-4 mb-3 pe-lg-0 pe-sm-1">
+                                    <a href="https://apps.odoo.com/apps/themes/14.0/ks_curved_backend_theme/"
+                                        style="text-decoration:none" target="_blanck">
+                                        <div class="d-flex  align-items-center h-100 bg-white px-3 py-3"
+                                            style="border: 1px solid #EFECEC;border-radius: 8px;">
+                                            <div style="width:100px;">
+                                                <img alt="icon" height="100" loading="lazy"
+                                                    src="./img/support/arc-backend-theme.png" width="100">
+                                            </div>
+                                            <div class="w-100 ps-3">
+                                                <p class="mb-0"
+                                                    style="font-style: normal;font-weight: 500;font-size: 15px;line-height: 150%;text-indent: 2px;color: #535456;">
+                                                    Arc Backend Theme
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </div>
+
+                                <div class="col-sm-6 col-lg-4 col-xl-4 mb-3 pe-lg-0 pe-sm-1">
+                                    <a href="https://apps.odoo.com/apps/modules/15.0/ks_gantt_view_base/"
+                                        style="text-decoration:none" target="_blanck">
+                                        <div class="d-flex  align-items-center h-100 bg-white px-3 py-3"
+                                            style="border: 1px solid #EFECEC;border-radius: 8px;">
+                                            <div style="width:100px;">
+                                                <img alt="icon" height="100" loading="lazy"
+                                                    src="./img/support/odoo-base.png" width="100">
+                                            </div>
+                                            <div class="w-100 ps-3">
+                                                <p class="mb-0"
+                                                    style="font-style: normal;font-weight: 500;font-size: 15px;line-height: 150%;text-indent: 2px;color: #535456;">
+                                                    Odoo Gantt View Base
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </div>
+
+                                <div class="col-sm-6 col-lg-4 col-xl-4 mb-3 pe-lg-0 pe-sm-1">
+                                    <a href="https://apps.odoo.com/apps/modules/15.0/ks_list_view_manager/"
+                                        style="text-decoration:none" target="_blanck">
+                                        <div class="d-flex  align-items-center h-100 bg-white px-3 py-3"
+                                            style="border: 1px solid #EFECEC;border-radius: 8px;">
+                                            <div style="width:100px;">
+                                                <img alt="icon" height="100" loading="lazy"
+                                                    src="./img/support/list-view-manager.png" width="100">
+                                            </div>
+                                            <div class="w-100 ps-3">
+                                                <p class="mb-0"
+                                                    style="font-style: normal;font-weight: 500;font-size: 15px;line-height: 150%;text-indent: 2px;color: #535456;">
+                                                    List View Manager
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </div>
+
+                                <div class="col-sm-6 col-lg-4 col-xl-4 mb-3 pe-lg-0 pe-sm-1">
+                                    <a href="https://apps.odoo.com/apps/modules/15.0/ks_custom_report/"
+                                        style="text-decoration:none" target="_blanck">
+                                        <div class="d-flex  align-items-center h-100 bg-white px-3 py-3"
+                                            style="border: 1px solid #EFECEC;border-radius: 8px;">
+                                            <div style="width:100px;">
+                                                <img alt="icon" height="100" loading="lazy"
+                                                    src="./img/support/report.png" width="100">
+                                            </div>
+                                            <div class="w-100 ps-3">
+                                                <p class="mb-0"
+                                                    style="font-style: normal;font-weight: 500;font-size: 15px;line-height: 150%;text-indent: 2px;color: #535456;">
+                                                    ReportMate
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </div>
+
+                                <div class="col-sm-6 col-lg-4 col-xl-4 mb-3 pe-lg-0 pe-sm-1">
+                                    <a href="https://apps.odoo.com/apps/modules/15.0/ks_dynamic_financial_report/"
+                                        style="text-decoration:none" target="_blanck">
+                                        <div class="d-flex  align-items-center h-100 bg-white px-3 py-3"
+                                            style="border: 1px solid #EFECEC; border-radius: 8px;">
+                                            <div style="width:100px;">
+                                                <img alt="icon" height="100" loading="lazy" src="./img/support/dfr.png"
+                                                    style="border-radius: 5px;" width="100">
+                                            </div>
+                                            <div class="w-100 ps-3">
+                                                <p class="mb-0"
+                                                    style="font-style: normal;font-weight: 500;font-size: 15px;line-height: 150%;text-indent: 2px;color: #535456;">
+                                                    Dynamic Financial Report
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </div>
+
+                                <div class="col-sm-6 col-lg-4 col-xl-4 mb-3 pe-lg-0 pe-sm-1">
+                                    <a href="https://apps.odoo.com/apps/modules/15.0/ks_shopify/"
+                                        style="text-decoration:none" target="_blanck">
+                                        <div class="d-flex  align-items-center h-100 bg-white px-3 py-3"
+                                            style="border: 1px solid #EFECEC;border-radius: 8px;">
+                                            <div style="width:100px;">
+                                                <img alt="icon" height="100" loading="lazy"
+                                                    src="./img/support/shopify.png" width="100">
+                                            </div>
+                                            <div class="w-100 ps-3">
+                                                <p class="mb-0"
+                                                    style="font-style: normal;font-weight: 500;font-size: 15px;line-height: 150%;text-indent: 2px;color: #535456;">
+                                                    Odoo Shopify Connector
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </div>
+
+                            </div>
+
+                        </div>
+                    </div>
+                </div> -->
+
+            <div class=" p-0" id="free_support" style=" border-radius: 20px;  padding-top: 41px; padding-bottom: 41px;">
+                <div class="row d-flex align-items-center justify-content-center m-0">
+                    <div class="col-12 px-0 position-relative overflow-hidden" style="border-radius: 20px; background-color: #fffefd;height: 500px;">
+                        <img alt="bg-img" class="h-100 w-100 position-absolute fix-bottom img-fluid" loading="lazy" src="./img/footer-layout-grid.png" style="top: 0;left: 0; width: 100%;">
+                        <div class="row h-100 position-relative pt-lg-3 px-lg-5 pb-lg-3 p-md-4 p-3 mx-auto d-flex align-items-center" style="color: #333333;font-weight: 500;font-size: 16px;width: 100%;gap: 35px 70px;">
+                            <div class="col text-center mt-5">
+                                <h4 style="color: #fff; font-weight: 700; font-size: 45px; line-height: 67px;">
+                                    Try Dashboard Ninja <br class="d-xl-block d-none">
+                                    with AI today
+                                </h4>
+
+                                <div class="d-flex align-iems-center justify-content-center mt-5 pt-2">
+                                    <a class="d-flex align-items-center me-3 justif-content-center px-4 py-3 text-center" href="https://www.youtube.com/watch?v=Kcye9yHu4rY&amp;ab_channel=KsolvesIndiaLimited" target="_blank" style="padding:15px !important; width: fit-content;font-family: Inter; text-decoration: none; background-color:#ffffff;border-radius: 8px;font-style: normal; font-weight: 600; font-size: 16px; line-height: 18.6px; text-transform: capitalize; color: #E84A5F;">
+
+                                        Get a demo </a>
+                                    <a class="d-flex align-items-center justif-content-center px-4 py-3 text-center" target="_blank" href="tel:+91-8527471031" style="padding:15px !important;font-family: Inter; text-decoration: none; background-color:transparent;border-radius: 8px;font-style: normal; font-weight: 600; font-size: 14px; width: fit-content; line-height: 18.6px; text-transform: capitalize; color: #ffffff;border: 2px solid #FFFFFF;">
+                                        +91-8527471031 </a>
+                                </div>
+
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </section>
+        </div>
+    </section>
+
+    <!-- Bootstrap 5 JS cdn -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

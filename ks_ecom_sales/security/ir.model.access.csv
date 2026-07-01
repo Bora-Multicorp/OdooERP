@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_stock_picking_ecom_sale,access.stock.picking.ecom.sale,stock.model_stock_picking,base.group_user,1,1,0,0
+access_ks_ecom_sale_info_user,access.ks.ecom.sale.info.user,model_ks_ecom_sale_info,base.group_user,1,1,1,0
+access_ks_so_import_wizard_user,access.ks.so.import.wizard.user,model_ks_so_import_wizard,base.group_user,1,1,1,1
+access_ks_so_delivery_import_wizard_user,access.ks.so.delivery.import.wizard.user,model_ks_so_delivery_import_wizard,base.group_user,1,1,1,1

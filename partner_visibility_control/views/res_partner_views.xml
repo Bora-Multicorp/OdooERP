@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!--
+        Extend the res.partner form view to:
+
+        Sales group  (group name="sale", inside page name="sales_purchases"):
+          - Hide the default Odoo "Salesperson" field (user_id).
+          - Show our custom salesperson_ids (Many2many) in its place.
+
+        Purchase group  (group name="purchase", same tab):
+          - Hide the default Odoo "Buyer" field (buyer_id, added by the
+            purchase module).
+          - Show our custom purchase_executive_ids (Many2many) in its place.
+
+        Priority note:
+          The purchase module adds buyer_id with priority=36.  Our view
+          must have a higher priority number (50) so Odoo applies our
+          xpath AFTER purchase has already inserted buyer_id into the arch.
+          Without this ordering, the buyer_id xpath would fail at install
+          time with "Element not found in arch".
+    -->
+    <!-- Contacts action: apply sales executive restriction via _search context -->
+    <record id="contacts.action_contacts" model="ir.actions.act_window">
+        <field name="domain">[('parent_id', '=', False)]</field>
+        <field name="context">{'restrict_by_sales_executive': 1}</field>
+    </record>
+
+    <!--
+        Extend the Contacts search view to add:
+          • Search   by Company (company_ids M2M)
+          • Search   by Sales / Purchase Executive
+          • Group By Company         → groups by company_ids  (replaces parent_id)
+          • Group By Sales Executive → groups by salesperson_ids
+          • Group By Purchase Executive → groups by purchase_executive_ids
+          • Filter   My Sales / Purchase Contacts
+    -->
+    <record id="res_partner_search_view_inherit_visibility"
+            model="ir.ui.view">
+        <field name="name">res.partner.select.visibility</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_res_partner_filter"/>
+        <field name="arch" type="xml">
+
+            <!-- Replace standard user_id search field with our exec search fields
+                 and add company_ids search field -->
+            <xpath expr="//search/field[@name='user_id']" position="replace">
+                <field name="company_ids"            string="Company"/>
+                <field name="salesperson_ids"        string="Sales Executive"/>
+                <field name="purchase_executive_ids" string="Purchase Executive"/>
+            </xpath>
+
+            <!-- Replace standard "Salesperson" group_by (user_id) with our M2M exec fields -->
+            <xpath expr="//group[@name='group_by']/filter[@name='salesperson']"
+                   position="replace">
+                <filter name="group_sales_executive"
+                        string="Sales Executive"
+                        domain="[]"
+                        context="{'group_by': 'salesperson_ids'}"/>
+                <filter name="group_purchase_executive"
+                        string="Purchase Executive"
+                        domain="[]"
+                        context="{'group_by': 'purchase_executive_ids'}"/>
+            </xpath>
+
+            <!-- Replace standard "Company" group_by (parent_id) with company_ids (M2M) -->
+            <xpath expr="//group[@name='group_by']/filter[@name='group_company']"
+                   position="replace">
+                <filter name="group_company_ids"
+                        string="Company"
+                        domain="[]"
+                        context="{'group_by': 'company_ids'}"/>
+            </xpath>
+
+            <!-- Add separator+quick filters for exec assignment -->
+            <xpath expr="//group[@name='group_by']" position="before">
+                <separator/>
+                <filter name="filter_my_sales"
+                        string="My Sales Contacts"
+                        domain="[('salesperson_ids', 'in', [uid])]"/>
+                <filter name="filter_my_purchase"
+                        string="My Purchase Contacts"
+                        domain="[('purchase_executive_ids', 'in', [uid])]"/>
+            </xpath>
+
+        </field>
+    </record>
+
+    <record id="res_partner_form_view_inherit_visibility"
+            model="ir.ui.view">
+        <field name="name">res.partner.form.partner.visibility</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="priority">50</field>
+        <field name="arch" type="xml">
+
+            <!-- ── Sales group ─────────────────────────────────────────── -->
+
+            <!-- Hide the standard Odoo "Salesperson" (single user) field -->
+            <xpath expr="//group[@name='sale']/field[@name='user_id']"
+                   position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+
+            <!-- Add our multi-user Sales Executives field in the same group -->
+            <xpath expr="//group[@name='sale']" position="inside">
+                <field name="salesperson_ids"
+                       string="Sales Executives"
+                       widget="many2many_tags"
+                       options="{'no_create': True}"
+                       groups="sales_team.group_sale_salesman"/>
+            </xpath>
+
+            <!-- ── Purchase group ───────────────────────────────────────── -->
+
+            <!--
+                Hide the standard Odoo "Buyer" (single user) field.
+                buyer_id is inserted by the purchase module at priority 36,
+                so our priority-50 view can safely target it here.
+            -->
+            <xpath expr="//field[@name='buyer_id']"
+                   position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+
+            <!-- Add our multi-user Purchase Executives field in the Purchase group -->
+            <xpath expr="//group[@name='purchase']" position="inside">
+                <field name="purchase_executive_ids"
+                       string="Purchase Executives"
+                       widget="many2many_tags"
+                       options="{'no_create': True}"
+                       groups="purchase.group_purchase_user"/>
+            </xpath>
+
+        </field>
+    </record>
+
+</odoo>

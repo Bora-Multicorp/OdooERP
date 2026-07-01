@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Reject/Request Reason Wizard Form View -->
+    <record id="ks_sale_reject_reason_wizard_form" model="ir.ui.view">
+        <field name="name">ks.sale.reject.reason.wizard.form</field>
+        <field name="model">ks.sale.reject.reason.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Enter Reason">
+                <group>
+                    <field name="ks_sale_order_id" invisible="1"/>
+                    <field name="ks_action_type" invisible="1"/>
+                    <field name="ks_action_type_label" string="Action" readonly="1" 
+                           widget="char" class="fw-bold"/>
+                </group>
+                <group>
+                    <field name="ks_reason" 
+                           placeholder="Please enter your reason here..."
+                           nolabel="1"
+                           widget="text"
+                           options="{'autoresize': true}"
+                           class="o_text_overflow"/>
+                </group>
+                <footer>
+                    <button name="action_submit" 
+                            type="object" 
+                            string="Submit" 
+                            class="btn-primary"/>
+                    <button string="Cancel" 
+                            class="btn-secondary" 
+                            special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>
+

@@ -13,18 +13,18 @@ class ProductTemplate(models.Model):
     dimensional_uom_id = fields.Many2one(
         "uom.uom",
         "Dimensional UoM",
+        related="product_variant_ids.dimensional_uom_id",
         help="UoM for length, height, width",
-        default=lambda self: self.env.ref("uom.product_uom_meter"),
-        readonly=True,
+        readonly=False,
     )
     product_length = fields.Float(
-        # related="product_variant_ids.product_length", readonly=False
+        related="product_variant_ids.product_length", readonly=False
     )
     product_height = fields.Float(
-        # related="product_variant_ids.product_height", readonly=False
+        related="product_variant_ids.product_height", readonly=False
     )
     product_width = fields.Float(
-        # related="product_variant_ids.product_width", readonly=False
+        related="product_variant_ids.product_width", readonly=False
     )
     volume = fields.Float(
         compute="_compute_volume",

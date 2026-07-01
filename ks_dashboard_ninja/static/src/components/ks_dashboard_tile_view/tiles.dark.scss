@@ -1,0 +1,106 @@
+ 
+ .encap-layout-2-box {
+            background-color: var(--color-563060) !important;
+            .layout-2-count,.layout-2-name {
+                color: var(--color-white-imp) !important;
+            }
+        .ks_dashboard_item_main_body_l2 {
+            background-color: var(--color-563060) !important;
+            border-radius: 16px 16px 0 0 !important;
+        }
+        .layout-2-icon {
+            background-color: var(--color-1A2438-imp) !important;
+            border-radius: 0 0 12px 12px;
+            span {
+                    color: var(--color-6789C6-imp) !important;
+            }
+        }
+    }
+
+    .encapsulated-tile-container .tile-layout-five {
+        background-color: var(--color-313967) !important;
+        border-radius: 12px !important;
+         .ks_dashboard_item_domain_count_l5,.dashboard-item-name   {
+            color: var(--color-white-imp) !important;
+         }
+         .ks_dashboard_icon_l5 span {
+            color: var(--color-6789C6-imp) !important;
+         }
+         .img-bg {
+            background-color: var(--color-white);
+         } 
+    }
+
+ .encapsulated-tile-container .encapsulated-main-body {
+    background-color: var(--color-4D1D46) !important;
+    border-radius: 12px !important;
+    .ks_dashboard_item_domain_count_l3  {
+            color: var(--color-6789C6-imp) !important;
+    }
+    .ks_dashboard_item_name_l3  {
+        color: var(--color-white-imp) !important;
+    }
+    .ks_dashboard_icon_l3 {
+        background-color: var(--color-white) !important;
+    border-top-left-radius: 16px;
+    span {
+        color: var(--color-6789C6-imp) !important;
+    }
+    }
+    }
+
+ .encapsulated-tile-container .encapsulated-tile-1 {
+        background-color: var(--color-2D5B6B) !important;
+        border-radius: 12px !important;
+        height: 100%;
+        .ks_dashboard_item_domain_count,.ks_dashboard_item_name {
+                color: var(--color-white-imp) !important;
+        }
+        
+        .ks_dashboard_icon {
+            background: var(--color-white);
+            span {
+                color: var(--color-6789C6-imp) !important;
+            }
+        }
+    }
+
+    .encapsulated-tile-container .tile-four-body {
+        background-color: var(--color-7D5570-imp) !important;
+        border-radius: 12px !important;
+        .ks_dashboard_item_domain_count_l2 {
+                color: var(--color-E7495E-imp) !important;
+        }
+        .layout-4-name {
+                color: var(--color-white-imp) !important;
+        }
+        .layout-4-icon {
+                background-color: var(--color-1A2438-imp) !important;
+                    border-top-left-radius: 100%;
+                    border-bottom-right-radius: 12px;
+                    span {
+                        color: var(--color-6789C6-imp) !important;
+                    }
+        }
+   }
+
+    .layout-6-box {
+        background-color: var(--color-125C76) !important;
+        .layout-6-name {
+                color: var(--color-white-imp) !important;
+        }
+        .ks_dashboard_icon_l2 {
+            background-color: transparent !important;
+            span {
+                color: var(--color-white-imp) !important;
+            }
+        }
+        .layout-6-tile-name {
+            background-color: var(--color-1A2438-imp) !important;
+    color: var(--color-white-imp) !important;
+        }
+   }
+.encapsulated-tile-container .img-bg {
+    background-color: var(--color-white) !important;
+} 
+

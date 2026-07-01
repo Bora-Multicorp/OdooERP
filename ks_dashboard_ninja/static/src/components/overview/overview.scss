@@ -1,0 +1,176 @@
+.overview-sec-one {
+    h1 {
+        font-size: $font-20;
+        font-weight: $f-w-500;
+        line-height: 28px;
+        color: var(--color-black);
+        margin-bottom: 0;
+
+        @include max-575 {
+            font-size: $font-12;
+        }
+
+        span {
+            font-weight: $f-w-600;
+        }
+    }
+}
+
+.overview-sec-tiles {
+    @media screen and (min-width:1200px) {
+        .col-xl-2 {
+            flex: 1;
+            width: auto;
+        }
+    }
+
+    .tile {
+        min-height: 113px;
+        border-radius: 16px;
+        padding: 14px;
+
+        &:hover {
+            box-shadow: 0px 4px 12px 0px #00000040;
+            transition: all 0.5s ease-in-out;
+        }
+
+        &.one {
+            background-color: var(--color-FFE2E5);
+        }
+
+        &.two {
+            background-color: var(--color-FFF4DE);
+        }
+
+        &.three {
+            background-color: var(--color-DCFCE7);
+        }
+
+        &.four {
+            background-color: var(--color-F3E8FF);
+        }
+
+        &.five {
+            background-color: var(--color-white-7D5570);
+        }
+
+        .num {
+            font-size: $font-24;
+            font-weight: $f-w-500;
+            line-height: 33.6px;
+            color: var(--color-black);
+        }
+
+        p {
+            font-size: $font-15;
+            font-weight: $f-w-400;
+            line-height: 18px;
+           color: var(--color-black);
+        }
+    }
+}
+
+.overview-sec-dasboards {
+
+    .no-data {
+        max-height: calc(100% - 56px);
+        overflow: auto;
+
+        h3 {
+            font-size: $font-32;
+            font-weight: $f-w-500;
+            line-height: 44.8px;
+           color: var(--color-secondary-main);
+        }
+
+        p {
+            font-size: $font-20;
+            font-weight: $f-w-500;
+            line-height: 28px;
+             color: var(--color-black);
+        }
+    }
+
+    .data-added {
+
+        max-height: calc(100vh - 467px);
+        overflow: auto;
+
+        @include max-768 {
+            max-height: unset;
+            overflow: unset;
+        }
+
+        @include custom-scrollbar;
+
+        @media screen and (min-width:1200px) {
+            max-height: calc(100vh - 331px);
+        }
+
+        @media (max-width: 900px) and (orientation: landscape) {
+            max-height: none;
+        }
+
+        .dashboard-box {
+            box-shadow: 0px 4px 20px 0px #EEEEEE80;
+            border-radius: 10px;
+            background-color: var(--color-white);
+            padding: 20px;
+            min-height: 290px;
+            border: 0.5px solid var(--color-4B5563-transparent);
+
+            .dash-preview-box {
+                border-radius: 10px;
+                border: 0.5px solid var(--color-E5E7EB);
+                width: 100%;
+                overflow: hidden;
+//                 height: 290px;
+
+                img {
+                    width: 100%;
+                    height: auto;
+                    aspect-ratio: 16/9;
+                }
+            }
+
+            .dashboard-info {
+                .left {
+                    h4 {
+                        font-size: $font-16;
+                        font-weight: $f-w-500;
+                        line-height: 22.4px;
+                        color: var(--color-black);
+                    }
+
+                    p {
+                        font-size: $font-14;
+                        font-weight: $f-w-400;
+                        line-height: 18px;
+                        color: var(--color-black);
+                    }
+                }
+
+                .right {
+                    .marked {
+                        .bookmark {
+                            display: block;
+                            cursor: pointer;
+                        }
+
+                        &.active {
+                            .bookmarked {
+                                display: block !important;
+                                cursor: pointer;
+                            }
+
+                            .bookmark {
+                                display: none;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+

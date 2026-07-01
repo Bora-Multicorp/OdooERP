@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ================================================================== -->
+    <!-- ks.cn.tracking.report — List view                                   -->
+    <!-- ================================================================== -->
+    <record id="view_ks_cn_tracking_report_list" model="ir.ui.view">
+        <field name="name">ks.cn.tracking.report.list</field>
+        <field name="model">ks.cn.tracking.report</field>
+        <field name="arch" type="xml">
+            <list string="CN Tracking" default_order="cn_date desc, id desc" open_form_view="0">
+                <header>
+                    <button
+                        name="action_export_xlsx"
+                        string="Export XLSX"
+                        type="object"
+                        class="btn-primary"
+                    />
+                </header>
+                <field name="partner_id" string="Party Name"/>
+                <field name="pi_no" string="PI No."/>
+                <field name="pi_date" string="PI Date"/>
+                <field name="pi_amount" string="PI Amount" sum="PI Total"/>
+                <field name="commercial_invoice_no" string="Comm. Invoice No."/>
+                <field name="commercial_invoice_date" string="Comm. Invoice Date"/>
+                <field name="commercial_invoice_amount" string="Comm. Invoice Amt" sum="CI Total"/>
+                <field name="cn_date" string="CN Date"/>
+                <field name="cn_no" string="CN No."/>
+                <field name="cn_amount" string="CN Amount" sum="CN Total"/>
+                <field name="adjusted_pi_no" string="CN Adj. Against PI"/>
+                <field name="adjustment_amount" string="Adjustment Amt" sum="Adj. Total"/>
+                <field name="balance_cn" string="Balance CN" sum="Balance Total"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- ================================================================== -->
+    <!-- ks.cn.tracking.report — Search view                                 -->
+    <!-- ================================================================== -->
+    <record id="view_ks_cn_tracking_report_search" model="ir.ui.view">
+        <field name="name">ks.cn.tracking.report.search</field>
+        <field name="model">ks.cn.tracking.report</field>
+        <field name="arch" type="xml">
+            <search string="CN Tracking">
+                <field name="partner_id" string="Party Name"/>
+                <field name="cn_no" string="CN No."/>
+                <field name="pi_no" string="PI No."/>
+                <field name="commercial_invoice_no" string="Comm. Invoice No."/>
+                <filter string="With Party" name="filter_has_party" domain="[('partner_id', '!=', False)]"/>
+                <filter string="With CN" name="filter_has_cn" domain="[('cn_no', '!=', False)]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Party Name" name="group_party" context="{'group_by': 'partner_id'}"/>
+                    <filter string="CN Date" name="group_cn_date" context="{'group_by': 'cn_date:month'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- ================================================================== -->
+    <!-- Window action                                                        -->
+    <!-- ================================================================== -->
+    <record id="action_ks_cn_tracking_report" model="ir.actions.act_window">
+        <field name="name">CN Tracking</field>
+        <field name="res_model">ks.cn.tracking.report</field>
+        <field name="view_mode">list</field>
+        <field name="search_view_id" ref="view_ks_cn_tracking_report_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No CN Tracking records yet.
+            </p>
+            <p>
+                Records are created automatically when Credit Notes are confirmed (posted).
+                Use the <strong>Export XLSX</strong> button to download selected rows.
+            </p>
+        </field>
+    </record>
+
+    <!-- ================================================================== -->
+    <!-- Server Action: Export selected to XLSX                              -->
+    <!-- ================================================================== -->
+    <record id="action_ks_cn_tracking_export_xlsx" model="ir.actions.server">
+        <field name="name">Export to Excel (XLSX)</field>
+        <field name="model_id" ref="model_ks_cn_tracking_report"/>
+        <field name="binding_model_id" ref="model_ks_cn_tracking_report"/>
+        <field name="binding_view_types">list</field>
+        <field name="state">code</field>
+        <field name="code">action = records.action_export_xlsx()</field>
+    </record>
+
+</odoo>

@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_vendor_payment_approval_request_form" model="ir.ui.view">
+        <field name="name">vendor.payment.approval.request.form</field>
+        <field name="model">vendor.payment.approval.request</field>
+        <field name="arch" type="xml">
+            <form string="Vendor Payment Approval Request">
+                <header>
+                    <field name="ks_can_approve" invisible="1"/>
+                    <field name="ks_is_requester" invisible="1"/>
+                    <button name="action_submit_and_open_wizard" string="Submit for Approval" type="object" class="btn-primary" invisible="state != 'draft'"/>
+                    <button name="action_update_approvals" string="Update Approvals" type="object"
+                            class="btn-warning"
+                            invisible="state != 'pending_approval' or not ks_is_requester"
+                            confirm="This will cancel the current approval request and let you choose new approvers. Continue?"/>
+                    <button name="action_approve_wizard" string="Approve" type="object" class="btn-primary"
+                            invisible="not ks_can_approve"/>
+                    <button name="action_reject_wizard" string="Reject" type="object" class="btn-secondary"
+                            invisible="not ks_can_approve"/>
+                    <button name="action_reset_to_draft" string="Reset to Draft" type="object" invisible="state not in ('pending_approval', 'rejected')"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,pending_approval,approved,cancelled"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_vendor_bill" type="object" class="oe_stat_button"
+                                icon="fa-file-text-o" invisible="not vendor_bill_id">
+                            <div class="o_stat_info">
+                                <span class="o_stat_text">Vendor Bill</span>
+                            </div>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <label for="purchase_order_id" string="Purchase Order"/>
+                        <h1>
+                            <field name="purchase_order_id" options="{'no_create': True}" readonly="state != 'draft'"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Request Details">
+                            <field name="approval_type" readonly="state != 'draft'" options="{'no_create': True}"/>
+<!--                            <field name="assigned_approver_id" readonly="state != 'draft'" options="{'no_create': True}"/>-->
+                            <field name="amount_for_approval" widget="monetary" readonly="state != 'draft'"/>
+                            <field name="request_user_id"/>
+                            <field name="request_date"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                        <group string="Purchase Order Info">
+                            <field name="partner_id" string="Vendor" readonly="1"/>
+                            <field name="po_amount_total" string="PO Total" widget="monetary" readonly="1"/>
+                            <field name="currency_id" invisible="1"/>
+                            <field name="po_state" string="PO Status" readonly="1"/>
+                            <field name="vendor_bill_id" readonly="1" invisible="not vendor_bill_id"/>
+                        </group>
+                    </group>
+                    <group string="Approval" invisible="state != 'approved'">
+                        <field name="approve_reason" placeholder="Optional reason for approval..."/>
+                    </group>
+                    <group string="Rejection" invisible="state != 'rejected'">
+                        <field name="reject_reason" readonly="1"/>
+                        <field name="reject_user_id" readonly="1"/>
+                        <field name="reject_date" readonly="1"/>
+                    </group>
+                    <group>
+                        <field name="rest_after_payment"/>
+                    </group>
+                    <notebook>
+                        <page string="Approval Lines" name="approval_lines" invisible="state == 'draft'">
+                            <field name="approval_line_ids" readonly="1" nolabel="1">
+                                <list decoration-success="state == 'approved'"
+                                      decoration-danger="state == 'rejected'"
+                                      decoration-warning="state == 'pending'"
+                                      decoration-muted="state == 'cancelled'">
+                                    <field name="sequence" optional="hide"/>
+                                    <field name="approver_type"/>
+                                    <field name="user_id"/>
+                                    <field name="state" widget="badge"/>
+                                    <field name="action_date"/>
+                                    <field name="remark"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Documents" name="documents">
+                            <field name="document_ids" nolabel="1" readonly="state not in ('draft', 'rejected')">
+                                <list editable="bottom">
+                                    <field name="document_type" string="Document Type"/>
+                                    <field name="document_number" string="Document Number"/>
+                                    <field name="document_attachment" string="Attachment" widget="binary" filename="document_filename"/>
+                                    <field name="document_filename" column_invisible="1"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_vendor_payment_approval_request_list" model="ir.ui.view">
+        <field name="name">vendor.payment.approval.request.list</field>
+        <field name="model">vendor.payment.approval.request</field>
+        <field name="arch" type="xml">
+            <list string="Payment Approval Request"
+                  decoration-success="state == 'approved'"
+                  decoration-danger="state == 'rejected'"
+                  decoration-warning="state == 'pending_approval'"
+                  decoration-muted="state == 'cancelled'">
+                <field name="purchase_order_id"/>
+                <field name="partner_id" string="Vendor" optional="show"/>
+                <field name="approval_type"/>
+                <field name="po_amount_total" string="PO Total" optional="show"/>
+                <field name="amount_for_approval" string="Amount for Approval" optional="show"/>
+                <field name="currency_id" column_invisible="1"/>
+                <field name="state" widget="badge"/>
+                <field name="request_user_id"/>
+                <field name="request_date"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_vendor_payment_approval_request_search" model="ir.ui.view">
+        <field name="name">vendor.payment.approval.request.search</field>
+        <field name="model">vendor.payment.approval.request</field>
+        <field name="arch" type="xml">
+            <search string="Payment Approval Request">
+                <field name="purchase_order_id"/>
+                <field name="partner_id" string="Vendor"/>
+                <filter name="filter_without_bill" string="Advance Payment" domain="[('approval_type', '=', 'without_bill')]"/>
+                <filter name="filter_with_bill" string="With Bill" domain="[('approval_type', '=', 'with_bill')]"/>
+                <separator/>
+                <filter name="draft" string="Draft" domain="[('state', '=', 'draft')]"/>
+                <filter name="pending" string="Pending Approval" domain="[('state', '=', 'pending_approval')]"/>
+                <filter name="approved" string="Approved" domain="[('state', '=', 'approved')]"/>
+                <filter name="rejected" string="Rejected" domain="[('state', '=', 'rejected')]"/>
+                <group expand="0" string="Group By">
+                    <filter name="group_by_po" string="Purchase Order" context="{'group_by': 'purchase_order_id'}"/>
+                    <filter name="group_by_vendor" string="Vendor" context="{'group_by': 'partner_id'}"/>
+                    <filter name="group_by_type" string="Approval Type" context="{'group_by': 'approval_type'}"/>
+                    <filter name="group_by_state" string="Status" context="{'group_by': 'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_vendor_payment_approval_request" model="ir.actions.act_window">
+        <field name="name">Payment Approval Request</field>
+        <field name="res_model">vendor.payment.approval.request</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_vendor_payment_approval_request_search"/>
+        <field name="context">{'search_default_pending': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No payment approval requests.
+            </p>
+            <p>
+                Create a request from a Purchase Order using "Request For Advance Payment" or "Request For Payment".
+                Once approved, you can create advance payments or register vendor bill payments for that PO.
+            </p>
+        </field>
+    </record>
+
+    <!-- Parent menu: Vendor Payment (groups PO with/without bill and Payment Approval Request) -->
+    <menuitem id="menu_vendor_payment_approval_root"
+              name="Vendor Payment"
+              parent="purchase.menu_purchase_root"
+              sequence="14"/>
+    <menuitem id="menu_vendor_payment_approval_request"
+              name="Payment Approval Request"
+              parent="menu_vendor_payment_approval_root"
+              action="action_vendor_payment_approval_request"
+              sequence="10"/>
+</odoo>

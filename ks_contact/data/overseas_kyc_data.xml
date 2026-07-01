@@ -1,0 +1,525 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <data>
+        <!-- ================================================================
+             OVERSEAS VENDOR / CUSTOMER KYC SURVEY
+             Replaces India-specific questions (GST, PAN, Udyam, Aadhaar)
+             with document-type-flexible overseas equivalents.
+        ================================================================ -->
+
+        <!--
+            Delete the old survey on upgrade to avoid stale answer records
+            where question_id / matrix_question_id were swapped in the
+            initial version.  This is a no-op on first install.
+        -->
+        <delete id="overseas_kyc_form_survey" model="survey.survey"/>
+
+        <record model="survey.survey" id="overseas_kyc_form_survey">
+            <field name="title">Bora Multicorp — Overseas KYC</field>
+            <field name="survey_type">survey</field>
+            <field name="user_id" ref="base.user_admin"/>
+            <field name="access_mode">public</field>
+            <field name="questions_layout">one_page</field>
+            <field name="users_can_go_back" eval="True"/>
+            <field name="users_login_required" eval="False"/>
+            <field name="is_attempts_limited" eval="True"/>
+            <field name="attempts_limit">1</field>
+            <field name="description" type="html">
+                <h2>Welcome to Bora Multicorp — Overseas KYC Registration</h2>
+                <p>This form collects KYC (Know Your Customer) information for overseas
+                   vendors and customers. Please upload documents as specified for your
+                   country of incorporation.</p>
+                <ul>
+                    <li><strong>Dubai / UAE:</strong> Trade License + Emirates ID or Passport of Authorized Signatory</li>
+                    <li><strong>Hong Kong:</strong> Business Registration Certificate + HKID or Passport</li>
+                    <li><strong>Other countries:</strong> Certificate of Incorporation (or equivalent) + Government-issued photo ID</li>
+                </ul>
+            </field>
+        </record>
+
+        <!-- Page 1: Contact Information -->
+        <record model="survey.question" id="overseas_kyc_p1">
+            <field name="title">Contact Information</field>
+            <field name="survey_id" ref="overseas_kyc_form_survey"/>
+            <field name="sequence">1</field>
+            <field name="question_type" eval="False"/>
+            <field name="is_page" eval="True"/>
+        </record>
+
+        <!-- Email -->
+        <record model="survey.question" id="overseas_email_kyc_survey">
+            <field name="title">Email</field>
+            <field name="survey_id" ref="overseas_kyc_form_survey"/>
+            <field name="sequence">2</field>
+            <field name="question_type">char_box</field>
+            <field name="constr_mandatory">True</field>
+            <field name="validation_email">True</field>
+            <field name="save_as_email">True</field>
+            <field name="question_placeholder">your@email.com</field>
+        </record>
+
+        <!-- Point of Contact (Bora Multicorp user) -->
+        <record model="survey.question" id="overseas_company_poc_kyc_survey">
+            <field name="title">Point of Contact / Purchase Manager (Bora Multicorp)</field>
+            <field name="survey_id" ref="overseas_kyc_form_survey"/>
+            <field name="sequence">3</field>
+            <field name="question_type">que_sh_many2one</field>
+            <field name="que_sh_many2one_model_id" ref="base.model_res_users"/>
+            <field name="constr_mandatory">True</field>
+        </record>
+
+        <!-- Point of Contact (Vendor/Customer side) -->
+        <record model="survey.question" id="overseas_poc_kyc_survey">
+            <field name="title">Point of Contact (Vendor / Customer)</field>
+            <field name="survey_id" ref="overseas_kyc_form_survey"/>
+            <field name="sequence">4</field>
+            <field name="question_type">char_box</field>
+            <field name="constr_mandatory">True</field>
+            <field name="question_placeholder">Full Name</field>
+        </record>
+
+        <!-- Page 2: Company Details -->
+        <record model="survey.question" id="overseas_kyc_p2">
+            <field name="title">Company Details</field>
+            <field name="survey_id" ref="overseas_kyc_form_survey"/>
+            <field name="sequence">5</field>
+            <field name="question_type" eval="False"/>
+            <field name="is_page" eval="True"/>
+        </record>
+
+        <!-- Business Legal Name -->
+        <record model="survey.question" id="overseas_business_name_kyc_survey">
+            <field name="title">Business Legal Name</field>
+            <field name="survey_id" ref="overseas_kyc_form_survey"/>
+            <field name="sequence">6</field>
+            <field name="question_type">char_box</field>
+            <field name="constr_mandatory">True</field>
+            <field name="question_placeholder">Registered legal name of the company</field>
+        </record>
+
+        <!-- Is Trade Name same as Legal Name -->
+        <record model="survey.question" id="overseas_same_trade_name_kyc_survey">
+            <field name="title"></field>
+            <field name="survey_id" ref="overseas_kyc_form_survey"/>
+            <field name="sequence">7</field>
+            <field name="question_type">simple_choice</field>
+            <field name="constr_mandatory">False</field>
+            <field name="description" type="html">
+                <p>Is the Trade Name the same as the Legal Name?</p>
+            </field>
+        </record>
+        <record model="survey.question.answer" id="overseas_same_trade_name_yes">
+            <field name="question_id" ref="overseas_same_trade_name_kyc_survey"/>
+            <field name="sequence">1</field>
+            <field name="value">Yes</field>
+        </record>
+
+        <!-- Business Trade Name -->
+        <record model="survey.question" id="overseas_trade_name_kyc_survey">
+            <field name="title">Business Trade Name</field>
+            <field name="survey_id" ref="overseas_kyc_form_survey"/>
+            <field name="sequence">8</field>
+            <field name="question_type">char_box</field>
+            <field name="constr_mandatory">False</field>
+            <field name="question_placeholder">Trade / brand name (if different from legal name)</field>
+        </record>
+
+        <!-- ── ADDRESS MATRIX ───────────────────────────────────────────── -->
+        <record model="survey.question" id="overseas_matrix_address_kyc_survey">
+            <field name="title">Business Address</field>
+            <field name="survey_id" ref="overseas_kyc_form_survey"/>
+            <field name="sequence">9</field>
+            <field name="question_type">matrix</field>
+            <field name="matrix_subtype">sh_custom_matrix</field>
+            <field name="add_an_item" eval="True"/>
+            <field name="constr_mandatory">True</field>
+        </record>
+
+        <!-- Columns: question_id + sh_value_type (input widget per cell) -->
+        <record model="survey.question.answer" id="overseas_addr_col_street">
+            <field name="question_id" ref="overseas_matrix_address_kyc_survey"/>
+            <field name="matrix_question_id" eval="False"/>
+            <field name="sequence">1</field>
+            <field name="value">Address</field>
+            <field name="sh_value_type">textbox</field>
+        </record>
+        <record model="survey.question.answer" id="overseas_addr_col_city">
+            <field name="question_id" ref="overseas_matrix_address_kyc_survey"/>
+            <field name="matrix_question_id" eval="False"/>
+            <field name="sequence">2</field>
+            <field name="value">City Name</field>
+            <field name="sh_value_type">textbox</field>
+        </record>
+        <record model="survey.question.answer" id="overseas_addr_col_pincode">
+            <field name="question_id" ref="overseas_matrix_address_kyc_survey"/>
+            <field name="matrix_question_id" eval="False"/>
+            <field name="sequence">3</field>
+            <field name="value">Postcode</field>
+            <field name="sh_value_type">textbox</field>
+        </record>
+        <record model="survey.question.answer" id="overseas_addr_col_phone">
+            <field name="question_id" ref="overseas_matrix_address_kyc_survey"/>
+            <field name="matrix_question_id" eval="False"/>
+            <field name="sequence">4</field>
+            <field name="value">Contact Number</field>
+            <field name="sh_value_type">textbox</field>
+            <field name="is_mobile" eval="True"/>
+        </record>
+        <record model="survey.question.answer" id="overseas_addr_col_email">
+            <field name="question_id" ref="overseas_matrix_address_kyc_survey"/>
+            <field name="matrix_question_id" eval="False"/>
+            <field name="sequence">5</field>
+            <field name="value">Email</field>
+            <field name="sh_value_type">textbox</field>
+            <field name="is_email" eval="True"/>
+        </record>
+        <record model="survey.question.answer" id="overseas_addr_col_state">
+            <field name="question_id" ref="overseas_matrix_address_kyc_survey"/>
+            <field name="matrix_question_id" eval="False"/>
+            <field name="sequence">6</field>
+            <field name="value">State / Emirate / Region</field>
+            <field name="sh_value_type">textbox</field>
+        </record>
+        <record model="survey.question.answer" id="overseas_addr_col_country">
+            <field name="question_id" ref="overseas_matrix_address_kyc_survey"/>
+            <field name="matrix_question_id" eval="False"/>
+            <field name="sequence">7</field>
+            <field name="value">Country</field>
+            <field name="sh_value_type">que_sh_many2one</field>
+            <field name="que_sh_many2one_model_id" ref="base.model_res_country"/>
+        </record>
+
+        <!-- Rows: matrix_question_id only -->
+        <record model="survey.question.answer" id="overseas_addr_row1">
+            <field name="matrix_question_id" ref="overseas_matrix_address_kyc_survey"/>
+            <field name="question_id" eval="False"/>
+            <field name="sequence">1</field>
+            <field name="value">1</field>
+        </record>
+        <record model="survey.question.answer" id="overseas_addr_row2">
+            <field name="matrix_question_id" ref="overseas_matrix_address_kyc_survey"/>
+            <field name="question_id" eval="False"/>
+            <field name="sequence">2</field>
+            <field name="value">2</field>
+            <field name="row_hide" eval="True"/>
+        </record>
+        <record model="survey.question.answer" id="overseas_addr_row3">
+            <field name="matrix_question_id" ref="overseas_matrix_address_kyc_survey"/>
+            <field name="question_id" eval="False"/>
+            <field name="sequence">3</field>
+            <field name="value">3</field>
+            <field name="row_hide" eval="True"/>
+        </record>
+        <record model="survey.question.answer" id="overseas_addr_row4">
+            <field name="matrix_question_id" ref="overseas_matrix_address_kyc_survey"/>
+            <field name="question_id" eval="False"/>
+            <field name="sequence">4</field>
+            <field name="value">4</field>
+            <field name="row_hide" eval="True"/>
+        </record>
+        <record model="survey.question.answer" id="overseas_addr_row5">
+            <field name="matrix_question_id" ref="overseas_matrix_address_kyc_survey"/>
+            <field name="question_id" eval="False"/>
+            <field name="sequence">5</field>
+            <field name="value">5</field>
+            <field name="row_hide" eval="True"/>
+        </record>
+
+        <!-- Constitution of Business -->
+        <record model="survey.question" id="overseas_const_business_kyc_survey">
+            <field name="title">Constitution of Business</field>
+            <field name="survey_id" ref="overseas_kyc_form_survey"/>
+            <field name="sequence">10</field>
+            <field name="question_type">simple_choice</field>
+            <field name="constr_mandatory">True</field>
+        </record>
+        <record model="survey.question.answer" id="overseas_const_sole">
+            <field name="question_id" ref="overseas_const_business_kyc_survey"/>
+            <field name="sequence">1</field>
+            <field name="value">Sole Proprietor</field>
+        </record>
+        <record model="survey.question.answer" id="overseas_const_partnership">
+            <field name="question_id" ref="overseas_const_business_kyc_survey"/>
+            <field name="sequence">2</field>
+            <field name="value">Partnership</field>
+        </record>
+        <record model="survey.question.answer" id="overseas_const_pvt">
+            <field name="question_id" ref="overseas_const_business_kyc_survey"/>
+            <field name="sequence">3</field>
+            <field name="value">Pvt Ltd Co.</field>
+        </record>
+        <record model="survey.question.answer" id="overseas_const_llp">
+            <field name="question_id" ref="overseas_const_business_kyc_survey"/>
+            <field name="sequence">4</field>
+            <field name="value">LLP</field>
+        </record>
+        <record model="survey.question.answer" id="overseas_const_other">
+            <field name="question_id" ref="overseas_const_business_kyc_survey"/>
+            <field name="sequence">5</field>
+            <field name="value">Other</field>
+        </record>
+
+        <!-- Page 3: Authorized Person & Documents -->
+        <record model="survey.question" id="overseas_kyc_p3">
+            <field name="title">Authorized Person Details &amp; Documents</field>
+            <field name="survey_id" ref="overseas_kyc_form_survey"/>
+            <field name="sequence">11</field>
+            <field name="question_type" eval="False"/>
+            <field name="is_page" eval="True"/>
+        </record>
+
+        <!-- Number of Authorized Persons / Directors -->
+        <record model="survey.question" id="overseas_no_directors_kyc_survey">
+            <field name="title">Number of Authorized Persons / Directors</field>
+            <field name="survey_id" ref="overseas_kyc_form_survey"/>
+            <field name="sequence">12</field>
+            <field name="question_type">simple_choice</field>
+            <field name="constr_mandatory">True</field>
+        </record>
+        <record model="survey.question.answer" id="overseas_dir_count_1">
+            <field name="question_id" ref="overseas_no_directors_kyc_survey"/>
+            <field name="sequence">1</field>
+            <field name="value">1</field>
+        </record>
+        <record model="survey.question.answer" id="overseas_dir_count_2">
+            <field name="question_id" ref="overseas_no_directors_kyc_survey"/>
+            <field name="sequence">2</field>
+            <field name="value">2</field>
+        </record>
+        <record model="survey.question.answer" id="overseas_dir_count_3">
+            <field name="question_id" ref="overseas_no_directors_kyc_survey"/>
+            <field name="sequence">3</field>
+            <field name="value">3</field>
+        </record>
+        <record model="survey.question.answer" id="overseas_dir_count_4">
+            <field name="question_id" ref="overseas_no_directors_kyc_survey"/>
+            <field name="sequence">4</field>
+            <field name="value">4</field>
+        </record>
+
+        <!-- ── DIRECTOR MATRIX ──────────────────────────────────────────── -->
+        <record model="survey.question" id="overseas_matrix_director_kyc_survey">
+            <field name="title">Authorized Person / Director Details</field>
+            <field name="survey_id" ref="overseas_kyc_form_survey"/>
+            <field name="sequence">13</field>
+            <field name="question_type">matrix</field>
+            <field name="matrix_subtype">sh_custom_matrix</field>
+            <field name="add_an_item" eval="False"/>
+            <field name="constr_mandatory">True</field>
+            <field name="description" type="html">
+                <p>Please fill in the details for each authorized person / director.</p>
+            </field>
+        </record>
+
+        <!-- Columns: question_id + sh_value_type -->
+        <record model="survey.question.answer" id="overseas_dir_col_designation">
+            <field name="question_id" ref="overseas_matrix_director_kyc_survey"/>
+            <field name="matrix_question_id" eval="False"/>
+            <field name="sequence">1</field>
+            <field name="value">Designation</field>
+            <field name="sh_value_type">textbox</field>
+        </record>
+        <record model="survey.question.answer" id="overseas_dir_col_name">
+            <field name="question_id" ref="overseas_matrix_director_kyc_survey"/>
+            <field name="matrix_question_id" eval="False"/>
+            <field name="sequence">2</field>
+            <field name="value">Name</field>
+            <field name="sh_value_type">textbox</field>
+        </record>
+        <record model="survey.question.answer" id="overseas_dir_col_contact">
+            <field name="question_id" ref="overseas_matrix_director_kyc_survey"/>
+            <field name="matrix_question_id" eval="False"/>
+            <field name="sequence">3</field>
+            <field name="value">Contact Number</field>
+            <field name="sh_value_type">textbox</field>
+            <field name="is_mobile" eval="True"/>
+        </record>
+        <record model="survey.question.answer" id="overseas_dir_col_email">
+            <field name="question_id" ref="overseas_matrix_director_kyc_survey"/>
+            <field name="matrix_question_id" eval="False"/>
+            <field name="sequence">4</field>
+            <field name="value">Email Address</field>
+            <field name="sh_value_type">textbox</field>
+            <field name="is_email" eval="True"/>
+        </record>
+        <record model="survey.question.answer" id="overseas_dir_col_govt_id">
+            <field name="question_id" ref="overseas_matrix_director_kyc_survey"/>
+            <field name="matrix_question_id" eval="False"/>
+            <field name="sequence">5</field>
+            <field name="value">Govt. ID (Passport / Emirates ID / HKID)</field>
+            <field name="sh_value_type">que_sh_file</field>
+        </record>
+        <record model="survey.question.answer" id="overseas_dir_col_govt_id_expiry">
+            <field name="question_id" ref="overseas_matrix_director_kyc_survey"/>
+            <field name="matrix_question_id" eval="False"/>
+            <field name="sequence">6</field>
+            <field name="value">Govt. ID Expiry Date</field>
+            <field name="sh_value_type">date</field>
+        </record>
+
+        <!-- Rows: matrix_question_id only -->
+        <record model="survey.question.answer" id="overseas_dir_row1">
+            <field name="matrix_question_id" ref="overseas_matrix_director_kyc_survey"/>
+            <field name="question_id" eval="False"/>
+            <field name="sequence">1</field>
+            <field name="value">1</field>
+        </record>
+        <record model="survey.question.answer" id="overseas_dir_row2">
+            <field name="matrix_question_id" ref="overseas_matrix_director_kyc_survey"/>
+            <field name="question_id" eval="False"/>
+            <field name="sequence">2</field>
+            <field name="value">2</field>
+        </record>
+        <record model="survey.question.answer" id="overseas_dir_row3">
+            <field name="matrix_question_id" ref="overseas_matrix_director_kyc_survey"/>
+            <field name="question_id" eval="False"/>
+            <field name="sequence">3</field>
+            <field name="value">3</field>
+        </record>
+        <record model="survey.question.answer" id="overseas_dir_row4">
+            <field name="matrix_question_id" ref="overseas_matrix_director_kyc_survey"/>
+            <field name="question_id" eval="False"/>
+            <field name="sequence">4</field>
+            <field name="value">4</field>
+        </record>
+
+        <!-- Company Registration Document -->
+        <record model="survey.question" id="overseas_company_reg_doc_kyc_survey">
+            <field name="title">Company Registration / Trade License</field>
+            <field name="survey_id" ref="overseas_kyc_form_survey"/>
+            <field name="sequence">14</field>
+            <field name="question_type">que_sh_file</field>
+            <field name="constr_mandatory">True</field>
+            <field name="description" type="html">
+                <p>
+                    <strong>Dubai / UAE:</strong> Trade License issued by Government Authority<br/>
+                    <strong>Hong Kong:</strong> Business Registration Certificate (BR) issued by Government Authority<br/>
+                    <strong>Other:</strong> Certificate of Incorporation or equivalent government-issued company registration proof
+                </p>
+            </field>
+        </record>
+
+        <!-- Company Registration Document Expiry Date -->
+        <record model="survey.question" id="overseas_company_reg_doc_expiry_survey">
+            <field name="title">Company Registration / Trade License Expiry Date</field>
+            <field name="survey_id" ref="overseas_kyc_form_survey"/>
+            <field name="sequence">15</field>
+            <field name="question_type">date</field>
+            <field name="constr_mandatory">True</field>
+        </record>
+
+        <!-- Authorized Person Identity Proof -->
+        <record model="survey.question" id="overseas_auth_person_id_doc_kyc_survey">
+            <field name="title">Authorized Person Identity Proof</field>
+            <field name="survey_id" ref="overseas_kyc_form_survey"/>
+            <field name="sequence">16</field>
+            <field name="question_type">que_sh_file</field>
+            <field name="constr_mandatory">True</field>
+            <field name="description" type="html">
+                <p>
+                    <strong>Dubai / UAE:</strong> Emirates ID or Passport of the Authorized Signatory / Manager<br/>
+                    <strong>Hong Kong:</strong> HKID Card or Passport<br/>
+                    <strong>Other:</strong> Government-issued photo ID (national ID or passport)
+                </p>
+            </field>
+        </record>
+
+        <!-- Authorized Person Identity Proof Expiry Date -->
+        <record model="survey.question" id="overseas_auth_person_id_expiry_survey">
+            <field name="title">Authorized Person Identity Proof Expiry Date</field>
+            <field name="survey_id" ref="overseas_kyc_form_survey"/>
+            <field name="sequence">17</field>
+            <field name="question_type">date</field>
+            <field name="constr_mandatory">True</field>
+        </record>
+
+        <!-- Page 4: Bank Details -->
+        <record model="survey.question" id="overseas_kyc_p4">
+            <field name="title">Bank Details</field>
+            <field name="survey_id" ref="overseas_kyc_form_survey"/>
+            <field name="sequence">18</field>
+            <field name="question_type" eval="False"/>
+            <field name="is_page" eval="True"/>
+        </record>
+
+        <!-- ── BANK MATRIX ──────────────────────────────────────────────── -->
+        <record model="survey.question" id="overseas_matrix_bank_kyc_survey">
+            <field name="title">Bank Details</field>
+            <field name="survey_id" ref="overseas_kyc_form_survey"/>
+            <field name="sequence">19</field>
+            <field name="question_type">matrix</field>
+            <field name="matrix_subtype">sh_custom_matrix</field>
+            <field name="add_an_item" eval="True"/>
+            <field name="constr_mandatory">True</field>
+            <field name="description" type="html">
+                <p>Please provide international bank details. Use SWIFT code for overseas banks.</p>
+            </field>
+        </record>
+
+        <!-- Columns: question_id + sh_value_type -->
+        <record model="survey.question.answer" id="overseas_bank_col_name">
+            <field name="question_id" ref="overseas_matrix_bank_kyc_survey"/>
+            <field name="matrix_question_id" eval="False"/>
+            <field name="sequence">1</field>
+            <field name="value">Bank Name</field>
+            <field name="sh_value_type">textbox</field>
+        </record>
+        <record model="survey.question.answer" id="overseas_bank_col_account">
+            <field name="question_id" ref="overseas_matrix_bank_kyc_survey"/>
+            <field name="matrix_question_id" eval="False"/>
+            <field name="sequence">2</field>
+            <field name="value">Account Number</field>
+            <field name="sh_value_type">textbox</field>
+        </record>
+        <record model="survey.question.answer" id="overseas_bank_col_swift">
+            <field name="question_id" ref="overseas_matrix_bank_kyc_survey"/>
+            <field name="matrix_question_id" eval="False"/>
+            <field name="sequence">3</field>
+            <field name="value">SWIFT Code</field>
+            <field name="sh_value_type">textbox</field>
+        </record>
+        <record model="survey.question.answer" id="overseas_bank_col_iban">
+            <field name="question_id" ref="overseas_matrix_bank_kyc_survey"/>
+            <field name="matrix_question_id" eval="False"/>
+            <field name="sequence">4</field>
+            <field name="value">IBAN No</field>
+            <field name="sh_value_type">textbox</field>
+        </record>
+        <record model="survey.question.answer" id="overseas_bank_col_intermediate_bank">
+            <field name="question_id" ref="overseas_matrix_bank_kyc_survey"/>
+            <field name="matrix_question_id" eval="False"/>
+            <field name="sequence">5</field>
+            <field name="value">Intermediate Bank Code</field>
+            <field name="sh_value_type">textbox</field>
+        </record>
+        <record model="survey.question.answer" id="overseas_bank_col_cheque">
+            <field name="question_id" ref="overseas_matrix_bank_kyc_survey"/>
+            <field name="matrix_question_id" eval="False"/>
+            <field name="sequence">6</field>
+            <field name="value">Cancelled Cheque</field>
+            <field name="sh_value_type">que_sh_file</field>
+        </record>
+
+        <!-- Rows: matrix_question_id only -->
+        <record model="survey.question.answer" id="overseas_bank_row1">
+            <field name="matrix_question_id" ref="overseas_matrix_bank_kyc_survey"/>
+            <field name="question_id" eval="False"/>
+            <field name="sequence">1</field>
+            <field name="value">1</field>
+        </record>
+        <record model="survey.question.answer" id="overseas_bank_row2">
+            <field name="matrix_question_id" ref="overseas_matrix_bank_kyc_survey"/>
+            <field name="question_id" eval="False"/>
+            <field name="sequence">2</field>
+            <field name="value">2</field>
+            <field name="row_hide" eval="True"/>
+        </record>
+        <record model="survey.question.answer" id="overseas_bank_row3">
+            <field name="matrix_question_id" ref="overseas_matrix_bank_kyc_survey"/>
+            <field name="question_id" eval="False"/>
+            <field name="sequence">3</field>
+            <field name="value">3</field>
+            <field name="row_hide" eval="True"/>
+        </record>
+    </data>
+</odoo>

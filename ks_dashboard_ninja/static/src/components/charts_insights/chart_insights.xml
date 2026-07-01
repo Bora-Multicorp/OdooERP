@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates xml:space="preserve">
+    <t t-name="ks_dashboard_ninja.chart_insights">
+        <Dialog title="'Chart Insights'">
+            <div class="container-fluid ks-chart-insights">
+                <div>
+                    <SwitchChartType t-if="featureVisibility['switch-chart-type']" chartInsightActions="chartInsightActions"
+                                     activeItemType.alike="state.itemComponentInfo.props.itemConfig.ks_dashboard_item_type"/>
+                </div>
+                <div>
+                    <t t-component="state.itemComponentInfo.component" t-props="state.itemComponentInfo.props" t-key="state.renderCount"/>
+                </div>
+            </div>
+            <t t-set-slot="footer">
+                <button class="btn btn-primary" t-on-click="onSave" t-esc="'Save'"/>
+                <button class="btn btn-secondary" t-on-click="props.close" t-esc="'Cancel'"/>
+            </t>
+        </Dialog>
+    </t>
+</templates>

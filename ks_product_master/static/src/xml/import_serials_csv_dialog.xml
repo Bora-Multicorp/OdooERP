@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="ks_product_master.ImportSerialsCsvDialog">
+        <Dialog size="size" title="title" withBodyPadding="true">
+            <t t-set-slot="footer">
+                <button class="btn btn-primary" t-on-click="_onConfirm">Import</button>
+                <button class="btn btn-secondary" t-on-click="() => this.props.close()">Discard</button>
+            </t>
+            <div class="o_form_view o_form_nosheet">
+                <div class="grid o_inner_group">
+                    <div class="d-flex d-sm-contents">
+                        <div class="o_cell flex-grow-0 flex-sm-grow-0 text-900 pe-3">
+                            <label class="o_form_label">CSV File</label>
+                        </div>
+                        <div class="o_cell flex-grow-1 flex-sm-grow-0">
+                            <input type="file" t-ref="fileInput" accept=".csv" class="o_input form-control"/>
+                        </div>
+                    </div>
+                    <div class="d-flex d-sm-contents mt-2">
+                        <div class="o_cell flex-grow-0 flex-sm-grow-0 text-900 pe-3">
+                            <label class="o_form_label" for="keep_lines_csv">Keep current lines</label>
+                        </div>
+                        <div class="o_cell flex-grow-1 flex-sm-grow-0">
+                            <input type="checkbox" t-ref="keepLines" id="keep_lines_csv"/>
+                        </div>
+                    </div>
+                    <div class="text-muted small mt-2">
+                        CSV must have 3 columns: Serials/Lots, IMEI 1, IMEI 2 (header row optional).
+                    </div>
+                </div>
+            </div>
+        </Dialog>
+    </t>
+    <t t-name="ks_product_master.ImportSerialsCsvButton">
+        <button class="btn btn-link" t-on-click="openDialog">Upload CSV</button>
+    </t>
+</templates>

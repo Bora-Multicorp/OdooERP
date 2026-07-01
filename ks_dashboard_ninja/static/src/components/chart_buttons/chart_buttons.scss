@@ -1,0 +1,31 @@
+.ks_dashboard_menu_container {
+    &.form-control.form-input-box.encapsulated-form-arrow {
+        width: auto !important;
+
+        &::after {
+            top: 41% !important;
+            right: 13px !important;
+        }
+
+        select {
+            font-size: $font-14;
+            /* width: 100%; */
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+    }
+
+    li {
+        justify-content: center;
+
+        .dash-btn-red {
+            font-size: $font-12 !important;
+            font-weight: $f-w-600;
+            min-height: 32px !important;
+            height: 100%;
+            margin-right: 8px;
+            padding: 0 12px !important;
+        }
+    }
+}

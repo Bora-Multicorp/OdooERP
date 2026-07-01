@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <record id="view_stock_move_upload_csv_wizard_form" model="ir.ui.view">
+            <field name="name">stock.move.upload.csv.wizard.form</field>
+            <field name="model">stock.move.upload.csv.wizard</field>
+            <field name="arch" type="xml">
+                <form string="Import Serials/Lots from CSV or Excel">
+                    <group>
+                        <field name="move_id" invisible="1"/>
+                        <field name="csv_file" filename="filename" options="{'accepted_file_extensions': '.csv,.xlsx'}"/>
+                        <field name="filename" invisible="1"/>
+                        <field name="keep_lines"/>
+                    </group>
+                    <footer>
+                        <button name="action_import" string="Import" type="object" class="btn-primary"/>
+                        <button string="Cancel" class="btn-secondary" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+    </data>
+</odoo>

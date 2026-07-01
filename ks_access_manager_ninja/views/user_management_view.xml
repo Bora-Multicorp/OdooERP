@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record model="ir.ui.view" id="user_access_management_form">
+        <field name="name">user.access.form</field>
+        <field name="model">user.management</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <field name="active" invisible="1" widget="statinfo"/>
+                        <button name="ks_view_profile_users" string="Users" type="object" class="oe_stat_button"
+                                icon="fa-users" widget="statinfo">
+                            <div class="o_stat_info">
+                                <field name="ks_users_count" class="o_stat_value"/>
+                                <span class="o_stat_text">Users</span>
+                            </div>
+                        </button>
+                        <button invisible="not active" class="oe_stat_button" widget="statinfo"
+                                string="Deactivate Rule" name="ks_deactivate_rule" type="object" icon="fa-circle">
+                            <div class="o_stat_info o_form_field w-100">
+                                <span class="o_stat_text text-danger">Deactivate Rule
+                                </span>
+                            </div>
+                        </button>
+                        <button invisible="active" class="oe_stat_button" widget="statinfo"
+                                string="Activate Rule" name="ks_activate_rule" type="object" icon="fa-circle-o">
+                            <div class="o_stat_info o_form_field">
+                                <span style="font-weight: bold; width:100px; word-wrap:break-word;"
+                                      class="text-success">Activate Rule
+                                </span>
+                            </div>
+                        </button>
+                        <button name="ks_view_profile_access_rights" string="Access Rights" type="object"
+                                class="oe_stat_button" icon="fa-book" widget="statinfo">
+                            <div class="o_stat_info">
+                                <span class="o_stat_text">Access Rights</span>
+                            </div>
+                        </button>
+                        <button name="ks_view_profile_record_rules" string="Record Rules" type="object"
+                                class="oe_stat_button" icon="fa-server" widget="statinfo">
+                            <div class="o_stat_info">
+                                <span class="o_stat_text">Record Rules</span>
+                            </div>
+                        </button>
+
+                    </div>
+                    <group>
+
+                        <span>
+                            <h1>
+                                <field name="name" nolabel="1" default_focus="1"
+                                       required="1"/>
+                            </h1>
+                        </span>
+                        <group/>
+                        <group>
+
+                            <field name="ks_company_ids" widget="many2many_tags"
+                                   options="{'no_create': True, 'color_field': 'color'}"/>
+                            <field name="ks_profile_ids" widget="many2many_tags"
+                                   options="{'no_create': True,  'color_field': 'color'}"/>
+                            <field name="ks_profile_based_menu" invisible="1"/>
+                            <field name="ks_user_ids" invisible="1" widget="many2many_tags"
+                                   options="{'no_create': True}"
+                                   domain="[('company_ids', 'in', ks_company_ids)]"/>
+                            <field name="ks_user_rel_ids" invisible="1" widget="many2many_tags"
+                                   options="{'no_create': True}"/>
+                        </group>
+
+                        <group>
+                            <field name="is_profile" invisible="1"/>
+                            <field name="ks_readonly" string="Make System Readonly"
+                                   invisible="not is_profile"/>
+                            <field name="ks_hide_chatter" string="Disable Chatter"
+                                   invisible="not is_profile"/>
+                            <field name="ks_disable_debug_mode" string="Disable Debug Mode"
+                                   invisible="not is_profile"/>
+                            <field name="ks_is_enterprise" invisible="1"/>
+                        </group>
+                    </group>
+                    <sheet>
+                        <h1>
+                            <group string="Hide Components" style="font-size:30"/>
+                        </h1>
+                        <notebook>
+                            <page string="Hide Menus">
+                                <field name="ks_hide_menu_ids"/>
+                            </page>
+
+
+                            <page string="Hide Button/Tab">
+                                <field name="ks_button_tab_access_line">
+                                    <list editable="bottom">
+                                        <field name="ks_profile_domain_model_ids" column_invisible="True" width="13"
+                                               invisible="True"/>
+                                        <field name="ks_model_id" string="Model" width="10"
+                                               options="{'no_create': True}"/>
+                                        <field name="ks_hide_button_ids" widget="many2many_tags" width="13"
+                                               domain="[('ks_model_id', '=', ks_model_id),('ks_type','=','button')]"
+                                               options="{'no_create': True}"/>
+                                        <field name="ks_hide_tab_ids" widget="many2many_tags" width="13"
+                                               domain="[('ks_model_id', '=', ks_model_id), ('ks_type', '=', 'page')]"
+                                               options="{'no_create': True}"/>
+                                        <field name="ks_kanban_button_ids" widget="many2many_tags" width="13"
+                                               domain="[('ks_model_id', '=', ks_model_id),('ks_type','=','link')]"
+                                               options="{'no_create': True}"/>
+                                    </list>
+                                </field>
+                            </page>
+
+                            <page string="Hide Filter/Group By">
+                                <field name="ks_hide_filters_groups_line">
+                                    <list editable="bottom">
+                                        <field name="ks_profile_domain_model_ids" column_invisible="True" width="10"
+                                               invisible="1"/>
+                                        <field name="ks_model_id" width="10" options="{'no_create': True}"/>
+                                        <field name="ks_hide_filter_ids" widget="many2many_tags" width="13"
+                                               domain="[('ks_model_id','=',ks_model_id),('ks_type','=','filter')]"
+                                               options="{'no_create': True}"/>
+                                        <field name="ks_hide_group_ids" widget="many2many_tags" width="13"
+                                               domain="[('ks_model_id','=',ks_model_id),('ks_type','=','group')]"
+                                               options="{'no_create': True}"/>
+                                    </list>
+                                </field>
+                            </page>
+                        </notebook>
+                    </sheet>
+                    <sheet>
+                        <h1>
+                            <group string="Revoke Access"/>
+                        </h1>
+                        <notebook>
+                            <page string="Model Access">
+                                <field name="ks_model_access_line">
+                                    <list editable="bottom">
+                                        <field name="ks_profile_domain_model_ids" column_invisible="True" width="13"
+                                               invisible="1"/>
+                                        <field name="ks_model_id" width="13" required="1"
+                                               options="{'no_create': True}"/>
+                                        <field name="ks_model_readonly" width="5"/>
+                                        <field name="ks_hide_create" width="5"/>
+                                        <field name="ks_hide_upload" width="5"/>
+                                        <field name="ks_hide_edit" width="5"/>
+                                        <field name="ks_hide_delete" width="5"/>
+                                        <field name="ks_hide_archive_unarchive" width="5"/>
+                                        <field name="ks_hide_duplicate" width="5"/>
+                                        <field name="ks_hide_export" width="5"/>
+                                        <field name="ks_insert_in_spreadsheet" invisible="not parent.ks_is_enterprise"
+                                               column_invisible="not parent.ks_is_enterprise" width="11"/>
+                                        <field name="ks_report_action_ids" width="13" widget="many2many_tags"
+                                               options="{'no_create': True}"/>
+                                        <field name="ks_server_action_ids" width="13" widget="many2many_tags"
+                                               options="{'no_create': True}"/>
+                                    </list>
+                                </field>
+                            </page>
+                            <page string="Field Access">
+                                <field name="ks_hide_field_line">
+                                    <list editable="bottom">
+                                        <field name="ks_profile_domain_model_ids" column_invisible="True" width="13"
+                                               invisible="1"/>
+                                        <field name="ks_model_id" required="1" width="13"
+                                               options="{'no_create': True}"/>
+                                        <field name="ks_field_id" width="300px" widget="many2many_tags"
+                                               options="{'no_create': True}" domain="[('model_id','=',ks_model_id)]"/>
+                                        <field name="ks_field_readonly" width="10"/>
+                                        <field name="ks_field_invisible" width="10"/>
+                                        <field name="ks_field_required" width="10"/>
+                                        <field name="ks_field_external_link" width="10"/>
+                                        <field name="ks_tracking" width="10"/>
+                                    </list>
+                                </field>
+                            </page>
+                            <page string="Domain Access">
+                                <field name="ks_domain_access_line">
+                                    <form>
+                                        <sheet>
+                                            <group>
+                                                <group>
+                                                    <field name="ks_profile_domain_model_ids" column_invisible="True"
+                                                           width="13" invisible="1"/>
+                                                    <field name="ks_model_id" required="1"
+                                                           options="{'no_create': True}"/>
+                                                </group>
+                                            </group>
+                                            <group>
+                                                <group>
+                                                    <field name="ks_create_access"/>
+                                                    <field name="ks_read_access"/>
+                                                </group>
+                                                <group>
+                                                    <field name="ks_write_access"/>
+                                                    <field name="ks_delete_access"/>
+                                                </group>
+                                            </group>
+                                            <group>
+                                                <field name="ks_model_name" invisible="1"/>
+                                                <field name="ks_domain"/>
+                                            </group>
+
+                                        </sheet>
+                                    </form>
+                                    <list>
+                                        <field name="ks_profile_domain_model_ids" column_invisible="True" width="13"
+                                               invisible="1"/>
+                                        <field name="ks_model_id" width="10"/>
+                                        <field name="ks_domain" width="10" string="Domain"/>
+                                    </list>
+                                </field>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record model="ir.ui.view" id="user_access_management_tree_view_1">
+        <field name="name">user.access.management.list.view</field>
+        <field name="model">user.management</field>
+        <field name="arch" type="xml">
+            <list decoration-muted="not active">
+                <field name="name"/>
+                <field name="create_uid"/>
+                <field name="create_date"/>
+                <field name="ks_profile_ids" widget="many2many_tags"/>
+                <field name="active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_user_management_search" model="ir.ui.view">
+        <field name="name">user.management.search</field>
+        <field name="model">user.management</field>
+        <field name="arch" type="xml">
+            <search>
+                <filter name="all_records" string="All" domain="[('active','in',[False, True])]"/>
+                <field name="name"
+                       filter_domain="[('name','ilike',self)]"
+                       string="Name"/>
+                <field name="ks_profile_ids"
+                       filter_domain="[('ks_profile_ids.name','ilike',self)]"
+                       string="Profile"/>
+            </search>
+        </field>
+    </record>
+
+
+    <record id="action_user_access_management" model="ir.actions.act_window">
+        <field name="name">Profile Management</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">user.management</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{"search_default_all_records":1}</field>
+    </record>
+
+
+</odoo>

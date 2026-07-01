@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="tileNameSection">
+        <t t-set="name" t-value="this.state.config.name || this.state.config.ks_model_id?.[1] || '-----'"/>
+        <div t-att-class="classes" t-att-style="styles" t-att-title="name" t-esc="name"/>
+    </t>
+
+    <t t-name="tileDataValueSection">
+        <t t-set="dataValue" t-value="this.displayDataValue"/>
+        <div t-att-class="classes" t-att-style="styles" t-att-data-tooltip="dataValue" t-esc="dataValue"/>
+    </t>
+
+    <t t-name="tileIconSection">
+        <div t-att-class="classes" t-att-style="styles">
+            <img t-if="this.state.config.ks_icon_select == 'Custom'" t-att-src="this.props.isFormPreview ? this.previewCustomIconUrl : this.customIconUrl" loading="lazy"/>
+            <span t-elif="this.state.config.ks_icon_select == 'Default'" t-att-style="this.iconColorStyle" t-att-class="this.defaultIconClass"/>
+        </div>
+    </t>
+
+    <t t-name="ks_dashboard_ninja.itemButtons">
+        <t t-if="!props.isPreview">
+            <KsItemButton itemComponent.alike="constructor" chartInsightsProps.bind.alike="chartInsightsProps" itemConfig="state.config" rootClasses.alike="''"
+                      fetchOrUpdateItem.bind.alike="() => this.fetchOrUpdateItem(this.props)" isDashboardManager.alike="state.config.ks_dashboard_manager"
+                      allDashboardLists.alike="props.dashboardData.ks_dashboard_list"
+                      itemBasicDataFields.alike="props.dashboardData.item_basic_data_fields" resetChart.alike="resetChart"
+                      dnStore="props.dnStore"/>
+        </t>
+    </t>
+
+    <t t-name="tile_view">
+
+        <!-- INFO: Wrapper for the Explanation and Chart -->
+        <div t-ref="tileRootRef" class="ks_dashboarditem_id encapsulated-tile-container ks_dashboard_item ks_dashboard_item_hover position-relative"
+             t-att-class="props.isAIExplanation ? ' ks_with_explanation' : ''">
+
+            <!-- INFO: Wrapper for the Border and padding -->
+            <div t-if="state.config" t-att-class="props.isAIExplanation ? 'ks_ai_chart ' : ''">
+
+                <!-- INFO: This is the main div Chart -->
+                <div class="w-100 ks_border_radius h-100 position-relative" t-att-style="bgColorStyle" t-on-click.stop="onTileClick">
+                    <t t-set="layout" t-value="state.config.ks_layout"/>
+
+                    <t t-if="layout == 'layout1'" t-call="ks_tile_layout_1"/>
+                    <t t-elif="layout == 'layout2'" t-call="ks_tile_layout_2"/>
+                    <t t-elif="layout == 'layout3'" t-call="ks_tile_layout_3"/>
+                    <t t-elif="layout == 'layout4'" t-call="ks_tile_layout_4"/>
+                    <t t-elif="layout == 'layout5'" t-call="ks_tile_layout_5"/>
+                    <t t-elif="layout == 'layout6'" t-call="ks_tile_layout_6"/>
+                    <t t-else="" t-call="ks_tile_layout_1"/>
+                </div>
+            </div>
+
+            <t t-else="" t-call="card_skeleton"/>
+
+            <ExplanationViewer t-if="props.isAIExplanation" fetchExplanation="fetchExplanation"
+                               itemConfig="state.config" explanationText="state.config.ks_ai_analysis"/>
+        </div>
+
+    </t>
+
+    <t t-name="ks_tile_layout_1">
+        <t t-call="ks_dashboard_ninja.itemButtons"/>
+
+        <div class="ks_dashboard_item_main_body encapsulated-tile-1 ">
+            <t t-call="tileIconSection" t-call-context="{ classes: 'ks_dashboard_icon', this: this, styles: this.bgColorStyle}"/>
+
+            <div class="ks_dashboard_item_info">
+                <t t-call="tileDataValueSection" t-call-context="{ classes: 'ks_dashboard_item_domain_count', this: this, styles: this.fontStyle}"/>
+                <t t-call="tileNameSection" t-call-context="{ classes: 'ks_dashboard_item_name', this: this, styles: this.fontStyle}"/>
+            </div>
+        </div>
+    </t>
+
+    <t t-name="ks_tile_layout_2">
+        <div t-att-class="'encap-layout-2-box ks_explain_ai_view ks_dashboard_item_l2 ks_dashboard_item_hover '">
+            <t t-call="ks_dashboard_ninja.itemButtons"/>
+            <div class="ks_dashboard_item_main_body_l2">
+                <t t-call="tileDataValueSection" t-call-context="{ classes: 'ks_dashboard_item_domain_count_l2 layout-2-count', this: this, styles: this.fontStyle}"/>
+                <t t-call="tileNameSection" t-call-context="{ classes: 'ks_dashboard_item_name_l2 layout-2-name', this: this, styles: this.fontStyle}"/>
+            </div>
+
+            <t t-call="tileIconSection" t-call-context="{ classes: 'ks_dashboard_icon_l2 layout-2-icon', this: this, styles: this.darkenBgColorStyle}"/>
+        </div>
+    </t>
+
+    <t t-name="ks_tile_layout_3">
+        <div t-att-class="'ks_dashboarditem_id ks_tile_carouse h-100 ks_explain_ai_view ks_dashboard_item ks_dashboard_item_hover '">
+            <t t-call="ks_dashboard_ninja.itemButtons"/>
+            <div class="ks_dashboard_item_main_body minimum-180 encapsulated-main-body">
+                <t t-call="tileIconSection" t-call-context="{ classes: 'ks_dashboard_icon_l3 bg-white', this: this}"/>
+
+                <div class="ks_dashboard_item_info ks_dashboard_item_info_l3">
+                    <t t-call="tileDataValueSection" t-call-context="{ classes: 'ks_dashboard_item_domain_count_l3', this: this, styles: this.fontStyle}"/>
+                    <t t-call="tileNameSection" t-call-context="{ classes: 'ks_dashboard_item_name_l3', this: this, styles: this.fontStyle}"/>
+                </div>
+            </div>
+        </div>
+    </t>
+
+    <t t-name="ks_tile_layout_4">
+        <div t-att-class="'ks_dashboarditem_id ks_explain_ai_view ks_dashboard_item_l2 ks_dashboard_item_hover '+ ks_inner_container_class">
+            <t t-call="ks_dashboard_ninja.itemButtons"/>
+
+            <div class="d-flex justify-content-between flex-column w-100 tile-four-body">
+                <t t-call="tileIconSection" t-call-context="{ classes: 'ks_dashboard_icon_l4 layout-4-icon bg-white', this: this, styles: this.bgColorStyle}"/>
+
+                <div class="ks_dashboard_item_main_body_l2 layout-4-count ks_bg_white">
+                    <t t-call="tileDataValueSection" t-call-context="{ classes: 'ks_dashboard_item_domain_count_l2 ms-0', this: this, styles: this.fontStyle}"/>
+                </div>
+
+                <t t-call="tileNameSection" t-call-context="{ classes: 'ks_dashboard_item_name_l2 layout-4-name ms-0', this: this, styles: this.fontStyle}"/>
+            </div>
+        </div>
+    </t>
+
+    <t t-name="ks_tile_layout_5">
+        <div t-att-class="'ks_dashboarditem_id ks_explain_ai_view tile-layout-five ks_dashboard_item_l5 ks_dashboard_item_hover '+ ks_inner_container_class">
+            <t t-call="ks_dashboard_ninja.itemButtons"/>
+
+            <t t-call="tileIconSection" t-call-context="{ classes: 'ks_dashboard_icon_l5 dashboard-item-icon img-bg bg-white', this: this}"/>
+
+            <div class="ks_dashboard_item_main_body_l5 dashboard-item-data">
+                <t t-call="tileDataValueSection" t-call-context="{ classes: 'ks_dashboard_item_domain_count_l5', this: this, styles: this.fontStyle}"/>
+            </div>
+
+            <t t-call="tileNameSection" t-call-context="{ classes: 'ks_dashboard_item_name_l5 dashboard-item-name', this: this, styles: this.fontStyle}"/>
+        </div>
+
+    </t>
+
+    <t t-name="ks_tile_layout_6">
+        <div t-att-class="'ks_dashboarditem_id  layout-6-box   ks_explain_ai_view ks_dashboard_item_l2 ks_dashboard_item_hover '+ ks_inner_container_class">
+
+            <t t-call="ks_dashboard_ninja.itemButtons"/>
+
+            <div class="d-flex flex-column w-100">
+                <div class="ks_dashboard_item_main_body_l2 layout-6-container">
+                    <t t-call="tileIconSection" t-call-context="{ classes: 'ks_dashboard_icon_l2', this: this, styles: this.bgColorStyle}"/>
+                    <t t-call="tileDataValueSection" t-call-context="{ classes: 'ks_dashboard_item_domain_count_l2 layout-6-name ml-0', this: this, styles: this.fontStyle}"/>
+                </div>
+                <t t-call="tileNameSection" t-call-context="{ classes: 'ks_dashboard_item_name_l2 layout-6-tile-name ellipsis-content w-100', this: this, styles: this.fontStyle}"/>
+            </div>
+        </div>
+    </t>
+
+</templates>

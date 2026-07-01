@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="seq_insurance_policy" model="ir.sequence">
+        <field name="name">Insurance Policy</field>
+        <field name="code">insurance.policy</field>
+        <field name="prefix">INS/%(year)s/</field>
+        <field name="padding">4</field>
+        <field name="number_increment">1</field>
+    </record>
+    <record id="seq_insurance_declaration" model="ir.sequence">
+        <field name="name">Insurance Declaration</field>
+        <field name="code">insurance.declaration</field>
+        <field name="prefix">DECL/%(year)s/</field>
+        <field name="padding">4</field>
+        <field name="number_increment">1</field>
+    </record>
+    <record id="seq_insurance_topup" model="ir.sequence">
+        <field name="name">Insurance Top-up</field>
+        <field name="code">insurance.topup</field>
+        <field name="prefix">TOPUP/%(year)s/</field>
+        <field name="padding">4</field>
+        <field name="number_increment">1</field>
+    </record>
+    <record id="seq_insurance_policy_payment" model="ir.sequence">
+        <field name="name">Insurance Policy Payment</field>
+        <field name="code">insurance.policy.payment</field>
+        <field name="prefix">INSPAY/%(year)s/</field>
+        <field name="padding">4</field>
+        <field name="number_increment">1</field>
+    </record>
+</odoo>

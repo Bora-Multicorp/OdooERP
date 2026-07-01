@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Overide start survey template for change name to start-->
+        <template id="survey.survey_fill_form_start" name="Survey: start form content">
+            <div class="wrap o_survey_start">
+                <div class='mb32'>
+                    <div t-field='survey.description' class="oe_no_empty pb-5 text-break"/>
+                    <t t-if="answer.is_session_answer">
+                        <div class="fw-bold">
+                            The session will begin automatically when the host starts.
+                        </div>
+                    </t>
+                    <t t-else="">
+                        <div t-if="survey.is_time_limited">
+                            <p>
+                                <span t-if="not survey.certification">Time limit for this survey:</span>
+                                <span t-else="">Time limit for this certification:</span>
+                                <span class="fw-bold text-danger" t-field="survey.time_limit"
+                                      t-options="{'widget': 'duration', 'unit': 'minute'}"></span>
+                            </p>
+                        </div>
+                        <button type="submit" value="start" class="btn btn-primary btn-lg disabled">
+                            <t t-if="survey.certification">
+                                <!--Start Certification-->
+                                Start
+                            </t>
+                            <t t-else="">
+                                <!--Start Survey-->
+                                Start
+                            </t>
+                        </button>
+                        <span class="o_survey_enter fw-bold text-muted ms-2 d-none d-md-inline">or press Enter</span>
+                        <t t-if="survey.vendor_reg_url">
+                            <a t-att-href="survey.vendor_reg_url"
+                               class="btn btn-sm btn-primary me-2"
+                               target="_blank"
+                               rel="noopener noreferrer">
+                                <i class="fa fa-youtube-play"/>
+                                <t t-esc="'Help(Watch Vendor Registration Process)'"/>
+                            </a>
+                        </t>
+                    </t>
+                </div>
+            </div>
+        </template>
+
+        <!-- Overide Question: text box(To add 'text-uppercase')-->
+        <template id="survey.question_char_box" name="Question: text box">
+            <div class="o_survey_comment_container p-0">
+                <input t-att-type="'email' if question.validation_email else 'text'"
+                       class="form-control o_survey_question_text_box bg-transparent rounded-0 p-0 text-uppercase"
+                       t-att-name="question.id" t-att-placeholder="question.question_placeholder"
+                       t-att-value="answer_lines[0].value_char_box if answer_lines else None"
+                       t-att-data-question-type="question.question_type"
+                       t-att-data-validation-length-min="question.validation_length_min if question.validation_required else False"
+                       t-att-data-validation-length-max="question.validation_length_max if question.validation_required else False"/>
+            </div>
+        </template>
+        <!-- Overide Question: free text box(To add 'text-uppercase')-->
+        <template id="survey.question_text_box" name="Question: free text box">
+            <div class="o_survey_comment_container h-auto p-0">
+                <textarea class="form-control o_survey_question_text_box bg-transparent rounded-0 p-0 text-uppercase"
+                          rows="3"
+                          t-att-name="question.id" t-att-placeholder="question.question_placeholder"
+                          t-att-data-question-type="question.question_type">
+                    <t t-if="answer_lines" t-esc="answer_lines[0].value_text_box or None"/>
+                </textarea>
+            </div>
+        </template>
+        <!-- Overide Question: text box(To add 'text-uppercase')-->
+        <template id="survey.question_char_box" name="Question: text box">
+            <div class="o_survey_comment_container p-0">
+                <input t-att-type="'email' if question.validation_email else 'text'"
+                       class="form-control o_survey_question_text_box bg-transparent rounded-0 p-0 text-uppercase"
+                       t-att-name="question.id" t-att-placeholder="question.question_placeholder"
+                       t-att-value="answer_lines[0].value_char_box if answer_lines else None"
+                       t-att-data-question-type="question.question_type"
+                       t-att-data-validation-length-min="question.validation_length_min if question.validation_required else False"
+                       t-att-data-validation-length-max="question.validation_length_max if question.validation_required else False"/>
+            </div>
+        </template>
+        <!-- Override survey finished page: show KYC error if record creation failed -->
+        <template id="survey_fill_form_done" inherit_id="survey.survey_fill_form_done" name="KYC: show error on finish page">
+            <xpath expr="//div[hasclass('o_survey_finished')]" position="inside">
+                <t t-if="answer.kyc_error_message">
+                    <div class="alert alert-danger mt-4 mb-2" role="alert" style="border-left: 5px solid #dc3545;">
+                        <h5 class="alert-heading">
+                            <i class="fa fa-exclamation-triangle me-2"/>
+                            KYC Registration Incomplete
+                        </h5>
+                        <p class="mb-0" t-esc="answer.kyc_error_message"/>
+                    </div>
+                </t>
+                <t t-else="">
+                    <div class="alert alert-success mt-4 mb-2" role="alert" style="border-left: 5px solid #28a745;">
+                        <h5 class="alert-heading">
+                            <i class="fa fa-check-circle me-2"/>
+                            KYC Submitted Successfully
+                        </h5>
+                        <p class="mb-0">Your KYC details have been received and are pending review by our team.</p>
+                    </div>
+                </t>
+            </xpath>
+        </template>
+
+        <!-- Override tmpl_sh_file: attachment-widget style cards + mandatory fix -->
+        <template id="tmpl_sh_file" inherit_id="sh_survey_extra_fields.tmpl_sh_file" name="KS File: integrated prefill">
+            <xpath expr="//input[@type='file']" position="replace">
+                <t t-set="ks_existing" t-value="answer_lines.filtered(lambda l: l.value_ans_sh_file_fname)"/>
+
+                <!-- ── Existing file cards (Odoo attachment-widget style) ── -->
+                <t t-if="ks_existing">
+                    <div class="ks_existing_files d-flex flex-wrap gap-2 mb-2">
+                        <t t-foreach="ks_existing" t-as="line">
+                            <t t-set="ks_fname" t-value="line.value_ans_sh_file_fname or ''"/>
+                            <t t-set="ks_ext" t-value="ks_fname.rsplit('.', 1)[-1].upper() if '.' in ks_fname else 'FILE'"/>
+                            <div style="position:relative;width:200px;border:1px solid #dee2e6;border-radius:6px;overflow:hidden;background:#fff;">
+                                <!-- Clickable area → view file in new tab -->
+                                <a t-att-href="'/web/content/survey.user_input.line/%s/value_ans_sh_file/%s?access_token=%s' % (line.id, ks_fname, answer.access_token)"
+                                   target="_blank"
+                                   style="display:flex;align-items:center;gap:10px;padding:8px 10px;text-decoration:none;color:inherit;">
+                                    <div style="width:36px;height:36px;border-radius:4px;background:#f1f3f4;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                        <span class="fa fa-file-o" style="font-size:18px;color:#5f6368;"/>
+                                    </div>
+                                    <div style="overflow:hidden;">
+                                        <div style="font-size:12px;font-weight:500;color:#212529;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px;" t-esc="ks_fname"/>
+                                        <div style="font-size:11px;color:#6c757d;" t-esc="ks_ext"/>
+                                    </div>
+                                </a>
+                                <!-- Remove × button (top-right corner, handled by JS) -->
+                                <button type="button"
+                                        class="ks_remove_file_btn"
+                                        t-att-data-line-id="line.id"
+                                        t-att-data-access-token="answer.access_token"
+                                        style="position:absolute;top:4px;right:4px;width:20px;height:20px;border-radius:50%;background:#6c757d;border:none;color:#fff;font-size:13px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;"
+                                        title="Remove">×</button>
+                            </div>
+                        </t>
+                    </div>
+
+                    <!--
+                        Hidden sentinel: validation loop checks [data-question-type].
+                        value="existing" is truthy → no mandatory error.
+                        Real file input has no data-question-type so loop skips it,
+                        but sh_file_input class + name keeps _onChangeFileInput working.
+                    -->
+                    <input type="hidden"
+                           t-att-name="question.id"
+                           value="existing"
+                           data-question-type="que_sh_file"
+                           class="ks_file_existing_sentinel"/>
+                    <input type="file"
+                           class="form-control o_survey_question_email_box bg-transparent text-dark rounded-0 p-0 sh_file_input mt-1"
+                           t-att-multiple="question.upload_multiple_file"
+                           t-att-id="question.id"
+                           t-att-name="question.id"
+                           t-att-data-question-code="question.question_code"
+                           t-att-data-cond-req-questions="question.cond_required_answer_ids.ids"
+                           t-att-data-has-existing="1"/>
+                </t>
+                <t t-else="">
+                    <input type="file"
+                           class="form-control o_survey_question_email_box bg-transparent text-dark rounded-0 p-0 sh_file_input"
+                           t-att-multiple="question.upload_multiple_file"
+                           t-att-id="question.id"
+                           t-att-name="question.id"
+                           t-att-data-question-code="question.question_code"
+                           t-att-data-cond-req-questions="question.cond_required_answer_ids.ids"
+                           t-att-data-question-type="question.question_type"/>
+                </t>
+            </xpath>
+        </template>
+        <!--
+            Override matrix cell: inject pre-filled file chips + sentinel
+            immediately before the matrix file <input type="file">.
+            Uses a robust XPath on the unique combination of attributes that
+            only the matrix file input has (type=file + t-att-data-row-id +
+            t-att-data-col-id + class sh_file_input inside sh_custom_matrix_template).
+        -->
+        <template id="sh_custom_matrix_file_cell"
+                  inherit_id="sh_survey_matrix_adv.sh_custom_matrix_template"
+                  name="KS Matrix: prefill file cells">
+            <xpath expr="//input[@type='file'][contains(@class,'sh_file_input')][@t-att-data-row-id][@t-att-data-col-id]" position="before">
+                <!-- Only show when filling (not review) and cell has pre-filled data -->
+                <t t-set="ks_cell_existing" t-value="answer.filtered(lambda a: a.value_ans_sh_file_fname) if answer else []"/>
+                <t t-if="ks_cell_existing and not review">
+                    <div class="ks_matrix_existing_files mb-1 d-flex flex-wrap gap-1">
+                        <t t-foreach="ks_cell_existing" t-as="ans">
+                            <span class="badge bg-secondary" style="font-size:11px;">
+                                <span class="fa fa-file-o me-1"/>
+                                <t t-esc="ans.value_ans_sh_file_fname"/>
+                            </span>
+                        </t>
+                    </div>
+                    <!-- Hidden sentinel consumed by JS _validateForm override -->
+                    <input type="hidden"
+                           class="ks_matrix_has_existing_file"
+                           t-att-data-row-id="row_label.id"
+                           t-att-data-col-id="col_label.id"
+                           value="1"/>
+                </t>
+            </xpath>
+        </template>
+    </data>
+</odoo>

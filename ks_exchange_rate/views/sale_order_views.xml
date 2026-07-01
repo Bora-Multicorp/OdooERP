@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <!-- Add exchanged_amount field below tax_totals (which shows amount_total) in sale order form view -->
+    <record id="view_order_form_exchanged_amount" model="ir.ui.view">
+        <field name="name">sale.order.view.form.inherit.exchange.amount</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+            <!-- Add exchanged_amount below tax_totals (which shows amount_total) -->
+            <xpath expr="//field[@name='tax_totals']" position="after">
+                <field name="ks_exchange_currency_id" invisible="1"/>
+                <field name="exchanged_amount"
+                       digits="[16,2]"
+                       readonly="1"
+                       invisible="currency_id == company_currency_id"
+                       widget="monetary"
+                       options="{'currency_field': 'ks_exchange_currency_id'}"/>
+            </xpath>
+            <!-- Add exchanged_amount to order lines - after price_subtotal field -->
+            <xpath expr="//field[@name='order_line']//list//field[@name='price_subtotal']" position="after">
+                <field name="company_currency_id" column_invisible="1"/>
+                <field name="ks_exchange_currency_id" column_invisible="1"/>
+                <field name="exchanged_amount"
+                       digits="[16,2]"
+                       readonly="1"
+                       invisible="order_id.currency_id == company_currency_id"
+                       widget="monetary"
+                       options="{'currency_field': 'ks_exchange_currency_id'}"/>
+            </xpath>
+            <xpath expr="//field[@name='payment_term_id']" position='after'>
+                <field name="ks_exchange_currency_id"
+                       readonly="state in ['cancel', 'sale']"
+                       invisible="currency_id == company_currency_id"
+                       options="{'no_create': True}"
+                       string="Convert To"/>
+            </xpath>
+
+        </field>
+    </record>
+</odoo>

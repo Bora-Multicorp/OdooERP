@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Remove previously defined "Add for Approval" button view inheritances -->
+    <delete model="ir.ui.view" id="ks_purchase_order_tree_payment_tracker"/>
+    <delete model="ir.ui.view" id="ks_purchase_order_kpis_tree_payment_tracker"/>
+    <delete model="ir.ui.view" id="ks_purchase_order_view_tree_payment_tracker"/>
+</odoo>

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- KYC Expired - Action Required: sent by RE-KYC Follow Up cron to contacts whose KYC has expired -->
+        <record id="mail_template_kyc_expired_action_required" model="mail.template">
+            <field name="name">KYC Expired - Action Required</field>
+            <field name="model_id" ref="base.model_res_partner"/>
+            <field name="subject">IMPORTANT: Your KYC has Expired - Action Required</field>
+            <field name="email_from">{{ (object.company_id.email or object.company_id.partner_id.email or user.email) }}</field>
+            <field name="auto_delete" eval="False"/>
+            <field name="body_html" type="html">
+                <div style="margin: 0; padding: 0; font-size: 14px; font-family: Arial, sans-serif;">
+                    <p>Dear <t t-out="object.name or 'Contact'"/>.</p>
+                    <p>Your <strong>KYC status has expired</strong>.</p>
+                    <p>Please update your documents to maintain an active status and avoid any disruption to our business relationship.</p>
+                    <p style="margin-top: 24px;">
+                        <t t-if="object.rekyc_survey_url">
+                            <a t-att-href="object.rekyc_survey_url"
+                               style="display: inline-block; padding: 10px 20px; background-color: #0d6efd; color: #ffffff !important; text-decoration: none; border-radius: 4px; font-weight: bold;"
+                               class="btn btn-primary">Update Your KYC Details</a>
+                        </t>
+                        <t t-else="">
+                            <span>KYC update link not available. Please contact us.</span>
+                        </t>
+                    </p>
+                    <p style="margin-top: 24px;">Thanks and Regards.</p>
+                </div>
+            </field>
+        </record>
+    </data>
+</odoo>

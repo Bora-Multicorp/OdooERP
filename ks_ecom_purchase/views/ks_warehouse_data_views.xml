@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Tree (List) view: delivered column shown as "Delivery Status" -->
+    <record id="view_ks_warehouse_data_tree" model="ir.ui.view">
+        <field name="name">ks.warehouse.data.tree</field>
+        <field name="model">ks.warehouse.data</field>
+        <field name="arch" type="xml">
+            <list string="Warehouse Data" create="1" edit="1" delete="1">
+                <field name="warehouse_type"/>
+                <field name="sr_no"/>
+                <field name="grn_no"/>
+                <field name="date"/>
+                <field name="awb"/>
+                <field name="order_id"/>
+                <field name="invoice_no"/>
+                <field name="model_name"/>
+                <field name="qty"/>
+                <field name="rate"/>
+                <field name="i_w"/>
+                <field name="person"/>
+                <field name="delivered" string="Delivery Status"/>
+                <field name="diff"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Form view -->
+    <record id="view_ks_warehouse_data_form" model="ir.ui.view">
+        <field name="name">ks.warehouse.data.form</field>
+        <field name="model">ks.warehouse.data</field>
+        <field name="arch" type="xml">
+            <form string="Warehouse Data">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="warehouse_type"/>
+                            <field name="sr_no"/>
+                            <field name="grn_no"/>
+                            <field name="date"/>
+                            <field name="awb"/>
+                            <field name="order_id"/>
+                            <field name="invoice_no"/>
+                            <field name="model_name"/>
+                            <field name="qty"/>
+                            <field name="rate"/>
+                        </group>
+                        <group>
+                            <field name="i_w"/>
+                            <field name="person"/>
+                            <field name="delivered" string="Delivery Status"/>
+                            <field name="diff"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action: Warehouse Pune -->
+    <record id="action_ks_warehouse_data_pune" model="ir.actions.act_window">
+        <field name="name">Warehouse Pune</field>
+        <field name="res_model">ks.warehouse.data</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('warehouse_type', '=', 'pune')]</field>
+        <field name="context" eval="{'default_warehouse_type': 'pune'}"/>
+    </record>
+
+    <!-- Action: Warehouse Delhi -->
+    <record id="action_ks_warehouse_data_delhi" model="ir.actions.act_window">
+        <field name="name">Warehouse Delhi</field>
+        <field name="res_model">ks.warehouse.data</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('warehouse_type', '=', 'delhi')]</field>
+        <field name="context" eval="{'default_warehouse_type': 'delhi'}"/>
+    </record>
+
+    <!-- Action: Warehouse Karnal -->
+    <record id="action_ks_warehouse_data_karnal" model="ir.actions.act_window">
+        <field name="name">Warehouse Karnal</field>
+        <field name="res_model">ks.warehouse.data</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('warehouse_type', '=', 'karnal')]</field>
+        <field name="context" eval="{'default_warehouse_type': 'karnal'}"/>
+    </record>
+
+    <!-- Menus: Inventory > Reporting > ZONE Reports > 3 sub-menus -->
+    <menuitem
+        id="menu_ks_zone_reports_root"
+        name="ZONE Reports"
+        parent="stock.menu_warehouse_report"
+        sequence="50"/>
+    <menuitem
+        id="menu_ks_warehouse_data_pune"
+        name="Warehouse Pune"
+        parent="menu_ks_zone_reports_root"
+        action="action_ks_warehouse_data_pune"
+        sequence="10"/>
+    <menuitem
+        id="menu_ks_warehouse_data_delhi"
+        name="Warehouse Delhi"
+        parent="menu_ks_zone_reports_root"
+        action="action_ks_warehouse_data_delhi"
+        sequence="20"/>
+    <menuitem
+        id="menu_ks_warehouse_data_karnal"
+        name="Warehouse Karnal"
+        parent="menu_ks_zone_reports_root"
+        action="action_ks_warehouse_data_karnal"
+        sequence="30"/>
+</odoo>

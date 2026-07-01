@@ -1,0 +1,477 @@
+<odoo>
+
+    <record id="paperformat_dubai_saleorder" model="report.paperformat">
+            <field name="name">US Letter</field>
+            <field name="default" eval="True" />
+            <field name="format">Letter</field>
+            <field name="page_height">0</field>
+            <field name="page_width">0</field>
+            <field name="orientation">Portrait</field>
+            <field name="margin_top">10</field>
+            <field name="margin_bottom">32</field>
+            <field name="margin_left">10</field>
+            <field name="margin_right">10</field>
+            <field name="header_line" eval="False" />
+            <field name="header_spacing">20</field>
+            <field name="dpi">90</field>
+            <field name="css_margins" eval="True" />
+        </record>
+    <!-- Define the new report action for sale order -->
+    <record id="action_report_saleorder_dubai" model="ir.actions.report">
+        <field name="name">PROFORMA INVOICE PDF</field>
+        <field name="model">sale.order</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">ks_templates.report_saleorder_dubai</field>
+        <field name="report_file">ks_templates.report_saleorder_dubai</field>
+        <field name="print_report_name">(object.state in ('draft', 'sent') and 'Custom Quotation - %s' % (object.name)) or 'Custom Order - %s' % (object.name)</field>
+        <field name="binding_model_id" ref="sale.model_sale_order"/>
+        <field name="paperformat_id" ref="paperformat_dubai_saleorder"/>
+        <field name="binding_type">report</field>
+    </record>
+
+
+
+    <template id="report_saleorder_dubai">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="doc">
+                <t t-set="doc" t-value="doc.with_context(lang=doc.partner_id.lang)"/>
+
+                <style>
+                    @page {
+                        size: A4;
+                        margin: 1cm;
+                    }
+                    body {
+                        font-family: Arial, Helvetica, sans-serif;
+                        font-size: 10pt;
+                        margin: 0;
+                        padding: 0;
+                    }
+                    .header-table {
+                        width: 100%;
+                        margin-bottom: 15px;
+                    }
+                    .company-name {
+                        font-size: 12pt;
+                        font-weight: bold;
+                    }
+                    .document-title {
+                        font-size: 12pt;
+                        font-weight: bold;
+                        text-align: right;
+                    }
+                    .reference-table {
+                        width: 100%;
+                        margin-bottom: 15px;
+                        border-collapse: collapse;
+                    }
+                    .reference-table td {
+                        padding: 5px;
+                        vertical-align: top;
+                    }
+                    .partner-section {
+                        width: 100%;
+                        margin-bottom: 15px;
+                        border-collapse: collapse;
+                    }
+                    .partner-section td {
+                        padding: 8px;
+                        vertical-align: top;
+                        width: 50%;
+                    }
+                    .partner-label {
+                        font-weight: bold;
+                        font-size: 10pt;
+                        margin-bottom: 5px;
+                    }
+                    .product-table {
+                        width: 100%;
+                        border-collapse: collapse;
+                        margin-bottom: 15px;
+                    }
+                    .product-table th {
+                        border: 1px solid #000;
+                        padding: 8px;
+                        text-align: left;
+                        background-color: #f0f0f0;
+                        font-weight: bold;
+                        font-size: 10pt;
+                    }
+                    .product-table td {
+                        border: 1px solid #000;
+                        padding: 8px;
+                        font-size: 10pt;
+                    }
+                    .product-table .text-right {
+                        text-align: right;
+                    }
+                    .product-table .text-center {
+                        text-align: center;
+                    }
+                    .totals-table {
+                        width: 100%;
+                        margin-bottom: 15px;
+                        border-collapse: collapse;
+                    }
+                    .totals-table td {
+                        padding: 5px;
+                        font-size: 10pt;
+                    }
+                    .totals-table .label-cell {
+                        text-align: right;
+                        font-weight: bold;
+                        width: 70%;
+                    }
+                    .totals-table .value-cell {
+                        text-align: right;
+                        width: 30%;
+                    }
+                    .bank-table {
+                        width: 100%;
+                        margin-bottom: 15px;
+                        border-collapse: collapse;
+                    }
+                    .bank-table td {
+                        padding: 5px;
+                        font-size: 10pt;
+                    }
+                    .bank-table .label-cell {
+                        font-weight: bold;
+                        width: 20%;
+                    }
+                    .footer-text {
+                        font-size: 10pt;
+                        margin-top: 10px;
+                    }
+                    .signatory {
+                        text-align: right;
+                        margin-top: 30px;
+                        font-size: 10pt;
+                    }
+                </style>
+                <!-- Main Single Table Structure - Everything in One Box -->
+                <table style="width:100%; border-collapse:collapse; border:1px solid #000; font-family: Arial, sans-serif; font-size: 11px;">
+                    <!-- Header Row with Title -->
+                    <tr>
+                        <td style="border:1px solid #000; padding:6px; text-align:center; font-weight:bold; font-size:14px;" colspan="2">
+                            PROFORMA INVOICE
+                        </td>
+                    </tr>
+
+                    <!-- Company and Invoice Details Row -->
+                    <tr>
+                        <!-- LEFT COLUMN -->
+                        <td style="width:55%; border:1px solid #000; vertical-align:top; padding:6px;">
+                            <!-- Company Information -->
+                            <strong t-esc="doc.company_id.name or ''"/>
+                            <br t-if="doc.company_id.partner_id.street"/>
+                            <t t-if="doc.company_id.partner_id.street" t-esc="doc.company_id.partner_id.street"/>
+                            <t t-if="doc.company_id.partner_id.street and doc.company_id.partner_id.street2">, </t>
+                            <t t-if="doc.company_id.partner_id.street2" t-esc="doc.company_id.partner_id.street2"/>
+                            <t t-if="(doc.company_id.partner_id.street or doc.company_id.partner_id.street2) and doc.company_id.partner_id.city">, </t>
+                            <t t-if="doc.company_id.partner_id.city" t-esc="doc.company_id.partner_id.city"/>
+                            <t t-if="doc.company_id.partner_id.city and doc.company_id.partner_id.country_id">, </t>
+                            <t t-if="doc.company_id.partner_id.country_id" t-esc="doc.company_id.partner_id.country_id.name or ''"/>
+                            <t t-if="doc.company_id.partner_id.zip"> P.O.Box <t t-esc="doc.company_id.partner_id.zip"/></t>
+                            <br t-if="doc.company_id.partner_id.state_id"/>
+                            <t t-if="doc.company_id.partner_id.state_id">
+                                <t t-if="doc.company_id.partner_id.country_id.code == 'IN'">State : </t>
+                                <t t-else="">Emirate : </t>
+                                <t t-esc="doc.company_id.partner_id.state_id.name or ''"/>
+                            </t>
+                            <br t-if="doc.company_id.vat"/>
+                            <t t-if="doc.company_id.vat">
+                                <t t-if="doc.company_id.partner_id.country_id.code == 'IN'">GSTN : <t t-esc="doc.company_id.vat"/></t>
+                                <t t-else="">TRN : <t t-esc="doc.company_id.vat"/></t>
+                            </t>
+                            <t t-if="doc.company_id.partner_id.country_id.code == 'IN'">
+                                <t t-set="company_pan" t-value="doc.get_company_pan()"/>
+                                <t t-if="company_pan">
+                                    <br/><t t-esc="'PAN : ' + company_pan"/>
+                                </t>
+                                <t t-set="company_iec" t-value="doc.get_company_iec()"/>
+                                <t t-if="company_iec">
+                                    <br/><t t-esc="'IEC No : ' + company_iec"/>
+                                </t>
+                            </t>
+                            <br t-if="doc.company_id.partner_id.email"/>
+                            <t t-if="doc.company_id.partner_id.email">E-Mail : <t t-esc="doc.company_id.partner_id.email"/></t>
+                            <div style="border-top:1px solid black;height:1px; margin-top:5px; margin-bottom:5px;"/>
+
+                            <!-- Consignee Information -->
+                            <t t-set="consignee_partner" t-value="doc.partner_shipping_id or doc.partner_id"/>
+                            Consignee<br/>
+                            <strong t-esc="consignee_partner.name or ''"/>
+                            <br t-if="consignee_partner.street"/>
+                            <t t-if="consignee_partner.street" t-esc="consignee_partner.street"/>
+                            <t t-if="consignee_partner.street and consignee_partner.street2">, </t>
+                            <t t-if="consignee_partner.street2" t-esc="consignee_partner.street2"/>
+                            <t t-if="(consignee_partner.street or consignee_partner.street2) and consignee_partner.city">, </t>
+                            <t t-if="consignee_partner.city" t-esc="consignee_partner.city"/>
+                            <t t-if="consignee_partner.city and consignee_partner.country_id">, </t>
+                            <t t-if="consignee_partner.country_id" t-esc="consignee_partner.country_id.name or ''"/>
+                            <t t-if="doc.ks_zone == 'india' and consignee_partner.l10n_in_pan">
+                                <br/>PAN : <t t-esc="consignee_partner.l10n_in_pan"/>
+                            </t>
+                            <br/>
+                            <br/>
+                            <div style="border-top:1px solid black;height:1px; margin-top:5px; margin-bottom:5px;"/>
+
+                            <!-- Buyer Information -->
+                            Buyer<br/>
+                            <strong t-esc="doc.partner_id.name or ''"/>
+                            <br t-if="doc.partner_id.street"/>
+                            <t t-if="doc.partner_id.street" t-esc="doc.partner_id.street"/>
+                            <t t-if="doc.partner_id.street and doc.partner_id.street2">, </t>
+                            <t t-if="doc.partner_id.street2" t-esc="doc.partner_id.street2"/>
+                            <t t-if="(doc.partner_id.street or doc.partner_id.street2) and doc.partner_id.city">, </t>
+                            <t t-if="doc.partner_id.city" t-esc="doc.partner_id.city"/>
+                            <t t-if="doc.partner_id.city and doc.partner_id.country_id">, </t>
+                            <t t-if="doc.partner_id.country_id" t-esc="doc.partner_id.country_id.name or ''"/>
+                            <br t-if="doc.partner_id.state_id"/>
+                            <t t-if="doc.partner_id.state_id">Emirate : <t t-esc="doc.partner_id.state_id.name or ''"/></t>
+                            <br t-if="doc.partner_id.country_id"/>
+                            <t t-if="doc.partner_id.country_id">Country : <t t-esc="doc.partner_id.country_id.name or ''"/></t>
+                            <t t-if="doc.ks_zone == 'india' and doc.partner_id.l10n_in_pan">
+                                <br/>PAN : <t t-esc="doc.partner_id.l10n_in_pan"/>
+                            </t>
+                        </td>
+
+                        <!-- RIGHT COLUMN -->
+                        <td style="width:45%;vertical-align:top; padding:0; border-left:1px solid #000;">
+                            <table style="width:100%; border-collapse:collapse;">
+                                <tr>
+                                    <td style="border-right:1px solid #000; padding:1px;">Voucher No.</td>
+                                    <td style="padding:1px;" colspan="3">Dated</td>
+                                </tr>
+                                <tr>
+                                    <td style="border-right:1px solid #000; padding:1px;"><strong t-esc="doc.name or ''"/></td>
+                                    <td style="border-left:1px solid #000; padding:1px;" colspan="3">
+                                        <strong>
+                                            <t t-if="doc.date_order" t-esc="doc.date_order.strftime('%d-%b-%y')"/>
+                                            <t t-elif="doc.create_date" t-esc="doc.create_date.strftime('%d-%b-%y')"/>
+                                        </strong>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="border-right:1px solid #000; padding:1px;border-top:1px solid #000; padding:1px;">Buyer's Ref./Order No.</td>
+                                    <td style="border-left:1px solid #000; padding:1px;border-right:1px solid #000; padding:1px;border-top:1px solid #000; padding:1px;" colspan="3">Other Reference(s)</td>
+                                </tr>
+                                <tr>
+                                    <td style="border-right:1px solid #000; padding:1px;"><strong t-esc="doc.name or ''"/></td>
+                                    <td style="border-right:1px solid #000; padding:1px;" colspan="3"><strong t-esc="doc.ks_other_reference or ''"/></td>
+                                </tr>
+                                <tr>
+                                    <td style="border-right:1px solid #000; padding:1px;border-top:1px solid #000; padding:1px;">Despatch through</td>
+                                    <td style="border-left:1px solid #000; padding:1px;border-right:1px solid #000; padding:1px;border-top:1px solid #000; padding:1px;" colspan="3">Destination</td>
+                                </tr>
+                                <tr>
+                                    <td style="border-right:1px solid #000; padding:1px;">
+                                        <t t-esc="doc.ks_despatched_through or ''"/>
+                                    </td>
+                                    <td style="border-right:1px solid #000; padding:1px;" colspan="3">
+                                        <t t-esc="doc.ks_city_port_of_discharge or ''"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="border-top:1px solid #000; padding:1px;" colspan="4">
+                                        <strong>Terms of Delivery</strong>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="border-right:1px solid #000; padding:1px;" colspan="4">
+                                        <strong>
+                                            <t t-if="doc.incoterm">
+                                                [<t t-esc="doc.incoterm.code or ''"/>] <t t-esc="doc.incoterm.name or ''"/>
+                                                <t t-if="doc.incoterm_location">, <t t-esc="doc.incoterm_location or ''"/></t>
+                                            </t>
+                                        </strong>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                    <!-- Product Table Row -->
+                    <tr>
+                        <td style="border:1px solid #000; padding:0;" colspan="2">
+                            <t t-set="total_qty" t-value="sum(line.product_uom_qty for line in doc.get_printable_order_lines())"/>
+                            <t t-set="total_usd" t-value="doc.get_printable_amount_total()"/>
+                            <t t-set="exchange_rate" t-value="3.676"/>
+                            <t t-set="total_aed" t-value="total_usd * exchange_rate"/>
+                            <table style="width:100%; border-collapse:collapse; border:0;">
+                                <thead>
+                                    <tr>
+                                        <th style="border:1px solid #000; padding:4px; text-align:center; background-color:#f0f0f0; font-weight:bold; font-size:10pt;">Sl No.</th>
+                                        <th style="border:1px solid #000; padding:4px; text-align:left; background-color:#f0f0f0; font-weight:bold; font-size:10pt;">Description of Goods</th>
+                                        <th style="border:1px solid #000; padding:4px; text-align:center; background-color:#f0f0f0; font-weight:bold; font-size:10pt;">HSN/SAC</th>
+                                        <th style="border:1px solid #000; padding:4px; text-align:right; background-color:#f0f0f0; font-weight:bold; font-size:10pt;">Quantity</th>
+                                        <th style="border:1px solid #000; padding:4px; text-align:right; background-color:#f0f0f0; font-weight:bold; font-size:10pt;">Rate</th>
+                                        <th style="border:1px solid #000; padding:4px; text-align:center; background-color:#f0f0f0; font-weight:bold; font-size:10pt;">per</th>
+                                        <th style="border:1px solid #000; padding:4px; text-align:right; background-color:#f0f0f0; font-weight:bold; font-size:10pt;">Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-set="line_num" t-value="0"/>
+                                    <t t-foreach="doc.get_printable_order_lines()" t-as="line">
+                                        <t t-set="line_num" t-value="line_num + 1"/>
+                                        <tr>
+                                            <td style="border:1px solid #000; padding:4px; text-align:center;" t-esc="line_num"/>
+                                            <td style="border:1px solid #000; padding:4px;">
+                                                <t t-esc="line.name or ''"/>
+                                                <t t-set="made_in_country" t-value="line.made_in_country_id or (line.product_id and line.product_id.product_tmpl_id.made_country)"/>
+                                                <t t-if="made_in_country">
+                                                    <br/><span style="margin-left: 1em;"><t t-esc="'Made in ' + (made_in_country.name or '')"/></span>
+                                                </t>
+                                            </td>
+                                            <td style="border:1px solid #000; padding:4px; text-align:center;" t-esc="doc.get_line_hsn_code(line)"/>
+                                            <td style="border:1px solid #000; padding:4px; text-align:right;" t-esc="doc.format_number(line.product_uom_qty, digits=0)"/>
+                                            <td style="border:1px solid #000; padding:4px; text-align:right;">
+                                                <strong><t t-esc="doc.currency_id.symbol or '$'"/> <t t-esc="doc.format_number(line.price_unit, digits=2)"/></strong>
+                                            </td>
+                                            <td style="border:1px solid #000; padding:4px; text-align:center;" t-esc="line.product_uom.name or 'pcs'"/>
+                                            <td style="border:1px solid #000; padding:4px; text-align:right;">
+                                                <strong><t t-esc="doc.currency_id.symbol or '$'"/> <t t-esc="doc.format_number(line.price_subtotal, digits=2)"/></strong>
+                                            </td>
+                                        </tr>
+                                    </t>
+                                    <!-- Total Row -->
+                                    <tr>
+                                        <td style="border:1px solid #000; padding:4px; text-align:center;"></td>
+                                        <td style="border:1px solid #000; padding:4px;"><strong>Total</strong></td>
+                                        <td style="border:1px solid #000; padding:4px; text-align:center;"></td>
+                                        <td style="border:1px solid #000; padding:4px; text-align:right;"><strong><t t-esc="doc.format_number(total_qty, digits=0)"/> pcs</strong></td>
+                                        <td style="border:1px solid #000; padding:4px; text-align:right;"></td>
+                                        <td style="border:1px solid #000; padding:4px; text-align:center;"></td>
+                                        <td style="border:1px solid #000; padding:4px; text-align:right;"><strong><t t-esc="doc.currency_id.symbol or '$'"/> <t t-esc="doc.format_number(total_usd, digits=2)"/></strong></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- Totals Summary Row -->
+                    <tr>
+                        <t t-set="invoice_currency" t-value="doc.currency_id"/>
+                        <t t-set="company_currency" t-value="doc.company_id.currency_id"/>
+                        <t t-set="conversion_date" t-value="doc.date_order or doc.create_date.date()"/>
+                        <t t-set="total_invoice_amount" t-value="total_usd"/>
+                        <t t-set="converted_amount" t-value="total_usd"/>
+                        <t t-set="invoice_currency_rate" t-value="1.0"/>
+                        <t t-set="exchange_rate" t-value="1.0"/>
+                        <t t-set="company_to_invoice_rate" t-value="1.0"/>
+                        <t t-if="invoice_currency and company_currency and invoice_currency != company_currency">
+                            <t t-set="converted_amount"
+                               t-value="invoice_currency._convert(total_usd, company_currency, doc.company_id, conversion_date, round=True)"/>
+                            <t t-set="invoice_currency_rate"
+                               t-value="doc.env['res.currency']._get_conversion_rate(invoice_currency, company_currency, doc.company_id, conversion_date)"/>
+                            <t t-set="exchange_rate" t-value="invoice_currency_rate"/>
+                            <t t-set="company_to_invoice_rate"
+                               t-value="1.0 / invoice_currency_rate if invoice_currency_rate else 1.0"/>
+                        </t>
+                    </tr>
+
+                    <!-- Conversion Rate Row -->
+                    <t t-if="doc.is_exchange and doc.exchanged_amount and doc.ks_exchange_currency_id">
+                        <tr>
+                            <td style="background-color:#e8f4e8; border:1px solid #000; padding:4px; font-size:10pt; text-align:right; font-weight:bold;" colspan="2">
+                                Total Invoice Amount in <t t-esc="doc.ks_exchange_currency_id.name"/>
+                                &amp;nbsp;
+                                <t t-esc="doc.currency_id.symbol or doc.currency_id.name"/>
+                                <t t-esc="doc.format_number(total_invoice_amount, digits=2)"/>
+                                &amp;nbsp;@&amp;nbsp;
+                                <t t-esc="doc.format_number(doc.rate, digits=2)"/>
+                                <t t-esc="doc.ks_exchange_currency_id.name"/>/<t t-esc="doc.currency_id.symbol or doc.currency_id.name"/>
+                                &amp;nbsp;=&amp;nbsp;
+                                <t t-esc="doc.format_number(doc.exchanged_amount, digits=2)"/>
+                                <t t-esc="doc.ks_exchange_currency_id.name"/>
+                            </td>
+                        </tr>
+                    </t>
+
+                    <!-- Amount in Words Row -->
+                    <tr>
+                        <td style="border:1px solid #000; padding:6px; font-size:10pt;" colspan="2">
+                            <t t-if="doc.is_exchange and doc.exchanged_amount and doc.ks_exchange_currency_id">
+                                <t t-set="words_amount" t-value="doc.exchanged_amount"/>
+                                <t t-set="words_currency" t-value="doc.ks_exchange_currency_id"/>
+                            </t>
+                            <t t-else="">
+                                <t t-set="words_amount" t-value="total_invoice_amount"/>
+                                <t t-set="words_currency" t-value="invoice_currency"/>
+                            </t>
+                            <t t-set="invoice_amount_words" t-value="doc.get_amount_in_words_currency(words_amount, words_currency)"/>
+                            <strong>Amount Chargeable (in words)</strong><br/>
+                            <strong>
+                                <t t-if="words_currency.name == 'HKD'">Hong Kong Dollar </t>
+                                <t t-esc="invoice_amount_words or ''"/>
+                            </strong>
+                        </td>
+                    </tr>
+
+                    <!-- Remarks + Declaration + Bank Details Row -->
+                    <tr>
+                        <td style="border:1px solid #000; padding:6px; font-size:11px; vertical-align:top; width:55%;">
+                            <!-- Remarks -->
+                            <t t-if="doc.ks_remarks">
+                                <strong>Remarks</strong><br/>
+                                <t t-esc="doc.ks_remarks"/><br/>
+                            </t>
+                            <!-- Declaration (Terms &amp; Conditions) -->
+                            <t t-if="doc.note">
+                                <strong>Declaration</strong><br/>
+                                <span t-out="doc.note"/>
+                            </t>
+                        </td>
+                        <td style="border:1px solid #000; padding:6px; font-size:11px; vertical-align:top; width:45%;">
+                            <t t-set="inv_bank" t-value="doc.ks_bank_id"/>
+                            <strong>Company's Bank Details</strong><br/>
+                            Bank Name: <t t-esc="inv_bank.name if inv_bank else ''"/><br/>
+                            A/c No.: <t t-esc="inv_bank.bic if inv_bank else ''"/><br/>
+                            Branch &amp; IFS Code: <t t-esc="inv_bank.city if inv_bank else ''"/><t t-if="inv_bank and inv_bank.ifsc_code"> (<t t-esc="inv_bank.ifsc_code"/>)</t><br/>
+                            SWIFT Code: <t t-esc="(inv_bank.swift_code or inv_bank.bic) if inv_bank else ''"/><br/>
+                            <div style="border-top:1px solid #000; height:1px; margin-top:8px; margin-bottom:4px;"/>
+                            <div style="text-align:right;">
+                                <t t-if="doc.company_id.name">for <strong><t t-esc="doc.company_id.name or ''"/></strong></t>
+                            </div>
+                            <br/><br/><br/>
+                            <div style="text-align:right;">
+                                <t t-if="doc.ks_authorized_signature">
+                                    <img t-att-src="image_data_uri(doc.ks_authorized_signature)"
+                                         style="max-height:60px; max-width:180px; display:block; margin:0 0 4px auto;"/>
+                                </t>
+                                Authorised Signatory
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- Footer Row -->
+                    <tr>
+                        <td style="border:1px solid #000; padding:6px; text-align:center; font-size:9pt;" colspan="2">
+                            <div style="margin-bottom: 5px;">SUBJECT TO <t t-esc="(doc.company_id.city or 'DUBAI').upper()"/>, <t t-esc="(doc.company_id.country_id.name or 'U.A.E.').upper()"/> JURISDICTION</div>
+                            <div>This is a Computer Generated Document</div>
+                        </td>
+                    </tr>
+                </table>
+            </t>
+        </t>
+    </template>
+</odoo>
+
+

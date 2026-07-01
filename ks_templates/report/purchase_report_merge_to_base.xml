@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- 1) Make base Purchase Order PDF use Custom template content -->
+    <template id="report_purchaseorder_use_custom" inherit_id="purchase.report_purchaseorder">
+        <xpath expr="//t[@t-foreach='docs']" position="replace">
+            <t t-call="ks_templates.purchase_order_custom_report"/>
+        </xpath>
+    </template>
+
+    <!-- 2) Apply custom paperformat + restrict to non-INR only -->
+    <record id="purchase.action_report_purchase_order" model="ir.actions.report">
+        <field name="paperformat_id" ref="ks_templates.paperformat_custom_purchase_order"/>
+        <field name="domain">[('currency_id.name', '!=', 'INR')]</field>
+    </record>
+
+    <!-- 3) Remove "Purchase / Order Custom" from Print menu -->
+    <delete model="ir.actions.report" id="ks_templates.action_report_purchase_custom"/>
+
+</odoo>

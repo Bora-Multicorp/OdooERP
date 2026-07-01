@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Inherit sale.order form view to add custom fields in Other Information tab -->
+        <record id="view_sale_order_form_inherit_ks_templates" model="ir.ui.view">
+            <field name="name">sale.order.form.ks.templates</field>
+            <field name="model">sale.order</field>
+            <field name="inherit_id" ref="sale.view_order_form"/>
+            <field name="arch" type="xml">
+                <!-- Add fields to Other Information tab -->
+                <xpath expr="//page[@name='other_information']/group" position="inside">
+                    <group string="Additional Information">
+                        <field name="ks_other_reference" placeholder="Other Reference(s)" readonly="not ks_can_edit or ks_qty_only_edit"/>
+                        <field name="ks_despatched_through" placeholder="Despatch through" readonly="not ks_can_edit or ks_qty_only_edit"/>
+                        <field name="ks_city_port_of_discharge" placeholder="Destination" readonly="not ks_can_edit or ks_qty_only_edit"/>
+                        <field name="ks_delivery_note" placeholder="Delivery Note" readonly="not ks_can_edit or ks_qty_only_edit"/>
+                        <field name="ks_buyer_order_no" placeholder="Buyer's Order No." readonly="not ks_can_edit or ks_qty_only_edit"/>
+                        <field name="ks_despatch_document_no" placeholder="Dispatch Doc No." readonly="not ks_can_edit or ks_qty_only_edit"/>
+                        <field name="ks_delivery_note_date" readonly="not ks_can_edit or ks_qty_only_edit"/>
+                        <field name="ks_exchange_rate" placeholder="e.g. 83.50 means 1 USD = ₹83.50" readonly="not ks_can_edit or ks_qty_only_edit"/>
+                        <field name="ks_remarks" placeholder="Remarks" colspan="2" readonly="not ks_can_edit or ks_qty_only_edit"/>
+                        <field name="ks_authorized_signature" widget="signature" string="Authorized Signature" readonly="not ks_can_edit or ks_qty_only_edit"/>
+                    </group>
+                </xpath>
+                <!-- Add Made In on Sale Order Line (form) -->
+                <xpath expr="//field[@name='order_line']/form/field[@name='name']" position="after">
+                    <field name="made_in_country_id" string="Made In" optional="show" placeholder="e.g. Made in India"/>
+                </xpath>
+                <!-- Add Made In on Sale Order Line (list) -->
+                <xpath expr="//field[@name='order_line']/list/field[@name='name']" position="after">
+                    <field name="made_in_country_id" string="Made In" optional="show" readonly="parent.ks_qty_only_edit"/>
+                </xpath>
+            </field>
+        </record>
+
+    </data>
+</odoo>
+

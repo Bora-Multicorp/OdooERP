@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <!-- Fire Insurance Types -->
+    <record id="type_fire_standard" model="insurance.type">
+        <field name="name">Fire Insurance</field>
+        <field name="category_id" ref="cat_fire"/>
+        <field name="is_fire_burglary">True</field>
+        <field name="company_id" eval="False"/>
+        <field name="description">Standard fire insurance covering loss or damage to property due to fire.</field>
+    </record>
+
+    <!-- Burglary Insurance Types -->
+    <record id="type_burglary_standard" model="insurance.type">
+        <field name="name">Burglary Insurance</field>
+        <field name="category_id" ref="cat_burglary"/>
+        <field name="is_fire_burglary">True</field>
+        <field name="company_id" eval="False"/>
+        <field name="description">Insurance covering loss of assets due to burglary or theft.</field>
+    </record>
+
+    <!-- Fire &amp; Burglary Combined -->
+    <record id="type_fire_burglary_combined" model="insurance.type">
+        <field name="name">Fire &amp; Burglary Combined</field>
+        <field name="category_id" ref="cat_fire"/>
+        <field name="is_fire_burglary">True</field>
+        <field name="company_id" eval="False"/>
+        <field name="description">Combined policy covering fire and burglary risks.</field>
+    </record>
+
+    <!-- Marine Insurance Types -->
+    <record id="type_marine_open" model="insurance.type">
+        <field name="name">Marine Open Cover</field>
+        <field name="category_id" ref="cat_marine"/>
+        <field name="is_marine">True</field>
+        <field name="marine_applicability">both</field>
+        <field name="company_id" eval="False"/>
+        <field name="description">Open cover marine policy for ongoing shipments (imports and exports).</field>
+    </record>
+    <record id="type_marine_exim" model="insurance.type">
+        <field name="name">Marine EXIM</field>
+        <field name="category_id" ref="cat_marine"/>
+        <field name="is_marine">True</field>
+        <field name="marine_applicability">exim</field>
+        <field name="company_id" eval="False"/>
+        <field name="description">Marine policy covering EXIM (Export-Import) shipments.</field>
+    </record>
+    <record id="type_marine_domestic" model="insurance.type">
+        <field name="name">Marine Domestic</field>
+        <field name="category_id" ref="cat_marine"/>
+        <field name="is_marine">True</field>
+        <field name="marine_applicability">domestic</field>
+        <field name="company_id" eval="False"/>
+        <field name="description">Marine policy covering domestic (within India) transit.</field>
+    </record>
+    <record id="type_marine_russia" model="insurance.type">
+        <field name="name">Marine Russia Only</field>
+        <field name="category_id" ref="cat_marine"/>
+        <field name="is_marine">True</field>
+        <field name="marine_applicability">russia</field>
+        <field name="company_id" eval="False"/>
+        <field name="description">Marine policy specific to Russia shipments.</field>
+    </record>
+
+    <!-- Miscellaneous Insurance Types -->
+    <record id="type_gmc" model="insurance.type">
+        <field name="name">Group Mediclaim (GMC)</field>
+        <field name="category_id" ref="cat_gmc"/>
+        <field name="company_id" eval="False"/>
+        <field name="description">Group Mediclaim insurance covering employees' medical expenses.</field>
+    </record>
+    <record id="type_gpa" model="insurance.type">
+        <field name="name">Group Personal Accident (GPA)</field>
+        <field name="category_id" ref="cat_gpa"/>
+        <field name="company_id" eval="False"/>
+        <field name="description">Group Personal Accident insurance for employees.</field>
+    </record>
+    <record id="type_vehicle_zero_dep" model="insurance.type">
+        <field name="name">Vehicle - Zero Depreciation</field>
+        <field name="category_id" ref="cat_vehicle"/>
+        <field name="company_id" eval="False"/>
+        <field name="description">Zero depreciation vehicle insurance for company vehicles.</field>
+    </record>
+    <record id="type_vehicle_third_party" model="insurance.type">
+        <field name="name">Vehicle - Third Party</field>
+        <field name="category_id" ref="cat_vehicle"/>
+        <field name="company_id" eval="False"/>
+        <field name="description">Third party vehicle insurance as mandated by law.</field>
+    </record>
+    <record id="type_personal" model="insurance.type">
+        <field name="name">Personal Accident</field>
+        <field name="category_id" ref="cat_personal"/>
+        <field name="company_id" eval="False"/>
+        <field name="description">Personal accident insurance policy.</field>
+    </record>
+    <record id="type_office_space" model="insurance.type">
+        <field name="name">Office Space Insurance</field>
+        <field name="category_id" ref="cat_office"/>
+        <field name="company_id" eval="False"/>
+        <field name="description">Insurance for office premises and contents.</field>
+    </record>
+    <record id="type_ho_assets" model="insurance.type">
+        <field name="name">HO Assets Insurance</field>
+        <field name="category_id" ref="cat_ho_assets"/>
+        <field name="company_id" eval="False"/>
+        <field name="description">Insurance for Head Office assets and equipment.</field>
+    </record>
+</odoo>

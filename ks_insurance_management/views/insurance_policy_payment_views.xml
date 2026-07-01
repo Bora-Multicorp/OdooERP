@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+  <!-- ══ Payment Approver Master ══════════════════════════════════════════════════════════ -->
+
+  <record id="insurance_payment_approver_form" model="ir.ui.view">
+    <field name="name">insurance.payment.approver.form</field>
+    <field name="model">insurance.payment.approver</field>
+    <field name="arch" type="xml">
+      <form string="Insurance Payment Approver">
+        <sheet>
+          <div class="oe_title"><h1><field name="name"/></h1></div>
+          <group>
+            <group>
+              <field name="user_id"/>
+              <field name="email" readonly="1"/>
+            </group>
+            <group>
+              <field name="company_id" groups="base.group_multi_company"/>
+              <field name="active"/>
+            </group>
+          </group>
+        </sheet>
+      </form>
+    </field>
+  </record>
+
+  <record id="insurance_payment_approver_list" model="ir.ui.view">
+    <field name="name">insurance.payment.approver.list</field>
+    <field name="model">insurance.payment.approver</field>
+    <field name="arch" type="xml">
+      <list string="Insurance Payment Approvers">
+        <field name="name"/>
+        <field name="user_id"/>
+        <field name="email"/>
+        <field name="company_id" groups="base.group_multi_company"/>
+        <field name="active" column_invisible="True"/>
+      </list>
+    </field>
+  </record>
+
+  <record id="action_insurance_payment_approver" model="ir.actions.act_window">
+    <field name="name">Insurance Payment Approvers</field>
+    <field name="res_model">insurance.payment.approver</field>
+    <field name="view_mode">list,form</field>
+  </record>
+
+  <!-- ══ Request Payment Wizard ═══════════════════════════════════════════════════════════ -->
+
+  <record id="insurance_payment_request_wizard_form" model="ir.ui.view">
+    <field name="name">insurance.payment.request.wizard.form</field>
+    <field name="model">insurance.payment.request.wizard</field>
+    <field name="arch" type="xml">
+      <form string="Request Payment">
+        <sheet>
+          <div class="oe_title"><h2>Request Payment</h2></div>
+          <group>
+            <field name="policy_ids" widget="many2many_tags" readonly="1" string="Policies"/>
+            <field name="approver_id"/>
+          </group>
+        </sheet>
+        <footer>
+          <button name="action_confirm" string="Submit Request"
+                  type="object" class="btn-primary"/>
+          <button string="Cancel" class="btn-secondary" special="cancel"/>
+        </footer>
+      </form>
+    </field>
+  </record>
+
+  <!-- ══ Top-up Wizard ═════════════════════════════════════════════════════════════════════ -->
+
+  <record id="insurance_policy_payment_wizard_form" model="ir.ui.view">
+    <field name="name">insurance.policy.payment.wizard.form</field>
+    <field name="model">insurance.policy.payment.wizard</field>
+    <field name="arch" type="xml">
+      <form string="Top Up Addon">
+        <sheet>
+          <div class="oe_title"><h2>Top Up Addon</h2></div>
+          <group>
+            <group string="Policy Details">
+              <field name="policy_id" readonly="1"/>
+              <field name="insurance_type_id" readonly="1"/>
+              <field name="company_id" readonly="1"/>
+              <field name="insurance_company_id" readonly="1"/>
+              <field name="agent_id" readonly="1"/>
+              <field name="expiry_date" readonly="1"/>
+            </group>
+            <group string="Top-up Details">
+              <field name="currency_id" invisible="1"/>
+              <field name="current_sum_insured" readonly="1" widget="monetary"
+                     options="{'currency_field': 'currency_id'}"
+                     string="Current Sum Insured"/>
+              <field name="cover_amount_words" readonly="1"/>
+              <field name="topup_amount" widget="monetary"
+                     options="{'currency_field': 'currency_id'}"/>
+              <field name="new_sum_insured" readonly="1" widget="monetary"
+                     options="{'currency_field': 'currency_id'}"
+                     string="New Sum Insured (Preview)"/>
+              <field name="premium" widget="monetary"
+                     options="{'currency_field': 'currency_id'}"
+                     string="Premium (Incl. GST)"/>
+              <field name="approver_id" options="{'no_create': True}"/>
+            </group>
+          </group>
+        </sheet>
+        <footer>
+          <button name="action_confirm" string="Confirm Top-up"
+                  type="object" class="btn-primary"/>
+          <button string="Cancel" class="btn-secondary" special="cancel"/>
+        </footer>
+      </form>
+    </field>
+  </record>
+
+  <!-- ══ Menu action: all insurance payments (account.payment) ═══════════════════════════ -->
+
+  <record id="action_insurance_policy_payment" model="ir.actions.act_window">
+    <field name="name">Insurance Policy Payments</field>
+    <field name="res_model">account.payment</field>
+    <field name="view_mode">list,form</field>
+    <field name="domain">[('is_insurance_payment', '=', True)]</field>
+    <field name="context">{'default_is_insurance_payment': True}</field>
+  </record>
+
+  <!-- ══ Server action for multi-select Request Payment from list view ══════════════════ -->
+
+  <record id="action_bulk_request_payment" model="ir.actions.server">
+    <field name="name">Request Payment</field>
+    <field name="model_id" ref="ks_insurance_management.model_insurance_policy"/>
+    <field name="binding_model_id" ref="ks_insurance_management.model_insurance_policy"/>
+    <field name="binding_view_types">list</field>
+    <field name="state">code</field>
+    <field name="code">records.action_request_payment()</field>
+  </record>
+
+</odoo>

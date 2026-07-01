@@ -1,0 +1,59 @@
+.ks_body_class .filters-amount {
+     background-color: var(--color-E7495E);
+    font-size: 8px;
+    font-weight: 400;
+    line-height: 16px;
+    text-align: left;
+    color: var(--color-white-imp);
+    height: 17px;
+    width: 17px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.ks_body_class .filter {
+    svg {
+       stroke: var(--color-black);
+        fill: none;
+    }
+}
+
+.ks_body_class .filter.active {
+    svg {
+        fill: var(--color-6789C6);
+        stroke: var(--color-white);
+    }
+}
+
+.ks_body_class .favorite-btn {
+   border: 0.81px solid var(--color-E5E7EB);
+    border-radius: 5px;
+    font-size: $font-12;
+    font-weight: $f-w-500;
+    line-height: 16.8px;
+    text-align: left;
+    color: var(--color-1E1E1E);
+    padding: 10px 8px;
+    background-color: var(--color-white-131B2F);
+}
+
+.ks_body_class .o_searchview_facet_label {
+    span {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+}
+
+.custom-dash-collapse {
+    left: -250px;
+}
+
+.custom-filter-tab, .predefined-filter-tab  {
+    overflow: auto;
+    max-height: 50vh;
+
+    @include custom-scrollbar;
+}

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates xml:space="preserve">
+
+    <t t-name='ks_dashboard_ninja.model_driven_filter_applicator'>
+        <t t-if="Object.values(state.facets).length" t-call="ks_dn.facets_container">
+            <t t-set="filter_data" t-value="state.facets"/>
+            <t t-set="remove" t-value="onRemoveFacet.bind(this)"/>
+        </t>
+        <t t-else="" t-call="no-data-view-without-button">
+            <t t-set="header_text" t-value="'No Filter Applied'"/>
+            <t t-set="body_text" t-value="'Apply from List Chart :) '"/>
+        </t>
+    </t>
+
+</templates>

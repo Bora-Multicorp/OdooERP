@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Email Template for Sending Sale Order Documents -->
+        <record id="email_template_sale_documents" model="mail.template">
+            <field name="name">Sale Order: Send Documents</field>
+            <field name="model_id" ref="sale.model_sale_order"/>
+            <field name="subject">Documents for Order {{ object.name }} - {{ object.company_id.name }}</field>
+            <field name="email_from">{{ (object.user_id.email_formatted or object.company_id.email_formatted or user.email_formatted) }}</field>
+            <field name="email_to">{{ object.partner_id.email }}</field>
+            <field name="partner_to">{{ object.partner_id.id }}</field>
+            <field name="body_html" type="html">
+<div style="margin: 0px; padding: 0px; font-size: 13px;">
+    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+        Dear <t t-out="object.partner_id.name or 'Valued Customer'">Customer</t>,
+    </p>
+    <br/>
+    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+        Please find attached the documents related to your order <strong><t t-out="object.name">SO/001</t></strong>.
+    </p>
+    <br/>
+    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+        <strong>Order Details:</strong>
+    </p>
+    <table style="border-collapse: collapse; margin: 10px 0;">
+        <tr>
+            <td style="padding: 5px 15px 5px 0; color: #666;">Order Reference:</td>
+            <td style="padding: 5px 0;"><strong><t t-out="object.name">SO/001</t></strong></td>
+        </tr>
+        <tr>
+            <td style="padding: 5px 15px 5px 0; color: #666;">Order Date:</td>
+            <td style="padding: 5px 0;"><t t-out="object.date_order.strftime('%B %d, %Y') if object.date_order else ''">January 01, 2024</t></td>
+        </tr>
+        <tr>
+            <td style="padding: 5px 15px 5px 0; color: #666;">Total Amount:</td>
+            <td style="padding: 5px 0;"><t t-out="format_amount(object.amount_total, object.currency_id)">$ 0.00</t></td>
+        </tr>
+        <tr>
+            <td style="padding: 5px 15px 5px 0; color: #666;">Documents Included:</td>
+            <td style="padding: 5px 0;"><t t-out="len(object.ks_document_ids)">0</t> file(s)</td>
+        </tr>
+    </table>
+    <br/>
+    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+        <strong>Attached Documents:</strong>
+    </p>
+    <ul style="margin: 10px 0; padding-left: 20px;">
+        <t t-foreach="object.ks_document_ids" t-as="doc">
+            <li style="padding: 3px 0;">
+                <t t-out="doc.name">Document Name</t>
+                <span style="color: #666;"> (<t t-out="dict(doc._fields['document_type'].selection).get(doc.document_type, doc.document_type)">Type</t>)</span>
+            </li>
+        </t>
+    </ul>
+    <br/>
+    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+        The documents are packaged in a ZIP file for your convenience. Please extract the ZIP file to access all documents.
+    </p>
+    <br/>
+    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+        If you have any questions or need further assistance, please don't hesitate to contact us.
+    </p>
+    <br/>
+    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+        Best regards,<br/>
+        <t t-if="object.user_id">
+            <strong><t t-out="object.user_id.name">Salesperson</t></strong><br/>
+            <t t-if="object.user_id.phone"><t t-out="object.user_id.phone">Phone</t><br/></t>
+            <t t-if="object.user_id.email"><t t-out="object.user_id.email">Email</t><br/></t>
+        </t>
+        <t t-else="">
+            <strong><t t-out="object.company_id.name">Company</t></strong>
+        </t>
+    </p>
+    <br/>
+    <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;"/>
+    <p style="margin: 0px; padding: 0px; font-size: 11px; color: #666;">
+        <t t-out="object.company_id.name">Company Name</t><br/>
+        <t t-if="object.company_id.street"><t t-out="object.company_id.street">Street</t><br/></t>
+        <t t-if="object.company_id.city or object.company_id.zip">
+            <t t-out="object.company_id.zip or ''">ZIP</t> <t t-out="object.company_id.city or ''">City</t><br/>
+        </t>
+        <t t-if="object.company_id.country_id"><t t-out="object.company_id.country_id.name">Country</t><br/></t>
+        <t t-if="object.company_id.phone">Phone: <t t-out="object.company_id.phone">Phone</t><br/></t>
+        <t t-if="object.company_id.website">Website: <t t-out="object.company_id.website">Website</t></t>
+    </p>
+</div>
+            </field>
+            <field name="lang">{{ object.partner_id.lang }}</field>
+            <field name="auto_delete" eval="False"/>
+        </record>
+    </data>
+</odoo>
+

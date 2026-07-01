@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Search view: filter and group by Warehouse -->
+    <record id="view_ks_po_warehouse_tracking_search" model="ir.ui.view">
+        <field name="name">ks.po.warehouse.tracking.search</field>
+        <field name="model">ks.po.warehouse.tracking</field>
+        <field name="arch" type="xml">
+            <search string="PO Warehouse Tracking">
+                <field name="order_id"/>
+                <field name="invoice_no"/>
+                <field name="product_id"/>
+                <field name="iw"/>
+                <field name="warehouse_id"/>
+                <field name="grn_id"/>
+                <separator/>
+                <filter string="Pune" name="filter_pune" domain="[('warehouse_id.partner_id.city', 'ilike', 'Pune')]"/>
+                <filter string="Delhi" name="filter_delhi" domain="[('warehouse_id.partner_id.city', 'ilike', 'Delhi')]"/>
+                <filter string="Karnal" name="filter_karnal" domain="[('warehouse_id.partner_id.city', 'ilike', 'Karnal')]"/>
+                <separator/>
+                <group expand="0" string="Group By">
+                    <filter string="Warehouse" name="group_warehouse" context="{'group_by': 'warehouse_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- List (Tree) view -->
+    <record id="view_ks_po_warehouse_tracking_list" model="ir.ui.view">
+        <field name="name">ks.po.warehouse.tracking.list</field>
+        <field name="model">ks.po.warehouse.tracking</field>
+        <field name="arch" type="xml">
+            <list string="PO Warehouse Tracking" create="0" edit="1" delete="1" default_order="date desc, sr_no asc">
+                <header>
+                    <button name="action_export_xlsx" string="Export XLSX" type="object" class="btn-primary"/>
+                </header>
+                <field name="sr_no"/>
+                <field name="grn_id"/>
+                <field name="date"/>
+                <field name="awb"/>
+                <field name="order_id"/>
+                <field name="invoice_no"/>
+                <field name="product_id"/>
+                <field name="qty"/>
+                <field name="rate"/>
+                <field name="iw"/>
+                <field name="person"/>
+                <field name="delivered_qty"/>
+                <field name="diff"/>
+                <field name="warehouse_id"/>
+                <field name="order_line_id" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Form view -->
+    <record id="view_ks_po_warehouse_tracking_form" model="ir.ui.view">
+        <field name="name">ks.po.warehouse.tracking.form</field>
+        <field name="model">ks.po.warehouse.tracking</field>
+        <field name="arch" type="xml">
+            <form string="PO Warehouse Tracking">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="sr_no"/>
+                            <field name="grn_id"/>
+                            <field name="date"/>
+                            <field name="awb"/>
+                            <field name="order_id"/>
+                            <field name="invoice_no"/>
+                            <field name="product_id"/>
+                            <field name="qty"/>
+                            <field name="rate"/>
+                            <field name="iw"/>
+                            <field name="person"/>
+                        </group>
+                        <group>
+                            <field name="delivered_qty"/>
+                            <field name="diff"/>
+                            <field name="warehouse_id"/>
+                            <field name="order_line_id"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_ks_po_warehouse_tracking" model="ir.actions.act_window">
+        <field name="name">PO Warehouse Tracking</field>
+        <field name="res_model">ks.po.warehouse.tracking</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_ks_po_warehouse_tracking_search"/>
+        <field name="context">{'search_default_group_warehouse': 0}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No tracking records yet.
+            </p>
+            <p>
+                Records are created automatically when you import Purchase Orders via the E-com XLSX import (only for imported POs).
+                They can be grouped by Warehouse. When a Vendor Bill is posted, Invoice No. is updated.
+                When a Receipt (GRN) is validated, Delivered and Diff are updated automatically.
+            </p>
+        </field>
+    </record>
+
+    <!-- Menu: under Inventory Reporting -->
+    <menuitem
+        id="menu_ks_po_warehouse_tracking"
+        name="PO Warehouse Tracking"
+        parent="stock.menu_warehouse_report"
+        action="action_ks_po_warehouse_tracking"
+        sequence="45"/>
+
+</odoo>

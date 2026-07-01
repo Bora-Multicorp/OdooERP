@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- 1) Make base Invoice PDF use Commercial Invoice (luminari) template content -->
+    <template id="report_invoice_use_luminari" inherit_id="account.report_invoice">
+        <xpath expr="//t[@t-foreach='docs']" position="replace">
+            <t t-call="ks_templates.report_luminari_invoice"/>
+        </xpath>
+    </template>
+
+    <!-- 2) Apply paperformat to Commercial Invoice -->
+    <record id="account.account_invoices_without_payment" model="ir.actions.report">
+        <field name="name">Commercial Invoice</field>
+        <field name="paperformat_id" ref="ks_templates.paperformat_luminari_saleorder"/>
+        <field name="domain">[('ks_zone', 'in', ['dubai', 'russia', 'sez'])]</field>
+    </record>
+
+    <!-- 4) Remove separate luminari action from Print menu -->
+    <delete model="ir.actions.report" id="ks_templates.action_report_luminari_dubai"/>
+
+    <!-- 5) Hide Original Vendor Bill from Print menu -->
+    <record id="account.action_account_original_vendor_bill" model="ir.actions.report">
+        <field name="binding_model_id" eval="False"/>
+    </record>
+
+</odoo>

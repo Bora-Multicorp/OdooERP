@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates>
+    <t t-name="ks_dashboard_ninja.pre_defined_filter" owl="1">
+        <div class="predefined-filters">
+            <t t-foreach="state.facets" t-as="model" t-key="model_index">
+
+                <h4 class="" t-esc="state.facets[model].model_name"/>
+
+                <Dropdown menuClass="'ks-dropdown-menu'">
+                    <t t-set-slot="content">
+                        <div class="w-500 p-3">
+                            <DropDownWithItemsSearch ddItems="dataList" ddItemSelect.bind="filterSelect"/>
+                        </div>
+                    </t>
+                    <t t-call="ks_dn.model_facets_renderer">
+                        <t t-set="model_data" t-value="state.facets[model]"/>
+                        <t t-set="ks_model" t-value="model"/>
+                        <t t-set="remove" t-value="removeGroup.bind(this)"/>
+                    </t>
+                </Dropdown>
+            </t>
+        </div>
+    </t>
+
+    <t t-name="ks_dashboard_ninja.pre_defined_filter_dropdown">
+        <div class="search-input d-flex align-items-center">
+            <div class="me-1">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M7.66634 14.4999C3.89967 14.4999 0.833008 11.4333 0.833008 7.66659C0.833008 3.89992 3.89967 0.833252 7.66634 0.833252C11.433 0.833252 14.4997 3.89992 14.4997 7.66659C14.4997 11.4333 11.433 14.4999 7.66634 14.4999ZM7.66634 1.83325C4.44634 1.83325 1.83301 4.45325 1.83301 7.66659C1.83301 10.8799 4.44634 13.4999 7.66634 13.4999C10.8863 13.4999 13.4997 10.8799 13.4997 7.66659C13.4997 4.45325 10.8863 1.83325 7.66634 1.83325Z" fill="#4b5563" stroke="none"/>
+                    <path d="M14.6666 15.1666C14.54 15.1666 14.4133 15.12 14.3133 15.02L12.98 13.6866C12.7866 13.4933 12.7866 13.1733 12.98 12.98C13.1733 12.7866 13.4933 12.7866 13.6866 12.98L15.02 14.3133C15.2133 14.5066 15.2133 14.8266 15.02 15.02C14.92 15.12 14.7933 15.1666 14.6666 15.1666Z" fill="#4b5563" stroke="none"/>
+                </svg>
+            </div>
+            <input class="predefinedFilterSearchInput" placeholder="Search" type="search" href="#" t-model="state.searchText"/>
+        </div>
+        <t t-if="ddItems.length">
+            <DropdownItem t-foreach="ddItems" t-as="ddItem" t-key="ddItem_index"
+                          class="{ 'global-active': ddItem.active, 'ks-disabled' : ddItem['type'] !== 'filter',  'ellipsis-content' : true}"
+                          onSelected="() => this.props.ddItemSelect(ddItem)">
+                <span t-if="ddItem['type'] === 'filter'"><t t-esc="ddItem.name"/> ( <t t-esc="ddItem.model_name"/> )</span>
+                <a t-else="" class="line-seperator-ks" href="#"/>
+            </DropdownItem>
+        </t>
+        <t t-else="" t-call="no-data-view-without-button">
+            <t t-set="header_text" t-value="'No Filter Available'"/>
+            <t t-set="body_text" t-value="'No search results :) '"/>
+        </t>
+    </t>
+
+</templates>

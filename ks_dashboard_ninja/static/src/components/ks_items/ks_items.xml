@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates>
+
+    <t t-name="ks_dashboard_ninja.items_view">
+
+
+        <div t-if="this.props.isGridStructure">
+            <t t-call="grid_header"/>
+        </div>
+
+        <!--  INFO: Root-container-->
+        <!--  INFO: This structure is not stable, adding div in between might cause CSS issues-->
+        <div class="ks_dashboard_item_content ks_dashboard_items_list m-3" t-att-class="{'ks_row_root': this.props.isRowStructure,
+                    'ks-grid-stack-root': this.props.isGridStack, 'ks-grid-root': this.props.isGridStructure,
+                    [this.props.isColumnStructure?.rootClass]: this.props.isColumnStructure}" t-ref="rootRef">
+
+            <!--  INFO: Inner Root-container-->
+            <div t-att-class="{
+                    [this.props.isColumnStructure?.innerRootClass]: this.props.isColumnStructure,
+                    'grid-stack': this.props.isGridStack,
+                    'ks-grid-inner-root': this.props.isGridStructure
+                }" t-ref="gsRootRef">
+
+                <t t-call="ks_dashboard_ninja.items_renderer"/>
+            </div>
+
+        </div>
+    </t>
+
+    <t t-name="ks_dashboard_ninja.items_renderer">
+
+        <!--  INFO: Child-container-->
+        <div t-foreach="props.itemsBasicData" t-as="itemBasicData" t-key="itemBasicData.id" t-att-id="itemBasicData.id" t-ref="{{ '' + itemBasicData.id }}"
+             class="ks-observable-el" t-on-click="() => this.props.isGridStructure ? this.gridSelectOne(itemBasicData.id) : () => {}"
+             t-att-class="{
+                'grid-stack-item': this.props.isGridStack,
+                'ks-border-red': state.gridSelectedIds.has(itemBasicData.id),
+                'row ks_row_child': this.props.isRowStructure,
+                'ks-grid-child cursor-pointer': this.props.isGridStructure,
+                [this.props.isColumnStructure?.childClass]: this.props.isColumnStructure,
+                [this.props.isColumnStructure?.presentationMode]: this.props.isColumnStructure?.presentationMode
+             }">
+
+            <!--  INFO: Inner-Child-container-->
+            <div t-att-class="{
+                    'grid-stack-item-content': this.props.isGridStack,
+                    'h-100': this.props.isGridStructure
+                 }">
+                <t t-if="itemBasicData.ks_dashboard_item_type === 'ks_tile'">
+                    <DNTile itemId="itemBasicData.id" dashboardData.alike="props.dashboardData" isPreview="props.isItemsPreview"
+                            filtersConfig="props.filtersConfig" dateFilterConfig="props.dateFilterConfig" isAIExplanation="props.isAIExplanation"
+                            dnStore="props.dnStore" visibleItemSet="dnObserver.visibleItemSet" basicData="itemBasicData"/>
+                </t>
+                <t t-elif="itemBasicData.ks_dashboard_item_type === 'ks_kpi'">
+                    <DNKpi itemId="itemBasicData.id" dashboardData.alike="props.dashboardData" isPreview="props.isItemsPreview"
+                           filtersConfig="props.filtersConfig" dateFilterConfig="props.dateFilterConfig" isAIExplanation="props.isAIExplanation"
+                           dnStore="props.dnStore" visibleItemSet="dnObserver.visibleItemSet" basicData="itemBasicData"/>
+                </t>
+                <t t-elif="itemBasicData.ks_dashboard_item_type === 'ks_to_do'">
+                    <DNTodo itemId="itemBasicData.id" dashboardData.alike="props.dashboardData" isPreview="props.isItemsPreview"
+                            filtersConfig.alike="props.filtersConfig" dateFilterConfig.alike="props.dateFilterConfig" isAIExplanation="props.isAIExplanation"
+                            dnStore="props.dnStore" visibleItemSet="dnObserver.visibleItemSet" basicData="itemBasicData"/>
+                </t>
+                <t t-else="">
+                    <DNGraph itemId="itemBasicData.id" dashboardData.alike="props.dashboardData" isPreview="props.isItemsPreview"
+                             filtersConfig="props.filtersConfig" dateFilterConfig="props.dateFilterConfig" isAIExplanation="props.isAIExplanation"
+                             dnStore="props.dnStore" visibleItemSet="dnObserver.visibleItemSet" basicData="itemBasicData"/>
+                </t>
+            </div>
+        </div>
+
+        <t t-if="props.itemsBasicData.length === 0" t-call="no_item_view"/>
+    </t>
+
+    <t t-name="grid_header">
+        <div class="d-flex p-2 w-100 bg-white justify-content-between flex-column flex-lg-row align-items-center">
+            <div class="ks_select_text ks-helping-text">
+                Here are your generated Items, kindly select to add them in your current dashboard
+            </div>
+            <div class="ks_dashboard_top_menu ks_select_none">
+                <div class="btn-box d-flex align-items-center">
+                    <button id="ks_ai_add_all_item" class="select-deselect p-0 m-0" t-on-click="gridSelectAll"
+                            t-att-class="{
+                                'active': props.itemsBasicData.length == state.gridSelectedIds.size
+                            }">
+                        <t t-call="select_all_svg"/>
+                    </button>
+                    <button id="ks_ai_add_item" class="dash-btn-red" t-on-click="onSaveGrid">Add</button>
+                </div>
+            </div>
+        </div>
+    </t>
+
+    <t t-name="select_all_svg">
+        <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 20 20" fill="none">
+            <path d="M9.99984 18.3332C14.5832 18.3332 18.3332 14.5832 18.3332 9.99984C18.3332 5.4165 14.5832 1.6665 9.99984 1.6665C5.4165 1.6665 1.6665 5.4165 1.6665 9.99984C1.6665 14.5832 5.4165 18.3332 9.99984 18.3332Z" stroke="" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M6.4585 9.99993L8.81683 12.3583L13.5418 7.6416" stroke="" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+    </t>
+
+    <t t-name="no_item_view">
+        <section class="overview-sec-dasboards container-fluid h-100">
+            <div class="d-flex flex-column justify-content-center align-items-center h-100 no-data">
+                <div>
+                    <img src="/ks_dashboard_ninja/static/images/dashboardOverview/no-data.png" alt="no-data-files" class="img-fluid" loading="lazy"/>
+                </div>
+                <h3 class="mb-0">
+                    No Data Found!!
+                </h3>
+                <p class="mb-3">Your Personal Dashboard is Empty!</p>
+            </div>
+        </section>
+    </t>
+</templates>

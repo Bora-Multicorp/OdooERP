@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Our own template for "Purchase Order Sent to Vendor" (used by action_rfq_send override).
+             Base purchase template is in noupdate="1" so we use a separate template and switch to it in code. -->
+        <record id="email_template_purchase_order_sent_to_vendor" model="mail.template">
+            <field name="name">Purchase Order: Sent to Vendor (KS)</field>
+            <field name="model_id" ref="purchase.model_purchase_order"/>
+            <field name="subject">Purchase Order {{ object.name }} – {{ object.company_id.name }}</field>
+            <field name="partner_to">{{ object.partner_id.id }}</field>
+            <field name="description">Sent to vendor with the purchase order in attachment</field>
+            <field name="body_html" type="html">
+<div style="margin: 0px; padding: 0px; font-size: 13px;">
+    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+        Dear <t t-out="object.partner_id.name or 'Valued Partner'">Partner</t>,
+    </p>
+    <br/>
+    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+        Please find attached <strong>Purchase Order <t t-out="object.name or ''">PO/001</t></strong> for your reference.
+    </p>
+    <br/>
+    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+        Kindly review the order details and confirm acceptance of the same.
+    </p>
+    <br/>
+    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+        In case of any queries or discrepancies, please feel free to contact us.
+    </p>
+    <br/>
+    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+        Warm regards,<br/>
+        <strong><t t-out="object.company_id.name">Company Name</t></strong>
+    </p>
+</div>
+            </field>
+            <field name="report_template_ids" eval="[(4, ref('purchase.action_report_purchase_order'))]"/>
+            <field name="lang">{{ object.partner_id.lang }}</field>
+            <field name="auto_delete" eval="True"/>
+        </record>
+    </data>
+</odoo>

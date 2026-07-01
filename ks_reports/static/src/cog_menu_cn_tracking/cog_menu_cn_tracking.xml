@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="ks_reports.CnTrackingCogMenu">
+        <DropdownItem class="'o_cn_tracking_menu'" onSelected.bind="onCnTracking">
+            <i class="fa fa-fw fa-file-excel-o me-1"/>CN Tracking
+        </DropdownItem>
+    </t>
+</templates>

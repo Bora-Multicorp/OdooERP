@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Cancel Approval Request Wizard Form View -->
+    <record id="ks_sale_cancel_approval_request_wizard_form" model="ir.ui.view">
+        <field name="name">ks.sale.cancel.approval.request.wizard.form</field>
+        <field name="model">ks.sale.cancel.approval.request.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Product Approval Picker">
+                <sheet>
+                    <group>
+                        <field name="ks_sale_order_id" invisible="1"/>
+                        <field name="ks_approver1_user_ids" invisible="1"/>
+                        <field name="ks_approver2_user_ids" invisible="1"/>
+                        <field name="ks_approver1_filtered_ids" invisible="1"/>
+                        <field name="ks_approver2_filtered_ids" invisible="1"/>
+                        <field name="ks_is_update_mode" invisible="1"/>
+                        <field name="ks_pm1_already_approved" invisible="1"/>
+                        <field name="ks_approval_info" nolabel="1" readonly="1"/>
+                    </group>
+                    <group>
+                        <field name="ks_approver1_user"
+                               options="{'no_create': True, 'no_create_edit': True}"
+                               placeholder="Select Approver 1"
+                               widget="many2one"
+                               readonly="ks_pm1_already_approved"/>
+                        <field name="ks_show_approver2" invisible="1"/>
+                        <field name="ks_approver2_user" 
+                               options="{'no_create': True, 'no_create_edit': True}"
+                               placeholder="Select Approver 2"
+                               widget="many2one"
+                               invisible="not ks_show_approver2"/>
+                    </group>
+                </sheet>
+                <footer>
+                    <button name="action_confirm_request" 
+                            type="object" 
+                            string="OK" 
+                            class="btn-primary"/>
+                    <button name="action_cancel" 
+                            type="object" 
+                            string="Cancel" 
+                            class="btn-secondary"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>
+

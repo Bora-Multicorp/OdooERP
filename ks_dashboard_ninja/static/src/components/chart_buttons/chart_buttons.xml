@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates>
+    <t t-name="ks_dashboard_ninja.ks_chart_buttons">
+        <div class="ks_dashboard_item_header_hover chart_button_container position-absolute end-0 top-0 p-2 d-flex" t-att-class="props.rootClasses"
+             t-on-click.stop="handleDropdowns" t-ref="rootRef">
+
+            <div t-if="buttonsVisibility['reset-chart']" class="ks_chart_inner_buttons dropdown d-none" t-ref="resetChart"
+                 data-tooltip="Reset Chart: Updates are available!!">
+                <button t-on-click="resetCb" type="button"
+                        class="ks_dashboard_quick_edit_action_popup d-sm-block d-none img-bg hover-item me-2"
+                        t-att-style="buttonColorStyle">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M22 12C22 17.52 17.52 22 12 22C6.48 22 3.11 16.44 3.11 16.44M3.11 16.44H7.63M3.11 16.44V21.44M2 12C2 6.48 6.44 2 12 2C18.67 2 22 7.56 22 7.56M22 7.56V2.56M22 7.56H17.56" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+            </div>
+
+
+            <div class="ks_chart_inner_buttons" t-if="buttonsVisibility['chart-color']" data-tooltip="Color Palette">
+                <button data-bs-toggle="dropdown" type="button" aria-expanded="true"
+                        class="ks_dashboard_item_action ks_dashboard_color_option dropdown-toggle o-no-caret img-bg hover-item me-2">
+                    <img src="/ks_dashboard_ninja/static/images/dashboardOverview/brush.svg" alt="create" class="img-fluid" loading="lazy"/>
+                </button>
+                <ul role="menu" class="dropdown-menu ks-dropdown-menu dropdown-menu-right ks_color_pallate">
+                    <t t-foreach="chartColors" t-as="color_option" t-key="color_option_index">
+                        <li t-att-class="{
+                                'global-active': props.itemConfig.ks_chart_item_color === color_option
+                            }">
+                            <span class="ks_chart_color_options" t-on-click="() => this.updateChartColor(color_option)" t-esc="color_option"/>
+                        </li>
+                    </t>
+                </ul>
+            </div>
+
+            <div class="ks_chart_inner_buttons" t-if="buttonsVisibility['move-duplicate']" data-tooltip="Move/Duplicate">
+                <button data-bs-toggle="dropdown" aria-expanded="true" type="button"
+                        class="ks_dashboard_item_action dropdown-toggle img-bg hover-item me-2" t-att-style="buttonColorStyle">
+
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M8.59351 3.92004H3.40682C2.26682 3.92004 1.3335 4.85337 1.3335 5.99337V13.5667C1.3335 14.5334 2.02683 14.9467 2.87349 14.4734L5.49349 13.0134C5.77349 12.86 6.22683 12.86 6.50016 13.0134L9.12016 14.4734C9.96682 14.9467 10.6602 14.5334 10.6602 13.5667V5.99337C10.6668 4.85337 9.73351 3.92004 8.59351 3.92004Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M10.6668 5.99337V13.5667C10.6668 14.5334 9.9735 14.94 9.12683 14.4734L6.50684 13.0134C6.22684 12.86 5.77349 12.86 5.49349 13.0134L2.87349 14.4734C2.02683 14.94 1.3335 14.5334 1.3335 13.5667V5.99337C1.3335 4.85337 2.26682 3.92004 3.40682 3.92004H8.59351C9.73351 3.92004 10.6668 4.85337 10.6668 5.99337Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M14.6668 3.4067V10.98C14.6668 11.9467 13.9735 12.3534 13.1268 11.8867L10.6668 10.5134V5.99337C10.6668 4.85337 9.73351 3.92004 8.59351 3.92004H5.3335V3.4067C5.3335 2.2667 6.26682 1.33337 7.40682 1.33337H12.5935C13.7335 1.33337 14.6668 2.2667 14.6668 3.4067Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+
+                </button>
+                <ul role="menu" class="ks_dashboard_menu_container form-input-box form-control encapsulated-form-arrow dropdown-menu ks-dropdown-menu dropdown-menu-right">
+                    <li class="ks_md_heading m-2">
+                        <span>Select Dashboard</span>
+                    </li>
+                    <li class="m-2" t-on-click.stop="() => {}">
+                        <select class="o_input o_group_selector o_add_group ks_dashboard_select" t-model="this.selectedDashboardId">
+                            <t t-foreach="props.allDashboardLists" t-as="dashboard" t-key="dashboard_index">
+                                <option t-att-value="dashboard['id']" t-esc="dashboard['name']"/>
+                            </t>
+                        </select>
+                    </li>
+                    <li class="m-2">
+                        <button class="dash-btn-red o_apply_group o_add_group ks_duplicate_item" t-on-click="duplicateItem"
+                                tabindex="-1" type="button">Duplicate
+                        </button>
+                        <button class="dash-btn-red o_apply_group o_add_group ks_move_item"
+                                tabindex="-1" type="button" t-on-click="moveItem">Move
+                        </button>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="ks_chart_inner_buttons dropdown" t-if="buttonsVisibility['item-info']" data-tooltip="Info">
+                <button data-bs-toggle="dropdown" class="ks_item_description dropdown-toggle o-no-caret img-bg hover-item me-2"
+                        type="button" t-att-style="buttonColorStyle" aria-expanded="true">
+
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M8.00004 14.6667C11.6667 14.6667 14.6667 11.6667 14.6667 8.00004C14.6667 4.33337 11.6667 1.33337 8.00004 1.33337C4.33337 1.33337 1.33337 4.33337 1.33337 8.00004C1.33337 11.6667 4.33337 14.6667 8.00004 14.6667Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M8 5.33337V8.66671" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M7.99646 10.6666H8.00245" stroke="currentColor" stroke-width="1.33333" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+
+                </button>
+                <div role="menu" class="dropdown-menu ks-dropdown-menu dropdown-menu-right">
+                    <div class="ks_chart_export_menu">
+                        <div class="ks_chart_export_menu_header"><span>Info</span></div>
+                            <div class="ks_info">
+                                <span>Company: <t t-esc="activeCompanyName"/></span>
+                            </div>
+                        <div class="ks_info">
+                            <t t-set="t_itemDescription" t-value="itemDescription"/>
+                            <t t-foreach="t_itemDescription" t-as="description" t-key="description_index">
+                                <span t-esc="description"/><br/>
+                            </t>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div t-if="buttonsVisibility['chart-exporting-options']" class="ks_chart_inner_buttons ks_dashboard_more_action" data-tooltip="Exports">
+                <button data-bs-toggle="dropdown" type="button" aria-expanded="true"
+                        class="ks_dashboard_item_action dropdown-toggle o-no-caret img-bg hover-item me-2">
+                    <img src="/ks_dashboard_ninja/static/images/dashboardOverview/document-upload.svg" alt="document-upload"
+                                class="img-fluid" loading="lazy"/>
+                </button>
+                <div role="menu" class="dropdown-menu ks-dropdown-menu dropdown-menu-right">
+                    <t t-call="ks_dashboard_ninja.chart_exporting_options"/>
+                </div>
+            </div>
+
+            <div t-if="buttonsVisibility['more']" class="ks_chart_inner_buttons ks_dashboard_more_action" data-tooltip="More">
+                <button data-bs-toggle="dropdown" type="button" aria-expanded="true"
+                        class="ks_dashboard_item_action dropdown-toggle img-bg hover-item me-2" t-att-style="buttonColorStyle">
+
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12.2916 15.8333C12.2916 17.1 11.2666 18.125 9.99992 18.125C8.73325 18.125 7.70825 17.1 7.70825 15.8333C7.70825 14.5667 8.73325 13.5417 9.99992 13.5417C11.2666 13.5417 12.2916 14.5667 12.2916 15.8333ZM8.95825 15.8333C8.95825 16.4083 9.42492 16.875 9.99992 16.875C10.5749 16.875 11.0416 16.4083 11.0416 15.8333C11.0416 15.2583 10.5749 14.7917 9.99992 14.7917C9.42492 14.7917 8.95825 15.2583 8.95825 15.8333Z" fill="currentColor"/>
+                        <path d="M12.2916 4.16671C12.2916 5.43337 11.2666 6.45837 9.99992 6.45837C8.73325 6.45837 7.70825 5.43337 7.70825 4.16671C7.70825 2.90004 8.73325 1.87504 9.99992 1.87504C11.2666 1.87504 12.2916 2.90004 12.2916 4.16671ZM8.95825 4.16671C8.95825 4.74171 9.42492 5.20837 9.99992 5.20837C10.5749 5.20837 11.0416 4.74171 11.0416 4.16671C11.0416 3.59171 10.5749 3.12504 9.99992 3.12504C9.42492 3.12504 8.95825 3.59171 8.95825 4.16671Z" fill="currentColor"/>
+                        <path d="M12.2916 9.99996C12.2916 11.2666 11.2666 12.2916 9.99992 12.2916C8.73325 12.2916 7.70825 11.2666 7.70825 9.99996C7.70825 8.73329 8.73325 7.70829 9.99992 7.70829C11.2666 7.70829 12.2916 8.73329 12.2916 9.99996ZM8.95825 9.99996C8.95825 10.575 9.42492 11.0416 9.99992 11.0416C10.5749 11.0416 11.0416 10.575 11.0416 9.99996C11.0416 9.42496 10.5749 8.95829 9.99992 8.95829C9.42492 8.95829 8.95825 9.42496 8.95825 9.99996Z" fill="currentColor"/>
+                    </svg>
+
+                </button>
+                <div role="menu" class="ks_chart_export_menu dropdown-menu ks-dropdown-menu dropdown-menu-right">
+                    <div class="ks_chart_json_export ks_chart_export_menu_item d-flex align-items-center"
+                         data-format="chart_xls" t-on-click="openItemFormView">
+                            <img src="/ks_dashboard_ninja/static/images/dashboardOverview/quick-customise.svg" alt="document-upload" class="img-fluid" loading="lazy"/>
+                        <span>Quick Customise</span>
+                    </div>
+
+
+
+                    <div class="ks_chart_json_export ks_chart_export_menu_item d-flex align-items-center"
+                         data-format="chart_xls" t-on-click="exportAsJson">
+                            <img src="/ks_dashboard_ninja/static/images/dashboardOverview/document-upload.svg" alt="document-upload" class="img-fluid" loading="lazy"/>
+                        <span>Export Item</span>
+                    </div>
+                    <div class="d-flex g-10 align-items-center">
+                        <button class="ks_dashboard_item_delete img-bg hover-item me-2 kpi-tile-img" type="button" t-on-click="deleteItem">
+                            <svg width="16" height="16" viewBox="0 0 16 16" class="me-1" fill="" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M14 3.98665C11.78 3.76665 9.54667 3.65332 7.32 3.65332C6 3.65332 4.68 3.71999 3.36 3.85332L2 3.98665" fill="#241C1D"/>
+                                <path d="M14 3.98665C11.78 3.76665 9.54667 3.65332 7.32 3.65332C6 3.65332 4.68 3.71999 3.36 3.85332L2 3.98665" stroke="#241C1D" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M5.66699 3.31337L5.81366 2.44004C5.92033 1.80671 6.00033 1.33337 7.12699 1.33337H8.87366C10.0003 1.33337 10.087 1.83337 10.187 2.44671L10.3337 3.31337" stroke="#241C1D" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M12.5669 6.09338L12.1336 12.8067C12.0603 13.8534 12.0003 14.6667 10.1403 14.6667H5.86026C4.00026 14.6667 3.94026 13.8534 3.86693 12.8067L3.43359 6.09338" stroke="#241C1D" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M6.88672 11H9.10672" stroke="#241C1D" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M6.33301 8.33337H9.66634" stroke="#241C1D" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg> Remove
+                        </button>
+                    </div>
+                    <div class="d-flex g-10 align-items-center" t-if="props.itemConfig.ks_dashboard_item_type !== 'ks_to_do'">
+                        <!-- FIXME: why id is given in compnent, it gets repeat in DOM -->
+                        <button id='ks_ai_item_exp_dash' class="img-bg hover-item me-2 kpi-tile-img" t-on-click="openChartInsights">
+                            <img src="/ks_dashboard_ninja/static/images/favorite-chart.svg" alt="create" class="img-fluid" loading="lazy"/>
+                            Explain With AI
+                        </button>
+                    </div>
+                    <div class="d-flex g-10 align-items-center">
+                        <button class="ks_dashboard_item_chatter_wizard img-bg hover-item me-2 kpi-tile-img" type="button" t-on-click.stop="openDiscussChannelPopup">
+                            <img src="/ks_dashboard_ninja/static/images/dashboardOverview/messages.svg" alt="messages" class="img-fluid" loading="lazy"/>
+                            Chat
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </t>
+
+
+
+
+    <t t-name="ks_dashboard_ninja.chart_exporting_options">
+        <div class="ks_chart_export_menu">
+            <div class="ks_chart_xls_csv_export ks_chart_export_menu_item" t-on-click="() => this.exportAsXlsCsv('xls')">
+                <i class="fa fa-file-excel-o"/>
+                <span>Export to Excel</span>
+            </div>
+            <div class="ks_chart_xls_csv_export ks_chart_export_menu_item" t-on-click="() => this.exportAsXlsCsv('csv')">
+                <i class="fa fa-file-code-o"/>
+                <span>Export to CSV</span>
+            </div>
+
+            <div t-if="props.itemConfig.ks_dashboard_item_type != 'ks_list_view'" t-on-click="exportAsPdf"
+                 class="ks_chart_pdf_export ks_chart_export_menu_item">
+                <i class="fa fa-file-pdf-o"/>
+                <span>Save as PDF</span>
+            </div>
+            <div t-if="props.itemConfig.ks_dashboard_item_type != 'ks_list_view'" t-on-click="exportAsImg"
+                 class="ks_chart_export_menu_item ks_chart_image_export">
+                <i class="fa fa-file-image-o"/>
+                <span>Save as Image</span>
+            </div>
+        </div>
+    </t>
+</templates>

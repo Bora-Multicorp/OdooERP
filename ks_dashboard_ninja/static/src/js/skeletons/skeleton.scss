@@ -1,0 +1,115 @@
+/* Animation Keyframes */
+@keyframes skeleton-shimmer {
+    0% {
+        background-position: -100% 0;
+    }
+    100% {
+        background-position: 100% 0;
+    }
+}
+
+/* Base styles */
+.ks-skeleton-card {
+    background-color: #f4f4f4;
+    border-radius: 16px;
+    height: 100%;
+    min-width: 184px;
+    padding: 20px 10px;
+    margin-bottom: 37px;
+}
+
+.ks-card-img,
+.ks-card-title,
+.ks-card-text {
+    border-radius: 20px;
+    background-color: #e7e7e7;
+}
+
+/* Specific sizes and spacing */
+.ks-card-img {
+    border-radius: 50%;
+    height: 40px;
+    width: 40px;
+    margin-bottom: 27px;
+}
+
+.ks-card-title {
+    min-height: 12px;
+    max-width: 57px;
+    margin-bottom: 14px;
+}
+
+.ks-card-text {
+    min-height: 12px;
+    max-width: 127px;
+    margin-bottom: 14px;
+}
+
+.ks-explain-card {
+    border: 1px solid #e5e7eb;
+    background-color: #f4f4f4;
+    border-radius: 20px;
+    min-height: 118px;
+    margin-bottom: 20px;
+}
+.ks-skeleton-loading .text {
+    border-radius: 20px;
+    background-color: #d9d9d9;
+    margin-bottom: 16px;
+    min-height: 12px;
+}
+.ks-skeleton-loading .text:last-child {
+    width: 15%;
+    margin-bottom: 0;
+}
+
+.ks-content {
+    border: 1px solid #e5e7eb;
+    background-color: #f4f4f4;
+    padding: 18px 12px;
+    border-radius: 8px;
+    height: 100%;
+    width: 100%;
+}
+
+.ks-chart-loading {
+    background-color: #f4f4f4;
+    border-radius: 16px;
+    height: 80%;
+}
+
+.ks-square-line {
+    width: 17% !important;
+    background-color: #e7e7e7;
+    height: 10% !important;
+    border-radius: 20pc;
+}
+.ks-legend-box {
+    height:20%;
+    width:75%;
+}
+.ks-overview-line {
+       width: 72%;
+    height: 10%;
+    background-color: #f4f4f4;
+    border-radius: 20px;
+}
+.ks-explain-content {
+    height: 100%;
+    width: 100%;
+}
+
+/* Apply shimmer animation only if parent has .skeleton-loading */
+.ks-skeleton-loading .ks-card-img,
+.ks-skeleton-loading .ks-card-title,
+.ks-skeleton-loading .ks-card-text,
+.ks-skeleton-loading .text,
+.ks-skeleton-loading .ks-explain-card,
+.ks-skeleton-loading .ks-chart-loading,
+.ks-skeleton-loading .ks-square-line,
+.ks-skeleton-loading .ks-overview-line {
+    background: linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%);
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.6s linear infinite;
+    will-change: background-position;
+}

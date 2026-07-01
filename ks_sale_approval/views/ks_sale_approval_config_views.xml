@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Sale Approval Configuration Form View -->
+    <record id="ks_sale_approval_config_form" model="ir.ui.view">
+        <field name="name">ks.sale.approval.config.form</field>
+        <field name="model">ks.sale.approval.config</field>
+        <field name="arch" type="xml">
+            <form string="Sale Approval Configuration">
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="Global Sale Approval Configuration"/>
+                        </h1>
+                    </div>
+                    <div class="alert alert-info" role="alert">
+                        <strong>Global Configuration:</strong> This configuration applies to all companies. Only one active configuration is allowed.
+                    </div>
+                    <group>
+                        <group string="Approval Mode">
+                            <field name="ks_approval_mode" widget="radio"/>
+                        </group>
+                        <group>
+                            <field name="active" widget="boolean_toggle"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Confirmation Approvers" name="confirm_approvers">
+                            <group>
+                                <group string="Approver 1 Users">
+                                    <field name="ks_confirm_pm1_ids" 
+                                           widget="many2many_tags"
+                                           options="{'no_create': True}"
+                                           context="{'show_email': True}"
+                                           placeholder="Select users for Approval 1"/>
+                                </group>
+                                <group string="Approver 2 Users" 
+                                       invisible="ks_approval_mode == 'single'">
+                                    <field name="ks_confirm_pm2_ids" 
+                                           widget="many2many_tags"
+                                           options="{'no_create': True}"
+                                           context="{'show_email': True}"
+                                           placeholder="Select users for Approval 2"/>
+                                </group>
+                            </group>
+                            <div class="alert alert-info" role="alert" 
+                                 invisible="ks_approval_mode != 'single'">
+                                <strong>Single PM Approval:</strong> Only one approver from Approval 1 list is required to confirm Sale Orders.
+                                Users will select an approver when requesting confirmation.
+                            </div>
+                            <div class="alert alert-info" role="alert" 
+                                 invisible="ks_approval_mode != 'dual'">
+                                <strong>Two PM Approval:</strong> Both Approver 1 and Approver 2 must approve before Sale Orders are confirmed.
+                                Users will select approvers from each list when requesting confirmation.
+                                Approver 2 cannot approve until Approver 1 has approved.
+                            </div>
+                        </page>
+                        <page string="Cancellation Approvers" name="cancel_approvers">
+                            <group>
+                                <group string="Approver 1 Users">
+                                    <field name="ks_cancel_pm1_ids" 
+                                           widget="many2many_tags"
+                                           options="{'no_create': True}"
+                                           context="{'show_email': True}"
+                                           placeholder="Select users for Approval 1"/>
+                                </group>
+                                <group string="Approver 2 Users" 
+                                       invisible="ks_approval_mode == 'single'">
+                                    <field name="ks_cancel_pm2_ids" 
+                                           widget="many2many_tags"
+                                           options="{'no_create': True}"
+                                           context="{'show_email': True}"
+                                           placeholder="Select users for Approval 2"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Edit Approvers" name="edit_approvers">
+                            <group>
+                                <group string="Approver 1 Users">
+                                    <field name="ks_edit_pm1_ids" 
+                                           widget="many2many_tags"
+                                           options="{'no_create': True}"
+                                           context="{'show_email': True}"
+                                           placeholder="Select users for Approval 1"/>
+                                </group>
+                                <group string="Approver 2 Users" 
+                                       invisible="ks_approval_mode == 'single'">
+                                    <field name="ks_edit_pm2_ids" 
+                                           widget="many2many_tags"
+                                           options="{'no_create': True}"
+                                           context="{'show_email': True}"
+                                           placeholder="Select users for Approval 2"/>
+                                </group>
+                            </group>
+                            <div class="alert alert-info" role="alert">
+                                <strong>Edit Approval:</strong> Normal users must request edit permission for confirmed Sale Orders.
+                                Once approved, they can edit the SO and then click "Complete Edit" to lock it again.
+                                Users will select approvers from the configured lists when requesting edit access.
+                            </div>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Sale Approval Configuration List View -->
+    <record id="ks_sale_approval_config_list" model="ir.ui.view">
+        <field name="name">ks.sale.approval.config.list</field>
+        <field name="model">ks.sale.approval.config</field>
+        <field name="arch" type="xml">
+            <list string="Sale Approval Configurations">
+                <field name="name"/>
+                <field name="active" widget="boolean_toggle"/>
+                <field name="ks_approval_mode"/>
+                <field name="ks_confirm_pm1_ids" widget="many2many_tags"/>
+                <field name="ks_confirm_pm2_ids" widget="many2many_tags" optional="show"/>
+                <field name="ks_cancel_pm1_ids" widget="many2many_tags"/>
+                <field name="ks_cancel_pm2_ids" widget="many2many_tags" optional="show"/>
+                <field name="ks_edit_pm1_ids" widget="many2many_tags"/>
+                <field name="ks_edit_pm2_ids" widget="many2many_tags" optional="show"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Sale Approval Configuration Action (Admin only) -->
+    <record id="action_ks_sale_approval_config" model="ir.actions.act_window">
+        <field name="name">Sale Approval Configuration</field>
+        <field name="res_model">ks.sale.approval.config</field>
+        <field name="view_mode">list,form</field>
+        <field name="groups_id" eval="[(4, ref('base.group_system'))]"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Configure Sale Order Approval Workflow
+            </p>
+            <p>
+                Set up PM approvers for Sale Order confirmation and cancellation requests.
+                You can choose between single PM approval or require both PM1 and PM2 to approve.
+            </p>
+        </field>
+    </record>
+
+    <!-- Menu Items (Admin only) -->
+    <menuitem id="menu_ks_sale_approval_config"
+              name="Sale Approval Configuration"
+              parent="sale.menu_sale_config"
+              action="action_ks_sale_approval_config"
+              sequence="100"
+              groups="base.group_system"/>
+</odoo>
+

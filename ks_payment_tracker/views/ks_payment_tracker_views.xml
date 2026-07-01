@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Payment Tracker List View (LO-002 columns) -->
+    <record id="ks_payment_tracker_list_view" model="ir.ui.view">
+        <field name="name">ks.payment.tracker.list</field>
+        <field name="model">ks.payment.tracker</field>
+        <field name="arch" type="xml">
+            <list string="Payment Tracker" create="0" delete="0" default_order="sn">
+                <field name="sn" readonly="1"/>
+                <field name="purchase_order_id" readonly="1"/>
+                <field name="user_id" widget="many2one_avatar_user" readonly="1"/>
+                <field name="company_id" groups="base.group_multi_company" readonly="1"/>
+                <field name="partner_id" readonly="1"/>
+                <field name="invoice_no" readonly="1"/>
+                <field name="e_invoice" readonly="1"/>
+                <field name="product_id" readonly="1"/>
+                <field name="fa" readonly="1"/>
+                <field name="product_qty" readonly="1"/>
+                <field name="price_unit" widget="monetary" readonly="1"/>
+                <field name="price_subtotal" widget="monetary" readonly="1"/>
+                <field name="currency_id" column_invisible="1"/>
+                <field name="ks_po_total_amount" widget="monetary" optional="show" readonly="1"/>
+                <field name="ks_requested_amount" widget="monetary" optional="show" readonly="1"/>
+                <field name="ks_total_paid_amount" widget="monetary" optional="show" readonly="1"/>
+                <field name="tds" widget="monetary" readonly="1"/>
+                <field name="amt_to_be_paid" widget="monetary" readonly="1"/>
+                <field name="stock_status"/>
+                <field name="purpose" readonly="1"/>
+                <field name="purchase_date" readonly="1"/>
+                <field name="transporter_id" readonly="1"/>
+                <field name="at_warehouse" readonly="1"/>
+                <field name="ks_destination" optional="show" readonly="1"/>
+                <field name="ks_despatched_through" optional="show" readonly="1"/>
+                <field name="ks_remarks" optional="show" readonly="1"/>
+                <field name="ks_invoice" optional="show" readonly="1"/>
+                <field name="ks_e_invoices" optional="show" readonly="1"/>
+                <field name="ks_e_way_bill" optional="show" readonly="1"/>
+                <field name="ks_imei_serial_no" optional="show" readonly="1"/>
+                <field name="ks_docket" optional="show" readonly="1"/>
+                <field name="ks_ewaybill_no" optional="show" readonly="1"/>
+                <field name="ks_docket_no" optional="show" readonly="1"/>
+                <field name="ks_vehicle_no" optional="show" readonly="1"/>
+                <field name="ks_transporter" optional="show" readonly="1"/>
+                <field name="approved" widget="boolean" readonly="1"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Payment Tracker Form View -->
+    <record id="ks_payment_tracker_form_view" model="ir.ui.view">
+        <field name="name">ks.payment.tracker.form</field>
+        <field name="model">ks.payment.tracker</field>
+        <field name="arch" type="xml">
+            <form string="Payment Tracker">
+                <sheet>
+                    <group>
+                        <group string="Reference">
+                            <field name="sn" readonly="1"/>
+                            <field name="purchase_order_id" readonly="1" options="{'no_create': True}"/>
+                            <field name="purchase_line_id" readonly="1" options="{'no_create': True}" invisible="1"/>
+                            <field name="user_id" string="Sales Person" readonly="1"/>
+                            <field name="company_id" string="From" readonly="1"/>
+                            <field name="partner_id" string="Vendor" readonly="1"/>
+                            <field name="purchase_date" readonly="1"/>
+                            <field name="payment_approval_request_id" readonly="1" options="{'no_create': True}"/>
+                            <field name="ks_account_payment_id" readonly="1" options="{'no_create': True}"/>
+                            <field name="ks_po_total_amount" readonly="1" widget="monetary"/>
+                            <field name="ks_requested_amount" readonly="1" widget="monetary"/>
+                            <field name="ks_total_paid_amount" readonly="1" widget="monetary"/>
+                        </group>
+                        <group string="Invoice &amp; Product">
+                            <field name="invoice_no" readonly="1"/>
+                            <field name="e_invoice" readonly="1"/>
+                            <field name="product_id" string="Model" readonly="1"/>
+                            <field name="fa" string="F/A" readonly="1"/>
+                            <field name="product_qty" string="Qty" readonly="1"/>
+                            <field name="price_unit" string="Rate" readonly="1"/>
+                            <field name="price_subtotal" string="Amount" readonly="1"/>
+                            <field name="currency_id" column_invisible="1"/>
+                            <field name="tds" readonly="1"/>
+                            <field name="amt_to_be_paid" readonly="1"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="Status">
+                            <field name="stock_status"/>
+                            <field name="purpose" readonly="1"/>
+                            <field name="transporter_id" readonly="1"/>
+                            <field name="at_warehouse" readonly="1"/>
+                            <field name="approved" readonly="1"/>
+                            <field name="approved_notes" readonly="1"/>
+                        </group>
+                        <group string="Extra PO Fields">
+                            <field name="ks_destination" readonly="1"/>
+                            <field name="ks_despatched_through" readonly="1"/>
+                            <field name="ks_remarks" readonly="1"/>
+                            <field name="ks_invoice" readonly="1"/>
+                            <field name="ks_e_invoices" readonly="1"/>
+                            <field name="ks_e_way_bill" readonly="1"/>
+                            <field name="ks_imei_serial_no" readonly="1"/>
+                            <field name="ks_docket" readonly="1"/>
+                            <field name="ks_ewaybill_no" readonly="1"/>
+                            <field name="ks_docket_no" readonly="1"/>
+                            <field name="ks_vehicle_no" readonly="1"/>
+                            <field name="ks_transporter" readonly="1"/>
+                        </group>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action: Payment Tracker -->
+    <record id="ks_payment_tracker_action" model="ir.actions.act_window">
+        <field name="name">Payment Tracker</field>
+        <field name="res_model">ks.payment.tracker</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{'search_default_my_records': 0, 'create': False}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Records are created automatically when a Payment Approval Request is submitted.
+            </p>
+        </field>
+    </record>
+
+    <!-- Menu: Payment Tracker under Purchase -->
+    <menuitem id="ks_payment_tracker_menu_root"
+              name="Payment Tracker"
+              action="ks_payment_tracker_action"
+              parent="purchase.menu_purchase_root"
+              sequence="50"/>
+</odoo>

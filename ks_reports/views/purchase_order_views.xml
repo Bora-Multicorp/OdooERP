@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Inherit purchase.order form view: add Sync to Report button and Extra PO Field section -->
+        <record id="view_purchase_order_form_ks_reports_extra_po" model="ir.ui.view">
+            <field name="name">purchase.order.form.ks.reports.extra.po</field>
+            <field name="model">purchase.order</field>
+            <field name="inherit_id" ref="purchase.purchase_order_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//form/header" position="inside">
+                    <button name="action_sync_to_report" type="object" string="Sync to Report" class="btn-secondary"/>
+                </xpath>
+                <xpath expr="//page[@name='purchase_delivery_invoice']/group" position="after">
+                    <group string="Extra PO Field">
+                        <group>
+                            <field name="ks_remarks" placeholder="Remarks" readonly="not ks_can_edit or ks_qty_only_edit"/>
+                            <field name="ks_invoice" placeholder="Invoice" readonly="not ks_can_edit or ks_qty_only_edit"/>
+                            <field name="ks_e_invoices" placeholder="E - Invoices" readonly="not ks_can_edit or ks_qty_only_edit"/>
+                            <field name="ks_e_way_bill" placeholder="E-way Bill" readonly="not ks_can_edit or ks_qty_only_edit"/>
+                            <field name="ks_imei_serial_no" placeholder="IMEI/ Serial No" readonly="not ks_can_edit or ks_qty_only_edit"/>
+                        </group>
+                        <group>
+                            <field name="ks_docket" placeholder="DOCKET" readonly="not ks_can_edit or ks_qty_only_edit"/>
+                            <field name="ks_ewaybill_no" placeholder="EWAYBILL NO" readonly="not ks_can_edit or ks_qty_only_edit"/>
+                            <field name="ks_docket_no" placeholder="DOCKET No" readonly="not ks_can_edit or ks_qty_only_edit"/>
+                            <field name="ks_vehicle_no" placeholder="Vehicle No." readonly="not ks_can_edit or ks_qty_only_edit"/>
+                            <field name="ks_transporter" placeholder="TRANSPORTER" readonly="not ks_can_edit or ks_qty_only_edit"/>
+                        </group>
+                    </group>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>

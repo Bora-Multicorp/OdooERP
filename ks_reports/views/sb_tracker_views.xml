@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- List view -->
+    <record id="view_sb_tracker_list" model="ir.ui.view">
+        <field name="name">sb.tracker.list</field>
+        <field name="model">sb.tracker</field>
+        <field name="arch" type="xml">
+            <list string="SB Tracker" create="1" delete="1">
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="document_type"/>
+                <field name="invoice_id"/>
+                <field name="invoice_date"/>
+                <field name="shipping_no"/>
+                <field name="shipping_date"/>
+                <field name="forex_amount"/>
+                <field name="exchange_rate"/>
+                <field name="inr_amount"/>
+                <field name="brc_date"/>
+                <field name="brc_no"/>
+                <field name="brc_amount"/>
+                <field name="bank_id"/>
+                <field name="ad_code"/>
+                <field name="bank_updation_status"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Search view -->
+    <record id="view_sb_tracker_search" model="ir.ui.view">
+        <field name="name">sb.tracker.search</field>
+        <field name="model">sb.tracker</field>
+        <field name="arch" type="xml">
+            <search string="SB Tracker">
+                <field name="partner_id" string="Party Name"/>
+                <field name="invoice_id" string="Invoice No"/>
+                <field name="name" string="Sr No"/>
+                <field name="shipping_no" string="SB No"/>
+                <field name="brc_no" string="BRC No"/>
+                <filter string="With Party" name="filter_has_party" domain="[('partner_id', '!=', False)]"/>
+                <filter string="With Invoice" name="filter_has_invoice" domain="[('invoice_id', '!=', False)]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Party Name" name="group_party" context="{'group_by': 'partner_id'}"/>
+                    <filter string="Invoice No" name="group_invoice" context="{'group_by': 'invoice_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Window action -->
+    <record id="action_sb_tracker" model="ir.actions.act_window">
+        <field name="name">SB Tracker</field>
+        <field name="res_model">sb.tracker</field>
+        <field name="view_mode">list</field>
+        <field name="search_view_id" ref="view_sb_tracker_search"/>
+        <field name="context">{}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                SB Tracker records are created or updated automatically when Invoices or SB/BRC Master records are created or updated.
+            </p>
+            <p>
+                You can also create or edit records manually. Use the <strong>Action</strong> menu to export selected rows to XLSX.
+            </p>
+        </field>
+    </record>
+
+    <!-- Server Action: Export to XLSX (top action on list) -->
+    <record id="action_sb_tracker_export_xlsx" model="ir.actions.server">
+        <field name="name">Export to Excel (XLSX)</field>
+        <field name="model_id" ref="model_sb_tracker"/>
+        <field name="binding_model_id" ref="model_sb_tracker"/>
+        <field name="binding_view_types">list,form</field>
+        <field name="state">code</field>
+        <field name="code">action = records.action_export_xlsx()</field>
+    </record>
+</odoo>

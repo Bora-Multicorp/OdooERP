@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- made_country and made_in_country_id intentionally removed from Purchase Order form.
+         Country of origin is managed at the Receipt (stock.picking) level. -->
+</odoo>
