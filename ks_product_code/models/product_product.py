@@ -51,9 +51,15 @@ class ProductProductCode(models.Model):
     def write(self, vals):
         """
         Regenerate codes when a variant's attribute values change.
+
+        Skipped when context flag ``skip_sku_regen`` is set — callers that
+        touch many variants of the same template in a loop (e.g. bulk
+        variant (re)creation) set this flag and trigger the regeneration
+        themselves exactly once per template afterwards, instead of once
+        per variant write (which was O(n²) DB searches for n variants).
         """
         res = super().write(vals)
-        if 'product_template_attribute_value_ids' in vals:
+        if 'product_template_attribute_value_ids' in vals and not self.env.context.get('skip_sku_regen'):
             for tmpl in self.mapped('product_tmpl_id'):
                 tmpl._generate_and_assign_sku()
         return res

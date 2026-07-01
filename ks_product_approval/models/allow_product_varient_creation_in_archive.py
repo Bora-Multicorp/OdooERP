@@ -48,7 +48,11 @@ class AllowProductVarientInArchive(models.Model):
                             len(combination) == len(lines_without_no_variants) and
                             combination.attribute_line_id == lines_without_no_variants
                     ):
-                        variant.product_template_attribute_value_ids = combination
+                        # skip_sku_regen: avoid firing a full SKU regeneration
+                        # (which re-scans every variant of the template) on
+                        # each individual variant write below — it's done
+                        # once per template after all variants are settled.
+                        variant.with_context(skip_sku_regen=True).product_template_attribute_value_ids = combination
 
             # Set containing existing `product.template.attribute.value` combination
             existing_variants = {
@@ -106,6 +110,13 @@ class AllowProductVarientInArchive(models.Model):
             ])
             # Unlink all combo items which reference unlinked variants.
             combo_items_to_unlink.unlink()
+
+        # SKU regeneration is deferred here and run once per template
+        # (rather than once per variant write above) since it re-scans and
+        # re-resolves every variant of the template on each call.
+        for tmpl_id in self:
+            tmpl_id._generate_and_assign_sku()
+
         self.env.flush_all()
         self.env.invalidate_all()
         return True
