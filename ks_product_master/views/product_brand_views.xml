@@ -5,7 +5,6 @@
         <field name="arch" type="xml">
             <list string="Brands" editable="bottom">
                 <field name="name"/>
-                <chatter/>
             </list>
         </field>
     </record>
