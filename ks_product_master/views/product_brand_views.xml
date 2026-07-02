@@ -1,5 +1,5 @@
 <odoo>
-    <record id="view_brand_master" model="ir.ui.view">
+    <record id="view_brand_master_list" model="ir.ui.view">
         <field name="name">product.brand.views</field>
         <field name="model">product.brand</field>
         <field name="arch" type="xml">
