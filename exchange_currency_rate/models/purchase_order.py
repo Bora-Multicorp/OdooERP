@@ -37,9 +37,10 @@ class PurchaseOrder(models.Model):
     @api.constrains('company_currency_id', 'currency_id')
     def _onchange_different_currency(self):
         """ When the Currency is changed back to company currency, the boolean field is disabled """
-        if self.company_currency_id == self.currency_id:
-            if self.is_exchange:
-                self.is_exchange = False
+        for order in self:
+            if order.company_currency_id == order.currency_id:
+                if order.is_exchange:
+                    order.is_exchange = False
 
     @api.onchange('is_exchange')
     def _onchange_is_exchange(self):
