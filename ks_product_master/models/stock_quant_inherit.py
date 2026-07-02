@@ -24,7 +24,6 @@ class StockQuantInherit(models.Model):
         string='Spec Made For',
         help='Specification made for a specific country.',
         tracking=True,
-        readonly=True
     )
 
     made_country = fields.Many2one(
