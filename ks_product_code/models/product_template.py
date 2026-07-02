@@ -1,8 +1,12 @@
 # -*- coding: utf-8 -*-
+import logging
 import math
 import re
+import time
 from odoo import models, api, _
 from odoo.exceptions import ValidationError
+
+_logger = logging.getLogger(__name__)
 
 # Hard ceiling on generated internal references (including hyphens).
 MAX_REF_LENGTH = 24
@@ -227,6 +231,7 @@ class ProductTemplateInternalRef(models.Model):
 
     def _generate_and_assign_sku(self):
         self.ensure_one()
+        t0 = time.monotonic()
 
         variants = self.env['product.product'].with_context(active_test=False).search(
             [('product_tmpl_id', '=', self.id)]
@@ -236,12 +241,22 @@ class ProductTemplateInternalRef(models.Model):
             code = self._generate_sku(self.id)
             code = self._resolve_cross_product_conflict(code, set(), self.name)
             self.with_context(skip_sku_duplicate_check=True).default_code = code
+            _logger.info(
+                "[SKU-PERF] tmpl=%s '%s' single-code path took %.2fs",
+                self.id, self.name, time.monotonic() - t0,
+            )
             return
 
         # Step 1 — generate all codes first (no writes)
+        t1 = time.monotonic()
         new_codes = {v.id: self._generate_sku(v.id) for v in variants}
+        _logger.info(
+            "[SKU-PERF] tmpl=%s '%s' step1 generate (%d variants) took %.2fs",
+            self.id, self.name, len(variants), time.monotonic() - t1,
+        )
 
         # Step 2 — intra-template collision resolution (auto-disambiguate)
+        t2 = time.monotonic()
         seen = {}   # code → vid of first variant that claimed it
         for vid in list(new_codes.keys()):
             code = new_codes[vid]
@@ -262,30 +277,53 @@ class ProductTemplateInternalRef(models.Model):
                     code, vb, set(new_codes.values())
                 )
             seen[new_codes[vid]] = vid
+        _logger.info(
+            "[SKU-PERF] tmpl=%s '%s' step2 intra-collision took %.2fs",
+            self.id, self.name, time.monotonic() - t2,
+        )
 
         # Step 3 — cross-product collision resolution
+        t3 = time.monotonic()
         taken_globally = set()
         name_words = (self.name or '').split()
         for vid in sorted(new_codes.keys()):
             code = new_codes[vid]
             if not code:
                 continue
+            tv = time.monotonic()
             resolved = self._resolve_cross_product_conflict(
                 code, taken_globally, self.name, own_ids=list(new_codes.keys())
             )
+            dtv = time.monotonic() - tv
+            if dtv > 0.5:
+                _logger.warning(
+                    "[SKU-PERF] tmpl=%s variant=%s code=%s conflict resolution "
+                    "took %.2fs -> resolved=%s",
+                    self.id, vid, code, dtv, resolved,
+                )
             new_codes[vid] = resolved
             taken_globally.add(resolved)
+        _logger.info(
+            "[SKU-PERF] tmpl=%s '%s' step3 cross-product (%d variants) took %.2fs",
+            self.id, self.name, len(variants), time.monotonic() - t3,
+        )
 
         # Step 4 — write all codes, per-row constraint suppressed
+        t4 = time.monotonic()
         ctx = dict(self.env.context, skip_sku_duplicate_check=True)
         for variant in variants:
             variant.with_context(**ctx).default_code = new_codes[variant.id]
+        _logger.info(
+            "[SKU-PERF] tmpl=%s '%s' step4 write took %.2fs, total %.2fs",
+            self.id, self.name, time.monotonic() - t4, time.monotonic() - t0,
+        )
 
     def _disambiguate_intra(self, base_code, variant, all_codes):
         """
         Make base_code unique within all_codes by appending more attribute chars.
         Tries progressively wider prefixes of combined attribute values, then
-        falls back to a numeric suffix.  Never raises.
+        falls back to a numeric suffix. Raises only if tens of thousands of
+        suffixes are all taken (should never happen in practice).
         """
         taken = set(all_codes) - {base_code}
 
@@ -305,13 +343,22 @@ class ProductTemplateInternalRef(models.Model):
             if candidate not in taken and candidate != base_code:
                 return candidate
 
-        # Numeric fallback
+        # Numeric fallback. Reserve room for the suffix instead of appending
+        # then truncating — if base_code is already MAX_REF_LENGTH chars,
+        # truncation would silently drop the suffix and candidate would
+        # never change, looping forever.
         n = 2
-        while True:
-            candidate = (base_code + str(n))[:MAX_REF_LENGTH].rstrip('-')
+        while n <= 99999:
+            suffix = str(n)
+            candidate = (base_code[:MAX_REF_LENGTH - len(suffix)] + suffix).rstrip('-')
             if candidate not in taken:
                 return candidate
             n += 1
+
+        raise ValidationError(
+            _("Could not disambiguate internal reference '%(code)s' within "
+              "its own product after %(n)d attempts.") % {'code': base_code, 'n': n}
+        )
 
     @staticmethod
     def _variants_have_same_attributes(va, vb):
@@ -324,17 +371,29 @@ class ProductTemplateInternalRef(models.Model):
         """
         Ensure code doesn't clash with any other product's default_code.
         Tries word fragments from product_name first, then numeric suffixes.
-        Never raises.
+        Raises only if the code namespace around this prefix is saturated
+        after tens of thousands of attempts (should never happen in practice).
+
+        Every candidate we could ever try (code, code+frag, code+N) starts
+        with ``code`` — so one prefix search up front fetches every
+        colliding default_code that exists, and the retry loop below checks
+        candidates against that in-memory set instead of issuing one DB
+        round-trip per candidate. With heavy collisions (e.g. generic codes
+        from products missing brand_id) the old per-candidate search could
+        take hundreds of sequential round-trips per variant.
         """
         own_ids = own_ids or []
+        if not code:
+            return code
+
+        t0 = time.monotonic()
+        existing = self.env['product.product'].with_context(active_test=False).search(
+            [('default_code', '=like', code + '%'), ('id', 'not in', own_ids)]
+        ).mapped('default_code')
+        taken = set(existing) | set(taken_locally)
 
         def _is_taken(c):
-            if c in taken_locally:
-                return True
-            dup = self.env['product.product'].with_context(active_test=False).search(
-                [('default_code', '=', c), ('id', 'not in', own_ids)], limit=1
-            )
-            return bool(dup)
+            return c in taken
 
         if not _is_taken(code):
             return code
@@ -348,13 +407,31 @@ class ProductTemplateInternalRef(models.Model):
                 if not _is_taken(candidate):
                     return candidate
 
-        # Numeric fallback
+        # Numeric fallback.
+        # The suffix must always survive the MAX_REF_LENGTH truncation, or
+        # the candidate never changes between iterations — reserve room for
+        # it up front instead of truncating (code + suffix).
         n = 2
-        while True:
-            candidate = (code + str(n))[:MAX_REF_LENGTH].rstrip('-')
+        while n <= 99999:
+            suffix = str(n)
+            candidate = (code[:MAX_REF_LENGTH - len(suffix)] + suffix).rstrip('-')
             if not _is_taken(candidate):
+                if n > 20 or time.monotonic() - t0 > 0.5:
+                    _logger.warning(
+                        "[SKU-PERF] code=%s needed %d numeric-suffix retries "
+                        "(%.2fs total, 1 batched DB search) to find a free code",
+                        code, n, time.monotonic() - t0,
+                    )
                 return candidate
             n += 1
+
+        # Exhausted a generous search space — surface this instead of
+        # looping forever or silently returning a colliding code.
+        raise ValidationError(
+            _("Could not generate a unique internal reference for base code "
+              "'%(code)s' after %(n)d attempts — the code namespace around "
+              "this prefix is saturated.") % {'code': code, 'n': n}
+        )
 
     def _check_cross_product_unique(self, code_map):
         # Kept for backward compatibility — no longer raises, just a no-op stub.

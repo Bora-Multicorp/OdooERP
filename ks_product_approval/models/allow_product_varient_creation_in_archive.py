@@ -1,7 +1,11 @@
 import itertools
+import logging
+import time
 from odoo.exceptions import UserError
 
 from odoo import models, _, fields
+
+_logger = logging.getLogger(__name__)
 
 
 class AllowProductVarientInArchive(models.Model):
@@ -19,6 +23,10 @@ class AllowProductVarientInArchive(models.Model):
     def _create_variant_ids(self):
         if not self:
             return
+        t0 = time.monotonic()
+        _logger.info(
+            "[SKU-PERF] _create_variant_ids start for templates=%s", self.ids,
+        )
         self.env.flush_all()
         Product = self.env["product.product"]
 
@@ -48,7 +56,11 @@ class AllowProductVarientInArchive(models.Model):
                             len(combination) == len(lines_without_no_variants) and
                             combination.attribute_line_id == lines_without_no_variants
                     ):
-                        variant.product_template_attribute_value_ids = combination
+                        # skip_sku_regen: avoid firing a full SKU regeneration
+                        # (which re-scans every variant of the template) on
+                        # each individual variant write below — it's done
+                        # once per template after all variants are settled.
+                        variant.with_context(skip_sku_regen=True).product_template_attribute_value_ids = combination
 
             # Set containing existing `product.template.attribute.value` combination
             existing_variants = {
@@ -99,13 +111,30 @@ class AllowProductVarientInArchive(models.Model):
         if variants_to_activate:
             variants_to_activate.write({'active': True})
         if variants_to_create:
+            t_create = time.monotonic()
             Product.create(variants_to_create)
+            _logger.info(
+                "[SKU-PERF] created %d new variants in %.2fs",
+                len(variants_to_create), time.monotonic() - t_create,
+            )
         for variant in variants_to_unlink:
             combo_items_to_unlink = self.env['product.combo.item'].search([
                 ('product_id', '=', variant.id)
             ])
             # Unlink all combo items which reference unlinked variants.
             combo_items_to_unlink.unlink()
+
+        # SKU regeneration is deferred here and run once per template
+        # (rather than once per variant write above) since it re-scans and
+        # re-resolves every variant of the template on each call.
+        t_sku = time.monotonic()
+        for tmpl_id in self:
+            tmpl_id._generate_and_assign_sku()
+        _logger.info(
+            "[SKU-PERF] SKU regen for templates=%s took %.2fs",
+            self.ids, time.monotonic() - t_sku,
+        )
+
         self.env.flush_all()
         self.env.invalidate_all()
         return True

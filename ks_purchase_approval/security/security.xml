@@ -13,6 +13,30 @@
         <record id="purchase.group_purchase_manager" model="res.groups">
             <field name="implied_ids" eval="[(4, ref('group_ks_purchase_approval_manager'))]"/>
         </record>
+
+        <!-- Purchase Users (not managers) can only see their own POs -->
+        <record id="purchase_order_user_own_rule" model="ir.rule">
+            <field name="name">Purchase Order: Users see only their own records</field>
+            <field name="model_id" ref="purchase.model_purchase_order"/>
+            <field name="domain_force">[('user_id', '=', user.id)]</field>
+            <field name="groups" eval="[(4, ref('purchase.group_purchase_user'))]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_unlink" eval="True"/>
+        </record>
+
+        <!-- Purchase Managers see all POs (OR logic overrides the user restriction) -->
+        <record id="purchase_order_manager_all_rule" model="ir.rule">
+            <field name="name">Purchase Order: Managers see all records</field>
+            <field name="model_id" ref="purchase.model_purchase_order"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('purchase.group_purchase_manager'))]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_unlink" eval="True"/>
+        </record>
     </data>
 </odoo>
 
