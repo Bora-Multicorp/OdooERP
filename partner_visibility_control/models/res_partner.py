@@ -64,7 +64,12 @@ class ResPartner(models.Model):
     def _search(self, domain, offset=0, limit=None, order=None) -> 'Query':
         ctx = self.env.context
 
-        if not self.env.is_admin():
+        # Admins and members of "See All Contacts" bypass every Layer 2 filter
+        # and see all contacts regardless of assignment.
+        can_see_all_contacts = self.env.is_admin() or self.env.user.has_group(
+            'partner_visibility_control.group_contact_visibility_all')
+
+        if not can_see_all_contacts:
             if ctx.get('filter_by_salesperson'):
                 domain = expression.AND([
                     domain,
@@ -76,15 +81,26 @@ class ResPartner(models.Model):
                     [('purchase_executive_ids', 'in', [self.env.uid])],
                 ])
             elif ctx.get('restrict_by_sales_executive'):
-                # Hard filter for Contacts list view: only assigned contacts
-                domain = expression.AND([
-                    domain,
-                    ['|',
-                        ('user_ids', '!=', False),
-                        '|',
-                        ('salesperson_ids', 'in', [self.env.uid]),
-                        ('purchase_executive_ids', 'in', [self.env.uid]),
-                    ],
-                ])
+                # In the Contacts app, members of "Hide User Contacts" see all
+                # contacts EXCEPT those linked to a user account.  This group's
+                # ONLY effect is hiding user-contacts; the assigned-contacts
+                # scoping below does not apply to them.
+                if self.env.user.has_group(
+                        'partner_visibility_control.group_hide_user_contacts'):
+                    domain = expression.AND([
+                        domain,
+                        [('user_ids', '=', False)],
+                    ])
+                else:
+                    # Hard filter for Contacts list view: only assigned contacts
+                    domain = expression.AND([
+                        domain,
+                        ['|',
+                            ('user_ids', '!=', False),
+                            '|',
+                            ('salesperson_ids', 'in', [self.env.uid]),
+                            ('purchase_executive_ids', 'in', [self.env.uid]),
+                        ],
+                    ])
 
         return super()._search(domain, offset=offset, limit=limit, order=order)
