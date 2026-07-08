@@ -19,6 +19,7 @@
     'depends': ['purchase', 'ks_purchase_advance_payment', 'mail'],
     'data': [
         'security/ir.model.access.csv',
+        'security/ks_payment_tracker_rules.xml',
         'views/ks_payment_tracker_views.xml',
         'views/purchase_order_views.xml',
         'wizards/ks_add_for_approval_wizard_views.xml',
