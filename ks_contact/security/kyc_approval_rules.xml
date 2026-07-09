@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Company-wise visibility for KYC Approval records.
+         company_ids is related to the linked contact's Companies field.
+         A user only sees a KYC record when the contact belongs to one of the
+         user's allowed/selected companies (company_ids), or when the contact
+         has no company set (shared contact). -->
+    <record id="res_partner_kyc_approval_company_rule" model="ir.rule">
+        <field name="name">KYC Approval: company-wise visibility</field>
+        <field name="model_id" ref="model_res_partner_kyc_approval"/>
+        <field name="global" eval="True"/>
+        <field name="domain_force">['|', ('partner_id.company_ids', '=', False), ('partner_id.company_ids', 'in', company_ids)]</field>
+    </record>
+</odoo>

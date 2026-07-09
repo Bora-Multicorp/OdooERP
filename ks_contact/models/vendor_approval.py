@@ -27,6 +27,17 @@ class ContactKYCApproval(models.Model):
     _rec_name = 'partner_id'
     _inherit = ['mail.thread', 'mail.activity.mixin']
 
+    # Companies of the linked contact. Drives company-wise visibility via the
+    # multi-company record rule (see security/kyc_approval_rules.xml).
+    company_ids = fields.Many2many(
+        'res.company',
+        string='Companies',
+        related='partner_id.company_ids',
+        readonly=True,
+        help='Companies of the linked contact; records are only visible to '
+             'users allowed on one of these companies.',
+    )
+
 
     # -------------------------------------------------------------------------
     # CREATE OVERRIDE → ensure attachments link to this record
