@@ -48,9 +48,8 @@ class ProductTemplateInherit(models.Model):
     attribute_ids = fields.Many2many('product.attribute', tracking=True)
 
     # To check if mobile category is selected from the Category field
-    @api.depends('categ_id')
+    @api.depends('categ_id', 'categ_id.is_mobile_category', 'categ_id.parent_path')
     def _compute_category_change(self):
-        mobile_categ = self.env.ref('ks_product_master.product_category_type_mobile', raise_if_not_found=False)
         packaging_categ = self.env.ref('ks_product_master.product_category_type_packaging_material',
                                        raise_if_not_found=False)
 
@@ -61,7 +60,7 @@ class ProductTemplateInherit(models.Model):
             rec.attribute_ids = rec.categ_id.product_attributes.ids
 
             while categ and (not is_mobile or not is_packing_categ):
-                if categ == mobile_categ:
+                if categ.is_mobile_category:
                     is_mobile = True
                 if categ == packaging_categ:
                     is_packing_categ = True
