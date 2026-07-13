@@ -20,11 +20,6 @@
             <field name="attribute_id" ref="product_attribute_box_type"/>
         </record>
 
-        <record id="product_category_type_mobile" model="product.category">
-            <field name="name">Mobile Phone</field>
-            <field name="product_attributes" eval="[(4, ref('ks_product_master.product_attribute_box_type'))]"/>
-        </record>
-
 <!--        <record id="product_category_type_tablet" model="product.category">-->
 <!--            <field name="name">Tablet</field>-->
 <!--        </record>-->

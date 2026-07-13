@@ -24,16 +24,11 @@ class StockMove(models.Model):
             )
             move.display_assign_serial = move.display_import_lot
 
-    @api.depends('product_id.categ_id')
+    @api.depends('product_id.is_mobile_category_selected')
     def _compute_show_imei_column(self):
         for move in self:
-            external_id = ""
-            category = move.product_id.categ_id
-            if category:
-                external_ids = category.get_external_id()
-                external_id = external_ids.get(category.id, "")
-            # Set field to True only for mobile category
-            move.hide_imei_fields = (external_id == 'ks_product_master.product_category_type_mobile')
+            # Mirrors product.template.is_mobile_category_selected (category or any ancestor flagged as mobile)
+            move.hide_imei_fields = move.product_id.is_mobile_category_selected
 
     show_IMEI_field = fields.Boolean(string='Show IMEI Field 1', compute='_compute_show_imei_fields')
     show_IMEI_field2 = fields.Boolean(string='Show IMEI Field 2', compute='_compute_show_imei_fields')
@@ -370,19 +365,20 @@ class StockMoveLine(models.Model):
         tracking=True
     )
 
+    @api.depends('lot_id')
     def _compute_imei(self):
-
         for line in self:
-            if line.move_id.picking_id.picking_type_id.code == 'incoming':
-                return
-        for line in self:
+            # Incoming lines are filled in manually at receipt time; don't touch them here.
+            if not line.lot_id or (line.move_id.picking_id and line.move_id.picking_id.picking_type_id.code == 'incoming'):
+                continue
             quant = self.env['stock.quant'].search([
                 ('product_id', '=', line.product_id.id),
                 ('location_id', '=', line.location_id.id),
                 ('lot_id', '=', line.lot_id.id),
             ], limit=1)
-            line.imei = quant.imei if quant else False
-            line.imei2 = quant.imei2 if quant else False
+            if quant:
+                line.imei = quant.imei
+                line.imei2 = quant.imei2
 
     def write(self, vals):
         """Override to propagate country fields to quants and validate quant matches"""
@@ -422,7 +418,7 @@ class StockMoveLine(models.Model):
                         picking.sudo().write({'made_country': vals['made_in_country_id']})
 
         # When lot_id is assigned (by Odoo's reservation engine or manually), auto-fill
-        # made_in_country_id on outgoing delivery lines from the matching quant.
+        # made_in_country_id / made_country / specs_made on outgoing delivery lines from the matching quant.
         if 'lot_id' in vals and vals['lot_id']:
             for line in self:
                 if (not line.made_in_country_id
@@ -440,7 +436,10 @@ class StockMoveLine(models.Model):
                             ('lot_id', '=', line.lot_id.id),
                             ('made_country', '!=', False),
                         ], limit=1)
+                    if quant and quant.specs_made and not line.specs_made:
+                        line.specs_made = quant.specs_made.id
                     if quant and quant.made_country:
+                        line.made_country = quant.made_country.id
                         line.made_in_country_id = quant.made_country.id
                         if line.move_id:
                             line.move_id.made_in_country_id = quant.made_country.id
@@ -505,7 +504,7 @@ class StockMoveLine(models.Model):
                     line.specs_made = line.move_id.specs_made.id
                 if not line.made_country and line.move_id.made_country:
                     line.made_country = line.move_id.made_country.id
-                # Populate made_in_country_id for delivery lines from the quant
+                # Populate made_in_country_id / made_country / specs_made for delivery lines from the quant
                 if (not line.made_in_country_id
                         and line.lot_id
                         and line.move_id.picking_id.picking_type_id.code == 'outgoing'):
@@ -514,7 +513,10 @@ class StockMoveLine(models.Model):
                         ('lot_id', '=', line.lot_id.id),
                         ('made_country', '!=', False),
                     ], limit=1)
+                    if quant and quant.specs_made and not line.specs_made:
+                        line.specs_made = quant.specs_made.id
                     if quant and quant.made_country:
+                        line.made_country = quant.made_country.id
                         line.made_in_country_id = quant.made_country.id
                         if line.move_id:
                             line.move_id.made_in_country_id = quant.made_country.id
@@ -948,8 +950,8 @@ class StockMoveLine(models.Model):
     @api.onchange('lot_id')
     def _onchange_lot_id_fill_made_in_country(self):
         """When a Lot/Serial Number is selected on a delivery line, auto-fill
-        made_in_country_id from the matching stock.quant so the country of origin
-        is immediately visible on the same row."""
+        made_in_country_id / made_country / specs_made from the matching stock.quant
+        so the country of origin and spec are immediately visible on the same row."""
         for line in self:
             if not line.lot_id:
                 continue
@@ -959,21 +961,20 @@ class StockMoveLine(models.Model):
                 ('location_id', '=', line.location_id.id),
                 ('made_country', '!=', False),
             ], limit=1)
-            if quant and quant.made_country:
-                line.made_in_country_id = quant.made_country.id
-                if line.move_id:
-                    line.move_id.made_in_country_id = quant.made_country.id
-            elif not quant:
+            if not quant:
                 # Fallback: search without location restriction
-                quant_any = self.env['stock.quant'].search([
+                quant = self.env['stock.quant'].search([
                     ('product_id', '=', line.product_id.id),
                     ('lot_id', '=', line.lot_id.id),
                     ('made_country', '!=', False),
                 ], limit=1)
-                if quant_any and quant_any.made_country:
-                    line.made_in_country_id = quant_any.made_country.id
-                    if line.move_id:
-                        line.move_id.made_in_country_id = quant_any.made_country.id
+            if quant and quant.specs_made and not line.specs_made:
+                line.specs_made = quant.specs_made.id
+            if quant and quant.made_country:
+                line.made_country = quant.made_country.id
+                line.made_in_country_id = quant.made_country.id
+                if line.move_id:
+                    line.move_id.made_in_country_id = quant.made_country.id
 
 
 class StockPickingInherit(models.Model):

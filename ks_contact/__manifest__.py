@@ -11,6 +11,7 @@
     # always loaded
     'data': [
         'security/ir.model.access.csv',
+        'security/kyc_approval_rules.xml',
         'data/master_data.xml',
         'data/mail_template_data.xml',
         'data/kyc_expiry_request_cron.xml',
