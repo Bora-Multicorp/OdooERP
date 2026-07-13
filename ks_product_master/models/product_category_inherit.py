@@ -9,3 +9,9 @@ class ProductCategory(models.Model):
                                           'category_id',                     # column that links to product.category
                                           'attribute_id',                    # column that links to product.attribute
                                           )
+
+    is_mobile_category = fields.Boolean(
+        string="Is Mobile Category",
+        help="Check this if products under this category (or its sub-categories) "
+             "should be treated as mobile phones, enabling IMEI tracking on stock moves."
+    )

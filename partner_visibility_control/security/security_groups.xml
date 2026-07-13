@@ -8,5 +8,11 @@
             <field name="comment">Users in this group can see all contacts regardless of Sales Executive assignment.</field>
         </record>
 
+        <record id="group_hide_user_contacts" model="res.groups">
+            <field name="name">Hide User Contacts</field>
+            <field name="category_id" ref="base.module_category_hidden"/>
+            <field name="comment">Users in this group cannot see contacts that are linked to a user account (user_ids set) in the Contacts app.</field>
+        </record>
+
     </data>
 </odoo>

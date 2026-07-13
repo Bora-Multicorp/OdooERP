@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Group: members are restricted to their OWN Payment Tracker records
+         (records where they are the Sales Person / user_id).
+         Users NOT in this group see all records. -->
+    <record id="group_payment_tracker_own_only" model="res.groups">
+        <field name="name">Payment Tracker: Own Records Only</field>
+        <field name="category_id" ref="base.module_category_hidden"/>
+        <field name="comment">Users in this group can only see their own Payment Tracker records (where they are the Sales Person / user_id). Users not in this group see all records.</field>
+    </record>
+
+    <!-- Record rule scoped to the group above (NOT global), so only its
+         members are restricted; everyone else is unaffected. -->
+    <record id="ks_payment_tracker_own_records_rule" model="ir.rule">
+        <field name="name">Payment Tracker: own records only</field>
+        <field name="model_id" ref="model_ks_payment_tracker"/>
+        <field name="domain_force">[('user_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('ks_payment_tracker.group_payment_tracker_own_only'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+</odoo>
