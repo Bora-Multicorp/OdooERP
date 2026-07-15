@@ -132,8 +132,9 @@ class StockQuantInherit(models.Model):
         for record in self:
             is_mobile = record.product_id.product_tmpl_id.is_mobile_category_selected
             is_dual_sim = record.product_id.product_tmpl_id.is_dual_sim
+            tracking = record.product_id.product_tmpl_id.tracking
 
-            if not record.lot_id.id:
+            if tracking != 'none' and not record.lot_id.id:
                 raise ValidationError(_('Please enter serial number.'))
 
             if not is_mobile:
