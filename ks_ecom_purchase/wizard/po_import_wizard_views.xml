@@ -16,6 +16,12 @@
                         type="object"
                         class="btn-primary"
                     />
+                    <button
+                        name="action_download_template"
+                        string="Download Template"
+                        type="object"
+                        class="btn-secondary"
+                    />
                     <button string="Cancel" special="cancel" class="btn-secondary"/>
                 </footer>
             </form>
