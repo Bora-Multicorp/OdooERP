@@ -20,8 +20,15 @@ class KsPoRefundImportWizard(models.TransientModel):
     _name = "ks.po.refund.import.wizard"
     _description = "Purchase Order Refund Import Wizard (E-com)"
 
-    file_data = fields.Binary(string="XLSX File", required=True)
-    file_name = fields.Char(string="File Name", required=True)
+    file_data = fields.Binary(string="XLSX File")
+    file_name = fields.Char(string="File Name")
+
+    def action_download_template(self):
+        return {
+            "type": "ir.actions.act_url",
+            "url": "/ks_ecom_purchase/static/src/xls/po_refund_import_template.xlsx",
+            "target": "self",
+        }
 
     _ORDER_ID_ALIASES = {"orderid", "order_id", "orderno", "order_no", "ecomorderid"}
     _PRODUCT_CODE_ALIASES = {"asin", "sku", "productcode", "defaultcode", "internalreference", "barcode"}
@@ -57,7 +64,10 @@ class KsPoRefundImportWizard(models.TransientModel):
         if load_workbook is None:
             raise UserError(_("Python package 'openpyxl' is required to import XLSX files."))
 
-        if not self.file_name or not self.file_name.lower().endswith(".xlsx"):
+        if not self.file_data or not self.file_name:
+            raise UserError(_("Please upload an XLSX file before importing."))
+
+        if not self.file_name.lower().endswith(".xlsx"):
             raise UserError(_("Please upload a valid .xlsx file only."))
 
         try:

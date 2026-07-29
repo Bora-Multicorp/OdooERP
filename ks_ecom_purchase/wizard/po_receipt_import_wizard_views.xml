@@ -23,8 +23,10 @@
                     </div>
                 </sheet>
                 <footer>
-                    <button name="action_import_receipt_data" string="Import Receipt Data" 
+                    <button name="action_import_receipt_data" string="Import Receipt Data"
                             type="object" class="btn-primary"/>
+                    <button name="action_download_template" string="Download Template"
+                            type="object" class="btn-secondary"/>
                     <button string="Cancel" class="btn-secondary" special="cancel"/>
                 </footer>
             </form>

@@ -84,7 +84,7 @@
                             <t t-if="doc.company_id.vat">GSTIN/UIN: <t t-esc="doc.company_id.vat"/><br/></t>
                             <t t-if="doc.company_id.partner_id.state_id">
                                 State Name : <t t-esc="doc.company_id.partner_id.state_id.name or ''"/>
-                                <t t-if="doc.company_id.partner_id.state_id.code">, Code : <t t-esc="doc.company_id.partner_id.state_id.code or ''"/></t><br/>
+                                <t t-if="doc.company_id.partner_id.state_id.l10n_in_tin">, Code : <t t-esc="doc.company_id.partner_id.state_id.l10n_in_tin or ''"/></t><br/>
                             </t>
                             <t t-if="doc.company_id.partner_id.country_id">Country: <t t-esc="doc.company_id.partner_id.country_id.name or ''"/><br/></t>
                             <t t-if="doc.company_id.company_registry">CIN: <t t-esc="doc.company_id.company_registry"/><br/></t>

@@ -189,7 +189,7 @@
                         <t t-if="made_in_country"><br/><t t-esc="'Made in ' + (made_in_country.name or '')"/></t>
                     </td>
                     <td style="border:1px solid #000; padding:4px; text-align:right;">
-                        <t t-esc="doc.format_number(line.product_qty, digits=0)"/> <t t-esc="line.product_uom.name or 'pcs'"/>
+                        <t t-esc="doc.format_number(line.product_qty, digits=0)"/>
                     </td>
                     <td style="border:1px solid #000; padding:4px; text-align:right;">
                         <t t-esc="doc.currency_id.symbol or '$'"/> <t t-esc="doc.format_number(line.price_unit, digits=2)"/>
