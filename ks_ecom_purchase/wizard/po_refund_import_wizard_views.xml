@@ -25,6 +25,8 @@
                 <footer>
                     <button name="action_import_refund_data" string="Import Refund Data"
                             type="object" class="btn-primary"/>
+                    <button name="action_download_template" string="Download Template"
+                            type="object" class="btn-secondary"/>
                     <button string="Cancel" class="btn-secondary" special="cancel"/>
                 </footer>
             </form>

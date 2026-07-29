@@ -109,30 +109,36 @@ class AccountMove(models.Model):
                 return f"UAE Dirham {integer_value} and {fractional_value} fils Only"
 
     def get_amount_in_words_currency(self, amount, currency):
-        """Convert amount to words for any currency using res.currency.amount_to_text."""
+        """Convert amount to words for any currency using res.currency.amount_to_text.
+
+        INR must use the Indian numbering system (lakh/crore) rather than the
+        international system (million), so it is routed to get_amount_in_words_inr.
+        """
         self.ensure_one()
         if not currency or amount is None:
             return ''
+        if currency.name == 'INR':
+            return self.get_amount_in_words_inr(amount)
         try:
             return currency.amount_to_text(amount) or ''
         except Exception:
             return ''
 
     def get_amount_in_words_inr(self, amount):
-        """Convert amount to words in INR currency"""
+        """Convert amount to words in INR currency using the Indian numbering
+        system (lakh/crore), independent of the user's UI language."""
         self.ensure_one()
         try:
             from num2words import num2words
-            
+
             # Split integer and decimal parts
             integral, _sep, fractional = f"{amount:.2f}".partition('.')
             integer_value = int(integral)
             fractional_value = int(fractional or 0)
-            
-            # Get language
-            lang = self.env['res.lang']._lang_get(self.env.user.lang or 'en_US')
-            lang_code = lang.iso_code if lang and hasattr(lang, 'iso_code') else 'en'
-            
+
+            # Indian currency always uses Indian numbering (lakh/crore), regardless of UI language
+            lang_code = 'en_IN'
+
             # Convert to words
             if fractional_value == 0:
                 words = num2words(integer_value, lang=lang_code).title()
