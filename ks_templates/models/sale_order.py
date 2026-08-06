@@ -6,13 +6,19 @@ from odoo.tools import formatLang
 class SaleOrder(models.Model):
     _inherit = 'sale.order'
 
-    ks_round_off = fields.Float(
+    ks_apply_round_off = fields.Boolean(
         string='Round Off',
+        default=False,
+        help='If checked, the order total is automatically rounded to the nearest integer. '
+             'If unchecked, the total is kept as-is.',
+    )
+
+    ks_round_off = fields.Float(
+        string='Round Off Amount',
         digits=(16, 2),
         compute='_compute_ks_round_off',
-        inverse='_inverse_ks_round_off',
         store=True,
-        help='Auto-calculated to round the total to the nearest integer. Can be manually overridden.',
+        help='Auto-calculated to round the total to the nearest integer when Round Off is checked.',
     )
 
     # Additional sale order information fields
@@ -34,26 +40,26 @@ class SaleOrder(models.Model):
         for order in self:
             order.ks_can_edit = order.state in ('draft', 'sent')
 
-    @api.depends('order_line.price_subtotal', 'order_line.price_tax')
+    @api.depends('order_line.price_subtotal', 'order_line.price_tax', 'ks_apply_round_off')
     def _compute_ks_round_off(self):
         for order in self:
+            if not order.ks_apply_round_off:
+                order.ks_round_off = 0.0
+                continue
             lines = order.order_line.filtered(lambda l: l.display_type not in ('line_section', 'line_note'))
             raw_untaxed = sum(lines.mapped('price_subtotal'))
             raw_tax = sum(lines.mapped('price_tax'))
             raw_total = raw_untaxed + raw_tax
             order.ks_round_off = raw_total - round(raw_total)
 
-    def _inverse_ks_round_off(self):
-        # Allow manual override — stored value is kept as-is; amount_total recomputes via _compute_amounts
-        pass
-
-    @api.depends('order_line.price_subtotal', 'currency_id', 'company_id', 'payment_term_id', 'ks_round_off')
+    @api.depends('order_line.price_subtotal', 'currency_id', 'company_id', 'payment_term_id',
+                 'ks_round_off', 'ks_apply_round_off')
     def _compute_amounts(self):
         super()._compute_amounts()
         for order in self:
             order.amount_total = order.amount_untaxed + order.amount_tax - order.ks_round_off
 
-    @api.depends('order_line.price_subtotal', 'currency_id', 'company_id', 'ks_round_off')
+    @api.depends('order_line.price_subtotal', 'currency_id', 'company_id', 'ks_round_off', 'ks_apply_round_off')
     @api.depends_context('lang')
     def _compute_tax_totals(self):
         super()._compute_tax_totals()
