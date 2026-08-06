@@ -26,6 +26,8 @@ class SaleOrderLine(models.Model):
             'ks_warehouse_extension.product_template_cash_handling_charges',
             raise_if_not_found=False
         )
+        if template:
+            template = template.sudo()
         variant = template.product_variant_ids[:1] if template else self.env['product.product']
         for line in self:
             line.is_cash_handling_charge = bool(
@@ -37,9 +39,12 @@ class SaleOrderLine(models.Model):
             'ks_warehouse_extension.product_template_cash_handling_charges',
             raise_if_not_found=False,
         )
-        if not template or not template.product_variant_ids:
+        if not template:
             return self.env['product.product']
-        return template.product_variant_ids[0]
+        template = template.sudo()
+        if not template.product_variant_ids:
+            return self.env['product.product']
+        return template.product_variant_ids[0].sudo()
 
     @api.onchange('product_id')
     def _onchange_product_id_check_cash_handling(self):

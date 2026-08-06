@@ -7,6 +7,14 @@
             <field name="model">sale.order</field>
             <field name="inherit_id" ref="sale.view_order_form"/>
             <field name="arch" type="xml">
+                <!-- Round Off toggle: single-line label + switch, right-aligned like the totals below it -->
+                <xpath expr="//group[@name='sale_total']/field[@name='tax_totals']" position="before">
+                    <div class="d-flex align-items-center oe_subtotal_footer_separator">
+                        <label for="ks_apply_round_off" string="Round Off" class="me-2 mb-0"/>
+                        <field name="ks_apply_round_off" widget="boolean_toggle" nolabel="1"
+                               class="mb-0 ms-auto" readonly="not ks_can_edit or ks_qty_only_edit"/>
+                    </div>
+                </xpath>
                 <!-- Add fields to Other Information tab -->
                 <xpath expr="//page[@name='other_information']/group" position="inside">
                     <group string="Additional Information">

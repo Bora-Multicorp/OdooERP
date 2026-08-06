@@ -190,9 +190,26 @@ class CustomContact(models.Model):
                     "Invalid GST Number: '%s'. It must follow the 15-character format (e.g., 27ABCDE1234F1Z5)."
                 ) % rec.vat)
 
+            # res.company records (root companies and their branches) are
+            # expected by Odoo core to share the same GSTIN — branch companies
+            # copy the root company's VAT automatically. `is_company` alone
+            # isn't enough to detect this: a plain Contact/customer/vendor can
+            # also be marked as a company from the front end and should still
+            # be checked for duplicates. So we only skip when this partner
+            # actually IS a res.company's partner_id (ref_company_ids), or is
+            # currently being created as one — res.company.create() creates
+            # the partner first (with context default_parent_id=False, a key
+            # unique to that call site) and only links its res.company row
+            # afterwards, so ref_company_ids isn't populated yet at that point.
+            if rec.is_company and (
+                rec.ref_company_ids or self.env.context.get('default_parent_id') is False
+            ):
+                continue
+
             duplicate = self.search([
                 ('vat', '=ilike', gst),
                 ('id', '!=', rec.id),
+                ('parent_id', '=', False),
             ], limit=1)
 
             if duplicate:
