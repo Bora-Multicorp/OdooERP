@@ -16,7 +16,11 @@ class IrUiMenu(models.Model):
         """Hide menu which is selected inside User management only for the selected users"""
         menu_ids = super(IrUiMenu, self).search(domain, offset=offset, limit=limit, order=order)
         current_user = self.env.user
-        company_ids = request.httprequest.cookies.get('cids') if request.httprequest.cookies.get('cids') else ''
+        try:
+            company_ids = request.httprequest.cookies.get('cids') or ''
+        except RuntimeError:
+            # No HTTP request in context (module update, cron, shell, etc.)
+            company_ids = ''
 
         if company_ids:
             if '-' in company_ids:
@@ -125,7 +129,11 @@ class IrActionsActWindow(models.Model):
         records = super().read(fields=fields, load=load)
 
         current_user = self.env.user
-        company_ids = request.httprequest.cookies.get('cids') if request.httprequest else ''
+        try:
+            company_ids = request.httprequest.cookies.get('cids') if request.httprequest else ''
+        except RuntimeError:
+            # No HTTP request in context (module update, cron, shell, etc.)
+            company_ids = ''
         if company_ids:
             if '-' in company_ids:
                 cid = company_ids.split('-')
