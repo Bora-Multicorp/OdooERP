@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ── Form View ─────────────────────────────────────────────────────── -->
+    <record id="bora_vendor_bill_approval_config_form" model="ir.ui.view">
+        <field name="name">bora.vendor.bill.approval.config.form</field>
+        <field name="model">bora.vendor.bill.approval.config</field>
+        <field name="arch" type="xml">
+            <form string="Vendor Bill Approval Configuration">
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="e.g. Company ABC — Dual Approval"/>
+                        </h1>
+                    </div>
+                    <div class="alert alert-info" role="alert">
+                        <strong>Configuration Scope:</strong>
+                        Select the companies this configuration applies to.
+                        If no company is selected, this configuration acts as a <strong>global fallback</strong> for all companies.
+                        Approver 1 and Approver 2 user lists are automatically filtered to members of the selected companies.
+                    </div>
+                    <group>
+                        <group string="Approval Mode">
+                            <field name="bora_approval_mode" widget="radio"/>
+                        </group>
+                        <group>
+                            <field name="active" widget="boolean_toggle"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Vendor Bill Approvers" name="bill_approvers">
+                            <group>
+                                <group string="Approver 1 Users">
+                                    <field name="bora_bill_pm1_ids"
+                                           widget="many2many_tags"
+                                           options="{'no_create': True}"
+                                           context="{'show_email': True}"
+                                           domain="[('company_ids', 'in', bora_company_ids), ('share', '=', False)] if bora_company_ids else [('share', '=', False)]"
+                                           placeholder="Select users for Approver 1"/>
+                                </group>
+                                <group string="Approver 2 Users"
+                                       invisible="bora_approval_mode == 'single'">
+                                    <field name="bora_bill_pm2_ids"
+                                           widget="many2many_tags"
+                                           options="{'no_create': True}"
+                                           context="{'show_email': True}"
+                                           domain="[('company_ids', 'in', bora_company_ids), ('share', '=', False)] if bora_company_ids else [('share', '=', False)]"
+                                           placeholder="Select users for Approver 2"/>
+                                </group>
+                            </group>
+                                                <group string="Applicable Companies">
+                        <field name="bora_company_ids"
+                               widget="many2many_tags"
+                               options="{'no_create': True}"
+                               placeholder="Leave empty to apply to all companies (global fallback)"
+                               nolabel="1"/>
+                    </group>
+
+                            <div class="alert alert-info" role="alert"
+                                 invisible="bora_approval_mode != 'single'">
+                                <strong>Single Approver:</strong> Only one approver from the Approver 1 list
+                                is required to confirm a vendor bill.
+                                Users will select an approver when requesting confirmation approval.
+                            </div>
+                            <div class="alert alert-info" role="alert"
+                                 invisible="bora_approval_mode != 'dual'">
+                                <strong>Two Approvers:</strong> Both Approver 1 and Approver 2 must approve
+                                before a vendor bill can be confirmed.
+                                Approver 2 cannot approve until Approver 1 has approved (sequential).
+                            </div>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- ── List View ──────────────────────────────────────────────────────── -->
+    <record id="bora_vendor_bill_approval_config_list" model="ir.ui.view">
+        <field name="name">bora.vendor.bill.approval.config.list</field>
+        <field name="model">bora.vendor.bill.approval.config</field>
+        <field name="arch" type="xml">
+            <list string="Vendor Bill Approval Configurations">
+                <field name="name"/>
+                <field name="active" widget="boolean_toggle"/>
+                <field name="bora_approval_mode"/>
+                <field name="bora_company_ids" widget="many2many_tags" optional="show"/>
+                <field name="bora_bill_pm1_ids" widget="many2many_tags"/>
+                <field name="bora_bill_pm2_ids" widget="many2many_tags" optional="show"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- ── Action ─────────────────────────────────────────────────────────── -->
+    <record id="action_bora_vendor_bill_approval_config" model="ir.actions.act_window">
+        <field name="name">Vendor Bill Approvers</field>
+        <field name="res_model">bora.vendor.bill.approval.config</field>
+        <field name="view_mode">list,form</field>
+        <field name="groups_id" eval="[(4, ref('base.group_system'))]"/>
+        <field name="context">{'active_test': False}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Configure Vendor Bill Approval Workflow
+            </p>
+            <p>
+                Create one configuration per company (or a global fallback with no company).
+                Set up Approver 1 and Approver 2 users filtered to the selected companies.
+                Choose between single approver or require both PM1 and PM2 to approve.
+            </p>
+        </field>
+    </record>
+
+    <!-- ── Menu: Purchase > Configuration > Vendor Bill Approvers ────────── -->
+    <menuitem id="menu_bora_vendor_bill_approval_config"
+              name="Vendor Bill Approvers"
+              parent="purchase.menu_purchase_config"
+              action="action_bora_vendor_bill_approval_config"
+              groups="base.group_system"
+              sequence="25"/>
+</odoo>

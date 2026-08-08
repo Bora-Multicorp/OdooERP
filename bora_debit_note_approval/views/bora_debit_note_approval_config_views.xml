@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ── Form View ─────────────────────────────────────────────────────── -->
+    <record id="bora_debit_note_approval_config_form" model="ir.ui.view">
+        <field name="name">bora.debit.note.approval.config.form</field>
+        <field name="model">bora.debit.note.approval.config</field>
+        <field name="arch" type="xml">
+            <form string="Debit Note Approval Configuration">
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="e.g. Company ABC — Dual Approval"/>
+                        </h1>
+                    </div>
+                    <div class="alert alert-info" role="alert">
+                        <strong>Configuration Scope:</strong>
+                        Select the companies this configuration applies to.
+                        If no company is selected, this configuration acts as a <strong>global fallback</strong> for all companies.
+                        Approver 1 and Approver 2 user lists are automatically filtered to members of the selected companies.
+                        This configuration applies to both <strong>Vendor</strong> and <strong>Customer</strong> debit notes.
+                    </div>
+                    <group>
+                        <group string="Approval Mode">
+                            <field name="bora_dn_approval_mode" widget="radio"/>
+                        </group>
+                        <group>
+                            <field name="active" widget="boolean_toggle"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Debit Note Approvers" name="dn_approvers">
+                            <group>
+                                <group string="Approver 1 Users">
+                                    <field name="bora_dn_pm1_ids"
+                                           widget="many2many_tags"
+                                           options="{'no_create': True}"
+                                           context="{'show_email': True}"
+                                           domain="[('company_ids', 'in', bora_dn_company_ids), ('share', '=', False)] if bora_dn_company_ids else [('share', '=', False)]"
+                                           placeholder="Select users for Approver 1"/>
+                                </group>
+                                <group string="Approver 2 Users"
+                                       invisible="bora_dn_approval_mode == 'single'">
+                                    <field name="bora_dn_pm2_ids"
+                                           widget="many2many_tags"
+                                           options="{'no_create': True}"
+                                           context="{'show_email': True}"
+                                           domain="[('company_ids', 'in', bora_dn_company_ids), ('share', '=', False)] if bora_dn_company_ids else [('share', '=', False)]"
+                                           placeholder="Select users for Approver 2"/>
+                                </group>
+                            </group>
+                                                <group string="Applicable Companies">
+                        <field name="bora_dn_company_ids"
+                               widget="many2many_tags"
+                               options="{'no_create': True}"
+                               placeholder="Leave empty to apply to all companies (global fallback)"
+                               nolabel="1"/>
+                    </group>
+
+                            <div class="alert alert-info" role="alert"
+                                 invisible="bora_dn_approval_mode != 'single'">
+                                <strong>Single Approver:</strong> Only one approver from the Approver 1 list
+                                is required to confirm a debit note.
+                                Users will select an approver when requesting confirmation approval.
+                            </div>
+                            <div class="alert alert-info" role="alert"
+                                 invisible="bora_dn_approval_mode != 'dual'">
+                                <strong>Two Approvers:</strong> Both Approver 1 and Approver 2 must approve
+                                before a debit note can be confirmed.
+                                Approver 2 cannot approve until Approver 1 has approved (sequential).
+                            </div>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- ── List View ──────────────────────────────────────────────────────── -->
+    <record id="bora_debit_note_approval_config_list" model="ir.ui.view">
+        <field name="name">bora.debit.note.approval.config.list</field>
+        <field name="model">bora.debit.note.approval.config</field>
+        <field name="arch" type="xml">
+            <list string="Debit Note Approval Configurations">
+                <field name="name"/>
+                <field name="active" widget="boolean_toggle"/>
+                <field name="bora_dn_approval_mode"/>
+                <field name="bora_dn_company_ids" widget="many2many_tags" optional="show"/>
+                <field name="bora_dn_pm1_ids" widget="many2many_tags"/>
+                <field name="bora_dn_pm2_ids" widget="many2many_tags" optional="show"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- ── Action ─────────────────────────────────────────────────────────── -->
+    <record id="action_bora_debit_note_approval_config" model="ir.actions.act_window">
+        <field name="name">Debit Note Approvers</field>
+        <field name="res_model">bora.debit.note.approval.config</field>
+        <field name="view_mode">list,form</field>
+        <field name="groups_id" eval="[(4, ref('base.group_system'))]"/>
+        <field name="context">{'active_test': False}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Configure Debit Note Approval Workflow
+            </p>
+            <p>
+                Create one configuration per company (or a global fallback with no company).
+                Applies to both Vendor and Customer debit notes.
+                Set up Approver 1 and Approver 2 users filtered to the selected companies.
+            </p>
+        </field>
+    </record>
+
+    <!-- ── Menu: Accounting > Configuration > Debit Note Approvers ───────── -->
+    <menuitem id="menu_bora_debit_note_approval_config"
+              name="Debit Note Approvers"
+              parent="account.menu_finance_configuration"
+              action="action_bora_debit_note_approval_config"
+              groups="base.group_system"
+              sequence="26"/>
+</odoo>

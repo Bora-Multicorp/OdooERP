@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="bora_journal_entry_approval_reason_wizard_form" model="ir.ui.view">
+        <field name="name">bora.journal.entry.approval.reason.wizard.form</field>
+        <field name="model">bora.journal.entry.approval.reason.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Approval / Rejection Reason">
+                <field name="bora_je_action_type" invisible="1"/>
+                <field name="bora_je_is_rejection" invisible="1"/>
+                <group>
+                    <field name="bora_je_move_id" readonly="1"/>
+                    <field name="bora_je_action_label" string="Action" readonly="1"/>
+                    <field name="bora_je_reason" placeholder="Please enter a reason (required)..."/>
+                </group>
+                <footer>
+                    <button name="action_submit" type="object" class="btn-danger"
+                            string="Confirm Rejection" invisible="not bora_je_is_rejection"/>
+                    <button name="action_submit" type="object" class="btn-success"
+                            string="Confirm Approval" invisible="bora_je_is_rejection"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>
