@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="bora_invoice_approval_request_wizard_form" model="ir.ui.view">
+        <field name="name">bora.invoice.approval.request.wizard.form</field>
+        <field name="model">bora.invoice.approval.request.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Request for Invoice Approval">
+                <field name="bora_inv_move_id" invisible="1"/>
+                <field name="bora_inv_is_local" invisible="1"/>
+                <field name="bora_inv_approver1_user_ids" invisible="1"/>
+                <field name="bora_inv_approver2_user_ids" invisible="1"/>
+                <field name="bora_inv_approver1_filtered_ids" invisible="1"/>
+                <field name="bora_inv_approver2_filtered_ids" invisible="1"/>
+                <field name="bora_inv_show_approver2" invisible="1"/>
+                <field name="bora_inv_is_update_mode" invisible="1"/>
+                <field name="bora_inv_pm1_already_approved" invisible="1"/>
+
+                <!-- DEBUG PANEL — remove after troubleshooting -->
+                <!-- <div class="alert alert-dark" style="font-family: monospace; font-size: 12px;">
+                    <strong>🔍 DEBUG — Sale Type Detection</strong><br/>
+                    Country Name: <field name="bora_inv_debug_partner_country" readonly="1" nolabel="1" class="d-inline"/><br/>
+                    Country Code: <field name="bora_inv_debug_country_code" readonly="1" nolabel="1" class="d-inline"/><br/>
+                    Is Local (code == 'IN'): <field name="bora_inv_debug_is_local" readonly="1" nolabel="1" class="d-inline fw-bold"/>
+                </div> -->
+
+                <field name="bora_inv_approval_info" widget="html" readonly="1" nolabel="1"/>
+                <group>
+                    <field name="bora_inv_sale_type_info" string="Sale Type" readonly="1"/>
+                    <field name="bora_inv_approver1_user"
+                           options="{'no_create': True}"
+                           domain="[('id', 'in', bora_inv_approver1_filtered_ids), ('share', '=', False)]"
+                           readonly="bora_inv_pm1_already_approved"/>
+                    <field name="bora_inv_approver2_user"
+                           options="{'no_create': True}"
+                           domain="[('id', 'in', bora_inv_approver2_filtered_ids), ('share', '=', False)]"
+                           required="bora_inv_show_approver2"
+                           invisible="not bora_inv_show_approver2"/>
+                    <field name="bora_inv_reason"/>
+                </group>
+                <footer>
+                    <button name="action_confirm_request" string="OK" type="object" class="btn-primary"/>
+                    <button name="action_cancel" string="Cancel" type="object" class="btn-secondary"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>
