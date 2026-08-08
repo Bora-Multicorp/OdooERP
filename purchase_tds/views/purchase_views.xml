@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_purchase_order_form_inherit_tds" model="ir.ui.view">
+        <field name="name">purchase.order.form.inherit.tds</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <button name="%(purchase_tds_entry_wizard_form_action)d"
+                        string="TDS Entry"
+                        type="action"
+                        class="btn-secondary"
+                        invisible="state != 'purchase'"/>
+            </xpath>
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_view_tds"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-money"
+                        invisible="tds_count == 0">
+                    <field name="tds_count"
+                           widget="statinfo"
+                           string="TDS"/>
+                </button>
+            </xpath>
+            <xpath expr="//field[@name='tax_totals']" position="after">
+                <field name="tds_section" nolabel="1" colspan="2" invisible="not tds_section"/>
+                <field name="tds_tax_id" nolabel="1" colspan="2" invisible="tds_section"/>
+                <field name="amount_tds" widget="monetary" style="font-size: 1.3em; font-weight: bold; white-space: nowrap;" options="{'currency_field': 'currency_id'}"/>
+                <field name="amount_net_payable" widget="monetary" options="{'currency_field': 'currency_id'}" style="font-size: 1.3em; font-weight: bold; white-space: nowrap;"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>
