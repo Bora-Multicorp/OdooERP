@@ -60,6 +60,9 @@ class AccountMove(models.Model):
             )
         )
 
+    def _is_journal_entry(self):
+        return self.move_type == 'entry'
+
     def _is_je_admin_user(self):
         """Returns True if the current user is a system administrator."""
         return self.env.user._is_admin()
@@ -71,12 +74,12 @@ class AccountMove(models.Model):
     def _compute_bora_je_admin(self):
         is_admin = self._is_je_admin_user()
         for rec in self:
-            rec.bora_is_je_admin = is_admin
+            rec.bora_is_je_admin = is_admin if rec._is_journal_entry() else False
 
     @api.depends_context('uid')
     def _compute_bora_je_pm_user(self):
         for rec in self:
-            if rec._has_je_approval_config():
+            if rec._is_journal_entry() and rec._has_je_approval_config():
                 config = rec._get_je_approval_config()
                 rec.bora_is_je_pm_user = self.env.user in config.get_all_pm_users()
             else:
@@ -85,13 +88,13 @@ class AccountMove(models.Model):
     @api.depends('state')
     def _compute_bora_je_dual_approval(self):
         for rec in self:
-            if rec._has_je_approval_config():
+            if rec._is_journal_entry() and rec._has_je_approval_config():
                 rec.bora_is_je_dual_approval = rec._get_je_approval_config().is_dual_approval()
             else:
                 rec.bora_is_je_dual_approval = False
 
     @api.depends(
-        'state',
+        'state', 'move_type',
         'bora_is_je_pm_user',
         'bora_je_pm1_id', 'bora_je_pm2_id',
         'bora_je_pm1_approved', 'bora_je_pm2_approved',
@@ -104,6 +107,9 @@ class AccountMove(models.Model):
             rec.bora_show_je_approve_button = False
             rec.bora_show_je_reject_button = False
             rec.bora_show_je_update_button = False
+
+            if not rec._is_journal_entry():
+                continue
 
             is_admin = rec._is_je_admin_user()
             is_pm = rec.bora_is_je_pm_user
@@ -146,7 +152,7 @@ class AccountMove(models.Model):
         """
         # Validate journal entry date up-front
         for move in self:
-            if move.move_type == 'entry' and not move.invoice_date and not move.date:
+            if move._is_journal_entry() and not move.invoice_date and not move.date:
                 raise UserError(_(
                     'The Journal Entry date is required to post this document. '
                     'Please set the date before posting.'
@@ -156,9 +162,8 @@ class AccountMove(models.Model):
         je_can_proceed = self.env['account.move']
 
         for move in self:
-            if (move.move_type == 'entry'
+            if (move._is_journal_entry()
                     and move.state == 'draft'
-                    and move._has_je_approval_config()
                     and not move._is_je_admin_user()
                     and not move.bora_je_approved):
                 config = move._get_je_approval_config()
@@ -173,13 +178,14 @@ class AccountMove(models.Model):
                 'state': 'journal_entry_approval_pending',
             })
 
+        res = True
         if je_can_proceed:
-            super(AccountMove, je_can_proceed).action_post()
+            res = super(AccountMove, je_can_proceed).action_post()
 
         if je_needing_approval:
             return je_needing_approval[0]._bora_open_je_approval_wizard()
 
-        return True
+        return res
 
     def _bora_open_je_approval_wizard(self, is_update=False):
         view_id = self.env.ref(

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_bora_insurance_approval_request_wizard_form" model="ir.ui.view">
+        <field name="name">bora.insurance.approval.request.wizard.form</field>
+        <field name="model">bora.insurance.approval.request.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Select Payment Approval Authorities">
+                <field name="bora_show_approver2" invisible="1"/>
+                <field name="bora_approver1_filtered_ids" invisible="1"/>
+                <field name="bora_approver2_filtered_ids" invisible="1"/>
+                <field name="bora_pm1_already_approved" invisible="1"/>
+
+                <field name="bora_approval_info" widget="html" readonly="1" options="{'style': 'margin-bottom: 15px;'}"/>
+
+                <group>
+                    <field name="bora_policy_ids" widget="many2many_tags" readonly="1"/>
+                    <field name="bora_approver1_user"
+                           options="{'no_create': True, 'no_open': True}"
+                           readonly="bora_pm1_already_approved"/>
+                    <field name="bora_approver2_user"
+                           options="{'no_create': True, 'no_open': True}"
+                           invisible="not bora_show_approver2"
+                           required="bora_show_approver2"/>
+                    <field name="bora_reason" placeholder="Optional reason for requesting payment..."/>
+                </group>
+                <footer>
+                    <button string="Submit for Approval" name="action_confirm_request" type="object" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_bora_insurance_approval_request_wizard" model="ir.actions.act_window">
+        <field name="name">Request Payment Approval</field>
+        <field name="res_model">bora.insurance.approval.request.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+</odoo>

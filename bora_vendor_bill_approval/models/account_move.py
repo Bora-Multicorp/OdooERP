@@ -68,6 +68,10 @@ class AccountMove(models.Model):
             )
         )
 
+    def _is_vendor_bill(self):
+        """True for vendor bills that are NOT debit notes."""
+        return self.move_type == 'in_invoice' and not self.debit_origin_id
+
     def _is_bill_admin_user(self):
         """Returns True if the current user is a system administrator."""
         return self.env.user._is_admin()
@@ -84,12 +88,12 @@ class AccountMove(models.Model):
     def _compute_bora_bill_admin(self):
         is_admin = self._is_bill_admin_user()
         for rec in self:
-            rec.bora_is_bill_admin = is_admin
+            rec.bora_is_bill_admin = is_admin if rec._is_vendor_bill() else False
 
     @api.depends_context('uid')
     def _compute_bora_bill_pm_user(self):
         for rec in self:
-            if rec._has_bill_approval_config():
+            if rec._is_vendor_bill() and rec._has_bill_approval_config():
                 config = rec._get_bill_approval_config()
                 rec.bora_is_bill_pm_user = self.env.user in config.get_all_pm_users()
             else:
@@ -98,13 +102,13 @@ class AccountMove(models.Model):
     @api.depends('state')
     def _compute_bora_bill_dual_approval(self):
         for rec in self:
-            if rec._has_bill_approval_config():
+            if rec._is_vendor_bill() and rec._has_bill_approval_config():
                 rec.bora_is_bill_dual_approval = rec._get_bill_approval_config().is_dual_approval()
             else:
                 rec.bora_is_bill_dual_approval = False
 
     @api.depends(
-        'state',
+        'state', 'move_type', 'debit_origin_id',
         'bora_is_bill_pm_user',
         'bora_bill_pm1_id', 'bora_bill_pm2_id',
         'bora_bill_pm1_approved', 'bora_bill_pm2_approved',
@@ -117,6 +121,9 @@ class AccountMove(models.Model):
             rec.bora_show_bill_approve_button = False
             rec.bora_show_bill_reject_button = False
             rec.bora_show_bill_update_button = False
+
+            if not rec._is_vendor_bill():
+                continue
 
             is_admin = rec._is_bill_admin_user()
             is_pm = rec.bora_is_bill_pm_user
@@ -157,8 +164,7 @@ class AccountMove(models.Model):
         # on clicking Confirm, before the approval flow begins.
         # Debit notes are excluded — they are handled by bora_debit_note_approval.
         for move in self:
-            if (move.move_type == 'in_invoice'
-                    and not move.debit_origin_id
+            if (move._is_vendor_bill()
                     and not move.invoice_date):
                 raise UserError(_(
                     'The Bill/Refund date is required to validate this document. '
@@ -169,10 +175,8 @@ class AccountMove(models.Model):
         bills_can_proceed = self.env['account.move']
 
         for move in self:
-            if (move.move_type == 'in_invoice'
-                    and not move.debit_origin_id  # exclude debit notes — handled by bora_debit_note_approval
+            if (move._is_vendor_bill()
                     and move.state == 'draft'
-                    and move._has_bill_approval_config()
                     and not move._is_bill_admin_user()
                     and not move.bora_bill_approved):
                 config = move._get_bill_approval_config()
@@ -187,13 +191,14 @@ class AccountMove(models.Model):
                 'state': 'bill_approval_pending',
             })
 
+        res = True
         if bills_can_proceed:
-            super(AccountMove, bills_can_proceed).action_post()
+            res = super(AccountMove, bills_can_proceed).action_post()
 
         if bills_needing_approval:
             return bills_needing_approval[0]._bora_open_bill_approval_wizard()
 
-        return True
+        return res
 
     def _bora_open_bill_approval_wizard(self, is_update=False):
         view_id = self.env.ref(

@@ -65,7 +65,7 @@
 
             <!-- Hide Confirm while any approval is pending (covers all modules). -->
             <xpath expr="//button[@name='action_post']" position="attributes">
-                <attribute name="invisible">state in ('bill_approval_pending', 'debit_note_approval_pending', 'journal_entry_approval_pending', 'invoice_approval_pending')</attribute>
+                <attribute name="invisible">state in ('bill_approval_pending', 'debit_note_approval_pending', 'journal_entry_approval_pending', 'invoice_approval_pending', 'credit_note_approval_pending')</attribute>
             </xpath>
 
             <!-- Status bar: common states only; current pending state auto-appears. -->

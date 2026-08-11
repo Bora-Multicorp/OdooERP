@@ -83,19 +83,19 @@ class AccountMove(models.Model):
     def _compute_bora_inv_admin(self):
         is_admin = self._is_inv_admin_user()
         for rec in self:
-            rec.bora_is_inv_admin = is_admin
+            rec.bora_is_inv_admin = is_admin if rec._is_customer_invoice() else False
 
     @api.depends_context('uid')
     def _compute_bora_inv_pm_user(self):
         for rec in self:
-            if rec._has_inv_approval_config():
+            if rec._is_customer_invoice() and rec._has_inv_approval_config():
                 config = rec._get_inv_approval_config()
                 rec.bora_is_inv_pm_user = self.env.user in config.get_all_pm_users()
             else:
                 rec.bora_is_inv_pm_user = False
 
     @api.depends(
-        'state',
+        'state', 'move_type', 'debit_origin_id',
         'bora_is_inv_pm_user',
         'bora_inv_pm1_id', 'bora_inv_pm2_id',
         'bora_inv_pm1_approved', 'bora_inv_pm2_approved',
@@ -108,6 +108,9 @@ class AccountMove(models.Model):
             rec.bora_show_inv_approve_button = False
             rec.bora_show_inv_reject_button = False
             rec.bora_show_inv_update_button = False
+
+            if not rec._is_customer_invoice():
+                continue
 
             is_admin = rec._is_inv_admin_user()
             is_pm = rec.bora_is_inv_pm_user
@@ -155,7 +158,6 @@ class AccountMove(models.Model):
         for move in self:
             if (move._is_customer_invoice()
                     and move.state == 'draft'
-                    and move._has_inv_approval_config()
                     and not move._is_inv_admin_user()
                     and not move.bora_inv_approved):
                 config = move._get_inv_approval_config()
@@ -171,13 +173,14 @@ class AccountMove(models.Model):
                 'bora_inv_is_local_sale': move._is_local_sale(),
             })
 
+        res = True
         if inv_can_proceed:
-            super(AccountMove, inv_can_proceed).action_post()
+            res = super(AccountMove, inv_can_proceed).action_post()
 
         if inv_needing_approval:
             return inv_needing_approval[0]._bora_open_inv_approval_wizard()
 
-        return True
+        return res
 
     def _bora_open_inv_approval_wizard(self, is_update=False):
         view_id = self.env.ref(

@@ -79,12 +79,12 @@ class AccountMove(models.Model):
     def _compute_bora_dn_admin(self):
         is_admin = self._is_dn_admin_user()
         for rec in self:
-            rec.bora_is_dn_admin = is_admin
+            rec.bora_is_dn_admin = is_admin if rec._is_debit_note() else False
 
     @api.depends_context('uid')
     def _compute_bora_dn_pm_user(self):
         for rec in self:
-            if rec._has_dn_approval_config():
+            if rec._is_debit_note() and rec._has_dn_approval_config():
                 config = rec._get_dn_approval_config()
                 rec.bora_is_dn_pm_user = self.env.user in config.get_all_pm_users()
             else:
@@ -93,13 +93,13 @@ class AccountMove(models.Model):
     @api.depends('state')
     def _compute_bora_dn_dual_approval(self):
         for rec in self:
-            if rec._has_dn_approval_config():
+            if rec._is_debit_note() and rec._has_dn_approval_config():
                 rec.bora_is_dn_dual_approval = rec._get_dn_approval_config().is_dual_approval()
             else:
                 rec.bora_is_dn_dual_approval = False
 
     @api.depends(
-        'state',
+        'state', 'debit_origin_id',
         'bora_is_dn_pm_user',
         'bora_dn_pm1_id', 'bora_dn_pm2_id',
         'bora_dn_pm1_approved', 'bora_dn_pm2_approved',
@@ -112,6 +112,9 @@ class AccountMove(models.Model):
             rec.bora_show_dn_approve_button = False
             rec.bora_show_dn_reject_button = False
             rec.bora_show_dn_update_button = False
+
+            if not rec._is_debit_note():
+                continue
 
             is_admin = rec._is_dn_admin_user()
             is_pm = rec.bora_is_dn_pm_user
@@ -163,7 +166,6 @@ class AccountMove(models.Model):
         for move in self:
             if (move._is_debit_note()
                     and move.state == 'draft'
-                    and move._has_dn_approval_config()
                     and not move._is_dn_admin_user()
                     and not move.bora_dn_approved):
                 config = move._get_dn_approval_config()
@@ -178,13 +180,14 @@ class AccountMove(models.Model):
                 'state': 'debit_note_approval_pending',
             })
 
+        res = True
         if dn_can_proceed:
-            super(AccountMove, dn_can_proceed).action_post()
+            res = super(AccountMove, dn_can_proceed).action_post()
 
         if dn_needing_approval:
             return dn_needing_approval[0]._bora_open_dn_approval_wizard()
 
-        return True
+        return res
 
     def _bora_open_dn_approval_wizard(self, is_update=False):
         view_id = self.env.ref(

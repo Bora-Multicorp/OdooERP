@@ -64,12 +64,12 @@ class StockPicking(models.Model):
     def _compute_ks_receipt_admin(self):
         is_admin = self._is_receipt_admin_user()
         for rec in self:
-            rec.ks_is_receipt_admin = is_admin
+            rec.ks_is_receipt_admin = is_admin if rec.picking_type_code == 'incoming' else False
 
     @api.depends_context('uid')
     def _compute_ks_receipt_pm_user(self):
         for rec in self:
-            if rec._has_receipt_approval_config():
+            if rec.picking_type_code == 'incoming' and rec._has_receipt_approval_config():
                 config = rec._get_receipt_approval_config()
                 rec.ks_is_receipt_pm_user = self.env.user in config.get_all_pm_users()
             else:
@@ -78,13 +78,13 @@ class StockPicking(models.Model):
     @api.depends('state')
     def _compute_ks_receipt_dual_approval(self):
         for rec in self:
-            if rec._has_receipt_approval_config():
+            if rec.picking_type_code == 'incoming' and rec._has_receipt_approval_config():
                 rec.ks_is_receipt_dual_approval = rec._get_receipt_approval_config().is_dual_approval()
             else:
                 rec.ks_is_receipt_dual_approval = False
 
     @api.depends(
-        'state',
+        'state', 'picking_type_code',
         'ks_is_receipt_pm_user',
         'ks_receipt_pm1_id', 'ks_receipt_pm2_id',
         'ks_receipt_pm1_approved', 'ks_receipt_pm2_approved',
@@ -97,6 +97,9 @@ class StockPicking(models.Model):
             rec.ks_show_receipt_approve_button = False
             rec.ks_show_receipt_reject_button = False
             rec.ks_show_receipt_update_button = False
+
+            if rec.picking_type_code != 'incoming':
+                continue
 
             is_admin = rec._is_receipt_admin_user()
             is_pm = rec.ks_is_receipt_pm_user

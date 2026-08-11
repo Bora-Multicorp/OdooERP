@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_bora_insurance_approval_config_user,bora.insurance.approval.config.user,model_bora_insurance_approval_config,ks_insurance_management.group_insurance_user,1,0,0,0
+access_bora_insurance_approval_config_admin,bora.insurance.approval.config.admin,model_bora_insurance_approval_config,ks_insurance_management.group_insurance_admin,1,1,1,1
+access_bora_insurance_approval_request_wizard,bora.insurance.approval.request.wizard,model_bora_insurance_approval_request_wizard,base.group_user,1,1,1,1
+access_bora_insurance_approval_reason_wizard,bora.insurance.approval.reason.wizard,model_bora_insurance_approval_reason_wizard,base.group_user,1,1,1,1

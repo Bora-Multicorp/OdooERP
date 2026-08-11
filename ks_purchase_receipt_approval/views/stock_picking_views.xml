@@ -29,20 +29,20 @@
                         string="Select Approvers"
                         type="object"
                         class="btn-primary"
-                        invisible="state != 'receipt_approval_pending' or ks_receipt_pm1_id"/>
+                        invisible="picking_type_code != 'incoming' or state != 'receipt_approval_pending' or ks_receipt_pm1_id"/>
                 <button name="action_update_receipt_approvals"
                         string="Update Approvals" type="object"
                         class="btn-warning"
-                        invisible="not ks_show_receipt_update_button"
+                        invisible="picking_type_code != 'incoming' or not ks_show_receipt_update_button"
                         confirm="This will cancel the current approval request and let you choose new approvers. Continue?"/>
                 <button name="ks_action_approve_receipt"
                         string="Approve" type="object"
                         class="btn-success"
-                        invisible="not ks_show_receipt_approve_button"/>
+                        invisible="picking_type_code != 'incoming' or not ks_show_receipt_approve_button"/>
                 <button name="ks_action_reject_receipt"
                         string="Reject" type="object"
                         class="btn-danger"
-                        invisible="not ks_show_receipt_reject_button"/>
+                        invisible="picking_type_code != 'incoming' or not ks_show_receipt_reject_button"/>
             </xpath>
 
             <!-- Hide oe_highlight Validate when receipt_approval_pending -->

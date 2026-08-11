@@ -64,21 +64,24 @@ class BoraJournalEntryApprovalConfig(models.Model):
         Lookup order:
           1. Active config that explicitly lists the company in bora_je_company_ids.
           2. Active config with no companies set (global / fallback).
+          3. Any active config fallback.
         Returns an empty recordset if nothing matches.
         """
-        if company:
-            specific = self.search([
-                ('active', '=', True),
-                ('bora_je_company_ids', 'in', company.id),
-            ], limit=1)
-            if specific:
-                return specific
+        configs = self.search([('active', '=', True)])
+        if not configs:
+            return self.browse()
 
-        # Global (no company restriction) fallback
-        return self.search([
-            ('active', '=', True),
-            ('bora_je_company_ids', '=', False),
-        ], limit=1)
+        target_company = company or self.env.company
+        if target_company:
+            specific = configs.filtered(lambda c: target_company in c.bora_je_company_ids)
+            if specific:
+                return specific[0]
+
+        global_cfg = configs.filtered(lambda c: not c.bora_je_company_ids)
+        if global_cfg:
+            return global_cfg[0]
+
+        return configs[0]
 
     def get_all_pm_users(self):
         self.ensure_one()

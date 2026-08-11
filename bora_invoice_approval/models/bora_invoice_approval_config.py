@@ -97,19 +97,23 @@ class BoraInvoiceApprovalConfig(models.Model):
     @api.model
     def get_config(self, company=None):
         """Return best-matching active config for the given company.
-        Priority: company-specific first, then global (no companies set).
+        Priority: company-specific first, then global (no companies set), then any active config fallback.
         """
-        if company:
-            specific = self.search([
-                ('active', '=', True),
-                ('bora_inv_company_ids', 'in', company.id),
-            ], limit=1)
+        configs = self.search([('active', '=', True)])
+        if not configs:
+            return self.browse()
+
+        target_company = company or self.env.company
+        if target_company:
+            specific = configs.filtered(lambda c: target_company in c.bora_inv_company_ids)
             if specific:
-                return specific
-        return self.search([
-            ('active', '=', True),
-            ('bora_inv_company_ids', '=', False),
-        ], limit=1)
+                return specific[0]
+
+        global_cfg = configs.filtered(lambda c: not c.bora_inv_company_ids)
+        if global_cfg:
+            return global_cfg[0]
+
+        return configs[0]
 
     def get_approvers_for_sale_type(self, is_local):
         """Return (approval_mode, pm1_ids, pm2_ids) for local or export."""
