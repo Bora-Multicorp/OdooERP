@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <!-- Add exchanged_amount field -->
+    <record id="view_account_payment_form_exchanged_amount" model="ir.ui.view">
+        <field name="name">account.payment.view.form.inherit.exchange.amount</field>
+        <field name="model">account.payment</field>
+        <field name="inherit_id" ref="account.view_account_payment_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='date']" position="before">
+                <field name="is_exchange" invisible="currency_id == company_currency_id" readonly="state != 'draft'"/>
+                <field name="rate" digits="[12,6]"
+                       invisible="is_exchange == False" readonly="state != 'draft'"/>
+                <field name="exchanged_amount"
+                       digits="[16,2]"
+                       readonly="1"
+                       invisible="currency_id == company_currency_id"
+                       widget="monetary"
+                       options="{'currency_field': 'company_currency_id'}"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>
