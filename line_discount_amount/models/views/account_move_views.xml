@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Inherit invoice form view to add discount amount field to invoice lines -->
+        <record id="view_invoice_form_fixed_discount" model="ir.ui.view">
+            <field name="name">account.move.form.fixed.discount</field>
+            <field name="model">account.move</field>
+            <field name="inherit_id" ref="account.view_move_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='invoice_line_ids']//field[@name='discount']" position="after">
+                    <field name="discount_amount" widget="monetary" options="{'currency_field': 'currency_id', 'reload_on_button': true}"/>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>
