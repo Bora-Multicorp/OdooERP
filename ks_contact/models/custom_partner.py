@@ -321,6 +321,7 @@ class CustomContact(models.Model):
     )
     # Customer/Vendor KYC Details
     is_vendor = fields.Boolean(string="Is Vendor?", tracking=True)
+    is_indian_company = fields.Boolean(compute='_compute_is_indian_company', string='Is Indian Company')
     vendor_type = fields.Selection(
         [
             ('regular', 'Regular'),
@@ -369,6 +370,12 @@ class CustomContact(models.Model):
 
     kyc_details = fields.One2many('res.partner.kyc.approval', 'partner_id', string="KYC Details", tracking=True)
 
+    @api.depends('company_id', 'company_id.country_id')
+    def _compute_is_indian_company(self):
+        for record in self:
+            company = record.company_id or self.env.company
+            record.is_indian_company = (company.country_id.code == 'IN')
+            
     @api.depends('kyc_details', 'kyc_details.state', 'kyc_details.deadline')
     def _compute_deadline(self):
         for rec in self:

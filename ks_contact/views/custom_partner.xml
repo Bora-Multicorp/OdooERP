@@ -133,7 +133,14 @@
                 <field name="legal_name_of_business"/>
                 <field name="constitution_of_business"/>
                 <field name="is_vendor" readonly="is_kyc"/>
-                <field name="vendor_type" invisible="not is_vendor" required="is_vendor"/>
+                <!--<field name="vendor_type" invisible="not is_vendor" required="is_vendor"/>-->
+                <!-- 1. Shown for Indian Vendors (Shows ALL options including Exceptional) -->
+                <field name="vendor_type" invisible="not is_vendor or not is_indian_company"
+                       required="is_vendor and is_indian_company"/>
+                <!-- 2. Shown for Overseas Vendors (Blacklists 'exceptional') -->
+                <field name="vendor_type" invisible="not is_vendor or is_indian_company"
+                       widget="filterable_selection" options="{'blacklisted_values': ['exceptional']}"
+                       required="is_vendor and not is_indian_company"/>
                 <field name="approval_status" invisible="not is_vendor" readonly="1"/>
                 <field name="is_customer" readonly="is_kyc" invisible="0"/>
                 <field name="is_overseas" invisible="not is_vendor and not is_customer" widget="boolean_toggle"/>
@@ -144,6 +151,7 @@
                 <field name="is_rejected" readonly="1" invisible="not is_rejected"/>
                 <field name="rejection_date" readonly="1" invisible="not rejection_date"/>
                 <field name="rejection_reason" readonly="1" invisible="not rejection_reason"/>
+                <field name="is_indian_company" invisible="1"/>
             </xpath>
 
             <xpath expr="//notebook" position="inside">
