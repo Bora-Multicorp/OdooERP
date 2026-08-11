@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="purchase_order_form_inherit_discount_amount" model="ir.ui.view">
+            <field name="name">purchase.order.form.inherit.discount.amount</field>
+            <field name="model">purchase.order</field>
+            <field name="inherit_id" ref="purchase.purchase_order_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='order_line']/list//field[@name='discount']" position="after">
+                    <field name="discount_amount" widget="monetary" options="{'currency_field': 'currency_id', 'reload_on_button': true}" optional="show"/>
+                </xpath>
+            </field>
+        </record>
+
+    </data>
+</odoo>
+
