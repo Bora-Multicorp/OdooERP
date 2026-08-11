@@ -26,6 +26,7 @@
         'views/sale_order_views.xml',
         'views/account_move_views.xml',
         'views/purchase_order_views.xml',
+        'views/account_payment_views.xml',
     ],
     'installable': True,
     'application': False,
