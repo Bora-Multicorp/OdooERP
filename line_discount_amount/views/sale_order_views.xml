@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Add discount_amount column to the inline LIST view (main table on sale order) -->
+        <record id="view_order_line_list_discount_amount" model="ir.ui.view">
+            <field name="name">sale.order.line.list.discount.amount</field>
+            <field name="model">sale.order</field>
+            <field name="inherit_id" ref="sale.view_order_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='order_line']//list//field[@name='discount']" position="after">
+                    <field name="discount_amount" widget="monetary" options="{'currency_field': 'currency_id', 'reload_on_button': true}" optional="show" string="Discount Amt"/>
+                </xpath>
+            </field>
+        </record>
+
+        <!-- Add discount_amount to the inline FORM popup (when clicking a line) -->
+        <record id="view_order_form_discount_amount" model="ir.ui.view">
+            <field name="name">sale.order.form.discount.amount</field>
+            <field name="model">sale.order</field>
+            <field name="inherit_id" ref="sale.view_order_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='order_line']/form//field[@name='discount']" position="after">
+                    <label for="discount_amount"/>
+                    <div name="discount_amount">
+                        <field name="discount_amount" class="oe_inline" widget="monetary" options="{'currency_field': 'currency_id', 'reload_on_button': true}"/>
+                    </div>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>
