@@ -346,7 +346,7 @@ class CustomContact(models.Model):
     )
     is_customer = fields.Boolean(string="Is Customer?", tracking=True)
     is_overseas = fields.Boolean(
-        string="Overseas Customer",
+        string="International KYC",
         default=False,
         tracking=True,
         help="Enable to apply KYC compliance checks for this overseas customer. "
