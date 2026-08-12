@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_bora_credit_note_approval_config_user,bora.credit.note.approval.config.user,model_bora_credit_note_approval_config,account.group_account_user,1,0,0,0
+access_bora_credit_note_approval_config_admin,bora.credit.note.approval.config.admin,model_bora_credit_note_approval_config,base.group_system,1,1,1,1
+access_bora_credit_note_approval_request_wizard,bora.credit.note.approval.request.wizard,model_bora_credit_note_approval_request_wizard,base.group_user,1,1,1,1
+access_bora_credit_note_approval_reason_wizard,bora.credit.note.approval.reason.wizard,model_bora_credit_note_approval_reason_wizard,base.group_user,1,1,1,1

@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_bora_journal_entry_approval_config_user,bora.journal.entry.approval.config.user,model_bora_journal_entry_approval_config,account.group_account_user,1,0,0,0
+access_bora_journal_entry_approval_config_admin,bora.journal.entry.approval.config.admin,model_bora_journal_entry_approval_config,base.group_system,1,1,1,1
+access_bora_journal_entry_approval_request_wizard,bora.journal.entry.approval.request.wizard,model_bora_journal_entry_approval_request_wizard,base.group_user,1,1,1,1
+access_bora_journal_entry_approval_reason_wizard,bora.journal.entry.approval.reason.wizard,model_bora_journal_entry_approval_reason_wizard,base.group_user,1,1,1,1

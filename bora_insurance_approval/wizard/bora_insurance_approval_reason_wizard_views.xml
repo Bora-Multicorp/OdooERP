@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_bora_insurance_approval_reason_wizard_form" model="ir.ui.view">
+        <field name="name">bora.insurance.approval.reason.wizard.form</field>
+        <field name="model">bora.insurance.approval.reason.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Provide Reason">
+                <field name="bora_policy_id" invisible="1"/>
+                <field name="bora_action_type" invisible="1"/>
+                <field name="bora_is_rejection" invisible="1"/>
+                <field name="bora_action_label" invisible="1"/>
+
+                <group>
+                    <div class="alert alert-warning" role="alert">
+                        Please specify the reason for this rejection. This will be recorded on chatter.
+                    </div>
+                </group>
+
+                <group>
+                    <field name="bora_reason" placeholder="Type reason here..."/>
+                </group>
+                <footer>
+                    <button string="Confirm Rejection" name="action_submit" type="object" class="btn-danger"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_bora_insurance_approval_reason_wizard" model="ir.actions.act_window">
+        <field name="name">Provide Rejection Reason</field>
+        <field name="res_model">bora.insurance.approval.reason.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+</odoo>

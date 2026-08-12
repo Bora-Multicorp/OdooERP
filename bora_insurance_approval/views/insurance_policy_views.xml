@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_insurance_policy_form_inherit_approval" model="ir.ui.view">
+        <field name="name">insurance.policy.form.inherit.approval</field>
+        <field name="model">insurance.policy</field>
+        <field name="inherit_id" ref="ks_insurance_management.insurance_policy_form_view"/>
+        <field name="arch" type="xml">
+
+            <!-- Add computed helper visibility fields into header -->
+            <xpath expr="//header" position="inside">
+                <field name="bora_show_insurance_approve_button" invisible="1"/>
+                <field name="bora_show_insurance_reject_button" invisible="1"/>
+                <field name="bora_show_insurance_update_button" invisible="1"/>
+                <field name="bora_is_insurance_dual_approval" invisible="1"/>
+            </xpath>
+
+            <!-- Update Approve Payment button visibility -->
+            <xpath expr="//button[@name='action_approve_payment']" position="attributes">
+                <attribute name="invisible">payment_status != 'requested' or not bora_show_insurance_approve_button</attribute>
+                <attribute name="confirm">Approve this payment request?</attribute>
+            </xpath>
+
+            <!-- Update Reject Payment button visibility & remove confirmation popup (handled by wizard) -->
+            <xpath expr="//button[@name='action_reject_payment']" position="attributes">
+                <attribute name="invisible">payment_status != 'requested' or not bora_show_insurance_reject_button</attribute>
+                <attribute name="confirm"/>
+            </xpath>
+
+            <!-- Add Update Approvers button after Reject button -->
+            <xpath expr="//button[@name='action_reject_payment']" position="after">
+                <button name="action_update_approvers" string="Update Approvers" type="object"
+                        class="btn-secondary"
+                        invisible="payment_status != 'requested' or not bora_show_insurance_update_button"/>
+            </xpath>
+
+            <!-- Add Approval Details page in sheet notebook -->
+            <xpath expr="//sheet" position="inside">
+                <notebook>
+                    <page string="Approval Details" name="approval_details"
+                          invisible="not bora_insurance_pm1_id and payment_status not in ('requested', 'approved')">
+                        <group>
+                            <group string="Approvers">
+                                <field name="bora_insurance_pm1_id" readonly="1"/>
+                                <field name="bora_insurance_pm1_approved" readonly="1"/>
+                                <field name="bora_insurance_pm2_id" readonly="1" invisible="not bora_is_insurance_dual_approval"/>
+                                <field name="bora_insurance_pm2_approved" readonly="1" invisible="not bora_is_insurance_dual_approval"/>
+                            </group>
+                            <group string="Request Information">
+                                <field name="bora_insurance_request_user_id" readonly="1"/>
+                                <field name="bora_insurance_request_date" readonly="1"/>
+                                <field name="bora_insurance_request_reason" readonly="1"/>
+                            </group>
+                        </group>
+                    </page>
+                </notebook>
+            </xpath>
+
+        </field>
+    </record>
+</odoo>

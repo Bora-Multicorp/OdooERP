@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ── Form View ─────────────────────────────────────────────────────── -->
+    <record id="bora_invoice_approval_config_form" model="ir.ui.view">
+        <field name="name">bora.invoice.approval.config.form</field>
+        <field name="model">bora.invoice.approval.config</field>
+        <field name="arch" type="xml">
+            <form string="Invoice Approval Configuration">
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="e.g. Company ABC — Invoice Approval"/>
+                        </h1>
+                    </div>
+                    <div class="alert alert-info" role="alert">
+                        <strong>Configuration Scope:</strong>
+                        Select the companies this configuration applies to.
+                        Leave empty to act as a <strong>global fallback</strong>.
+                        Approver lists are filtered to members of the selected companies.
+                        <br/>
+                        <strong>Local Sale</strong> = Customer's country is <strong>India</strong>.
+                        <strong>Export / Foreign Sale</strong> = Customer's country is <strong>not India</strong>.
+                        The correct approver set is chosen automatically based on the customer's country when an invoice is submitted for approval.
+                    </div>
+                    <group>
+                        <group string="Applicable Companies">
+                            <field name="bora_inv_company_ids"
+                                   widget="many2many_tags"
+                                   options="{'no_create': True}"
+                                   placeholder="Leave empty to apply to all companies (global fallback)"
+                                   nolabel="1"/>
+                        </group>
+                        <group>
+                            <field name="active" widget="boolean_toggle"/>
+                        </group>
+                    </group>
+                    <notebook>
+
+                        <!-- ── Page 1: Local Sale (India) ─────────────────── -->
+                        <page string="🇮🇳 Local Sale Approvers" name="local_approvers">
+                            <div class="alert alert-success" role="alert">
+                                <strong>Local Sale:</strong> These approvers are used when the
+                                <strong>customer's country is India</strong>.
+                            </div>
+                            <group>
+                                <group string="Approval Mode">
+                                    <field name="bora_inv_local_approval_mode" widget="radio"/>
+                                </group>
+                            </group>
+                            <group>
+                                <group string="Approver 1 Users">
+                                    <field name="bora_inv_local_pm1_ids"
+                                           widget="many2many_tags"
+                                           options="{'no_create': True}"
+                                           context="{'show_email': True}"
+                                           domain="[('company_ids', 'in', bora_inv_company_ids), ('share', '=', False)] if bora_inv_company_ids else [('share', '=', False)]"
+                                           placeholder="Select users for Local Approver 1"/>
+                                </group>
+                                <group string="Approver 2 Users"
+                                       invisible="bora_inv_local_approval_mode == 'single'">
+                                    <field name="bora_inv_local_pm2_ids"
+                                           widget="many2many_tags"
+                                           options="{'no_create': True}"
+                                           context="{'show_email': True}"
+                                           domain="[('company_ids', 'in', bora_inv_company_ids), ('share', '=', False)] if bora_inv_company_ids else [('share', '=', False)]"
+                                           placeholder="Select users for Local Approver 2"/>
+                                </group>
+                            </group>
+                            <div class="alert alert-info" role="alert"
+                                 invisible="bora_inv_local_approval_mode != 'dual'">
+                                <strong>Two Approvers (Sequential):</strong> Both Approver 1 and Approver 2
+                                must approve before the local invoice can be confirmed.
+                                Approver 2 cannot act until Approver 1 has approved.
+                            </div>
+                        </page>
+
+                        <!-- ── Page 2: Export / Foreign Sale ──────────────── -->
+                        <page string="✈️ Export / Foreign Sale Approvers" name="export_approvers">
+                            <div class="alert alert-warning" role="alert">
+                                <strong>Export / Foreign Sale:</strong> These approvers are used when the
+                                <strong>customer's country is NOT India</strong>.
+                            </div>
+                            <group>
+                                <group string="Approval Mode">
+                                    <field name="bora_inv_export_approval_mode" widget="radio"/>
+                                </group>
+                            </group>
+                            <group>
+                                <group string="Approver 1 Users">
+                                    <field name="bora_inv_export_pm1_ids"
+                                           widget="many2many_tags"
+                                           options="{'no_create': True}"
+                                           context="{'show_email': True}"
+                                           domain="[('company_ids', 'in', bora_inv_company_ids), ('share', '=', False)] if bora_inv_company_ids else [('share', '=', False)]"
+                                           placeholder="Select users for Export Approver 1"/>
+                                </group>
+                                <group string="Approver 2 Users"
+                                       invisible="bora_inv_export_approval_mode == 'single'">
+                                    <field name="bora_inv_export_pm2_ids"
+                                           widget="many2many_tags"
+                                           options="{'no_create': True}"
+                                           context="{'show_email': True}"
+                                           domain="[('company_ids', 'in', bora_inv_company_ids), ('share', '=', False)] if bora_inv_company_ids else [('share', '=', False)]"
+                                           placeholder="Select users for Export Approver 2"/>
+                                </group>
+                            </group>
+                            <div class="alert alert-info" role="alert"
+                                 invisible="bora_inv_export_approval_mode != 'dual'">
+                                <strong>Two Approvers (Sequential):</strong> Both Approver 1 and Approver 2
+                                must approve before the export invoice can be confirmed.
+                                Approver 2 cannot act until Approver 1 has approved.
+                            </div>
+                        </page>
+
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- ── List View ──────────────────────────────────────────────────────── -->
+    <record id="bora_invoice_approval_config_list" model="ir.ui.view">
+        <field name="name">bora.invoice.approval.config.list</field>
+        <field name="model">bora.invoice.approval.config</field>
+        <field name="arch" type="xml">
+            <list string="Invoice Approval Configurations">
+                <field name="name"/>
+                <field name="active" widget="boolean_toggle"/>
+                <field name="bora_inv_company_ids" widget="many2many_tags" optional="show"/>
+                <field name="bora_inv_local_approval_mode" string="Local Mode"/>
+                <field name="bora_inv_local_pm1_ids" widget="many2many_tags" string="Local PM1" optional="show"/>
+                <field name="bora_inv_export_approval_mode" string="Export Mode" optional="show"/>
+                <field name="bora_inv_export_pm1_ids" widget="many2many_tags" string="Export PM1" optional="show"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- ── Action ─────────────────────────────────────────────────────────── -->
+    <record id="action_bora_invoice_approval_config" model="ir.actions.act_window">
+        <field name="name">Invoice Approvers</field>
+        <field name="res_model">bora.invoice.approval.config</field>
+        <field name="view_mode">list,form</field>
+        <field name="groups_id" eval="[(4, ref('base.group_system'))]"/>
+        <field name="context">{'active_test': False}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Configure Invoice Approval Workflow</p>
+            <p>
+                Create one configuration per company (or a global fallback with no company).
+                Each configuration has separate approver sets for <strong>Local Sale</strong>
+                (customer from India) and <strong>Export / Foreign Sale</strong> (customer not from India).
+            </p>
+        </field>
+    </record>
+
+    <!-- ── Menu: Accounting > Configuration > Invoice Approvers ────────────── -->
+    <menuitem id="menu_bora_invoice_approval_config"
+              name="Invoice Approvers"
+              parent="sale.menu_sale_config"
+              action="action_bora_invoice_approval_config"
+              groups="base.group_system"
+              sequence="101"/>
+</odoo>

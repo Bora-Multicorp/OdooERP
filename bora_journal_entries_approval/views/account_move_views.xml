@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="bora_journal_entry_approval_move_form" model="ir.ui.view">
+        <field name="name">bora.journal.entry.approval.move.form</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_move_form"/>
+        <field name="arch" type="xml">
+
+            <!-- Hidden computed fields needed for button visibility and banners.
+                 All UI is gated on move_type == 'entry' so nothing appears on
+                 vendor bills or debit notes. -->
+            <xpath expr="//sheet" position="before">
+                <field name="bora_is_je_pm_user" invisible="1"/>
+                <field name="bora_is_je_admin" invisible="1"/>
+                <field name="bora_is_je_dual_approval" invisible="1"/>
+                <field name="bora_je_approved" invisible="1"/>
+                <field name="bora_show_je_approve_button" invisible="1"/>
+                <field name="bora_show_je_reject_button" invisible="1"/>
+                <field name="bora_show_je_update_button" invisible="1"/>
+                <field name="bora_je_pm1_id" invisible="1"/>
+                <field name="bora_je_pm2_id" invisible="1"/>
+                <field name="bora_je_pm1_approved" invisible="1"/>
+                <field name="bora_je_pm2_approved" invisible="1"/>
+                <field name="bora_je_request_user_id" invisible="1"/>
+            </xpath>
+
+            <!-- Approval action buttons before the Post button.
+                 All guarded by move_type == 'entry' so they never appear
+                 on vendor bills or debit notes. -->
+            <xpath expr="//button[@name='action_post']" position="before">
+
+                <!-- Re-open wizard when stuck with no PM1 selected -->
+                <button name="bora_action_request_je_approval"
+                        string="Select Approvers"
+                        type="object"
+                        class="btn-primary"
+                        invisible="state != 'journal_entry_approval_pending' or bora_je_pm1_id or move_type != 'entry'"/>
+
+                <!-- Update approvers (original requester while pending) -->
+                <button name="action_update_je_approvers"
+                        string="Update Approvers"
+                        type="object"
+                        class="btn-warning"
+                        invisible="not bora_show_je_update_button"
+                        confirm="This will cancel the current approval request and let you choose new approvers. Continue?"/>
+
+                <!-- Approve button (visible to assigned PM) -->
+                <button name="bora_action_approve_je"
+                        string="Approve"
+                        type="object"
+                        class="btn-success"
+                        invisible="not bora_show_je_approve_button"/>
+
+                <!-- Reject button (visible to assigned PM) -->
+                <button name="bora_action_reject_je"
+                        string="Reject"
+                        type="object"
+                        class="btn-danger"
+                        invisible="not bora_show_je_reject_button"/>
+
+            </xpath>
+
+            <!-- Hide the Post button while ANY approval is pending.
+                 Covers all three pending states — whichever module loads last
+                 will still hide the button for all pending states. -->
+            <xpath expr="//button[@name='action_post']" position="attributes">
+                <attribute name="invisible">state in ('bill_approval_pending', 'debit_note_approval_pending', 'journal_entry_approval_pending', 'invoice_approval_pending', 'credit_note_approval_pending')</attribute>
+            </xpath>
+
+            <!-- Status bar: only list common milestone states.
+                 The current pending state auto-appears when the record is in it. -->
+            <xpath expr="//field[@name='state'][@widget='statusbar']" position="attributes">
+                <attribute name="statusbar_visible">draft,posted,cancel</attribute>
+            </xpath>
+
+            <!-- Banners — gated strictly on move_type == 'entry' -->
+            <xpath expr="//sheet" position="before">
+
+                <!-- Approval Pending banner -->
+                <div class="alert alert-warning mb-0"
+                     invisible="move_type != 'entry' or state != 'journal_entry_approval_pending'"
+                     role="alert">
+                    <strong>⏳ Journal Entry Approval Pending</strong> — This journal entry is waiting for approver confirmation.
+                    <br/>
+                    <span invisible="not bora_je_pm1_id">
+                        <strong>PM1 (<field name="bora_je_pm1_id" readonly="1" nolabel="1" class="d-inline"/>):</strong>
+                        <span invisible="bora_je_pm1_approved"> ⏳ Pending</span>
+                        <span invisible="not bora_je_pm1_approved"> ✅ Approved</span>
+                    </span>
+                    <span invisible="not bora_je_pm2_id">
+                        &#160;&#160;|&#160;&#160;
+                        <strong>PM2 (<field name="bora_je_pm2_id" readonly="1" nolabel="1" class="d-inline"/>):</strong>
+                        <span invisible="bora_je_pm2_approved"> ⏳ Pending</span>
+                        <span invisible="not bora_je_pm2_approved"> ✅ Approved</span>
+                    </span>
+                </div>
+
+                <!-- Approved banner (briefly visible after approval before reload) -->
+                <div class="alert alert-success mb-0"
+                     invisible="move_type != 'entry' or not bora_je_approved or state == 'posted' or bora_is_je_admin or bora_is_je_pm_user"
+                     role="alert">
+                    ✅ <strong>Approved</strong> — Your journal entry has been approved and is being posted.
+                </div>
+
+                <!-- Approval Required info banner -->
+                <div class="alert alert-info mb-0"
+                     invisible="move_type != 'entry' or state != 'draft' or bora_je_approved or bora_is_je_admin or bora_is_je_pm_user"
+                     role="alert">
+                    🔒 <strong>Approval Required</strong> — Click <strong>Post</strong> to submit this journal entry for approval.
+                </div>
+
+            </xpath>
+
+            <!-- Journal Entry Approval History tab -->
+            <xpath expr="//notebook" position="inside">
+                <page string="JE Approval" name="je_approval_history"
+                      invisible="move_type != 'entry' or (state != 'journal_entry_approval_pending' and not bora_je_pm1_id)">
+                    <group>
+                        <group string="Approval Request">
+                            <field name="bora_je_request_user_id" string="Requested By" readonly="1"/>
+                            <field name="bora_je_request_date" string="Request Date" readonly="1"/>
+                            <field name="bora_je_request_reason" string="Reason" readonly="1"/>
+                        </group>
+                        <group string="Approvers">
+                            <field name="bora_je_pm1_id" string="Approver 1 (PM1)" readonly="1"/>
+                            <field name="bora_je_pm1_approved" string="PM1 Approved" readonly="1"/>
+                            <field name="bora_je_pm2_id" string="Approver 2 (PM2)" readonly="1"
+                                   invisible="not bora_je_pm2_id"/>
+                            <field name="bora_je_pm2_approved" string="PM2 Approved" readonly="1"
+                                   invisible="not bora_je_pm2_id"/>
+                        </group>
+                    </group>
+                </page>
+            </xpath>
+
+        </field>
+    </record>
+</odoo>

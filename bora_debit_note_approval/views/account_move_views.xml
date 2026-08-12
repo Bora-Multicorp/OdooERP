@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="bora_debit_note_approval_move_form" model="ir.ui.view">
+        <field name="name">bora.debit.note.approval.move.form</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_move_form"/>
+        <field name="arch" type="xml">
+
+            <!-- Hidden computed fields needed for button visibility and banners -->
+            <xpath expr="//sheet" position="before">
+                <field name="bora_is_dn_pm_user" invisible="1"/>
+                <field name="bora_is_dn_admin" invisible="1"/>
+                <field name="bora_is_dn_dual_approval" invisible="1"/>
+                <field name="bora_dn_approved" invisible="1"/>
+                <field name="bora_show_dn_approve_button" invisible="1"/>
+                <field name="bora_show_dn_reject_button" invisible="1"/>
+                <field name="bora_show_dn_update_button" invisible="1"/>
+                <field name="bora_dn_pm1_id" invisible="1"/>
+                <field name="bora_dn_pm2_id" invisible="1"/>
+                <field name="bora_dn_pm1_approved" invisible="1"/>
+                <field name="bora_dn_pm2_approved" invisible="1"/>
+                <field name="bora_dn_request_user_id" invisible="1"/>
+                <field name="debit_origin_id" invisible="1"/>
+            </xpath>
+
+            <!-- Approval action buttons before the Confirm button -->
+            <xpath expr="//button[@name='action_post']" position="before">
+
+                <!-- Re-open wizard when stuck in debit_note_approval_pending with no PM1 -->
+                <button name="bora_action_request_dn_approval"
+                        string="Select Approvers"
+                        type="object"
+                        class="btn-primary"
+                        invisible="state != 'debit_note_approval_pending' or bora_dn_pm1_id or not debit_origin_id"/>
+
+                <!-- Update approvers (original requester while pending) -->
+                <button name="action_update_dn_approvers"
+                        string="Update Approvers"
+                        type="object"
+                        class="btn-warning"
+                        invisible="not bora_show_dn_update_button"
+                        confirm="This will cancel the current approval request and let you choose new approvers. Continue?"/>
+
+                <!-- Approve button (visible to assigned PM) -->
+                <button name="bora_action_approve_dn"
+                        string="Approve"
+                        type="object"
+                        class="btn-success"
+                        invisible="not bora_show_dn_approve_button"/>
+
+                <!-- Reject button (visible to assigned PM) -->
+                <button name="bora_action_reject_dn"
+                        string="Reject"
+                        type="object"
+                        class="btn-danger"
+                        invisible="not bora_show_dn_reject_button"/>
+
+            </xpath>
+
+            <!-- Hide the Confirm button while ANY approval is pending.
+                 Covers both pending states so the last-loaded module always hides
+                 Confirm correctly regardless of install order. -->
+            <xpath expr="//button[@name='action_post']" position="attributes">
+                <attribute name="invisible">state in ('bill_approval_pending', 'debit_note_approval_pending', 'journal_entry_approval_pending', 'invoice_approval_pending', 'credit_note_approval_pending')</attribute>
+            </xpath>
+
+            <!-- Status bar: only list the common milestone states.
+                 Odoo always adds the CURRENT state even if not listed here,
+                 so debit_note_approval_pending only appears when the record is
+                 in that state — it never shows on vendor bills. -->
+            <xpath expr="//field[@name='state'][@widget='statusbar']" position="attributes">
+                <attribute name="statusbar_visible">draft,posted,cancel</attribute>
+            </xpath>
+
+            <!-- Banners (placed before sheet) -->
+            <xpath expr="//sheet" position="before">
+
+                <!-- Approval Pending banner -->
+                <div class="alert alert-warning mb-0"
+                     invisible="not debit_origin_id or state != 'debit_note_approval_pending'"
+                     role="alert">
+                    <strong>⏳ Debit Note Approval Pending</strong> — This debit note is waiting for approver confirmation.
+                    <br/>
+                    <span invisible="not bora_dn_pm1_id">
+                        <strong>PM1 (<field name="bora_dn_pm1_id" readonly="1" nolabel="1" class="d-inline"/>):</strong>
+                        <span invisible="bora_dn_pm1_approved"> ⏳ Pending</span>
+                        <span invisible="not bora_dn_pm1_approved"> ✅ Approved</span>
+                    </span>
+                    <span invisible="not bora_dn_pm2_id">
+                        &#160;&#160;|&#160;&#160;
+                        <strong>PM2 (<field name="bora_dn_pm2_id" readonly="1" nolabel="1" class="d-inline"/>):</strong>
+                        <span invisible="bora_dn_pm2_approved"> ⏳ Pending</span>
+                        <span invisible="not bora_dn_pm2_approved"> ✅ Approved</span>
+                    </span>
+                </div>
+
+                <!-- Approved banner (briefly visible after approval before reload) -->
+                <div class="alert alert-success mb-0"
+                     invisible="not debit_origin_id or not bora_dn_approved or state == 'posted' or bora_is_dn_admin or bora_is_dn_pm_user"
+                     role="alert">
+                    ✅ <strong>Approved</strong> — Your debit note has been approved and is being confirmed.
+                </div>
+
+                <!-- Approval Required info banner (draft, not yet approved) -->
+                <div class="alert alert-info mb-0"
+                     invisible="not debit_origin_id or state != 'draft' or bora_dn_approved or bora_is_dn_admin or bora_is_dn_pm_user"
+                     role="alert">
+                    🔒 <strong>Approval Required</strong> — Click <strong>Confirm</strong> to submit this debit note for approval.
+                </div>
+
+            </xpath>
+
+            <!-- Debit Note Approval History tab -->
+            <xpath expr="//notebook" position="inside">
+                <page string="Debit Note Approval" name="dn_approval_history"
+                      invisible="not debit_origin_id or (state != 'debit_note_approval_pending' and not bora_dn_pm1_id)">
+                    <group>
+                        <group string="Approval Request">
+                            <field name="bora_dn_request_user_id" string="Requested By" readonly="1"/>
+                            <field name="bora_dn_request_date" string="Request Date" readonly="1"/>
+                            <field name="bora_dn_request_reason" string="Reason" readonly="1"/>
+                        </group>
+                        <group string="Approvers">
+                            <field name="bora_dn_pm1_id" string="Approver 1 (PM1)" readonly="1"/>
+                            <field name="bora_dn_pm1_approved" string="PM1 Approved" readonly="1"/>
+                            <field name="bora_dn_pm2_id" string="Approver 2 (PM2)" readonly="1"
+                                   invisible="not bora_dn_pm2_id"/>
+                            <field name="bora_dn_pm2_approved" string="PM2 Approved" readonly="1"
+                                   invisible="not bora_dn_pm2_id"/>
+                        </group>
+                    </group>
+                </page>
+            </xpath>
+
+        </field>
+    </record>
+</odoo>
