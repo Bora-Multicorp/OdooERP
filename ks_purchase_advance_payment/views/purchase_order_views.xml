@@ -94,17 +94,53 @@
         </field>
     </record>
 
-    <!-- Add Purchase Order reference field to Payment Form View -->
+    <!-- Add Purchase Order reference field & Payment Approval to Payment Form View -->
     <record id="view_account_payment_form_inherit_purchase_order" model="ir.ui.view">
         <field name="name">account.payment.form.purchase.order</field>
         <field name="model">account.payment</field>
         <field name="inherit_id" ref="account.view_account_payment_form"/>
         <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <field name="ks_can_approve" invisible="1"/>
+                <field name="ks_is_requester" invisible="1"/>
+            </xpath>
+            <xpath expr="//header//button[@name='action_post']" position="before">
+                <button name="action_submit_and_open_wizard" string="Submit for Approval" type="object" class="btn-primary" invisible="state != 'draft'"/>
+                <button name="action_update_approvals" string="Update Approvals" type="object"
+                        class="btn-warning"
+                        invisible="state != 'pending_approval' or not ks_is_requester"
+                        confirm="This will cancel the current approval request and let you choose new approvers. Continue?"/>
+                <button name="action_approve_wizard" string="Approve" type="object" class="btn-primary"
+                        invisible="not ks_can_approve"/>
+                <button name="action_reject_wizard" string="Reject" type="object" class="btn-secondary"
+                        invisible="not ks_can_approve"/>
+                <button name="action_reset_to_draft" string="Reset to Draft" type="object" invisible="state not in ('pending_approval', 'rejected')"/>
+            </xpath>
+            <xpath expr="//header//button[@name='action_post']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
             <xpath expr="//field[@name='partner_id']" position="after">
                 <field name="ks_purchase_order_id"
                        string="Purchase Order"
                        readonly="state != 'draft'"
                        invisible="is_insurance_payment or (not ks_purchase_order_id and state != 'draft')"/>
+            </xpath>
+            <xpath expr="//notebook" position="inside">
+                <page string="Approval Lines" name="approval_lines" invisible="state == 'draft'">
+                    <field name="approval_line_ids" readonly="1" nolabel="1">
+                        <list decoration-success="state == 'approved'"
+                              decoration-danger="state == 'rejected'"
+                              decoration-warning="state == 'pending'"
+                              decoration-muted="state == 'cancelled'">
+                            <field name="sequence" optional="hide"/>
+                            <field name="approver_type"/>
+                            <field name="user_id"/>
+                            <field name="state" widget="badge"/>
+                            <field name="action_date"/>
+                            <field name="remark"/>
+                        </list>
+                    </field>
+                </page>
             </xpath>
         </field>
     </record>

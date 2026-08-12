@@ -6,6 +6,7 @@
         <field name="arch" type="xml">
             <form string="Send for Approval">
                 <field name="request_id" invisible="1"/>
+                <field name="payment_id" invisible="1"/>
                 <field name="available_approver_1_ids" invisible="1"/>
                 <field name="available_approver_2_ids" invisible="1"/>
                 <div class="alert alert-info" role="alert" style="margin:16px;">

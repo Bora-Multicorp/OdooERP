@@ -10,7 +10,12 @@ class VendorPaymentApprovalUpdateWizard(models.TransientModel):
     request_id = fields.Many2one(
         'vendor.payment.approval.request',
         string='Approval Request',
-        required=True,
+        required=False,
+    )
+    payment_id = fields.Many2one(
+        'account.payment',
+        string='Payment',
+        required=False,
     )
     ks_pm1_already_approved = fields.Boolean(string='PM1 Already Approved', default=False)
     approver_1_id = fields.Many2one(
@@ -44,9 +49,34 @@ class VendorPaymentApprovalUpdateWizard(models.TransientModel):
     @api.model
     def default_get(self, fields_list):
         res = super().default_get(fields_list)
+        active_model = self.env.context.get('active_model')
+        active_id = self.env.context.get('active_id')
         request_id = self.env.context.get('default_request_id')
-        if request_id:
-            req = self.env['vendor.payment.approval.request'].browse(request_id)
+        payment_id = self.env.context.get('default_payment_id') or (active_id if active_model == 'account.payment' else False)
+
+        if payment_id:
+            pay = self.env['account.payment'].browse(payment_id)
+            res['payment_id'] = pay.id
+            pm1_line = pay.approval_line_ids.filtered(
+                lambda l: l.approver_type == 'approver1' and l.state == 'approved'
+            )[:1]
+            if pm1_line:
+                res['ks_pm1_already_approved'] = True
+                res['approver_1_id'] = pm1_line.user_id.id
+            else:
+                existing_pm1 = pay.approval_line_ids.filtered(
+                    lambda l: l.approver_type == 'approver1'
+                )[:1]
+                if existing_pm1:
+                    res['approver_1_id'] = existing_pm1.user_id.id
+            existing_pm2 = pay.approval_line_ids.filtered(
+                lambda l: l.approver_type == 'approver2'
+            )[:1]
+            if existing_pm2:
+                res['approver_2_id'] = existing_pm2.user_id.id
+        elif request_id or active_model == 'vendor.payment.approval.request':
+            req = self.env['vendor.payment.approval.request'].browse(request_id or active_id)
+            res['request_id'] = req.id
             pm1_line = req.approval_line_ids.filtered(
                 lambda l: l.approver_type == 'approver1' and l.state == 'approved'
             )[:1]
@@ -66,23 +96,26 @@ class VendorPaymentApprovalUpdateWizard(models.TransientModel):
                 res['approver_2_id'] = existing_pm2.user_id.id
         return res
 
-    @api.depends('request_id')
+    @api.depends('request_id', 'payment_id')
     def _compute_available_approvers(self):
         Config = self.env['vendor.payment.approval.config']
+        app1_users = Config.search([
+            ('active', '=', True), ('approver_type', '=', 'approver1'),
+        ]).mapped('user_id')
+        app2_users = Config.search([
+            ('active', '=', True), ('approver_type', '=', 'approver2'),
+        ]).mapped('user_id')
         for rec in self:
-            rec.available_approver_1_ids = Config.search([
-                ('active', '=', True), ('approver_type', '=', 'approver1'),
-            ]).mapped('user_id')
-            rec.available_approver_2_ids = Config.search([
-                ('active', '=', True), ('approver_type', '=', 'approver2'),
-            ]).mapped('user_id')
+            rec.available_approver_1_ids = app1_users
+            rec.available_approver_2_ids = app2_users
 
-    @api.depends('request_id', 'ks_pm1_already_approved')
+    @api.depends('request_id', 'payment_id', 'ks_pm1_already_approved')
     def _compute_approval_info(self):
         for wiz in self:
             html = ''
-            if wiz.ks_pm1_already_approved and wiz.request_id:
-                pm1_line = wiz.request_id.approval_line_ids.filtered(
+            target = wiz.payment_id or wiz.request_id
+            if wiz.ks_pm1_already_approved and target:
+                pm1_line = target.approval_line_ids.filtered(
                     lambda l: l.approver_type == 'approver1' and l.state == 'approved'
                 )[:1]
                 if pm1_line:
@@ -112,10 +145,12 @@ class VendorPaymentApprovalUpdateWizard(models.TransientModel):
 
     def action_update(self):
         self.ensure_one()
-        req = self.request_id
+        target = self.payment_id or self.request_id
+        if not target:
+            raise UserError(_('No payment or approval request specified.'))
 
-        if req.state != 'pending_approval':
-            raise UserError(_('Update Approvals is only available for pending requests.'))
+        if target.state != 'pending_approval':
+            raise UserError(_('Update Approvals is only available for pending items.'))
         if not self.approver_1_id:
             raise UserError(_('Approver 1 is required.'))
         if not self.approver_2_id:
@@ -123,8 +158,7 @@ class VendorPaymentApprovalUpdateWizard(models.TransientModel):
         if self.approver_1_id == self.approver_2_id:
             raise UserError(_('Approver 1 and Approver 2 must be different users.'))
 
-        # Block changing Approver 1 if already approved
-        pm1_line = req.approval_line_ids.filtered(
+        pm1_line = target.approval_line_ids.filtered(
             lambda l: l.approver_type == 'approver1' and l.state == 'approved'
         )[:1]
         if pm1_line and pm1_line.user_id != self.approver_1_id:
@@ -134,21 +168,23 @@ class VendorPaymentApprovalUpdateWizard(models.TransientModel):
 
         preserve_pm1 = bool(pm1_line and pm1_line.user_id == self.approver_1_id)
 
-        # Cancel existing pending activities
-        req.activity_unlink(['mail.mail_activity_data_todo'])
+        target.activity_unlink(['mail.mail_activity_data_todo'])
 
         if preserve_pm1:
-            # Keep PM1 approval, only replace PM2
-            req.approval_line_ids.filtered(
+            target.approval_line_ids.filtered(
                 lambda l: l.approver_type == 'approver2'
             ).write({'state': 'cancelled', 'remark': _('Approver updated by %s') % self.env.user.name})
-            req.approval_line_ids.create({
-                'request_id': req.id,
+            vals = {
                 'user_id': self.approver_2_id.id,
                 'approver_type': 'approver2',
                 'sequence': 20,
-            })
-            req.message_post(
+            }
+            if self.payment_id:
+                vals['payment_id'] = self.payment_id.id
+            else:
+                vals['request_id'] = self.request_id.id
+            self.env['vendor.payment.approval.line'].create(vals)
+            target.message_post(
                 body=_('Approval request updated by %s. Approver 1 (%s) approval preserved; only Approver 2 updated.')
                 % (self.env.user.name, self.approver_1_id.name),
                 message_type='notification',
@@ -160,12 +196,12 @@ class VendorPaymentApprovalUpdateWizard(models.TransientModel):
                 (0, 0, {'user_id': self.approver_1_id.id, 'approver_type': 'approver1', 'sequence': 10}),
                 (0, 0, {'user_id': self.approver_2_id.id, 'approver_type': 'approver2', 'sequence': 20}),
             ]
-            req.sudo().write({'approval_line_ids': lines})
-            req.message_post(
+            target.sudo().write({'approval_line_ids': lines})
+            target.message_post(
                 body=_('Approval request updated by %s. Previous approvers cancelled.') % self.env.user.name,
                 message_type='notification',
                 subtype_xmlid='mail.mt_note',
             )
 
-        req._notify_next_approver()
+        target._notify_next_approver()
         return {'type': 'ir.actions.act_window_close'}

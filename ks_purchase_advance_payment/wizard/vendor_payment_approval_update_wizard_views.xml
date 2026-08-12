@@ -6,6 +6,7 @@
         <field name="arch" type="xml">
             <form string="Update Approvers">
                 <field name="request_id" invisible="1"/>
+                <field name="payment_id" invisible="1"/>
                 <field name="available_approver_1_ids" invisible="1"/>
                 <field name="available_approver_2_ids" invisible="1"/>
                 <field name="ks_pm1_already_approved" invisible="1"/>

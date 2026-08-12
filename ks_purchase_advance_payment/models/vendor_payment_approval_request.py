@@ -631,7 +631,13 @@ class VendorPaymentApprovalLine(models.Model):
     request_id = fields.Many2one(
         'vendor.payment.approval.request',
         string='Request',
-        required=True,
+        required=False,
+        ondelete='cascade',
+    )
+    payment_id = fields.Many2one(
+        'account.payment',
+        string='Payment',
+        required=False,
         ondelete='cascade',
     )
     user_id = fields.Many2one('res.users', string='Approver', required=True)
