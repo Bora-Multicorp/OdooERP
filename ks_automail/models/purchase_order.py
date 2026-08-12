@@ -3,25 +3,53 @@
 from odoo import api, fields, models, _
 from odoo.exceptions import UserError, ValidationError
 
-
 class PurchaseOrder(models.Model):
     _inherit = 'purchase.order'
+    
+    @api.model
+    def _default_ks_zone(self):
+        company = self.env.company
+        # Indian company defaults to 'india'
+        if company.country_id and company.country_id.code == 'IN':
+            return 'india'
+        # Overseas companies have no default (user chooses manually)
+        return False
 
     ks_zone = fields.Selection([
-        ('russia', 'Russia'),
-        ('india', 'India'),
-        ('dubai', 'Dubai'),
-        ('sez', 'Sez'),
-    ], string='Zone', required=True, default='india',
+            ('russia', 'Russia'),
+            ('india', 'India'),
+            ('dubai', 'Dubai'),
+            ('sez', 'Sez'),
+            ('dafza', 'DAFZA'),
+            ('mainland', 'MainLand'),
+            ('export', 'Export'),
+            ('other', 'Other')], default=_default_ks_zone, string='Zone', required=True,
        help='Select the zone for this purchase order.',
        tracking=True)
-
+    is_overseas_company = fields.Boolean(compute='_compute_is_overseas_company')
     ks_no_tax_allowed = fields.Boolean(
         string='No Tax',
         default=False,
         help='If checked, no tax can be applied on order lines; existing line taxes are cleared.',
         tracking=True,
     )
+    
+    @api.onchange('company_id')
+    def _onchange_company_id_update_zone(self):
+        """ Automatically clear/reset invalid values when changing companies """
+        if self.company_id:
+            is_overseas = self.company_id.country_id.code != 'IN' if self.company_id.country_id else False
+            if is_overseas:
+                if self.ks_zone in ['india', 'dubai', 'sez']:
+                    self.ks_zone = False
+            else:
+                if self.ks_zone in ['dafza', 'mainland', 'export', 'other']:
+                    self.ks_zone = 'india'
+
+    @api.depends('company_id', 'company_id.country_id')
+    def _compute_is_overseas_company(self):
+        for rec in self:
+            rec.is_overseas_company = bool(rec.company_id and rec.company_id.country_id.code != 'IN')
 
     @api.onchange('ks_no_tax_allowed')
     def _onchange_ks_no_tax_allowed_clear_tax(self):

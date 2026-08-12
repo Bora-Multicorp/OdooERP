@@ -10,12 +10,24 @@
             
             <!-- Add Zone Field -->
             <xpath expr="//field[@name='partner_id']" position="after">
-                <field name="ks_zone" 
-                       widget="radio" 
-                       options="{'horizontal': true}"
+                <!-- 1. Shown for Indian Companies -->
+                <field name="ks_zone"
+                       invisible="is_overseas_company"
+                       required="not is_overseas_company"
+                       widget="filterable_selection"
+                       options="{'horizontal': true, 'blacklisted_values': ['dafza', 'mainland', 'export', 'other']}"
+                       readonly="state in ('sale', 'done', 'cancel')"
+                       help="Select the zone. Automatic emails will only be sent for India and Dubai zones. This field cannot be changed once the order is confirmed."/>
+                <!-- 2. Shown for Overseas Companies-->
+                <field name="ks_zone"
+                       invisible="not is_overseas_company"
+                       required="is_overseas_company"
+                       widget="filterable_selection"
+                       options="{'horizontal': true, 'blacklisted_values': ['india', 'dubai', 'sez']}"
                        readonly="state in ('sale', 'done', 'cancel')"
                        help="Select the zone. Automatic emails will only be sent for India and Dubai zones. This field cannot be changed once the order is confirmed."/>
                 <field name="ks_no_tax_allowed" optional="show"/>
+                <field name="is_overseas_company" invisible="1"/>
             </xpath>
             <!-- When No Tax is checked, tax on order lines is readonly (and cleared by onchange/write) -->
             <xpath expr="//field[@name='order_line']/list/field[@name='tax_id']" position="attributes">

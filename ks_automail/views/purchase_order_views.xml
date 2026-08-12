@@ -7,11 +7,22 @@
         <field name="inherit_id" ref="purchase.purchase_order_form"/>
         <field name="arch" type="xml">
             <xpath expr="//field[@name='partner_ref']" position="after">
+                <!-- 1. Shown for Indian Companies -->
                 <field name="ks_zone"
-                       widget="radio"
-                       options="{'horizontal': true}"
+                       invisible="is_overseas_company"
+                       required="not is_overseas_company"
+                       widget="filterable_selection"
+                       options="{'horizontal': true, 'blacklisted_values': ['dafza', 'mainland', 'export', 'other']}"
+                       readonly="state in ('purchase', 'done', 'cancel')"/>
+                <!-- 2. Shown for Overseas Companies-->
+                <field name="ks_zone"
+                       invisible="not is_overseas_company"
+                       required="is_overseas_company"
+                       widget="filterable_selection"
+                       options="{'horizontal': true, 'blacklisted_values': ['india', 'dubai', 'sez']}"
                        readonly="state in ('purchase', 'done', 'cancel')"/>
                 <field name="ks_no_tax_allowed" optional="show"/>
+                <field name="is_overseas_company" invisible="1"/>
             </xpath>
             <!-- When No Tax is checked, tax on order lines is readonly (and cleared by onchange/write) -->
             <xpath expr="//field[@name='order_line']/list/field[@name='taxes_id']" position="attributes">
