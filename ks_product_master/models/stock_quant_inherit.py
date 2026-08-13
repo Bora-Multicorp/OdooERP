@@ -13,6 +13,7 @@ class StockQuantInherit(models.Model):
 
     imei = fields.Char(string='IMEI 1', tracking=True)
     imei2 = fields.Char(string='IMEI 2', tracking=True)
+    is_imei_readonly = fields.Boolean(string="IMEI Readonly", compute="_compute_is_imei_readonly")
     active_months = fields.Char(string="Activated Months", compute="_compute_active_months", store=True)
     activation_date = fields.Date(string="Activation Date", help="Mobile phone activation date.", tracking=True)
     activation_status = fields.Boolean(string='Active', help="Indicates if the mobile phone is activated or not.",
@@ -32,6 +33,13 @@ class StockQuantInherit(models.Model):
         help='Country where the product is manufactured',
         tracking=True,
     )
+
+    @api.depends_context('uid')
+    def _compute_is_imei_readonly(self):
+        is_sales_admin = self.env.user.has_group('sales_team.group_sale_manager')
+        for rec in self:
+            rec.is_imei_readonly = bool(rec.id) and not is_sales_admin
+
 
     @api.model
     def _get_inventory_fields_create(self):
@@ -123,6 +131,9 @@ class StockQuantInherit(models.Model):
         return super(StockQuantInherit, self).create(vals_list)
 
     def write(self, vals):
+        if 'imei' in vals or 'imei2' in vals:
+            if not (self.env.is_admin() or self.env.user.has_group('sales_team.group_sale_manager')):
+                raise ValidationError(_('Only Sales Administrators can edit IMEI numbers on saved records.'))
         if self.env.context.get('inventory_mode'):
             self._check_all_validations()
         return super(StockQuantInherit, self).write(vals)
