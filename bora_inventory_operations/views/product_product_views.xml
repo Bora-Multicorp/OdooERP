@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="product_product_stock_tree_inherit_bora_inventory" model="ir.ui.view">
+            <field name="name">product.product.stock.tree.inherit.bora.inventory</field>
+            <field name="model">product.product</field>
+            <field name="inherit_id" ref="stock.product_product_stock_tree"/>
+            <field name="arch" type="xml">
+                <field name="categ_id" position="after">
+                    <field name="latest_purchase_price" optional="show"/>
+                </field>
+            </field>
+        </record>
+    </data>
+</odoo>
