@@ -20,8 +20,15 @@ class KsSoImportWizard(models.TransientModel):
     _name = "ks.so.import.wizard"
     _description = "Sale Order Import Wizard (E-com)"
 
-    file_data = fields.Binary(string="XLSX File", required=True)
-    file_name = fields.Char(string="File Name", required=True)
+    file_data = fields.Binary(string="XLSX File")
+    file_name = fields.Char(string="File Name")
+
+    def action_download_template(self):
+        return {
+            "type": "ir.actions.act_url",
+            "url": "/ks_ecom_sales/static/src/xls/so_import_template.xlsx",
+            "target": "self",
+        }
 
     # ─── Header alias sets ───────────────────────────────────────────────────
     _ORDER_ID_ALIASES = {"orderid", "order_id", "orderno", "order_no", "ecomorderid"}
@@ -118,7 +125,10 @@ class KsSoImportWizard(models.TransientModel):
         if load_workbook is None:
             raise UserError(_("Python package 'openpyxl' is required to import XLSX files."))
 
-        if not self.file_name or not self.file_name.lower().endswith(".xlsx"):
+        if not self.file_data or not self.file_name:
+            raise UserError(_("Please upload an XLSX file before importing."))
+
+        if not self.file_name.lower().endswith(".xlsx"):
             raise UserError(_("Please upload a valid .xlsx file only."))
 
         try:
