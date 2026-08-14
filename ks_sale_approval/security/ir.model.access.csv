@@ -6,6 +6,7 @@ access_ks_sale_approval_request_wizard_user,ks.sale.approval.request.wizard.user
 access_ks_sale_cancel_approval_request_wizard_user,ks.sale.cancel.approval.request.wizard.user,model_ks_sale_cancel_approval_request_wizard,base.group_user,1,1,1,1
 access_ks_sale_edit_approval_request_wizard_user,ks.sale.edit.approval.request.wizard.user,model_ks_sale_edit_approval_request_wizard,base.group_user,1,1,1,1
 access_ks_sale_approval_reason_wizard_user,ks.sale.approval.reason.wizard.user,model_ks_sale_approval_reason_wizard,base.group_user,1,1,1,1
+access_ks_sale_price_warning_wizard_user,ks.sale.price.warning.wizard.user,model_ks_sale_price_warning_wizard,base.group_user,1,1,1,1
 
 access_ks_delivery_approval_config_user,ks.delivery.approval.config.user,model_ks_delivery_approval_config,stock.group_stock_user,1,0,0,0
 access_ks_delivery_approval_config_admin,ks.delivery.approval.config.admin,model_ks_delivery_approval_config,base.group_system,1,1,1,1

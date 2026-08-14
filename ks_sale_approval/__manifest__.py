@@ -50,6 +50,7 @@
         'wizard/ks_delivery_approval_request_wizard_views.xml',
         'wizard/ks_delivery_approval_reason_wizard_views.xml',
         'wizard/ks_pod_upload_wizard_views.xml',
+        'wizard/ks_sale_price_warning_wizard_views.xml',
         'views/ks_sale_approval_config_views.xml',
         'views/sale_order_views.xml',
         'views/product_views.xml',

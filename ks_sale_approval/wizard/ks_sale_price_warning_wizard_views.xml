@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Sale Price Below Purchase Warning Wizard Form View -->
+    <record id="ks_sale_price_warning_wizard_form" model="ir.ui.view">
+        <field name="name">ks.sale.price.warning.wizard.form</field>
+        <field name="model">ks.sale.price.warning.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Price Warning">
+                <div class="alert alert-warning mb-3" role="alert">
+                    <p class="mb-0">
+                        <strong>Warning:</strong> One or more items have unit prices below the latest purchase price.
+                    </p>
+                </div>
+                <group>
+                    <field name="ks_sale_order_id" readonly="1"/>
+                    <field name="ks_warning_message" readonly="1" nolabel="1"/>
+                </group>
+                <footer>
+                    <button name="action_continue" 
+                            type="object" 
+                            string="Continue Order Creation" 
+                            class="btn-primary" 
+                            data-hotkey="q"/>
+                    <button string="Cancel" 
+                            class="btn-secondary" 
+                            special="cancel" 
+                            data-hotkey="z"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>
