@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <record id="paperformat_sa_grn_report" model="report.paperformat">
+            <field name="name">Custom Report (GRN)</field>
+            <field name="default" eval="True" />
+            <field name="format">Letter</field>
+            <field name="page_height">0</field>
+            <field name="page_width">0</field>
+            <field name="orientation">Portrait</field>
+            <field name="margin_top">5</field>
+            <field name="margin_bottom">10</field>
+            <field name="margin_left">5</field>
+            <field name="margin_right">5</field>
+            <field name="header_line" eval="False" />
+            <field name="header_spacing">20</field>
+            <field name="dpi">90</field>
+            <field name="css_margins" eval="True" />
+    </record>
+
+    <record id="action_sa_grn_report" model="ir.actions.report">
+        <field name="name">GRN / Receipt Note</field>
+        <field name="model">stock.picking</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">sa_report.sa_grn_report_template</field>
+        <field name="report_file">sa_report.sa_grn_report_template</field>
+        <field name="binding_model_id" ref="stock.model_stock_picking"/>
+        <field name="binding_type">report</field>
+        <field name="domain">[('picking_type_code','=','incoming')]</field>
+        <field name="paperformat_id" ref="paperformat_sa_grn_report"/>
+    </record>
+
+</odoo>
