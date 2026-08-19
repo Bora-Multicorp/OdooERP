@@ -315,6 +315,21 @@ SurveyFormWidget.include({
                         if (index < count) {
                             $(this).removeClass("hide-row");
                         } else {
+                             // Clear data BEFORE hiding the row
+                            $(this).find("input, textarea, select").each(function () {
+                                const $input = $(this);
+                                if ($input.attr("type") === "file") {
+                                    $input.val("");
+                                } else if (
+                                    $input.attr("type") === "checkbox" ||
+                                    $input.attr("type") === "radio"
+                                ) {
+                                    $input.prop("checked", false);
+                                } else {
+                                    $input.val("");
+                                }
+                            });
+                            $(this).find(".select2").val(null).trigger("change");
                             $(this).addClass("hide-row");
                         }
                     });
