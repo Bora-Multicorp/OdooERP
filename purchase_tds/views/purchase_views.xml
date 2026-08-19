@@ -10,7 +10,7 @@
                         string="TDS Entry"
                         type="action"
                         class="btn-secondary"
-                        invisible="state != 'purchase'"/>
+                        invisible="state == 'cancel'"/>
             </xpath>
             <xpath expr="//div[@name='button_box']" position="inside">
                 <button name="action_view_tds"
