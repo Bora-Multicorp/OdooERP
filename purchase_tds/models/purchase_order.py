@@ -11,7 +11,7 @@ class PurchaseOrder(models.Model):
         'purchase_id',
         string='TDS Entries',
     )
-    tds_tax_id = fields.Many2one("account.tax", string="TDS Tax")
+    tds_tax_id = fields.Many2one("account.tax", string="TDS Tax", readonly=1)
     tds_section = fields.Many2one("l10n_in.section.alert", string="TDS Section", related="tds_tax_id.l10n_in_section_id", store=True, readonly=True)
     amount_tds = fields.Monetary(
             string="TDS Amount",
