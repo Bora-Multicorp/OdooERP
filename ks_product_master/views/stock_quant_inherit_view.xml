@@ -6,8 +6,9 @@
             <field name="inherit_id" ref="stock.view_stock_quant_tree_editable"/>
             <field name="arch" type="xml">
                 <xpath expr="//list/field[@name='lot_id']" position="after">
-                    <field name="imei" column_invisible="not context.get('show_IMEI')"/>
-                    <field name="imei2" column_invisible="not context.get('show_IMEI2')"/>
+                    <field name="is_imei_readonly" column_invisible="1"/>
+                    <field name="imei" column_invisible="not context.get('show_IMEI')" readonly="is_imei_readonly"/>
+                    <field name="imei2" column_invisible="not context.get('show_IMEI2')" readonly="is_imei_readonly"/>
                     <field name="activation_status" column_invisible="not context.get('show_IMEI')" groups="base.group_system"/>
                     <field name="activation_date"/>
                     <field name="specs_made" optional="show" string="Spec Made For"/>
@@ -21,8 +22,9 @@
             <field name="inherit_id" ref="stock.view_stock_quant_form_editable"/>
             <field name="arch" type="xml">
                 <xpath expr="//field[@name='lot_id']" position="after">
-                    <field name="imei" invisible="not context.get('show_IMEI')"/>
-                    <field name="imei2" invisible="not context.get('show_IMEI2')"/>
+                    <field name="is_imei_readonly" invisible="1"/>
+                    <field name="imei" invisible="not context.get('show_IMEI')" readonly="is_imei_readonly"/>
+                    <field name="imei2" invisible="not context.get('show_IMEI2')" readonly="is_imei_readonly"/>
                     <field name="activation_status" invisible="not context.get('show_IMEI')" groups="base.group_system"/>
                     <field name="specs_made"/>
                     <field name="made_country" readonly="1"/>
@@ -35,8 +37,9 @@
             <field name="inherit_id" ref="stock.view_stock_quant_tree_inventory_editable"/>
             <field name="arch" type="xml">
                 <xpath expr="//list/field[@name='lot_id']" position="after">
-                    <field name="imei" optional="hidden"/>
-                    <field name="imei2" optional="hidden"/>
+                    <field name="is_imei_readonly" column_invisible="1"/>
+                    <field name="imei" optional="hidden" readonly="is_imei_readonly"/>
+                    <field name="imei2" optional="hidden" readonly="is_imei_readonly"/>
                     <field name="activation_status" optional="hidden" groups="base.group_system"/>
                     <field name="activation_date" optional="hidden"/>
                     <field name="active_months" readonly="1" optional="hidden"/>
