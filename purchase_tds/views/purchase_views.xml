@@ -24,10 +24,10 @@
                 </button>
             </xpath>
             <xpath expr="//field[@name='tax_totals']" position="after">
-                <field name="tds_section" nolabel="1" colspan="2" invisible="not tds_section"/>
-                <field name="tds_tax_id" nolabel="1" colspan="2" invisible="tds_section"/>
-                <field name="amount_tds" widget="monetary" style="font-size: 1.3em; font-weight: bold; white-space: nowrap;" options="{'currency_field': 'currency_id'}"/>
-                <field name="amount_net_payable" widget="monetary" options="{'currency_field': 'currency_id'}" style="font-size: 1.3em; font-weight: bold; white-space: nowrap;"/>
+                <field name="tds_section"  nolabel="1" colspan="2" readonly="1"  options="{'no_open': True}" invisible="amount_tds == 0 or not tds_section"/>
+                <field name="tds_tax_id" nolabel="1" colspan="2" readonly="1"  options="{'no_open': True}" invisible="amount_tds == 0 or tds_section"/>
+                <field name="amount_tds" invisible="amount_tds == 0" widget="monetary" style="font-size: 1.3em; font-weight: bold; white-space: nowrap;" options="{'currency_field': 'currency_id'}"/>
+                <field name="amount_net_payable" invisible="amount_tds == 0" widget="monetary" options="{'currency_field': 'currency_id'}" style="font-size: 1.3em; font-weight: bold; white-space: nowrap;"/>
             </xpath>
         </field>
     </record>
