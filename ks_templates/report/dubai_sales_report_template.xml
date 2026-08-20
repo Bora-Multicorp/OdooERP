@@ -26,6 +26,7 @@
         <field name="print_report_name">(object.state in ('draft', 'sent') and 'Custom Quotation - %s' % (object.name)) or 'Custom Order - %s' % (object.name)</field>
         <field name="binding_model_id" ref="sale.model_sale_order"/>
         <field name="paperformat_id" ref="paperformat_dubai_saleorder"/>
+        <field name="domain">[('state', 'not in', ('draft', 'sent'))]</field>
         <field name="binding_type">report</field>
     </record>
 

@@ -12,6 +12,7 @@
     <record id="sale.action_report_saleorder" model="ir.actions.report">
         <field name="name">PROFORMA INVOICE PDF</field>
         <field name="paperformat_id" ref="ks_templates.paperformat_dubai_saleorder"/>
+        <field name="domain">[('state', 'not in', ('draft', 'sent'))]</field>
     </record>
 
     <!-- 3) Remove "Dubai Quotation / Order" from Print menu (delete the separate report action) -->
