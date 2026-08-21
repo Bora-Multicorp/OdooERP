@@ -27,7 +27,7 @@
         <field name="binding_model_id" ref="sale.model_sale_order"/>
         <field name="paperformat_id" ref="paperformat_domestic_saleorder"/>
         <field name="binding_type">report</field>
-        <field name="domain">[('currency_id.name', '=', 'INR'), ('state', 'not in', ('draft', 'sent'))]</field>
+        <field name="domain">[('currency_id.name', '=', 'INR'), ('state', 'in', ('sale', 'done'))]</field>
     </record>
 
     <template id="report_saleorder_domestic">
@@ -380,7 +380,7 @@
         <field name="report_file">ks_templates.report_saleorder_dubai_inr</field>
         <field name="print_report_name">'Proforma_Invoice_INR - %s' % object.name</field>
         <field name="binding_model_id" ref="sale.model_sale_order"/>
-        <field name="domain">[('currency_id.name', '!=', 'INR'), '|', ('company_id.currency_id.name', '!=', 'HKD'), '|', ('pricelist_id', '=', False), ('pricelist_id.currency_id.name', '!=', 'USD'), ('state', 'not in', ('draft', 'sent'))]</field>
+        <field name="domain">[('currency_id.name', '!=', 'INR'), '|', ('company_id.currency_id.name', '!=', 'HKD'), '|', ('pricelist_id', '=', False), ('pricelist_id.currency_id.name', '!=', 'USD'), ('state', 'in', ('sale', 'done'))]</field>
         <field name="binding_type">report</field>
     </record>
 
