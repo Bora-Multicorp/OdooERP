@@ -11,10 +11,15 @@
     <!-- 2) Apply custom paperformat + restrict to non-INR and confirmed orders only -->
     <record id="purchase.action_report_purchase_order" model="ir.actions.report">
         <field name="paperformat_id" ref="ks_templates.paperformat_custom_purchase_order"/>
-        <field name="domain">[('currency_id.name', '!=', 'INR'), ('state', 'not in', ('draft', 'sent'))]</field>
+        <field name="domain">[('currency_id.name', '!=', 'INR'), ('state', 'in', ('purchase', 'done'))]</field>
     </record>
 
     <!-- 3) Remove "Purchase / Order Custom" from Print menu -->
     <delete model="ir.actions.report" id="ks_templates.action_report_purchase_custom"/>
+
+    <!-- 4) Restrict Request for Quotation to unconfirmed orders only -->
+    <record id="purchase.report_purchase_quotation" model="ir.actions.report">
+        <field name="domain">[('state', 'not in', ('purchase', 'done', 'cancel'))]</field>
+    </record>
 
 </odoo>
