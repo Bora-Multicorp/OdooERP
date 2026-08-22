@@ -410,8 +410,9 @@ class ContactKYCApproval(models.Model):
         is_admin = current_user.has_group('base.group_system')
         is_owner = self.create_uid and self.create_uid == current_user
         
-        if not (is_admin or is_owner):
-            raise ValidationError(_("Access Denied: Only administrators or the form creator can submit for approval."))
+        # Ravi Teja asked to remove this condition
+        # if not (is_admin or is_owner):
+        #     raise ValidationError(_("Access Denied: Only administrators or the form creator can submit for approval."))
         
         # Check if approval config exists
         config = self.env['vendor.approval.config'].get_config()
