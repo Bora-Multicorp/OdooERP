@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from odoo import api, fields, models, _
-from odoo.exceptions import UserError
+from odoo.exceptions import UserError, ValidationError
 
 
 class AccountPayment(models.Model):
@@ -17,8 +17,12 @@ class AccountPayment(models.Model):
     )
 
     state = fields.Selection(
-        selection_add=[
+        selection=[
+            ('draft', 'Draft'),
             ('pending_approval', 'Pending Approval'),
+            ('in_process', 'In Process'),
+            ('paid', 'Paid'),
+            ('canceled', 'Canceled'),
             ('rejected', 'Rejected'),
         ],
         ondelete={
@@ -26,6 +30,16 @@ class AccountPayment(models.Model):
             'rejected': 'set default',
         },
     )
+
+    @api.constrains('state', 'move_id')
+    def _check_move_id(self):
+        for payment in self:
+            if (
+                payment.state not in ('draft', 'canceled', 'pending_approval', 'rejected')
+                and not payment.move_id
+                and payment.outstanding_account_id
+            ):
+                raise ValidationError(_("A payment with an outstanding account cannot be confirmed without having a journal entry."))
 
     approval_line_ids = fields.One2many(
         'vendor.payment.approval.line',
