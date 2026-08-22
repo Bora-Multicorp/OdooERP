@@ -119,11 +119,24 @@
             <xpath expr="//header//button[@name='action_post']" position="attributes">
                 <attribute name="invisible">1</attribute>
             </xpath>
+            <xpath expr="//field[@name='state']" position="attributes">
+                <attribute name="statusbar_visible">draft,pending_approval,in_process,paid</attribute>
+            </xpath>
             <xpath expr="//field[@name='partner_id']" position="after">
                 <field name="ks_purchase_order_id"
                        string="Purchase Order"
                        readonly="state != 'draft'"
                        invisible="is_insurance_payment or (not ks_purchase_order_id and state != 'draft')"/>
+            </xpath>
+            <xpath expr="//sheet" position="inside">
+                <group string="Approval" invisible="not approve_reason">
+                    <field name="approve_reason" readonly="1"/>
+                </group>
+                <group string="Rejection" invisible="state != 'rejected'">
+                    <field name="reject_reason" readonly="1"/>
+                    <field name="reject_user_id" readonly="1"/>
+                    <field name="reject_date" readonly="1"/>
+                </group>
             </xpath>
             <xpath expr="//notebook" position="inside">
                 <page string="Approval Lines" name="approval_lines" invisible="state == 'draft'">

@@ -60,6 +60,16 @@ class VendorPaymentApprovalSubmitWizard(models.TransientModel):
             res['request_id'] = default_req or active_id
         elif active_id:
             res['request_id'] = active_id
+
+        Config = self.env['vendor.payment.approval.config']
+        if 'approver_1_id' not in res or not res.get('approver_1_id'):
+            app1 = Config.search([('active', '=', True), ('approver_type', '=', 'approver1')], limit=1).user_id
+            if app1:
+                res['approver_1_id'] = app1.id
+        if 'approver_2_id' not in res or not res.get('approver_2_id'):
+            app2 = Config.search([('active', '=', True), ('approver_type', '=', 'approver2')], limit=1).user_id
+            if app2:
+                res['approver_2_id'] = app2.id
         return res
 
     @api.depends('request_id', 'payment_id')
