@@ -161,11 +161,12 @@
             <!-- PRODUCT HEADER -->
             <tr>
                 <th style="border:1px solid #000; padding:4px; text-align:center; background-color:#f0f0f0; width:5%;">Sl No.</th>
-                <th style="border:1px solid #000; padding:4px; text-align:left; background-color:#f0f0f0; width:35%;">Description of Goods and Services</th>
-                <th style="border:1px solid #000; padding:4px; text-align:center; background-color:#f0f0f0; width:10%;">HSN/SAC</th>
-                <th style="border:1px solid #000; padding:4px; text-align:right; background-color:#f0f0f0; width:13%;">Quantity</th>
-                <th style="border:1px solid #000; padding:4px; text-align:right; background-color:#f0f0f0; width:13%;">Rate</th>
-                <th style="border:1px solid #000; padding:4px; text-align:center; background-color:#f0f0f0; width:8%;">Per</th>
+                <th style="border:1px solid #000; padding:4px; text-align:left; background-color:#f0f0f0; width:28%;">Description of Goods and Services</th>
+                <th style="border:1px solid #000; padding:4px; text-align:center; background-color:#f0f0f0; width:9%;">HSN/SAC</th>
+                <th style="border:1px solid #000; padding:4px; text-align:right; background-color:#f0f0f0; width:11%;">Quantity</th>
+                <th style="border:1px solid #000; padding:4px; text-align:right; background-color:#f0f0f0; width:11%;">Rate</th>
+                <th style="border:1px solid #000; padding:4px; text-align:right; background-color:#f0f0f0; width:13%;">Rate (Incl. Tax)</th>
+                <th style="border:1px solid #000; padding:4px; text-align:center; background-color:#f0f0f0; width:7%;">Per</th>
                 <th style="border:1px solid #000; padding:4px; text-align:right; background-color:#f0f0f0; width:16%;">Amount</th>
             </tr>
 
@@ -187,6 +188,9 @@
                     <td style="border:1px solid #000; padding:4px; text-align:right;">
                         <t t-esc="doc.currency_id.symbol or '₹'"/> <t t-esc="doc.format_number(line.price_unit, digits=2)"/>
                     </td>
+                    <td style="border:1px solid #000; padding:4px; text-align:right;">
+                        <t t-esc="doc.currency_id.symbol or '₹'"/> <t t-esc="doc.format_number(line.price_unit_incl, digits=2)"/>
+                    </td>
                     <td style="border:1px solid #000; padding:4px; text-align:center;" t-esc="line.product_uom.name or 'NOS'"/>
                     <td style="border:1px solid #000; padding:4px; text-align:right;">
                         <t t-esc="doc.currency_id.symbol or '₹'"/> <t t-esc="doc.format_number(line.price_subtotal, digits=2)"/>
@@ -207,6 +211,7 @@
                     <t t-if="tds_info['tds_amount'] > 0">Less: <t t-esc="tds_info['tds_name']"/><br/></t>
                     <t t-if="show_round_off">Round Off</t>
                 </td>
+                <td style="border:1px solid #000; padding:4px;"></td>
                 <td style="border:1px solid #000; padding:4px;"></td>
                 <td style="border:1px solid #000; padding:4px;"></td>
                 <td style="border:1px solid #000; padding:4px; text-align:right;">
@@ -242,6 +247,7 @@
                 <td style="border:1px solid #000; padding:4px;"></td>
                 <td style="border:1px solid #000; padding:4px; text-align:right;"><strong><t t-esc="doc.format_number(total_qty, digits=2)"/></strong></td>
                 <td style="border:1px solid #000; padding:4px;"></td>
+                <td style="border:1px solid #000; padding:4px;"></td>
                 <td style="border:1px solid #000; padding:4px; text-align:center;"><strong>NOS</strong></td>
                 <td style="border:1px solid #000; padding:4px; text-align:right;">
                     <strong><t t-esc="doc.currency_id.symbol or '₹'"/> <t t-esc="doc.format_number(doc.amount_total, digits=2)"/></strong>
@@ -252,7 +258,7 @@
             <t t-if="svx_has_exchange">
             <t t-set="svx_inr_amount" t-value="svx_total_amount * svx_large_rate"/>
             <tr>
-                <td style="border:1px solid #000; padding:4px; text-align:right;" colspan="7">
+                <td style="border:1px solid #000; padding:4px; text-align:right;" colspan="8">
                     <strong>
                         Total Invoice Amount in
                         <t t-esc="svx_inv_currency.symbol or svx_inv_currency.name or 'USD'"/>
@@ -269,7 +275,7 @@
             <t t-set="svx_inr_currency" t-value="env['res.currency'].search([('name', '=', 'INR')], limit=1)"/>
             <t t-set="svx_words_currency" t-value="svx_inr_currency if svx_has_exchange else svx_inv_currency"/>
             <tr>
-                <td style="border:1px solid #000; padding:6px;" colspan="7">
+                <td style="border:1px solid #000; padding:6px;" colspan="8">
                     Amount Chargeable (in words)<br/>
                     <strong><t t-esc="doc.get_amount_in_words_currency(svx_words_amount, svx_words_currency)"/></strong>
                 </td>
@@ -281,7 +287,7 @@
                     <strong>Remarks:</strong><br/>
                     <t t-if="doc.ks_remarks"><t t-out="doc.ks_remarks"/></t>
                 </td>
-                <td style="border:1px solid #000; padding:6px; text-align:center; vertical-align:bottom;" colspan="3">
+                <td style="border:1px solid #000; padding:6px; text-align:center; vertical-align:bottom;" colspan="4">
                     <t t-if="doc.ks_authorised_signatory">
                         <img t-att-src="image_data_uri(doc.ks_authorised_signatory)"
                              style="max-height:60px; max-width:180px; display:block; margin:0 auto 4px auto;"/>
@@ -293,7 +299,7 @@
 
             <!-- COMPUTER GENERATED ROW -->
             <tr>
-                <td style="border:1px solid #000; padding:4px; text-align:center; font-size:10px;" colspan="7">
+                <td style="border:1px solid #000; padding:4px; text-align:center; font-size:10px;" colspan="8">
                     This is a Computer Generated Invoice
                 </td>
             </tr>

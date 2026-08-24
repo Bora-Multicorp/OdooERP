@@ -262,11 +262,12 @@
                     <!-- PRODUCT TABLE HEADER -->
                     <tr>
                         <th style="border:1px solid #000; padding:4px; text-align:center; background-color:#f0f0f0; width:5%;">Sl No.</th>
-                        <th style="border:1px solid #000; padding:4px; text-align:left; background-color:#f0f0f0; width:35%;">Description of Goods</th>
-                        <th style="border:1px solid #000; padding:4px; text-align:right; background-color:#f0f0f0; width:10%;">HSN/SAC</th>
-                        <th style="border:1px solid #000; padding:4px; text-align:right; background-color:#f0f0f0; width:13%;">Quantity</th>
-                        <th style="border:1px solid #000; padding:4px; text-align:right; background-color:#f0f0f0; width:13%;">Rate</th>
-                        <th style="border:1px solid #000; padding:4px; text-align:center; background-color:#f0f0f0; width:8%;">Per</th>
+                        <th style="border:1px solid #000; padding:4px; text-align:left; background-color:#f0f0f0; width:28%;">Description of Goods</th>
+                        <th style="border:1px solid #000; padding:4px; text-align:right; background-color:#f0f0f0; width:9%;">HSN/SAC</th>
+                        <th style="border:1px solid #000; padding:4px; text-align:right; background-color:#f0f0f0; width:10%;">Quantity</th>
+                        <th style="border:1px solid #000; padding:4px; text-align:right; background-color:#f0f0f0; width:12%;">Rate</th>
+                        <th style="border:1px solid #000; padding:4px; text-align:right; background-color:#f0f0f0; width:14%;">Rate (Incl. Tax)</th>
+                        <th style="border:1px solid #000; padding:4px; text-align:center; background-color:#f0f0f0; width:6%;">Per</th>
                         <th style="border:1px solid #000; padding:4px; text-align:right; background-color:#f0f0f0; width:16%;">Amount</th>
                     </tr>
 
@@ -290,6 +291,9 @@
                             <td style="border:1px solid #000; padding:4px; text-align:right;">
                                 <t t-esc="doc.currency_id.symbol or '$'"/> <t t-esc="doc.format_number(line.price_unit, digits=2)"/>
                             </td>
+                            <td style="border:1px solid #000; padding:4px; text-align:right;">
+                                <t t-esc="doc.currency_id.symbol or '$'"/> <t t-esc="doc.format_number(line.price_unit_incl, digits=2)"/>
+                            </td>
                             <td style="border:1px solid #000; padding:4px; text-align:center;" t-esc="line.product_uom_id.name or 'pcs'"/>
                             <td style="border:1px solid #000; padding:4px; text-align:right;">
                                 <t t-esc="doc.currency_id.symbol or '$'"/> <t t-esc="doc.format_number(line.price_subtotal, digits=2)"/>
@@ -299,7 +303,7 @@
 
                     <!-- SUBTOTAL ROW -->
                     <tr>
-                        <td style="border:1px solid #000; padding:4px;" colspan="6"></td>
+                        <td style="border:1px solid #000; padding:4px;" colspan="7"></td>
                         <td style="border:1px solid #000; padding:4px; text-align:right;">
                             <t t-esc="doc.format_number(total_untaxed, digits=2)"/>
                         </td>
@@ -316,6 +320,7 @@
                         <td style="border:1px solid #000; padding:4px; text-align:right;">
                             <t t-esc="doc.format_number(igst_rate, digits=0)"/>
                         </td>
+                        <td style="border:1px solid #000; padding:4px;"></td>
                         <td style="border:1px solid #000; padding:4px; text-align:center;">%</td>
                         <td style="border:1px solid #000; padding:4px; text-align:right;">
                             INR <t t-esc="doc.format_number(total_untaxed * inr_rate * igst_rate / 100.0, digits=2)"/>
@@ -332,6 +337,7 @@
                         </td>
                         <td style="border:1px solid #000; padding:4px;"></td>
                         <td style="border:1px solid #000; padding:4px;"></td>
+                        <td style="border:1px solid #000; padding:4px;"></td>
                         <td style="border:1px solid #000; padding:4px; text-align:left;">
                             <strong><t t-esc="doc.currency_id.symbol or '$'"/> <t t-esc="doc.format_number(doc.amount_untaxed + doc.amount_tax, digits=2)"/></strong>
                         </td>
@@ -340,7 +346,7 @@
                     <!-- CURRENCY CONVERSION ROW -->
                     <t t-if="invoice_currency and company_currency and invoice_currency != company_currency">
                     <tr>
-                        <td style="border:1px solid #000; padding:4px; text-align:right;" colspan="7">
+                        <td style="border:1px solid #000; padding:4px; text-align:right;" colspan="8">
                             <strong>
                                 Total Invoice Amount in <t t-esc="invoice_currency.name or 'USD'"/> <t t-esc="doc.format_number(total_amount, digits=2)"/> @ <t t-esc="company_currency.name or 'INR'"/> <t t-esc="doc.format_number(company_to_invoice_rate, digits=4)"/> / 1 <t t-esc="company_currency.name or 'INR'"/> = <t t-esc="doc.format_number(exchange_rate, digits=4)"/> <t t-esc="invoice_currency.name or 'USD'"/>
                             </strong>
@@ -350,7 +356,7 @@
 
                     <!-- AMOUNT IN WORDS ROW -->
                     <tr>
-                        <td style="border:1px solid #000; padding:6px;" colspan="7">
+                        <td style="border:1px solid #000; padding:6px;" colspan="8">
                             Amount Chargeable (in words)<br/>
                             <strong>
                                 <t t-esc="invoice_amount_words or ''"/>
@@ -360,7 +366,7 @@
 
                     <!-- TAX SUMMARY ROW (inner table) -->
                     <tr>
-                        <td style="border:1px solid #000; padding:0;" colspan="7">
+                        <td style="border:1px solid #000; padding:0;" colspan="8">
                             <table style="width:100%; border-collapse:collapse; font-size:11px;">
                                 <tr>
                                     <td style="width:40%; border-right:1px solid #000; border-bottom:1px solid #000; padding:4px;" rowspan="2">HSN/SAC</td>
@@ -400,7 +406,7 @@
 
                     <!-- TAX AMOUNT IN WORDS ROW -->
                     <tr>
-                        <td style="border:1px solid #000; padding:6px;" colspan="7">
+                        <td style="border:1px solid #000; padding:6px;" colspan="8">
                             Tax Amount (in words):<br/>
                             <strong>
                                 <t t-set="tax_amount_in_words" t-value="doc.get_amount_in_words_inr(correct_total_tax)"/>
@@ -421,7 +427,7 @@
                                 <span t-out="gst_sale.note"/>
                             </t>
                         </td>
-                        <td style="vertical-align:top; padding:6px; border:1px solid #000;" colspan="3">
+                        <td style="vertical-align:top; padding:6px; border:1px solid #000;" colspan="4">
 
                                 <p style="font-weight:bold; margin:0 0 4px 0;">Company's Bank Details</p>
                                 <span><strong>Bank Name:</strong> <t t-esc="inv_bank.name if inv_bank else ''"/></span><br/>
@@ -444,7 +450,7 @@
 
                     <!-- COMPUTER GENERATED ROW -->
                     <tr>
-                        <td style="border:1px solid #000; padding:4px; text-align:center; font-size:10px;" colspan="7">
+                        <td style="border:1px solid #000; padding:4px; text-align:center; font-size:10px;" colspan="8">
                             This is a Computer Generated Invoice
                         </td>
                     </tr>
