@@ -260,6 +260,11 @@
                 <attribute name="readonly">not ks_can_edit or ks_qty_only_edit or state in ('cancel', 'done', 'purchase', 'pending_approval')</attribute>
             </xpath>
 
+            <!-- Make ship_to readonly when not in edit mode or qty-only mode -->
+            <xpath expr="//field[@name='ship_to']" position="attributes">
+                <attribute name="readonly">not ks_can_edit or ks_qty_only_edit or state in ('cancel', 'done', 'purchase', 'pending_approval')</attribute>
+            </xpath>
+
             <!-- Make currency_id readonly when not in edit mode or qty-only mode -->
             <xpath expr="//field[@name='currency_id'][@groups='base.group_multi_currency']" position="attributes">
                 <attribute name="readonly">not ks_can_edit or ks_qty_only_edit or state in ('cancel', 'done', 'purchase', 'pending_approval')</attribute>

@@ -9,6 +9,28 @@ class PurchaseOrder(models.Model):
     ks_authorised_signatory = fields.Binary(string='Authorised Signatory', attachment=True, copy=False)
     ks_bank_id = fields.Many2one('res.bank', string='Bank Information')
     ks_remarks = fields.Text(string='Remarks')
+    ship_to = fields.Many2one(
+        'res.partner',
+        string='Ship To',
+        compute='_compute_ship_to',
+        store=True,
+        readonly=False,
+        precompute=True,
+        help='Vendor shipping partner auto-selected from partner_id, editable by user.'
+    )
+
+    @api.depends('partner_id')
+    def _compute_ship_to(self):
+        for order in self:
+            order.ship_to = order.partner_id
+
+    @api.onchange('partner_id')
+    def _onchange_partner_id_ship_to(self):
+        if self.partner_id:
+            self.ship_to = self.partner_id
+        else:
+            self.ship_to = False
+
     ks_round_off = fields.Float(
         string='Round Off',
         digits=(16, 2),
