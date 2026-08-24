@@ -169,13 +169,14 @@
                                 <thead>
                                     <tr>
                                         <th style="border:1px solid #000; padding:3px; text-align:center; width:4%;">Sl<br/>No.</th>
-                                        <th style="border:1px solid #000; padding:3px; text-align:center; width:28%;">Description of Goods</th>
+                                        <th style="border:1px solid #000; padding:3px; text-align:center; width:23%;">Description of Goods</th>
                                         <th style="border:1px solid #000; padding:3px; text-align:center; width:9%;">HSN/SAC</th>
-                                        <th style="border:1px solid #000; padding:3px; text-align:center; width:10%;">Quantity</th>
-                                        <th style="border:1px solid #000; padding:3px; text-align:center; width:12%;">Rate</th>
-                                        <th style="border:1px solid #000; padding:3px; text-align:center; width:6%;">per</th>
+                                        <th style="border:1px solid #000; padding:3px; text-align:center; width:9%;">Quantity</th>
+                                        <th style="border:1px solid #000; padding:3px; text-align:center; width:11%;">Rate</th>
+                                        <th style="border:1px solid #000; padding:3px; text-align:center; width:13%;">Rate (Incl. Tax)</th>
+                                        <th style="border:1px solid #000; padding:3px; text-align:center; width:5%;">per</th>
                                         <th style="border:1px solid #000; padding:3px; text-align:center; width:7%;">Disc. %</th>
-                                        <th style="border:1px solid #000; padding:3px; text-align:right; width:14%;">Amount</th>
+                                        <th style="border:1px solid #000; padding:3px; text-align:right; width:19%;">Amount</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -220,6 +221,12 @@
                                                 <t t-if="l_sgst_rate"><br/><em><strong><t t-esc="doc.format_rate(l_sgst_rate)"/></strong></em></t>
                                                 <t t-if="l_igst_rate"><br/><br/><em><strong><t t-esc="doc.format_rate(l_igst_rate)"/></strong></em></t>
                                             </td>
+                                            <td style="border-right:1px solid #000; padding:3px; text-align:right; vertical-align:top;">
+                                                <t t-esc="doc.format_number(line.price_unit_incl, digits=2)"/>
+                                                <t t-if="l_cgst_rate"><br/><br/><em><strong><t t-esc="doc.format_rate(l_cgst_rate)"/></strong></em></t>
+                                                <t t-if="l_sgst_rate"><br/><em><strong><t t-esc="doc.format_rate(l_sgst_rate)"/></strong></em></t>
+                                                <t t-if="l_igst_rate"><br/><br/><em><strong><t t-esc="doc.format_rate(l_igst_rate)"/></strong></em></t>
+                                            </td>
                                             <td style="border-right:1px solid #000; padding:3px; text-align:center; vertical-align:top;">
                                                 <t t-esc="line.product_uom.name or 'NOS'"/>
                                                 <t t-if="l_cgst_rate"><br/><br/><em><strong>%</strong></em></t>
@@ -241,6 +248,7 @@
                                     <tr>
                                         <td style="border:1px solid #000; padding:3px; text-align:right;" colspan="3"><strong>Total</strong></td>
                                         <td style="border:1px solid #000; padding:3px; text-align:center;"><strong><t t-esc="doc.format_number(total_qty, digits=0)"/> NOS</strong></td>
+                                        <td style="border:1px solid #000; padding:3px;"></td>
                                         <td style="border:1px solid #000; padding:3px;"></td>
                                         <td style="border:1px solid #000; padding:3px;"></td>
                                         <td style="border:1px solid #000; padding:3px;"></td>
@@ -404,6 +412,16 @@
                 <strong>
                     INR
                     <t t-esc="doc.format_number(line.price_unit * inr_rate, digits=2)"/>
+                </strong>
+            </td>
+        </xpath>
+
+        <!-- Step 3b: Replace Rate (Incl. Tax) column (line.price_unit_incl) td with INR value -->
+        <xpath expr="//td[strong/t[@t-esc='doc.format_number(line.price_unit_incl, digits=2)']]" position="replace">
+            <td style="border:1px solid #000; padding:4px; text-align:right;">
+                <strong>
+                    INR
+                    <t t-esc="doc.format_number(line.price_unit_incl * inr_rate, digits=2)"/>
                 </strong>
             </td>
         </xpath>

@@ -192,13 +192,14 @@
                     <!-- PRODUCT TABLE HEADER -->
                     <tr>
                         <th style="border:1px solid #000; padding:4px; text-align:center; background-color:#f0f0f0; width:5%;">Sl No.</th>
-                        <th style="border:1px solid #000; padding:4px; text-align:left; background-color:#f0f0f0; width:30%;">Description of Goods</th>
-                        <th style="border:1px solid #000; padding:4px; text-align:right; background-color:#f0f0f0; width:10%;">HSN/SAC</th>
-                        <th style="border:1px solid #000; padding:4px; text-align:right; background-color:#f0f0f0; width:8%;">GST Rate</th>
-                        <th style="border:1px solid #000; padding:4px; text-align:right; background-color:#f0f0f0; width:12%;">Quantity</th>
-                        <th style="border:1px solid #000; padding:4px; text-align:right; background-color:#f0f0f0; width:12%;">Rate</th>
-                        <th style="border:1px solid #000; padding:4px; text-align:center; background-color:#f0f0f0; width:7%;">Per</th>
-                        <th style="border:1px solid #000; padding:4px; text-align:right; background-color:#f0f0f0; width:16%;">Amount</th>
+                        <th style="border:1px solid #000; padding:4px; text-align:left; background-color:#f0f0f0; width:25%;">Description of Goods</th>
+                        <th style="border:1px solid #000; padding:4px; text-align:right; background-color:#f0f0f0; width:9%;">HSN/SAC</th>
+                        <th style="border:1px solid #000; padding:4px; text-align:right; background-color:#f0f0f0; width:7%;">GST Rate</th>
+                        <th style="border:1px solid #000; padding:4px; text-align:right; background-color:#f0f0f0; width:10%;">Quantity</th>
+                        <th style="border:1px solid #000; padding:4px; text-align:right; background-color:#f0f0f0; width:11%;">Rate</th>
+                        <th style="border:1px solid #000; padding:4px; text-align:right; background-color:#f0f0f0; width:13%;">Rate (Incl. Tax)</th>
+                        <th style="border:1px solid #000; padding:4px; text-align:center; background-color:#f0f0f0; width:5%;">Per</th>
+                        <th style="border:1px solid #000; padding:4px; text-align:right; background-color:#f0f0f0; width:15%;">Amount</th>
                     </tr>
 
                     <!-- PRODUCT ROWS -->
@@ -230,6 +231,9 @@
                             <td style="border:1px solid #000; padding:4px; text-align:right;">
                                 &#8377; <t t-esc="doc.format_number(line.price_unit, digits=2)"/>
                             </td>
+                            <td style="border:1px solid #000; padding:4px; text-align:right;">
+                                &#8377; <t t-esc="doc.format_number(line.price_unit_incl, digits=2)"/>
+                            </td>
                             <td style="border:1px solid #000; padding:4px; text-align:center;" t-esc="line.product_uom_id.name or 'pcs'"/>
                             <td style="border:1px solid #000; padding:4px; text-align:right;">
                                 &#8377; <t t-esc="doc.format_number(line.price_subtotal, digits=2)"/>
@@ -239,7 +243,7 @@
 
                     <!-- SUBTOTAL ROW -->
                     <tr>
-                        <td style="border:1px solid #000; padding:4px;" colspan="7"></td>
+                        <td style="border:1px solid #000; padding:4px;" colspan="8"></td>
                         <td style="border:1px solid #000; padding:4px; text-align:right;">
                             &#8377; <t t-esc="doc.format_number(total_untaxed, digits=2)"/>
                         </td>
@@ -255,6 +259,7 @@
                                 <td style="border:1px solid #000; padding:4px;"></td>
                                 <td style="border:1px solid #000; padding:4px;"></td>
                                 <td style="border:1px solid #000; padding:4px; text-align:right;"><t t-esc="doc.format_rate(grp['cgst_rate'])"/></td>
+                                <td style="border:1px solid #000; padding:4px;"></td>
                                 <td style="border:1px solid #000; padding:4px; text-align:center;">%</td>
                                 <td style="border:1px solid #000; padding:4px; text-align:right;">&#8377; <t t-esc="doc.format_number(grp['cgst_amount'], digits=2)"/></td>
                             </tr>
@@ -267,6 +272,7 @@
                                 <td style="border:1px solid #000; padding:4px;"></td>
                                 <td style="border:1px solid #000; padding:4px;"></td>
                                 <td style="border:1px solid #000; padding:4px; text-align:right;"><t t-esc="doc.format_rate(grp['sgst_rate'])"/></td>
+                                <td style="border:1px solid #000; padding:4px;"></td>
                                 <td style="border:1px solid #000; padding:4px; text-align:center;">%</td>
                                 <td style="border:1px solid #000; padding:4px; text-align:right;">&#8377; <t t-esc="doc.format_number(grp['sgst_amount'], digits=2)"/></td>
                             </tr>
@@ -279,6 +285,7 @@
                                 <td style="border:1px solid #000; padding:4px;"></td>
                                 <td style="border:1px solid #000; padding:4px;"></td>
                                 <td style="border:1px solid #000; padding:4px; text-align:right;"><t t-esc="doc.format_rate(grp['igst_rate'])"/></td>
+                                <td style="border:1px solid #000; padding:4px;"></td>
                                 <td style="border:1px solid #000; padding:4px; text-align:center;">%</td>
                                 <td style="border:1px solid #000; padding:4px; text-align:right;">&#8377; <t t-esc="doc.format_number(grp['igst_amount'], digits=2)"/></td>
                             </tr>
@@ -296,6 +303,7 @@
                         </td>
                         <td style="border:1px solid #000; padding:4px;"></td>
                         <td style="border:1px solid #000; padding:4px;"></td>
+                        <td style="border:1px solid #000; padding:4px;"></td>
                         <td style="border:1px solid #000; padding:4px; text-align:right;">
                             <strong>&#8377; <t t-esc="doc.format_number(total_amount, digits=2)"/></strong>
                         </td>
@@ -303,7 +311,7 @@
 
                     <!-- AMOUNT IN WORDS ROW -->
                     <tr>
-                        <td style="border:1px solid #000; padding:6px;" colspan="8">
+                        <td style="border:1px solid #000; padding:6px;" colspan="9">
                             Amount Chargeable (in words)<br/>
                             <strong>
                                 <t t-esc="doc.get_amount_in_words_inr(total_amount)"/>
@@ -314,7 +322,7 @@
 
                     <!-- TAX SUMMARY ROW -->
                     <tr>
-                        <td style="border:1px solid #000; padding:0;" colspan="8">
+                        <td style="border:1px solid #000; padding:0;" colspan="9">
                             <table style="width:100%; border-collapse:collapse; font-size:11px;">
                                 <tr>
                                     <td style="width:20%; border-right:1px solid #000; border-bottom:1px solid #000; padding:4px;" rowspan="2">HSN/SAC</td>
@@ -416,7 +424,7 @@
 
                     <!-- COMPUTER GENERATED ROW -->
                     <tr>
-                        <td style="border:1px solid #000; padding:4px; text-align:center; font-size:10px;" colspan="8">
+                        <td style="border:1px solid #000; padding:4px; text-align:center; font-size:10px;" colspan="9">
                             This is a Computer Generated Invoice
                         </td>
                     </tr>
