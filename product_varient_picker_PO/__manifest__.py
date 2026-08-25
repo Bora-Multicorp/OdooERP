@@ -3,7 +3,7 @@
     'name': 'Product Variant Picker for Purchase Order',
     'version': '1.0',
     'category': 'Inventory/Purchase',
-    'summary': 'Product variant picker dialog for purchase order line items',
+    'summary': 'Product variant picker dialog for purchase order',
     'description': """
 Product Variant Picker for Purchase Order
 ==========================================
