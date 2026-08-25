@@ -3,6 +3,7 @@
     <template id="report_purchase_landing_cost_document">
         <t t-call="web.html_container">
             <t t-foreach="docs" t-as="doc">
+                <t t-set="doc" t-value="doc.sudo()"/>
                 <t t-call="web.external_layout">
                     <div class="page">
                         <h2>Net Landing Cost Report - <t t-esc="doc.purchase_order_id.name"/></h2>

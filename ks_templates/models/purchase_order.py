@@ -30,19 +30,20 @@ class PurchaseOrder(models.Model):
         Priority: manual rate (is_exchange=True) → system rate.
         """
         self.ensure_one()
-        inv_currency = self.currency_id
-        comp_currency = self.company_id.currency_id
+        order = self.sudo()
+        inv_currency = order.currency_id.sudo()
+        comp_currency = order.company_id.sudo().currency_id.sudo()
         if not inv_currency or not comp_currency or inv_currency == comp_currency:
             return {'has_exchange': False, 'large_rate': 1.0, 'small_rate': 1.0}
         try:
             # Use manually entered rate when is_exchange is enabled
-            if self.is_exchange and self.rate and self.rate > 0:
-                large_rate = self.rate
+            if order.is_exchange and order.rate and order.rate > 0:
+                large_rate = order.rate
                 small_rate = 1.0 / large_rate
             else:
                 # Fallback to system rate
-                large_rate = self.env['res.currency']._get_conversion_rate(
-                    inv_currency, comp_currency, self.company_id, fields.Date.today()
+                large_rate = self.env['res.currency'].sudo()._get_conversion_rate(
+                    inv_currency, comp_currency, order.company_id.sudo(), fields.Date.today()
                 )
                 small_rate = 1.0 / large_rate if large_rate else 1.0
             return {'has_exchange': True, 'large_rate': large_rate, 'small_rate': small_rate}
@@ -53,7 +54,7 @@ class PurchaseOrder(models.Model):
         """Get company PAN number (Indian localization field)"""
         self.ensure_one()
         try:
-            return self.company_id.l10n_in_pan or ''
+            return self.sudo().company_id.sudo().l10n_in_pan or ''
         except Exception:
             return ''
 
@@ -61,7 +62,7 @@ class PurchaseOrder(models.Model):
         """Get company IEC number"""
         self.ensure_one()
         try:
-            return self.company_id.iec_no or ''
+            return self.sudo().company_id.sudo().iec_no or ''
         except Exception:
             return ''
 
@@ -239,7 +240,7 @@ class PurchaseOrder(models.Model):
         """Calculate total discount amount before GST/IGST"""
         self.ensure_one()
         total_discount = 0.0
-        for line in self.order_line.filtered(lambda l: l.display_type not in ('line_section', 'line_note')):
+        for line in self.sudo().order_line.sudo().filtered(lambda l: l.display_type not in ('line_section', 'line_note')):
             if line.discount:
                 # Calculate discount amount: (price_unit * quantity * discount / 100)
                 discount_amount = (line.price_unit * line.product_qty * line.discount) / 100.0
@@ -249,8 +250,9 @@ class PurchaseOrder(models.Model):
     def get_cgst_sgst_info(self):
         """Get CGST and SGST information - split total tax equally (50% each)"""
         self.ensure_one()
+        order = self.sudo()
         # Get total tax amount
-        total_tax = self.amount_tax
+        total_tax = order.amount_tax
         
         # Split equally (50% each)
         cgst_amount = total_tax / 2.0
@@ -261,8 +263,8 @@ class PurchaseOrder(models.Model):
         sgst_rate = 0.0
         
         # Find CGST and SGST taxes from order lines
-        for line in self.order_line.filtered(lambda l: l.display_type not in ('line_section', 'line_note') and l.taxes_id):
-            for tax in line.taxes_id:
+        for line in order.order_line.sudo().filtered(lambda l: l.display_type not in ('line_section', 'line_note') and l.taxes_id):
+            for tax in line.taxes_id.sudo():
                 if hasattr(tax, 'l10n_in_tax_type'):
                     if tax.l10n_in_tax_type == 'cgst':
                         cgst_rate = tax.amount
@@ -270,9 +272,9 @@ class PurchaseOrder(models.Model):
                         sgst_rate = tax.amount
         
         # If rates not found, calculate from total tax and untaxed amount
-        if cgst_rate == 0.0 and sgst_rate == 0.0 and self.amount_untaxed > 0:
+        if cgst_rate == 0.0 and sgst_rate == 0.0 and order.amount_untaxed > 0:
             # Estimate rate from total tax
-            estimated_rate = (total_tax / self.amount_untaxed) * 100.0
+            estimated_rate = (total_tax / order.amount_untaxed) * 100.0
             cgst_rate = estimated_rate / 2.0
             sgst_rate = estimated_rate / 2.0
         
@@ -286,13 +288,14 @@ class PurchaseOrder(models.Model):
     def get_tds_info(self):
         """Get TDS (Tax Deducted at Source) information"""
         self.ensure_one()
+        order = self.sudo()
         tds_name = ''
         tds_amount = 0.0
         
         # Search for TDS taxes in order lines
         # TDS taxes typically have specific tags or names
-        for line in self.order_line.filtered(lambda l: l.display_type not in ('line_section', 'line_note') and l.taxes_id):
-            for tax in line.taxes_id:
+        for line in order.order_line.sudo().filtered(lambda l: l.display_type not in ('line_section', 'line_note') and l.taxes_id):
+            for tax in line.taxes_id.sudo():
                 # Check if tax is a withholding/TDS tax
                 # Look for TDS in tax name or check for withholding tags
                 tax_name_lower = (tax.name or '').lower()
@@ -307,12 +310,12 @@ class PurchaseOrder(models.Model):
         # If TDS not found in taxes, check for withholding moves (if invoice is created)
         if tds_amount == 0.0:
             # Check if there are any invoice moves with TDS
-            for invoice in self.invoice_ids.filtered(lambda inv: inv.state != 'cancel'):
+            for invoice in order.invoice_ids.sudo().filtered(lambda inv: inv.state != 'cancel'):
                 if hasattr(invoice, 'l10n_in_total_withholding_amount') and invoice.l10n_in_total_withholding_amount:
                     tds_amount = invoice.l10n_in_total_withholding_amount
                     # Try to get TDS name from withholding lines
                     if hasattr(invoice, 'l10n_in_withholding_line_ids') and invoice.l10n_in_withholding_line_ids:
-                        tds_tax = invoice.l10n_in_withholding_line_ids.mapped('tax_ids').filtered(
+                        tds_tax = invoice.l10n_in_withholding_line_ids.sudo().mapped('tax_ids').sudo().filtered(
                             lambda t: 'tds' in (t.name or '').lower() or 'withhold' in (t.name or '').lower() or '194' in (t.name or '').lower()
                         )
                         if tds_tax:
@@ -335,6 +338,7 @@ class PurchaseOrder(models.Model):
         CGST+SGST at same rate are combined: 'Input SGST/UTGST @2.5% + Input CGST @2.5%'
         """
         self.ensure_one()
+        order = self.sudo()
 
         def get_tax_type(tax):
             if hasattr(tax, 'l10n_in_tax_type') and tax.l10n_in_tax_type:
@@ -357,15 +361,15 @@ class PurchaseOrder(models.Model):
             key = (tax_type, rate)
             raw[key] = raw.get(key, 0.0) + amount
 
-        for line in self.order_line.filtered(lambda l: l.display_type not in ('line_section', 'line_note')):
-            for tax in line.taxes_id:
+        for line in order.order_line.sudo().filtered(lambda l: l.display_type not in ('line_section', 'line_note')):
+            for tax in line.taxes_id.sudo():
                 if tax.amount_type == 'group':
                     parent_type = get_tax_type(tax)
                     if parent_type:
-                        total_rate = sum(c.amount for c in tax.children_tax_ids)
+                        total_rate = sum(c.amount for c in tax.children_tax_ids.sudo())
                         add(parent_type, total_rate, line.price_subtotal * total_rate / 100.0)
                     else:
-                        for child in tax.children_tax_ids:
+                        for child in tax.children_tax_ids.sudo():
                             child_type = get_tax_type(child)
                             if child_type:
                                 add(child_type, child.amount, line.price_subtotal * child.amount / 100.0)
@@ -390,6 +394,7 @@ class PurchaseOrder(models.Model):
         """
         self.ensure_one()
         result = []
+        line = line.sudo()
 
         def get_tax_type(tax):
             if hasattr(tax, 'l10n_in_tax_type') and tax.l10n_in_tax_type:
@@ -405,15 +410,15 @@ class PurchaseOrder(models.Model):
 
         type_labels = {'igst': 'IGST', 'cgst': 'CGST', 'sgst': 'SGST/UTGST'}
 
-        for tax in line.taxes_id:
+        for tax in line.taxes_id.sudo():
             if tax.amount_type == 'group':
                 parent_type = get_tax_type(tax)
                 if parent_type:
-                    total_rate = sum(c.amount for c in tax.children_tax_ids)
+                    total_rate = sum(c.amount for c in tax.children_tax_ids.sudo())
                     label = type_labels.get(parent_type, parent_type.upper())
                     result.append(f"Input {label} @{total_rate:.0f}%")
                 else:
-                    for child in tax.children_tax_ids:
+                    for child in tax.children_tax_ids.sudo():
                         child_type = get_tax_type(child)
                         if child_type:
                             label = type_labels.get(child_type, child_type.upper())
@@ -431,30 +436,35 @@ class PurchaseOrder(models.Model):
         self.ensure_one()
 
         def is_printable(line):
+            line = line.sudo()
             if line.display_type in ('line_section', 'line_note'):
                 return False
-            if line.product_id and line.product_id.product_tmpl_id.is_advance_payment_product:
+            if line.product_id and line.product_id.sudo().product_tmpl_id.sudo().is_advance_payment_product:
                 return False
             return True
 
-        return self.order_line.filtered(is_printable)
+        return self.sudo().order_line.sudo().filtered(is_printable)
 
     def get_line_hsn_code(self, line):
         """Get HSN/SAC code from purchase order line safely"""
+        line = line.sudo()
         try:
             # Get HSN/SAC code from product template (primary source)
-            if line.product_id and line.product_id.product_tmpl_id:
-                if hasattr(line.product_id.product_tmpl_id, 'l10n_in_hsn_code') and line.product_id.product_tmpl_id.l10n_in_hsn_code:
-                    return line.product_id.product_tmpl_id.l10n_in_hsn_code
-        except:
+            if line.product_id and line.product_id.sudo().product_tmpl_id.sudo():
+                tmpl = line.product_id.sudo().product_tmpl_id.sudo()
+                if hasattr(tmpl, 'l10n_in_hsn_code') and tmpl.l10n_in_hsn_code:
+                    return tmpl.l10n_in_hsn_code
+        except Exception:
             pass
         
         # Fallback: Try to get from product variant
         try:
-            if line.product_id and hasattr(line.product_id, 'l10n_in_hsn_code') and line.product_id.l10n_in_hsn_code:
-                return line.product_id.l10n_in_hsn_code
-        except:
+            prod = line.product_id.sudo()
+            if prod and hasattr(prod, 'l10n_in_hsn_code') and prod.l10n_in_hsn_code:
+                return prod.l10n_in_hsn_code
+        except Exception:
             pass
         
         return ''
+
 

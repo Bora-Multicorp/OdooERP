@@ -45,7 +45,7 @@ class PurchaseOrderOtekReportWizard(models.TransientModel):
 
     def _get_otek_pol_domain(self):
         """Domain for purchase order lines: Otek brand + date_order in range."""
-        brand = self.env['product.brand'].search([('name', '=ilike', 'otek')], limit=1)
+        brand = self.env['product.brand'].sudo().search([('name', '=ilike', 'otek')], limit=1)
         if not brand:
             raise UserError(_("Brand 'Otek' not found. Please create the brand first."))
         return [
@@ -60,17 +60,17 @@ class PurchaseOrderOtekReportWizard(models.TransientModel):
         """Create report lines and open tree view."""
         self.ensure_one()
         pol_domain = self._get_otek_pol_domain()
-        pol_lines = self.env['purchase.order.line'].search(pol_domain, order='order_id, id')
+        pol_lines = self.env['purchase.order.line'].sudo().search(pol_domain, order='order_id, id')
         if not pol_lines:
             raise UserError(_("No purchase order lines found with Otek brand products in the selected date range."))
 
-        ReportLine = self.env['ks.purchase.order.otek.report.line']
+        ReportLine = self.env['ks.purchase.order.otek.report.line'].sudo()
         ReportLine.search([('wizard_id', '=', self.id)]).unlink()
 
         for line in pol_lines:
-            order = line.order_id
-            product = line.product_id
-            product_template = product.product_tmpl_id
+            order = line.sudo().order_id.sudo()
+            product = line.sudo().product_id.sudo()
+            product_template = product.sudo().product_tmpl_id.sudo()
             qty = line.product_qty or 0.0
             if order.is_exchange:
                 rate = order.rate
