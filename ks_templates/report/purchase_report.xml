@@ -63,7 +63,7 @@
             <!-- HEADER ROW: Company + Invoice Details -->
             <tr>
                 <!-- LEFT SIDE -->
-                <td style="width:55%; vertical-align:top; border:1px solid #000; padding:6px;" colspan="3">
+                <td style="width:55%; vertical-align:top; border:1px solid #000; padding:6px;" colspan="4">
                     Invoice To<br/>
                     <strong t-esc="doc.company_id.sudo().name or ''"/><br/>
                     <t t-if="doc.company_id.sudo().partner_id.sudo().street" t-esc="doc.company_id.sudo().partner_id.sudo().street"/><br/>
