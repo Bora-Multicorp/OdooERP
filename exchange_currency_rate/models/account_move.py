@@ -99,8 +99,7 @@ class AccountMove(models.Model):
             elif move.purchase_order_id:
                 move.is_exchange = move.purchase_order_id.is_exchange
             else:
-                # Retain manually toggled/existing value safely
-                move.is_exchange = move.is_exchange or False
+                move.is_exchange = False
 
     def _inverse_is_exchange(self):
         """ Allow manual editing of is_exchange in account.move """
@@ -115,8 +114,7 @@ class AccountMove(models.Model):
             elif move.purchase_order_id:
                 move.rate = move.purchase_order_id.rate
             else:
-                # Retain manually toggled/existing value safely
-                move.rate = move.rate or 0.0
+                move.rate = 0.0
 
     def _inverse_rate(self):
         """ Allow manual editing of rate in account.move """

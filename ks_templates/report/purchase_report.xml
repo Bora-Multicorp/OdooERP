@@ -32,12 +32,13 @@
     <t t-call="web.basic_layout">
         <t t-foreach="docs" t-as="doc">
         <main>
+        <t t-set="doc" t-value="doc.sudo()"/>
 
         <!-- Variables -->
         <t t-set="total_qty" t-value="sum(line.product_qty for line in doc.get_printable_order_lines())"/>
         <t t-set="total_usd" t-value="doc.amount_untaxed + doc.amount_tax"/>
-        <t t-set="invoice_currency" t-value="doc.currency_id"/>
-        <t t-set="company_currency" t-value="doc.company_id.currency_id"/>
+        <t t-set="invoice_currency" t-value="doc.currency_id.sudo()"/>
+        <t t-set="company_currency" t-value="doc.company_id.sudo().currency_id.sudo()"/>
         <t t-set="conversion_date" t-value="doc.date_order or doc.create_date.date()"/>
         <t t-set="total_invoice_amount" t-value="total_usd"/>
         <t t-set="po_rate_info" t-value="doc.get_exchange_rate_info()"/>
@@ -62,55 +63,56 @@
             <!-- HEADER ROW: Company + Invoice Details -->
             <tr>
                 <!-- LEFT SIDE -->
-                <td style="width:55%; vertical-align:top; border:1px solid #000; padding:6px;" colspan="3">
+                <td style="width:55%; vertical-align:top; border:1px solid #000; padding:6px;" colspan="4">
                     Invoice To<br/>
-                    <strong t-esc="doc.company_id.name or ''"/><br/>
-                    <t t-if="doc.company_id.partner_id.street" t-esc="doc.company_id.partner_id.street"/><br/>
-                    <t t-if="doc.company_id.partner_id.street2" t-esc="doc.company_id.partner_id.street2"/><br/>
-                    <t t-if="doc.company_id.partner_id.city" t-esc="doc.company_id.partner_id.city"/>
-                    <t t-if="doc.company_id.partner_id.city and doc.company_id.partner_id.country_id">, </t>
-                    <t t-if="doc.company_id.partner_id.country_id" t-esc="doc.company_id.partner_id.country_id.name or ''"/><br/>
-                    <t t-if="doc.company_id.partner_id.zip">P.O.Box <t t-esc="doc.company_id.partner_id.zip"/><br/></t>
-                    <t t-if="doc.company_id.partner_id.state_id">
-                        <t t-if="doc.company_id.partner_id.country_id.code == 'IN'">State : </t>
+                    <strong t-esc="doc.company_id.sudo().name or ''"/><br/>
+                    <t t-if="doc.company_id.sudo().partner_id.sudo().street" t-esc="doc.company_id.sudo().partner_id.sudo().street"/><br/>
+                    <t t-if="doc.company_id.sudo().partner_id.sudo().street2" t-esc="doc.company_id.sudo().partner_id.sudo().street2"/><br/>
+                    <t t-if="doc.company_id.sudo().partner_id.sudo().city" t-esc="doc.company_id.sudo().partner_id.sudo().city"/>
+                    <t t-if="doc.company_id.sudo().partner_id.sudo().city and doc.company_id.sudo().partner_id.sudo().country_id">, </t>
+                    <t t-if="doc.company_id.sudo().partner_id.sudo().country_id" t-esc="doc.company_id.sudo().partner_id.sudo().country_id.sudo().name or ''"/><br/>
+                    <t t-if="doc.company_id.sudo().partner_id.sudo().zip">P.O.Box <t t-esc="doc.company_id.sudo().partner_id.sudo().zip"/><br/></t>
+                    <t t-if="doc.company_id.sudo().partner_id.sudo().state_id">
+                        <t t-if="doc.company_id.sudo().partner_id.sudo().country_id.sudo().code == 'IN'">State : </t>
                         <t t-else="">Emirate : </t>
-                        <t t-esc="doc.company_id.partner_id.state_id.name or ''"/><br/>
+                        <t t-esc="doc.company_id.sudo().partner_id.sudo().state_id.sudo().name or ''"/><br/>
                     </t>
-                    <t t-if="doc.company_id.vat">
-                        <t t-if="doc.company_id.partner_id.country_id.code == 'IN'">GSTN : </t>
+                    <t t-if="doc.company_id.sudo().vat">
+                        <t t-if="doc.company_id.sudo().partner_id.sudo().country_id.sudo().code == 'IN'">GSTN : </t>
                         <t t-else="">TRN : </t>
-                        <t t-esc="doc.company_id.vat"/><br/>
+                        <t t-esc="doc.company_id.sudo().vat"/><br/>
                     </t>
-                    <t t-if="doc.company_id.partner_id.country_id.code == 'IN'">
+                    <t t-if="doc.company_id.sudo().partner_id.sudo().country_id.sudo().code == 'IN'">
                         <t t-set="company_pan" t-value="doc.get_company_pan()"/>
                         <t t-if="company_pan">PAN : <t t-esc="company_pan"/><br/></t>
                         <t t-set="company_iec" t-value="doc.get_company_iec()"/>
                         <t t-if="company_iec">IEC No : <t t-esc="company_iec"/><br/></t>
                     </t>
-                    <t t-if="doc.company_id.partner_id.email">E-Mail : <t t-esc="doc.company_id.partner_id.email"/></t>
+                    <t t-if="doc.company_id.sudo().partner_id.sudo().email">E-Mail : <t t-esc="doc.company_id.sudo().partner_id.sudo().email"/></t>
                     <div style="border-top:1px solid black; height:1px;"/>
-                    <t t-set="consignee" t-value="doc.picking_type_id.warehouse_id.partner_id or doc.dest_address_id"/>
+                    <t t-set="consignee" t-value="(doc.picking_type_id.sudo().warehouse_id.sudo().partner_id or doc.dest_address_id).sudo()"/>
                     Consignee (Ship to)<br/>
-                    <strong t-esc="consignee.name or doc.company_id.name or ''"/><br/>
-                    <t t-if="consignee and consignee.street and consignee.street != consignee.name"><t t-esc="consignee.street"/><br/></t>
-                    <t t-if="consignee and consignee.street2 and consignee.street2 != consignee.name"><t t-esc="consignee.street2"/><br/></t>
-                    <t t-if="consignee and consignee.city"><t t-esc="consignee.city"/><t t-if="consignee.state_id">, <t t-esc="consignee.state_id.name or ''"/></t><br/></t>
-                    <t t-if="consignee and consignee.country_id"><t t-esc="consignee.country_id.name or ''"/><br/></t>
-                    <t t-if="consignee and consignee.vat">TRN: <t t-esc="consignee.vat"/><br/></t>
+                    <strong t-esc="consignee and consignee.sudo().name or doc.company_id.sudo().name or ''"/><br/>
+                    <t t-if="consignee and consignee.sudo().street and consignee.sudo().street != consignee.sudo().name"><t t-esc="consignee.sudo().street"/><br/></t>
+                    <t t-if="consignee and consignee.sudo().street2 and consignee.sudo().street2 != consignee.sudo().name"><t t-esc="consignee.sudo().street2"/><br/></t>
+                    <t t-if="consignee and consignee.sudo().city"><t t-esc="consignee.sudo().city"/><t t-if="consignee.sudo().state_id">, <t t-esc="consignee.sudo().state_id.sudo().name or ''"/></t><br/></t>
+                    <t t-if="consignee and consignee.sudo().country_id"><t t-esc="consignee.sudo().country_id.sudo().name or ''"/><br/></t>
+                    <t t-if="consignee and consignee.sudo().vat">TRN: <t t-esc="consignee.sudo().vat"/><br/></t>
                     <div style="border-top:1px solid black; height:1px;"/>
                     Supplier<br/>
-                    <strong t-esc="doc.partner_id.name or ''"/><br/>
-                    <t t-if="doc.partner_id.street" t-esc="doc.partner_id.street"/><br/>
-                    <t t-if="doc.partner_id.street2" t-esc="doc.partner_id.street2"/><br/>
-                    <t t-if="doc.partner_id.city" t-esc="doc.partner_id.city"/>
-                    <t t-if="doc.partner_id.city and doc.partner_id.state_id">, </t>
-                    <t t-if="doc.partner_id.state_id" t-esc="doc.partner_id.state_id.name or ''"/>
-                    <t t-if="doc.partner_id.city and doc.partner_id.country_id">, </t>
-                    <t t-if="doc.partner_id.country_id" t-esc="doc.partner_id.country_id.name or ''"/><br/>
-                    <t t-if="doc.partner_id.country_id">Country : <t t-esc="doc.partner_id.country_id.name or ''"/><br/></t>
-                    <t t-if="doc.partner_id.vat">GSTIN : <t t-esc="doc.partner_id.vat"/><br/></t>
-                    <t t-if="doc.partner_id.l10n_in_pan">PAN : <t t-esc="doc.partner_id.l10n_in_pan"/></t>
+                    <strong t-esc="doc.partner_id.sudo().name or ''"/><br/>
+                    <t t-if="doc.partner_id.sudo().street" t-esc="doc.partner_id.sudo().street"/><br/>
+                    <t t-if="doc.partner_id.sudo().street2" t-esc="doc.partner_id.sudo().street2"/><br/>
+                    <t t-if="doc.partner_id.sudo().city" t-esc="doc.partner_id.sudo().city"/>
+                    <t t-if="doc.partner_id.sudo().city and doc.partner_id.sudo().state_id">, </t>
+                    <t t-if="doc.partner_id.sudo().state_id" t-esc="doc.partner_id.sudo().state_id.sudo().name or ''"/>
+                    <t t-if="doc.partner_id.sudo().city and doc.partner_id.sudo().country_id">, </t>
+                    <t t-if="doc.partner_id.sudo().country_id" t-esc="doc.partner_id.sudo().country_id.sudo().name or ''"/><br/>
+                    <t t-if="doc.partner_id.sudo().country_id">Country : <t t-esc="doc.partner_id.sudo().country_id.sudo().name or ''"/><br/></t>
+                    <t t-if="doc.partner_id.sudo().vat">GSTIN : <t t-esc="doc.partner_id.sudo().vat"/><br/></t>
+                    <t t-if="doc.partner_id.sudo().l10n_in_pan">PAN : <t t-esc="doc.partner_id.sudo().l10n_in_pan"/></t>
                 </td>
+
                 <!-- RIGHT SIDE -->
                 <td style="width:45%; vertical-align:top; padding:0; border:1px solid #000;" colspan="3">
                     <table style="width:100%; border-collapse:collapse; border-color:white;">

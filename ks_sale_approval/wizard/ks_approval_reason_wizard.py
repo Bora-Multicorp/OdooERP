@@ -27,12 +27,6 @@ class KsApprovalReasonWizard(models.TransientModel):
         help='Please provide a reason (required)',
     )
     
-    ks_price_below_purchase_warning = fields.Text(
-        string='Price Below Purchase Warning',
-        related='ks_sale_order_id.ks_price_below_purchase_warning',
-        readonly=True,
-    )
-    
     ks_action_type_label = fields.Char(
         string='Action Type',
         compute='_compute_action_type_label',

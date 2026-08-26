@@ -286,10 +286,33 @@ class SaleOrderLine(models.Model):
         except Exception:
             return None
 
+    @api.constrains('price_unit', 'product_id', 'order_id', 'display_type')
     def _check_sale_price_not_below_latest_purchase(self):
         """
-        Check if sales price is below latest purchase price.
-        Warning dialog and approver checks are handled on sale.order level.
+        Sales price must not be below latest purchase price.
+        Comparison is done in order currency: sale price is already in order currency;
+        latest purchase price is converted to order currency (e.g. INR → USD when SO is in USD).
         """
-        pass
-
+        for line in self:
+            if line.display_type or not line.product_id or not line.order_id:
+                continue
+            min_purchase = line._ks_get_latest_purchase_price_in_order_currency()
+            if min_purchase is None:
+                continue
+            sale_price = line._ks_get_sale_price_in_order_currency()
+            if sale_price is None:
+                continue
+            if float_compare(sale_price, min_purchase, precision_digits=2) < 0:
+                order = line.order_id
+                order_cur = order.currency_id
+                raise ValidationError(_(
+                    "Sales price cannot be below the latest purchase price. "
+                    "Product '%(product)s': unit price in order currency (%(order_cur)s) is %(sale)s, "
+                    "but latest purchase price (converted to %(order_cur)s) is %(min)s. "
+                    "Please set unit price to at least %(min)s %(order_cur)s."
+                ) % {
+                    'product': line.product_id.display_name,
+                    'order_cur': order_cur.name,
+                    'sale': order_cur.round(sale_price),
+                    'min': order_cur.round(min_purchase),
+                })

@@ -65,12 +65,12 @@ class StockPicking(models.Model):
     def _compute_ks_delivery_admin(self):
         is_admin = self._is_delivery_admin_user()
         for rec in self:
-            rec.ks_is_delivery_admin = is_admin if rec.picking_type_code == 'outgoing' else False
+            rec.ks_is_delivery_admin = is_admin
 
     @api.depends_context('uid')
     def _compute_ks_delivery_pm_user(self):
         for rec in self:
-            if rec.picking_type_code == 'outgoing' and rec._has_delivery_approval_config():
+            if rec._has_delivery_approval_config():
                 config = rec._get_delivery_approval_config()
                 rec.ks_is_delivery_pm_user = self.env.user in config.get_all_pm_users()
             else:
@@ -79,13 +79,13 @@ class StockPicking(models.Model):
     @api.depends('state')
     def _compute_ks_delivery_dual_approval(self):
         for rec in self:
-            if rec.picking_type_code == 'outgoing' and rec._has_delivery_approval_config():
+            if rec._has_delivery_approval_config():
                 rec.ks_is_delivery_dual_approval = rec._get_delivery_approval_config().is_dual_approval()
             else:
                 rec.ks_is_delivery_dual_approval = False
 
     @api.depends(
-        'state', 'picking_type_code',
+        'state',
         'ks_is_delivery_pm_user',
         'ks_validate_pm1_id', 'ks_validate_pm2_id',
         'ks_validate_pm1_approved', 'ks_validate_pm2_approved',
@@ -98,9 +98,6 @@ class StockPicking(models.Model):
             rec.ks_show_delivery_approve_button = False
             rec.ks_show_delivery_reject_button = False
             rec.ks_show_delivery_update_button = False
-
-            if rec.picking_type_code != 'outgoing':
-                continue
 
             is_admin = rec._is_delivery_admin_user()
             is_pm = rec.ks_is_delivery_pm_user

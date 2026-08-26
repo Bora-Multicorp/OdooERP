@@ -84,13 +84,13 @@ class PurchaseOrderReportController(http.Controller):
             except (ValueError, TypeError):
                 ids = []
             if ids:
-                report_lines = request.env['ks.purchase.order.otek.report.line'].browse(ids).exists()
+                report_lines = request.env['ks.purchase.order.otek.report.line'].sudo().browse(ids).exists()
                 if report_lines:
                     return self._export_report_lines_xlsx(report_lines)
             # Fall through to legacy if no valid report lines
 
         # Legacy: all Otek purchase order lines (no date filter)
-        brand = request.env['product.brand'].search([('name', '=ilike', 'otek')], limit=1)
+        brand = request.env['product.brand'].sudo().search([('name', '=ilike', 'otek')], limit=1)
         if not brand:
             raise UserError(_("Brand 'otek' not found. Please create the brand first."))
 
@@ -98,9 +98,10 @@ class PurchaseOrderReportController(http.Controller):
             ('product_id.product_tmpl_id.brand_id', '=', brand.id),
             ('display_type', '=', False),
         ]
-        pol_lines = request.env['purchase.order.line'].search(pol_domain)
+        pol_lines = request.env['purchase.order.line'].sudo().search(pol_domain)
         if not pol_lines:
             raise UserError(_("No purchase order lines found with Otek brand products."))
+
 
         return self._export_pol_lines_xlsx(pol_lines)
 

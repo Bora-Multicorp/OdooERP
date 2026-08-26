@@ -53,14 +53,14 @@
                         string="Select Approvers"
                         type="object"
                         class="btn-primary"
-                        invisible="picking_type_code != 'outgoing' or state != 'approval_pending' or ks_validate_pm1_id"/>
+                        invisible="state != 'approval_pending' or ks_validate_pm1_id"/>
 
                 <!-- Normal User: Update Approvals while pending -->
                 <button name="action_update_delivery_approvals"
                         string="Update Approvals"
                         type="object"
                         class="btn-warning"
-                        invisible="picking_type_code != 'outgoing' or not ks_show_delivery_update_button"
+                        invisible="not ks_show_delivery_update_button"
                         confirm="This will cancel the current approval request and let you choose new approvers. Continue?"/>
 
                 <!-- PM: Approve -->
@@ -68,14 +68,14 @@
                         string="Approve"
                         type="object"
                         class="btn-success"
-                        invisible="picking_type_code != 'outgoing' or not ks_show_delivery_approve_button"/>
+                        invisible="not ks_show_delivery_approve_button"/>
 
                 <!-- PM: Reject -->
                 <button name="ks_action_reject_delivery"
                         string="Reject"
                         type="object"
                         class="btn-danger"
-                        invisible="picking_type_code != 'outgoing' or not ks_show_delivery_reject_button"/>
+                        invisible="not ks_show_delivery_reject_button"/>
 
             </xpath>
 
@@ -103,7 +103,7 @@
 
                 <!-- Approval Pending -->
                 <div class="alert alert-warning mb-0"
-                     invisible="picking_type_code != 'outgoing' or state != 'approval_pending'"
+                     invisible="state != 'approval_pending'"
                      role="alert">
                     <strong>⏳ Approval Pending</strong> — This delivery is waiting for PM approval before it can be validated.
                     <br/>
@@ -122,14 +122,14 @@
 
                 <!-- Approved — delivery is being completed automatically -->
                 <div class="alert alert-success mb-0"
-                     invisible="picking_type_code != 'outgoing' or not ks_delivery_approved or state == 'done' or ks_is_delivery_admin or ks_is_delivery_pm_user"
+                     invisible="not ks_delivery_approved or state == 'done' or ks_is_delivery_admin or ks_is_delivery_pm_user"
                      role="alert">
                     ✅ <strong>Approved</strong> — Your delivery has been approved and is being completed.
                 </div>
 
                 <!-- Not yet submitted — normal user, picking in Ready state only -->
                 <div class="alert alert-info mb-0"
-                     invisible="picking_type_code != 'outgoing' or state != 'assigned' or ks_delivery_approved or ks_is_delivery_admin or ks_is_delivery_pm_user"
+                     invisible="state != 'assigned' or ks_delivery_approved or ks_is_delivery_admin or ks_is_delivery_pm_user"
                      role="alert">
                     🔒 <strong>Approval Required</strong> — Click <strong>Validate</strong> to submit this delivery for approval.
                 </div>
@@ -141,7 +141,7 @@
             <!-- ============================================================ -->
             <xpath expr="//notebook" position="inside">
                 <page string="Approval History" name="delivery_approval_history"
-                      invisible="picking_type_code != 'outgoing' or (state != 'approval_pending' and not ks_validate_pm1_id)">
+                      invisible="state != 'approval_pending' and not ks_validate_pm1_id">
                     <group>
                         <group string="Approval Request">
                             <field name="ks_validate_request_user_id" string="Requested By" readonly="1"/>

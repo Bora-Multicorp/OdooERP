@@ -452,55 +452,34 @@ class SaleOrder(models.Model):
         """
         return bool(self.env.user.is_custom_admin)
 
-    ks_price_below_purchase_warning = fields.Text(
-        string='Price Below Purchase Warning',
-        compute='_compute_ks_price_below_purchase_warning',
-    )
-
-    @api.depends('order_line.price_unit', 'order_line.product_id', 'currency_id', 'date_order', 'is_exchange', 'rate')
-    def _compute_ks_price_below_purchase_warning(self):
-        """Compute warning message if any line unit price is below latest purchase price (in order currency)."""
-        for order in self:
-            warning_msgs = []
-            for line in order.order_line:
-                if line.display_type or not line.product_id:
-                    continue
-                min_purchase = line._ks_get_latest_purchase_price_in_order_currency()
-                if min_purchase is None:
-                    continue
-                sale_price = line._ks_get_sale_price_in_order_currency()
-                if sale_price is None:
-                    continue
-                if float_compare(sale_price, min_purchase, precision_digits=2) < 0:
-                    order_cur = order.currency_id
-                    warning_msgs.append(_(
-                        "Product '%(product)s': unit price in order currency (%(order_cur)s) is %(sale)s, "
-                        "but latest purchase price (converted to %(order_cur)s) is %(min)s. "
-                        "Minimum recommended price: %(min)s %(order_cur)s."
-                    ) % {
-                        'product': line.product_id.display_name,
-                        'order_cur': order_cur.name,
-                        'sale': order_cur.round(sale_price),
-                        'min': order_cur.round(min_purchase),
-                    })
-            if warning_msgs:
-                order.ks_price_below_purchase_warning = _(
-                    "Sales price cannot be below the latest purchase price.\n"
-                ) + "\n".join(warning_msgs)
-            else:
-                order.ks_price_below_purchase_warning = False
-
     # ===== Override Confirm Action =====
 
     def _confirmation_error_message(self):
-        """Standard confirmation error message check."""
-        return super()._confirmation_error_message()
+        """Include check: sales price must not be below latest purchase price (in order currency)."""
+        msg = super()._confirmation_error_message()
+        if msg:
+            return msg
+        self.ensure_one()
+        for line in self.order_line:
+            if line.display_type or not line.product_id:
+                continue
+            min_purchase = line._ks_get_latest_purchase_price_in_order_currency()
+            if min_purchase is None:
+                continue
+            sale_price = line._ks_get_sale_price_in_order_currency()
+            if sale_price is None:
+                continue
+            if float_compare(sale_price, min_purchase, precision_digits=2) < 0:
+                order_cur = self.currency_id
+                return _(
+                    "Sales price cannot be below latest purchase price. "
+                    "Product '%s': unit price in order currency (%s) is below latest purchase price (min %s %s)."
+                ) % (line.product_id.display_name, order_cur.name, order_cur.round(min_purchase), order_cur.name)
+        return False
 
     def action_confirm(self):
         """
         Override:
-        - Check if sales price is below latest purchase price. If so and not bypassed,
-          open warning wizard allowing continuation of order creation.
         - Custom admin (is_custom_admin): Confirm immediately (bypass all approval)
         - PM users (from config): Confirm immediately (standard flow)
         - Normal users: Open approval request wizard to show recipients
@@ -513,20 +492,6 @@ class SaleOrder(models.Model):
             error_msg = order._confirmation_error_message()
             if error_msg:
                 raise UserError(error_msg)
-
-            # Price warning check: show warning wizard if price < latest purchase price and not bypassed
-            if order.ks_price_below_purchase_warning and not self.env.context.get('bypass_price_warning'):
-                return {
-                    'name': _('Sales Price Warning'),
-                    'type': 'ir.actions.act_window',
-                    'res_model': 'ks.sale.price.warning.wizard',
-                    'view_mode': 'form',
-                    'target': 'new',
-                    'context': {
-                        'default_ks_sale_order_id': order.id,
-                        'default_ks_warning_message': order.ks_price_below_purchase_warning,
-                    },
-                }
 
             # Custom admin bypasses all approval restrictions (no group check)
             if order._is_admin_user():

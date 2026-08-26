@@ -16,15 +16,6 @@ class AccountMove(models.Model):
              'Example: If total is 200 USD and rate is 50 (1 USD = 50 INR), then exchanged currency amount = 200 × 50 = 10,000 INR',
     )
 
-    @api.onchange("currency_id")
-    def _onchange_currency_id_update_lines(self):
-        """Force line currency and custom exchange fields to update in draft UI."""
-        for move in self:
-            if move.state == "draft" and move.currency_id:
-                for line in move.line_ids:
-                    if line.display_type != "cogs":
-                        line.currency_id = move.currency_id
-
     @api.depends('amount_total', 'rate', 'currency_id', 'company_currency_id', 'is_exchange', 'invoice_line_ids.price_subtotal')
     def _compute_exchanged_amount(self):
         """Calculate exchanged amount based on total amount and exchange rate
@@ -65,22 +56,6 @@ class AccountMoveLine(models.Model):
         help='Calculated as: Line Total / Exchange Rate. '
              'Example: If line total is 100 USD and rate is 50, then exchanged currency amount = 100 / 50 = 2',
     )
-
-    @api.depends("currency_id", "company_id", "move_id.invoice_currency_rate", "move_id.date", "move_id.is_exchange", "move_id.rate",)
-    def _compute_currency_rate(self):
-        super()._compute_currency_rate()
-        for line in self:
-            move = line.move_id
-            if move.is_exchange and move.rate:
-                line.currency_rate = move.rate
-
-    @api.depends("amount_currency", "move_id")
-    def _compute_balance(self):
-        super()._compute_balance()
-        for line in self:
-            move = line.move_id
-            if (move.is_exchange and move.rate and line.amount_currency and line.currency_id != line.company_currency_id and line.display_type not in ("line_section", "line_note")):
-                line.balance = line.amount_currency * move.rate
 
     @api.depends('price_subtotal', 'price_unit', 'quantity', 'discount', 'move_id.rate', 'move_id.currency_id', 'move_id.company_currency_id', 'move_id.is_exchange')
     def _compute_exchanged_amount(self):
