@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_purchase_order_form_product_picker" model="ir.ui.view">
+        <field name="name">purchase.order.form.product.picker</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='order_line']//field[@name='product_id']" position="replace">
+                <field name="product_template_id"
+                       string="Product"
+                       widget="pol_product_many2one"
+                       context="{
+                            'partner_id': parent.partner_id,
+                            'quantity': product_qty,
+                            'company_id': parent.company_id,
+                            'default_uom_id': product_uom,
+                            'default_list_price': price_unit,
+                       }"
+                       options="{'no_create': True, 'no_create_edit': True}"
+                       domain="[('purchase_ok', '=', True), '|', ('company_id', '=', False), ('company_id', '=', parent.company_id)]"
+                       placeholder="Type to find a product..."/>
+                <field name="product_id" column_invisible="1"/>
+                <field name="is_configurable_product" column_invisible="1"/>
+                <field name="product_template_attribute_value_ids" column_invisible="1"/>
+                <field name="product_no_variant_attribute_value_ids" column_invisible="1"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

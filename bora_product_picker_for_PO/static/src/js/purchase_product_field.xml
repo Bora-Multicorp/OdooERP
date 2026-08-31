@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
-    <t t-name="product_varient_picker_PO.PurchaseProductField" t-inherit="account.ProductLabelSectionAndNoteField" t-inherit-mode="primary">
+    <t t-name="purchase.PurchaseProductField" t-inherit="account.ProductLabelSectionAndNoteField" t-inherit-mode="primary">
         <xpath expr="//button[@t-if='hasExternalButton']" position="before">
             <t t-if="hasConfigurationButton">
                 <button
