@@ -13,11 +13,6 @@ _logger = logging.getLogger(__name__)
 class CustomContact(models.Model):
     _inherit = 'res.partner'
 
-    _sql_constraints = [
-        # SQL-level constraint (optional if email is NULLable)
-        ('unique_email', 'UNIQUE(email)', 'Email address must be unique.')
-    ]
-
     is_expired = fields.Boolean(compute='_compute_is_expired')
     has_expired_docs = fields.Boolean(compute='_compute_has_expired_docs',
                                       help="True when any overseas KYC document expiry date has passed.")
@@ -83,20 +78,18 @@ class CustomContact(models.Model):
                 )
 
     @api.constrains('email')
-    def _check_duplicate_email(self):
+    def _check_email_format(self):
         """
-        Validate email format and ensure uniqueness.
+        Validate email format.
 
         Email:
             - Must follow a basic valid pattern.
             - Regex: ^[\w\.-]+@[\w\.-]+\.\w+$
-            - Must be unique across all partners (case-insensitive).
 
         Raises
         ------
         ValidationError:
-            If email format is invalid or the email is already assigned
-            to another partner.
+            If email format is invalid.
         """
         email_regex = re.compile(r'^[\w\.-]+@[\w\.-]+\.\w+$')
 
@@ -111,17 +104,6 @@ class CustomContact(models.Model):
             if not email_regex.match(email):
                 raise ValidationError(
                     _("Invalid email format: %s. Expected format: user@example.com.") % email
-                )
-
-            # Check duplicate email (case insensitive)
-            existing = self.env['res.partner'].search([
-                ('email', '=ilike', email),
-                ('id', '!=', rec.id)
-            ], limit=1)
-
-            if existing:
-                raise ValidationError(
-                    _("The email address '%s' is already used by another contact.") % email
                 )
 
     # @api.constrains('l10n_in_pan')
