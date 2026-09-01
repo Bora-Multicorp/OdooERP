@@ -10,8 +10,9 @@
                     <field name="show_IMEI_field2" invisible="1"/>
                     <field name="hide_imei_fields" invisible="1"/>
                 </xpath>
-<xpath expr="//widget[@name='import_lots']" position="after">
+                <xpath expr="//widget[@name='import_lots']" position="after">
                     <button name="action_open_upload_csv_wizard" type="object" string="Upload File" class="btn btn-link" invisible="not display_import_lot"/>
+                    <button name="action_download_sample_xlsx" type="object" string="Download Sample Template" class="btn btn-link" invisible="not display_import_lot"/>
                 </xpath>
             </field>
         </record>
