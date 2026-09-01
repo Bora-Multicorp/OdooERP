@@ -240,13 +240,8 @@ class SurveyUserInput(models.Model):
                 _logger.info("KYC survey (input %s): creating new KYC record for partner %s", self.id, partner.id)
                 kyc_record = KycModel.create(values)
 
-            # Rebind attachments to the KYC record so they appear in its chatter/files
-            all_att_ids = [aid for ids in attachments_by_field.values() for aid in ids]
-            if all_att_ids:
-                self.env['ir.attachment'].sudo().browse(all_att_ids).write({
-                    'res_model': 'res.partner.kyc.approval',
-                    'res_id': kyc_record.id,
-                })
+            # Rebind all attachments to the KYC record (direct & line attachments)
+            kyc_record._rebind_attachments()
 
             partner.write({
                 'is_kyc': True,

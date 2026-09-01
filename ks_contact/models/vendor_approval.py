@@ -79,20 +79,57 @@ class ContactKYCApproval(models.Model):
                         ))
         
         res_list = super().create(vals_list)
+        res_list._rebind_attachments()
+        return res_list
 
+    def _rebind_attachments(self):
+        """
+        Ensure all attachments referenced directly on this KYC record or on its
+        child bank/director detail lines are bound to res_model='res.partner.kyc.approval'
+        and res_id=record.id.
+        """
         attachment_fields = [
             'gst_certificate', 'udyam_document', 'shop_act_document',
             'shop_photos', 'shop_videos', 'pan_card_document',
             'incorporation_certificate', 'moa_aoa', 'electricity_bill',
             'company_reg_document', 'authorized_person_id_document',
         ]
-
-        for record in res_list:
+        for record in self:
+            all_attachments = self.env['ir.attachment']
             for field in attachment_fields:
-                attachments = record[field]
-                attachments.write({'res_model': self._name, 'res_id': record.id})
+                all_attachments |= record[field]
+            for bank in record.bank_detail:
+                all_attachments |= bank.bank_cheque_attachments
+            for director in record.directors_detail:
+                all_attachments |= (
+                    director.aadhaar_card_attachments
+                    | director.pan_card_attachments
+                    | director.govt_id_attachments
+                )
+            if all_attachments:
+                to_update = all_attachments.filtered(
+                    lambda a: a.res_model != 'res.partner.kyc.approval' or a.res_id != record.id
+                )
+                if to_update:
+                    to_update.sudo().write({
+                        'res_model': 'res.partner.kyc.approval',
+                        'res_id': record.id,
+                    })
 
-        return res_list
+    def write(self, vals):
+        res = super().write(vals)
+        self._rebind_attachments()
+        return res
+
+    def _register_hook(self):
+        res = super()._register_hook()
+        try:
+            kyc_records = self.search([])
+            if kyc_records:
+                kyc_records._rebind_attachments()
+        except Exception as e:
+            _logger.warning("Could not auto-fix KYC attachments on startup: %s", e)
+        return res
 
 
     # -------------------------------------------------------------------------
@@ -1348,25 +1385,38 @@ class DirectorDetails(models.Model):
         help="Expiry date of this director's government-issued identity document.",
     )
 
+    def _rebind_attachments(self):
+        for record in self:
+            atts = (
+                record.aadhaar_card_attachments
+                | record.pan_card_attachments
+                | record.govt_id_attachments
+            )
+            if atts:
+                if record.kyc_approval_id:
+                    atts.sudo().write({
+                        'res_model': 'res.partner.kyc.approval',
+                        'res_id': record.kyc_approval_id.id,
+                    })
+                else:
+                    atts.sudo().write({
+                        'res_model': self._name,
+                        'res_id': record.id,
+                    })
+
     @api.model_create_multi
     def create(self, vals_list):
         """
         Links Aadhaar / PAN / Govt ID attachments correctly.
         """
         res_list = super().create(vals_list)
-
-        for record in res_list:
-            for attachment in (
-                record.aadhaar_card_attachments
-                | record.pan_card_attachments
-                | record.govt_id_attachments
-            ):
-                attachment.write({
-                    'res_model': self._name,
-                    'res_id': record.id,
-                })
-
+        res_list._rebind_attachments()
         return res_list
+
+    def write(self, vals):
+        res = super().write(vals)
+        self._rebind_attachments()
+        return res
 
 
 # =============================================================================
@@ -1393,17 +1443,31 @@ class BankDetail(models.Model):
         'kyc_approval_id', 'attachment_id'
     )
 
+    def _rebind_attachments(self):
+        for record in self:
+            atts = record.bank_cheque_attachments
+            if atts:
+                if record.kyc_approval_id:
+                    atts.sudo().write({
+                        'res_model': 'res.partner.kyc.approval',
+                        'res_id': record.kyc_approval_id.id,
+                    })
+                else:
+                    atts.sudo().write({
+                        'res_model': self._name,
+                        'res_id': record.id,
+                    })
+
     @api.model_create_multi
     def create(self, vals_list):
         res_list = super().create(vals_list)
-
-        for record in res_list:
-            record.bank_cheque_attachments.write({
-                'res_model': self._name,
-                'res_id': record.id
-            })
-
+        res_list._rebind_attachments()
         return res_list
+
+    def write(self, vals):
+        res = super().write(vals)
+        self._rebind_attachments()
+        return res
 
 
 # =============================================================================
