@@ -1,7 +1,13 @@
 # -- coding: utf-8 --
+import base64
+import io
 from odoo.exceptions import ValidationError, UserError
-
 from odoo import models, fields, api, _
+
+try:
+    import openpyxl
+except ImportError:
+    openpyxl = None
 
 
 class StockMove(models.Model):
@@ -202,6 +208,69 @@ class StockMove(models.Model):
             "target": "new",
             "context": {"default_move_id": self.id},
         }
+
+    def action_download_sample_xlsx(self):
+        self.ensure_one()
+        if openpyxl is None:
+            raise UserError(_("Excel export requires the 'openpyxl' library."))
+
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Serials"
+
+        product = self.product_id
+        is_mobile = product.is_mobile_category_selected
+        is_dual = product.is_dual_sim if is_mobile else False
+
+        if is_mobile and is_dual:
+            headers = ["Serials/Lots", "IMEI 1", "IMEI 2"]
+            rows = [
+                ["SER100001", "864201040000001", "864201040000002"],
+                ["SER100002", "864201040000003", "864201040000004"],
+            ]
+        elif is_mobile:
+            headers = ["Serials/Lots", "IMEI 1"]
+            rows = [
+                ["SER100001", "864201040000001"],
+                ["SER100002", "864201040000002"],
+            ]
+        else:
+            headers = ["Serials/Lots"]
+            rows = [
+                ["SER100001"],
+                ["SER100002"],
+            ]
+
+        ws.append(headers)
+        for r in rows:
+            ws.append(r)
+
+        output = io.BytesIO()
+        wb.save(output)
+        output.seek(0)
+        xlsx_data = output.read()
+
+        product_code = self.product_id.default_code or self.product_id.name or 'serials'
+        clean_code = "".join(c if c.isalnum() else "_" for c in product_code)
+        filename = f"sample_import_{clean_code}.xlsx"
+
+        attachment = self.env['ir.attachment'].create({
+            'name': filename,
+            'type': 'binary',
+            'datas': base64.b64encode(xlsx_data),
+            'res_model': 'stock.move',
+            'res_id': self.id,
+            'mimetype': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        })
+        return {
+            'type': 'ir.actions.act_url',
+            'url': f'/web/content/{attachment.id}?download=true',
+            'target': 'self',
+        }
+
+    def action_download_sample_xml(self):
+        """Alias for sample template download."""
+        return self.action_download_sample_xlsx()
 
     def action_apply_csv_serial_lines(self, csv_rows, keep_lines=False):
         """Create or update move lines from CSV rows (server-side). Each row: {lot_name, imei, imei2}."""

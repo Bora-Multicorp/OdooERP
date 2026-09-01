@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import base64
 import io
+import xml.etree.ElementTree as ET
 
 from odoo import models, fields, _
 from odoo.exceptions import UserError, ValidationError
@@ -14,26 +15,26 @@ except ImportError:
 
 class StockMoveUploadCsvWizard(models.TransientModel):
     _name = "stock.move.upload.csv.wizard"
-    _description = "Upload Serials/Lots and IMEI from CSV or Excel"
+    _description = "Upload Serials/Lots and IMEI from CSV, Excel or XML"
 
     move_id = fields.Many2one("stock.move", string="Stock Move", required=True, ondelete="cascade")
-    csv_file = fields.Binary(string="File (CSV or Excel)", required=True)
+    csv_file = fields.Binary(string="File (CSV, Excel or XML)", required=True)
     filename = fields.Char(string="Filename")
     keep_lines = fields.Boolean(string="Keep current lines", default=False)
 
-    SUPPORTED_EXTENSIONS = (".csv", ".xlsx")
+    SUPPORTED_EXTENSIONS = (".csv", ".xlsx", ".xml")
 
     def action_import(self):
         self.ensure_one()
         if not self.move_id:
             raise UserError(_("No move specified."))
         if not self.csv_file or not self.filename:
-            raise ValidationError(_("Please upload a file (CSV or Excel)."))
+            raise ValidationError(_("Please upload a file (CSV, Excel or XML)."))
 
         fn_lower = self.filename.lower()
         if not any(fn_lower.endswith(ext) for ext in self.SUPPORTED_EXTENSIONS):
             raise ValidationError(
-                _("Unsupported file format. Only .csv and .xlsx files are allowed.")
+                _("Unsupported file format. Only .csv, .xlsx and .xml files are allowed.")
             )
 
         try:
@@ -43,16 +44,57 @@ class StockMoveUploadCsvWizard(models.TransientModel):
 
         if fn_lower.endswith(".xlsx"):
             rows = self._parse_xlsx_content(file_content)
+        elif fn_lower.endswith(".xml"):
+            rows = self._parse_xml_content(file_content)
         else:
             rows = self._parse_csv_content(file_content)
 
         if not rows:
             raise ValidationError(
-                _("No valid rows found. File must have 3 columns: Serials/Lots, IMEI 1, IMEI 2")
+                _("No valid rows found. File must contain Serials/Lots, IMEI 1, IMEI 2")
             )
 
         self.move_id.action_apply_csv_serial_lines(rows, keep_lines=self.keep_lines)
         return {"type": "ir.actions.act_window_close"}
+
+    def action_download_sample_xlsx(self):
+        self.ensure_one()
+        if not self.move_id:
+            raise UserError(_("No stock move specified."))
+        return self.move_id.action_download_sample_xlsx()
+
+    def action_download_sample_xml(self):
+        return self.action_download_sample_xlsx()
+
+    def _parse_xml_content(self, file_content):
+        """Parse XML file content; returns list of dicts with keys lot_name, imei, imei2."""
+        try:
+            root = ET.fromstring(file_content)
+        except Exception as e:
+            raise ValidationError(_("Could not parse XML file: %s") % e)
+
+        rows = []
+        lines = root.findall(".//line") or root.findall(".//row") or root.findall(".//item")
+        if not lines:
+            lines = list(root)
+
+        for el in lines:
+            lot_name = ""
+            imei = ""
+            imei2 = ""
+            for child in el:
+                tag = child.tag.lower()
+                val = (child.text or "").strip()
+                if tag in ("lot_name", "serial", "serial_number", "lot", "lot_number"):
+                    lot_name = val
+                elif tag in ("imei", "imei1", "imei_1"):
+                    imei = val
+                elif tag in ("imei2", "imei_2"):
+                    imei2 = val
+            if lot_name:
+                rows.append({"lot_name": lot_name, "imei": imei, "imei2": imei2})
+
+        return rows
 
     def _parse_csv_content(self, file_content):
         """Parse CSV file content; returns list of dicts with keys lot_name, imei, imei2."""
