@@ -7,3 +7,4 @@ from . import custom_partner
 from . import survey
 from . import survey_user_input
 from . import vendor_approval_res_config
+from . import ir_attachment
