@@ -154,6 +154,8 @@
                             <t t-if="doc.partner_id.state_id">State Name&#160;: <t t-esc="doc.partner_id.state_id.name"/><t t-if="doc.partner_id.state_id.l10n_in_tin">, Code : <t t-esc="doc.partner_id.state_id.l10n_in_tin"/></t><br/></t>
                         </td>
                         <td style="vertical-align:top; padding:4px;">
+                            Terms of Payment<br/>
+                            <strong><t t-esc="doc.payment_term_id.name or ''"/></strong><br/><br/>
                             Terms of Delivery<br/>
                             <t t-if="doc.incoterm">
                                 [<t t-esc="doc.incoterm.code or ''"/>] <t t-esc="doc.incoterm.name or ''"/>
