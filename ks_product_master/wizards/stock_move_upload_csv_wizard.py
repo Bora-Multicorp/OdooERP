@@ -51,7 +51,7 @@ class StockMoveUploadCsvWizard(models.TransientModel):
 
         if not rows:
             raise ValidationError(
-                _("No valid rows found. File must contain Serials/Lots, IMEI 1, IMEI 2")
+                _("No valid rows found. File must contain Serials/Lots, IMEI 1, IMEI 2, Made In")
             )
 
         self.move_id.action_apply_csv_serial_lines(rows, keep_lines=self.keep_lines)
@@ -67,7 +67,7 @@ class StockMoveUploadCsvWizard(models.TransientModel):
         return self.action_download_sample_xlsx()
 
     def _parse_xml_content(self, file_content):
-        """Parse XML file content; returns list of dicts with keys lot_name, imei, imei2."""
+        """Parse XML file content; returns list of dicts with keys lot_name, imei, imei2, made_in."""
         try:
             root = ET.fromstring(file_content)
         except Exception as e:
@@ -82,6 +82,7 @@ class StockMoveUploadCsvWizard(models.TransientModel):
             lot_name = ""
             imei = ""
             imei2 = ""
+            made_in = ""
             for child in el:
                 tag = child.tag.lower()
                 val = (child.text or "").strip()
@@ -91,38 +92,46 @@ class StockMoveUploadCsvWizard(models.TransientModel):
                     imei = val
                 elif tag in ("imei2", "imei_2"):
                     imei2 = val
+                elif tag in ("made_in", "made_in_country", "made_country", "country", "made_in_country_id", "country_of_origin"):
+                    made_in = val
             if lot_name:
-                rows.append({"lot_name": lot_name, "imei": imei, "imei2": imei2})
+                rows.append({"lot_name": lot_name, "imei": imei, "imei2": imei2, "made_in": made_in})
 
         return rows
 
     def _parse_csv_content(self, file_content):
-        """Parse CSV file content; returns list of dicts with keys lot_name, imei, imei2."""
+        """Parse CSV file content; returns list of dicts with keys lot_name, imei, imei2, made_in."""
         try:
             text = file_content.decode("utf-8", errors="replace")
         except Exception as e:
             raise ValidationError(_("Could not read file as text: %s") % e)
 
+        lines = [line.strip() for line in text.splitlines() if line.strip()]
+        if not lines:
+            return []
+
+        parsed_lines = [self._parse_csv_line(line) for line in lines]
+        first_row = parsed_lines[0]
+        has_header = self._is_header_row(first_row)
+
+        if has_header:
+            header_map = self._map_header_indices(first_row)
+            data_rows = parsed_lines[1:]
+        else:
+            header_map = None
+            data_rows = parsed_lines
+
         rows = []
-        for line in text.splitlines():
-            line = line.strip()
-            if not line:
+        for parts in data_rows:
+            if not parts:
                 continue
-            parts = self._parse_csv_line(line)
-            if len(parts) < 1:
-                continue
-            lot_name = (parts[0] or "").strip()
-            imei = (parts[1] if len(parts) > 1 else "").strip()
-            imei2 = (parts[2] if len(parts) > 2 else "").strip()
-            if not lot_name:
-                continue
-            if not rows and self._is_header_row(lot_name, imei, imei2):
-                continue
-            rows.append({"lot_name": lot_name, "imei": imei, "imei2": imei2})
+            row_data = self._extract_row_data(parts, header_map)
+            if row_data.get("lot_name"):
+                rows.append(row_data)
         return rows
 
     def _parse_xlsx_content(self, file_content):
-        """Parse XLSX file content; returns list of dicts with keys lot_name, imei, imei2."""
+        """Parse XLSX file content; returns list of dicts with keys lot_name, imei, imei2, made_in."""
         if openpyxl is None:
             raise ValidationError(
                 _("Excel (.xlsx) support requires the 'openpyxl' library. Please install it (e.g. pip install openpyxl).")
@@ -132,25 +141,119 @@ class StockMoveUploadCsvWizard(models.TransientModel):
         except Exception as e:
             raise ValidationError(_("Could not open Excel file: %s") % e)
 
-        rows = []
+        parsed_rows = []
         try:
             ws = wb.active
             if not ws:
-                return rows
+                return []
             for row in ws.iter_rows(min_row=1, values_only=True):
                 if not row:
                     continue
-                lot_name = self._cell_to_str(row[0] if len(row) > 0 else None)
-                imei = self._cell_to_str(row[1] if len(row) > 1 else None)
-                imei2 = self._cell_to_str(row[2] if len(row) > 2 else None)
-                if not lot_name:
-                    continue
-                if not rows and self._is_header_row(lot_name, imei, imei2):
-                    continue
-                rows.append({"lot_name": lot_name, "imei": imei, "imei2": imei2})
+                row_str_vals = [self._cell_to_str(c) for c in row]
+                if any(row_str_vals):
+                    parsed_rows.append(row_str_vals)
         finally:
             wb.close()
+
+        if not parsed_rows:
+            return []
+
+        first_row = parsed_rows[0]
+        has_header = self._is_header_row(first_row)
+
+        if has_header:
+            header_map = self._map_header_indices(first_row)
+            data_rows = parsed_rows[1:]
+        else:
+            header_map = None
+            data_rows = parsed_rows
+
+        rows = []
+        for parts in data_rows:
+            if not parts:
+                continue
+            row_data = self._extract_row_data(parts, header_map)
+            if row_data.get("lot_name"):
+                rows.append(row_data)
         return rows
+
+    def _is_header_row(self, row):
+        if not row:
+            return False
+        row_str = " ".join(str(c or "").lower() for c in row)
+        return any(k in row_str for k in ("serial", "lot", "imei", "made", "country", "origin"))
+
+    def _map_header_indices(self, headers):
+        lot_idx = -1
+        imei1_idx = -1
+        imei2_idx = -1
+        made_in_idx = -1
+
+        for idx, h in enumerate(headers):
+            h_clean = str(h or "").strip().lower()
+            if not h_clean:
+                continue
+            if ("serial" in h_clean or "lot" in h_clean) and lot_idx == -1:
+                lot_idx = idx
+            elif ("imei 2" in h_clean or "imei2" in h_clean or "imei_2" in h_clean) and imei2_idx == -1:
+                imei2_idx = idx
+            elif ("imei 1" in h_clean or "imei1" in h_clean or "imei_1" in h_clean or h_clean == "imei") and imei1_idx == -1:
+                imei1_idx = idx
+            elif ("made" in h_clean or "country" in h_clean or "origin" in h_clean) and made_in_idx == -1:
+                made_in_idx = idx
+
+        if lot_idx == -1 and len(headers) > 0:
+            lot_idx = 0
+
+        return {
+            "lot_idx": lot_idx,
+            "imei1_idx": imei1_idx,
+            "imei2_idx": imei2_idx,
+            "made_in_idx": made_in_idx,
+        }
+
+    def _extract_row_data(self, parts, header_map=None):
+        def get_val(idx):
+            return str(parts[idx]).strip() if (idx != -1 and idx < len(parts) and parts[idx] is not None) else ""
+
+        if header_map:
+            lot_name = get_val(header_map["lot_idx"])
+            imei = get_val(header_map["imei1_idx"])
+            imei2 = get_val(header_map["imei2_idx"])
+            made_in = get_val(header_map["made_in_idx"])
+        else:
+            lot_name = get_val(0)
+            imei = ""
+            imei2 = ""
+            made_in = ""
+            if len(parts) >= 4:
+                imei = get_val(1)
+                imei2 = get_val(2)
+                made_in = get_val(3)
+            elif len(parts) == 3:
+                p1 = get_val(1)
+                p2 = get_val(2)
+                if p1.isdigit() and p2.isdigit():
+                    imei = p1
+                    imei2 = p2
+                elif p1.isdigit():
+                    imei = p1
+                    made_in = p2
+                else:
+                    made_in = p1
+            elif len(parts) == 2:
+                p1 = get_val(1)
+                if p1.isdigit():
+                    imei = p1
+                else:
+                    made_in = p1
+
+        return {
+            "lot_name": lot_name,
+            "imei": imei,
+            "imei2": imei2,
+            "made_in": made_in,
+        }
 
     def _cell_to_str(self, value):
         """Convert a cell value (possibly number/date) to stripped string for consistent mapping."""
@@ -176,9 +279,3 @@ class StockMoveUploadCsvWizard(models.TransientModel):
                 current.append(c)
         result.append("".join(current).strip())
         return result
-
-    def _is_header_row(self, col0, col1, col2):
-        a, b, c = (col0 or "").lower(), (col1 or "").lower(), (col2 or "").lower()
-        return (
-            (("serial" in a or "lot" in a) and "imei" in b and "imei" in c)
-        )
