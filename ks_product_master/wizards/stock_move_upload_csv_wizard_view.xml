@@ -14,7 +14,6 @@
                     </group>
                     <footer>
                         <button name="action_import" string="Import" type="object" class="btn-primary"/>
-                        <button name="action_download_sample_xlsx" string="Download Sample Template" type="object" class="btn-secondary" icon="fa-download"/>
                         <button string="Cancel" class="btn-secondary" special="cancel"/>
                     </footer>
                 </form>
