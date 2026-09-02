@@ -10,39 +10,115 @@ import { Component, useRef } from "@odoo/owl";
 import { standardWidgetProps } from "@web/views/widgets/standard_widget_props";
 
 /**
- * Parse CSV text into rows of { lot_name, imei, imei2 }.
- * Expects 3 columns: Serials/Lots, IMEI 1, IMEI 2 (header row is skipped if present).
+ * Parse CSV text into rows of { lot_name, imei, imei2, made_in }.
+ * Supports columns: Serials/Lots, IMEI 1, IMEI 2, Made In (header row optional).
  */
 function parseCsvSerialsImei(text) {
     const rows = [];
     const lines = text.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
-    for (let i = 0; i < lines.length; i++) {
-        const line = lines[i];
-        const parts = parseCsvLine(line);
-        if (parts.length >= 1) {
-            const lot_name = (parts[0] || "").trim();
-            const imei = (parts[1] !== undefined ? parts[1] : "").trim();
-            const imei2 = (parts[2] !== undefined ? parts[2] : "").trim();
-            if (i === 0 && isHeaderRow(lot_name, imei, imei2)) {
-                continue;
-            }
-            if (lot_name) {
-                rows.push({ lot_name, imei, imei2 });
-            }
+    if (lines.length === 0) return rows;
+
+    const parsedLines = lines.map(parseCsvLine);
+    const firstRow = parsedLines[0];
+    const hasHeader = isHeaderRow(firstRow);
+
+    let headerMap = null;
+    let dataLines = parsedLines;
+    if (hasHeader) {
+        headerMap = mapHeaderIndices(firstRow);
+        dataLines = parsedLines.slice(1);
+    }
+
+    for (const parts of dataLines) {
+        if (!parts || parts.length === 0) continue;
+        const rowData = extractRowData(parts, headerMap);
+        if (rowData.lot_name) {
+            rows.push(rowData);
         }
     }
     return rows;
 }
 
-function isHeaderRow(col0, col1, col2) {
-    const a = (col0 || "").toLowerCase();
-    const b = (col1 || "").toLowerCase();
-    const c = (col2 || "").toLowerCase();
+function isHeaderRow(row) {
+    if (!row || row.length === 0) return false;
+    const rowStr = row.map((c) => (c || "").toLowerCase()).join(" ");
     return (
-        (a.includes("serial") || a.includes("lot")) &&
-        (b.includes("imei") && (b === "imei 1" || b === "imei1" || b.includes("imei 1"))) &&
-        (c.includes("imei") && (c === "imei 2" || c === "imei2" || c.includes("imei 2")))
+        rowStr.includes("serial") ||
+        rowStr.includes("lot") ||
+        rowStr.includes("imei") ||
+        rowStr.includes("made") ||
+        rowStr.includes("country")
     );
+}
+
+function mapHeaderIndices(headers) {
+    let lot_idx = -1;
+    let imei1_idx = -1;
+    let imei2_idx = -1;
+    let made_in_idx = -1;
+
+    headers.forEach((h, idx) => {
+        const hClean = (h || "").trim().toLowerCase();
+        if (!hClean) return;
+        if ((hClean.includes("serial") || hClean.includes("lot")) && lot_idx === -1) {
+            lot_idx = idx;
+        } else if ((hClean.includes("imei 2") || hClean.includes("imei2") || hClean.includes("imei_2")) && imei2_idx === -1) {
+            imei2_idx = idx;
+        } else if ((hClean.includes("imei 1") || hClean.includes("imei1") || hClean.includes("imei_1") || hClean === "imei") && imei1_idx === -1) {
+            imei1_idx = idx;
+        } else if ((hClean.includes("made") || hClean.includes("country") || hClean.includes("origin")) && made_in_idx === -1) {
+            made_in_idx = idx;
+        }
+    });
+
+    if (lot_idx === -1 && headers.length > 0) {
+        lot_idx = 0;
+    }
+
+    return { lot_idx, imei1_idx, imei2_idx, made_in_idx };
+}
+
+function extractRowData(parts, headerMap) {
+    const getVal = (idx) => (idx !== -1 && idx < parts.length && parts[idx] !== undefined ? String(parts[idx]).trim() : "");
+
+    if (headerMap) {
+        return {
+            lot_name: getVal(headerMap.lot_idx),
+            imei: getVal(headerMap.imei1_idx),
+            imei2: getVal(headerMap.imei2_idx),
+            made_in: getVal(headerMap.made_in_idx),
+        };
+    } else {
+        const lot_name = getVal(0);
+        let imei = "";
+        let imei2 = "";
+        let made_in = "";
+        if (parts.length >= 4) {
+            imei = getVal(1);
+            imei2 = getVal(2);
+            made_in = getVal(3);
+        } else if (parts.length === 3) {
+            const p1 = getVal(1);
+            const p2 = getVal(2);
+            if (/^\d+$/.test(p1) && /^\d+$/.test(p2)) {
+                imei = p1;
+                imei2 = p2;
+            } else if (/^\d+$/.test(p1)) {
+                imei = p1;
+                made_in = p2;
+            } else {
+                made_in = p1;
+            }
+        } else if (parts.length === 2) {
+            const p1 = getVal(1);
+            if (/^\d+$/.test(p1)) {
+                imei = p1;
+            } else {
+                made_in = p1;
+            }
+        }
+        return { lot_name, imei, imei2, made_in };
+    }
 }
 
 function parseCsvLine(line) {
@@ -94,7 +170,7 @@ export class ImportSerialsCsvDialog extends Component {
         const csvRows = parseCsvSerialsImei(text);
         if (csvRows.length === 0) {
             this.env.services.notification.add(
-                _t("No valid rows found. CSV must have columns: Serials/Lots, IMEI 1, IMEI 2"),
+                _t("No valid rows found. CSV must have columns: Serials/Lots, IMEI 1, IMEI 2, Made In"),
                 { type: "warning" }
             );
             return;

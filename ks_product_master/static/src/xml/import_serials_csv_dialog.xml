@@ -25,7 +25,7 @@
                         </div>
                     </div>
                     <div class="text-muted small mt-2">
-                        CSV must have 3 columns: Serials/Lots, IMEI 1, IMEI 2 (header row optional).
+                        CSV must have columns: Serials/Lots, IMEI 1, IMEI 2, Made In (header row optional).
                     </div>
                 </div>
             </div>

@@ -209,6 +209,100 @@ class StockMove(models.Model):
             "context": {"default_move_id": self.id},
         }
 
+    def _find_country(self, country_str):
+        """Lookup res.country by code, exact name, alias, partial name, or ID."""
+        if not country_str:
+            return self.env['res.country']
+        country_str = str(country_str).strip()
+        if not country_str:
+            return self.env['res.country']
+
+        country_clean = country_str.lower()
+
+        # Known common country code aliases
+        COUNTRY_ALIASES = {
+            'china': 'CN',
+            'cn': 'CN',
+            'chn': 'CN',
+            'prc': 'CN',
+            'p.r.c.': 'CN',
+            'people\'s republic of china': 'CN',
+            'peoples republic of china': 'CN',
+            'mainland china': 'CN',
+            'india': 'IN',
+            'in': 'IN',
+            'ind': 'IN',
+            'switzerland': 'CH',
+            'ch': 'CH',
+            'che': 'CH',
+            'swiss': 'CH',
+            'united states': 'US',
+            'united states of america': 'US',
+            'usa': 'US',
+            'us': 'US',
+            'united kingdom': 'GB',
+            'uk': 'GB',
+            'gb': 'GB',
+            'great britain': 'GB',
+            'united arab emirates': 'AE',
+            'uae': 'AE',
+            'ae': 'AE',
+            'vietnam': 'VN',
+            'viet nam': 'VN',
+            'vn': 'VN',
+            'vnm': 'VN',
+            'taiwan': 'TW',
+            'tw': 'TW',
+            'twn': 'TW',
+            'hong kong': 'HK',
+            'hk': 'HK',
+            'hkg': 'HK',
+            'singapore': 'SG',
+            'sg': 'SG',
+            'sgp': 'SG',
+            'japan': 'JP',
+            'jp': 'JP',
+            'jpn': 'JP',
+            'korea': 'KR',
+            'south korea': 'KR',
+            'kr': 'KR',
+            'kor': 'KR',
+            'germany': 'DE',
+            'de': 'DE',
+            'deu': 'DE',
+        }
+
+        # 1. Alias lookup
+        if country_clean in COUNTRY_ALIASES:
+            code = COUNTRY_ALIASES[country_clean]
+            country = self.env['res.country'].search([('code', '=ilike', code)], limit=1)
+            if country:
+                return country
+
+        # 2. Exact code match if 2 characters (e.g. IN, US, CN, CH, AE)
+        if len(country_str) == 2:
+            country = self.env['res.country'].search([('code', '=ilike', country_str)], limit=1)
+            if country:
+                return country
+
+        # 3. Exact name match (case-insensitive)
+        country = self.env['res.country'].search([('name', '=ilike', country_str)], limit=1)
+        if country:
+            return country
+
+        # 4. Partial name match
+        country = self.env['res.country'].search([('name', 'ilike', country_str)], limit=1)
+        if country:
+            return country
+
+        # 5. Integer ID match
+        if country_str.isdigit():
+            country = self.env['res.country'].browse(int(country_str))
+            if country.exists():
+                return country
+
+        return self.env['res.country']
+
     def action_download_sample_xlsx(self):
         self.ensure_one()
         if openpyxl is None:
@@ -222,23 +316,31 @@ class StockMove(models.Model):
         is_mobile = product.is_mobile_category_selected
         is_dual = product.is_dual_sim if is_mobile else False
 
+        sample_country_name = (
+            self.made_in_country_id.name
+            or self.made_country.name
+            or (self.picking_id and self.picking_id.made_country.name)
+            or "India"
+        )
+        sample_country_name2 = "China"
+
         if is_mobile and is_dual:
-            headers = ["Serials/Lots", "IMEI 1", "IMEI 2"]
+            headers = ["Serials/Lots", "IMEI 1", "IMEI 2", "Made In"]
             rows = [
-                ["SER100001", "864201040000001", "864201040000002"],
-                ["SER100002", "864201040000003", "864201040000004"],
+                ["SER100001", "864201040000001", "864201040000002", sample_country_name],
+                ["SER100002", "864201040000003", "864201040000004", sample_country_name2],
             ]
         elif is_mobile:
-            headers = ["Serials/Lots", "IMEI 1"]
+            headers = ["Serials/Lots", "IMEI 1", "Made In"]
             rows = [
-                ["SER100001", "864201040000001"],
-                ["SER100002", "864201040000002"],
+                ["SER100001", "864201040000001", sample_country_name],
+                ["SER100002", "864201040000002", sample_country_name2],
             ]
         else:
-            headers = ["Serials/Lots"]
+            headers = ["Serials/Lots", "Made In"]
             rows = [
-                ["SER100001"],
-                ["SER100002"],
+                ["SER100001", sample_country_name],
+                ["SER100002", sample_country_name2],
             ]
 
         ws.append(headers)
@@ -273,7 +375,7 @@ class StockMove(models.Model):
         return self.action_download_sample_xlsx()
 
     def action_apply_csv_serial_lines(self, csv_rows, keep_lines=False):
-        """Create or update move lines from CSV rows (server-side). Each row: {lot_name, imei, imei2}."""
+        """Create or update move lines from CSV rows (server-side). Each row: {lot_name, imei, imei2, made_in}."""
         self.ensure_one()
         if not self.product_id:
             raise UserError(_("No product found to generate Serials/Lots for."))
@@ -311,6 +413,12 @@ class StockMove(models.Model):
                 continue
             imei = (row.get("imei") or row.get("imei1") or "").strip() or False
             imei2 = (row.get("imei2") or "").strip() or False
+            made_in_str = (row.get("made_in") or row.get("made_in_country") or row.get("made_country") or row.get("country") or "").strip()
+
+            country = self._find_country(made_in_str) if made_in_str else (
+                self.made_in_country_id or self.made_country or (self.picking_id and self.picking_id.made_country)
+            )
+
             original_loc_dest_id = default_vals["location_dest_id"]
             loc_dest = self.env["stock.location"].browse(original_loc_dest_id)
             product = self.env["product.product"].browse(default_vals["product_id"])
@@ -326,6 +434,10 @@ class StockMove(models.Model):
                 "imei": imei,
                 "imei2": imei2,
             }
+            if country:
+                line_vals["made_in_country_id"] = country.id
+                line_vals["made_country"] = country.id
+
             vals_list.append(line_vals)
         if default_vals.get("picking_type_id"):
             picking_type = self.env["stock.picking.type"].browse(default_vals["picking_type_id"])
@@ -338,7 +450,7 @@ class StockMove(models.Model):
 
     @api.model
     def action_generate_lot_line_vals_from_csv(self, context, csv_rows):
-        """Generate move line values from CSV rows. Each row is [lot_name, imei, imei2].
+        """Generate move line values from CSV rows. Each row is {lot_name, imei, imei2, made_in}.
         Returns same structure as action_generate_lot_line_vals for use in the receipt serial/lot wizard.
         """
         if not context.get('default_product_id'):
@@ -353,6 +465,8 @@ class StockMove(models.Model):
             if key.startswith('default_'):
                 default_vals[remove_prefix(key, 'default_')] = context[key]
 
+        move = self.browse(context.get('default_move_id')) if context.get('default_move_id') else self.env['stock.move']
+
         vals_list = []
         for row in csv_rows:
             lot_name = (row.get('lot_name') or row.get('serial') or '').strip()
@@ -360,6 +474,14 @@ class StockMove(models.Model):
                 continue
             imei = (row.get('imei') or row.get('imei1') or '').strip()
             imei2 = (row.get('imei2') or '').strip()
+            made_in_str = (row.get("made_in") or row.get("made_in_country") or row.get("made_country") or row.get("country") or "").strip()
+
+            country = move._find_country(made_in_str) if (made_in_str and move) else (
+                self._find_country(made_in_str) if made_in_str else (
+                    move.made_in_country_id or move.made_country or (move.picking_id and move.picking_id.made_country) if move else False
+                )
+            )
+
             original_loc_dest_id = default_vals['location_dest_id']
             loc_dest = self.env['stock.location'].browse(original_loc_dest_id)
             product = self.env['product.product'].browse(default_vals['product_id'])
@@ -374,6 +496,10 @@ class StockMove(models.Model):
                 'imei': imei or False,
                 'imei2': imei2 or False,
             }
+            if country:
+                line_vals['made_in_country_id'] = country.id
+                line_vals['made_country'] = country.id
+
             vals_list.append(line_vals)
         if default_vals.get('picking_type_id'):
             picking_type = self.env['stock.picking.type'].browse(default_vals['picking_type_id'])
@@ -573,6 +699,12 @@ class StockMoveLine(models.Model):
                     line.specs_made = line.move_id.specs_made.id
                 if not line.made_country and line.move_id.made_country:
                     line.made_country = line.move_id.made_country.id
+                if not line.made_in_country_id and line.made_country:
+                    line.made_in_country_id = line.made_country.id
+                elif not line.made_country and line.made_in_country_id:
+                    line.made_country = line.made_in_country_id.id
+                elif not line.made_in_country_id and line.move_id.made_in_country_id:
+                    line.made_in_country_id = line.move_id.made_in_country_id.id
                 # Populate made_in_country_id / made_country / specs_made for delivery lines from the quant
                 if (not line.made_in_country_id
                         and line.lot_id
