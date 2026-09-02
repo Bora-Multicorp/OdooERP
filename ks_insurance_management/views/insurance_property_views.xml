@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <record id="insurance_property_form_view" model="ir.ui.view">
+    <field name="name">insurance.property.form</field>
+    <field name="model">insurance.property</field>
+    <field name="arch" type="xml">
+      <form string="Property">
+        <sheet>
+          <group>
+            <field name="name"/>
+            <field name="address"/>
+          </group>
+        </sheet>
+      </form>
+    </field>
+  </record>
+
+  <record id="insurance_property_list_view" model="ir.ui.view">
+    <field name="name">insurance.property.list</field>
+    <field name="model">insurance.property</field>
+    <field name="arch" type="xml">
+      <list string="Properties">
+        <field name="name"/>
+        <field name="address"/>
+      </list>
+    </field>
+  </record>
+
+  <record id="insurance_property_search_view" model="ir.ui.view">
+    <field name="name">insurance.property.search</field>
+    <field name="model">insurance.property</field>
+    <field name="arch" type="xml">
+      <search string="Search Properties">
+        <field name="name"/>
+        <field name="address"/>
+        <filter name="archived" string="Archived" domain="[('active', '=', False)]"/>
+      </search>
+    </field>
+  </record>
+
+  <record id="action_insurance_property" model="ir.actions.act_window">
+    <field name="name">Properties</field>
+    <field name="res_model">insurance.property</field>
+    <field name="view_mode">list,form</field>
+    <field name="search_view_id" ref="insurance_property_search_view"/>
+    <field name="help" type="html">
+      <p class="o_view_nocontent_smiling_face">
+        Create a new Property
+      </p>
+      <p>
+        Define properties that can be pledged as collateral security for insurance policies.
+      </p>
+    </field>
+  </record>
+</odoo>

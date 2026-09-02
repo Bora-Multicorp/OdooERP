@@ -67,4 +67,9 @@
               action="ks_insurance_management.action_insurance_payment_approver"
               sequence="50"
               groups="ks_insurance_management.group_insurance_admin"/>
+    <menuitem id="menu_config_property" name="Properties"
+              parent="menu_insurance_config"
+              action="action_insurance_property"
+              sequence="60"
+              groups="ks_insurance_management.group_insurance_admin"/>
 </odoo>

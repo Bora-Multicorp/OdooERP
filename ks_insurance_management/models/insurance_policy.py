@@ -75,6 +75,14 @@ class InsurancePolicy(models.Model):
         help='Applicable only for Floater policies. '
              'Select all warehouse locations covered under this single floater policy.',
     )
+    property_ids = fields.Many2many(
+        'insurance.property',
+        'insurance_policy_property_rel',
+        'policy_id',
+        'property_id',
+        string='Collateral Security Properties',
+        help='Properties selected as collateral security for this policy.',
+    )
     warehouse_id = fields.Many2one(
         'stock.warehouse',
         string='Warehouse',
