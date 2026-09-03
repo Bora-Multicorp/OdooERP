@@ -19,6 +19,7 @@
             <main>
                 <t t-set="gst_sale" t-value="doc.get_sale_order_info()"/>
                 <t t-set="sale_order" t-value="gst_sale"/>
+                <t t-set="purchase_order" t-value="doc.get_purchase_order_info()"/>
                 <t t-set="delivery_partner" t-value="doc.partner_shipping_id or doc.partner_id"/>
                 <t t-set="total_qty" t-value="sum(line.quantity for line in doc.get_printable_invoice_lines())"/>
                 <t t-set="total_untaxed" t-value="doc.amount_untaxed"/>
@@ -116,7 +117,7 @@
                                         <strong><t t-esc="doc.ks_delivery_note or ''"/></strong>
                                     </td>
                                     <td style="border-left:1px solid #000; border-bottom:1px solid #000; padding:1px;" colspan="3">
-                                        <strong><t t-esc="doc.invoice_payment_term_id.name if doc.invoice_payment_term_id else (sale_order.payment_term_id.name if sale_order and sale_order.payment_term_id else '')"/></strong>
+                                        <strong><t t-esc="doc.get_payment_terms_name()"/></strong>
                                     </td>
                                 </tr>
                                 <tr>
@@ -373,9 +374,14 @@
                                 <strong>Remarks</strong><br/>
                                 <t t-esc="gst_sale.ks_remarks"/><br/><br/>
                             </t>
-                            <t t-if="gst_sale and gst_sale.note">
-                                <strong>Declaration</strong><br/>
-                                <span t-out="gst_sale.note"/>
+                            <t t-elif="purchase_order and purchase_order.ks_remarks">
+                                <strong>Remarks</strong><br/>
+                                <t t-esc="purchase_order.ks_remarks"/><br/><br/>
+                            </t>
+                            <t t-set="tc_content" t-value="doc.get_terms_and_conditions()"/>
+                            <t t-if="tc_content">
+                                <strong>Declaration / Terms &amp; Conditions</strong><br/>
+                                <span t-out="tc_content"/>
                             </t>
                         </td>
                         <td style="vertical-align:top; padding:6px; border:1px solid #000;" colspan="4">

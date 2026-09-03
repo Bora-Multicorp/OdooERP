@@ -241,12 +241,16 @@
                 </td>
             </tr>
 
-            <!-- REMARKS + SIGNATORY ROW -->
+            <!-- REMARKS + TERMS & CONDITIONS + SIGNATORY ROW -->
             <tr>
                 <td style="border:1px solid #000; padding:6px; vertical-align:top;" colspan="4">
                     <t t-if="doc.ks_remarks">
                         <strong>Remarks</strong><br/>
-                        <t t-esc="doc.ks_remarks"/>
+                        <t t-esc="doc.ks_remarks"/><br/><br/>
+                    </t>
+                    <t t-if="doc.notes">
+                        <strong>Terms &amp; Conditions</strong><br/>
+                        <span t-out="doc.notes"/>
                     </t>
                 </td>
                 <td style="border:1px solid #000; padding:6px; text-align:center; vertical-align:bottom;" colspan="3">
