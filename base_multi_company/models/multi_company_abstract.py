@@ -35,10 +35,11 @@ class MultiCompanyAbstract(models.AbstractModel):
                 or self.env.context.get("force_company")
                 or self.env.company.id
             )
-            if company_id in record.company_ids.ids:
+            comp_ids = record.sudo().company_ids.ids
+            if company_id in comp_ids:
                 record.company_id = company_id
             else:
-                record.company_id = record.company_ids[:1].id
+                record.company_id = comp_ids[0] if comp_ids else False
 
     def _inverse_company_id(self):
         # To allow modifying allowed companies by non-aware base_multi_company
