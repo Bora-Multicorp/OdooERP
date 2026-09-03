@@ -12,7 +12,7 @@ class StockPicking(models.Model):
     def _action_done(self):
         """Override to check stock availability and sync inter-company delivery lots/serials to receipt."""
         try:
-            self._ks_sync_intercompany_lots_between_picking()
+            self.sudo()._ks_sync_intercompany_lots_between_picking()
         except Exception as e:
             _logger.warning("Failed to sync inter-company lots on _action_done: %s", str(e), exc_info=True)
         result = super()._action_done()
@@ -20,19 +20,19 @@ class StockPicking(models.Model):
             lambda p: p.picking_type_id.code == 'incoming' and p.state == 'done'
         )
         if incoming_pickings:
-            purchase_orders = incoming_pickings.mapped('purchase_id')
+            purchase_orders = incoming_pickings.sudo().mapped('purchase_id')
             if purchase_orders:
-                sale_orders = purchase_orders.mapped('ks_source_sale_order_id').filtered(
+                sale_orders = purchase_orders.sudo().mapped('ks_source_sale_order_id').filtered(
                     lambda so: so and getattr(so, 'ks_po_created_for_stock', False) and so.state not in ('sale', 'done', 'cancel')
                 )
                 for so in sale_orders:
-                    so._ks_check_and_notify_stock_availability()
+                    so.sudo()._ks_check_and_notify_stock_availability()
         return result
 
     def button_validate(self):
         """Override button_validate to trigger inter-company lot sync before validation"""
         try:
-            self._ks_sync_intercompany_lots_between_picking()
+            self.sudo()._ks_sync_intercompany_lots_between_picking()
         except Exception as e:
             _logger.warning("Failed to sync inter-company lots on button_validate: %s", str(e), exc_info=True)
         result = super().button_validate()
@@ -123,7 +123,7 @@ class StockPicking(models.Model):
 
     def _ks_sync_intercompany_lots_between_picking(self):
         """Bidirectional sync helper between delivery and receipt pickings."""
-        for picking in self:
+        for picking in self.sudo():
             if picking.state == 'cancel':
                 continue
 

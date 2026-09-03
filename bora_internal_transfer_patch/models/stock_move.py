@@ -212,7 +212,7 @@ class StockMoveLine(models.Model):
                         _('IMEI number must be unique, the IMEI number(%s) is already used in another stock item.' % record.imei))
 
             if record.move_id.show_IMEI_field2:
-                brand_record = record.product_id.product_tmpl_id.brand_id
+                brand_record = record.sudo().product_id.product_tmpl_id.brand_id
                 brand_name = brand_record.name if brand_record else ''
                 is_brand_samsung_or_oneplus = False
                 if brand_name and (brand_name.lower() == 'samsung' or brand_name.lower() == 'oneplus'):

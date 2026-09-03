@@ -901,8 +901,8 @@ class StockMoveLine(models.Model):
             if record.move_id.show_IMEI_field2:
 
                 # check if brand is samsung or oneplus, as these two brands have imei1 and imei2 field's same value 
-                brand_record = record.product_id.product_tmpl_id.brand_id
-                brand_name = brand_record.name
+                brand_record = record.sudo().product_id.product_tmpl_id.brand_id
+                brand_name = brand_record.name if brand_record else ''
                 is_brand_samsung_or_oneplus = False
                 if brand_name and (brand_name.lower() == 'samsung' or brand_name.lower() == 'oneplus'):
                     is_brand_samsung_or_oneplus = True
@@ -910,7 +910,7 @@ class StockMoveLine(models.Model):
                 if not is_brand_samsung_or_oneplus:
                     if record.imei == record.imei2:
                         raise ValidationError(
-                            f"Both IMEI numbers must be different for product '{record.product_id.product_tmpl_id.name}'")
+                            f"Both IMEI numbers must be different for product '{record.sudo().product_id.product_tmpl_id.name}'")
 
                 imei_results = self.env['stock.quant'].search([
                     '|',
@@ -1497,10 +1497,10 @@ class StockPickingInherit(models.Model):
 
         for picking in self:
             for line in picking.move_line_ids:
-                product = line.product_id
-                category = product.categ_id
+                product = line.sudo().product_id
+                category = product.sudo().categ_id
                 if line.picking_type_id.code != 'outgoing' and category != packaging_category:  # dont validate if it's outgoing picking (sales order)
-                    line.validate_imei_and_serial_number()
+                    line.sudo().validate_imei_and_serial_number()
 
         res = super().button_validate()
 
