@@ -461,6 +461,63 @@ class AccountMove(models.Model):
             return ''
         return ', '.join(sale_orders.mapped('name'))
 
+    def get_purchase_order_info(self):
+        """Get purchase order information from invoice — returns the first linked PO."""
+        self.ensure_one()
+        purchase_orders = self.line_ids.mapped('purchase_line_id.order_id')
+        if purchase_orders:
+            return purchase_orders[0]
+        # Fallback: try to get from invoice_origin
+        if self.invoice_origin:
+            origins = [o.strip() for o in self.invoice_origin.split(',')]
+            purchase_order = self.env['purchase.order'].search([('name', 'in', origins)], limit=1)
+            if purchase_order:
+                return purchase_order
+        return False
+
+    def get_all_purchase_orders(self):
+        """Return all purchase orders linked to this invoice (deduplicated, ordered)."""
+        self.ensure_one()
+        purchase_orders = self.line_ids.mapped('purchase_line_id.order_id')
+        if not purchase_orders and self.invoice_origin:
+            origins = [o.strip() for o in self.invoice_origin.split(',')]
+            purchase_orders = self.env['purchase.order'].search([('name', 'in', origins)])
+        return purchase_orders
+
+    def get_all_purchase_order_names(self):
+        """Return comma-separated names of all purchase orders linked to this invoice."""
+        self.ensure_one()
+        pos = self.get_all_purchase_orders()
+        if not pos:
+            return ''
+        return ', '.join(pos.mapped('name'))
+
+    def get_terms_and_conditions(self):
+        """Returns terms and conditions from linked Sale Order (note), linked Purchase Order (notes), or Invoice narration."""
+        self.ensure_one()
+        so = self.get_sale_order_info()
+        if so and getattr(so, 'note', None):
+            return so.note
+        po = self.get_purchase_order_info()
+        if po and getattr(po, 'notes', None):
+            return po.notes
+        if self.narration:
+            return self.narration
+        return False
+
+    def get_payment_terms_name(self):
+        """Returns payment term name from invoice, linked sale order, or linked purchase order."""
+        self.ensure_one()
+        if self.invoice_payment_term_id:
+            return self.invoice_payment_term_id.name or ''
+        so = self.get_sale_order_info()
+        if so and so.payment_term_id:
+            return so.payment_term_id.name or ''
+        po = self.get_purchase_order_info()
+        if po and po.payment_term_id:
+            return po.payment_term_id.name or ''
+        return ''
+
     def get_invoice_inr_rate(self):
         """Get INR conversion rate from linked sale order's rate field."""
         self.ensure_one()

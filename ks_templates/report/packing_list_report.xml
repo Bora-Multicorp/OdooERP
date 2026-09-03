@@ -127,10 +127,15 @@
 
                             <td rowspan="2" style="border:1px solid #000; vertical-align:top; padding:1px 2px; font-size:10px; line-height:14px;">
                                 <strong>Terms of Delivery &amp; Payment</strong><br/>
-                                <t t-if="doc.sale_id and doc.sale_id.note">
-                                    <span t-out="doc.sale_id.note"/>
+                                <t t-set="pk_pay_terms" t-value="doc.get_payment_terms_name()"/>
+                                <t t-set="pk_tc" t-value="doc.get_terms_and_conditions()"/>
+                                <t t-if="pk_pay_terms">
+                                    <strong><t t-esc="pk_pay_terms"/></strong><br/>
                                 </t>
-                                <t t-else="">
+                                <t t-if="pk_tc">
+                                    <span t-out="pk_tc"/>
+                                </t>
+                                <t t-elif="not pk_pay_terms">
                                     <t t-esc="doc.ks_terms_of_delivery_payment or ''"/>
                                 </t>
                             </td>
