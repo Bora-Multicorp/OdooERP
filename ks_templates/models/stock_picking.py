@@ -70,6 +70,40 @@ class StockPicking(models.Model):
         
         return invoice_info
 
+    def get_purchase_order_info(self):
+        """Get purchase order information from picking."""
+        self.ensure_one()
+        if hasattr(self, 'purchase_id') and self.purchase_id:
+            return self.purchase_id
+        po_lines = self.move_ids.mapped('purchase_line_id.order_id')
+        if po_lines:
+            return po_lines[0]
+        if self.origin:
+            po = self.env['purchase.order'].search([('name', '=', self.origin)], limit=1)
+            if po:
+                return po
+        return False
+
+    def get_terms_and_conditions(self):
+        """Returns terms & conditions from linked sale order (note), purchase order (notes), or picking custom field."""
+        self.ensure_one()
+        if self.sale_id and self.sale_id.note:
+            return self.sale_id.note
+        po = self.get_purchase_order_info()
+        if po and getattr(po, 'notes', None):
+            return po.notes
+        return self.ks_terms_of_delivery_payment or ''
+
+    def get_payment_terms_name(self):
+        """Returns payment term name from linked sale order or purchase order."""
+        self.ensure_one()
+        if self.sale_id and self.sale_id.payment_term_id:
+            return self.sale_id.payment_term_id.name or ''
+        po = self.get_purchase_order_info()
+        if po and po.payment_term_id:
+            return po.payment_term_id.name or ''
+        return ''
+
     def get_exporter_info(self):
         """Get exporter (company) information"""
         self.ensure_one()
