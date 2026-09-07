@@ -160,6 +160,54 @@ class PurchaseOrder(models.Model):
         help='Sale Orders linked to this Purchase Order',
     )
 
+    # ===== Bill To Fields =====
+    bill_to_id = fields.Many2one(
+        'res.partner',
+        string='Bill To',
+        required=True,
+        copy=False,
+        help='Contact for billing (lists current selected company contact + current selected company warehouse contacts).',
+    )
+    bill_to_partner_ids = fields.Many2many(
+        'res.partner',
+        compute='_compute_bill_to_partner_ids',
+        string='Allowed Bill To Partners',
+    )
+
+    @api.depends('company_id')
+    def _compute_bill_to_partner_ids(self):
+        for order in self:
+            company = order.company_id or self.env.company
+            partner_ids = set()
+            if company:
+                # 1. Selected company main contact
+                if company.partner_id:
+                    partner_ids.add(company.partner_id.id)
+
+                # 2. Selected company warehouse contacts
+                warehouses = self.env['stock.warehouse'].sudo().search([('company_id', '=', company.id)])
+                for wh in warehouses:
+                    if wh.partner_id and wh.partner_id != company.partner_id:
+                        partner_ids.add(wh.partner_id.id)
+                    else:
+                        # Auto-create and link dedicated partner contact for warehouse if missing or sharing company partner
+                        wh_partner = self.env['res.partner'].sudo().create({
+                            'name': wh.name,
+                            'company_id': company.id,
+                            'type': 'contact',
+                        })
+                        wh.sudo().write({'partner_id': wh_partner.id})
+                        partner_ids.add(wh_partner.id)
+
+            order.bill_to_partner_ids = [(6, 0, list(partner_ids))]
+
+    @api.onchange('company_id')
+    def _onchange_company_id_bill_to(self):
+        self._compute_bill_to_partner_ids()
+        if self.bill_to_id and self.bill_to_id.id not in self.bill_to_partner_ids.ids:
+            self.bill_to_id = False
+
+
     # ===== Computed Fields for UI =====
     ks_is_pm_user = fields.Boolean(
         string='Is PM User',
@@ -1709,7 +1757,7 @@ class PurchaseOrder(models.Model):
             'payment_term_id', 'fiscal_position_id',
             'dest_address_id', 'ks_round_off', 'ks_no_tax_allowed',
             'picking_type_id', 'ks_linked_sale_order_ids', 'ks_zone', 'partner_ref',
-            'date_planned',
+            'date_planned', 'bill_to_id',
         ]
         _locked_states = ('purchase', 'pending_approval', 'cancel_pending', 'edit_pending')
 
