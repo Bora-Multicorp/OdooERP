@@ -227,5 +227,24 @@ class TestKsPurchaseConfirmationWorkflow(KsPurchaseApprovalCommon):
         with self.assertRaises(UserError):
             po.with_user(other_pm).ks_action_approve_confirmation()
 
+    def test_21_bill_to_contacts_computation(self):
+        """TEST: Bill To field lists company contact and company warehouse contacts"""
+        # Create warehouse for test company
+        wh_partner = self.env['res.partner'].create({
+            'name': 'Test WH Partner',
+            'company_id': self.company.id,
+        })
+        warehouse = self.env['stock.warehouse'].create({
+            'name': 'Test Warehouse',
+            'code': 'TWH',
+            'company_id': self.company.id,
+            'partner_id': wh_partner.id,
+        })
+
+        po = self._create_purchase_order()
+        self.assertIn(self.company.partner_id, po.bill_to_partner_ids, "Company partner should be in allowed Bill To contacts")
+        self.assertIn(wh_partner, po.bill_to_partner_ids, "Warehouse partner should be in allowed Bill To contacts")
+
+
 
 

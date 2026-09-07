@@ -93,6 +93,7 @@ class KsPurchaseApprovalCommon(TransactionCase):
         return self.env['purchase.order'].with_user(user).with_company(self.company).create({
             'partner_id': self.vendor.id,
             'company_id': self.company.id,
+            'bill_to_id': self.company.partner_id.id,
             'order_line': [(0, 0, {
                 'product_id': self.product.id,
                 'product_qty': 10.0,
