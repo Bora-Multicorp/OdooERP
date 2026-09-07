@@ -214,6 +214,43 @@ class SaleOrder(models.Model):
         string='Show Update Edit Approvals Button',
         compute='_compute_ks_button_visibility',
     )
+    ks_has_price_below_purchase = fields.Boolean(
+        string='Has Item Price Below Purchase',
+        compute='_compute_ks_has_price_below_purchase',
+        help='True if any line item selling price is lower than the product latest purchase price.',
+    )
+    ks_price_below_purchase_warning_text = fields.Text(
+        string='Price Below Purchase Details',
+        compute='_compute_ks_has_price_below_purchase',
+    )
+
+    @api.depends(
+        'order_line.price_unit',
+        'order_line.product_id',
+        'order_line.display_type',
+        'currency_id',
+        'company_id',
+        'date_order',
+    )
+    def _compute_ks_has_price_below_purchase(self):
+        """Compute whether any order line unit price is lower than latest purchase price."""
+        for order in self:
+            low_lines = order.order_line.filtered(lambda l: l.ks_is_price_below_purchase)
+            if low_lines:
+                order.ks_has_price_below_purchase = True
+                details = []
+                currency = order.currency_id
+                cur_name = currency.name if currency else ''
+                for line in low_lines:
+                    min_p = line._ks_get_latest_purchase_price_in_order_currency()
+                    formatted_min_p = currency.round(min_p) if (min_p is not None and currency) else (min_p or 0.0)
+                    details.append(
+                        f"• {line.product_id.display_name}: Unit Sale Price ({line.price_unit} {cur_name}) < Latest Purchase Price ({formatted_min_p} {cur_name})"
+                    )
+                order.ks_price_below_purchase_warning_text = "\n".join(details)
+            else:
+                order.ks_has_price_below_purchase = False
+                order.ks_price_below_purchase_warning_text = ""
 
     @api.depends('company_id')
     def _compute_ks_is_dual_approval(self):
@@ -455,27 +492,8 @@ class SaleOrder(models.Model):
     # ===== Override Confirm Action =====
 
     def _confirmation_error_message(self):
-        """Include check: sales price must not be below latest purchase price (in order currency)."""
-        msg = super()._confirmation_error_message()
-        if msg:
-            return msg
-        self.ensure_one()
-        for line in self.order_line:
-            if line.display_type or not line.product_id:
-                continue
-            min_purchase = line._ks_get_latest_purchase_price_in_order_currency()
-            if min_purchase is None:
-                continue
-            sale_price = line._ks_get_sale_price_in_order_currency()
-            if sale_price is None:
-                continue
-            if float_compare(sale_price, min_purchase, precision_digits=2) < 0:
-                order_cur = self.currency_id
-                return _(
-                    "Sales price cannot be below latest purchase price. "
-                    "Product '%s': unit price in order currency (%s) is below latest purchase price (min %s %s)."
-                ) % (line.product_id.display_name, order_cur.name, order_cur.round(min_purchase), order_cur.name)
-        return False
+        """Standard confirmation error message check."""
+        return super()._confirmation_error_message()
 
     def action_confirm(self):
         """
@@ -1798,6 +1816,8 @@ class SaleOrder(models.Model):
                                                                                                              requester_name))
         if reason:
             base_note += f"\n\nReason: {reason}"
+        if self.ks_has_price_below_purchase and self.ks_price_below_purchase_warning_text:
+            base_note += f"\n\n⚠️ Low Sale Price Warning:\n{self.ks_price_below_purchase_warning_text}"
         return base_note
 
     # ===== Wizard Helpers =====
