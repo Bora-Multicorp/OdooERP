@@ -280,64 +280,20 @@
                        placeholder="Select Sale Orders..."/>
             </xpath>
 
-            <!-- Payment Status under Deliver To (picking_type_id) -->
+            <!-- Payment Status and Bill To under Deliver To (picking_type_id) -->
             <xpath expr="//field[@name='picking_type_id']" position="after">
-                <field name="payment_status"
-                       widget="badge"
-                       decoration-success="payment_status == 'paid'"
-                       decoration-warning="payment_status == 'partial'"
-                       decoration-danger="payment_status == 'unpaid'"
-                       decoration-info="payment_status == 'no_invoice'"/>
-            </xpath>
-
-            <!-- Lock Payment Terms for normal users after approval -->
-            <xpath expr="//field[@name='payment_term_id']" position="attributes">
-                <attribute name="readonly">not ks_can_edit or ks_qty_only_edit or invoice_status == 'invoiced' or state == 'done'</attribute>
-            </xpath>
-
-            <!-- Lock Fiscal Position for normal users after approval -->
-            <xpath expr="//field[@name='fiscal_position_id']" position="attributes">
-                <attribute name="readonly">not ks_can_edit or ks_qty_only_edit or invoice_status == 'invoiced' or state == 'done'</attribute>
-            </xpath>
-
-            <!-- Lock Delivery Address for normal users after approval -->
-            <xpath expr="//field[@name='dest_address_id']" position="attributes">
-                <attribute name="readonly">not ks_can_edit or ks_qty_only_edit or state in ['cancel', 'done']</attribute>
-            </xpath>
-
-            <!-- Lock Round Off for normal users after approval (field from ks_templates) -->
-            <xpath expr="//field[@name='ks_round_off']" position="attributes">
-                <attribute name="readonly">not ks_can_edit or ks_qty_only_edit</attribute>
-            </xpath>
-
-            <!-- Lock No Tax checkbox for normal users after approval (field from ks_automail) -->
-            <xpath expr="//field[@name='ks_no_tax_allowed']" position="attributes">
-                <attribute name="readonly">not ks_can_edit or ks_qty_only_edit</attribute>
-            </xpath>
-
-            <!-- Lock Deliver To / Operation Type for normal users after approval -->
-            <xpath expr="//field[@name='picking_type_id']" position="attributes">
-                <attribute name="readonly">not ks_can_edit or ks_qty_only_edit or state in ['cancel', 'done']</attribute>
-            </xpath>
-
-            <!-- Lock Linked Sale Orders for normal users after approval -->
-            <xpath expr="//field[@name='ks_linked_sale_order_ids']" position="attributes">
-                <attribute name="readonly">not ks_can_edit or ks_qty_only_edit or state in ['done', 'cancel']</attribute>
-            </xpath>
-
-            <!-- Lock Zone field for normal users after approval (field from ks_automail) -->
-            <xpath expr="//field[@name='ks_zone']" position="attributes">
-                <attribute name="readonly">not ks_can_edit or ks_qty_only_edit</attribute>
-            </xpath>
-
-            <!-- Bill To field placed just before partner_ref -->
-            <xpath expr="//field[@name='partner_ref']" position="before">
                 <field name="bill_to_id"
                        domain="[('id', 'in', bill_to_partner_ids)]"
                        options="{'no_create': True, 'no_create_edit': True}"
                        required="1"
                        readonly="not ks_can_edit or ks_qty_only_edit or state in ('cancel', 'done', 'purchase', 'pending_approval')"/>
                 <field name="bill_to_partner_ids" invisible="1"/>
+                <field name="payment_status"
+                       widget="badge"
+                       decoration-success="payment_status == 'paid'"
+                       decoration-warning="payment_status == 'partial'"
+                       decoration-danger="payment_status == 'unpaid'"
+                       decoration-info="payment_status == 'no_invoice'"/>
             </xpath>
 
             <!-- Lock Vendor Reference for normal users after approval -->
