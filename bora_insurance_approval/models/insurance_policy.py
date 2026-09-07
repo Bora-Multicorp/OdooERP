@@ -268,20 +268,31 @@ class InsurancePolicy(models.Model):
                 ) % rec.company_id.name)
 
             memo = f"Top-up Premium for {rec.policy_number}" if is_topup else f"Premium Payment — {rec.policy_number}"
+            
+            partner = False
+            if rec.insurance_company_id:
+                partner = rec.env['res.partner'].search([
+                    ('name', '=', rec.insurance_company_id.name),
+                ], limit=1)
+                if not partner:
+                    partner = rec.env['res.partner'].sudo().create({
+                        'name': rec.insurance_company_id.name,
+                        'is_company': True,
+                        'supplier_rank': 1,
+                    })
+
             payment_vals = {
                 'payment_type': 'outbound',
                 'partner_type': 'supplier',
-                'partner_id': rec.insurance_company_id.id,
+                'partner_id': partner.id if partner else False,
                 'amount': amount,
                 'currency_id': rec.company_id.currency_id.id,
                 'journal_id': journal.id,
-                'ref': memo,
+                'memo': memo,
                 'company_id': rec.company_id.id,
                 'is_insurance_payment': True,
                 'insurance_policy_id': rec.id,
                 'is_topup': is_topup,
-                'topup_amount': amount if is_topup else 0.0,
-                'topup_premium': rec.pending_topup_premium if is_topup else 0.0,
             }
             payment = rec.env['account.payment'].create(payment_vals)
 

@@ -266,7 +266,7 @@ class InsuranceTopup(models.Model):
                 'amount': self.amount,
                 'date': self.payment_date or fields.Date.today(),
                 'journal_id': self.journal_id.id,
-                'ref': (
+                'memo': (
                     f'Top-up {self.name} — '
                     f'Policy {self.policy_id.policy_number}'
                 ),
@@ -287,7 +287,7 @@ class InsuranceTopup(models.Model):
         if not users:
             users = self.env.ref('base.user_admin')
 
-        pay_ref = payment.name or payment.ref or self.name
+        pay_ref = payment.name or getattr(payment, 'memo', '') or self.name
         note = (
             f'Top-up request <b>{self.name}</b> has been approved.<br/>'
             f'Policy: <b>{self.policy_id.policy_number}</b><br/>'
