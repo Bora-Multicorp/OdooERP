@@ -74,24 +74,41 @@
             <tr>
                 <td style="width:55%; vertical-align:top; border:1px solid #000; padding:6px;" colspan="4">
                     Invoice To<br/>
-                    <strong t-esc="doc.company_id.sudo().name or ''"/><br/>
-                    <t t-if="doc.company_id.sudo().partner_id.sudo().street" t-esc="doc.company_id.sudo().partner_id.sudo().street"/><br/>
-                    <t t-if="doc.company_id.sudo().partner_id.sudo().city" t-esc="doc.company_id.sudo().partner_id.sudo().city"/>
-                    <t t-if="doc.company_id.sudo().partner_id.sudo().city and doc.company_id.sudo().partner_id.sudo().state_id">, </t>
-                    <t t-if="doc.company_id.sudo().partner_id.sudo().state_id" t-esc="doc.company_id.sudo().partner_id.sudo().state_id.sudo().name or ''"/><br/>
-                    <t t-if="doc.company_id.sudo().vat">GSTIN/UIN: <t t-esc="doc.company_id.sudo().vat"/><br/></t>
-                    <t t-if="doc.company_id.sudo().partner_id.sudo().state_id">State Name : <t t-esc="doc.company_id.sudo().partner_id.sudo().state_id.sudo().name or ''"/><t t-if="doc.company_id.sudo().partner_id.sudo().state_id.sudo().l10n_in_tin">, Code : <t t-esc="doc.company_id.sudo().partner_id.sudo().state_id.sudo().l10n_in_tin"/></t></t>
-                    <t t-set="company_pan" t-value="doc.get_company_pan()"/>
-                    <t t-if="company_pan"><br/>PAN : <t t-esc="company_pan"/></t>
+                    <t t-set="bill_to" t-value="(doc.bill_to_id or doc.company_id.sudo().partner_id).sudo()"/>
+                    <strong t-esc="bill_to.name or ''"/><br/>
+                    <t t-if="bill_to.street" t-esc="bill_to.street"/><br/>
+                    <t t-if="bill_to.street2" t-esc="bill_to.street2"/><br/>
+                    <t t-if="bill_to.city" t-esc="bill_to.city"/>
+                    <t t-if="bill_to.city and bill_to.state_id">, </t>
+                    <t t-if="bill_to.state_id" t-esc="bill_to.state_id.name or ''"/><br/>
+                    <t t-if="bill_to.vat">
+                        <t t-if="bill_to.country_id and bill_to.country_id.code == 'IN'">GSTIN/UIN : </t>
+                        <t t-else="">TRN : </t>
+                        <t t-esc="bill_to.vat"/><br/>
+                    </t>
+                    <t t-if="bill_to.state_id">State Name : <t t-esc="bill_to.state_id.name or ''"/><t t-if="bill_to.state_id.l10n_in_tin">, Code : <t t-esc="bill_to.state_id.l10n_in_tin"/></t><br/></t>
+                    <t t-set="bill_to_pan" t-value="bill_to.l10n_in_pan or doc.get_company_pan()"/>
+                    <t t-if="bill_to_pan">PAN : <t t-esc="bill_to_pan"/><br/></t>
                     <t t-set="company_iec" t-value="doc.get_company_iec()"/>
-                    <t t-if="company_iec"><br/>IEC No : <t t-esc="company_iec"/></t>
+                    <t t-if="company_iec">IEC No : <t t-esc="company_iec"/><br/></t>
+                    <t t-if="bill_to.email">E-Mail : <t t-esc="bill_to.email"/><br/></t>
+                    <t t-if="bill_to.phone">Phone : <t t-esc="bill_to.phone"/><br/></t>
                     <div style="border-top:1px solid black; height:1px;"/>
-                    <t t-set="consignee" t-value="(doc.picking_type_id.sudo().warehouse_id.sudo().partner_id or doc.dest_address_id).sudo()"/>
+                    <t t-set="consignee" t-value="(doc.picking_type_id.sudo().warehouse_id.sudo().partner_id or doc.dest_address_id or doc.company_id.sudo().partner_id).sudo()"/>
                     <strong>Consignee (Ship to)</strong><br/>
-                    <strong t-esc="consignee and consignee.sudo().name or doc.company_id.sudo().name or ''"/><br/>
-                    <t t-if="consignee and consignee.sudo().street and consignee.sudo().street != consignee.sudo().name" t-esc="consignee.sudo().street"/><br/>
-                    <t t-if="consignee and consignee.sudo().city" t-esc="consignee.sudo().city"/>
-                    <t t-if="consignee and consignee.sudo().state_id">, <t t-esc="consignee.sudo().state_id.sudo().name or ''"/></t><br/>
+                    <strong t-esc="consignee and consignee.name or doc.company_id.sudo().name or ''"/><br/>
+                    <t t-if="consignee and consignee.street and consignee.street != consignee.name" t-esc="consignee.street"/><br/>
+                    <t t-if="consignee and consignee.street2 and consignee.street2 != consignee.name" t-esc="consignee.street2"/><br/>
+                    <t t-if="consignee and consignee.city" t-esc="consignee.city"/>
+                    <t t-if="consignee and consignee.state_id">, <t t-esc="consignee.state_id.name or ''"/></t><br/>
+                    <t t-if="consignee and consignee.country_id" t-esc="consignee.country_id.name or ''"/><t t-if="consignee and consignee.zip"> - <t t-esc="consignee.zip"/></t><br/>
+                    <t t-if="consignee and consignee.vat">
+                        <t t-if="consignee.country_id and consignee.country_id.code == 'IN'">GSTIN/UIN : </t>
+                        <t t-else="">TRN : </t>
+                        <t t-esc="consignee.vat"/><br/>
+                    </t>
+                    <t t-if="consignee and consignee.phone">Phone : <t t-esc="consignee.phone"/><br/></t>
+                    <t t-if="consignee and consignee.email">E-Mail : <t t-esc="consignee.email"/><br/></t>
                     <div style="border-top:1px solid black; height:1px;"/>
                     Supplier (Bill from)<br/>
                     <strong t-esc="doc.partner_id.sudo().name or ''"/><br/>

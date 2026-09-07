@@ -330,6 +330,16 @@
                 <attribute name="readonly">not ks_can_edit or ks_qty_only_edit</attribute>
             </xpath>
 
+            <!-- Bill To field placed just before partner_ref -->
+            <xpath expr="//field[@name='partner_ref']" position="before">
+                <field name="bill_to_id"
+                       domain="[('id', 'in', bill_to_partner_ids)]"
+                       options="{'no_create': True, 'no_create_edit': True}"
+                       required="1"
+                       readonly="not ks_can_edit or ks_qty_only_edit or state in ('cancel', 'done', 'purchase', 'pending_approval')"/>
+                <field name="bill_to_partner_ids" invisible="1"/>
+            </xpath>
+
             <!-- Lock Vendor Reference for normal users after approval -->
             <xpath expr="//field[@name='partner_ref']" position="attributes">
                 <attribute name="readonly">not ks_can_edit or ks_qty_only_edit</attribute>
