@@ -22,6 +22,12 @@ class SaleOrderLine(models.Model):
         store=False,
         help='Minimum unit price allowed: latest purchase price converted to order currency.',
     )
+    ks_is_price_below_purchase = fields.Boolean(
+        string='Price Below Latest Purchase',
+        compute='_compute_ks_is_price_below_purchase',
+        store=False,
+        help='True if line unit price is lower than the product latest purchase price.',
+    )
 
     @api.depends('product_id', 'order_id.currency_id', 'order_id.company_id', 'order_id.date_order')
     def _compute_ks_min_unit_price(self):
@@ -286,33 +292,30 @@ class SaleOrderLine(models.Model):
         except Exception:
             return None
 
-    @api.constrains('price_unit', 'product_id', 'order_id', 'display_type')
-    def _check_sale_price_not_below_latest_purchase(self):
-        """
-        Sales price must not be below latest purchase price.
-        Comparison is done in order currency: sale price is already in order currency;
-        latest purchase price is converted to order currency (e.g. INR → USD when SO is in USD).
-        """
+    @api.depends('price_unit', 'product_id', 'order_id.currency_id', 'order_id.company_id', 'order_id.date_order', 'display_type')
+    def _compute_ks_is_price_below_purchase(self):
+        """Compute whether sales line unit price is lower than latest purchase price."""
         for line in self:
             if line.display_type or not line.product_id or not line.order_id:
+                line.ks_is_price_below_purchase = False
                 continue
             min_purchase = line._ks_get_latest_purchase_price_in_order_currency()
             if min_purchase is None:
+                line.ks_is_price_below_purchase = False
                 continue
             sale_price = line._ks_get_sale_price_in_order_currency()
             if sale_price is None:
+                line.ks_is_price_below_purchase = False
                 continue
-            if float_compare(sale_price, min_purchase, precision_digits=2) < 0:
-                order = line.order_id
-                order_cur = order.currency_id
-                raise ValidationError(_(
-                    "Sales price cannot be below the latest purchase price. "
-                    "Product '%(product)s': unit price in order currency (%(order_cur)s) is %(sale)s, "
-                    "but latest purchase price (converted to %(order_cur)s) is %(min)s. "
-                    "Please set unit price to at least %(min)s %(order_cur)s."
-                ) % {
-                    'product': line.product_id.display_name,
-                    'order_cur': order_cur.name,
-                    'sale': order_cur.round(sale_price),
-                    'min': order_cur.round(min_purchase),
-                })
+            line.ks_is_price_below_purchase = float_compare(sale_price, min_purchase, precision_digits=2) < 0
+
+    def _check_sale_price_not_below_latest_purchase(self):
+        """
+        No longer blocks order processing with ValidationError.
+        Instead, returns lines where sale price is lower than latest purchase price for warning reporting.
+        """
+        low_price_lines = self.env['sale.order.line']
+        for line in self:
+            if line.ks_is_price_below_purchase:
+                low_price_lines |= line
+        return low_price_lines
