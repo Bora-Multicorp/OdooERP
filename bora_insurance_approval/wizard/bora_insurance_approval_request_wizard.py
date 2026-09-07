@@ -40,17 +40,34 @@ class BoraInsuranceApprovalRequestWizard(models.TransientModel):
         is_update = self.env.context.get('bora_is_update', False)
         policy_ids = self.env.context.get('default_bora_policy_ids') or res.get('bora_policy_ids')
         if is_update and policy_ids:
-            # Handle standard Many2many command tuples or raw IDs
-            if isinstance(policy_ids, list) and policy_ids and isinstance(policy_ids[0], tuple):
-                p_ids = policy_ids[0][2]
-            else:
-                p_ids = policy_ids
+            p_ids = []
+            if isinstance(policy_ids, models.BaseModel):
+                p_ids = policy_ids.ids
+            elif isinstance(policy_ids, (int, str)) and str(policy_ids).isdigit():
+                p_ids = [int(policy_ids)]
+            elif isinstance(policy_ids, (list, tuple)):
+                for item in policy_ids:
+                    if isinstance(item, models.BaseModel):
+                        p_ids.extend(item.ids)
+                    elif isinstance(item, (int, str)) and str(item).isdigit():
+                        p_ids.append(int(item))
+                    elif isinstance(item, (list, tuple)):
+                        if len(item) == 3:
+                            cmd, val1, val2 = item[0], item[1], item[2]
+                            if cmd == 6 and isinstance(val2, (list, tuple)):
+                                p_ids.extend([int(x) for x in val2 if isinstance(x, (int, str)) and str(x).isdigit()])
+                            elif cmd == 4 and isinstance(val1, (int, str)) and str(val1).isdigit():
+                                p_ids.append(int(val1))
+                        else:
+                            p_ids.extend([int(x) for x in item if isinstance(x, (int, str)) and str(x).isdigit()])
+
             policies = self.env['insurance.policy'].browse(p_ids)
-            if len(policies) == 1:
-                p = policies[0]
-                if p.bora_insurance_pm1_approved and p.bora_insurance_pm1_id:
-                    res['bora_pm1_already_approved'] = True
-                    res['bora_approver1_user'] = p.bora_insurance_pm1_id.id
+            if policies:
+                if len(policies) == 1:
+                    p = policies[0]
+                    if p.bora_insurance_pm1_approved and p.bora_insurance_pm1_id:
+                        res['bora_pm1_already_approved'] = True
+                        res['bora_approver1_user'] = p.bora_insurance_pm1_id.id
                 res['bora_is_update_mode'] = True
         return res
 
