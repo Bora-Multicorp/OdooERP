@@ -277,7 +277,7 @@ class InsurancePolicyPayment(models.Model):
 
         label = 'Top-up' if self.payment_type == 'topup' else 'Premium'
         policy_ref = self.policy_id.policy_number
-        pay_ref = payment.name or payment.ref or self.name
+        pay_ref = payment.name or getattr(payment, 'memo', '') or self.name
         note = (
             f'Insurance {label.lower()} request <b>{self.name}</b> has been approved.<br/>'
             f'Policy: <b>{policy_ref}</b><br/>'
