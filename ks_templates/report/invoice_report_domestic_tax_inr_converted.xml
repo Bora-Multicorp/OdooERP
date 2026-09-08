@@ -149,7 +149,7 @@
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td style="border-top:1px solid #000; border-right:1px solid #000; padding:1px;">Despatch Document No.</td>
+                                    <td style="border-top:1px solid #000; border-right:1px solid #000; padding:1px;">Dispatch Document No.</td>
                                     <td style="border-top:1px solid #000; border-left:1px solid #000; padding:1px;" colspan="3">Delivery Note Date</td>
                                 </tr>
                                 <tr>
@@ -163,7 +163,7 @@
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td style="border-top:1px solid #000; border-right:1px solid #000; padding:1px;">Despatched Through</td>
+                                    <td style="border-top:1px solid #000; border-right:1px solid #000; padding:1px;">Dispatched Through</td>
                                     <td style="border-top:1px solid #000; border-left:1px solid #000; padding:1px;" colspan="3">Destination</td>
                                 </tr>
                                 <tr>
