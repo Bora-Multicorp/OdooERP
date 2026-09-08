@@ -164,7 +164,6 @@ class PurchaseOrder(models.Model):
     bill_to_id = fields.Many2one(
         'res.partner',
         string='Bill To',
-        required=True,
         copy=False,
         help='Contact for billing (lists current selected company contact + current selected company warehouse contacts).',
     )
