@@ -70,7 +70,7 @@
                         <tr>
                             <td style="border:1px solid #000; padding:2px; font-weight:bold;">
                                 <t t-esc="invoice_info.get('invoice_no') or doc.name or ''"/>
-                                <t t-if="invoice_date"> DATE - <t t-esc="invoice_date.strftime('%d.%m.%Y')"/></t>
+                                <t t-if="invoice_date"> DATE - <t t-esc="invoice_date.strftime('%d/%m/%Y')"/></t>
                             </td>
                             <td style="border:1px solid #000; padding:2px;" t-esc="doc.ks_exporter_ref or ''"/>
                         </tr>
