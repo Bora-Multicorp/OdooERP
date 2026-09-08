@@ -76,6 +76,11 @@
                     Invoice To<br/>
                     <t t-set="bill_to" t-value="(doc.bill_to_id or doc.company_id.sudo().partner_id).sudo()"/>
                     <strong t-esc="doc.get_bill_to_company_name()"/><br/>
+                    <t t-if="bill_to.street" t-esc="bill_to.street"/><br/>
+                    <t t-if="bill_to.street2" t-esc="bill_to.street2"/><br/>
+                    <t t-if="bill_to.city" t-esc="bill_to.city"/>
+                    <t t-if="bill_to.city and bill_to.state_id">, </t>
+                    <t t-if="bill_to.state_id" t-esc="bill_to.state_id.name or ''"/><br/>
                     <t t-if="bill_to.vat">
                         <t t-if="bill_to.country_id and bill_to.country_id.code == 'IN'">GSTIN/UIN : </t>
                         <t t-else="">TRN : </t>
@@ -92,6 +97,11 @@
                     <t t-set="consignee" t-value="(doc.picking_type_id.sudo().warehouse_id.sudo().partner_id or doc.dest_address_id or doc.company_id.sudo().partner_id).sudo()"/>
                     <strong>Consignee (Ship to)</strong><br/>
                     <strong t-esc="doc.get_ship_to_company_name()"/><br/>
+                    <t t-if="consignee and consignee.street and consignee.street != consignee.name" t-esc="consignee.street"/><br/>
+                    <t t-if="consignee and consignee.street2 and consignee.street2 != consignee.name" t-esc="consignee.street2"/><br/>
+                    <t t-if="consignee and consignee.city" t-esc="consignee.city"/>
+                    <t t-if="consignee and consignee.state_id">, <t t-esc="consignee.state_id.name or ''"/></t><br/>
+                    <t t-if="consignee and consignee.country_id" t-esc="consignee.country_id.name or ''"/><t t-if="consignee and consignee.zip"> - <t t-esc="consignee.zip"/></t><br/>
                     <t t-if="consignee and consignee.vat">
                         <t t-if="consignee.country_id and consignee.country_id.code == 'IN'">GSTIN/UIN : </t>
                         <t t-else="">TRN : </t>
