@@ -140,8 +140,8 @@
                                     <td style="border-right:1px solid #000; padding:1px;"><strong t-esc="doc.name or ''"/></td>
                                     <td style="border-left:1px solid #000; padding:1px;" colspan="3">
                                         <strong>
-                                            <t t-if="doc.invoice_date" t-esc="doc.invoice_date.strftime('%d-%b-%y')"/>
-                                            <t t-elif="doc.date" t-esc="doc.date.strftime('%d-%b-%y')"/>
+                                            <t t-if="doc.invoice_date" t-esc="doc.invoice_date.strftime('%d/%m/%Y')"/>
+                                            <t t-elif="doc.date" t-esc="doc.date.strftime('%d/%m/%Y')"/>
                                         </strong>
                                     </td>
                                 </tr>
@@ -170,8 +170,8 @@
                                             <t t-if="doc.ks_reference_no_date" t-esc="doc.ks_reference_no_date"/>
                                             <t t-else="">
                                                 <t t-esc="doc.name or ''"/>
-                                                <t t-if="doc.invoice_date"> dt. <t t-esc="doc.invoice_date.strftime('%d-%b-%y')"/></t>
-                                                <t t-elif="doc.date"> dt. <t t-esc="doc.date.strftime('%d-%b-%y')"/></t>
+                                                <t t-if="doc.invoice_date"> dt. <t t-esc="doc.invoice_date.strftime('%d/%m/%Y')"/></t>
+                                                <t t-elif="doc.date"> dt. <t t-esc="doc.date.strftime('%d/%m/%Y')"/></t>
                                             </t>
                                         </strong>
                                     </td>
@@ -186,8 +186,8 @@
                                     </td>
                                     <td style="border-left:1px solid #000; padding:1px;" colspan="3">
                                         <strong>
-                                            <t t-if="sale_order and sale_order.date_order" t-esc="sale_order.date_order.strftime('%d-%b-%y')"/>
-                                            <t t-elif="sale_order and sale_order.create_date" t-esc="sale_order.create_date.strftime('%d-%b-%y')"/>
+                                            <t t-if="sale_order and sale_order.date_order" t-esc="sale_order.date_order.strftime('%d/%m/%Y')"/>
+                                            <t t-elif="sale_order and sale_order.create_date" t-esc="sale_order.create_date.strftime('%d/%m/%Y')"/>
                                         </strong>
                                     </td>
                                 </tr>
@@ -201,7 +201,7 @@
                                     </td>
                                     <td style="border-bottom:1px solid #000; border-left:1px solid #000; padding:1px;" colspan="3">
                                         <strong>
-                                            <t t-if="doc.ks_delivery_note_date" t-esc="doc.ks_delivery_note_date.strftime('%d-%b-%y')"/>
+                                            <t t-if="doc.ks_delivery_note_date" t-esc="doc.ks_delivery_note_date.strftime('%d/%m/%Y')"/>
                                         </strong>
                                     </td>
                                 </tr>
