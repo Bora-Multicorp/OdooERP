@@ -154,7 +154,7 @@
                             <td style="padding:1px;" colspan="3"><strong t-esc="doc.user_id.name or ''"/></td>
                         </tr>
                         <tr>
-                            <td style="border-right:1px solid #000; border-top:1px solid #000; padding:1px;">Despatch through</td>
+                            <td style="border-right:1px solid #000; border-top:1px solid #000; padding:1px;">Dispatch through</td>
                             <td style="border-left:1px solid #000; border-top:1px solid #000; padding:1px;" colspan="3">Destination</td>
                         </tr>
                         <tr>
