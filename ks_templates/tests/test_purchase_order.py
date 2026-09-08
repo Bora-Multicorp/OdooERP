@@ -105,3 +105,16 @@ class TestPurchaseOrder(KsTemplatesCommon):
             if hsn_code:
                 self.assertIsInstance(hsn_code, str)
 
+    def test_get_bill_to_company_name(self):
+        """Test get_bill_to_company_name method"""
+        res = self.purchase_order.get_bill_to_company_name()
+        self.assertIsInstance(res, str)
+        self.assertTrue(len(res) > 0)
+
+    def test_get_ship_to_company_name(self):
+        """Test get_ship_to_company_name method"""
+        res = self.purchase_order.get_ship_to_company_name()
+        self.assertIsInstance(res, str)
+        self.assertTrue(len(res) > 0)
+
+
