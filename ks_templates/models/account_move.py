@@ -35,6 +35,23 @@ class AccountMove(models.Model):
                 pass
             move.ks_zone = zone
 
+    ks_company_country_code = fields.Char(
+        string='Company Country Code',
+        compute='_compute_ks_company_country_code',
+        store=False,
+    )
+
+    @api.depends('company_id', 'company_id.country_id', 'company_id.country_id.code', 'company_id.partner_id.country_id.code')
+    def _compute_ks_company_country_code(self):
+        for move in self:
+            code = ''
+            if move.company_id:
+                if move.company_id.country_id and move.company_id.country_id.code:
+                    code = move.company_id.country_id.code
+                elif move.company_id.partner_id and move.company_id.partner_id.country_id and move.company_id.partner_id.country_id.code:
+                    code = move.company_id.partner_id.country_id.code
+            move.ks_company_country_code = code
+
     # Bank details for invoice (copied from sale order ks_bank_id when invoice is created from SO)
     ks_bank_id = fields.Many2one(
         'res.bank',

@@ -21,21 +21,31 @@ patch(FormController.prototype, {
             }
         }
 
-        // Filter invoice (account.move) Download menu based on zone
-        if (this.model.root.resModel === "account.move" && items?.print?.length) {
-            const zone = this.model.root.data.ks_zone || "";
-            const isIndia = zone.toLowerCase() === "india";
+        // Filter invoice (account.move) Download/Print menu based on company country
+        if (this.model.root.resModel === "account.move") {
+            const companyCountryCode = (this.model.root.data.ks_company_country_code || "").toUpperCase();
+            const isIndianCompany = companyCountryCode === "IN";
 
-            items.print = items.print.filter((item) => {
-                const label = (item.label || item.description || item.name || "").trim().toLowerCase();
-                if (isIndia) {
-                    // India zone: show only "With GST Report"
-                    return label.includes("with gst");
-                } else {
-                    // Other zones: show "Commercial Invoice" and "Without GST Report", hide "PDF"
-                    return label.includes("commercial invoice") || label.includes("without gst");
-                }
-            });
+            if (items?.print?.length) {
+                items.print = items.print.filter((item) => {
+                    const label = (item.label || item.description || item.name || "").trim().toLowerCase();
+                    const isCommercialInvoice = label.includes("commercial invoice");
+
+                    // Hide "Commercial Invoice" ONLY for Indian company (company_id's country is India)
+                    if (isIndianCompany && isCommercialInvoice) {
+                        return false;
+                    }
+
+                    return true;
+                });
+            }
+
+            if (items?.action?.length && isIndianCompany) {
+                items.action = items.action.filter((item) => {
+                    const label = (item.label || item.description || item.name || "").trim().toLowerCase();
+                    return !label.includes("commercial invoice");
+                });
+            }
         }
 
         return items;
