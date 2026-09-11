@@ -21,31 +21,31 @@ patch(FormController.prototype, {
             }
         }
 
-        // Filter invoice (account.move) Download/Print menu based on company country
-        if (this.model.root.resModel === "account.move") {
-            const companyCountryCode = (this.model.root.data.ks_company_country_code || "").toUpperCase();
-            const isIndianCompany = companyCountryCode === "IN";
+        // Filter invoice (account.move) Download menu based on visibility conditions
+        if (this.model.root.resModel === "account.move" && items?.print?.length) {
+            const zone = (this.model.root.data.ks_zone || "").toLowerCase();
+            const isIndiaZone = zone === "india";
+            const showCommercialInvoice = this.model.root.data.ks_show_commercial_invoice;
 
-            if (items?.print?.length) {
-                items.print = items.print.filter((item) => {
-                    const label = (item.label || item.description || item.name || "").trim().toLowerCase();
-                    const isCommercialInvoice = label.includes("commercial invoice");
+            items.print = items.print.filter((item) => {
+                const label = (item.label || item.description || item.name || "").trim().toLowerCase();
 
-                    // Hide "Commercial Invoice" ONLY for Indian company (company_id's country is India)
-                    if (isIndianCompany && isCommercialInvoice) {
-                        return false;
-                    }
+                // Commercial Invoice visibility:
+                // 1. Non-Indian company => show
+                // 2. Indian company + Indian customer => hide
+                // 3. Indian company + Non-Indian customer => show
+                if (label.includes("commercial invoice")) {
+                    return showCommercialInvoice !== undefined ? Boolean(showCommercialInvoice) : !isIndiaZone;
+                }
 
-                    return true;
-                });
-            }
-
-            if (items?.action?.length && isIndianCompany) {
-                items.action = items.action.filter((item) => {
-                    const label = (item.label || item.description || item.name || "").trim().toLowerCase();
-                    return !label.includes("commercial invoice");
-                });
-            }
+                if (isIndiaZone) {
+                    // India zone: show "With GST Report"
+                    return label.includes("with gst");
+                } else {
+                    // Other zones: show "Without GST Report"
+                    return label.includes("without gst");
+                }
+            });
         }
 
         return items;

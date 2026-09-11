@@ -242,10 +242,12 @@
                                 </td>
                                 <td style="border:1px solid #000; vertical-align:top; padding:6px 8px;">
                                     <strong>SIGNATURE</strong>
-                                    <t t-if="doc.ks_user_signature">
-                                        <br/>
-                                        <img t-att-src="image_data_uri(doc.ks_user_signature)" style="max-width:100%; max-height:55px; margin-top:4px; display:block;" alt=""/>
-                                    </t>
+                                    <t t-set="company_stamp" t-value="(doc and doc.company_id and (doc.company_id.effective_stamp_image or doc.company_id.stamp_image or (doc.company_id.parent_id and doc.company_id.parent_id.stamp_image))) or (env.company and (env.company.effective_stamp_image or env.company.stamp_image or (env.company.parent_id and env.company.parent_id.stamp_image)))"/>
+                                    <div style="margin-top:4px;">
+                                        <t t-if="company_stamp">
+                                            <img t-att-src="image_data_uri(company_stamp)" style="max-height:55px; max-width:100px; vertical-align:middle; margin-right:4px;" alt=""/>
+                                        </t>
+                                    </div>
                                 </td>
                             </tr>
                         </tbody>

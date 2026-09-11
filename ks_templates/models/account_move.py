@@ -18,6 +18,21 @@ class AccountMove(models.Model):
     ks_city_port_of_loading = fields.Char(string='City / Port of Loading')
     ks_city_port_of_discharge = fields.Char(string='City / Port of Discharge')
     ks_zone = fields.Char(string='Zone', compute='_compute_ks_zone', store=False)
+    ks_is_company_indian = fields.Boolean(
+        string='Is Company Indian',
+        compute='_compute_ks_commercial_invoice_visibility',
+        store=False
+    )
+    ks_is_customer_indian = fields.Boolean(
+        string='Is Customer Indian',
+        compute='_compute_ks_commercial_invoice_visibility',
+        store=False
+    )
+    ks_show_commercial_invoice = fields.Boolean(
+        string='Show Commercial Invoice',
+        compute='_compute_ks_commercial_invoice_visibility',
+        store=False
+    )
 
     @api.depends('invoice_line_ids.sale_line_ids.order_id.ks_zone')
     def _compute_ks_zone(self):
@@ -35,22 +50,24 @@ class AccountMove(models.Model):
                 pass
             move.ks_zone = zone
 
-    ks_company_country_code = fields.Char(
-        string='Company Country Code',
-        compute='_compute_ks_company_country_code',
-        store=False,
+    @api.depends(
+        'company_id.country_id',
+        'company_id.partner_id.country_id',
+        'partner_id.country_id',
+        'partner_id.commercial_partner_id.country_id'
     )
-
-    @api.depends('company_id', 'company_id.country_id', 'company_id.country_id.code', 'company_id.partner_id.country_id.code')
-    def _compute_ks_company_country_code(self):
+    def _compute_ks_commercial_invoice_visibility(self):
         for move in self:
-            code = ''
-            if move.company_id:
-                if move.company_id.country_id and move.company_id.country_id.code:
-                    code = move.company_id.country_id.code
-                elif move.company_id.partner_id and move.company_id.partner_id.country_id and move.company_id.partner_id.country_id.code:
-                    code = move.company_id.partner_id.country_id.code
-            move.ks_company_country_code = code
+            comp_country = move.company_id.country_id or (move.company_id.partner_id and move.company_id.partner_id.country_id)
+            is_comp_indian = bool(comp_country and comp_country.code == 'IN')
+
+            cust_country = (move.partner_id and move.partner_id.country_id) or (move.partner_id and move.partner_id.commercial_partner_id and move.partner_id.commercial_partner_id.country_id)
+            is_cust_indian = bool(cust_country and cust_country.code == 'IN')
+
+            move.ks_is_company_indian = is_comp_indian
+            move.ks_is_customer_indian = is_cust_indian
+            move.ks_show_commercial_invoice = not (is_comp_indian and is_cust_indian)
+
 
     # Bank details for invoice (copied from sale order ks_bank_id when invoice is created from SO)
     ks_bank_id = fields.Many2one(

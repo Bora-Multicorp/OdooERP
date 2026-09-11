@@ -12,7 +12,7 @@
     <record id="account.account_invoices_without_payment" model="ir.actions.report">
         <field name="name">Commercial Invoice</field>
         <field name="paperformat_id" ref="ks_templates.paperformat_luminari_saleorder"/>
-        <field name="domain">[('ks_zone', 'in', ['dubai', 'russia', 'sez'])]</field>
+        <field name="domain">[('ks_show_commercial_invoice', '=', True)]</field>
     </record>
 
     <!-- 4) Remove separate luminari action from Print menu -->
