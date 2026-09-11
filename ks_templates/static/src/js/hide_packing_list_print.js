@@ -21,19 +21,29 @@ patch(FormController.prototype, {
             }
         }
 
-        // Filter invoice (account.move) Download menu based on zone
+        // Filter invoice (account.move) Download menu based on visibility conditions
         if (this.model.root.resModel === "account.move" && items?.print?.length) {
-            const zone = this.model.root.data.ks_zone || "";
-            const isIndia = zone.toLowerCase() === "india";
+            const zone = (this.model.root.data.ks_zone || "").toLowerCase();
+            const isIndiaZone = zone === "india";
+            const showCommercialInvoice = this.model.root.data.ks_show_commercial_invoice;
 
             items.print = items.print.filter((item) => {
                 const label = (item.label || item.description || item.name || "").trim().toLowerCase();
-                if (isIndia) {
-                    // India zone: show only "With GST Report"
+
+                // Commercial Invoice visibility:
+                // 1. Non-Indian company => show
+                // 2. Indian company + Indian customer => hide
+                // 3. Indian company + Non-Indian customer => show
+                if (label.includes("commercial invoice")) {
+                    return showCommercialInvoice !== undefined ? Boolean(showCommercialInvoice) : !isIndiaZone;
+                }
+
+                if (isIndiaZone) {
+                    // India zone: show "With GST Report"
                     return label.includes("with gst");
                 } else {
-                    // Other zones: show "Commercial Invoice" and "Without GST Report", hide "PDF"
-                    return label.includes("commercial invoice") || label.includes("without gst");
+                    // Other zones: show "Without GST Report"
+                    return label.includes("without gst");
                 }
             });
         }
