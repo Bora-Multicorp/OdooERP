@@ -66,14 +66,25 @@ class PurchaseOrder(models.Model):
         except Exception:
             return ''
 
+    @staticmethod
+    def _get_parent_company_name(comp):
+        if not comp:
+            return ''
+        comp_sudo = comp.sudo()
+        while comp_sudo.parent_id:
+            comp_sudo = comp_sudo.parent_id
+        return comp_sudo.name or ''
+
     def get_bill_to_company_name(self):
         """Returns the company name for Bill To / Invoice To field in reports."""
         self.ensure_one()
         order = self.sudo()
         if order.bill_to_id:
             partner = order.bill_to_id.sudo()
-            return partner.company_id.name or partner.parent_id.name or partner.commercial_company_name or partner.name or order.company_id.sudo().name or ''
-        return order.company_id.sudo().name or ''
+            if partner.company_id:
+                return self._get_parent_company_name(partner.company_id)
+            return partner.parent_id.name or partner.commercial_company_name or partner.name or self._get_parent_company_name(order.company_id) or ''
+        return self._get_parent_company_name(order.company_id) or ''
 
     def get_ship_to_company_name(self):
         """Returns the company name for Ship To / Consignee field from picking_type_id in reports."""
@@ -81,16 +92,21 @@ class PurchaseOrder(models.Model):
         order = self.sudo()
         if order.picking_type_id:
             pt = order.picking_type_id.sudo()
-            company_name = pt.company_id.name or (pt.warehouse_id and pt.warehouse_id.company_id.name)
-            if company_name:
-                return company_name
+            comp = pt.company_id or (pt.warehouse_id and pt.warehouse_id.company_id)
+            if comp:
+                return self._get_parent_company_name(comp)
             if pt.warehouse_id and pt.warehouse_id.partner_id:
                 partner = pt.warehouse_id.partner_id.sudo()
-                return partner.company_id.name or partner.parent_id.name or partner.commercial_company_name or partner.name
+                if partner.company_id:
+                    return self._get_parent_company_name(partner.company_id)
+                return partner.parent_id.name or partner.commercial_company_name or partner.name or ''
         if order.dest_address_id:
             partner = order.dest_address_id.sudo()
-            return partner.company_id.name or partner.parent_id.name or partner.commercial_company_name or partner.name
-        return order.company_id.sudo().name or ''
+            if partner.company_id:
+                return self._get_parent_company_name(partner.company_id)
+            return partner.parent_id.name or partner.commercial_company_name or partner.name or ''
+        return self._get_parent_company_name(order.company_id) or ''
+
 
 
     @api.depends('order_line.price_subtotal', 'order_line.price_tax')
