@@ -11,3 +11,5 @@ from . import stock_rule
 # from . import stock_move_line
 from . import report_sale_inr
 from . import report_purchase
+from . import res_company
+from . import ir_actions_report
