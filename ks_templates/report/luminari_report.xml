@@ -314,7 +314,7 @@
                     </strong><br/>
                     <div style="border-top:1px solid #000; margin-top:20px;"/>
                     <t t-set="user_signature" t-value="(user and user.sign_signature) or (env.user and env.user.sign_signature) or (lum_sale and lum_sale.ks_authorized_signature)"/>
-                    <t t-set="company_stamp" t-value="(doc and doc.company_id and doc.company_id.stamp_image) or (env.company and env.company.stamp_image)"/>
+                    <t t-set="company_stamp" t-value="(doc and doc.company_id and (doc.company_id.effective_stamp_image or doc.company_id.stamp_image or (doc.company_id.parent_id and doc.company_id.parent_id.stamp_image))) or (env.company and (env.company.effective_stamp_image or env.company.stamp_image or (env.company.parent_id and env.company.parent_id.stamp_image)))"/>
                     <div style="text-align:right; margin-top:10px;">
                         <t t-if="company_stamp">
                             <img t-att-src="image_data_uri(company_stamp)" style="max-height:60px; max-width:120px; vertical-align:middle; margin-left:8px;"/>
