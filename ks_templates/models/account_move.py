@@ -18,6 +18,21 @@ class AccountMove(models.Model):
     ks_city_port_of_loading = fields.Char(string='City / Port of Loading')
     ks_city_port_of_discharge = fields.Char(string='City / Port of Discharge')
     ks_zone = fields.Char(string='Zone', compute='_compute_ks_zone', store=False)
+    ks_is_company_indian = fields.Boolean(
+        string='Is Company Indian',
+        compute='_compute_ks_commercial_invoice_visibility',
+        store=False
+    )
+    ks_is_customer_indian = fields.Boolean(
+        string='Is Customer Indian',
+        compute='_compute_ks_commercial_invoice_visibility',
+        store=False
+    )
+    ks_show_commercial_invoice = fields.Boolean(
+        string='Show Commercial Invoice',
+        compute='_compute_ks_commercial_invoice_visibility',
+        store=False
+    )
 
     @api.depends('invoice_line_ids.sale_line_ids.order_id.ks_zone')
     def _compute_ks_zone(self):
@@ -34,6 +49,25 @@ class AccountMove(models.Model):
             except Exception:
                 pass
             move.ks_zone = zone
+
+    @api.depends(
+        'company_id.country_id',
+        'company_id.partner_id.country_id',
+        'partner_id.country_id',
+        'partner_id.commercial_partner_id.country_id'
+    )
+    def _compute_ks_commercial_invoice_visibility(self):
+        for move in self:
+            comp_country = move.company_id.country_id or (move.company_id.partner_id and move.company_id.partner_id.country_id)
+            is_comp_indian = bool(comp_country and comp_country.code == 'IN')
+
+            cust_country = (move.partner_id and move.partner_id.country_id) or (move.partner_id and move.partner_id.commercial_partner_id and move.partner_id.commercial_partner_id.country_id)
+            is_cust_indian = bool(cust_country and cust_country.code == 'IN')
+
+            move.ks_is_company_indian = is_comp_indian
+            move.ks_is_customer_indian = is_cust_indian
+            move.ks_show_commercial_invoice = not (is_comp_indian and is_cust_indian)
+
 
     # Bank details for invoice (copied from sale order ks_bank_id when invoice is created from SO)
     ks_bank_id = fields.Many2one(

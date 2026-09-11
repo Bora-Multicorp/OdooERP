@@ -171,3 +171,41 @@ class TestAccountMove(KsTemplatesCommon):
         bank_info = self.invoice.get_payment_bank_info()
         self.assertFalse(bank_info['has_payment'])
 
+    def test_commercial_invoice_visibility_non_indian_company(self):
+        """Rule 1: Non-Indian company => always show Commercial Invoice option."""
+        country_ae = self.env.ref('base.ae', raise_if_not_found=False) or self.env['res.country'].search([('code', '=', 'AE')], limit=1)
+        foreign_company = self.env['res.company'].create({
+            'name': 'Dubai Company',
+            'country_id': country_ae.id if country_ae else False,
+        })
+        inv = self.env['account.move'].create({
+            'move_type': 'out_invoice',
+            'partner_id': self.supplier.id,  # Indian customer
+            'company_id': foreign_company.id,
+        })
+        self.assertFalse(inv.ks_is_company_indian)
+        self.assertTrue(inv.ks_show_commercial_invoice)
+
+    def test_commercial_invoice_visibility_indian_company_indian_customer(self):
+        """Rule 2: Indian company + Indian customer => hide Commercial Invoice option."""
+        inv = self.env['account.move'].create({
+            'move_type': 'out_invoice',
+            'partner_id': self.supplier.id,  # Indian customer
+            'company_id': self.company.id,   # Indian company
+        })
+        self.assertTrue(inv.ks_is_company_indian)
+        self.assertTrue(inv.ks_is_customer_indian)
+        self.assertFalse(inv.ks_show_commercial_invoice)
+
+    def test_commercial_invoice_visibility_indian_company_non_indian_customer(self):
+        """Rule 3: Indian company + Non-Indian customer => show Commercial Invoice option."""
+        inv = self.env['account.move'].create({
+            'move_type': 'out_invoice',
+            'partner_id': self.customer.id,  # Russian/Non-Indian customer
+            'company_id': self.company.id,   # Indian company
+        })
+        self.assertTrue(inv.ks_is_company_indian)
+        self.assertFalse(inv.ks_is_customer_indian)
+        self.assertTrue(inv.ks_show_commercial_invoice)
+
+
