@@ -106,15 +106,34 @@ class TestPurchaseOrder(KsTemplatesCommon):
                 self.assertIsInstance(hsn_code, str)
 
     def test_get_bill_to_company_name(self):
-        """Test get_bill_to_company_name method"""
+        """Test get_bill_to_company_name method returns parent company name for branch company"""
         res = self.purchase_order.get_bill_to_company_name()
         self.assertIsInstance(res, str)
         self.assertTrue(len(res) > 0)
 
+        # Test branch company parent resolution
+        parent_company = self.env['res.company'].create({'name': 'Parent Test Company'})
+        branch_company = self.env['res.company'].create({
+            'name': 'Branch Test Company',
+            'parent_id': parent_company.id,
+        })
+        po_branch = self.purchase_order.copy({'company_id': branch_company.id, 'bill_to_id': False})
+        self.assertEqual(po_branch.get_bill_to_company_name(), 'Parent Test Company')
+
     def test_get_ship_to_company_name(self):
-        """Test get_ship_to_company_name method"""
+        """Test get_ship_to_company_name method returns parent company name for branch company"""
         res = self.purchase_order.get_ship_to_company_name()
         self.assertIsInstance(res, str)
         self.assertTrue(len(res) > 0)
+
+        # Test branch company parent resolution
+        parent_company = self.env['res.company'].create({'name': 'Parent Test Company Ship'})
+        branch_company = self.env['res.company'].create({
+            'name': 'Branch Test Company Ship',
+            'parent_id': parent_company.id,
+        })
+        po_branch = self.purchase_order.copy({'company_id': branch_company.id, 'picking_type_id': False, 'dest_address_id': False})
+        self.assertEqual(po_branch.get_ship_to_company_name(), 'Parent Test Company Ship')
+
 
 
