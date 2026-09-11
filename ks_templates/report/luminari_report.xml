@@ -313,11 +313,16 @@
                         <t t-esc="(inv_bank.swift_code or inv_bank.bic) if inv_bank else ''"/>
                     </strong><br/>
                     <div style="border-top:1px solid #000; margin-top:20px;"/>
+                    <t t-set="user_signature" t-value="(user and user.sign_signature) or (env.user and env.user.sign_signature) or (lum_sale and lum_sale.ks_authorized_signature)"/>
+                    <t t-set="company_stamp" t-value="(doc and doc.company_id and doc.company_id.stamp_image) or (env.company and env.company.stamp_image)"/>
                     <div style="text-align:right; margin-top:10px;">
-                        <t t-if="lum_sale and lum_sale.ks_authorized_signature">
-                            <img t-att-src="image_data_uri(lum_sale.ks_authorized_signature)"
-                                 style="max-height:60px; max-width:180px; display:block; margin:0 0 4px auto;"/>
+                        <t t-if="company_stamp">
+                            <img t-att-src="image_data_uri(company_stamp)" style="max-height:60px; max-width:120px; vertical-align:middle; margin-left:8px;"/>
                         </t>
+                        <t t-if="user_signature">
+                            <img t-att-src="image_data_uri(user_signature)" style="max-height:60px; max-width:140px; vertical-align:middle; margin-left:8px;"/>
+                        </t>
+                        <br/>
                         Authorised Signatory<br/><br/>
                         For <strong><t t-esc="doc.company_id.name or 'BORA ELECTRONICS FZCO'"/></strong>
                     </div>
