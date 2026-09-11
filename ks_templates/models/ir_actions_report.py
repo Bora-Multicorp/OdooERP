@@ -15,7 +15,17 @@ class IrActionsReport(models.Model):
             if records and 'company_id' in records._fields and records[0].company_id:
                 company = records[0].company_id
 
-        stamp_missing = not bool(company.stamp_image)
+        # Check effective stamp (branch stamp -> parent company stamp fallback)
+        has_stamp = bool(company.effective_stamp_image or company.stamp_image)
+        if not has_stamp:
+            curr = company.parent_id
+            while curr:
+                if curr.stamp_image:
+                    has_stamp = True
+                    break
+                curr = curr.parent_id
+
+        stamp_missing = not has_stamp
         signature_missing = not bool(self.env.user.sign_signature)
 
         if stamp_missing or signature_missing:
@@ -23,10 +33,10 @@ class IrActionsReport(models.Model):
             if stamp_missing:
                 errors.append(
                     _("1. Company / Branch Stamp Missing:\n"
-                      "The selected company or branch '%(company)s' does not have a stamp image uploaded.\n\n"
+                      "Neither the selected company/branch '%(company)s' nor its parent company has a stamp image uploaded.\n\n"
                       "How to add Company Stamp:\n"
                       "• Go to Settings -> Companies -> Companies.\n"
-                      "• Open '%(company)s'.\n"
+                      "• Open '%(company)s' (or its parent company).\n"
                       "• Under Company Details (below Color), upload your stamp image in the 'Company Stamp' field.\n"
                       "• Save the company form.",
                       company=company.display_name)
