@@ -118,7 +118,7 @@
                             </t>
                         </td>
                         <!-- RIGHT SIDE -->
-                        <td style="width:45%; vertical-align:top; padding:0; border:1px solid #000;" colspan="3">
+                        <td style="width:45%; vertical-align:top; padding:0; border:1px solid #000;" colspan="4">
                             <table style="width:100%; border-collapse:collapse; border-color:white;">
                                 <tr>
                                     <td style="border-right:1px solid #000; padding:1px;">Invoice No.</td>
