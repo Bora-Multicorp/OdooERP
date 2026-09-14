@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from odoo import api, fields, models, _
 from odoo.exceptions import UserError, ValidationError
+from odoo.tools import float_compare
 
 
 class VendorPaymentApprovalRequest(models.Model):
@@ -204,16 +205,16 @@ class VendorPaymentApprovalRequest(models.Model):
                 ('state', '!=', 'rejected'),
             ])
             total_requested = sum(all_active.mapped('amount_for_approval'))
-            if total_requested >= original_total:
+            precision = po.currency_id.rounding or 0.01
+            if float_compare(total_requested, original_total, precision_rounding=precision) > 0:
                 raise ValidationError(
                     _(
                         'Payment approval request cannot be created for Purchase Order %s.\n'
-                        'The full PO amount (%s %.2f) has already been requested for approval.\n'
-                        'Total already requested: %s %.2f.'
+                        'The requested total amount (%s %.2f) exceeds the PO total (%s %.2f).'
                     ) % (
                         po.name,
-                        po.currency_id.symbol, original_total,
                         po.currency_id.symbol, total_requested,
+                        po.currency_id.symbol, original_total,
                     )
                 )
 
