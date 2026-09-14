@@ -1,13 +1,93 @@
 # -*- coding: utf-8 -*-
 
 import logging
-from odoo import api, models
+from odoo import api, fields, models, _
 
 _logger = logging.getLogger(__name__)
 
 
 class SaleOrderLine(models.Model):
     _inherit = 'sale.order.line'
+
+    is_cash_handling_charge = fields.Boolean(
+        string="Is Cash Handling Charge",
+        compute="_compute_charge_flags",
+        store=False,
+    )
+    is_transfer_charge = fields.Boolean(
+        string="Is Transfer Charge",
+        compute="_compute_charge_flags",
+        store=False,
+    )
+    is_cash_handling_rate_deviation = fields.Boolean(
+        string="Cash Handling Rate Changed",
+        default=False,
+    )
+    ks_enable_shipping_cash_charges = fields.Boolean(
+        related='order_id.ks_enable_shipping_cash_charges',
+        string="Enable Cash Handling & Transfer Charges",
+    )
+    has_cash_handling_charge = fields.Boolean(
+        related='order_id.has_cash_handling_charge',
+        string="Has Cash Handling Charge",
+    )
+    has_transfer_charge = fields.Boolean(
+        related='order_id.has_transfer_charge',
+        string="Has Transfer Charge",
+    )
+
+
+    def action_add_cash_handling_charge(self):
+        orders = self.mapped('order_id')
+        if not orders and self.env.context.get('active_id'):
+            orders = self.env['sale.order'].browse(self.env.context.get('active_id'))
+        for order in orders:
+            order.action_add_cash_handling_charge()
+        return
+
+    def action_add_transfer_charge(self):
+        orders = self.mapped('order_id')
+        if not orders and self.env.context.get('active_id'):
+            orders = self.env['sale.order'].browse(self.env.context.get('active_id'))
+        for order in orders:
+            order.action_add_transfer_charge()
+        return
+
+
+
+    @api.depends('product_id')
+    def _compute_charge_flags(self):
+        cash_template = self.env.ref(
+            'ks_sale_order.product_template_cash_handling_charges',
+            raise_if_not_found=False
+        )
+        transfer_template = self.env.ref(
+            'ks_sale_order.product_template_transfer_charges',
+            raise_if_not_found=False
+        )
+        cash_product = cash_template.product_variant_ids[:1] if cash_template else self.env['product.product']
+        transfer_product = transfer_template.product_variant_ids[:1] if transfer_template else self.env['product.product']
+
+        for line in self:
+            is_cash = bool(
+                line.product_id and (
+                    (cash_template and line.product_id.product_tmpl_id == cash_template) or
+                    (cash_product and line.product_id == cash_product) or
+                    (line.product_id.default_code == 'CASH-HANDLING') or
+                    ('CASH HANDLING' in (line.product_id.name or '').upper())
+                )
+            )
+            is_transfer = bool(
+                line.product_id and (
+                    (transfer_template and line.product_id.product_tmpl_id == transfer_template) or
+                    (transfer_product and line.product_id == transfer_product) or
+                    (line.product_id.default_code == 'TRANSFER-CHARGES') or
+                    ('TRANSFER' in (line.product_id.name or '').upper())
+                )
+            )
+            line.is_cash_handling_charge = is_cash
+            line.is_transfer_charge = is_transfer
+
 
     def _ks_get_stock_location_for_company(self, company, warehouse=None):
         """Get the stock location for a company.
@@ -295,12 +375,47 @@ class SaleOrderLine(models.Model):
 
     @api.model_create_multi
     def create(self, vals_list):
-        """Override create - stock check removed.
-        
-        Stock validation has been moved to Sale Order confirmation step.
-        Users can now freely add products without stock availability checks.
-        """
-        return super().create(vals_list)
+        filtered_vals_list = []
+        for vals in vals_list:
+            order_id = vals.get('order_id')
+            product_id = vals.get('product_id')
+            if order_id and product_id:
+                product = self.env['product.product'].browse(product_id)
+                order = self.env['sale.order'].browse(order_id)
+
+                is_cash = order._is_cash_handling_product(product)
+                is_transfer = order._is_transfer_charge_product(product)
+
+                if is_cash:
+                    existing = order.order_line.filtered(lambda l: order._is_cash_handling_product(l.product_id) or l.is_cash_handling_charge)
+                    if not existing:
+                        existing = self.search([
+                            ('order_id', '=', order_id),
+                            '|', ('product_id', '=', product.id),
+                            '|', ('product_id.default_code', '=', 'CASH-HANDLING'),
+                            ('product_id.name', 'ilike', 'CASH HANDLING')
+                        ], limit=1)
+                    if existing:
+                        continue  # Silently skip duplicate Cash Handling Charge line
+
+                if is_transfer:
+                    existing = order.order_line.filtered(lambda l: order._is_transfer_charge_product(l.product_id) or l.is_transfer_charge)
+                    if not existing:
+                        existing = self.search([
+                            ('order_id', '=', order_id),
+                            '|', ('product_id', '=', product.id),
+                            '|', ('product_id.default_code', '=', 'TRANSFER-CHARGES'),
+                            ('product_id.name', 'ilike', 'TRANSFER CHARGE')
+                        ], limit=1)
+                    if existing:
+                        continue  # Silently skip duplicate Transfer Charge line
+
+            filtered_vals_list.append(vals)
+
+        if not filtered_vals_list:
+            return self.browse()
+
+        return super().create(filtered_vals_list)
 
     def write(self, values):
         """Override write - stock check removed.
