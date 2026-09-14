@@ -14,7 +14,6 @@
 
     },
     'data': [
-        'data/ks_cash_handling_product.xml',
         'report/qc_email_template.xml',
         'report/sale_order_mail_3pl.xml',
         'views/sale_order_view.xml',

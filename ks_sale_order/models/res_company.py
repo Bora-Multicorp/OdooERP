@@ -22,3 +22,20 @@ class ResCompany(models.Model):
              'The system will block the addition and notify these users.',
     )
 
+    ks_enable_shipping_cash_charges = fields.Boolean(
+        string="Enable Cash Handling & Transfer Charges",
+        default=True,
+        help="Enable Cash Handling Charges and Transfer Charges buttons in Sales Order for this company.",
+    )
+    ks_cash_handling_charge_pct = fields.Float(
+        string="Cash Handling Charges (%)",
+        default=0.2,
+        help="Default percentage for Cash Handling Charges.",
+    )
+    ks_transfer_charge_amount = fields.Float(
+        string="Transfer Charges Amount",
+        default=160.0,
+        help="Default flat amount for Transfer Charges.",
+    )
+
+

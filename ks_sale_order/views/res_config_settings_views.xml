@@ -37,6 +37,27 @@
                         </div>
                     </setting>
                 </block>
+                <block title="Transfer &amp; Cash Handling Charges" name="ks_sale_order_charges_container">
+                    <setting id="ks_sale_order_shipping_charges_setting"
+                             company_dependent="1"
+                             string="Transfer &amp; Cash Handling Charges"
+                             help="Enable and configure Cash Handling Charges and Transfer Charges for companies other than India.">
+                        <field name="ks_enable_shipping_cash_charges"/>
+                        <div class="content-group" invisible="not ks_enable_shipping_cash_charges">
+                            <field name="currency_id" invisible="1"/>
+                            <div class="mt16">
+                                <label for="ks_cash_handling_charge_pct" string="Cash Handling Charges (%)" class="o_light_label"/>
+                                <field name="ks_cash_handling_charge_pct" class="oe_inline"/>
+                                <span class="o_form_label">%</span>
+                            </div>
+                            <div class="mt8">
+                                <label for="ks_transfer_charge_amount" string="Transfer Charges Flat Amount" class="o_light_label me-1"/>
+                                <field name="ks_transfer_charge_amount" class="oe_inline"/>
+                                <field name="currency_id" class="oe_inline ms-1" readonly="1" options="{'no_open': True}"/>
+                            </div>
+                        </div>
+                    </setting>
+                </block>
             </xpath>
         </field>
     </record>
