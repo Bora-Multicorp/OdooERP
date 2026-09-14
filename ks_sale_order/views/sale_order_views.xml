@@ -17,7 +17,41 @@
                 <field name="ks_created_po_id" invisible="1"/>
                 <field name="ks_created_po_ids" invisible="1"/>
                 <field name="ks_created_po_count" invisible="1"/>
+                <field name="ks_enable_shipping_cash_charges" invisible="1"/>
+                <field name="has_cash_handling_charge" invisible="1"/>
+                <field name="has_transfer_charge" invisible="1"/>
             </xpath>
+
+            <!-- Include charge line indicator fields in order_line list -->
+            <xpath expr="//field[@name='order_line']/list/field[@name='product_id']" position="before">
+                <field name="is_cash_handling_charge" column_invisible="1"/>
+                <field name="is_transfer_charge" column_invisible="1"/>
+                <field name="ks_enable_shipping_cash_charges" column_invisible="1"/>
+                <field name="has_cash_handling_charge" column_invisible="1"/>
+                <field name="has_transfer_charge" column_invisible="1"/>
+            </xpath>
+
+            <!-- Text color decoration for charge lines (blue/info text color) -->
+            <xpath expr="//field[@name='order_line']/list" position="attributes">
+                <attribute name="decoration-info">is_cash_handling_charge or is_transfer_charge</attribute>
+            </xpath>
+
+            <!-- Cash Handling & Transfer Charge Buttons (Right-aligned next to Discount & Add shipping) -->
+            <xpath expr="//field[@name='order_line']" position="after">
+                <div class="d-flex justify-content-end gap-2 mt-2 mb-2" invisible="not ks_enable_shipping_cash_charges">
+                    <button name="action_add_cash_handling_charge"
+                            string="Add Cash handling"
+                            type="object"
+                            class="btn btn-secondary"
+                            invisible="not ks_enable_shipping_cash_charges or has_cash_handling_charge or state not in ('draft', 'sent')"/>
+                    <button name="action_add_transfer_charge"
+                            string="Add Transfer Charges"
+                            type="object"
+                            class="btn btn-secondary"
+                            invisible="not ks_enable_shipping_cash_charges or has_transfer_charge or state not in ('draft', 'sent')"/>
+                </div>
+            </xpath>
+
             <!-- Payment Status under Payment Terms (right column) -->
             <xpath expr="//field[@name='payment_term_id']" position="after">
                 <field name="payment_status"

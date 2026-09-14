@@ -38,6 +38,7 @@ Configuration:
     'data': [
         'security/ir.model.access.csv',
         'data/hide_products_menu.xml',
+        'data/charge_products_data.xml',
         'data/mail_template_data.xml',
         'views/res_config_settings_views.xml',
         'views/res_company_views.xml',

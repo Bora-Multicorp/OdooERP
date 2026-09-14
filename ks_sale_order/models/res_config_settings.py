@@ -6,6 +6,10 @@ from odoo import fields, models
 class ResConfigSettings(models.TransientModel):
     _inherit = 'res.config.settings'
 
+    currency_id = fields.Many2one(
+        related='company_id.currency_id',
+        readonly=True,
+    )
     ks_sale_procurement_team_user_ids = fields.Many2many(
         related='company_id.ks_sale_procurement_team_user_ids',
         readonly=False,
@@ -14,3 +18,20 @@ class ResConfigSettings(models.TransientModel):
              'insufficient stock is added to a sales order. '
              'The system will block the addition and notify these users.',
     )
+    ks_enable_shipping_cash_charges = fields.Boolean(
+        related='company_id.ks_enable_shipping_cash_charges',
+        readonly=False,
+        string="Enable Cash Handling & Transfer Charges",
+    )
+    ks_cash_handling_charge_pct = fields.Float(
+        related='company_id.ks_cash_handling_charge_pct',
+        readonly=False,
+        string="Cash Handling Charges (%)",
+    )
+    ks_transfer_charge_amount = fields.Float(
+        related='company_id.ks_transfer_charge_amount',
+        readonly=False,
+        string="Transfer Charges Amount",
+    )
+
+

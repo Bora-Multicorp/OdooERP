@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Product template: CASH HANDLING CHARGES -->
+        <record id="product_template_cash_handling_charges" model="product.template">
+            <field name="name">CASH HANDLING CHARGES</field>
+            <field name="default_code">CASH-HANDLING</field>
+            <field name="type">service</field>
+            <field name="is_storable" eval="False"/>
+            <field name="tracking">none</field>
+            <field name="invoice_policy">order</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+        </record>
+
+        <!-- Product template: TRANSFER CHARGES -->
+        <record id="product_template_transfer_charges" model="product.template">
+            <field name="name">TRANSFER CHARGES</field>
+            <field name="default_code">TRANSFER-CHARGES</field>
+            <field name="type">service</field>
+            <field name="is_storable" eval="False"/>
+            <field name="tracking">none</field>
+            <field name="invoice_policy">order</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+        </record>
+    </data>
+</odoo>

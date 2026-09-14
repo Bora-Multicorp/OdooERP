@@ -30,6 +30,204 @@ class SaleOrder(models.Model):
         help='Bank details for this Sale Order.',
     )
 
+    ks_enable_shipping_cash_charges = fields.Boolean(
+        related='company_id.ks_enable_shipping_cash_charges',
+        string="Enable Cash Handling & Transfer Charges",
+    )
+    has_cash_handling_charge = fields.Boolean(
+        string="Has Cash Handling Charge",
+        compute="_compute_charge_line_presence",
+    )
+    has_transfer_charge = fields.Boolean(
+        string="Has Transfer Charge",
+        compute="_compute_charge_line_presence",
+    )
+
+    def _is_cash_handling_product(self, product):
+        if not product:
+            return False
+        name = (product.name or '').upper().strip()
+        code = (product.default_code or '').upper().strip()
+        return 'CASH HANDLING' in name or 'CASH-HANDLING' in code or code == 'CASH-HANDLING'
+
+    def _is_transfer_charge_product(self, product):
+        if not product:
+            return False
+        name = (product.name or '').upper().strip()
+        code = (product.default_code or '').upper().strip()
+        return 'TRANSFER' in name or 'TRANSFER-CHARGES' in code or code == 'TRANSFER-CHARGES'
+
+    @api.depends('order_line', 'order_line.product_id')
+    def _compute_charge_line_presence(self):
+        for order in self:
+            order.has_cash_handling_charge = any(
+                order._is_cash_handling_product(line.product_id) or line.is_cash_handling_charge
+                for line in order.order_line
+            )
+            order.has_transfer_charge = any(
+                order._is_transfer_charge_product(line.product_id) or line.is_transfer_charge
+                for line in order.order_line
+            )
+
+    def _ks_get_or_create_charge_product(self, xml_id, default_name, default_code):
+        """Helper to find or create service product for charges."""
+        # 1. Try search product.product directly by default_code or name
+        variant = self.env['product.product'].search([('default_code', '=', default_code)], limit=1)
+        if not variant:
+            variant = self.env['product.product'].search([('name', '=', default_name)], limit=1)
+        if variant:
+            tmpl = variant.product_tmpl_id
+            updates = {}
+            if tmpl.type != 'service':
+                updates['type'] = 'service'
+            if hasattr(tmpl, 'is_storable') and tmpl.is_storable:
+                updates['is_storable'] = False
+            if hasattr(tmpl, 'tracking') and tmpl.tracking != 'none':
+                updates['tracking'] = 'none'
+            if not tmpl.sale_ok:
+                updates['sale_ok'] = True
+            if tmpl.purchase_ok:
+                updates['purchase_ok'] = False
+            if updates:
+                tmpl.sudo().write(updates)
+            return variant
+
+        # 2. Try search product.template by xml_id, default_code, or name
+        product_template = self.env.ref(xml_id, raise_if_not_found=False)
+        if not product_template:
+            product_template = self.env['product.template'].search([
+                '|', ('default_code', '=', default_code), ('name', '=', default_name)
+            ], limit=1)
+        if not product_template:
+            create_vals = {
+                'name': default_name,
+                'default_code': default_code,
+                'type': 'service',
+                'invoice_policy': 'order',
+                'sale_ok': True,
+                'purchase_ok': False,
+            }
+            if hasattr(self.env['product.template'], 'is_storable'):
+                create_vals['is_storable'] = False
+            if hasattr(self.env['product.template'], 'tracking'):
+                create_vals['tracking'] = 'none'
+            product_template = self.env['product.template'].create(create_vals)
+        else:
+            updates = {}
+            if product_template.type != 'service':
+                updates['type'] = 'service'
+            if hasattr(product_template, 'is_storable') and product_template.is_storable:
+                updates['is_storable'] = False
+            if hasattr(product_template, 'tracking') and product_template.tracking != 'none':
+                updates['tracking'] = 'none'
+            if not product_template.sale_ok:
+                updates['sale_ok'] = True
+            if product_template.purchase_ok:
+                updates['purchase_ok'] = False
+            if updates:
+                product_template.sudo().write(updates)
+
+        # 3. Get variant from template or create one if missing
+        variant = product_template.product_variant_ids[:1]
+        if not variant:
+            variant = self.env['product.product'].search([('product_tmpl_id', '=', product_template.id)], limit=1)
+        if not variant:
+            variant = self.env['product.product'].create({
+                'product_tmpl_id': product_template.id,
+                'default_code': default_code,
+            })
+        return variant
+
+    def action_add_cash_handling_charge(self):
+        """Add Cash Handling Charge line to sale order. Silently skips if already present."""
+        self.ensure_one()
+        if not self.company_id.ks_enable_shipping_cash_charges:
+            return
+
+        # Live check: silently skip if Cash Handling Charge line is already present
+        if any(self._is_cash_handling_product(line.product_id) or line.is_cash_handling_charge for line in self.order_line):
+            return
+
+        product = self._ks_get_or_create_charge_product(
+            'ks_sale_order.product_template_cash_handling_charges',
+            'CASH HANDLING CHARGES',
+            'CASH-HANDLING'
+        )
+        if not product or not product.id:
+            return
+
+        if any(line.product_id == product for line in self.order_line):
+            return
+
+        base_amount = sum(
+            line.price_subtotal for line in self.order_line
+            if not line.display_type and not self._is_cash_handling_product(line.product_id) and not self._is_transfer_charge_product(line.product_id)
+        )
+        pct = self.company_id.ks_cash_handling_charge_pct or 0.2
+        currency_name = self.currency_id.name or self.company_id.currency_id.name or ''
+        charge_amount = base_amount * (pct / 100.0)
+        line_description = _("Cash Handling Charges (%(pct)g%% - %(currency)s)", pct=pct, currency=currency_name)
+
+        line_vals = {
+            'order_id': self.id,
+            'product_id': product.id,
+            'name': line_description,
+            'product_uom_qty': 1.0,
+            'price_unit': charge_amount,
+        }
+        if product.product_tmpl_id:
+            line_vals['product_template_id'] = product.product_tmpl_id.id
+        if product.uom_id:
+            line_vals['product_uom'] = product.uom_id.id
+
+        self.env['sale.order.line'].create(line_vals)
+        self.invalidate_recordset(['order_line', 'has_cash_handling_charge', 'has_transfer_charge'])
+        self._compute_charge_line_presence()
+        return
+
+    def action_add_transfer_charge(self):
+        """Add Transfer Charge line to sale order. Silently skips if already present."""
+        self.ensure_one()
+        if not self.company_id.ks_enable_shipping_cash_charges:
+            return
+
+        # Live check: silently skip if Transfer Charge line is already present
+        if any(self._is_transfer_charge_product(line.product_id) or line.is_transfer_charge for line in self.order_line):
+            return
+
+        product = self._ks_get_or_create_charge_product(
+            'ks_sale_order.product_template_transfer_charges',
+            'TRANSFER CHARGES',
+            'TRANSFER-CHARGES'
+        )
+        if not product or not product.id:
+            return
+
+        if any(line.product_id == product for line in self.order_line):
+            return
+
+        flat_amount = self.company_id.ks_transfer_charge_amount or 160.0
+        currency_name = self.currency_id.name or self.company_id.currency_id.name or ''
+        line_description = _("Transfer Charges (%(amount)g %(currency)s Flat)", amount=flat_amount, currency=currency_name)
+
+        line_vals = {
+            'order_id': self.id,
+            'product_id': product.id,
+            'name': line_description,
+            'product_uom_qty': 1.0,
+            'price_unit': flat_amount,
+        }
+        if product.product_tmpl_id:
+            line_vals['product_template_id'] = product.product_tmpl_id.id
+        if product.uom_id:
+            line_vals['product_uom'] = product.uom_id.id
+
+        self.env['sale.order.line'].create(line_vals)
+        self.invalidate_recordset(['order_line', 'has_cash_handling_charge', 'has_transfer_charge'])
+        self._compute_charge_line_presence()
+        return
+
+
     def _prepare_invoice(self):
         """Copy ks_bank_id from sale order to invoice."""
         invoice_vals = super()._prepare_invoice()
