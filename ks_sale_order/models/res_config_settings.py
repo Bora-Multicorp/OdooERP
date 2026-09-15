@@ -23,6 +23,16 @@ class ResConfigSettings(models.TransientModel):
         readonly=False,
         string="Enable Cash Handling & Transfer Charges",
     )
+    ks_cash_handling_charge_type = fields.Selection(
+        related='company_id.ks_cash_handling_charge_type',
+        readonly=False,
+        string="Cash Handling Charges Type",
+    )
+    ks_cash_handling_charge_value = fields.Float(
+        related='company_id.ks_cash_handling_charge_value',
+        readonly=False,
+        string="Cash Handling Charges Value",
+    )
     ks_cash_handling_charge_pct = fields.Float(
         related='company_id.ks_cash_handling_charge_pct',
         readonly=False,
