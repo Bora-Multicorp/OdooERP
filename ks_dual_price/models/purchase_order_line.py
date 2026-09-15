@@ -9,6 +9,10 @@ class PurchaseOrderLine(models.Model):
         digits="Product Price",
         store=True,
     )
+    ks_is_indian_company = fields.Boolean(
+        related="order_id.ks_is_indian_company",
+        string="Is Indian Company",
+    )
     ks_editing_from_incl = fields.Boolean(default=False, store=False)
 
     @api.onchange("price_unit", "taxes_id", "order_id.currency_id")

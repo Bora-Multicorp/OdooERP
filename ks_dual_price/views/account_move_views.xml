@@ -5,22 +5,39 @@
         <field name="model">account.move</field>
         <field name="inherit_id" ref="account.view_move_form"/>
         <field name="arch" type="xml">
-            <!-- Relabel existing column to make tax-exclusive explicit -->
+            <xpath expr="//field[@name='state']" position="before">
+                <field name="ks_is_indian_company" invisible="1"/>
+            </xpath>
+            <!-- Hide tax_ids column for non-Indian companies -->
+            <xpath
+                expr="//field[@name='invoice_line_ids']//list//field[@name='tax_ids']"
+                position="attributes"
+            >
+                <attribute name="column_invisible">not parent.ks_is_indian_company</attribute>
+            </xpath>
+            <!-- Relabel existing column to make tax-exclusive explicit for Indian companies -->
             <xpath
                 expr="//field[@name='invoice_line_ids']//list//field[@name='price_unit']"
                 position="attributes"
             >
                 <attribute name="string">Unit Price (Excl. Tax)</attribute>
+                <attribute name="column_invisible">not parent.ks_is_indian_company</attribute>
             </xpath>
-            <!-- Insert tax-inclusive column immediately after price_unit -->
+            <!-- Insert single Unit Price column for Non-Indian companies and price_unit_incl for Indian companies -->
             <xpath
                 expr="//field[@name='invoice_line_ids']//list//field[@name='price_unit']"
                 position="after"
             >
                 <field
+                    name="price_unit"
+                    string="Unit Price"
+                    column_invisible="parent.ks_is_indian_company"
+                />
+                <field
                     name="price_unit_incl"
                     string="Unit Price (Incl. Tax)"
                     optional="show"
+                    column_invisible="not parent.ks_is_indian_company"
                 />
             </xpath>
         </field>
