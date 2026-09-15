@@ -9,6 +9,10 @@ class SaleOrderLine(models.Model):
         digits="Product Price",
         store=True,
     )
+    ks_is_indian_company = fields.Boolean(
+        related="order_id.ks_is_indian_company",
+        string="Is Indian Company",
+    )
     # Non-stored flag: set when user edits price_unit_incl so the cascade triggered
     # by the resulting price_unit change doesn't overwrite price_unit_incl.
     # Reset inside _onchange_compute_price_incl when it catches the cascade.
