@@ -163,10 +163,16 @@ class SaleOrder(models.Model):
             line.price_subtotal for line in self.order_line
             if not line.display_type and not self._is_cash_handling_product(line.product_id) and not self._is_transfer_charge_product(line.product_id)
         )
-        pct = self.company_id.ks_cash_handling_charge_pct or 0.2
+        charge_type = self.company_id.ks_cash_handling_charge_type or 'percentage'
+        val = self.company_id.ks_cash_handling_charge_value or self.company_id.ks_cash_handling_charge_pct or 0.0
         currency_name = self.currency_id.name or self.company_id.currency_id.name or ''
-        charge_amount = base_amount * (pct / 100.0)
-        line_description = _("Cash Handling Charges (%(pct)g%% - %(currency)s)", pct=pct, currency=currency_name)
+
+        if charge_type == 'fixed':
+            charge_amount = val
+            line_description = _("Cash Handling Charges (%(amount)g %(currency)s Flat)", amount=charge_amount, currency=currency_name)
+        else:
+            charge_amount = base_amount * (val / 100.0)
+            line_description = _("Cash Handling Charges (%(pct)g%% - %(currency)s)", pct=val, currency=currency_name)
 
         line_vals = {
             'order_id': self.id,
@@ -206,7 +212,7 @@ class SaleOrder(models.Model):
         if any(line.product_id == product for line in self.order_line):
             return
 
-        flat_amount = self.company_id.ks_transfer_charge_amount or 160.0
+        flat_amount = self.company_id.ks_transfer_charge_amount or 0.0
         currency_name = self.currency_id.name or self.company_id.currency_id.name or ''
         line_description = _("Transfer Charges (%(amount)g %(currency)s Flat)", amount=flat_amount, currency=currency_name)
 
