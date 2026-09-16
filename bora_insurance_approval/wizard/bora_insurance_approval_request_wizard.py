@@ -28,7 +28,6 @@ class BoraInsuranceApprovalRequestWizard(models.TransientModel):
     bora_approver2_user = fields.Many2one(
         'res.users', string='Approver 2',
         domain="[('id', 'in', bora_approver2_filtered_ids)]")
-    bora_reason = fields.Text(string='Reason', placeholder='Optional reason for this request...')
     bora_show_approver2 = fields.Boolean(compute='_compute_show_approver2')
     bora_approval_info = fields.Html(compute='_compute_approval_info', readonly=True)
     bora_is_update_mode = fields.Boolean(string='Is Update Mode', default=False)
@@ -126,8 +125,8 @@ class BoraInsuranceApprovalRequestWizard(models.TransientModel):
                 ) % first_policy.bora_insurance_pm1_id.name
 
             html += '<div class="alert alert-info">'
-            html += '<h5><strong>Insurance Payment Approval Request</strong></h5>'
-            html += '<p>You are about to submit insurance payment request for approval.</p>'
+            html += '<h5><strong>Insurance Approval Request</strong></h5>'
+            html += '<p>You are about to submit insurance approval request.</p>'
             if config.is_dual_approval():
                 html += ('<p><strong>Note:</strong> Both Approver 1 and Approver 2 approval is required. '
                          'Approver 2 cannot approve until Approver 1 has approved.</p>')
@@ -183,7 +182,6 @@ class BoraInsuranceApprovalRequestWizard(models.TransientModel):
             policy.bora_do_request_insurance_approval(
                 pm1_user=self.bora_approver1_user,
                 pm2_user=self.bora_approver2_user if self.bora_approver2_user else None,
-                reason=self.bora_reason,
             )
 
             if preserve_pm1:

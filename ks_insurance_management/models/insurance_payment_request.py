@@ -29,18 +29,18 @@ class InsurancePaymentApprover(models.Model):
 
     @api.constrains('active', 'company_id', 'user_id')
     def _check_single_active_approver(self):
-        """Only ONE active approver is allowed per company."""
+        """Only one active approver record per user per company."""
         for rec in self:
-            if not rec.active:
+            if not rec.active or not rec.user_id or not rec.company_id:
                 continue
             duplicate = self.search([
                 ('company_id', '=', rec.company_id.id),
+                ('user_id', '=', rec.user_id.id),
                 ('active', '=', True),
                 ('id', '!=', rec.id),
             ], limit=1)
             if duplicate:
                 raise ValidationError(
-                    f"Only one active Insurance Payment Approver is allowed per company. "
-                    f"'{duplicate.name}' is already the active approver for "
-                    f"'{rec.company_id.name}'. Please deactivate them first."
+                    f"'{rec.user_id.name}' is already an active Insurance Payment Approver for "
+                    f"'{rec.company_id.name}'."
                 )

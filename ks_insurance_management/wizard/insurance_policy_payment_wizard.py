@@ -61,10 +61,32 @@ class InsurancePolicyPaymentWizard(models.TransientModel):
         for rec in self:
             rec.new_sum_insured = (rec.current_sum_insured or 0.0) + (rec.topup_amount or 0.0)
 
+    @api.model
+    def default_get(self, fields_list):
+        res = super().default_get(fields_list)
+        policy_id = self.env.context.get('default_policy_id') or res.get('policy_id')
+        if policy_id:
+            policy = self.env['insurance.policy'].browse(policy_id)
+            if policy.exists():
+                if 'premium' in fields_list and 'premium' not in res:
+                    res['premium'] = policy.premium
+                self._sync_approvers_for_policy(policy)
+        res.pop('approver_id', None)
+        return res
+
+    def _sync_approvers_for_policy(self, policy):
+        """Ensure active Approval Authorities users are synced as insurance.payment.approver records."""
+        comp = policy.company_id or self.env.company
+        if 'bora.insurance.approval.config' in self.env:
+            config = self.env['bora.insurance.approval.config'].get_config(comp)
+            if config:
+                config._sync_payment_approvers()
+
     @api.onchange('policy_id')
     def _onchange_policy_id(self):
         if self.policy_id:
             self.premium = self.policy_id.premium
+            self._sync_approvers_for_policy(self.policy_id)
 
     def action_confirm(self):
         """Submit top-up for approval. Sum insured and premium are updated only after payment is posted."""

@@ -4,7 +4,7 @@
         <field name="name">bora.insurance.approval.request.wizard.form</field>
         <field name="model">bora.insurance.approval.request.wizard</field>
         <field name="arch" type="xml">
-            <form string="Select Payment Approval Authorities">
+            <form string="Select Approval Authorities">
                 <field name="bora_show_approver2" invisible="1"/>
                 <field name="bora_approver1_filtered_ids" invisible="1"/>
                 <field name="bora_approver2_filtered_ids" invisible="1"/>
@@ -21,7 +21,6 @@
                            options="{'no_create': True, 'no_open': True}"
                            invisible="not bora_show_approver2"
                            required="bora_show_approver2"/>
-                    <field name="bora_reason" placeholder="Optional reason for requesting payment..."/>
                 </group>
                 <footer>
                     <button string="Submit for Approval" name="action_confirm_request" type="object" class="btn-primary"/>
