@@ -7,15 +7,15 @@
       <form string="Insurance Policy">
         <header>
           <!-- Request Payment: shown when no active payment request exists -->
-          <button name="action_request_payment" string="Request Payment" type="object"
+          <button name="action_request_payment" string="Submit for Approval" type="object"
                   class="btn-primary"
                   invisible="payment_status in ('requested', 'approved', 'paid')"/>
           <field name="is_pending_approver" invisible="1"/>
           <!-- Approval buttons: shown only to the selected approver when request is pending -->
-          <button name="action_approve_payment" string="Approve Payment" type="object"
+          <button name="action_approve_payment" string="Approve" type="object"
                   class="btn-success"
                   invisible="payment_status != 'requested' or not is_pending_approver"
-                  confirm="Approve this payment request and create a draft payment?"/>
+                  confirm="Approve this approval request and create a draft payment?"/>
           <button name="action_reject_payment" string="Reject" type="object"
                   class="btn-danger"
                   invisible="payment_status != 'requested' or not is_pending_approver"

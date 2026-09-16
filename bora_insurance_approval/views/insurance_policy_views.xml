@@ -17,7 +17,7 @@
             <!-- Update Approve Payment button visibility -->
             <xpath expr="//button[@name='action_approve_payment']" position="attributes">
                 <attribute name="invisible">payment_status != 'requested' or not bora_show_insurance_approve_button</attribute>
-                <attribute name="confirm">Approve this payment request?</attribute>
+                <attribute name="confirm">Approve this approval request?</attribute>
             </xpath>
 
             <!-- Update Reject Payment button visibility & remove confirmation popup (handled by wizard) -->

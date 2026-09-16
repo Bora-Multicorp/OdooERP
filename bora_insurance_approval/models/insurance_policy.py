@@ -35,7 +35,7 @@ class InsurancePolicy(models.Model):
             raise UserError(_(
                 'No active insurance payment approval configuration found for company "%s". '
                 'Please configure approvers in Insurance > Configuration > '
-                'Payment Approval Authorities.'
+                'Approval Authorities.'
             ) % self.company_id.name)
         return config
 
@@ -145,7 +145,7 @@ class InsurancePolicy(models.Model):
         self._get_insurance_approval_config()
         return {
             'type': 'ir.actions.act_window',
-            'name': _('Request Payment Approval Authorities'),
+            'name': _('Request Approval Authorities'),
             'res_model': 'bora.insurance.approval.request.wizard',
             'view_mode': 'form',
             'target': 'new',
@@ -194,7 +194,7 @@ class InsurancePolicy(models.Model):
             rec._create_insurance_approval_activity(pm1_user, 'Confirm')
 
             msg = _(
-                'Insurance payment approval requested by <b>%s</b>.<br/>'
+                'Insurance approval requested by <b>%s</b>.<br/>'
                 'Awaiting Approver 1 approval: <b>%s</b>.'
             ) % (self.env.user.name, pm1_user.name)
             if pm2_user:
@@ -370,11 +370,11 @@ class InsurancePolicy(models.Model):
         act_type_id = activity_type.id if activity_type else self.env.ref('mail.mail_activity_data_todo').id
         self.env['mail.activity'].create({
             'activity_type_id': act_type_id,
-            'note': _('Insurance Payment Approval requested for Policy %s.') % self.policy_number,
+            'note': _('Insurance Approval requested for Policy %s.') % self.policy_number,
             'res_id': self.id,
             'res_model_id': self.env.ref('ks_insurance_management.model_insurance_policy').id,
             'user_id': user.id,
-            'summary': _('Insurance Payment Approval required'),
+            'summary': _('Insurance Approval required'),
         })
 
     def _bora_unlink_user_activity(self, user):
