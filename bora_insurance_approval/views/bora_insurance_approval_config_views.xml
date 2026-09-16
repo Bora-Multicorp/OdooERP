@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Config Tree View -->
-    <record id="view_bora_insurance_approval_config_tree" model="ir.ui.view">
+    <!-- Config List View -->
+    <record id="view_bora_insurance_approval_config_list" model="ir.ui.view">
         <field name="name">bora.insurance.approval.config.list</field>
         <field name="model">bora.insurance.approval.config</field>
         <field name="arch" type="xml">
-            <list string="Payment Approval Authorities">
+            <list string="Approval Authorities">
                 <field name="name"/>
                 <field name="bora_approval_mode"/>
                 <field name="bora_company_ids" widget="many2many_tags"/>
                 <field name="bora_insurance_pm1_ids" widget="many2many_tags"/>
                 <field name="bora_insurance_pm2_ids" widget="many2many_tags"/>
-                <field name="active" widget="boolean_toggle"/>
+                <field name="active"/>
             </list>
         </field>
     </record>
@@ -21,43 +21,31 @@
         <field name="name">bora.insurance.approval.config.form</field>
         <field name="model">bora.insurance.approval.config</field>
         <field name="arch" type="xml">
-            <form string="Payment Approval Authority Configuration">
+            <form string="Approval Configuration">
                 <sheet>
                     <widget name="web_ribbon" title="Archived" bg_color="bg-danger" invisible="active"/>
-                    <div class="oe_title">
-                        <h1>
-                            <field name="name" placeholder="e.g. Standard Insurance Payment Approval Rule"/>
-                        </h1>
-                    </div>
                     <group>
-                        <group string="Approval Settings">
-                            <field name="bora_approval_mode" widget="radio"/>
+                        <group>
+                            <field name="name"/>
+                            <field name="bora_approval_mode"/>
                             <field name="active" invisible="1"/>
                         </group>
                     </group>
                     <notebook>
-                        <page string="Approvers" name="approvers">
+                        <page string="Approvers Assignment" name="approvers">
                             <group>
-                                <group string="Approver 1 (PM1)">
-                                    <field name="bora_insurance_pm1_ids" widget="many2many_tags"
-                                           options="{'no_create': True}"
-                                           placeholder="Users who can act as Approver 1"/>
-                                </group>
-                                <group string="Approver 2 (PM2)" invisible="bora_approval_mode != 'dual'">
-                                    <field name="bora_insurance_pm2_ids" widget="many2many_tags"
-                                           options="{'no_create': True}"
-                                           required="bora_approval_mode == 'dual'"
-                                           placeholder="Users who can act as Approver 2"/>
-                                </group>
+                                <field name="bora_insurance_pm1_ids" widget="many2many_tags"
+                                       options="{'no_create': True}"
+                                       placeholder="Users who can perform PM1 payment approvals"/>
+                                <field name="bora_company_ids" widget="many2many_tags"
+                                       options="{'no_create': True}"
+                                       placeholder="Global (all companies) if left empty"/>
+                                <field name="bora_insurance_pm2_ids" widget="many2many_tags"
+                                       options="{'no_create': True}"
+                                       invisible="bora_approval_mode != 'dual'"
+                                       required="bora_approval_mode == 'dual'"
+                                       placeholder="Users who can perform PM2 payment approvals"/>
                             </group>
-                            <group>
-                                                    <group>
-                            <field name="bora_company_ids" widget="many2many_tags"
-                                   options="{'no_create': True}"
-                                   placeholder="Leave blank to apply to all companies"/>
-                        </group>
-                        </group>
-
                         </page>
                     </notebook>
                 </sheet>
@@ -67,7 +55,7 @@
 
     <!-- Config Window Action -->
     <record id="action_bora_insurance_approval_config" model="ir.actions.act_window">
-        <field name="name">Payment Approval Authorities</field>
+        <field name="name">Approval Authorities</field>
         <field name="res_model">bora.insurance.approval.config</field>
         <field name="view_mode">list,form</field>
         <field name="help" type="html">
@@ -82,7 +70,7 @@
 
     <!-- Menu Item under Insurance > Configuration -->
     <menuitem id="menu_bora_insurance_approval_config"
-              name="Payment Approval Authorities"
+              name="Approval Authorities"
               parent="ks_insurance_management.menu_insurance_config"
               action="action_bora_insurance_approval_config"
               sequence="50"

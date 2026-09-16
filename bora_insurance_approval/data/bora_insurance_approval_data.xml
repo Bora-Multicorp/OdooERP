@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <record id="mail_activity_data_insurance_approval" model="mail.activity.type">
-        <field name="name">Insurance Payment Approval Request</field>
+        <field name="name">Insurance Approval Request</field>
         <field name="icon">fa-shield</field>
         <field name="delay_count">1</field>
         <field name="delay_unit">days</field>
