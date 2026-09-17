@@ -173,10 +173,10 @@ class PurchaseOrder(models.Model):
         string='Allowed Bill To Partners',
     )
 
-    @api.depends('company_id')
+    @api.depends('company_id', 'bill_to_id')
     def _compute_bill_to_partner_ids(self):
         for order in self:
-            company = order.company_id or self.env.company
+            company = (order.company_id or self.env.company).sudo()
             partner_ids = set()
             if company:
                 # 1. Selected company main contact
@@ -197,6 +197,9 @@ class PurchaseOrder(models.Model):
                         })
                         wh.sudo().write({'partner_id': wh_partner.id})
                         partner_ids.add(wh_partner.id)
+
+            if order.bill_to_id:
+                partner_ids.add(order.bill_to_id.id)
 
             order.bill_to_partner_ids = [(6, 0, list(partner_ids))]
 
