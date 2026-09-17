@@ -138,6 +138,82 @@ class SaleOrder(models.Model):
             })
         return variant
 
+    def _ks_convert_charge_amount(self, amount, from_currency, to_currency, order=None):
+        """Convert charge amount from setting currency to order pricelist currency using exchange rate / order.rate."""
+        if not amount or not from_currency or not to_currency or from_currency == to_currency:
+            return amount
+
+        order_obj = order or self
+        company = order_obj.company_id if order_obj else self.env.company
+        date = order_obj.date_order or fields.Date.today() if order_obj else fields.Date.today()
+
+        # 1. Check order manual exchange rate (order.rate or order.ks_exchange_rate)
+        order_rate = 0.0
+        if order_obj:
+            order_rate = getattr(order_obj, 'rate', 0.0) or getattr(order_obj, 'ks_exchange_rate', 0.0) or 0.0
+
+        if order_rate > 0:
+            if order_rate > 1.0:
+                # E.g. 1 USD = 3.67 AED -> order_rate = 3.67
+                if from_currency == company.currency_id and to_currency != company.currency_id:
+                    res = amount / order_rate
+                elif from_currency != company.currency_id and to_currency == company.currency_id:
+                    res = amount * order_rate
+                else:
+                    res = amount / order_rate
+            else:
+                # E.g. 1 AED = 0.27248 USD -> order_rate = 0.27248
+                if from_currency == company.currency_id and to_currency != company.currency_id:
+                    res = amount * order_rate
+                elif from_currency != company.currency_id and to_currency == company.currency_id:
+                    res = amount / order_rate
+                else:
+                    res = amount * order_rate
+            return to_currency.round(res) if hasattr(to_currency, 'round') else round(res, 2)
+
+        # 2. Try res.currency._get_conversion_rate
+        try:
+            rate = self.env['res.currency']._get_conversion_rate(from_currency, to_currency, company, date)
+            if rate and rate != 1.0:
+                res = amount * rate
+                return to_currency.round(res) if hasattr(to_currency, 'round') else round(res, 2)
+            # Try inverse rate
+            inv_rate = self.env['res.currency']._get_conversion_rate(to_currency, from_currency, company, date)
+            if inv_rate and inv_rate != 1.0:
+                res = amount / inv_rate
+                return to_currency.round(res) if hasattr(to_currency, 'round') else round(res, 2)
+        except Exception:
+            pass
+
+        # 3. Try standard _convert
+        try:
+            converted = from_currency._convert(amount, to_currency, company, date)
+            if converted and converted != amount:
+                return converted
+        except Exception:
+            pass
+
+        # 4. Check rates on currency records relative to company currency
+        try:
+            to_rate = to_currency.with_company(company).rate or 0.0
+            from_rate = from_currency.with_company(company).rate or 0.0
+            if to_rate and to_rate != 1.0:
+                if to_rate > 1.0:
+                    res = amount / to_rate
+                else:
+                    res = amount * to_rate
+                return to_currency.round(res) if hasattr(to_currency, 'round') else round(res, 2)
+            elif from_rate and from_rate != 1.0:
+                if from_rate > 1.0:
+                    res = amount * from_rate
+                else:
+                    res = amount / from_rate
+                return to_currency.round(res) if hasattr(to_currency, 'round') else round(res, 2)
+        except Exception:
+            pass
+
+        return amount
+
     def action_add_cash_handling_charge(self):
         """Add Cash Handling Charge line to sale order. Silently skips if already present."""
         self.ensure_one()
@@ -165,13 +241,17 @@ class SaleOrder(models.Model):
         )
         charge_type = self.company_id.ks_cash_handling_charge_type or 'percentage'
         val = self.company_id.ks_cash_handling_charge_value or self.company_id.ks_cash_handling_charge_pct or 0.0
-        currency_name = self.currency_id.name or self.company_id.currency_id.name or ''
+
+        so_currency = self.pricelist_id.currency_id or self.currency_id or self.company_id.currency_id
 
         if charge_type == 'fixed':
+            charge_currency = self.company_id.ks_cash_handling_charge_currency_id or self.company_id.currency_id
+            currency_name = charge_currency.name if charge_currency else so_currency.name
+            line_description = _("Cash Handling Charges (%(amount)g %(currency)s Flat)", amount=val, currency=currency_name)
             charge_amount = val
-            line_description = _("Cash Handling Charges (%(amount)g %(currency)s Flat)", amount=charge_amount, currency=currency_name)
         else:
             charge_amount = base_amount * (val / 100.0)
+            currency_name = so_currency.name if so_currency else ''
             line_description = _("Cash Handling Charges (%(pct)g%% - %(currency)s)", pct=val, currency=currency_name)
 
         line_vals = {
@@ -186,7 +266,8 @@ class SaleOrder(models.Model):
         if product.uom_id:
             line_vals['product_uom'] = product.uom_id.id
 
-        self.env['sale.order.line'].create(line_vals)
+        new_line = self.env['sale.order.line'].create(line_vals)
+        new_line._compute_amount()
         self.invalidate_recordset(['order_line', 'has_cash_handling_charge', 'has_transfer_charge'])
         self._compute_charge_line_presence()
         return
@@ -213,7 +294,8 @@ class SaleOrder(models.Model):
             return
 
         flat_amount = self.company_id.ks_transfer_charge_amount or 0.0
-        currency_name = self.currency_id.name or self.company_id.currency_id.name or ''
+        charge_currency = self.company_id.ks_transfer_charge_currency_id or self.company_id.currency_id
+        currency_name = charge_currency.name if charge_currency else (self.currency_id.name or '')
         line_description = _("Transfer Charges (%(amount)g %(currency)s Flat)", amount=flat_amount, currency=currency_name)
 
         line_vals = {
@@ -228,10 +310,65 @@ class SaleOrder(models.Model):
         if product.uom_id:
             line_vals['product_uom'] = product.uom_id.id
 
-        self.env['sale.order.line'].create(line_vals)
+        new_line = self.env['sale.order.line'].create(line_vals)
+        new_line._compute_amount()
         self.invalidate_recordset(['order_line', 'has_cash_handling_charge', 'has_transfer_charge'])
         self._compute_charge_line_presence()
         return
+
+    @api.onchange('pricelist_id', 'currency_id', 'rate', 'is_exchange')
+    def _onchange_pricelist_id_update_charges(self):
+        """Recompute Transfer & Cash Handling charge lines when pricelist, currency, or rate changes."""
+        for order in self:
+            if order.pricelist_id and order.pricelist_id.currency_id:
+                order.currency_id = order.pricelist_id.currency_id
+            order._ks_update_charge_lines_currency()
+
+    def _ks_update_charge_lines_currency(self):
+        """Update existing Transfer Charge and Cash Handling Charge lines when order currency/pricelist/rate changes."""
+        for order in self:
+            if not order.company_id.ks_enable_shipping_cash_charges:
+                continue
+            so_currency = order.pricelist_id.currency_id or order.currency_id or order.company_id.currency_id
+
+            for line in order.order_line:
+                # Transfer Charge line
+                if order._is_transfer_charge_product(line.product_id) or line.is_transfer_charge:
+                    flat_amount = order.company_id.ks_transfer_charge_amount or 0.0
+                    charge_currency = order.company_id.ks_transfer_charge_currency_id or order.company_id.currency_id
+                    currency_name = charge_currency.name if charge_currency else (order.currency_id.name or '')
+                    line_description = _("Transfer Charges (%(amount)g %(currency)s Flat)", amount=flat_amount, currency=currency_name)
+
+                    line.write({
+                        'name': line_description,
+                        'price_unit': flat_amount,
+                    })
+                    line._compute_amount()
+
+                # Cash Handling Charge line
+                elif order._is_cash_handling_product(line.product_id) or line.is_cash_handling_charge:
+                    base_amount = sum(
+                        l.price_subtotal for l in order.order_line
+                        if not l.display_type and not order._is_cash_handling_product(l.product_id) and not order._is_transfer_charge_product(l.product_id) and l.id != line.id
+                    )
+                    charge_type = order.company_id.ks_cash_handling_charge_type or 'percentage'
+                    val = order.company_id.ks_cash_handling_charge_value or order.company_id.ks_cash_handling_charge_pct or 0.0
+
+                    if charge_type == 'fixed':
+                        charge_currency = order.company_id.ks_cash_handling_charge_currency_id or order.company_id.currency_id
+                        currency_name = charge_currency.name if charge_currency else (order.currency_id.name or '')
+                        line_description = _("Cash Handling Charges (%(amount)g %(currency)s Flat)", amount=val, currency=currency_name)
+                        charge_amount = val
+                    else:
+                        charge_amount = base_amount * (val / 100.0)
+                        currency_name = so_currency.name if so_currency else ''
+                        line_description = _("Cash Handling Charges (%(pct)g%% - %(currency)s)", pct=val, currency=currency_name)
+
+                    line.write({
+                        'name': line_description,
+                        'price_unit': charge_amount,
+                    })
+                    line._compute_amount()
 
 
     def _prepare_invoice(self):

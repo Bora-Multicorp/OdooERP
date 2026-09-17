@@ -48,11 +48,13 @@
                                 <label for="ks_cash_handling_charge_type" string="Cash handling charges" class="o_light_label text-nowrap me-1" style="white-space: nowrap;"/>
                                 <field name="ks_cash_handling_charge_type" class="oe_inline" style="min-width: 140px;" placeholder="Select Type..." required="ks_enable_shipping_cash_charges"/>
                                 <field name="ks_cash_handling_charge_value" class="oe_inline" style="min-width: 90px;" placeholder="0.00" required="ks_enable_shipping_cash_charges and ks_cash_handling_charge_type" invisible="not ks_cash_handling_charge_type"/>
+                                <field name="ks_cash_handling_charge_currency_id" class="oe_inline" style="min-width: 90px;" options="{'no_create': True, 'no_open': True}" invisible="not ks_cash_handling_charge_type or ks_cash_handling_charge_type != 'fixed'"/>
                                 <span class="o_form_label ms-1" invisible="not ks_cash_handling_charge_type or ks_cash_handling_charge_type != 'percentage'">%</span>
                             </div>
                             <div class="mt8 d-flex align-items-center flex-nowrap gap-2">
                                 <label for="ks_transfer_charge_amount" string="Transfer Charges Flat Amount" class="o_light_label text-nowrap me-1" style="white-space: nowrap;"/>
                                 <field name="ks_transfer_charge_amount" class="oe_inline" style="min-width: 90px;" placeholder="0.00" required="ks_enable_shipping_cash_charges"/>
+                                <field name="ks_transfer_charge_currency_id" class="oe_inline" style="min-width: 90px;" options="{'no_create': True, 'no_open': True}"/>
                             </div>
                             <div class="mt12 alert alert-danger" role="alert" style="margin-bottom: 0;">
                                 <i class="fa fa-exclamation-triangle me-1"/>

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from odoo import fields, models
+from odoo import api, fields, models
 
 
 class ResCompany(models.Model):
@@ -46,10 +46,62 @@ class ResCompany(models.Model):
         default=False,
         help="Default percentage for Cash Handling Charges.",
     )
+    ks_custom_cash_handling_charge_currency_id = fields.Many2one(
+        'res.currency',
+        string="Custom Cash Handling Charge Currency",
+    )
+    ks_cash_handling_charge_currency_id = fields.Many2one(
+        'res.currency',
+        string="Cash Handling Charge Currency",
+        compute='_compute_ks_cash_handling_charge_currency_id',
+        inverse='_inverse_ks_cash_handling_charge_currency_id',
+        help="Currency for Cash Handling Charges Fixed Amount.",
+    )
     ks_transfer_charge_amount = fields.Float(
         string="Transfer Charges Amount",
         default=False,
         help="Default flat amount for Transfer Charges.",
     )
+    ks_custom_transfer_charge_currency_id = fields.Many2one(
+        'res.currency',
+        string="Custom Transfer Charge Currency",
+    )
+    ks_transfer_charge_currency_id = fields.Many2one(
+        'res.currency',
+        string="Transfer Charge Currency",
+        compute='_compute_ks_transfer_charge_currency_id',
+        inverse='_inverse_ks_transfer_charge_currency_id',
+        help="Currency for Transfer Charges Flat Amount.",
+    )
+
+    @api.depends('currency_id', 'ks_custom_cash_handling_charge_currency_id')
+    def _compute_ks_cash_handling_charge_currency_id(self):
+        for company in self:
+            company.ks_cash_handling_charge_currency_id = (
+                company.ks_custom_cash_handling_charge_currency_id or company.currency_id
+            )
+
+    def _inverse_ks_cash_handling_charge_currency_id(self):
+        for company in self:
+            if company.ks_cash_handling_charge_currency_id == company.currency_id:
+                company.ks_custom_cash_handling_charge_currency_id = False
+            else:
+                company.ks_custom_cash_handling_charge_currency_id = company.ks_cash_handling_charge_currency_id
+
+    @api.depends('currency_id', 'ks_custom_transfer_charge_currency_id')
+    def _compute_ks_transfer_charge_currency_id(self):
+        for company in self:
+            company.ks_transfer_charge_currency_id = (
+                company.ks_custom_transfer_charge_currency_id or company.currency_id
+            )
+
+    def _inverse_ks_transfer_charge_currency_id(self):
+        for company in self:
+            if company.ks_transfer_charge_currency_id == company.currency_id:
+                company.ks_custom_transfer_charge_currency_id = False
+            else:
+                company.ks_custom_transfer_charge_currency_id = company.ks_transfer_charge_currency_id
+
+
 
 
