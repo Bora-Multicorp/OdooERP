@@ -88,6 +88,125 @@ class SaleOrderLine(models.Model):
             line.is_cash_handling_charge = is_cash
             line.is_transfer_charge = is_transfer
 
+    @api.depends('product_id', 'product_uom', 'product_uom_qty', 'order_id.pricelist_id', 'order_id.currency_id', 'order_id.rate', 'order_id.is_exchange')
+    def _compute_price_unit(self):
+        super()._compute_price_unit()
+        for line in self:
+            if not line.product_id or not line.order_id:
+                continue
+            if line.is_transfer_charge:
+                line._ks_set_transfer_charge_price()
+            elif line.is_cash_handling_charge:
+                line._ks_set_cash_handling_charge_price()
+
+    @api.onchange('product_id')
+    def _onchange_product_id_charge_price(self):
+        if self.is_transfer_charge:
+            self._ks_set_transfer_charge_price()
+        elif self.is_cash_handling_charge:
+            self._ks_set_cash_handling_charge_price()
+
+    @api.onchange('price_unit')
+    def _onchange_price_unit_update_charge_description(self):
+        for line in self:
+            if not line.product_id or not line.order_id or not line.company_id.ks_enable_shipping_cash_charges:
+                continue
+            if line.is_transfer_charge:
+                flat_amount = line.price_unit or 0.0
+                charge_currency = line.company_id.ks_transfer_charge_currency_id or line.company_id.currency_id
+                currency_name = charge_currency.name if charge_currency else (line.order_id.currency_id.name or '')
+                line.name = _("Transfer Charges (%(amount)g %(currency)s Flat)", amount=flat_amount, currency=currency_name)
+            elif line.is_cash_handling_charge:
+                charge_type = line.company_id.ks_cash_handling_charge_type or 'percentage'
+                if charge_type == 'fixed':
+                    val = line.price_unit or 0.0
+                    charge_currency = line.company_id.ks_cash_handling_charge_currency_id or line.company_id.currency_id
+                    currency_name = charge_currency.name if charge_currency else (line.order_id.currency_id.name or '')
+                    line.name = _("Cash Handling Charges (%(amount)g %(currency)s Flat)", amount=val, currency=currency_name)
+
+    def _ks_set_transfer_charge_price(self):
+        self.ensure_one()
+        order = self.order_id
+        company = order.company_id
+        if not company.ks_enable_shipping_cash_charges:
+            return
+
+        flat_amount = company.ks_transfer_charge_amount or 0.0
+        charge_currency = company.ks_transfer_charge_currency_id or company.currency_id
+        currency_name = charge_currency.name if charge_currency else (order.currency_id.name or '')
+        line_description = _("Transfer Charges (%(amount)g %(currency)s Flat)", amount=flat_amount, currency=currency_name)
+
+        self.price_unit = flat_amount
+        self.name = line_description
+
+    def _ks_set_cash_handling_charge_price(self):
+        self.ensure_one()
+        order = self.order_id
+        company = order.company_id
+        if not company.ks_enable_shipping_cash_charges:
+            return
+
+        charge_type = company.ks_cash_handling_charge_type or 'percentage'
+        val = company.ks_cash_handling_charge_value or company.ks_cash_handling_charge_pct or 0.0
+
+        if charge_type == 'fixed':
+            charge_currency = company.ks_cash_handling_charge_currency_id or company.currency_id
+            currency_name = charge_currency.name if charge_currency else (order.currency_id.name or '')
+            line_description = _("Cash Handling Charges (%(amount)g %(currency)s Flat)", amount=val, currency=currency_name)
+            charge_amount = val
+        else:
+            base_amount = sum(
+                l.price_subtotal for l in order.order_line
+                if not l.display_type and not order._is_cash_handling_product(l.product_id) and not order._is_transfer_charge_product(l.product_id) and l.id != self.id
+            )
+            charge_amount = base_amount * (val / 100.0)
+            currency_name = order.currency_id.name if order.currency_id else ''
+            line_description = _("Cash Handling Charges (%(pct)g%% - %(currency)s)", pct=val, currency=currency_name)
+
+        self.price_unit = charge_amount
+        self.name = line_description
+
+    @api.depends('product_uom_qty', 'discount', 'price_unit', 'tax_id', 'order_id.pricelist_id', 'order_id.currency_id', 'order_id.rate', 'order_id.is_exchange')
+    def _compute_amount(self):
+        super()._compute_amount()
+        for line in self:
+            if not line.order_id or not line.company_id.ks_enable_shipping_cash_charges:
+                continue
+
+            if line.is_transfer_charge:
+                flat_amount = line.price_unit or 0.0
+                charge_currency = line.company_id.ks_transfer_charge_currency_id or line.company_id.currency_id
+                so_currency = line.order_id.pricelist_id.currency_id or line.order_id.currency_id or line.company_id.currency_id
+
+                if charge_currency and so_currency and charge_currency != so_currency:
+                    raw_subtotal = flat_amount * (line.product_uom_qty or 1.0) * (1.0 - (line.discount or 0.0) / 100.0)
+                    converted_subtotal = line.order_id._ks_convert_charge_amount(
+                        raw_subtotal,
+                        charge_currency,
+                        so_currency,
+                        line.order_id
+                    )
+                    line.price_subtotal = converted_subtotal
+                    line.price_total = converted_subtotal
+
+            elif line.is_cash_handling_charge:
+                charge_type = line.company_id.ks_cash_handling_charge_type or 'percentage'
+                if charge_type == 'fixed':
+                    val = line.price_unit or 0.0
+                    charge_currency = line.company_id.ks_cash_handling_charge_currency_id or line.company_id.currency_id
+                    so_currency = line.order_id.pricelist_id.currency_id or line.order_id.currency_id or line.company_id.currency_id
+
+                    if charge_currency and so_currency and charge_currency != so_currency:
+                        raw_subtotal = val * (line.product_uom_qty or 1.0) * (1.0 - (line.discount or 0.0) / 100.0)
+                        converted_subtotal = line.order_id._ks_convert_charge_amount(
+                            raw_subtotal,
+                            charge_currency,
+                            so_currency,
+                            line.order_id
+                        )
+                        line.price_subtotal = converted_subtotal
+                        line.price_total = converted_subtotal
+
 
     def _ks_get_stock_location_for_company(self, company, warehouse=None):
         """Get the stock location for a company.
