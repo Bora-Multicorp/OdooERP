@@ -18,6 +18,10 @@ class AccountPayment(models.Model):
     is_insurance_payment = fields.Boolean(
         string='Insurance Payment',
         default=False,
+        compute='_compute_ins_fields_from_policy',
+        store=True,
+        readonly=False,
+        precompute=True,
         help='Marks this as an insurance premium or top-up payment.',
     )
     insurance_policy_id = fields.Many2one(
@@ -30,25 +34,110 @@ class AccountPayment(models.Model):
     # ── Fields used by the Insurance Details popup (payment → new policy) ─────
 
     insurance_popup_done = fields.Boolean(default=False, copy=False)
-    ins_company_id = fields.Many2one('res.company', string='Insured Company')
-    ins_type_id = fields.Many2one('insurance.type', string='Insurance Type')
-    ins_policy_number = fields.Char(string='Policy Number')
-    ins_sum_insured = fields.Float(string='Sum Insured')
+    ins_company_id = fields.Many2one(
+        'res.company',
+        string='Insured Company',
+        compute='_compute_ins_fields_from_policy',
+        store=True,
+        readonly=False,
+        precompute=True,
+    )
+    ins_type_id = fields.Many2one(
+        'insurance.type',
+        string='Insurance Type',
+        compute='_compute_ins_fields_from_policy',
+        store=True,
+        readonly=False,
+        precompute=True,
+    )
+    ins_policy_number = fields.Char(
+        string='Policy Number',
+        compute='_compute_ins_fields_from_policy',
+        store=True,
+        readonly=False,
+        precompute=True,
+    )
+    ins_sum_insured = fields.Float(
+        string='Sum Insured',
+        compute='_compute_ins_fields_from_policy',
+        store=True,
+        readonly=False,
+        precompute=True,
+    )
     ins_sum_insured_words = fields.Char(
         string='Cover Amount (in Words)',
         compute='_compute_ins_words',
         store=True,
     )
-    ins_agent = fields.Char(string='Agent Name')
-    ins_insurance_company_id = fields.Many2one('insurance.company', string='Insurance Company')
-    ins_expiry_date = fields.Date(string='Expiry Date')
+    ins_agent = fields.Char(
+        string='Agent Name',
+        compute='_compute_ins_fields_from_policy',
+        store=True,
+        readonly=False,
+        precompute=True,
+    )
+    ins_insurance_company_id = fields.Many2one(
+        'insurance.company',
+        string='Insurance Company',
+        compute='_compute_ins_fields_from_policy',
+        store=True,
+        readonly=False,
+        precompute=True,
+    )
+    ins_expiry_date = fields.Date(
+        string='Expiry Date',
+        compute='_compute_ins_fields_from_policy',
+        store=True,
+        readonly=False,
+        precompute=True,
+    )
     ins_policy_type = fields.Selection(
         [('individual', 'Individual'), ('floater', 'Floater')],
         string='Policy Type',
+        compute='_compute_ins_fields_from_policy',
+        store=True,
+        readonly=False,
+        precompute=True,
     )
-    ins_floater_location_ids = fields.Many2many('stock.warehouse', string='Covered Locations (Floater)')
+    ins_floater_location_ids = fields.Many2many(
+        'stock.warehouse',
+        string='Covered Locations (Floater)',
+        compute='_compute_ins_fields_from_policy',
+        store=True,
+        readonly=False,
+        precompute=True,
+    )
 
     # ── Compute ───────────────────────────────────────────────────────────────
+
+    @api.depends(
+        'insurance_policy_id',
+        'insurance_policy_id.company_id',
+        'insurance_policy_id.insurance_type_id',
+        'insurance_policy_id.policy_number',
+        'insurance_policy_id.initial_sum_insured',
+        'insurance_policy_id.agent_id',
+        'insurance_policy_id.insurance_company_id',
+        'insurance_policy_id.expiry_date',
+        'insurance_policy_id.policy_type',
+        'insurance_policy_id.floater_location_ids',
+    )
+    def _compute_ins_fields_from_policy(self):
+        for rec in self:
+            if rec.insurance_policy_id:
+                policy = rec.insurance_policy_id
+                rec.is_insurance_payment = True
+                rec.ins_company_id = policy.company_id
+                rec.ins_type_id = policy.insurance_type_id
+                rec.ins_policy_number = policy.policy_number
+                rec.ins_sum_insured = policy.initial_sum_insured
+                rec.ins_agent = policy.agent_id.name if policy.agent_id else False
+                rec.ins_insurance_company_id = policy.insurance_company_id
+                rec.ins_expiry_date = policy.expiry_date
+                rec.ins_policy_type = policy.policy_type
+                rec.ins_floater_location_ids = policy.floater_location_ids
+            elif not rec.is_insurance_payment:
+                rec.is_insurance_payment = False
 
     @api.depends('ins_sum_insured')
     def _compute_ins_words(self):
