@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from odoo import fields, models
+from odoo import api, fields, models
 
 
 class ResConfigSettings(models.TransientModel):
@@ -38,10 +38,22 @@ class ResConfigSettings(models.TransientModel):
         readonly=False,
         string="Cash Handling Charges (%)",
     )
+    ks_cash_handling_charge_currency_id = fields.Many2one(
+        related='company_id.ks_cash_handling_charge_currency_id',
+        readonly=False,
+        string="Cash Handling Charge Currency",
+    )
     ks_transfer_charge_amount = fields.Float(
         related='company_id.ks_transfer_charge_amount',
         readonly=False,
         string="Transfer Charges Amount",
     )
+    ks_transfer_charge_currency_id = fields.Many2one(
+        related='company_id.ks_transfer_charge_currency_id',
+        readonly=False,
+        string="Transfer Charge Currency",
+    )
+
+
 
 
