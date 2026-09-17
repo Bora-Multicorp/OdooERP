@@ -83,7 +83,20 @@ class PurchaseOrder(models.Model):
             partner = order.bill_to_id.sudo()
             if partner.company_id:
                 return self._get_parent_company_name(partner.company_id)
-            return partner.parent_id.name or partner.commercial_company_name or partner.name or self._get_parent_company_name(order.company_id) or ''
+            comp = self.env['res.company'].sudo().search([
+                '|', ('partner_id', '=', partner.id),
+                ('partner_id', '=', partner.commercial_partner_id.id)
+            ], limit=1)
+            if comp:
+                return self._get_parent_company_name(comp)
+            if partner.parent_id:
+                parent_comp = self.env['res.company'].sudo().search([
+                    ('partner_id', '=', partner.parent_id.id)
+                ], limit=1)
+                if parent_comp:
+                    return self._get_parent_company_name(parent_comp)
+                return partner.parent_id.name or ''
+            return partner.commercial_company_name or partner.name or self._get_parent_company_name(order.company_id) or ''
         return self._get_parent_company_name(order.company_id) or ''
 
     def get_ship_to_company_name(self):
