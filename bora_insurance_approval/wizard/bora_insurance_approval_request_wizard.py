@@ -28,6 +28,7 @@ class BoraInsuranceApprovalRequestWizard(models.TransientModel):
     bora_approver2_user = fields.Many2one(
         'res.users', string='Approver 2',
         domain="[('id', 'in', bora_approver2_filtered_ids)]")
+    bora_reason = fields.Text(string='Reason', placeholder='Optional reason for this request...')
     bora_show_approver2 = fields.Boolean(compute='_compute_show_approver2')
     bora_approval_info = fields.Html(compute='_compute_approval_info', readonly=True)
     bora_is_update_mode = fields.Boolean(string='Is Update Mode', default=False)
@@ -182,6 +183,7 @@ class BoraInsuranceApprovalRequestWizard(models.TransientModel):
             policy.bora_do_request_insurance_approval(
                 pm1_user=self.bora_approver1_user,
                 pm2_user=self.bora_approver2_user if self.bora_approver2_user else None,
+                reason=self.bora_reason,
             )
 
             if preserve_pm1:
