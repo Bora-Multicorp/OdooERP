@@ -505,13 +505,8 @@ class InsurancePolicy(models.Model):
         )
 
     def action_topup_addon(self):
-        """Open the top-up wizard. Policy must be active and paid."""
+        """Open the top-up wizard. Policy must be active."""
         self.ensure_one()
-        if not self.is_paid:
-            raise UserError(
-                "Top-up is only available on paid policies. "
-                "Please complete the premium payment first."
-            )
         if self.state != 'active':
             raise UserError("Top-up is only allowed on active policies.")
         return {
