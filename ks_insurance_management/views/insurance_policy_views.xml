@@ -20,12 +20,12 @@
                   class="btn-danger"
                   invisible="payment_status != 'requested' or not is_pending_approver"
                   confirm="Reject this payment request?"/>
-          <!-- Top Up Addon: only on active + paid policies -->
+          <!-- Top Up Addon: shown when policy state is active -->
           <button name="action_topup_addon" string="Top Up Addon" type="object"
                   class="btn-secondary"
-                  invisible="state != 'active' or not is_paid or payment_status in ('requested', 'approved')"/>
+                  invisible="state != 'active'"/>
           <button name="action_mark_expired" string="Mark as Expired" type="object"
-                  class="btn-danger" invisible="state == 'expired'"
+                  class="btn-danger" invisible="state != 'active'"
                   confirm="Mark this policy as Expired?"/>
           <button name="action_renew_policy" string="Renew Policy" type="object"
                   class="btn-success" invisible="state != 'expired'"/>
