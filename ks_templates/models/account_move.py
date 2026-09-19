@@ -59,7 +59,7 @@ class AccountMove(models.Model):
     def _search_ks_show_domestic_tax_invoice(self, operator, value):
         return []
 
-    @api.depends('invoice_line_ids.sale_line_ids.order_id.ks_zone')
+    @api.depends('invoice_line_ids.sale_line_ids')
     def _compute_ks_zone(self):
         for move in self:
             zone = ''
