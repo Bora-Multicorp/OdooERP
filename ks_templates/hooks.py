@@ -7,22 +7,22 @@ def post_init_hook(env):
     if report:
         report.sudo().write({'binding_model_id': False})
 
-    dom_report = env.ref('ks_templates.action_report_domestic_tax_invoice', raise_if_not_found=False)
-    move_model = env.ref('account.model_account_move', raise_if_not_found=False)
-    if dom_report and move_model:
-        dom_report.sudo().write({
-            'binding_model_id': move_model.id,
-            'binding_type': 'report',
-            'domain': False,
-        })
-
     env.cr.execute("""
+        UPDATE ir_act_report_xml
+        SET binding_model_id = (SELECT id FROM ir_model WHERE model = 'account.move' LIMIT 1),
+            binding_type = 'report',
+            domain = NULL
+        WHERE id IN (
+            SELECT res_id FROM ir_model_data
+            WHERE module = 'ks_templates' AND name LIKE 'action_report_domestic_tax%'
+        );
+
         DELETE FROM remove_action_report_action_data_rel_ah
         WHERE report_action_id IN (
             SELECT id FROM report_action_data
             WHERE ks_action_id IN (
                 SELECT res_id FROM ir_model_data
-                WHERE module = 'ks_templates' AND name = 'action_report_domestic_tax_invoice'
+                WHERE module = 'ks_templates' AND name LIKE 'action_report_domestic_tax%'
             )
         );
     """)

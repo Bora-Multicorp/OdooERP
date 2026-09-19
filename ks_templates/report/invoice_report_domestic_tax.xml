@@ -10,6 +10,7 @@
         <field name="binding_model_id" ref="account.model_account_move"/>
         <field name="paperformat_id" ref="paperformat_with_gst_invoice"/>
         <field name="binding_type">report</field>
+        <field name="domain" eval="False"/>
     </record>
 
     <template id="domestic_tax_invoice_report">

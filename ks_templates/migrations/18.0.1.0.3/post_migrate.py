@@ -2,7 +2,7 @@
 
 
 def migrate(cr, version):
-    """Ensure Domestic Sales - Tax Invoice is bound to account.move and unhidden on module upgrade."""
+    """Ensure Domestic Sales - Tax Invoice report actions are bound to account.move, unhidden, and have no domain restrictions."""
     cr.execute("""
         UPDATE ir_act_report_xml
         SET binding_model_id = (SELECT id FROM ir_model WHERE model = 'account.move' LIMIT 1),
