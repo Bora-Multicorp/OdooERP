@@ -12,13 +12,18 @@ def migrate(cr, version):
             SELECT res_id FROM ir_model_data
             WHERE module = 'ks_templates' AND name LIKE 'action_report_domestic_tax%'
         );
-
-        DELETE FROM remove_action_report_action_data_rel_ah
-        WHERE report_action_id IN (
-            SELECT id FROM report_action_data
-            WHERE ks_action_id IN (
-                SELECT res_id FROM ir_model_data
-                WHERE module = 'ks_templates' AND name LIKE 'action_report_domestic_tax%'
-            )
-        );
     """)
+
+    cr.execute("SELECT to_regclass('remove_action_report_action_data_rel_ah'), to_regclass('report_action_data')")
+    row = cr.fetchone()
+    if row and row[0] and row[1]:
+        cr.execute("""
+            DELETE FROM remove_action_report_action_data_rel_ah
+            WHERE report_action_id IN (
+                SELECT id FROM report_action_data
+                WHERE ks_action_id IN (
+                    SELECT res_id FROM ir_model_data
+                    WHERE module = 'ks_templates' AND name LIKE 'action_report_domestic_tax%'
+                )
+            );
+        """)
