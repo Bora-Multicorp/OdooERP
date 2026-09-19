@@ -5,7 +5,7 @@
     'version': "18.0.1.0.3",
     'category': 'Extra Tools',
     'summary': 'Extended features of warehouse',
-    'description': 'This module is used for attachments of file in Survey Form,'
+    'description': 'This module is used for attachments of file in Survey Form '
                    'You can also add multiple file attachment to Survey Form .',
     'author': 'Ksolves Private Limited',
     'website': 'https://www.ksolves.com/',
