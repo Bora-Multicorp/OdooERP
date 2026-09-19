@@ -2,7 +2,7 @@
 
 {
     'name': "Warehouse Extension",
-    'version': "18.0.1.0.2",
+    'version': '18.0.1.0.0',
     'category': 'Extra Tools',
     'summary': 'Extended features of warehouses',
     'description': 'This module is used for attachments of file in Survey Form,'
