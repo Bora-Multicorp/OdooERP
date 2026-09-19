@@ -21,10 +21,8 @@ patch(FormController.prototype, {
             }
         }
 
-        // Filter invoice (account.move) Download menu based on visibility conditions
+        // Filter invoice (account.move) Download menu
         if (this.model.root.resModel === "account.move" && items?.print?.length) {
-            const zone = (this.model.root.data.ks_zone || "").toLowerCase();
-            const isIndiaZone = zone === "india";
             const showCommercialInvoice = this.model.root.data.ks_show_commercial_invoice;
             const isCompIndian = Boolean(this.model.root.data.ks_is_company_indian);
             const isCustIndian = Boolean(this.model.root.data.ks_is_customer_indian);
@@ -39,32 +37,14 @@ patch(FormController.prototype, {
                     ""
                 ).trim().toLowerCase();
 
-                const key = (item.key || "").toString().toLowerCase();
-
-                // Always show "Domestic Sales - Tax Invoice" (no visibility condition)
-                if (
-                    label.includes("domestic sales") ||
-                    label.includes("tax invoice") ||
-                    key.includes("domestic_tax_invoice")
-                ) {
-                    return true;
-                }
-
                 // Commercial Invoice visibility:
-                // 1. Non-Indian company => show
-                // 2. Indian company + Indian customer => hide
-                // 3. Indian company + Non-Indian customer => show
+                // Hide when both company and customer are Indian; show otherwise
                 if (label.includes("commercial invoice")) {
                     return showCommercialInvoice !== undefined ? Boolean(showCommercialInvoice) : !(isCompIndian && isCustIndian);
                 }
 
-                if (isIndiaZone) {
-                    // India zone: show "With GST Report"
-                    return label.includes("with gst");
-                } else {
-                    // Other zones: show "Without GST Report"
-                    return label.includes("without gst");
-                }
+                // Show all other reports (like Domestic Sales - Tax Invoice) unconditionally
+                return true;
             });
         }
 
