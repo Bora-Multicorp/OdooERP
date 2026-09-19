@@ -33,6 +33,11 @@ class AccountMove(models.Model):
         compute='_compute_ks_commercial_invoice_visibility',
         store=False
     )
+    ks_show_domestic_tax_invoice = fields.Boolean(
+        string='Show Domestic Tax Invoice',
+        compute='_compute_ks_commercial_invoice_visibility',
+        store=False
+    )
 
     @api.depends('invoice_line_ids.sale_line_ids.order_id.ks_zone')
     def _compute_ks_zone(self):
@@ -67,6 +72,7 @@ class AccountMove(models.Model):
             move.ks_is_company_indian = is_comp_indian
             move.ks_is_customer_indian = is_cust_indian
             move.ks_show_commercial_invoice = not (is_comp_indian and is_cust_indian)
+            move.ks_show_domestic_tax_invoice = is_comp_indian and is_cust_indian
 
 
     # Bank details for invoice (copied from sale order ks_bank_id when invoice is created from SO)
