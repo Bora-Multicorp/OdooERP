@@ -4,7 +4,7 @@
     'name': "Warehouse Extension",
     'version': "18.0.1.0.2",
     'category': 'Extra Tools',
-    'summary': 'Extended features of warehouse',
+    'summary': 'Extended features of warehouses',
     'description': 'This module is used for attachments of file in Survey Form,'
                    'You can also add multiple file attachment to Survey Form .',
     'author': 'Ksolves Private Limited',
