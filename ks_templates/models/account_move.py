@@ -57,18 +57,6 @@ class AccountMove(models.Model):
         return []
 
     def _search_ks_show_domestic_tax_invoice(self, operator, value):
-        if operator in ('=', '!=') and isinstance(value, bool):
-            is_true = (operator == '=' and value) or (operator == '!=' and not value)
-            domain = [
-                ('company_id.country_id.code', '=', 'IN'),
-                '|',
-                ('partner_id.country_id.code', '=', 'IN'),
-                ('partner_id.commercial_partner_id.country_id.code', '=', 'IN')
-            ]
-            if is_true:
-                return domain
-            else:
-                return ['!'] + domain
         return []
 
     @api.depends('invoice_line_ids.sale_line_ids.order_id.ks_zone')
@@ -104,7 +92,7 @@ class AccountMove(models.Model):
             move.ks_is_company_indian = is_comp_indian
             move.ks_is_customer_indian = is_cust_indian
             move.ks_show_commercial_invoice = not (is_comp_indian and is_cust_indian)
-            move.ks_show_domestic_tax_invoice = is_comp_indian and is_cust_indian
+            move.ks_show_domestic_tax_invoice = True
 
 
     # Bank details for invoice (copied from sale order ks_bank_id when invoice is created from SO)
