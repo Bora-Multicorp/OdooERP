@@ -31,13 +31,45 @@ class AccountMove(models.Model):
     ks_show_commercial_invoice = fields.Boolean(
         string='Show Commercial Invoice',
         compute='_compute_ks_commercial_invoice_visibility',
+        search='_search_ks_show_commercial_invoice',
         store=False
     )
     ks_show_domestic_tax_invoice = fields.Boolean(
         string='Show Domestic Tax Invoice',
         compute='_compute_ks_commercial_invoice_visibility',
+        search='_search_ks_show_domestic_tax_invoice',
         store=False
     )
+
+    def _search_ks_show_commercial_invoice(self, operator, value):
+        if operator in ('=', '!=') and isinstance(value, bool):
+            is_true = (operator == '=' and value) or (operator == '!=' and not value)
+            domain = [
+                ('company_id.country_id.code', '=', 'IN'),
+                '|',
+                ('partner_id.country_id.code', '=', 'IN'),
+                ('partner_id.commercial_partner_id.country_id.code', '=', 'IN')
+            ]
+            if is_true:
+                return ['!'] + domain
+            else:
+                return domain
+        return []
+
+    def _search_ks_show_domestic_tax_invoice(self, operator, value):
+        if operator in ('=', '!=') and isinstance(value, bool):
+            is_true = (operator == '=' and value) or (operator == '!=' and not value)
+            domain = [
+                ('company_id.country_id.code', '=', 'IN'),
+                '|',
+                ('partner_id.country_id.code', '=', 'IN'),
+                ('partner_id.commercial_partner_id.country_id.code', '=', 'IN')
+            ]
+            if is_true:
+                return domain
+            else:
+                return ['!'] + domain
+        return []
 
     @api.depends('invoice_line_ids.sale_line_ids.order_id.ks_zone')
     def _compute_ks_zone(self):
