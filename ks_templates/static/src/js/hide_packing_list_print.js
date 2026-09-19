@@ -26,15 +26,27 @@ patch(FormController.prototype, {
             const zone = (this.model.root.data.ks_zone || "").toLowerCase();
             const isIndiaZone = zone === "india";
             const showCommercialInvoice = this.model.root.data.ks_show_commercial_invoice;
-            const showDomesticTaxInvoice = this.model.root.data.ks_show_domestic_tax_invoice;
             const isCompIndian = Boolean(this.model.root.data.ks_is_company_indian);
             const isCustIndian = Boolean(this.model.root.data.ks_is_customer_indian);
 
             items.print = items.print.filter((item) => {
-                const label = (item.label || item.description || item.name || "").trim().toLowerCase();
+                const label = (
+                    item.label ||
+                    item.description ||
+                    item.name ||
+                    item.action?.name ||
+                    item.action?.description ||
+                    ""
+                ).trim().toLowerCase();
+
+                const key = (item.key || "").toString().toLowerCase();
 
                 // Always show "Domestic Sales - Tax Invoice" (no visibility condition)
-                if (label.includes("domestic sales") || label.includes("tax invoice")) {
+                if (
+                    label.includes("domestic sales") ||
+                    label.includes("tax invoice") ||
+                    key.includes("domestic_tax_invoice")
+                ) {
                     return true;
                 }
 
