@@ -7,10 +7,10 @@
         <field name="report_name">ks_templates.domestic_tax_invoice_inr_converted_report</field>
         <field name="report_file">ks_templates.domestic_tax_invoice_inr_converted_report</field>
         <field name="print_report_name">'Domestic Sales - Tax Invoice (INR) - %s' % (object.name)</field>
+        <field name="domain">['&amp;', ('ks_zone', '=', 'india'), ('currency_id.name', '!=', 'INR')]</field>
         <field name="binding_model_id" ref="account.model_account_move"/>
         <field name="paperformat_id" ref="paperformat_with_gst_invoice"/>
         <field name="binding_type">report</field>
-        <field name="domain" eval="False"/>
     </record>
 
     <template id="domestic_tax_invoice_inr_converted_report">
