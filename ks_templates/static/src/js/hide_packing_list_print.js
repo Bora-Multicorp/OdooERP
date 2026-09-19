@@ -33,19 +33,17 @@ patch(FormController.prototype, {
             items.print = items.print.filter((item) => {
                 const label = (item.label || item.description || item.name || "").trim().toLowerCase();
 
+                // Always show "Domestic Sales - Tax Invoice" (no visibility condition)
+                if (label.includes("domestic sales") || label.includes("tax invoice")) {
+                    return true;
+                }
+
                 // Commercial Invoice visibility:
                 // 1. Non-Indian company => show
                 // 2. Indian company + Indian customer => hide
                 // 3. Indian company + Non-Indian customer => show
                 if (label.includes("commercial invoice")) {
                     return showCommercialInvoice !== undefined ? Boolean(showCommercialInvoice) : !(isCompIndian && isCustIndian);
-                }
-
-                // Domestic Sales - Tax Invoice visibility:
-                // 1. Indian company + Indian customer => show
-                // 2. Otherwise => hide
-                if (label.includes("domestic sales") || label.includes("tax invoice")) {
-                    return showDomesticTaxInvoice !== undefined ? Boolean(showDomesticTaxInvoice) : (isCompIndian && isCustIndian);
                 }
 
                 if (isIndiaZone) {

@@ -7,7 +7,6 @@
         <field name="report_name">ks_templates.domestic_tax_invoice_report</field>
         <field name="report_file">ks_templates.domestic_tax_invoice_report</field>
         <field name="print_report_name">'Domestic Sales - Tax Invoice - %s' % (object.name)</field>
-        <field name="domain">[('ks_show_domestic_tax_invoice', '=', True)]</field>
         <field name="binding_model_id" ref="account.model_account_move"/>
         <field name="paperformat_id" ref="paperformat_with_gst_invoice"/>
         <field name="binding_type">report</field>
