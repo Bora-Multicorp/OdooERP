@@ -6,9 +6,9 @@
         <field name="inherit_id" ref="purchase.purchase_order_form"/>
         <field name="arch" type="xml">
             <xpath expr="//header" position="inside">
-                <button name="%(purchase_tds_entry_wizard_form_action)d"
-                        string="TDS Entry"
-                        type="action"
+                <button name="action_deduct_tds"
+                        string="Deduct TDS"
+                        type="object"
                         class="btn-secondary"
                         invisible="state == 'cancel'"/>
             </xpath>
@@ -22,6 +22,7 @@
                            widget="statinfo"
                            string="TDS"/>
                 </button>
+                <field name="tds_ids" invisible="1"/>
             </xpath>
             <xpath expr="//field[@name='tax_totals']" position="after">
                 <field name="tds_section"  nolabel="1" colspan="2" readonly="1"  options="{'no_open': True}" invisible="amount_tds == 0 or not tds_section"/>
