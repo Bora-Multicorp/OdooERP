@@ -1233,6 +1233,26 @@ class StockPickingInherit(models.Model):
         help='Country where the product is manufactured',
     )
 
+    def action_open_upload_serials_wizard(self):
+        self.ensure_one()
+        return {
+            'name': _('Upload Serials / Lots and IMEIs (Excel)'),
+            'type': 'ir.actions.act_window',
+            'res_model': 'stock.picking.upload.excel.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'default_picking_id': self.id,
+            },
+        }
+
+    def action_download_serials_sample_xlsx(self):
+        self.ensure_one()
+        wizard = self.env['stock.picking.upload.excel.wizard'].create({
+            'picking_id': self.id,
+        })
+        return wizard.action_download_sample_xlsx()
+
     @api.model_create_multi
     def create(self, vals_list):
         pickings = super().create(vals_list)

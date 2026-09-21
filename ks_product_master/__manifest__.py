@@ -39,6 +39,7 @@
         'views/product_template_tree_view.xml',
         'wizards/activation_status_wizard_view.xml',
         'wizards/stock_move_upload_csv_wizard_view.xml',
+        'wizards/stock_picking_upload_excel_wizard_view.xml',
         'views/stock_traceability_report_pdf.xml',
         'views/margin_analysis_report_views.xml',
         'views/ad_margin_report_views.xml',

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <record id="view_stock_picking_upload_excel_wizard_form" model="ir.ui.view">
+            <field name="name">stock.picking.upload.excel.wizard.form</field>
+            <field name="model">stock.picking.upload.excel.wizard</field>
+            <field name="arch" type="xml">
+                <form string="Upload Serials/Lots and IMEIs (Excel)">
+                    <div class="alert alert-info" role="alert">
+                        <strong>Step 1:</strong> Download the pre-formatted Excel template matching the line items of this transfer.<br/>
+                        <strong>Step 2:</strong> Fill in the Serial Numbers, 15-digit IMEIs (mandatory for mobile phones), and select Made In country from the dropdown.<br/>
+                        <strong>Step 3:</strong> Upload the populated file below.
+                    </div>
+                    <div class="mb-3">
+                        <button name="action_download_sample_xlsx"
+                                string="Download Sample File (.xlsx)"
+                                type="object"
+                                class="btn btn-primary"
+                                icon="fa-download"/>
+                    </div>
+                    <group>
+                        <group string="File Upload">
+                            <field name="picking_id" invisible="1"/>
+                            <field name="picking_type_code" invisible="1"/>
+                            <field name="excel_file"
+                                   filename="filename"
+                                   string="Upload File"
+                                   options="{'accepted_file_extensions': '.xlsx,.xls,.csv'}"/>
+                            <field name="filename" invisible="1"/>
+                        </group>
+                        <group string="Options">
+                            <field name="keep_lines"/>
+                            <field name="validate_picking"/>
+                        </group>
+                    </group>
+                    <footer>
+                        <button name="action_import" string="Upload File" type="object" class="btn-primary"/>
+                        <button string="Cancel" class="btn-secondary" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+    </data>
+</odoo>

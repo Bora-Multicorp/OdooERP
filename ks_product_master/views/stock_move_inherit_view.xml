@@ -22,6 +22,13 @@
           <field name="model">stock.picking</field>
           <field name="inherit_id" ref="stock.view_picking_form"/>
           <field name="arch" type="xml">
+              <xpath expr="//header" position="inside">
+                  <button name="action_open_upload_serials_wizard"
+                          type="object"
+                          string="Upload Serials / IMEIs"
+                          class="btn-secondary"
+                          invisible="state in ('done', 'cancel')"/>
+              </xpath>
               <xpath expr="//field[@name='move_ids_without_package']//list/field[@name='product_id']"
                      position="attributes">
                   <attribute name="options">{'no_create': True, 'no_create_edit': True, 'no_open': True}</attribute>
