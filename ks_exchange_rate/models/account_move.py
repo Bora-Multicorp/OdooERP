@@ -71,18 +71,17 @@ class AccountMoveLine(models.Model):
         super()._compute_currency_rate()
         for line in self:
             move = line.move_id
-            if move.is_exchange and move.rate and move.move_type == "entry":
+            if move.is_exchange and move.rate and move.move_type == "entry" and line.display_type not in ("line_section", "line_note"):
                 line.currency_rate = move.rate
-
+                
     @api.depends("amount_currency", "move_id", "move_id.is_exchange", "move_id.rate", "move_id.move_type")
     def _compute_balance(self):
         super()._compute_balance()
         for line in self:
             move = line.move_id
-            if (
-                move.is_exchange 
+            if (move.is_exchange
                 and move.rate 
-                and move.move_type == "entry" 
+                and move.move_type == "entry"
                 and line.amount_currency 
                 and line.currency_id != line.company_currency_id 
                 and line.display_type not in ("line_section", "line_note")
