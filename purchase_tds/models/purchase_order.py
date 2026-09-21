@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from markupsafe import Markup
+
 from odoo import _, api, Command, fields, models
 from odoo.exceptions import UserError
 from odoo.tools import SQL
@@ -12,8 +14,20 @@ class PurchaseOrder(models.Model):
         'purchase_id',
         string='TDS Entries',
     )
-    tds_tax_id = fields.Many2one("account.tax", string="TDS Tax", readonly=1)
-    tds_section = fields.Many2one("l10n_in.section.alert", string="TDS Section", related="tds_tax_id.l10n_in_section_id", store=True, readonly=True)
+    tds_tax_id = fields.Many2one(
+        "account.tax",
+        string="TDS Tax",
+        compute='_compute_tds_tax_id',
+        store=True,
+        readonly=True,
+    )
+    tds_section = fields.Many2one(
+        "l10n_in.section.alert",
+        string="TDS Section",
+        related="tds_tax_id.l10n_in_section_id",
+        store=True,
+        readonly=True,
+    )
     amount_tds = fields.Monetary(
             string="TDS Amount",
             compute='_compute_tds_amounts',
@@ -48,12 +62,17 @@ class PurchaseOrder(models.Model):
             action['res_id'] = self.tds_ids.id
         return action
 
+    @api.depends('tds_ids.tax_id')
+    def _compute_tds_tax_id(self):
+        for order in self:
+            order.tds_tax_id = order.tds_ids[0].tax_id if order.tds_ids else False
+
     @api.depends('tds_ids')
     def _compute_tds_count(self):
         for order in self:
             order.tds_count = len(order.tds_ids)
 
-    @api.depends('amount_total', 'tds_ids.base', 'tds_ids.amount')
+    @api.depends('amount_total', 'tds_ids', 'tds_ids.base', 'tds_ids.amount')
     def _compute_tds_amounts(self):
         for order in self:
             amount_tds = sum(order.tds_ids.mapped('amount'))
@@ -209,24 +228,48 @@ class PurchaseOrder(models.Model):
             "reference": _("TDS 194Q of %s", self.name),
         }
 
+        is_new = not bool(self.tds_ids)
         if self.tds_ids:
-            self.tds_ids[0].write(tds_vals)
+            self.tds_ids[0].with_context(skip_tds_chatter=True).write(tds_vals)
             if len(self.tds_ids) > 1:
-                (self.tds_ids - self.tds_ids[0]).unlink()
+                (self.tds_ids - self.tds_ids[0]).with_context(skip_tds_chatter=True).unlink()
             tds_entry = self.tds_ids[0]
-            self.write({"tds_tax_id": tax.id})
         else:
-            self.write({
+            self.with_context(skip_tds_chatter=True).write({
                 "tds_ids": [Command.create(tds_vals)],
-                "tds_tax_id": tax.id,
             })
             tds_entry = self.tds_ids[0]
 
         # Force recomputation of fields on self
+        self._compute_tds_tax_id()
         self._compute_tds_count()
         self._compute_tds_amounts()
 
+        # Log in Purchase Order Chatter
         currency_symbol = self.currency_id.symbol or ""
+        chatter_title = _("TDS (ACT 1961) 194Q Deducted") if is_new else _("TDS (ACT 1961) 194Q Recomputed")
+        self.message_post(
+            body=Markup(
+                "<b>%(title)s</b><br/>"
+                "<ul>"
+                "<li><b>Tax:</b> %(tax)s</li>"
+                "<li><b>TDS Base Amount (Excl. Tax):</b> %(symbol)s %(base)s</li>"
+                "<li><b>TDS Amount:</b> %(symbol)s %(amount)s</li>"
+                "<li><b>Net Payable:</b> %(symbol)s %(net_payable)s</li>"
+                "<li><b>Cumulative FY Purchases across %(company)s:</b> %(symbol)s %(cumulative)s</li>"
+                "</ul>"
+            ) % {
+                "title": chatter_title,
+                "tax": tax.display_name,
+                "symbol": currency_symbol,
+                "base": f"{base_amount:,.2f}",
+                "amount": f"{tds_entry.amount:,.2f}",
+                "net_payable": f"{self.amount_net_payable:,.2f}",
+                "company": root_company.name,
+                "cumulative": f"{cumulative_total:,.2f}",
+            },
+            subtype_xmlid="mail.mt_note",
+        )
         return {
             "type": "ir.actions.client",
             "tag": "display_notification",

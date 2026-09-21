@@ -14,4 +14,5 @@ access_ad_margin_report,ad.margin.report,model_ad_margin_report,base.group_user,
 access_ad_margin_report_wizard,ad.margin.report.wizard,model_ad_margin_report_wizard,base.group_user,1,1,1,1
 access_mop_master,mop.master,model_mop_master,base.group_user,1,1,1,1
 access_stock_move_upload_csv_wizard,stock.move.upload.csv.wizard,model_stock_move_upload_csv_wizard,base.group_user,1,1,1,1
+access_stock_picking_upload_excel_wizard,stock.picking.upload.excel.wizard,model_stock_picking_upload_excel_wizard,base.group_user,1,1,1,1
 
