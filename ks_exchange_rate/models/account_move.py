@@ -66,20 +66,27 @@ class AccountMoveLine(models.Model):
              'Example: If line total is 100 USD and rate is 50, then exchanged currency amount = 100 / 50 = 2',
     )
 
-    @api.depends("currency_id", "company_id", "move_id.invoice_currency_rate", "move_id.date", "move_id.is_exchange", "move_id.rate",)
+    @api.depends("currency_id", "company_id", "move_id.invoice_currency_rate", "move_id.date", "move_id.is_exchange", "move_id.rate", "move_id.move_type")
     def _compute_currency_rate(self):
         super()._compute_currency_rate()
         for line in self:
             move = line.move_id
-            if move.is_exchange and move.rate:
+            if move.is_exchange and move.rate and move.move_type == "entry":
                 line.currency_rate = move.rate
 
-    @api.depends("amount_currency", "move_id")
+    @api.depends("amount_currency", "move_id", "move_id.is_exchange", "move_id.rate", "move_id.move_type")
     def _compute_balance(self):
         super()._compute_balance()
         for line in self:
             move = line.move_id
-            if (move.is_exchange and move.rate and line.amount_currency and line.currency_id != line.company_currency_id and line.display_type not in ("line_section", "line_note")):
+            if (
+                move.is_exchange 
+                and move.rate 
+                and move.move_type == "entry" 
+                and line.amount_currency 
+                and line.currency_id != line.company_currency_id 
+                and line.display_type not in ("line_section", "line_note")
+            ):
                 line.balance = line.amount_currency * move.rate
 
     @api.depends('price_subtotal', 'price_unit', 'quantity', 'discount', 'move_id.rate', 'move_id.currency_id', 'move_id.company_currency_id', 'move_id.is_exchange')
