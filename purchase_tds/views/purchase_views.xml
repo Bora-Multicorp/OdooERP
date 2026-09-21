@@ -11,6 +11,7 @@
                         type="object"
                         class="btn-secondary"
                         invisible="state == 'cancel'"/>
+
             </xpath>
             <xpath expr="//div[@name='button_box']" position="inside">
                 <button name="action_view_tds"
