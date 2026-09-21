@@ -38,11 +38,6 @@ class AccountMove(models.Model):
         compute='_compute_ks_commercial_invoice_visibility',
         store=True
     )
-    ks_show_domestic_tax_invoice = fields.Boolean(
-        string='Show Domestic Tax Invoice',
-        compute='_compute_ks_commercial_invoice_visibility',
-        store=False
-    )
 
     @api.depends(
         'invoice_line_ids.sale_line_ids.order_id.ks_zone',
