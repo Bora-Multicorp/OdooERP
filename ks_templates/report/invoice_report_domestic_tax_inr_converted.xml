@@ -1,12 +1,12 @@
 <odoo>
 
     <record id="action_report_domestic_tax_invoice_inr_converted" model="ir.actions.report">
-        <field name="name">Domestic Sales - Tax Invoice (INR Converted)</field>
+        <field name="name">Tax Invoice (INR Converted)</field>
         <field name="model">account.move</field>
         <field name="report_type">qweb-pdf</field>
         <field name="report_name">ks_templates.domestic_tax_invoice_inr_converted_report</field>
         <field name="report_file">ks_templates.domestic_tax_invoice_inr_converted_report</field>
-        <field name="print_report_name">'Domestic Sales - Tax Invoice (INR) - %s' % (object.name)</field>
+        <field name="print_report_name">'Tax Invoice (INR Converted) - %s' % (object.name)</field>
         <field name="domain">['&amp;', ('ks_zone', '=', 'india'), ('currency_id.name', '!=', 'INR')]</field>
         <field name="binding_model_id" ref="account.model_account_move"/>
         <field name="paperformat_id" ref="paperformat_with_gst_invoice"/>

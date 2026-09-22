@@ -17,21 +17,26 @@ class AccountMove(models.Model):
     ks_place_of_receipt_by_shipper = fields.Char(string='Place of Receipt by Shipper')
     ks_city_port_of_loading = fields.Char(string='City / Port of Loading')
     ks_city_port_of_discharge = fields.Char(string='City / Port of Discharge')
-    ks_zone = fields.Char(string='Zone', compute='_compute_ks_zone', store=False)
+    ks_zone = fields.Char(string='Zone', compute='_compute_ks_zone', store=True)
     ks_is_company_indian = fields.Boolean(
         string='Is Company Indian',
         compute='_compute_ks_commercial_invoice_visibility',
-        store=False
+        store=True
     )
     ks_is_customer_indian = fields.Boolean(
         string='Is Customer Indian',
         compute='_compute_ks_commercial_invoice_visibility',
-        store=False
+        store=True
     )
     ks_show_commercial_invoice = fields.Boolean(
         string='Show Commercial Invoice',
         compute='_compute_ks_commercial_invoice_visibility',
-        store=False
+        store=True
+    )
+    ks_show_domestic_tax_invoice = fields.Boolean(
+        string='Show Domestic Tax Invoice',
+        compute='_compute_ks_commercial_invoice_visibility',
+        store=True
     )
     ks_show_domestic_tax_invoice = fields.Boolean(
         string='Show Domestic Tax Invoice',
@@ -39,7 +44,15 @@ class AccountMove(models.Model):
         store=False
     )
 
-    @api.depends('invoice_line_ids.sale_line_ids.order_id.ks_zone')
+    @api.depends(
+        'invoice_line_ids.sale_line_ids.order_id.ks_zone',
+        'company_id.country_id',
+        'company_id.partner_id.country_id',
+        'partner_id.country_id',
+        'partner_id.commercial_partner_id.country_id',
+        'partner_id.parent_id.country_id',
+        'partner_shipping_id.country_id'
+    )
     def _compute_ks_zone(self):
         for move in self:
             zone = ''
@@ -53,20 +66,33 @@ class AccountMove(models.Model):
                         break
             except Exception:
                 pass
+            if not zone:
+                comp_country = move.company_id.country_id or (move.company_id.partner_id and move.company_id.partner_id.country_id)
+                cust_country = (move.partner_id and move.partner_id.country_id) or \
+                               (move.partner_id and move.partner_id.commercial_partner_id and move.partner_id.commercial_partner_id.country_id) or \
+                               (move.partner_id and move.partner_id.parent_id and move.partner_id.parent_id.country_id) or \
+                               (move.partner_shipping_id and move.partner_shipping_id.country_id)
+                if comp_country and comp_country.code == 'IN' and cust_country and cust_country.code == 'IN':
+                    zone = 'india'
             move.ks_zone = zone
 
     @api.depends(
         'company_id.country_id',
         'company_id.partner_id.country_id',
         'partner_id.country_id',
-        'partner_id.commercial_partner_id.country_id'
+        'partner_id.commercial_partner_id.country_id',
+        'partner_id.parent_id.country_id',
+        'partner_shipping_id.country_id'
     )
     def _compute_ks_commercial_invoice_visibility(self):
         for move in self:
             comp_country = move.company_id.country_id or (move.company_id.partner_id and move.company_id.partner_id.country_id)
             is_comp_indian = bool(comp_country and comp_country.code == 'IN')
 
-            cust_country = (move.partner_id and move.partner_id.country_id) or (move.partner_id and move.partner_id.commercial_partner_id and move.partner_id.commercial_partner_id.country_id)
+            cust_country = (move.partner_id and move.partner_id.country_id) or \
+                           (move.partner_id and move.partner_id.commercial_partner_id and move.partner_id.commercial_partner_id.country_id) or \
+                           (move.partner_id and move.partner_id.parent_id and move.partner_id.parent_id.country_id) or \
+                           (move.partner_shipping_id and move.partner_shipping_id.country_id)
             is_cust_indian = bool(cust_country and cust_country.code == 'IN')
 
             move.ks_is_company_indian = is_comp_indian
