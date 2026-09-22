@@ -389,8 +389,8 @@ class InsurancePolicy(models.Model):
         if self.payment_status != 'requested':
             raise UserError("This policy does not have a pending payment request.")
 
-        is_topup = self.pending_topup_amount > 0
-        amount = self.pending_topup_amount if is_topup else self.premium
+        is_topup = bool(self.pending_topup_amount > 0 or self.pending_topup_premium > 0)
+        amount = self.pending_topup_premium if (is_topup and self.pending_topup_premium) else self.premium
         if not amount:
             raise UserError(
                 "No payment amount found. "

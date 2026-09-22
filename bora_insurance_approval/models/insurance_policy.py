@@ -249,8 +249,8 @@ class InsurancePolicy(models.Model):
     def _bora_do_complete_payment_approval(self):
         """Execute final approval logic (creating payment and updating status)."""
         for rec in self:
-            is_topup = rec.pending_topup_amount > 0
-            amount = rec.pending_topup_amount if is_topup else rec.premium
+            is_topup = bool(rec.pending_topup_amount > 0 or rec.pending_topup_premium > 0)
+            amount = rec.pending_topup_premium if (is_topup and rec.pending_topup_premium) else rec.premium
             if not amount:
                 raise UserError(_(
                     "No payment amount found. "
