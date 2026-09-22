@@ -35,16 +35,32 @@ class StockPickingUploadExcelWizard(models.TransientModel):
     filename = fields.Char(string="Filename")
     keep_lines = fields.Boolean(
         string="Keep existing lines",
-        default=False,
-        help="If unchecked, existing lines for the moves in the file will be replaced.",
+        default=True,
+        help="1.checked, existing lines with serial numbers/IMEIs are kept and newly uploaded lines are added. 2. unchecked, existing lines for the moves in the file will be removed and replaced by the uploaded lines.",
     )
-    validate_picking = fields.Boolean(
-        string="Validate Transfer after Import",
+    test_passed = fields.Boolean(
+        string="File Tested",
         default=False,
-        help="If checked, the transfer will be automatically validated once serial numbers are imported.",
+    )
+    test_message = fields.Char(
+        string="Test Result",
+        readonly=True,
     )
 
     SUPPORTED_EXTENSIONS = (".xlsx", ".xls", ".csv")
+
+    @api.model
+    def default_get(self, fields_list):
+        res = super().default_get(fields_list)
+        res["keep_lines"] = True
+        res["test_passed"] = False
+        res["test_message"] = False
+        return res
+
+    @api.onchange("excel_file")
+    def _onchange_excel_file(self):
+        self.test_passed = False
+        self.test_message = False
 
     # -------------------------------------------------------------------------
     # SAMPLE FILE DOWNLOAD
@@ -126,98 +142,59 @@ class StockPickingUploadExcelWizard(models.TransientModel):
             is_dual = self._is_product_dual_sim(product)
             move_ext_id = self._get_or_create_external_id(move)
 
-            # Made in country pre-fill (from move or picking)
-            row_country_name = (
+            # Move country name fallback
+            move_country_name = (
                 (move.made_in_country_id and move.made_in_country_id.name)
                 or (move.made_country and move.made_country.name)
                 or picking_country_name
                 or ""
             )
 
-            # Determine number of rows to generate
-            if product.tracking == "serial":
-                qty = int(move.product_uom_qty or move.quantity or 1)
-                qty = max(qty, 1)
-            else:
-                qty = 1
+            # Total demand quantity required for this move
+            demand_qty = int(move.product_uom_qty or 0)
+            if demand_qty <= 0:
+                demand_qty = int(move.quantity or 0)
+            if demand_qty <= 0:
+                demand_qty = 1
 
-            # Check existing move lines for pre-existing serials / lots
-            existing_lines = move.move_line_ids.filtered(lambda l: l.lot_name or l.lot_id or l.imei)
+            # Find existing lines that have a serial/lot or IMEI assigned (ignore empty placeholder lines)
+            assigned_lines = move.move_line_ids.filtered(
+                lambda l: bool(l.lot_name or l.lot_id or l.imei)
+            )
 
-            # For outgoing, find quants/lots in stock
-            available_quants = []
-            if is_outgoing:
-                available_quants = self.env["stock.quant"].search([
-                    ("product_id", "=", product.id),
-                    ("location_id", "child_of", move.location_id.id),
-                    ("quantity", ">", 0),
-                    ("lot_id", "!=", False),
-                ], limit=qty)
-
-            for line_idx in range(qty):
-                # 1. Receipt External ID
-                receipt_val = picking_ext_id
-
-                # 2. Move External ID
-                move_val = move_ext_id
-
-                # 3. Product Name
-                product_val = product.display_name or product.name
-
-                # 4. Serial Number
-                serial_val = ""
-                imei1_val = ""
-                imei2_val = ""
-
-                if line_idx < len(existing_lines):
-                    el = existing_lines[line_idx]
-                    serial_val = el.lot_name or (el.lot_id and el.lot_id.name) or ""
-                    imei1_val = el.imei or ""
-                    imei2_val = el.imei2 or ""
-                    if el.made_in_country_id:
-                        row_country_name = el.made_in_country_id.name
-
-                if not serial_val:
-                    if is_outgoing and line_idx < len(available_quants):
-                        q = available_quants[line_idx]
-                        serial_val = q.lot_id.name
-                        if not imei1_val:
-                            imei1_val = q.imei or ""
-                        if not imei2_val:
-                            imei2_val = q.imei2 or ""
-                    else:
-                        serial_val = f"SN{move.id}{line_idx + 1:04d}"
-
-                # 5 & 6. IMEI 1 and IMEI 2 based on conditions
-                if is_mobile:
-                    if not imei1_val:
-                        imei1_val = f"86{move.id % 10000:04d}{line_idx + 1:09d}"
-                    if is_dual and not imei2_val:
-                        imei2_val = f"87{move.id % 10000:04d}{line_idx + 1:09d}"
-                else:
-                    imei1_val = ""
-                    imei2_val = ""
+            # 1. Export already assigned lines first (e.g. manual entries already passed)
+            exported_lines_count = 0
+            for line in assigned_lines:
+                exported_lines_count += 1
+                serial_val = (line.lot_name or (line.lot_id and line.lot_id.name) or "").strip()
+                imei1_val = str(line.imei).strip() if line.imei else ""
+                imei2_val = str(line.imei2).strip() if line.imei2 else ""
+                row_country = (
+                    (line.made_in_country_id and line.made_in_country_id.name)
+                    or (line.made_country and line.made_country.name)
+                    or move_country_name
+                )
 
                 if has_dual_sim:
                     row_vals = [
-                        receipt_val,
-                        move_val,
-                        product_val,
+                        picking_ext_id,
+                        move_ext_id,
+                        product.display_name or product.name,
                         serial_val,
                         imei1_val,
                         imei2_val,
-                        row_country_name,
+                        row_country,
                     ]
                     text_col_indices = (4, 5, 6)
                     center_col_indices = (1, 2, 4, 5, 6, 7)
                 else:
                     row_vals = [
-                        receipt_val,
-                        move_val,
-                        product_val,
+                        picking_ext_id,
+                        move_ext_id,
+                        product.display_name or product.name,
                         serial_val,
                         imei1_val,
-                        row_country_name,
+                        row_country,
                     ]
                     text_col_indices = (4, 5)
                     center_col_indices = (1, 2, 4, 5, 6)
@@ -226,7 +203,6 @@ class StockPickingUploadExcelWizard(models.TransientModel):
                 for c_idx, val in enumerate(row_vals, 1):
                     c = ws.cell(row=current_row, column=c_idx, value=val)
                     c.border = border
-                    # Force IMEI and Serial as text format so Excel does not convert to scientific notation
                     if c_idx in text_col_indices:
                         c.number_format = "@"
                     if c_idx in center_col_indices:
@@ -236,13 +212,87 @@ class StockPickingUploadExcelWizard(models.TransientModel):
 
                 current_row += 1
 
-        # Fallback if picking had no moves
+            # 2. Export remaining unassigned lines to fulfill the total demand (e.g. 17 total: 2 existing + 15 remaining)
+            remaining_qty = max(0, demand_qty - exported_lines_count)
+
+            # For outgoing delivery, find quants in stock excluding already assigned lots
+            available_quants = []
+            if is_outgoing and remaining_qty > 0:
+                assigned_lot_ids = assigned_lines.mapped("lot_id").ids
+                quant_domain = [
+                    ("product_id", "=", product.id),
+                    ("location_id", "child_of", move.location_id.id),
+                    ("quantity", ">", 0),
+                    ("lot_id", "!=", False),
+                ]
+                if assigned_lot_ids:
+                    quant_domain.append(("lot_id", "not in", assigned_lot_ids))
+                available_quants = self.env["stock.quant"].search(quant_domain, limit=remaining_qty)
+
+            for offset in range(remaining_qty):
+                seq = exported_lines_count + offset + 1
+                if is_outgoing and offset < len(available_quants):
+                    q = available_quants[offset]
+                    serial_val = q.lot_id.name
+                    imei1_val = q.imei or ""
+                    imei2_val = q.imei2 or ""
+                else:
+                    serial_val = f"SN{move.id}{seq:04d}"
+                    imei1_val = ""
+                    imei2_val = ""
+
+                if is_mobile:
+                    if not imei1_val:
+                        imei1_val = f"86{move.id % 10000:04d}{seq:09d}"
+                    if is_dual and not imei2_val:
+                        imei2_val = f"87{move.id % 10000:04d}{seq:09d}"
+
+                if has_dual_sim:
+                    row_vals = [
+                        picking_ext_id,
+                        move_ext_id,
+                        product.display_name or product.name,
+                        serial_val,
+                        imei1_val,
+                        imei2_val,
+                        move_country_name,
+                    ]
+                    text_col_indices = (4, 5, 6)
+                    center_col_indices = (1, 2, 4, 5, 6, 7)
+                else:
+                    row_vals = [
+                        picking_ext_id,
+                        move_ext_id,
+                        product.display_name or product.name,
+                        serial_val,
+                        imei1_val,
+                        move_country_name,
+                    ]
+                    text_col_indices = (4, 5)
+                    center_col_indices = (1, 2, 4, 5, 6)
+
+                ws.row_dimensions[current_row].height = 20
+                for c_idx, val in enumerate(row_vals, 1):
+                    c = ws.cell(row=current_row, column=c_idx, value=val)
+                    c.border = border
+                    if c_idx in text_col_indices:
+                        c.number_format = "@"
+                    if c_idx in center_col_indices:
+                        c.alignment = Alignment(horizontal="center", vertical="center")
+                    else:
+                        c.alignment = Alignment(horizontal="left", vertical="center")
+
+                current_row += 1
+
+        # Fallback if picking had no moves or all were completed
         if current_row == 2:
+            first_move = moves[0] if moves else False
+            first_prod = first_move.product_id if first_move else False
             if has_dual_sim:
                 sample_row = [
                     picking_ext_id or "WH/IN/00001",
-                    "stock_move_1",
-                    "Sample Mobile Product",
+                    self._get_or_create_external_id(first_move) if first_move else "stock_move_1",
+                    (first_prod and (first_prod.display_name or first_prod.name)) or "Sample Mobile Product",
                     "SN0000001",
                     "864201040000001",
                     "864201040000002",
@@ -252,8 +302,8 @@ class StockPickingUploadExcelWizard(models.TransientModel):
             else:
                 sample_row = [
                     picking_ext_id or "WH/IN/00001",
-                    "stock_move_1",
-                    "Sample Mobile Product",
+                    self._get_or_create_external_id(first_move) if first_move else "stock_move_1",
+                    (first_prod and (first_prod.display_name or first_prod.name)) or "Sample Mobile Product",
                     "SN0000001",
                     "864201040000001",
                     picking_country_name,
@@ -360,6 +410,9 @@ class StockPickingUploadExcelWizard(models.TransientModel):
         if not self.excel_file or not self.filename:
             raise ValidationError(_("Please select and upload a file (.xlsx, .xls, or .csv)."))
 
+        if not self.test_passed:
+            self.action_test_file()
+
         fn_lower = self.filename.lower()
         if not any(fn_lower.endswith(ext) for ext in self.SUPPORTED_EXTENSIONS):
             raise ValidationError(_("Unsupported file format. Please upload .xlsx, .xls or .csv file."))
@@ -385,11 +438,134 @@ class StockPickingUploadExcelWizard(models.TransientModel):
         # Apply serials, IMEIs, and Made In to the picking moves
         self._apply_rows_to_picking(structured_rows)
 
-        # Validate transfer if checkbox is set
-        if self.validate_picking:
-            self.picking_id.button_validate()
-
         return {"type": "ir.actions.act_window_close"}
+
+    def action_test_file(self):
+        """Verify that the selected Excel/CSV file matches the current transfer's External ID and Move IDs."""
+        self.ensure_one()
+        if not self.excel_file:
+            raise ValidationError(_("Please select and upload a file (.xlsx, .xls, or .csv) to test."))
+
+        fn_lower = (self.filename or "").lower()
+        if not any(fn_lower.endswith(ext) for ext in self.SUPPORTED_EXTENSIONS):
+            raise ValidationError(_("Unsupported file format. Please upload .xlsx, .xls or .csv file."))
+
+        try:
+            file_content = base64.b64decode(self.excel_file)
+        except Exception as e:
+            raise ValidationError(_("Could not decode file: %s") % e)
+
+        if fn_lower.endswith(".csv"):
+            parsed_rows = self._parse_csv_file(file_content)
+        else:
+            parsed_rows = self._parse_xlsx_file(file_content)
+
+        if not parsed_rows:
+            raise ValidationError(_("The selected file contains no data rows."))
+
+        structured_rows = self._extract_structured_rows(parsed_rows)
+        if not structured_rows:
+            raise ValidationError(_("No valid data rows found in the selected file."))
+
+        picking = self.picking_id
+        picking_ext_id = self._get_or_create_external_id(picking)
+        current_move_ids = set(picking.move_ids.ids)
+        current_move_ext_ids = {self._get_or_create_external_id(m) for m in picking.move_ids}
+
+        errors = []
+        matching_rows = 0
+
+        for r in structured_rows:
+            row_num = r["row_number"]
+            receipt_ref = r["receipt_ref"]
+            move_ref = r["move_ref"]
+            product_ref = r["product_ref"]
+            imei1 = r["imei1"]
+            imei2 = r["imei2"]
+
+            # 1. Check Receipt External ID match
+            if receipt_ref:
+                resolved_picking = self._resolve_record_by_ref("stock.picking", receipt_ref)
+                if resolved_picking and resolved_picking.id != picking.id:
+                    errors.append(
+                        _("Row %s: External ID : Receipts '%s' belongs to transfer '%s', NOT current transfer '%s'.")
+                        % (row_num, receipt_ref, resolved_picking.name, picking.name)
+                    )
+                elif not resolved_picking and receipt_ref not in (picking_ext_id, picking.name):
+                    errors.append(
+                        _("Row %s: External ID : Receipts '%s' does not match current transfer '%s'.")
+                        % (row_num, receipt_ref, picking.name)
+                    )
+
+            # 2. Check Move External ID / Product match
+            move = None
+            if move_ref:
+                resolved_move = self._resolve_record_by_ref("stock.move", move_ref)
+                if resolved_move and resolved_move.id in current_move_ids:
+                    move = resolved_move
+                elif resolved_move and resolved_move.id not in current_move_ids:
+                    errors.append(
+                        _("Row %s: Move ID '%s' belongs to transfer '%s', not current transfer '%s'.")
+                        % (row_num, move_ref, resolved_move.picking_id.name, picking.name)
+                    )
+                elif move_ref not in current_move_ext_ids:
+                    errors.append(
+                        _("Row %s: Move ID '%s' not found in current transfer '%s'.")
+                        % (row_num, move_ref, picking.name)
+                    )
+
+            if not move and product_ref:
+                matching_moves = picking.move_ids.filtered(
+                    lambda m: m.product_id.name == product_ref
+                    or m.product_id.display_name == product_ref
+                    or m.product_id.default_code == product_ref
+                )
+                if not matching_moves and not move_ref:
+                    errors.append(
+                        _("Row %s: Product '%s' not found in current transfer '%s'.")
+                        % (row_num, product_ref, picking.name)
+                    )
+
+            # 3. Check IMEI length constraints
+            if imei1 and (not imei1.isdigit() or len(imei1) != 15):
+                errors.append(
+                    _("Row %s: IMEI 1 '%s' must be a 15-digit number.") % (row_num, imei1)
+                )
+            if imei2 and (not imei2.isdigit() or len(imei2) != 15):
+                errors.append(
+                    _("Row %s: IMEI 2 '%s' must be a 15-digit number.") % (row_num, imei2)
+                )
+
+            matching_rows += 1
+
+        if errors:
+            self.write({
+                "test_passed": False,
+                "test_message": False,
+            })
+            err_msg = _("Test File Failed - Found %s issue(s):\n\n") % len(errors)
+            err_msg += "\n".join(errors[:10])
+            if len(errors) > 10:
+                err_msg += _("\n... and %s more issue(s).") % (len(errors) - 10)
+            raise ValidationError(err_msg)
+
+        msg = _("Receipt External ID matches '%s'. All %s data row(s) are valid and ready to upload.") % (
+            picking.name, matching_rows
+        )
+        self.write({
+            "test_passed": True,
+            "test_message": msg,
+        })
+
+        return {
+            "type": "ir.actions.act_window",
+            "res_model": self._name,
+            "res_id": self.id,
+            "view_mode": "form",
+            "views": [[False, "form"]],
+            "target": "new",
+            "context": self.env.context,
+        }
 
     def _parse_xlsx_file(self, file_content):
         if openpyxl is None:
@@ -696,6 +872,7 @@ class StockPickingUploadExcelWizard(models.TransientModel):
         seen_imei1 = set()
         seen_imei2 = set()
 
+
         rows_by_move = {}
         for r in rows:
             row_num = r["row_number"]
@@ -746,6 +923,16 @@ class StockPickingUploadExcelWizard(models.TransientModel):
                     raise ValidationError(_("Row %s: Serial Number '%s' is duplicated in the file.") % (row_num, serial))
                 seen_serials.add(serial)
 
+                # Check if serial is assigned to a DIFFERENT move in this transfer
+                other_move_lines = picking.move_ids.filtered(lambda m: m.id != move.id).move_line_ids.filtered(
+                    lambda l: (l.lot_name or (l.lot_id and l.lot_id.name) or "").strip() == serial
+                )
+                if other_move_lines:
+                    raise ValidationError(
+                        _("Row %s: Serial Number '%s' is already assigned to another line in this transfer.")
+                        % (row_num, serial)
+                    )
+
             # IMEI 1 validation
             if is_mobile:
                 if not imei1:
@@ -759,12 +946,25 @@ class StockPickingUploadExcelWizard(models.TransientModel):
                 if imei1 in seen_imei1 or imei1 in seen_imei2:
                     raise ValidationError(_("Row %s: IMEI 1 '%s' is duplicated in the file.") % (row_num, imei1))
                 seen_imei1.add(imei1)
+
+                # Check if IMEI 1 is assigned to a DIFFERENT move in this transfer
+                other_imei_lines = picking.move_ids.filtered(lambda m: m.id != move.id).move_line_ids.filtered(
+                    lambda l: (l.imei and str(l.imei).strip() == imei1) or (l.imei2 and str(l.imei2).strip() == imei1)
+                )
+                if other_imei_lines:
+                    raise ValidationError(
+                        _("Row %s: IMEI 1 '%s' is already assigned to another line in this transfer.")
+                        % (row_num, imei1)
+                    )
             elif imei1:
                 # If non-mobile but IMEI 1 entered, must be 15 digits
                 if not imei1.isdigit() or len(imei1) != 15:
                     raise ValidationError(
                         _("Row %s: IMEI 1 must be a 15-digit number. Got: '%s'") % (row_num, imei1)
                     )
+                if imei1 in seen_imei1 or imei1 in seen_imei2:
+                    raise ValidationError(_("Row %s: IMEI 1 '%s' is duplicated in the file.") % (row_num, imei1))
+                seen_imei1.add(imei1)
 
             # IMEI 2 validation
             if is_mobile and is_dual:
@@ -781,6 +981,16 @@ class StockPickingUploadExcelWizard(models.TransientModel):
                     raise ValidationError(_("Row %s: IMEI 2 '%s' is duplicated in the file.") % (row_num, imei2))
                 seen_imei2.add(imei2)
 
+                # Check if IMEI 2 is assigned to a DIFFERENT move in this transfer
+                other_imei2_lines = picking.move_ids.filtered(lambda m: m.id != move.id).move_line_ids.filtered(
+                    lambda l: (l.imei and str(l.imei).strip() == imei2) or (l.imei2 and str(l.imei2).strip() == imei2)
+                )
+                if other_imei2_lines:
+                    raise ValidationError(
+                        _("Row %s: IMEI 2 '%s' is already assigned to another line in this transfer.")
+                        % (row_num, imei2)
+                    )
+
                 # IMEI 1 and 2 must differ (unless Samsung / OnePlus)
                 if imei1 and imei2 and imei1 == imei2:
                     brand_name = (product.product_tmpl_id.brand_id.name or "").lower()
@@ -792,6 +1002,9 @@ class StockPickingUploadExcelWizard(models.TransientModel):
                     raise ValidationError(
                         _("Row %s: IMEI 2 must be a 15-digit number. Got: '%s'") % (row_num, imei2)
                     )
+                if imei2 in seen_imei1 or imei2 in seen_imei2:
+                    raise ValidationError(_("Row %s: IMEI 2 '%s' is duplicated in the file.") % (row_num, imei2))
+                seen_imei2.add(imei2)
 
             # Made In country validation
             country = None
@@ -817,8 +1030,22 @@ class StockPickingUploadExcelWizard(models.TransientModel):
             product = move.product_id
 
             if not self.keep_lines:
-                # Unlink current move lines for this move
+                # Unlink all move lines for this move if user explicitly unchecked keep_lines
                 move.move_line_ids.unlink()
+                existing_lines_by_serial = {}
+            else:
+                # Clean up empty placeholder lines that have no serial/lot and no IMEI
+                empty_lines = move.move_line_ids.filtered(
+                    lambda l: not l.lot_name and not l.lot_id and not l.imei
+                )
+                empty_lines.unlink()
+
+                # Map existing lines by their serial/lot name
+                existing_lines_by_serial = {}
+                for l in move.move_line_ids:
+                    s = (l.lot_name or (l.lot_id and l.lot_id.name) or "").strip()
+                    if s:
+                        existing_lines_by_serial[s] = l
 
             default_vals = {
                 "move_id": move.id,
@@ -878,12 +1105,36 @@ class StockPickingUploadExcelWizard(models.TransientModel):
 
                 vals_list.append(line_vals)
 
+            # Apply lines: update existing matching lines or create new lines
+            vals_to_create = []
+            for vals in vals_list:
+                serial_key = vals.get("lot_name") or ""
+                if is_outgoing and vals.get("lot_id"):
+                    existing_line = move.move_line_ids.filtered(lambda l: l.lot_id.id == vals["lot_id"])
+                    existing_line = existing_line[0] if existing_line else False
+                else:
+                    existing_line = existing_lines_by_serial.get(serial_key)
+
+                if existing_line:
+                    update_vals = {
+                        "imei": vals.get("imei"),
+                        "imei2": vals.get("imei2"),
+                    }
+                    if vals.get("made_in_country_id"):
+                        update_vals["made_in_country_id"] = vals["made_in_country_id"]
+                        update_vals["made_country"] = vals["made_country"]
+                    if vals.get("lot_id"):
+                        update_vals["lot_id"] = vals["lot_id"]
+                    existing_line.write(update_vals)
+                else:
+                    vals_to_create.append(vals)
+
             # If use_existing_lots is enabled on picking type, resolve lot_ids
             if move.picking_type_id and move.picking_type_id.use_existing_lots and not is_outgoing:
-                move._create_lot_ids_from_move_line_vals(vals_list, product.id, move.company_id.id)
+                move._create_lot_ids_from_move_line_vals(vals_to_create, product.id, move.company_id.id)
 
-            # Create the move lines
-            for vals in vals_list:
+            # Create the new move lines
+            for vals in vals_to_create:
                 MoveLine.create(vals)
 
             # Update move-level country if not yet set

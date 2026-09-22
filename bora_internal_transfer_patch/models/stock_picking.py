@@ -1,13 +1,106 @@
-# -*- coding: utf-8 -*-
-
 import logging
-from odoo import models
+from odoo import models, api, _
+from odoo.exceptions import ValidationError
 
 _logger = logging.getLogger(__name__)
 
 
 class StockPicking(models.Model):
     _inherit = 'stock.picking'
+
+    @api.onchange('move_line_ids', 'move_line_ids_without_package')
+    def _onchange_move_line_ids_validate_lots_imei(self):
+        """Validate lot/serial and IMEI uniqueness across move lines on picking form in real time."""
+        for picking in self:
+            lines = picking.move_line_ids | getattr(picking, 'move_line_ids_without_package', self.env['stock.move.line'])
+            if not lines:
+                continue
+
+            seen_lots = set()
+            seen_imeis = set()
+            company_id = picking.company_id.id if picking.company_id else self.env.company.id
+            is_outgoing = picking.picking_type_id and picking.picking_type_id.code == 'outgoing'
+
+            for line in lines:
+                lot_str = (line.lot_name or '').strip() or (line.lot_id and line.lot_id.name)
+                if lot_str:
+                    # 1. Stock quant check FIRST (Existing stock item)
+                    dq = [('company_id', '=', company_id), ('lot_id.name', '=', lot_str)]
+                    if line.lot_id:
+                        dq.append(('lot_id', '!=', line.lot_id.id))
+                    quant_exist = self.env['stock.quant'].search(dq)
+                    if len(quant_exist) > 0:
+                        raise ValidationError(_('Serial number (%s) is already used in another stock item.') % lot_str)
+
+                    # 2. In-memory check: duplicate in current wizard/picking lines
+                    if lot_str in seen_lots:
+                        raise ValidationError(_('Serial number (%s) is already used in another line item in this wizard.') % lot_str)
+                    seen_lots.add(lot_str)
+
+                    # 3. Database check: search saved stock.move.line records in DB
+                    d = [('company_id', '=', company_id), ('id', '!=', line._origin.id if line._origin else line.id), '|', ('lot_name', '=', lot_str), ('lot_id.name', '=', lot_str)]
+                    if line.lot_id:
+                        d.append(('lot_id', '!=', line.lot_id.id))
+                    exist = self.env['stock.move.line'].search(d, limit=1)
+                    if exist and (not line._origin or exist.id != line._origin.id):
+                        raise ValidationError(_('Serial number (%s) is already used in another saved line.') % lot_str)
+
+                # IMEI 1 validation
+                if line.imei:
+                    imei1 = line.imei.strip()
+                    if not imei1.isdigit() or len(imei1) != 15:
+                        raise ValidationError(_('IMEI 1 must be a 15-digit number. Got: %s') % imei1)
+                    if not is_outgoing:
+                        if imei1 in seen_imeis:
+                            raise ValidationError(_('IMEI 1 (%s) is already used in another line item.') % imei1)
+                        seen_imeis.add(imei1)
+
+                        d1 = [('company_id', '=', company_id), ('id', '!=', line._origin.id if line._origin else line.id), '|', ('imei', '=', imei1), ('imei2', '=', imei1)]
+                        d1_q = [('company_id', '=', company_id), ('quantity', '>', 0), ('location_id.usage', '=', 'internal'), '|', ('imei', '=', imei1), ('imei2', '=', imei1)]
+                        if line.lot_id:
+                            d1.append(('lot_id', '!=', line.lot_id.id))
+                            d1_q.append(('lot_id', '!=', line.lot_id.id))
+                        if lot_str:
+                            d1.extend([('lot_name', '!=', lot_str), ('lot_id.name', '!=', lot_str)])
+                            d1_q.append(('lot_id.name', '!=', lot_str))
+                        exist = self.env['stock.move.line'].search(d1, limit=1)
+                        if exist and (not line._origin or exist.id != line._origin.id):
+                            raise ValidationError(_('IMEI 1 (%s) is already used in another stock line.') % imei1)
+                        quant_exist = self.env['stock.quant'].search(d1_q)
+                        if len(quant_exist) > 0:
+                            raise ValidationError(_('IMEI 1 (%s) is already used in stock.') % imei1)
+
+                # IMEI 2 validation
+                if getattr(line.move_id, 'show_IMEI_field2', False) and line.imei2:
+                    imei2 = line.imei2.strip()
+                    if not imei2.isdigit() or len(imei2) != 15:
+                        raise ValidationError(_('IMEI 2 must be a 15-digit number. Got: %s') % imei2)
+                    if not is_outgoing:
+                        if imei2 in seen_imeis:
+                            raise ValidationError(_('IMEI 2 (%s) is already used in another line item.') % imei2)
+                        seen_imeis.add(imei2)
+
+                        d2 = [('company_id', '=', company_id), ('id', '!=', line._origin.id if line._origin else line.id), '|', ('imei', '=', imei2), ('imei2', '=', imei2)]
+                        d2_q = [('company_id', '=', company_id), ('quantity', '>', 0), ('location_id.usage', '=', 'internal'), '|', ('imei', '=', imei2), ('imei2', '=', imei2)]
+                        if line.lot_id:
+                            d2.append(('lot_id', '!=', line.lot_id.id))
+                            d2_q.append(('lot_id', '!=', line.lot_id.id))
+                        if lot_str:
+                            d2.extend([('lot_name', '!=', lot_str), ('lot_id.name', '!=', lot_str)])
+                            d2_q.append(('lot_id.name', '!=', lot_str))
+                        exist = self.env['stock.move.line'].search(d2, limit=1)
+                        if exist and (not line._origin or exist.id != line._origin.id):
+                            raise ValidationError(_('IMEI 2 (%s) is already used in another stock line.') % imei2)
+                        quant_exist = self.env['stock.quant'].search(d2_q)
+                        if len(quant_exist) > 0:
+                            raise ValidationError(_('IMEI 2 (%s) is already used in stock.') % imei2)
+
+                # IMEI 1 vs IMEI 2 check
+                if getattr(line.move_id, 'show_IMEI_field2', False) and line.imei and line.imei2 and line.imei.strip() == line.imei2.strip():
+                    product = line.product_id
+                    brand_name = (product.product_tmpl_id.brand_id.name or '').lower() if product else ''
+                    if brand_name not in ('samsung', 'oneplus'):
+                        raise ValidationError(_('IMEI 1 and IMEI 2 must be different.'))
 
     def _action_done(self):
         """Override to check stock availability and sync inter-company delivery lots/serials to receipt."""

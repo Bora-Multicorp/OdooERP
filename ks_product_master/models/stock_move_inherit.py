@@ -829,12 +829,12 @@ class StockMoveLine(models.Model):
 
         # Validate Serial/Lot number
         if lot_name:
-            exist = self.search([('lot_name', '=', lot_name), ('id', 'not in', self.ids)], limit=1)
-            if exist:
-                raise ValidationError(_('Serial number (%s) is already used in another line.') % lot_name)
             quant = self.env['stock.quant'].search([('lot_id.name', '=', lot_name)])
             if len(quant) > 0:
-                raise ValidationError(_('Serial number (%s) is already registered in stock.') % lot_name)
+                raise ValidationError(_('Serial number (%s) is already used in another stock item.') % lot_name)
+            exist = self.search([('lot_name', '=', lot_name), ('id', 'not in', self.ids)], limit=1)
+            if exist:
+                raise ValidationError(_('Serial number (%s) is already used in another saved line.') % lot_name)
 
     def create(self, vals_list):
         records_vals = [vals_list] if isinstance(vals_list, dict) else vals_list
@@ -941,20 +941,19 @@ class StockMoveLine(models.Model):
                     raise ValidationError(
                         _('IMEI number must be unique, the IMEI number(%s) is already used in another stock item.' % record.imei))
 
-            # 4.1 Uniqueness of Serial number check in same lines
-            exist = self.search([('lot_name', '=', record.lot_name), ('id', '!=', record.id)], limit=1)
-            if exist:
-                raise ValidationError(
-                    _('Serial number must be unique, the serial number(%s) is already used in another stock item.' % record.lot_name))
-
-            # 4.2 Uniqueness of Serial number check in all other saved items
+            # 4.1 Uniqueness of Serial number check in stock quants
             results = self.env['stock.quant'].search([
                 ('lot_id.name', '=', record.lot_name)
             ])
-
             if len(results) > 0:
                 raise ValidationError(
-                    _('Serial number must be unique, the Serial number(%s) is already used in another stock item.' % record.lot_name))
+                    _('Serial number (%s) is already used in another stock item.') % record.lot_name)
+
+            # 4.2 Uniqueness of Serial number check in same lines
+            exist = self.search([('lot_name', '=', record.lot_name), ('id', '!=', record.id)], limit=1)
+            if exist:
+                raise ValidationError(
+                    _('Serial number (%s) is already used in another saved line.') % record.lot_name)
 
     @api.constrains('imei', 'imei2')
     def _constrains_validate_imei(self):
@@ -1015,14 +1014,26 @@ class StockMoveLine(models.Model):
         for record in self:
             if not record.lot_name:
                 continue
-            exist = self.search([('lot_name', '=', record.lot_name), ('id', '!=', record.id)], limit=1)
-            if exist:
-                raise ValidationError(
-                    _('Serial number (%s) is already used in another line.') % record.lot_name)
             quant = self.env['stock.quant'].search([('lot_id.name', '=', record.lot_name)])
             if len(quant) > 0:
                 raise ValidationError(
                     _('Serial number (%s) is already used in another stock item.') % record.lot_name)
+            exist = self.search([('lot_name', '=', record.lot_name), ('id', '!=', record.id)], limit=1)
+            if exist:
+                raise ValidationError(
+                    _('Serial number (%s) is already used in another saved line.') % record.lot_name)
+
+    def _get_in_memory_sibling_move_lines(self):
+        """Helper to collect all sibling move lines currently in memory/view context."""
+        move_lines = self.env['stock.move.line']
+        for record in self:
+            if record.move_id:
+                move_lines |= record.move_id.move_line_ids
+                if hasattr(record.move_id, 'move_line_nosuggest_ids'):
+                    move_lines |= record.move_id.move_line_nosuggest_ids
+            if record.picking_id:
+                move_lines |= record.picking_id.move_line_ids
+        return move_lines
 
     @api.onchange('imei', 'imei2')
     def _onchange_validate_imei(self):
@@ -1034,14 +1045,25 @@ class StockMoveLine(models.Model):
         )
         is_outgoing = picking_type_code == 'outgoing'
 
+        move_lines = self._get_in_memory_sibling_move_lines()
+        lot_str = (self.lot_name or '').strip() or (self.lot_id and self.lot_id.name)
+
         # IMEI 1 validations
         if self.imei:
             if not self.imei.isdigit() or len(self.imei) != 15:
                 warning_msgs.append(_('IMEI 1 must be a 15-digit number.'))
             elif not is_outgoing:
-                exist = self.search([('imei', '=', self.imei), ('id', '!=', self._origin.id)], limit=1)
-                if exist:
-                    warning_msgs.append(_('IMEI 1 (%s) is already used in another stock item.') % self.imei)
+                # In-memory check
+                for line in move_lines:
+                    if line == self or (self._origin and (line == self._origin or line._origin == self._origin)):
+                        continue
+                    if line.imei == self.imei or line.imei2 == self.imei:
+                        warning_msgs.append(_('IMEI 1 (%s) is already used in another line item.') % self.imei)
+                        break
+
+                exist = self.search([('imei', '=', self.imei), ('id', '!=', self._origin.id if self._origin else self.id)], limit=1)
+                if exist and (not self._origin or exist.id != self._origin.id):
+                    warning_msgs.append(_('IMEI 1 (%s) is already used in another stock line.') % self.imei)
                 quant_exist = self.env['stock.quant'].search([
                     '|', ('imei', '=', self.imei), ('imei2', '=', self.imei)
                 ])
@@ -1053,9 +1075,17 @@ class StockMoveLine(models.Model):
             if not self.imei2.isdigit() or len(self.imei2) != 15:
                 warning_msgs.append(_('IMEI 2 must be a 15-digit number.'))
             elif not is_outgoing:
-                exist = self.search([('imei2', '=', self.imei2), ('id', '!=', self._origin.id)], limit=1)
-                if exist:
-                    warning_msgs.append(_('IMEI 2 (%s) is already used in another stock item.') % self.imei2)
+                # In-memory check
+                for line in move_lines:
+                    if line == self or (self._origin and (line == self._origin or line._origin == self._origin)):
+                        continue
+                    if line.imei == self.imei2 or line.imei2 == self.imei2:
+                        warning_msgs.append(_('IMEI 2 (%s) is already used in another line item.') % self.imei2)
+                        break
+
+                exist = self.search([('imei2', '=', self.imei2), ('id', '!=', self._origin.id if self._origin else self.id)], limit=1)
+                if exist and (not self._origin or exist.id != self._origin.id):
+                    warning_msgs.append(_('IMEI 2 (%s) is already used in another stock line.') % self.imei2)
                 quant_exist = self.env['stock.quant'].search([
                     '|', ('imei', '=', self.imei2), ('imei2', '=', self.imei2)
                 ])
@@ -1069,24 +1099,32 @@ class StockMoveLine(models.Model):
                 warning_msgs.append(_('IMEI 1 and IMEI 2 must be different.'))
 
         if warning_msgs:
-            return {'warning': {'title': _('IMEI Validation'), 'message': '\n'.join(warning_msgs)}}
+            raise ValidationError('\n'.join(warning_msgs))
 
-    @api.onchange('lot_name')
+    @api.onchange('lot_name', 'lot_id')
     def _onchange_validate_lot_name(self):
-        if not self.lot_name:
+        lot_str = (self.lot_name or '').strip() or (self.lot_id and self.lot_id.name)
+        if not lot_str:
             return
-        warning_msgs = []
 
-        exist = self.search([('lot_name', '=', self.lot_name), ('id', '!=', self._origin.id)], limit=1)
-        if exist:
-            warning_msgs.append(_('Serial number (%s) is already used in another line.') % self.lot_name)
-
-        quant_exist = self.env['stock.quant'].search([('lot_id.name', '=', self.lot_name)])
+        # 1. Stock quant check FIRST (existing stock item)
+        quant_exist = self.env['stock.quant'].search([('lot_id.name', '=', lot_str)])
         if len(quant_exist) > 0:
-            warning_msgs.append(_('Serial number (%s) is already used in another stock item.') % self.lot_name)
+            raise ValidationError(_('Serial number (%s) is already used in another stock item.') % lot_str)
 
-        if warning_msgs:
-            return {'warning': {'title': _('Serial Number Validation'), 'message': '\n'.join(warning_msgs)}}
+        # 2. In-memory check against other lines in the same wizard / move / picking
+        move_lines = self._get_in_memory_sibling_move_lines()
+        for line in move_lines:
+            if line == self or (self._origin and (line == self._origin or line._origin == self._origin)):
+                continue
+            line_lot = (line.lot_name or '').strip() or (line.lot_id and line.lot_id.name)
+            if line_lot and line_lot == lot_str:
+                raise ValidationError(_('Serial number (%s) is already used in another line item in this wizard.') % lot_str)
+
+        # 3. Database check against saved move lines in DB
+        exist = self.search([('id', '!=', self._origin.id if self._origin else self.id), '|', ('lot_name', '=', lot_str), ('lot_id.name', '=', lot_str)], limit=1)
+        if exist and (not self._origin or exist.id != self._origin.id):
+            raise ValidationError(_('Serial number (%s) is already used in another saved line.') % lot_str)
 
     def _synchronize_quant(self, quantity, location, action="available", in_date=False, **quants_value):
         """Override to stamp made_country / specs_made onto the destination quant
