@@ -5,13 +5,21 @@
         <field name="model">purchase.order</field>
         <field name="inherit_id" ref="purchase.purchase_order_form"/>
         <field name="arch" type="xml">
-            <xpath expr="//header" position="inside">
-                <button name="action_deduct_tds"
-                        string="Deduct TDS"
-                        type="object"
-                        class="btn-secondary"
-                        invisible="state == 'cancel'"/>
-
+            <xpath expr="//sheet" position="before">
+                <div class="alert alert-info d-flex align-items-center justify-content-between mb-2 py-2" role="alert" invisible="not tds_eligible_warning">
+                    <div>
+                        <i class="fa fa-info-circle me-2"/>
+                        <field name="tds_eligible_warning" readonly="1" nolabel="1"/>
+                    </div>
+                    <button name="action_deduct_tds" string="Deduct TDS" type="object" class="btn btn-sm btn-primary ms-3 text-nowrap"/>
+                </div>
+                <div class="alert alert-warning d-flex align-items-center justify-content-between mb-2 py-2" role="alert" invisible="not tds_mismatch_warning">
+                    <div>
+                        <i class="fa fa-exclamation-triangle me-2"/>
+                        <field name="tds_mismatch_warning" readonly="1" nolabel="1"/>
+                    </div>
+                    <button name="action_deduct_tds" string="Deduct TDS (Update)" type="object" class="btn btn-sm btn-warning ms-3 text-nowrap"/>
+                </div>
             </xpath>
             <xpath expr="//div[@name='button_box']" position="inside">
                 <button name="action_view_tds"
@@ -24,12 +32,20 @@
                            string="TDS"/>
                 </button>
                 <field name="tds_ids" invisible="1"/>
+                <field name="tds_eligible_warning" invisible="1"/>
+                <field name="tds_mismatch_warning" invisible="1"/>
             </xpath>
             <xpath expr="//field[@name='tax_totals']" position="after">
                 <field name="tds_section"  nolabel="1" colspan="2" readonly="1"  options="{'no_open': True}" invisible="amount_tds == 0 or not tds_section"/>
                 <field name="tds_tax_id" nolabel="1" colspan="2" readonly="1"  options="{'no_open': True}" invisible="amount_tds == 0 or tds_section"/>
                 <field name="amount_tds" invisible="amount_tds == 0" widget="monetary" style="font-size: 1.3em; font-weight: bold; white-space: nowrap;" options="{'currency_field': 'currency_id'}"/>
                 <field name="amount_net_payable" invisible="amount_tds == 0" widget="monetary" options="{'currency_field': 'currency_id'}" style="font-size: 1.3em; font-weight: bold; white-space: nowrap;"/>
+                <div class="text-danger small mt-1 text-end" colspan="2" invisible="not tds_mismatch_warning">
+                    <i class="fa fa-exclamation-circle me-1"/> TDS amount mismatch! Click "Deduct TDS" to update.
+                </div>
+                <div class="text-primary small mt-1 text-end" colspan="2" invisible="not tds_eligible_warning">
+                    <i class="fa fa-info-circle me-1"/> Eligible for TDS! Click "Deduct TDS" to apply.
+                </div>
             </xpath>
         </field>
     </record>
