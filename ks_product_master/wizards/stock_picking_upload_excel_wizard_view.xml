@@ -11,12 +11,20 @@
                         <strong>Step 2:</strong> Fill in the Serial Numbers, 15-digit IMEIs (mandatory for mobile phones), and select Made In country from the dropdown.<br/>
                         <strong>Step 3:</strong> Upload the populated file below.
                     </div>
+                    <field name="test_passed" invisible="1"/>
                     <div class="mb-3">
                         <button name="action_download_sample_xlsx"
                                 string="Download Sample File (.xlsx)"
                                 type="object"
                                 class="btn btn-primary"
                                 icon="fa-download"/>
+                    </div>
+                    <div class="alert alert-success d-flex align-items-center mb-3" role="alert" invisible="not test_passed">
+                        <i class="fa fa-check-circle fa-2x me-3 text-success"/>
+                        <div>
+                            <strong class="d-block">File Verified Successfully!</strong>
+                            <field name="test_message" readonly="1" class="d-inline"/>
+                        </div>
                     </div>
                     <group>
                         <group string="File Upload">
@@ -30,11 +38,27 @@
                         </group>
                         <group string="Options">
                             <field name="keep_lines"/>
-                            <field name="validate_picking"/>
                         </group>
                     </group>
                     <footer>
-                        <button name="action_import" string="Upload File" type="object" class="btn-primary"/>
+                        <button name="action_test_file"
+                                string="Test File"
+                                type="object"
+                                class="btn-primary"
+                                icon="fa-check-circle"
+                                invisible="test_passed"/>
+                        <button name="action_test_file"
+                                string="Re-Test File"
+                                type="object"
+                                class="btn-secondary"
+                                icon="fa-check-circle"
+                                invisible="not test_passed"/>
+                        <button name="action_import"
+                                string="Upload File"
+                                type="object"
+                                class="btn-primary"
+                                icon="fa-upload"
+                                invisible="not test_passed"/>
                         <button string="Cancel" class="btn-secondary" special="cancel"/>
                     </footer>
                 </form>
