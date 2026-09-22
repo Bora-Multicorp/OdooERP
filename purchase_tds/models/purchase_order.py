@@ -43,6 +43,14 @@ class PurchaseOrder(models.Model):
     tds_count = fields.Integer(
         compute='_compute_tds_count',
     )
+    tds_eligible_warning = fields.Char(
+        string="TDS Eligibility Warning",
+        compute='_compute_tds_warnings',
+    )
+    tds_mismatch_warning = fields.Char(
+        string="TDS Mismatch Warning",
+        compute='_compute_tds_warnings',
+    )
 
     def action_view_tds(self):
         self.ensure_one()
@@ -79,24 +87,39 @@ class PurchaseOrder(models.Model):
             order.amount_tds = amount_tds
             order.amount_net_payable = order.amount_total - amount_tds
 
-    def action_deduct_tds(self):
+    def _get_tds_expected_calculation(self):
         self.ensure_one()
-        if self.state == 'cancel':
-            raise UserError(_("You cannot deduct TDS on a cancelled Purchase Order."))
-        if not self.partner_id:
-            raise UserError(_("Please select a Vendor before deducting TDS."))
-        if self.amount_total <= 0:
-            raise UserError(_("Purchase Order total must be greater than zero to deduct TDS."))
-
         company = self.company_id
         root_company = company.root_id or company
         commercial_partner = self.partner_id.commercial_partner_id
 
+        res = {
+            'eligible': False,
+            'prior_total': 0.0,
+            'current_total': 0.0,
+            'cumulative_total': 0.0,
+            'threshold': 5000000.0,
+            'base_amount': 0.0,
+            'tax': False,
+            'root_company': root_company,
+            'prior_orders': self.env['purchase.order'],
+            'section_194q': False,
+            'consider_amount': 'untaxed_amount',
+            'amount_label': _("(Excl. Tax)"),
+        }
+
+        if self.state == 'cancel' or not self.partner_id or self.amount_untaxed <= 0:
+            return res
+
         # 1. Determine fiscal year date range based on order date
         order_date = self.date_order.date() if self.date_order else fields.Date.context_today(self)
-        fiscalyear_dates = root_company.sudo().compute_fiscalyear_dates(order_date)
-        fiscalyear_start_date = fiscalyear_dates["date_from"]
-        fiscalyear_end_date = fiscalyear_dates["date_to"]
+        try:
+            fiscalyear_dates = root_company.sudo().compute_fiscalyear_dates(order_date)
+            fiscalyear_start_date = fiscalyear_dates["date_from"]
+            fiscalyear_end_date = fiscalyear_dates["date_to"]
+        except Exception:
+            fiscalyear_start_date = order_date.replace(month=4, day=1) if order_date.month >= 4 else order_date.replace(year=order_date.year - 1, month=4, day=1)
+            fiscalyear_end_date = fiscalyear_start_date.replace(year=fiscalyear_start_date.year + 1, month=3, day=31)
 
         # 2. Section 194Q lookup
         section_194q = self.env['l10n_in.section.alert'].search([('name', '=', '(ACT 1961) 194Q')], limit=1)
@@ -106,9 +129,10 @@ class PurchaseOrder(models.Model):
             section_194q = self.env['l10n_in.section.alert'].search([('name', 'ilike', '194Q')], limit=1)
 
         threshold = (section_194q and section_194q.aggregate_limit) or 5000000.0
+        res['threshold'] = threshold
+        res['section_194q'] = section_194q
 
         # 3. Find prior qualifying POs across main company and all sub-companies using sudo()
-        # to bypass multi-company record rules so all branch records are counted in cumulative total
         domain = [
             ("company_id", "child_of", root_company.id),
             ("state", "!=", "cancel"),
@@ -131,17 +155,17 @@ class PurchaseOrder(models.Model):
 
         # Prior POs are all orders preceding this order in the fiscal year
         current_date_order = self.date_order or fields.Datetime.now()
-        prior_orders = all_po_in_fy.filtered(lambda po: po.id != self.id and (
+        origin_id = self._origin.id if hasattr(self, '_origin') and self._origin else self.id
+        prior_orders = all_po_in_fy.filtered(lambda po: po.id != origin_id and (
             (po.date_order < current_date_order) or
-            (po.date_order == current_date_order and (not self.id or po.id < self.id))
+            (po.date_order == current_date_order and (not origin_id or po.id < origin_id))
         ))
+        res['prior_orders'] = prior_orders
 
-        # Section 194Q u/s Indian Income Tax Act applies on UNTAXED amount (purchase value excl. GST).
-        # Using amount_untaxed ensures:
-        # 1. Calculation is stable on repeated clicks (amount_untaxed never changes unlike amount_total
-        #    which could appear different after TDS recomputation caching).
-        # 2. Consistent with l10n_in.section.alert consider_amount = 'untaxed_amount' for 194Q.
         consider_amount = (section_194q and section_194q.consider_amount) or 'untaxed_amount'
+        res['consider_amount'] = consider_amount
+        res['amount_label'] = _("(Incl. Tax)") if consider_amount == 'total_amount' else _("(Excl. Tax)")
+
         if consider_amount == 'total_amount':
             prior_total = sum(prior_orders.mapped("amount_total"))
             current_total = self.amount_total
@@ -150,37 +174,21 @@ class PurchaseOrder(models.Model):
             current_total = self.amount_untaxed
 
         cumulative_total = prior_total + current_total
+        res['prior_total'] = prior_total
+        res['current_total'] = current_total
+        res['cumulative_total'] = cumulative_total
 
-        # 4. Check threshold condition
-        if cumulative_total <= threshold:
-            currency_symbol = self.currency_id.symbol or ""
-            amount_label = _("(Incl. Tax)") if consider_amount == 'total_amount' else _("(Excl. Tax)")
-            raise UserError(_(
-                "TDS under Section (ACT 1961) 194Q is not applicable.\n\n"
-                "• Prior purchases across %(company)s group (%(count)d order(s)) %(label)s: %(symbol)s %(prior)s\n"
-                "• Current PO untaxed amount %(label)s: %(symbol)s %(current)s\n"
-                "• Cumulative purchases in FY %(label)s: %(symbol)s %(cumulative)s\n"
-                "• Section 194Q Threshold: %(symbol)s %(threshold)s\n\n"
-                "The cumulative total does not exceed the threshold limit of %(symbol)s %(threshold)s.",
-                company=root_company.name,
-                count=len(prior_orders),
-                label=amount_label,
-                symbol=currency_symbol,
-                prior=f"{prior_total:,.2f}",
-                current=f"{current_total:,.2f}",
-                cumulative=f"{cumulative_total:,.2f}",
-                threshold=f"{threshold:,.2f}",
-            ))
-
-        if prior_total < threshold:
-            # Threshold crossed in this purchase order — TDS base is the excess above threshold
-            base_amount = cumulative_total - threshold
+        if cumulative_total > threshold:
+            res['eligible'] = True
+            if prior_total < threshold:
+                res['base_amount'] = cumulative_total - threshold
+            else:
+                res['base_amount'] = current_total
         else:
-            # Threshold already fully crossed in prior orders — TDS base is full current PO untaxed amount
-            base_amount = current_total
+            res['eligible'] = False
+            res['base_amount'] = 0.0
 
-        # 5. Find Section 194Q Purchase Tax (matches '0.1% TDS 194Q P')
-        # In Odoo Indian withholding, TDS purchase taxes have type_tax_use='none' and l10n_in_tds_tax_type='purchase'
+        # Find tax
         tax = self.env["account.tax"].search([
             ("company_id", "in", [company.id, root_company.id]),
             ("name", "=ilike", "0.1% TDS 194Q P%"),
@@ -210,17 +218,105 @@ class PurchaseOrder(models.Model):
                 ("name", "=ilike", "0.1% TDS 194Q P%"),
             ], limit=1)
 
+        res['tax'] = tax
+        return res
+
+    @api.depends(
+        'state',
+        'partner_id',
+        'date_order',
+        'amount_untaxed',
+        'amount_total',
+        'order_line.price_unit',
+        'order_line.product_qty',
+        'order_line.price_subtotal',
+        'tds_ids',
+        'tds_ids.base',
+        'tds_ids.amount',
+    )
+    def _compute_tds_warnings(self):
+        for order in self:
+            order.tds_eligible_warning = False
+            order.tds_mismatch_warning = False
+
+            if order.state == 'cancel' or not order.partner_id or order.amount_untaxed <= 0:
+                continue
+
+            calc = order._get_tds_expected_calculation()
+            currency_symbol = order.currency_id.symbol or ""
+
+            # Case 1: PO is eligible for TDS under Section 194Q, but TDS has not been deducted yet
+            if calc['eligible'] and not order.tds_ids:
+                order.tds_eligible_warning = _(
+                    "This Purchase Order is eligible for TDS deduction under Section (ACT 1961) 194Q. "
+                    "Cumulative purchases in FY across under Company: %(company)s: %(symbol)s %(cumulative)s (Threshold: %(symbol)s %(threshold)s). "
+                    "Expected TDS Base: %(symbol)s %(base)s.",
+                    company=calc['root_company'].name,
+                    symbol=currency_symbol,
+                    cumulative=f"{calc['cumulative_total']:,.2f}",
+                    threshold=f"{calc['threshold']:,.2f}",
+                    base=f"{calc['base_amount']:,.2f}",
+                )
+
+            # Case 2: TDS was already deducted, but PO lines/unit price were updated and TDS base/amount no longer matches
+            elif order.tds_ids:
+                current_tds_base = order.tds_ids[0].base
+                expected_base = calc['base_amount'] if calc['eligible'] else 0.0
+                if abs(current_tds_base - expected_base) > 0.01:
+                    order.tds_mismatch_warning = _(
+                        "TDS Amount Mismatch: Purchase Order untaxed amount has changed (Current Untaxed: %(symbol)s %(untaxed)s). "
+                        "Deducted TDS Base (%(symbol)s %(current_base)s) does not match Expected Base (%(symbol)s %(expected_base)s). "
+                        "Please click 'Deduct TDS' to update.",
+                        symbol=currency_symbol,
+                        untaxed=f"{order.amount_untaxed:,.2f}",
+                        current_base=f"{current_tds_base:,.2f}",
+                        expected_base=f"{expected_base:,.2f}",
+                    )
+
+    def action_deduct_tds(self):
+        self.ensure_one()
+        if self.state == 'cancel':
+            raise UserError(_("You cannot deduct TDS on a cancelled Purchase Order."))
+        if not self.partner_id:
+            raise UserError(_("Please select a Vendor before deducting TDS."))
+        if self.amount_total <= 0:
+            raise UserError(_("Purchase Order total must be greater than zero to deduct TDS."))
+
+        calc = self._get_tds_expected_calculation()
+
+        if not calc['eligible']:
+            currency_symbol = self.currency_id.symbol or ""
+            raise UserError(_(
+                "TDS under Section (ACT 1961) 194Q is not applicable.\n\n"
+                "• Prior purchases across %(company)s group (%(count)d order(s)) %(label)s: %(symbol)s %(prior)s\n"
+                "• Current PO untaxed amount %(label)s: %(symbol)s %(current)s\n"
+                "• Cumulative purchases in FY %(label)s: %(symbol)s %(cumulative)s\n"
+                "• Section 194Q Threshold: %(symbol)s %(threshold)s\n\n"
+                "The cumulative total does not exceed the threshold limit of %(symbol)s %(threshold)s.",
+                company=calc['root_company'].name,
+                count=len(calc['prior_orders']),
+                label=calc['amount_label'],
+                symbol=currency_symbol,
+                prior=f"{calc['prior_total']:,.2f}",
+                current=f"{calc['current_total']:,.2f}",
+                cumulative=f"{calc['cumulative_total']:,.2f}",
+                threshold=f"{calc['threshold']:,.2f}",
+            ))
+
+        tax = calc['tax']
         if not tax:
             raise UserError(_(
                 "No TDS purchase tax found for '0.1%% TDS 194Q P' in company %s.",
-                company.name,
+                self.company_id.name,
             ))
 
-        # Ensure section_id is linked on tax if available so PO displays TDS section
+        section_194q = calc['section_194q']
         if section_194q and not tax.l10n_in_section_id:
             tax.sudo().write({"l10n_in_section_id": section_194q.id})
 
-        # 6. Auto-create or update purchase.tds entry
+        base_amount = calc['base_amount']
+
+        # Auto-create or update purchase.tds entry
         tds_vals = {
             "date": self.date_order.date() if self.date_order else fields.Date.context_today(self),
             "tax_id": tax.id,
@@ -244,6 +340,7 @@ class PurchaseOrder(models.Model):
         self._compute_tds_tax_id()
         self._compute_tds_count()
         self._compute_tds_amounts()
+        self._compute_tds_warnings()
 
         # Log in Purchase Order Chatter
         currency_symbol = self.currency_id.symbol or ""
@@ -265,8 +362,8 @@ class PurchaseOrder(models.Model):
                 "base": f"{base_amount:,.2f}",
                 "amount": f"{tds_entry.amount:,.2f}",
                 "net_payable": f"{self.amount_net_payable:,.2f}",
-                "company": root_company.name,
-                "cumulative": f"{cumulative_total:,.2f}",
+                "company": calc['root_company'].name,
+                "cumulative": f"{calc['cumulative_total']:,.2f}",
             },
             subtype_xmlid="mail.mt_note",
         )
@@ -281,9 +378,9 @@ class PurchaseOrder(models.Model):
                     "TDS Base Amount (Excl. Tax): %(symbol)s %(base)s\n"
                     "Tax: %(tax)s\n"
                     "TDS Amount: %(symbol)s %(amount)s",
-                    count=len(prior_orders),
-                    company=root_company.name,
-                    cumulative=f"{cumulative_total:,.2f}",
+                    count=len(calc['prior_orders']),
+                    company=calc['root_company'].name,
+                    cumulative=f"{calc['cumulative_total']:,.2f}",
                     base=f"{base_amount:,.2f}",
                     tax=tax.name,
                     symbol=currency_symbol,
