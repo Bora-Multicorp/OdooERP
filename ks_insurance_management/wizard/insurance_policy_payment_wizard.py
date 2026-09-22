@@ -93,6 +93,8 @@ class InsurancePolicyPaymentWizard(models.TransientModel):
         self.ensure_one()
         if self.topup_amount <= 0:
             raise UserError("Top-up amount must be greater than zero.")
+        if self.premium <= 0:
+            raise UserError("Premium amount must be greater than zero.")
         if not self.approver_id:
             raise UserError("Please select a Payment Approver.")
 
