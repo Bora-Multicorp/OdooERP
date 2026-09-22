@@ -31,12 +31,12 @@
 
     <!-- New report action for Purchase / without Discount Order -->
     <record id="action_report_purchase_without_discount" model="ir.actions.report">
-        <field name="name">Purchase Order Domestic</field>
+        <field name="name">Purchase Order</field>
         <field name="model">purchase.order</field>
         <field name="report_type">qweb-pdf</field>
         <field name="report_name">ks_templates.purchase_order_without_discount_report</field>
         <field name="report_file">ks_templates.purchase_order_without_discount_report</field>
-        <field name="print_report_name">'Purchase Order Domestic - %s' % (object.name)</field>
+        <field name="print_report_name">'Purchase Order - %s' % (object.name)</field>
         <field name="domain">[('currency_id.name', '=', 'INR'), ('state', 'in', ('purchase', 'done'))]</field>
         <field name="binding_model_id" ref="purchase.model_purchase_order"/>
         <field name="paperformat_id" ref="paperformat_savex_purchase_order"/>
