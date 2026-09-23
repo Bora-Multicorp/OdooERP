@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="tds_entry_view_form_inherit_bora_account_tds" model="ir.ui.view">
+        <field name="name">l10n_in.withhold.wizard.view.form.inherit.bora</field>
+        <field name="model">l10n_in.withhold.wizard</field>
+        <field name="inherit_id" ref="l10n_in_withholding.tds_entry_view_form"/>
+        <field name="priority">20</field>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='date']" position="before">
+                <field name="company_id" invisible="1"/>
+            </xpath>
+            <xpath expr="//field[@name='withhold_line_ids']//list//field[@name='tax_id']" position="attributes">
+                <attribute name="domain">[('l10n_in_tds_tax_type', '=', l10n_in_tds_tax_type), '|', ('company_id', '=', False), ('company_id', 'parent_of', parent.company_id)]</attribute>
+            </xpath>
+        </field>
+    </record>
+</odoo>
