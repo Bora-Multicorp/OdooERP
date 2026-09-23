@@ -21,6 +21,7 @@
                            options="{'no_create': True, 'no_open': True}"
                            invisible="not bora_show_approver2"
                            required="bora_show_approver2"/>
+                    <field name="bora_reason"/>
                 </group>
                 <footer>
                     <button string="Submit for Approval" name="action_confirm_request" type="object" class="btn-primary"/>
