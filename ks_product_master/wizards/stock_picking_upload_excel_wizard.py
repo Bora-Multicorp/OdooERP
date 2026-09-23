@@ -97,10 +97,12 @@ class StockPickingUploadExcelWizard(models.TransientModel):
         current_row = 2
         moves = picking.move_ids.filtered(lambda m: m.state != "cancel")
 
-        # IMEI 2 column is included IF AND ONLY IF any product in the transfer has dual SIM enabled
-        has_dual_sim = any(self._is_product_dual_sim(m.product_id) for m in moves)
+        # IMEI 1 is included IF AND ONLY IF any product in the transfer is in a Mobile category
+        has_mobile = any(self._is_product_mobile(m.product_id) for m in moves)
+        # IMEI 2 is included IF AND ONLY IF any product in the transfer is a Mobile with dual SIM
+        has_dual_sim = has_mobile and any(self._is_product_dual_sim(m.product_id) for m in moves)
 
-        if has_dual_sim:
+        if has_mobile and has_dual_sim:
             headers = [
                 "External ID : Receipts",
                 "External ID : Move ID",
@@ -110,13 +112,21 @@ class StockPickingUploadExcelWizard(models.TransientModel):
                 "IMEI 2",
                 "Made In",
             ]
-        else:
+        elif has_mobile:
             headers = [
                 "External ID : Receipts",
                 "External ID : Move ID",
                 "Product Name",
                 "Serial Number",
                 "IMEI 1",
+                "Made In",
+            ]
+        else:
+            headers = [
+                "External ID : Receipts",
+                "External ID : Move ID",
+                "Product Name",
+                "Serial Number",
                 "Made In",
             ]
 
@@ -169,13 +179,14 @@ class StockPickingUploadExcelWizard(models.TransientModel):
                 serial_val = (line.lot_name or (line.lot_id and line.lot_id.name) or "").strip()
                 imei1_val = str(line.imei).strip() if line.imei else ""
                 imei2_val = str(line.imei2).strip() if line.imei2 else ""
+                # Only include Made In if explicitly set on this manual line; otherwise leave blank
                 row_country = (
                     (line.made_in_country_id and line.made_in_country_id.name)
                     or (line.made_country and line.made_country.name)
-                    or move_country_name
+                    or ""
                 )
 
-                if has_dual_sim:
+                if has_mobile and has_dual_sim:
                     row_vals = [
                         picking_ext_id,
                         move_ext_id,
@@ -187,7 +198,7 @@ class StockPickingUploadExcelWizard(models.TransientModel):
                     ]
                     text_col_indices = (4, 5, 6)
                     center_col_indices = (1, 2, 4, 5, 6, 7)
-                else:
+                elif has_mobile:
                     row_vals = [
                         picking_ext_id,
                         move_ext_id,
@@ -198,6 +209,16 @@ class StockPickingUploadExcelWizard(models.TransientModel):
                     ]
                     text_col_indices = (4, 5)
                     center_col_indices = (1, 2, 4, 5, 6)
+                else:
+                    row_vals = [
+                        picking_ext_id,
+                        move_ext_id,
+                        product.display_name or product.name,
+                        serial_val,
+                        row_country,
+                    ]
+                    text_col_indices = (4,)
+                    center_col_indices = (1, 2, 4, 5)
 
                 ws.row_dimensions[current_row].height = 20
                 for c_idx, val in enumerate(row_vals, 1):
@@ -215,39 +236,14 @@ class StockPickingUploadExcelWizard(models.TransientModel):
             # 2. Export remaining unassigned lines to fulfill the total demand (e.g. 17 total: 2 existing + 15 remaining)
             remaining_qty = max(0, demand_qty - exported_lines_count)
 
-            # For outgoing delivery, find quants in stock excluding already assigned lots
-            available_quants = []
-            if is_outgoing and remaining_qty > 0:
-                assigned_lot_ids = assigned_lines.mapped("lot_id").ids
-                quant_domain = [
-                    ("product_id", "=", product.id),
-                    ("location_id", "child_of", move.location_id.id),
-                    ("quantity", ">", 0),
-                    ("lot_id", "!=", False),
-                ]
-                if assigned_lot_ids:
-                    quant_domain.append(("lot_id", "not in", assigned_lot_ids))
-                available_quants = self.env["stock.quant"].search(quant_domain, limit=remaining_qty)
-
             for offset in range(remaining_qty):
-                seq = exported_lines_count + offset + 1
-                if is_outgoing and offset < len(available_quants):
-                    q = available_quants[offset]
-                    serial_val = q.lot_id.name
-                    imei1_val = q.imei or ""
-                    imei2_val = q.imei2 or ""
-                else:
-                    serial_val = f"SN{move.id}{seq:04d}"
-                    imei1_val = ""
-                    imei2_val = ""
+                # If not already entered manually on the list in Odoo, leave serial number, IMEIs, and Made In blank
+                serial_val = ""
+                imei1_val = ""
+                imei2_val = ""
+                row_country = ""
 
-                if is_mobile:
-                    if not imei1_val:
-                        imei1_val = f"86{move.id % 10000:04d}{seq:09d}"
-                    if is_dual and not imei2_val:
-                        imei2_val = f"87{move.id % 10000:04d}{seq:09d}"
-
-                if has_dual_sim:
+                if has_mobile and has_dual_sim:
                     row_vals = [
                         picking_ext_id,
                         move_ext_id,
@@ -255,21 +251,31 @@ class StockPickingUploadExcelWizard(models.TransientModel):
                         serial_val,
                         imei1_val,
                         imei2_val,
-                        move_country_name,
+                        row_country,
                     ]
                     text_col_indices = (4, 5, 6)
                     center_col_indices = (1, 2, 4, 5, 6, 7)
-                else:
+                elif has_mobile:
                     row_vals = [
                         picking_ext_id,
                         move_ext_id,
                         product.display_name or product.name,
                         serial_val,
                         imei1_val,
-                        move_country_name,
+                        row_country,
                     ]
                     text_col_indices = (4, 5)
                     center_col_indices = (1, 2, 4, 5, 6)
+                else:
+                    row_vals = [
+                        picking_ext_id,
+                        move_ext_id,
+                        product.display_name or product.name,
+                        serial_val,
+                        row_country,
+                    ]
+                    text_col_indices = (4,)
+                    center_col_indices = (1, 2, 4, 5)
 
                 ws.row_dimensions[current_row].height = 20
                 for c_idx, val in enumerate(row_vals, 1):
@@ -284,59 +290,27 @@ class StockPickingUploadExcelWizard(models.TransientModel):
 
                 current_row += 1
 
-        # Fallback if picking had no moves or all were completed
-        if current_row == 2:
-            first_move = moves[0] if moves else False
-            first_prod = first_move.product_id if first_move else False
-            if has_dual_sim:
-                sample_row = [
-                    picking_ext_id or "WH/IN/00001",
-                    self._get_or_create_external_id(first_move) if first_move else "stock_move_1",
-                    (first_prod and (first_prod.display_name or first_prod.name)) or "Sample Mobile Product",
-                    "SN0000001",
-                    "864201040000001",
-                    "864201040000002",
-                    picking_country_name,
-                ]
-                sample_text_cols = (4, 5, 6)
-            else:
-                sample_row = [
-                    picking_ext_id or "WH/IN/00001",
-                    self._get_or_create_external_id(first_move) if first_move else "stock_move_1",
-                    (first_prod and (first_prod.display_name or first_prod.name)) or "Sample Mobile Product",
-                    "SN0000001",
-                    "864201040000001",
-                    picking_country_name,
-                ]
-                sample_text_cols = (4, 5)
-
-            for c_idx, val in enumerate(sample_row, 1):
-                c = ws.cell(row=2, column=c_idx, value=val)
-                c.border = border
-                if c_idx in sample_text_cols:
-                    c.number_format = "@"
-            current_row = 3
-
         max_validation_row = max(current_row + 100, 500)
 
-        # Add Data Validation for IMEI 1 (Column E) - must be exactly 15 digits
-        dv_imei1 = DataValidation(
-            type="textLength",
-            operator="equal",
-            formula1="15",
-            allow_blank=True,
-            showErrorMessage=True,
-            showInputMessage=True,
-            errorTitle=_("Invalid IMEI 1"),
-            error=_("IMEI 1 must be exactly 15 digits."),
-            promptTitle=_("IMEI 1"),
-            prompt=_("Enter a 15-digit IMEI number."),
-        )
-        ws.add_data_validation(dv_imei1)
-        dv_imei1.add(f"E2:E{max_validation_row}")
+        # Add Data Validation for IMEI 1 (Column E) only if mobile product is present
+        if has_mobile:
+            dv_imei1 = DataValidation(
+                type="textLength",
+                operator="equal",
+                formula1="15",
+                allow_blank=True,
+                showErrorMessage=True,
+                showInputMessage=True,
+                errorTitle=_("Invalid IMEI 1"),
+                error=_("IMEI 1 must be exactly 15 digits."),
+                promptTitle=_("IMEI 1"),
+                prompt=_("Enter a 15-digit IMEI number."),
+            )
+            ws.add_data_validation(dv_imei1)
+            dv_imei1.add(f"E2:E{max_validation_row}")
 
-        # Add Data Validation for IMEI 2 (Column F) if dual SIM is present - must be exactly 15 digits
-        if has_dual_sim:
+        # Add Data Validation for IMEI 2 (Column F) only if dual SIM mobile product is present
+        if has_mobile and has_dual_sim:
             dv_imei2 = DataValidation(
                 type="textLength",
                 operator="equal",
@@ -634,10 +608,14 @@ class StockPickingUploadExcelWizard(models.TransientModel):
         if not product:
             return False
         tmpl = product.product_tmpl_id or product
-        return bool(
-            getattr(product, "is_mobile_category_selected", False)
-            or getattr(tmpl, "is_mobile_category_selected", False)
-        )
+        if getattr(product, "is_mobile_category_selected", False) or getattr(tmpl, "is_mobile_category_selected", False):
+            return True
+        categ = getattr(product, "categ_id", False) or getattr(tmpl, "categ_id", False)
+        while categ:
+            if getattr(categ, "is_mobile_category", False) or "mobile" in (categ.name or "").lower():
+                return True
+            categ = categ.parent_id
+        return False
 
     def _is_product_dual_sim(self, product):
         if not product:
