@@ -64,3 +64,13 @@ class PurchaseOrder(models.Model):
                 self.rate = 0.0
         else:
             self.rate = 0.0
+
+    @api.depends('order_line.price_subtotal', 'currency_id', 'company_id')
+    def _compute_tax_totals(self):
+        super()._compute_tax_totals()
+        for order in self:
+            if order.tax_totals and isinstance(order.tax_totals, dict) and 'amount_total_cc' in order.tax_totals:
+                tax_totals = dict(order.tax_totals)
+                tax_totals.pop('amount_total_cc', None)
+                order.tax_totals = tax_totals
+

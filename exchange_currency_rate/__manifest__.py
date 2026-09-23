@@ -40,6 +40,11 @@
         'views/purchase_order_views.xml',
         'views/sale_order_views.xml'
     ],
+    'assets': {
+        'web.assets_backend': [
+            'exchange_currency_rate/static/src/components/tax_totals/tax_totals.xml',
+        ],
+    },
     'images': ['static/description/banner.png'],
     'license': 'AGPL-3',
     'installable': True,
