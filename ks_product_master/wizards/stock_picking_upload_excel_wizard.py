@@ -112,6 +112,9 @@ class StockPickingUploadExcelWizard(models.TransientModel):
                 "IMEI 2",
                 "Made In",
             ]
+            text_col_indices = (4,)
+            number_col_indices = (5, 6)
+            center_col_indices = (1, 2, 4, 5, 6, 7)
         elif has_mobile:
             headers = [
                 "External ID : Receipts",
@@ -121,6 +124,9 @@ class StockPickingUploadExcelWizard(models.TransientModel):
                 "IMEI 1",
                 "Made In",
             ]
+            text_col_indices = (4,)
+            number_col_indices = (5,)
+            center_col_indices = (1, 2, 4, 5, 6)
         else:
             headers = [
                 "External ID : Receipts",
@@ -129,6 +135,9 @@ class StockPickingUploadExcelWizard(models.TransientModel):
                 "Serial Number",
                 "Made In",
             ]
+            text_col_indices = (4,)
+            number_col_indices = ()
+            center_col_indices = (1, 2, 4, 5)
 
         # Setup styles
         header_font = Font(name="Arial", size=11, bold=True, color="FFFFFF")
@@ -196,8 +205,6 @@ class StockPickingUploadExcelWizard(models.TransientModel):
                         imei2_val,
                         row_country,
                     ]
-                    text_col_indices = (4, 5, 6)
-                    center_col_indices = (1, 2, 4, 5, 6, 7)
                 elif has_mobile:
                     row_vals = [
                         picking_ext_id,
@@ -207,8 +214,6 @@ class StockPickingUploadExcelWizard(models.TransientModel):
                         imei1_val,
                         row_country,
                     ]
-                    text_col_indices = (4, 5)
-                    center_col_indices = (1, 2, 4, 5, 6)
                 else:
                     row_vals = [
                         picking_ext_id,
@@ -217,15 +222,24 @@ class StockPickingUploadExcelWizard(models.TransientModel):
                         serial_val,
                         row_country,
                     ]
-                    text_col_indices = (4,)
-                    center_col_indices = (1, 2, 4, 5)
 
                 ws.row_dimensions[current_row].height = 20
                 for c_idx, val in enumerate(row_vals, 1):
-                    c = ws.cell(row=current_row, column=c_idx, value=val)
+                    c = ws.cell(row=current_row, column=c_idx)
                     c.border = border
-                    if c_idx in text_col_indices:
-                        c.number_format = "@"
+                    if c_idx in number_col_indices:
+                        c.number_format = "0"
+                        if val and str(val).strip().isdigit():
+                            c.value = int(str(val).strip())
+                        elif val:
+                            c.value = str(val).strip()
+                        else:
+                            c.value = None
+                    else:
+                        c.value = val or ""
+                        if c_idx in text_col_indices:
+                            c.number_format = "@"
+
                     if c_idx in center_col_indices:
                         c.alignment = Alignment(horizontal="center", vertical="center")
                     else:
@@ -253,8 +267,6 @@ class StockPickingUploadExcelWizard(models.TransientModel):
                         imei2_val,
                         row_country,
                     ]
-                    text_col_indices = (4, 5, 6)
-                    center_col_indices = (1, 2, 4, 5, 6, 7)
                 elif has_mobile:
                     row_vals = [
                         picking_ext_id,
@@ -264,8 +276,6 @@ class StockPickingUploadExcelWizard(models.TransientModel):
                         imei1_val,
                         row_country,
                     ]
-                    text_col_indices = (4, 5)
-                    center_col_indices = (1, 2, 4, 5, 6)
                 else:
                     row_vals = [
                         picking_ext_id,
@@ -274,15 +284,24 @@ class StockPickingUploadExcelWizard(models.TransientModel):
                         serial_val,
                         row_country,
                     ]
-                    text_col_indices = (4,)
-                    center_col_indices = (1, 2, 4, 5)
 
                 ws.row_dimensions[current_row].height = 20
                 for c_idx, val in enumerate(row_vals, 1):
-                    c = ws.cell(row=current_row, column=c_idx, value=val)
+                    c = ws.cell(row=current_row, column=c_idx)
                     c.border = border
-                    if c_idx in text_col_indices:
-                        c.number_format = "@"
+                    if c_idx in number_col_indices:
+                        c.number_format = "0"
+                        if val and str(val).strip().isdigit():
+                            c.value = int(str(val).strip())
+                        elif val:
+                            c.value = str(val).strip()
+                        else:
+                            c.value = None
+                    else:
+                        c.value = val or ""
+                        if c_idx in text_col_indices:
+                            c.number_format = "@"
+
                     if c_idx in center_col_indices:
                         c.alignment = Alignment(horizontal="center", vertical="center")
                     else:
@@ -292,17 +311,23 @@ class StockPickingUploadExcelWizard(models.TransientModel):
 
         max_validation_row = max(current_row + 100, 500)
 
+        # Pre-format numeric columns so continuous autofill / fill-down preserves the Number format
+        for col_idx in number_col_indices:
+            for r in range(2, max_validation_row + 1):
+                ws.cell(row=r, column=col_idx).number_format = "0"
+
         # Add Data Validation for IMEI 1 (Column E) only if mobile product is present
         if has_mobile:
             dv_imei1 = DataValidation(
-                type="textLength",
-                operator="equal",
-                formula1="15",
+                type="whole",
+                operator="between",
+                formula1="100000000000000",
+                formula2="999999999999999",
                 allow_blank=True,
                 showErrorMessage=True,
                 showInputMessage=True,
                 errorTitle=_("Invalid IMEI 1"),
-                error=_("IMEI 1 must be exactly 15 digits."),
+                error=_("IMEI 1 must be a 15-digit number."),
                 promptTitle=_("IMEI 1"),
                 prompt=_("Enter a 15-digit IMEI number."),
             )
@@ -312,14 +337,15 @@ class StockPickingUploadExcelWizard(models.TransientModel):
         # Add Data Validation for IMEI 2 (Column F) only if dual SIM mobile product is present
         if has_mobile and has_dual_sim:
             dv_imei2 = DataValidation(
-                type="textLength",
-                operator="equal",
-                formula1="15",
+                type="whole",
+                operator="between",
+                formula1="100000000000000",
+                formula2="999999999999999",
                 allow_blank=True,
                 showErrorMessage=True,
                 showInputMessage=True,
                 errorTitle=_("Invalid IMEI 2"),
-                error=_("IMEI 2 must be exactly 15 digits."),
+                error=_("IMEI 2 must be a 15-digit number."),
                 promptTitle=_("IMEI 2"),
                 prompt=_("Enter a 15-digit IMEI number."),
             )
@@ -356,7 +382,7 @@ class StockPickingUploadExcelWizard(models.TransientModel):
         xlsx_data = output.read()
 
         clean_picking_name = re.sub(r"[^\w\-]", "_", picking.name or "picking")
-        filename = f"sample_serials_{clean_picking_name}.xlsx"
+        filename = f"Template_Serial_IMEI_{clean_picking_name}.xlsx"
 
         attachment = self.env["ir.attachment"].sudo().create({
             "name": filename,
