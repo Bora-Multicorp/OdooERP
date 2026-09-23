@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates>
+    <t t-inherit="account.TaxTotalsField" t-inherit-mode="extension" owl="1">
+        <xpath expr="//tr[@t-if='totals.amount_total_cc']" position="replace"/>
+    </t>
+</templates>

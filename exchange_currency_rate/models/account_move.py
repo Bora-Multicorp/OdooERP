@@ -121,3 +121,12 @@ class AccountMove(models.Model):
     def _inverse_rate(self):
         """ Allow manual editing of rate in account.move """
         pass
+
+    def _compute_tax_totals(self):
+        super()._compute_tax_totals()
+        for move in self:
+            if move.tax_totals and isinstance(move.tax_totals, dict) and 'amount_total_cc' in move.tax_totals:
+                tax_totals = dict(move.tax_totals)
+                tax_totals.pop('amount_total_cc', None)
+                move.tax_totals = tax_totals
+
