@@ -142,7 +142,8 @@
                        widget="filterable_selection" options="{'blacklisted_values': ['exceptional']}"
                        required="is_vendor and not is_indian_company"/>
                 <field name="approval_status" invisible="not is_vendor" readonly="1"/>
-                <field name="is_customer" readonly="is_kyc" invisible="0"/>
+                <!-- <field name="is_customer" readonly="is_kyc" invisible="0"/> -->
+                <field name="is_customer" invisible="0"/>
                 <field name="is_overseas" invisible="not is_vendor and not is_customer" widget="boolean_toggle"/>
                 <field name="is_kyc" readonly="1"/>
                 <field name="is_approved" readonly="1" invisible="not is_approved"/>
