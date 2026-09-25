@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- E-Com Master Initial Data -->
+        <record id="ecom_master_domestic" model="bora.ecom.master">
+            <field name="name">Domestic</field>
+            <field name="code">DOMESTIC</field>
+            <field name="is_ecommerce">False</field>
+            <field name="sequence">10</field>
+            <field name="description">Domestic business transactions and purchase orders</field>
+        </record>
+
+        <record id="ecom_master_ecommerce" model="bora.ecom.master">
+            <field name="name">E-Commerce</field>
+            <field name="code">ECOMMERCE</field>
+            <field name="is_ecommerce">True</field>
+            <field name="sequence">20</field>
+            <field name="description">E-Commerce business transactions and purchase orders</field>
+        </record>
+
+        <record id="ecom_master_export" model="bora.ecom.master">
+            <field name="name">Export</field>
+            <field name="code">EXPORT</field>
+            <field name="is_ecommerce">False</field>
+            <field name="sequence">30</field>
+            <field name="description">Export business transactions and purchase orders</field>
+        </record>
+
+        <!-- Marketplace Master Initial Data -->
+        <record id="marketplace_master_amazon" model="bora.marketplace.master">
+            <field name="name">Amazon</field>
+            <field name="code">AMAZON</field>
+            <field name="sequence">10</field>
+            <field name="description">Amazon Marketplace</field>
+        </record>
+
+        <record id="marketplace_master_flipkart" model="bora.marketplace.master">
+            <field name="name">Flipkart</field>
+            <field name="code">FLIPKART</field>
+            <field name="sequence">20</field>
+            <field name="description">Flipkart Marketplace</field>
+        </record>
+    </data>
+</odoo>

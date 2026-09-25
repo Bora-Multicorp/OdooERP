@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- List / Tree View -->
+    <record id="view_bora_marketplace_master_tree" model="ir.ui.view">
+        <field name="name">bora.marketplace.master.list</field>
+        <field name="model">bora.marketplace.master</field>
+        <field name="arch" type="xml">
+            <list string="Marketplace Master">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="code"/>
+                <field name="description" optional="show"/>
+                <field name="active" widget="boolean_toggle" optional="show"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Form View -->
+    <record id="view_bora_marketplace_master_form" model="ir.ui.view">
+        <field name="name">bora.marketplace.master.form</field>
+        <field name="model">bora.marketplace.master</field>
+        <field name="arch" type="xml">
+            <form string="Marketplace Master">
+                <sheet>
+                    <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger" invisible="active"/>
+                    <div class="oe_title">
+                        <label for="name" string="Marketplace Name"/>
+                        <h1>
+                            <field name="name" placeholder="e.g. Amazon, Flipkart..."/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="code" placeholder="e.g. AMZ, FLP"/>
+                        </group>
+                        <group>
+                            <field name="sequence"/>
+                            <field name="active"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Description" name="description_page">
+                            <field name="description" placeholder="Add any details or notes regarding this marketplace..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Search View -->
+    <record id="view_bora_marketplace_master_search" model="ir.ui.view">
+        <field name="name">bora.marketplace.master.search</field>
+        <field name="model">bora.marketplace.master</field>
+        <field name="arch" type="xml">
+            <search string="Search Marketplace Master">
+                <field name="name" string="Marketplace"/>
+                <field name="code"/>
+                <separator/>
+                <filter name="filter_archived" string="Archived" domain="[('active', '=', False)]"/>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_bora_marketplace_master" model="ir.actions.act_window">
+        <field name="name">Marketplace Master</field>
+        <field name="res_model">bora.marketplace.master</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_bora_marketplace_master_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a new Marketplace record
+            </p>
+            <p>
+                Maintain marketplaces applicable to E-Commerce transactions such as Amazon, Flipkart, and future marketplaces.
+            </p>
+        </field>
+    </record>
+</odoo>
