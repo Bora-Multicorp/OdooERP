@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Form View Inheritance -->
+    <record id="view_purchase_order_form_ecom" model="ir.ui.view">
+        <field name="name">purchase.order.form.ecom.marketplace</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_form"/>
+        <field name="priority">25</field>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='currency_id'][1]" position="after">
+                <field name="is_ecom_po" invisible="1"/>
+                <field name="ecom_id"
+                       placeholder="Select E-Com Category..."
+                       options="{'no_create': True, 'no_open': False}"
+                       readonly="state in ('cancel', 'done')"/>
+                <field name="marketplace_id"
+                       placeholder="Select Marketplace..."
+                       invisible="not is_ecom_po"
+                       options="{'no_create': True, 'no_open': False}"
+                       readonly="state in ('cancel', 'done')"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Purchase Orders Tree / List View (KPIs List) -->
+    <record id="view_purchase_order_kpis_tree_ecom" model="ir.ui.view">
+        <field name="name">purchase.order.kpis.tree.ecom.marketplace</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_kpis_tree"/>
+        <field name="priority">25</field>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='partner_id']" position="after">
+                <field name="ecom_id" optional="show"/>
+                <field name="marketplace_id" optional="show"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Purchase Orders Standard Tree / List View -->
+    <record id="view_purchase_order_tree_ecom" model="ir.ui.view">
+        <field name="name">purchase.order.tree.ecom.marketplace</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_view_tree"/>
+        <field name="priority">25</field>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='partner_id']" position="after">
+                <field name="ecom_id" optional="show"/>
+                <field name="marketplace_id" optional="show"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Search View Inheritance for Purchase Orders -->
+    <record id="view_purchase_order_search_ecom" model="ir.ui.view">
+        <field name="name">purchase.order.search.ecom.marketplace</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_view_search"/>
+        <field name="priority">25</field>
+        <field name="arch" type="xml">
+            <xpath expr="//filter[@name='my_Orders']" position="before">
+                <filter name="filter_ecom" string="E-Com" domain="[('ecom_id', '!=', False)]"/>
+                <filter name="filter_marketplace" string="Marketplace" domain="[('marketplace_id', '!=', False)]"/>
+                <separator/>
+            </xpath>
+            <xpath expr="//field[@name='partner_id']" position="after">
+                <field name="ecom_id" string="E-Com" filter_domain="['|', ('ecom_id.name', 'ilike', self), ('ecom_id.code', 'ilike', self)]"/>
+                <field name="marketplace_id" string="Marketplace" filter_domain="['|', ('marketplace_id.name', 'ilike', self), ('marketplace_id.code', 'ilike', self)]"/>
+            </xpath>
+            <xpath expr="//group" position="inside">
+                <filter string="E-Com" name="group_by_ecom" domain="[]" context="{'group_by': 'ecom_id'}"/>
+                <filter string="Marketplace" name="group_by_marketplace" domain="[]" context="{'group_by': 'marketplace_id'}"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Search View Inheritance for RFQs / Purchase Order Filter -->
+    <record id="view_purchase_order_filter_ecom" model="ir.ui.view">
+        <field name="name">purchase.order.filter.ecom.marketplace</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.view_purchase_order_filter"/>
+        <field name="priority">25</field>
+        <field name="arch" type="xml">
+            <xpath expr="//filter[@name='my_purchases']" position="before">
+                <filter name="filter_ecom" string="E-Com" domain="[('ecom_id', '!=', False)]"/>
+                <filter name="filter_marketplace" string="Marketplace" domain="[('marketplace_id', '!=', False)]"/>
+                <separator/>
+            </xpath>
+            <xpath expr="//field[@name='partner_id']" position="after">
+                <field name="ecom_id" string="E-Com" filter_domain="['|', ('ecom_id.name', 'ilike', self), ('ecom_id.code', 'ilike', self)]"/>
+                <field name="marketplace_id" string="Marketplace" filter_domain="['|', ('marketplace_id.name', 'ilike', self), ('marketplace_id.code', 'ilike', self)]"/>
+            </xpath>
+            <xpath expr="//group" position="inside">
+                <filter string="E-Com" name="group_by_ecom" domain="[]" context="{'group_by': 'ecom_id'}"/>
+                <filter string="Marketplace" name="group_by_marketplace" domain="[]" context="{'group_by': 'marketplace_id'}"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

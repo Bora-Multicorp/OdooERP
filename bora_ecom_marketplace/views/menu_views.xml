@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Master Data Configuration Menus under Purchase > Configuration -->
+    <menuitem id="menu_bora_ecom_marketplace_config_root"
+              name="E-Commerce &amp; Marketplaces"
+              parent="purchase.menu_purchase_config"
+              sequence="55"
+              groups="purchase.group_purchase_manager"/>
+
+    <menuitem id="menu_bora_ecom_master"
+              name="E-Com Master"
+              parent="menu_bora_ecom_marketplace_config_root"
+              action="action_bora_ecom_master"
+              sequence="10"/>
+
+    <menuitem id="menu_bora_marketplace_master"
+              name="Marketplace Master"
+              parent="menu_bora_ecom_marketplace_config_root"
+              action="action_bora_marketplace_master"
+              sequence="20"/>
+</odoo>
