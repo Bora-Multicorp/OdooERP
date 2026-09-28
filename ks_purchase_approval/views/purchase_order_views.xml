@@ -29,10 +29,13 @@
                 <field name="ks_show_update_edit_approval_button" invisible="1"/>
                 <field name="ks_pm1_approved" invisible="1"/>
                 <field name="ks_pm2_approved" invisible="1"/>
+                <field name="ks_approver_2_id" invisible="1"/>
                 <field name="ks_cancel_pm1_approved" invisible="1"/>
                 <field name="ks_cancel_pm2_approved" invisible="1"/>
+                <field name="ks_cancel_pm2_id" invisible="1"/>
                 <field name="ks_edit_pm1_approved" invisible="1"/>
                 <field name="ks_edit_pm2_approved" invisible="1"/>
+                <field name="ks_edit_pm2_id" invisible="1"/>
                 <field name="ks_edit_approved" invisible="1"/>
             </xpath>
 
@@ -181,37 +184,42 @@
                 <div class="alert alert-warning mb-0" role="alert"
                      invisible="state != 'pending_approval'">
                     <strong>⏳ Pending Approval:</strong>
-                    This Purchase Order is waiting for approval from Approver 1 and Approver 2.
+                    <span invisible="not ks_approver_2_id">This Purchase Order is waiting for approval from Approver 1 and Approver 2.</span>
+                    <span invisible="ks_approver_2_id">This Purchase Order is waiting for approval from Approver 1.</span>
                     <br/>
                     <span class="badge bg-success" invisible="not ks_pm1_approved">✓ Approver 1 Approved</span>
                     <span class="badge bg-secondary" invisible="ks_pm1_approved">⏳ Approver 1 Pending</span>
-                    &amp;nbsp;
-                    <span class="badge bg-success" invisible="not ks_pm2_approved">✓ Approver 2 Approved</span>
-                    <span class="badge bg-secondary" invisible="ks_pm2_approved">⏳ Approver 2 Pending</span>
+                    <span invisible="not ks_approver_2_id">&amp;nbsp;</span>
+                    <span class="badge bg-success" invisible="not ks_approver_2_id or not ks_pm2_approved">✓ Approver 2 Approved</span>
+                    <span class="badge bg-secondary" invisible="not ks_approver_2_id or ks_pm2_approved">⏳ Approver 2 Pending</span>
                 </div>
 
                 <!-- Cancel Pending Banner -->
                 <div class="alert alert-danger mb-0" role="alert"
                      invisible="state != 'cancel_pending'">
-                    <strong>🚫 Cancel Pending:</strong> This Purchase Order is waiting for cancellation approval.
+                    <strong>🚫 Cancel Pending:</strong>
+                    <span invisible="not ks_cancel_pm2_id">This Purchase Order is waiting for cancellation approval from Approver 1 and Approver 2.</span>
+                    <span invisible="ks_cancel_pm2_id">This Purchase Order is waiting for cancellation approval from Approver 1.</span>
                     <br/>
                     <span class="badge bg-success" invisible="not ks_cancel_pm1_approved">✓ Approver 1 Approved</span>
                     <span class="badge bg-secondary" invisible="ks_cancel_pm1_approved">⏳ Approver 1 Pending</span>
-                    &amp;nbsp;
-                    <span class="badge bg-success" invisible="not ks_cancel_pm2_approved">✓ Approver 2 Approved</span>
-                    <span class="badge bg-secondary" invisible="ks_cancel_pm2_approved">⏳ Approver 2 Pending</span>
+                    <span invisible="not ks_cancel_pm2_id">&amp;nbsp;</span>
+                    <span class="badge bg-success" invisible="not ks_cancel_pm2_id or not ks_cancel_pm2_approved">✓ Approver 2 Approved</span>
+                    <span class="badge bg-secondary" invisible="not ks_cancel_pm2_id or ks_cancel_pm2_approved">⏳ Approver 2 Pending</span>
                 </div>
 
                 <!-- Edit Pending Banner -->
                 <div class="alert alert-info mb-0" role="alert"
                      invisible="state != 'edit_pending'">
-                    <strong>📝 Edit Pending:</strong> This Purchase Order is waiting for edit approval.
+                    <strong>📝 Edit Pending:</strong>
+                    <span invisible="not ks_edit_pm2_id">This Purchase Order is waiting for edit approval from Approver 1 and Approver 2.</span>
+                    <span invisible="ks_edit_pm2_id">This Purchase Order is waiting for edit approval from Approver 1.</span>
                     <br/>
                     <span class="badge bg-success" invisible="not ks_edit_pm1_approved">✓ Approver 1 Approved</span>
                     <span class="badge bg-secondary" invisible="ks_edit_pm1_approved">⏳ Approver 1 Pending</span>
-                    &amp;nbsp;
-                    <span class="badge bg-success" invisible="not ks_edit_pm2_approved">✓ Approver 2 Approved</span>
-                    <span class="badge bg-secondary" invisible="ks_edit_pm2_approved">⏳ Approver 2 Pending</span>
+                    <span invisible="not ks_edit_pm2_id">&amp;nbsp;</span>
+                    <span class="badge bg-success" invisible="not ks_edit_pm2_id or not ks_edit_pm2_approved">✓ Approver 2 Approved</span>
+                    <span class="badge bg-secondary" invisible="not ks_edit_pm2_id or ks_edit_pm2_approved">⏳ Approver 2 Pending</span>
                 </div>
 
                 <!-- Edit Approved Banner (Editable Mode for the requester) -->
