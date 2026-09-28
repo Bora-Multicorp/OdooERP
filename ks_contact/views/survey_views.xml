@@ -81,9 +81,9 @@
                             class="btn btn-secondary" invisible="1">Start Live Session
                     </button>
                 </xpath>
-                <xpath expr="//kanban" position="attributes">
+                <!-- <xpath expr="//kanban" position="attributes">
                     <attribute name="create">False</attribute>
-                </xpath>
+                </xpath> -->
                 <xpath expr="//button[@name='action_end_session']" position="replace">
                     <button name="action_end_session" string="End Live Session" type="object"
                             class="btn btn-secondary" invisible="1">End Live Session
