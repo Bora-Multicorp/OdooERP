@@ -19,8 +19,25 @@ class PurchaseOrder(models.Model):
     )
     ks_destination = fields.Char(string='Destination')
     ks_despatched_through = fields.Char(string='Despatched Through')
+    bill_to_id = fields.Many2one(
+        'res.partner',
+        string='Bill To',
+        copy=False,
+        help='Contact for billing (lists current selected company contact + current selected company warehouse contacts).',
+    )
+    ks_invoice_to = fields.Char(
+        string='Invoice To',
+        compute='_compute_ks_invoice_to',
+        help='Shows the company name for Invoice To as displayed in reports.',
+    )
     amount_total = fields.Monetary(string='Total', store=True, readonly=True, compute='_amount_all')
     tax_totals = fields.Binary(compute='_compute_tax_totals', exportable=False)
+
+    @api.depends('bill_to_id', 'company_id')
+    def _compute_ks_invoice_to(self):
+        for order in self:
+            order.ks_invoice_to = order.get_bill_to_company_name()
+
 
     def get_exchange_rate_info(self):
         """Returns exchange rate info for PDF display.
@@ -79,25 +96,14 @@ class PurchaseOrder(models.Model):
         """Returns the company name for Bill To / Invoice To field in reports."""
         self.ensure_one()
         order = self.sudo()
-        if order.bill_to_id:
-            partner = order.bill_to_id.sudo()
-            if partner.company_id:
-                return self._get_parent_company_name(partner.company_id)
-            comp = self.env['res.company'].sudo().search([
-                '|', ('partner_id', '=', partner.id),
-                ('partner_id', '=', partner.commercial_partner_id.id)
-            ], limit=1)
-            if comp:
-                return self._get_parent_company_name(comp)
-            if partner.parent_id:
-                parent_comp = self.env['res.company'].sudo().search([
-                    ('partner_id', '=', partner.parent_id.id)
-                ], limit=1)
-                if parent_comp:
-                    return self._get_parent_company_name(parent_comp)
-                return partner.parent_id.name or ''
-            return partner.commercial_company_name or partner.name or self._get_parent_company_name(order.company_id) or ''
-        return self._get_parent_company_name(order.company_id) or ''
+        if order.company_id:
+            return self._get_parent_company_name(order.company_id)
+        if order.bill_to_id and order.bill_to_id.sudo().company_id:
+            return self._get_parent_company_name(order.bill_to_id.sudo().company_id)
+        return ''
+
+
+
 
     def get_ship_to_company_name(self):
         """Returns the company name for Ship To / Consignee field from picking_type_id in reports."""

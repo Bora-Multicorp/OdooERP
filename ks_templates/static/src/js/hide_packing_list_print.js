@@ -2,6 +2,16 @@
 
 import { patch } from "@web/core/utils/patch";
 import { FormController } from "@web/views/form/form_controller";
+import { AccountMoveFormController } from "@account/components/account_move_form/account_move_form";
+
+// Patch AccountMoveFormController to prevent dynamic "PDF" extra print items from loading
+if (AccountMoveFormController) {
+    patch(AccountMoveFormController.prototype, {
+        async loadExtraPrintItems() {
+            return [];
+        },
+    });
+}
 
 patch(FormController.prototype, {
     async getActionMenuItems() {
@@ -32,6 +42,12 @@ patch(FormController.prototype, {
 
             items.print = items.print.filter((item) => {
                 const label = (item.label || item.description || item.name || "").trim().toLowerCase();
+                const key = (item.key || "").toLowerCase();
+
+                // Explicitly hide standard Odoo base PDF / Invoices report
+                if (label === "pdf" || label === "invoices" || label === "invoice" || label.startsWith("pdf ") || label === "invoice pdf" || key === "download_pdf") {
+                    return false;
+                }
 
                 // Commercial Invoice visibility:
                 // 1. Non-Indian company => show
