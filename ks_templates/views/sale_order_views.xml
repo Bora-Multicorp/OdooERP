@@ -6,6 +6,7 @@
             <field name="name">sale.order.form.ks.templates</field>
             <field name="model">sale.order</field>
             <field name="inherit_id" ref="sale.view_order_form"/>
+            <field name="priority">50</field>
             <field name="arch" type="xml">
                 <!-- Round Off toggle: single-line label + switch, right-aligned like the totals below it -->
                 <xpath expr="//group[@name='sale_total']/field[@name='tax_totals']" position="before">
@@ -14,6 +15,10 @@
                         <field name="ks_apply_round_off" widget="boolean_toggle" nolabel="1"
                                class="mb-0 ms-auto" readonly="not ks_can_edit or ks_qty_only_edit"/>
                     </div>
+                </xpath>
+                <!-- Add Additional Terms of Delivery under Incoterm Location in Delivery section -->
+                <xpath expr="//field[@name='incoterm_location']" position="after">
+                    <field name="ks_additional_terms_of_delivery" placeholder="Additional Terms of Delivery" readonly="not ks_can_edit or ks_qty_only_edit"/>
                 </xpath>
                 <!-- Add fields to Other Information tab -->
                 <xpath expr="//page[@name='other_information']/group" position="inside">

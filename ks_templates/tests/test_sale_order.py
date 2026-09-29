@@ -12,6 +12,11 @@ class TestSaleOrder(KsTemplatesCommon):
         self.sale_order.ks_other_reference = 'REF001'
         self.assertEqual(self.sale_order.ks_other_reference, 'REF001')
 
+    def test_ks_additional_terms_of_delivery_field(self):
+        """Test ks_additional_terms_of_delivery field"""
+        self.sale_order.ks_additional_terms_of_delivery = 'CONTRACT NO. : DNS - BORA 2024'
+        self.assertEqual(self.sale_order.ks_additional_terms_of_delivery, 'CONTRACT NO. : DNS - BORA 2024')
+
     def test_ks_despatched_through_field(self):
         """Test ks_despatched_through field"""
         self.sale_order.ks_despatched_through = 'BY SEA'
