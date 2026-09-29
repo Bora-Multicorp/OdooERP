@@ -266,31 +266,33 @@ class VendorPaymentApprovalRequest(models.Model):
                     )
                     % rec.purchase_order_id.name
                 )
-            configs = self.env['vendor.payment.approval.config'].search([
-                ('active', '=', True),
-            ], order='sequence, approver_type')
-            if not configs:
+            config = self.env['vendor.payment.approval.config'].get_config()
+            if not config:
                 raise UserError(
                     _(
-                        'No approvers configured. '
+                        'No active approval configuration found. '
                         'Please set up Vendor Payment Approval Settings (Purchase → Configuration).'
                     )
                 )
-            approver_types = configs.mapped('approver_type')
-            if set(approver_types) != {'approver1', 'approver2'}:
-                raise UserError(
-                    _(
-                        'Both Approver 1 and Approver 2 must be configured in Vendor Payment Approval Settings. '
-                        'Currently missing: %s'
-                    )
-                    % ', '.join({'approver1', 'approver2'} - set(approver_types))
-                )
-            lines = [(5, 0, 0)]
-            for cfg in configs:
+            is_two_way = config.is_two_way_approval()
+            if not config.ks_approver_1_ids:
+                raise UserError(_('Approver 1 Users must be configured in Vendor Payment Approval Settings.'))
+            if is_two_way and not config.ks_approver_2_ids:
+                raise UserError(_('Approver 2 Users must be configured when using Two Level Approval mode.'))
+
+            lines = [
+                (5, 0, 0),
+                (0, 0, {
+                    'user_id': config.ks_approver_1_ids[0].id,
+                    'approver_type': 'approver1',
+                    'sequence': 10,
+                }),
+            ]
+            if is_two_way:
                 lines.append((0, 0, {
-                    'user_id': cfg.user_id.id,
-                    'approver_type': cfg.approver_type,
-                    'sequence': cfg.sequence,
+                    'user_id': config.ks_approver_2_ids[0].id,
+                    'approver_type': 'approver2',
+                    'sequence': 20,
                 }))
             rec.sudo().write({
                 'state': 'pending_approval',
