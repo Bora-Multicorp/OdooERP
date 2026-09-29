@@ -101,7 +101,7 @@
                             invisible="(vendor_type != 'regular' and not (is_customer and is_overseas)) or (not is_expired and not is_rejected and not has_expired_docs)"/>
                     <button name="action_submit_for_approval" string="Submit for Approval" type="object"
                             class="btn-primary"
-                            invisible="not is_vendor or approval_status != 'draft' or vendor_type == 'regular'"/>
+                            invisible="not is_vendor or approval_status != 'draft' or vendor_type == 'regular' or not vendor_type"/>
                     <button name="action_update_approvals" string="Update Approvals" type="object"
                             class="btn-warning"
                             invisible="not is_vendor or approval_status != 'to_approve' or is_approved or ks_is_approver"
