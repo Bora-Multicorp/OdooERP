@@ -11,6 +11,23 @@ class PurchaseOrder(models.Model):
                 order.picking_ids.write({"ks_ecom_po_reciept": True})
         return result
 
+    def write(self, vals):
+        result = super().write(vals)
+        if "name" in vals or "partner_id" in vals:
+            activities = self.env["mail.activity"].sudo().search([
+                ("res_model", "=", self._name),
+                ("res_id", "in", self.ids),
+            ])
+            if activities:
+                for activity in activities:
+                    order = self.browse(activity.res_id)
+                    if order.exists():
+                        if order.partner_id and order.partner_id.name:
+                            activity.res_name = f"{order.name} - {order.partner_id.name}"
+                        else:
+                            activity.res_name = order.name
+        return result
+
     ks_ecom_imported = fields.Boolean(
         string="Imported from E-com",
         copy=False,
