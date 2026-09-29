@@ -37,6 +37,20 @@
                 </xpath>
             </field>
         </record>
+
+        <!-- Invoice To field (hidden) -->
+        <record id="view_purchase_order_form_inherit_ks_templates_invoice_to" model="ir.ui.view">
+            <field name="name">purchase.order.form.ks.templates.invoice.to</field>
+            <field name="model">purchase.order</field>
+            <field name="inherit_id" ref="purchase.purchase_order_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='date_order']" position="after">
+                    <field name="ks_invoice_to" string="Invoice To" readonly="1" invisible="1"/>
+                </xpath>
+            </field>
+        </record>
+
+
         <!-- Exclude advance payment products from purchase order line product selection -->
 <!--        <record id="view_purchase_order_form_inherit_ks_advance_product_domain" model="ir.ui.view">-->
 <!--            <field name="name">purchase.order.form.ks.advance.product.domain</field>-->
