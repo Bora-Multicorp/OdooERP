@@ -18,6 +18,10 @@ class VendorPaymentApprovalUpdateWizard(models.TransientModel):
         required=False,
     )
     ks_pm1_already_approved = fields.Boolean(string='PM1 Already Approved', default=False)
+    ks_approval_mode = fields.Selection([
+        ('single', 'Single Level Approval'),
+        ('two_way', 'Two Level Approval'),
+    ], string='Approval Mode', compute='_compute_available_approvers')
     approver_1_id = fields.Many2one(
         'res.users',
         string='Approver 1',
@@ -27,7 +31,7 @@ class VendorPaymentApprovalUpdateWizard(models.TransientModel):
     approver_2_id = fields.Many2one(
         'res.users',
         string='Approver 2',
-        required=True,
+        required=False,
         domain="[('id', 'in', available_approver_2_ids)]",
     )
     available_approver_1_ids = fields.Many2many(
@@ -98,18 +102,21 @@ class VendorPaymentApprovalUpdateWizard(models.TransientModel):
 
     @api.depends('request_id', 'payment_id')
     def _compute_available_approvers(self):
-        Config = self.env['vendor.payment.approval.config']
-        app1_users = Config.search([
-            ('active', '=', True), ('approver_type', '=', 'approver1'),
-        ]).mapped('user_id')
-        app2_users = Config.search([
-            ('active', '=', True), ('approver_type', '=', 'approver2'),
-        ]).mapped('user_id')
+        Config = self.env['vendor.payment.approval.config'].sudo().get_config()
+        if Config:
+            app1_users = Config.ks_approver_1_ids
+            app2_users = Config.ks_approver_2_ids
+            mode = Config.ks_approval_mode
+        else:
+            app1_users = self.env['res.users']
+            app2_users = self.env['res.users']
+            mode = 'two_way'
         for rec in self:
             rec.available_approver_1_ids = app1_users
             rec.available_approver_2_ids = app2_users
+            rec.ks_approval_mode = mode
 
-    @api.depends('request_id', 'payment_id', 'ks_pm1_already_approved')
+    @api.depends('request_id', 'payment_id', 'ks_pm1_already_approved', 'ks_approval_mode')
     def _compute_approval_info(self):
         for wiz in self:
             html = ''
@@ -125,12 +132,19 @@ class VendorPaymentApprovalUpdateWizard(models.TransientModel):
                         ' Keeping the same Approver 1 will preserve their approval.'
                         '</div>'
                     ) % pm1_line.user_id.name
-            html += (
-                '<div class="alert alert-info">'
-                '<p>Update the approvers for this payment approval request. '
-                'Approval is sequential (Approver 1 must approve before Approver 2).</p>'
-                '</div>'
-            )
+            if wiz.ks_approval_mode == 'single':
+                html += (
+                    '<div class="alert alert-info">'
+                    '<p>Update the approver for this payment approval request (Single Level Approval).</p>'
+                    '</div>'
+                )
+            else:
+                html += (
+                    '<div class="alert alert-info">'
+                    '<p>Update the approvers for this payment approval request. '
+                    'Approval is sequential (Approver 1 must approve before Approver 2).</p>'
+                    '</div>'
+                )
             wiz.ks_approval_info = html
 
     @api.onchange('approver_1_id')
@@ -151,12 +165,17 @@ class VendorPaymentApprovalUpdateWizard(models.TransientModel):
 
         if target.state != 'pending_approval':
             raise UserError(_('Update Approvals is only available for pending items.'))
+
+        Config = self.env['vendor.payment.approval.config'].sudo().get_config()
+        is_two_way = Config.is_two_way_approval() if Config else True
+
         if not self.approver_1_id:
             raise UserError(_('Approver 1 is required.'))
-        if not self.approver_2_id:
-            raise UserError(_('Approver 2 is required.'))
-        if self.approver_1_id == self.approver_2_id:
-            raise UserError(_('Approver 1 and Approver 2 must be different users.'))
+        if is_two_way:
+            if not self.approver_2_id:
+                raise UserError(_('Approver 2 is required.'))
+            if self.approver_1_id == self.approver_2_id:
+                raise UserError(_('Approver 1 and Approver 2 must be different users.'))
 
         pm1_line = target.approval_line_ids.filtered(
             lambda l: l.approver_type == 'approver1' and l.state == 'approved'
@@ -170,7 +189,7 @@ class VendorPaymentApprovalUpdateWizard(models.TransientModel):
 
         target.activity_unlink(['mail.mail_activity_data_todo'])
 
-        if preserve_pm1:
+        if preserve_pm1 and is_two_way:
             target.approval_line_ids.filtered(
                 lambda l: l.approver_type == 'approver2'
             ).write({'state': 'cancelled', 'remark': _('Approver updated by %s') % self.env.user.name})
@@ -194,8 +213,9 @@ class VendorPaymentApprovalUpdateWizard(models.TransientModel):
             lines = [
                 (5, 0, 0),
                 (0, 0, {'user_id': self.approver_1_id.id, 'approver_type': 'approver1', 'sequence': 10}),
-                (0, 0, {'user_id': self.approver_2_id.id, 'approver_type': 'approver2', 'sequence': 20}),
             ]
+            if is_two_way and self.approver_2_id:
+                lines.append((0, 0, {'user_id': self.approver_2_id.id, 'approver_type': 'approver2', 'sequence': 20}))
             target.sudo().write({'approval_line_ids': lines})
             target.message_post(
                 body=_('Approval request updated by %s. Previous approvers cancelled.') % self.env.user.name,
@@ -205,3 +225,4 @@ class VendorPaymentApprovalUpdateWizard(models.TransientModel):
 
         target._notify_next_approver()
         return {'type': 'ir.actions.act_window_close'}
+

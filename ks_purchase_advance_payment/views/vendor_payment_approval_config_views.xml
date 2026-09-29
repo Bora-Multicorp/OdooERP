@@ -1,45 +1,93 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <record id="view_vendor_payment_approval_config_list" model="ir.ui.view">
-        <field name="name">vendor.payment.approval.config.list</field>
-        <field name="model">vendor.payment.approval.config</field>
-        <field name="arch" type="xml">
-            <list string="Vendor Payment Approval Settings" editable="bottom">
-                <field name="sequence" widget="handle"/>
-                <field name="user_id" string="Approver"/>
-                <field name="approver_type" string="Approver Type"/>
-            </list>
-        </field>
-    </record>
     <record id="view_vendor_payment_approval_config_form" model="ir.ui.view">
         <field name="name">vendor.payment.approval.config.form</field>
         <field name="model">vendor.payment.approval.config</field>
         <field name="arch" type="xml">
             <form string="Vendor Payment Approval Settings">
                 <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="Global Vendor Payment Approval Configuration"/>
+                        </h1>
+                    </div>
+                    <div class="alert alert-info" role="alert">
+                        <strong>Global Configuration:</strong> This configuration applies to all companies. Only one active configuration is allowed.
+                    </div>
                     <group>
-                        <field name="sequence"/>
-                        <field name="user_id" string="Approver"/>
-                        <field name="approver_type"/>
-                        <field name="active"/>
+                        <group string="Approval Mode">
+                            <field name="ks_approval_mode" widget="radio"/>
+                        </group>
+                        <group>
+                            <field name="active" widget="boolean_toggle"/>
+                        </group>
                     </group>
+                    <notebook>
+                        <page string="Approvers" name="approvers">
+                            <group>
+                                <group string="Approver 1 Users">
+                                    <field name="ks_approver_1_ids" 
+                                           widget="many2many_tags"
+                                           options="{'no_create': True}"
+                                           context="{'show_email': True}"
+                                           placeholder="Select users for Approval 1"/>
+                                </group>
+                                <group string="Approver 2 Users" 
+                                       invisible="ks_approval_mode == 'single'">
+                                    <field name="ks_approver_2_ids" 
+                                           widget="many2many_tags"
+                                           options="{'no_create': True}"
+                                           context="{'show_email': True}"
+                                           placeholder="Select users for Approval 2"/>
+                                </group>
+                            </group>
+                            <div class="alert alert-info" role="alert" 
+                                 invisible="ks_approval_mode != 'single'">
+                                <strong>Single Level Approval:</strong> Only one approver from Approver 1 list is required to confirm Vendor Payment Requests.
+                                Users will select an approver when requesting approval.
+                            </div>
+                            <div class="alert alert-info" role="alert" 
+                                 invisible="ks_approval_mode != 'two_way'">
+                                <strong>Two Level Approval:</strong> Both Approver 1 and Approver 2 must approve before Vendor Payment Requests are confirmed.
+                                Users will select approvers from each list when requesting approval.
+                                Approver 2 cannot approve until Approver 1 has approved.
+                            </div>
+                        </page>
+                    </notebook>
                 </sheet>
             </form>
         </field>
     </record>
+
+    <record id="view_vendor_payment_approval_config_list" model="ir.ui.view">
+        <field name="name">vendor.payment.approval.config.list</field>
+        <field name="model">vendor.payment.approval.config</field>
+        <field name="arch" type="xml">
+            <list string="Vendor Payment Approval Settings">
+                <field name="name"/>
+                <field name="active" widget="boolean_toggle"/>
+                <field name="ks_approval_mode"/>
+                <field name="ks_approver_1_ids" widget="many2many_tags"/>
+                <field name="ks_approver_2_ids" widget="many2many_tags" optional="show"/>
+            </list>
+        </field>
+    </record>
+
     <record id="action_vendor_payment_approval_config" model="ir.actions.act_window">
         <field name="name">Vendor Payment Approval Settings</field>
         <field name="res_model">vendor.payment.approval.config</field>
         <field name="view_mode">list,form</field>
+        <field name="groups_id" eval="[(4, ref('purchase.group_purchase_manager'))]"/>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
                 No approvers configured.
             </p>
             <p>
-                Configure one Approver 1 and one Approver 2. Both must approve each payment request in sequence.
+                Configure Vendor Payment Approval Workflow. You can choose between single level approval or require both Approver 1 and Approver 2 to approve.
             </p>
         </field>
     </record>
+
     <menuitem id="menu_vendor_payment_approval_config"
               name="Vendor Payment Approval Settings"
               parent="purchase.menu_purchase_config"
@@ -47,3 +95,4 @@
               groups="purchase.group_purchase_manager"
               sequence="50"/>
 </odoo>
+
