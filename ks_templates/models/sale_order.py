@@ -23,6 +23,7 @@ class SaleOrder(models.Model):
 
     # Additional sale order information fields
     ks_other_reference = fields.Char(string='Other Reference(s)')
+    ks_additional_terms_of_delivery = fields.Char(string='Additional Terms of Delivery')
     ks_despatched_through = fields.Char(string='Despatch through')
     ks_city_port_of_discharge = fields.Char(string='Destination')
     ks_delivery_note = fields.Char(string='Delivery Note')
