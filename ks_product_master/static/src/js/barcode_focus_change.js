@@ -111,40 +111,95 @@ document.addEventListener(
     const input = e.target;
 
     if (
-      e.key === "Enter" &&
+      (e.key === "Enter" || (e.key === "Tab" && !e.shiftKey)) &&
+      input &&
       input.tagName === "INPUT" &&
-      input.closest("tr.o_data_row") &&
-      input.classList.contains("o_input")
+      input.closest("tr.o_data_row")
     ) {
       const row = input.closest("tr.o_data_row");
-      const parentFieldDiv = input.closest("div[name]");
-      const currentFieldName = parentFieldDiv?.getAttribute("name");
+      const parentCell = input.closest("[name]");
+      const currentFieldName = parentCell?.getAttribute("name") || input.getAttribute("name");
 
       if (!currentFieldName) return;
 
-      // Collect all visible editable inputs BEFORE 'quantity'
-      const inputs = Array.from(
-        row.querySelectorAll("div[name] input.o_input:not([readonly]):not([disabled])")
-      ).filter((el) => {
-        const div = el.closest("div[name]");
-        const name = div?.getAttribute("name");
-        return name !== "quantity" && el.offsetParent !== null;
-      });
+      const SERIAL_FIELDS = ["lot_name", "lot_id", "imei", "imei2"];
 
-      const currentIndex = inputs.indexOf(input);
+      // If Enter or Tab is pressed inside a serial/lot/IMEI input:
+      if (SERIAL_FIELDS.includes(currentFieldName)) {
+        // Collect all visible serial inputs in current row (excluding made_in_country_id, quantity, etc.)
+        const serialInputs = Array.from(
+          row.querySelectorAll("input:not([readonly]):not([disabled])")
+        ).filter((el) => {
+          const cell = el.closest("[name]");
+          const name = cell?.getAttribute("name") || el.getAttribute("name");
+          return SERIAL_FIELDS.includes(name) && el.offsetParent !== null;
+        });
 
-      // If current field is the last one before quantity, let Odoo handle next row
-      if (currentIndex === -1 || currentIndex === inputs.length - 1) {
-        return; // Allow default behavior (Odoo saves and adds new row)
+        const currentIndex = serialInputs.indexOf(input);
+        if (currentIndex !== -1) {
+          e.preventDefault();
+          e.stopPropagation();
+
+          if (currentIndex < serialInputs.length - 1) {
+            // Move to next serial field in the SAME row (e.g. lot_name -> imei -> imei2)
+            const nextInput = serialInputs[currentIndex + 1];
+            nextInput.focus();
+            nextInput.select?.();
+          } else {
+            // Last serial field in row reached: jump to NEXT row's lot_name field
+            const tbody = row.parentElement;
+            const allRows = Array.from(tbody.querySelectorAll("tr.o_data_row"));
+            const currentRowIndex = allRows.indexOf(row);
+            const nextRow = allRows[currentRowIndex + 1];
+
+            const focusLotOnRow = (targetRow) => {
+              const targetInput = targetRow.querySelector(
+                "[name='lot_name'] input, [name='lot_id'] input, input[name='lot_name'], input[name='lot_id']"
+              );
+              if (targetInput) {
+                targetInput.focus();
+                targetInput.select?.();
+                return true;
+              }
+              const targetCell = targetRow.querySelector("[name='lot_name'], [name='lot_id']");
+              if (targetCell) {
+                targetCell.click();
+                setTimeout(() => {
+                  const inp = targetRow.querySelector(
+                    "[name='lot_name'] input, [name='lot_id'] input, input[name='lot_name'], input[name='lot_id']"
+                  );
+                  if (inp) {
+                    inp.focus();
+                    inp.select?.();
+                  }
+                }, 50);
+                return true;
+              }
+              return false;
+            };
+
+            if (nextRow && focusLotOnRow(nextRow)) {
+              return;
+            }
+
+            // On the last row: click 'Add a line' button to create new row and focus lot_name
+            const listContainer = row.closest("table, .o_list_renderer, .o_field_widget") || document;
+            const addLineBtn = listContainer.querySelector(
+              ".o_field_x2many_list_row_add a, .o_field_x2many_list_row_add button, tr.o_field_x2many_list_row_add a, .o_list_button_add, a.o_field_x2many_list_row_add"
+            );
+            if (addLineBtn) {
+              addLineBtn.click();
+              setTimeout(() => {
+                const updatedRows = Array.from(tbody.querySelectorAll("tr.o_data_row"));
+                const newRow = updatedRows[updatedRows.length - 1];
+                if (newRow) {
+                  focusLotOnRow(newRow);
+                }
+              }, 150);
+            }
+          }
+        }
       }
-
-      // Prevent default Enter & move to next input
-      e.preventDefault();
-      e.stopPropagation();
-
-      const nextInput = inputs[currentIndex + 1];
-      nextInput.focus();
-      nextInput.select?.();
     }
   },
   true
