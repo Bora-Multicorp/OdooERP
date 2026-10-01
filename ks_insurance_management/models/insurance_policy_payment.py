@@ -270,44 +270,46 @@ class InsurancePolicyPayment(models.Model):
 
     def _notify_banking_team(self, payment):
         """Assign a To-Do activity to every user in the accounting group."""
-        banking_group = self.env.ref('account.group_account_user', raise_if_not_found=False)
-        users = banking_group.users if banking_group else self.env['res.users']
-        if not users:
-            users = self.env.ref('base.user_admin')
-
-        label = 'Top-up' if self.payment_type == 'topup' else 'Premium'
-        policy_ref = self.policy_id.policy_number
-        pay_ref = payment.name or getattr(payment, 'memo', '') or self.name
-        note = (
-            f'Insurance {label.lower()} request <b>{self.name}</b> has been approved.<br/>'
-            f'Policy: <b>{policy_ref}</b><br/>'
-            f'Please post the following draft payment:<br/>'
-            f'• {pay_ref} (\u20b9{self.amount:,.2f})<br/>'
-            f'Then click <b>Mark as Paid</b> on the request.'
-        )
-        for user in users:
-            self.activity_schedule(
-                'mail.mail_activity_data_todo',
-                user_id=user.id,
-                summary=f'Insurance {label} Payment Ready to Post — {self.name}',
-                note=note,
-            )
+        # banking_group = self.env.ref('account.group_account_user', raise_if_not_found=False)
+        # users = banking_group.users if banking_group else self.env['res.users']
+        # if not users:
+        #     users = self.env.ref('base.user_admin')
+        #
+        # label = 'Top-up' if self.payment_type == 'topup' else 'Premium'
+        # policy_ref = self.policy_id.policy_number
+        # pay_ref = payment.name or getattr(payment, 'memo', '') or self.name
+        # note = (
+        #     f'Insurance {label.lower()} request <b>{self.name}</b> has been approved.<br/>'
+        #     f'Policy: <b>{policy_ref}</b><br/>'
+        #     f'Please post the following draft payment:<br/>'
+        #     f'• {pay_ref} (\u20b9{self.amount:,.2f})<br/>'
+        #     f'Then click <b>Mark as Paid</b> on the request.'
+        # )
+        # for user in users:
+        #     self.activity_schedule(
+        #         'mail.mail_activity_data_todo',
+        #         user_id=user.id,
+        #         summary=f'Insurance {label} Payment Ready to Post — {self.name}',
+        #         note=note,
+        #     )
+        pass
 
     def _notify_insurance_team(self):
         """Notify insurance users that payment is complete."""
-        ins_group = self.env.ref(
-            'ks_insurance_management.group_insurance_user', raise_if_not_found=False)
-        if not ins_group:
-            return
-        label = 'Top-up' if self.payment_type == 'topup' else 'Premium'
-        policy_ref = self.policy_id.policy_number
-        for user in ins_group.users.filtered(lambda u: u.id != self.requested_by.id):
-            self.activity_schedule(
-                'mail.mail_activity_data_todo',
-                user_id=user.id,
-                summary=f'Insurance {label} Payment Completed — {self.name}',
-                note=(
-                    f'{label} payment <b>{self.name}</b> for policy <b>{policy_ref}</b> '
-                    f'has been fully processed. Amount: \u20b9{self.amount:,.2f}'
-                ),
-            )
+        # ins_group = self.env.ref(
+        #     'ks_insurance_management.group_insurance_user', raise_if_not_found=False)
+        # if not ins_group:
+        #     return
+        # label = 'Top-up' if self.payment_type == 'topup' else 'Premium'
+        # policy_ref = self.policy_id.policy_number
+        # for user in ins_group.users.filtered(lambda u: u.id != self.requested_by.id):
+        #     self.activity_schedule(
+        #         'mail.mail_activity_data_todo',
+        #         user_id=user.id,
+        #         summary=f'Insurance {label} Payment Completed — {self.name}',
+        #         note=(
+        #             f'{label} payment <b>{self.name}</b> for policy <b>{policy_ref}</b> '
+        #             f'has been fully processed. Amount: \u20b9{self.amount:,.2f}'
+        #         ),
+        #     )
+        pass
