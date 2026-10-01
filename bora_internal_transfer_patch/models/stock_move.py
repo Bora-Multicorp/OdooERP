@@ -280,20 +280,25 @@ class StockMoveLine(models.Model):
             # If both IMEI 1 and IMEI 2 are completely empty (unpopulated/un-synced line), skip mandatory IMEI enforcement
             if not record.imei and not record.imei2:
                 continue
-            if record.move_id.show_IMEI_field2:
+            is_dual_mandatory = bool(
+                record.move_id.show_IMEI_field2 and getattr(record.move_id, 'is_dual_sim_mandatory', getattr(record.move_id, 'dual_sim_mode', 'on') == 'on')
+            )
+            if is_dual_mandatory:
                 if not record.imei or not record.imei2:
                     raise ValidationError(_('Please enter both IMEI numbers.'))
             elif record.move_id.show_IMEI_field:
                 if not record.imei:
                     raise ValidationError(_('Please enter IMEI number.'))
 
-            if record.move_id.show_IMEI_field2:
+            if is_dual_mandatory:
                 if not record.imei.isdigit() or len(record.imei) != 15 or not record.imei2.isdigit() or len(
                         record.imei2) != 15:
                     raise ValidationError(_('IMEI number must be a 15-digit number.'))
             elif record.move_id.show_IMEI_field:
                 if not record.imei.isdigit() or len(record.imei) != 15:
                     raise ValidationError(_('IMEI number must be a 15-digit number.'))
+                if record.imei2 and (not record.imei2.isdigit() or len(record.imei2) != 15):
+                    raise ValidationError(_('IMEI 2 number must be a 15-digit number.'))
 
             if record.move_id.show_IMEI_field2:
                 d_line1 = [('company_id', '=', record.company_id.id), ('imei', '=', record.imei), ('id', '!=', record.id)]
@@ -669,20 +674,25 @@ class StockMoveLine(models.Model):
             # If both IMEI 1 and IMEI 2 are completely empty (unpopulated/un-synced line), skip mandatory IMEI enforcement
             if not record.imei and not record.imei2:
                 continue
-            if record.move_id.show_IMEI_field2:
+            is_dual_mandatory = bool(
+                record.move_id.show_IMEI_field2 and getattr(record.move_id, 'is_dual_sim_mandatory', getattr(record.move_id, 'dual_sim_mode', 'on') == 'on')
+            )
+            if is_dual_mandatory:
                 if not record.imei or not record.imei2:
                     raise ValidationError(_('Please enter both IMEI numbers.'))
             elif record.move_id.show_IMEI_field:
                 if not record.imei:
                     raise ValidationError(_('Please enter IMEI number.'))
 
-            if record.move_id.show_IMEI_field2:
+            if is_dual_mandatory:
                 if not record.imei.isdigit() or len(record.imei) != 15 or not record.imei2.isdigit() or len(
                         record.imei2) != 15:
                     raise ValidationError(_('IMEI number must be a 15-digit number.'))
             elif record.move_id.show_IMEI_field:
                 if not record.imei.isdigit() or len(record.imei) != 15:
                     raise ValidationError(_('IMEI number must be a 15-digit number.'))
+                if record.imei2 and (not record.imei2.isdigit() or len(record.imei2) != 15):
+                    raise ValidationError(_('IMEI 2 number must be a 15-digit number.'))
 
             if record.move_id.show_IMEI_field2:
                 d_line1 = [('company_id', '=', record.company_id.id), ('imei', '=', record.imei), ('id', '!=', record.id)]
