@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <record id="view_stock_move_generate_imei_wizard_form" model="ir.ui.view">
+            <field name="name">stock.move.generate.imei.wizard.form</field>
+            <field name="model">stock.move.generate.imei.wizard</field>
+            <field name="arch" type="xml">
+                <form string="Generate IMEI">
+                    <group>
+                        <field name="move_id" invisible="1"/>
+                        <field name="is_dual_sim" invisible="1"/>
+                        <field name="prefix" string="Prefix Number" placeholder="Leave empty for auto-sequence (15 digits), or enter custom prefix e.g. 86420104"/>
+                    </group>
+                    <group string="Generate For">
+                        <field name="is_imei1" string="IMEI 1"/>
+                        <field name="is_imei2" string="IMEI 2" invisible="not is_dual_sim"/>
+                    </group>
+                    <footer>
+                        <button name="action_generate" string="Generate" type="object" class="btn-primary"/>
+                        <button string="Cancel" class="btn-secondary" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+    </data>
+</odoo>
