@@ -9,6 +9,15 @@
                     <field name="show_IMEI_field" invisible="1"/>
                     <field name="show_IMEI_field2" invisible="1"/>
                     <field name="hide_imei_fields" invisible="1"/>
+                    <field name="is_product_dual_sim" invisible="1"/>
+                    <field name="dual_sim_mode" invisible="1"/>
+                </xpath>
+                <xpath expr="//group/group[2]" position="inside">
+                    <field name="is_dual_sim_mandatory" string="Is Dual SIM Mandatory" widget="boolean_toggle"
+                           invisible="not is_product_dual_sim"/>
+                </xpath>
+                <xpath expr="//widget[@name='generate_serials']" position="after">
+                    <button name="action_open_generate_imei_wizard" type="object" string="Generate IMEI" class="btn btn-link" invisible="not hide_imei_fields"/>
                 </xpath>
                 <xpath expr="//widget[@name='import_lots']" position="after">
                     <button name="action_open_upload_csv_wizard" type="object" string="Upload File" class="btn btn-link" invisible="not display_import_lot"/>
@@ -49,7 +58,8 @@
                     <field name="imei" placeholder="IMEI No."
                            column_invisible="not parent.hide_imei_fields or not parent.show_IMEI_field" required="1"/>
                     <field name="imei2" placeholder="IMEI No."
-                           column_invisible="not parent.hide_imei_fields or not parent.show_IMEI_field2" required="1"/>
+                           column_invisible="not parent.hide_imei_fields or not parent.show_IMEI_field2"
+                           required="parent.is_dual_sim_mandatory"/>
                     <!-- Made In Country — shown in both the picking Detailed Ops tab and
                          the Stock Move popup. optional="show" means visible by default;
                          users can hide it via the column toggle menu. -->
