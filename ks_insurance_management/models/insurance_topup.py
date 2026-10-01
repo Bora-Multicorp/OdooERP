@@ -282,22 +282,23 @@ class InsuranceTopup(models.Model):
 
     def _notify_banking_team(self, payment):
         """Create a To-Do activity for every user in the accounting group."""
-        banking_group = self.env.ref('account.group_account_user', raise_if_not_found=False)
-        users = banking_group.users if banking_group else self.env['res.users']
-        if not users:
-            users = self.env.ref('base.user_admin')
-
-        pay_ref = payment.name or getattr(payment, 'memo', '') or self.name
-        note = (
-            f'Top-up request <b>{self.name}</b> has been approved.<br/>'
-            f'Policy: <b>{self.policy_id.policy_number}</b><br/>'
-            f'Please post the following draft payment and then notify the requestor:<br/>'
-            f'• {pay_ref} (\u20b9{self.amount:,.2f})'
-        )
-        for user in users:
-            self.activity_schedule(
-                'mail.mail_activity_data_todo',
-                user_id=user.id,
-                summary=f'Top-up Payment Ready to Post — {self.name}',
-                note=note,
-            )
+        # banking_group = self.env.ref('account.group_account_user', raise_if_not_found=False)
+        # users = banking_group.users if banking_group else self.env['res.users']
+        # if not users:
+        #     users = self.env.ref('base.user_admin')
+        #
+        # pay_ref = payment.name or getattr(payment, 'memo', '') or self.name
+        # note = (
+        #     f'Top-up request <b>{self.name}</b> has been approved.<br/>'
+        #     f'Policy: <b>{self.policy_id.policy_number}</b><br/>'
+        #     f'Please post the following draft payment and then notify the requestor:<br/>'
+        #     f'• {pay_ref} (\u20b9{self.amount:,.2f})'
+        # )
+        # for user in users:
+        #     self.activity_schedule(
+        #         'mail.mail_activity_data_todo',
+        #         user_id=user.id,
+        #         summary=f'Top-up Payment Ready to Post — {self.name}',
+        #         note=note,
+        #     )
+        pass
