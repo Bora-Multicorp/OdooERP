@@ -1201,6 +1201,16 @@ class ContactKYCApproval(models.Model):
                 * confirmed → approval notifications
                 * rejected → rejection activities
         """
+        for single_att_field in ['shop_photos', 'shop_videos']:
+            if single_att_field in vals and isinstance(vals[single_att_field], list):
+                new_cmds = []
+                for cmd in vals[single_att_field]:
+                    if isinstance(cmd, (list, tuple)) and cmd[0] == 6 and len(cmd) > 2 and isinstance(cmd[2], list) and len(cmd[2]) > 1:
+                        new_cmds.append((6, cmd[1], [cmd[2][-1]]))
+                    else:
+                        new_cmds.append(cmd)
+                vals[single_att_field] = new_cmds
+
         res = super().write(vals)
 
         # --- Attachments Management ---
