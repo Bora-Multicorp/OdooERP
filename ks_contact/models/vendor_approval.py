@@ -225,6 +225,7 @@ class ContactKYCApproval(models.Model):
         ('Pvt Ltd Co.', 'Pvt Ltd Co.'),
         ('LLP', 'LLP'),
         ('HUF(Karta)', 'HUF(Karta)'),
+        ('Public Limited', 'Public Limited'),
         ('Other', 'Other'),
     ], string="Constitution of Business")
 
