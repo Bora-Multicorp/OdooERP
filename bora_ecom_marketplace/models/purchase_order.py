@@ -28,6 +28,10 @@ class PurchaseOrder(models.Model):
         index=True,
         help="Technical flag indicating if this Purchase Order is identified as an E-Commerce PO.",
     )
+    purpose = fields.Selection(
+        string='Purpose',
+        selection=[('purchase', 'Purchase'), ('return', 'Return'),('ecommerce', 'E-Commerce')]
+    )
 
     @api.depends('ecom_id', 'ecom_id.name', 'ecom_id.is_ecommerce')
     def _compute_is_ecom_po(self):
