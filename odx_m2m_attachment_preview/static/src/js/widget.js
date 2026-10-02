@@ -16,6 +16,7 @@ export class Many2ManyBinaryField2 extends Component {
     static props = {
         ...standardFieldProps,
         acceptedFileExtensions: { type: String, optional: true },
+        numberOfFiles: { type: Number, optional: true },
         className: { type: String, optional: true },
     };
 
@@ -376,7 +377,17 @@ export class Many2ManyBinaryField2 extends Component {
         return file.name.replace(/^.*\./, "");
     }
 
-     async onFileUploaded(files) {
+    get isSingle() {
+        const isKycApproval = this.props.record && this.props.record.resModel === 'res.partner.kyc.approval';
+        const isShopMedia = ['shop_photos', 'shop_videos'].includes(this.props.name);
+        return Boolean(isKycApproval && isShopMedia);
+    }
+
+    get multiUpload() {
+        return !this.isSingle;
+    }
+
+    async onFileUploaded(files) {
         for (const file of files) {
             if (file.error) {
                 return this.notification.add(file.error, {
@@ -384,7 +395,26 @@ export class Many2ManyBinaryField2 extends Component {
                     type: "danger",
                 });
             }
-            await this.operations.saveRecord([file.id]);
+        }
+        if (this.isSingle) {
+            const list = this.props.record.data[this.props.name];
+            const currentRecords = [...(list && list.records ? list.records : [])];
+            const file = files[files.length - 1];
+            if (file && !file.error) {
+                if (list && list.addAndRemove) {
+                    const currentIds = currentRecords.map((r) => r.resId).filter(Boolean);
+                    await list.addAndRemove({ add: [file.id], remove: currentIds });
+                } else {
+                    for (const rec of currentRecords) {
+                        await this.operations.removeRecord(rec);
+                    }
+                    await this.operations.saveRecord([file.id]);
+                }
+            }
+        } else {
+            for (const file of files) {
+                await this.operations.saveRecord([file.id]);
+            }
         }
     }
 
@@ -404,6 +434,11 @@ export const many2ManyBinaryField2 = {
             name: "accepted_file_extensions",
             type: "string",
         },
+        {
+            label: _t("Number of files"),
+            name: "number_of_files",
+            type: "number",
+        },
     ],
     supportedTypes: ["many2many"],
     isEmpty: () => false,
@@ -413,6 +448,7 @@ export const many2ManyBinaryField2 = {
     ],
     extractProps: ({ attrs, options }) => ({
         acceptedFileExtensions: options.accepted_file_extensions,
+        numberOfFiles: options.number_of_files,
         className: attrs.class,
     }),
 };
