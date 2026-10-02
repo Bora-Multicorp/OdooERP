@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="res_config_settings_view_form_purchase_inherit_terms" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.inherit.purchase.terms</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="purchase.res_config_settings_view_form_purchase"/>
+        <field name="arch" type="xml">
+            <xpath expr="//setting[@id='auto_receipt_reminder']" position="after">
+                <setting id="use_purchase_terms" company_dependent="1" help="Add your terms &amp; conditions at the bottom of orders/purchase requests">
+                    <field name="use_purchase_terms"/>
+                    <div class="content-group" invisible="not use_purchase_terms">
+                        <div class="mt16">
+                            <field name="purchase_terms_type" class="o_light_label" widget="radio"/>
+                            <div>
+                                <field name="purchase_terms"
+                                       invisible="purchase_terms_type == 'html'"
+                                       class="oe_account_terms mt-5 w-100"
+                                       placeholder="Insert your terms &amp; conditions here..."/>
+                            </div>
+                            <div class="mt8" invisible="purchase_terms_type != 'html'">
+                                <button name="action_update_purchase_terms" icon="oi-arrow-right" type="object" string="Update Terms" class="btn-link"/>
+                            </div>
+                            <field name="purchase_preview_ready" invisible="1"/>
+                            <div class="mt4 ms-1" invisible="not purchase_preview_ready">
+                                <a class="btn-link" href="/purchase-terms" role="button">
+                                    <i class="oi oi-arrow-right"/>
+                                    Preview
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </setting>
+            </xpath>
+        </field>
+    </record>
+</odoo>

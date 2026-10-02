@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <template id="purchase_terms_conditions_setting_banner" name="Purchase Terms and Conditions Setting Banner">
+        <div id="terms_conditions" t-ignore="true" class="text-center">
+            <span>This is a preview of your Terms &amp; Conditions.</span>
+            <a t-att-href="backend_url"><i class="oi oi-arrow-right me-1"/>Back to settings</a>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </template>
+
+    <template id="purchase_terms_conditions_page" name="Purchase Terms &amp; Conditions">
+        <t t-call="web.frontend_layout">
+            <t t-set="o_portal_fullwidth_alert" groups="purchase.group_purchase_manager">
+                <t t-call="bora_po_terms_condition.purchase_terms_conditions_setting_banner">
+                    <t t-set="backend_url" t-value="'/odoo/action-purchase.action_purchase_configuration'"/>
+                </t>
+            </t>
+            <div class="oe_structure" id="oe_structure_purchase_terms_conditions"/>
+            <div class="container oe_website_terms_conditions">
+                <div id="o_purchase_terms_conditions">
+                    <div t-field="company.purchase_terms_html"/>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <template id="purchase_default_terms_and_conditions">
+        <div>
+            <h1>STANDARD TERMS AND CONDITIONS OF PURCHASE</h1>
+            <p>You should update this document to reflect your T&amp;C.</p>
+            <p>Below text serves as a suggestion and doesn’t engage our responsibility.</p>
+            <ol>
+                <li>
+                    The vendor explicitly accepts these terms and conditions upon acknowledgment or fulfillment of the Purchase Order. In order to be valid, any derogation must be expressly agreed to in advance in writing by <t t-out="company_name"/>.
+                </li>
+                <li>
+                    All goods and services must conform strictly to the specifications, quantities, and quality agreed upon in the Purchase Order. Non-conforming goods may be rejected at the vendor's expense.
+                </li>
+                <li>
+                    Invoices must reference the official Purchase Order number and will be settled according to agreed payment terms.
+                </li>
+                <li>
+                    The vendor warrants that all products supplied are new, merchantable, and free from defects in design, material, and workmanship.
+                </li>
+                <li>
+                    All contractual relations will be governed exclusively by <t t-out="company_country"/> law.
+                </li>
+            </ol>
+        </div>
+    </template>
+</odoo>
