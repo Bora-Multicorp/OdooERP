@@ -15,6 +15,12 @@ class AccountPayment(models.Model):
         copy=False,
         help='True when this payment is for a policy top-up (coverage increase).',
     )
+    is_renewal = fields.Boolean(
+        string='Is Renewal',
+        default=False,
+        copy=False,
+        help='True when this payment is for a policy renewal.',
+    )
     is_insurance_payment = fields.Boolean(
         string='Insurance Payment',
         default=False,
@@ -192,6 +198,12 @@ class AccountPayment(models.Model):
                     update_vals['premium'] = policy.pending_topup_premium
                     update_vals['pending_topup_premium'] = 0.0
                 policy.write(update_vals)
+            elif payment.is_renewal:
+                # Renewal payment confirmed: mark paid
+                policy.write({
+                    'payment_status': 'paid',
+                    'is_paid': True,
+                })
             else:
                 # Regular premium payment confirmed: mark paid and activate policy
                 policy.write({
