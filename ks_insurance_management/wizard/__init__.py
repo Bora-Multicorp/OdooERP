@@ -5,3 +5,5 @@ from . import insurance_payment_popup_wizard
 from . import insurance_report_wizard
 from . import insurance_policy_payment_wizard
 from . import insurance_payment_request_wizard
+from . import insurance_policy_renew_wizard
+from . import insurance_update_policy_number_wizard
