@@ -258,6 +258,26 @@ class InsurancePolicy(models.Model):
              'Marine policies require monthly/weekly sales declarations; '
              'Fire & Burglary require inventory declarations.',
     )
+    renewal_history_ids = fields.One2many(
+        'insurance.policy.renewal.history',
+        'policy_id',
+        string='Renewal History',
+        help='History of previous policy terms and renewal payments.',
+    )
+    has_pending_renewal = fields.Boolean(
+        string='Has Pending Renewal',
+        compute='_compute_has_pending_renewal',
+        help='True if there is an in-progress renewal awaiting payment or policy number update.',
+    )
+    can_update_policy_number = fields.Boolean(
+        string='Can Update Policy Number',
+        compute='_compute_can_update_policy_number',
+        help='True if the latest renewal payment is paid and fresh policy number can be entered.',
+    )
+    is_policy_number_editable = fields.Boolean(
+        string='Is Policy Number Editable',
+        compute='_compute_is_policy_number_editable',
+    )
     pending_topup_amount = fields.Float(
         string='Pending Top-up Amount',
         default=0.0,
@@ -699,6 +719,30 @@ class InsurancePolicy(models.Model):
         for rec in self:
             rec.total_premium_paid = sum(rec.payment_ids.mapped('amount'))
 
+    @api.depends('renewal_history_ids.is_policy_number_updated', 'renewal_history_ids.payment_id.state')
+    def _compute_has_pending_renewal(self):
+        for rec in self:
+            rec.has_pending_renewal = bool(
+                rec.renewal_history_ids.filtered(
+                    lambda r: not r.is_policy_number_updated and (not r.payment_id or r.payment_id.state != 'cancel')
+                )
+            )
+
+    @api.depends('renewal_history_ids.can_update_policy_no')
+    def _compute_can_update_policy_number(self):
+        for rec in self:
+            rec.can_update_policy_number = any(rec.renewal_history_ids.mapped('can_update_policy_no'))
+
+    @api.depends('state', 'can_update_policy_number', 'renewal_history_ids', 'is_paid')
+    def _compute_is_policy_number_editable(self):
+        for rec in self:
+            if rec.can_update_policy_number:
+                rec.is_policy_number_editable = True
+            elif rec.state == 'draft' and not rec.renewal_history_ids and not rec.is_paid:
+                rec.is_policy_number_editable = True
+            else:
+                rec.is_policy_number_editable = False
+
     # ── ORM overrides ────────────────────────────────────────────────────────────────────
 
     @api.model_create_multi
@@ -708,6 +752,26 @@ class InsurancePolicy(models.Model):
     # ── ORM overrides ─────────────────────────────────────────────────────────────────────
 
     def write(self, vals):
+        if 'policy_number' in vals and not self.env.context.get('from_renewal_update'):
+            for rec in self:
+                # If policy is already created/paid, only allow changing policy_number if renewal payment is paid
+                if rec.renewal_history_ids or rec.is_paid or rec.state != 'draft':
+                    if not rec.can_update_policy_number:
+                        raise UserError(
+                            "Policy Number cannot be modified directly while payment is pending. "
+                            "It can only be updated once the renewal payment is marked as 'Paid'."
+                        )
+                    # When updated directly in the field by the user:
+                    pending = rec.renewal_history_ids.filtered(lambda r: r.can_update_policy_no)[:1]
+                    if pending:
+                        pending.write({'is_policy_number_updated': True})
+                        rec.message_post(
+                            body=(
+                                f"<b>Policy Renewed:</b> Policy number updated from <b>{rec.policy_number}</b> "
+                                f"to <b>{vals['policy_number']}</b>. Previous policy details moved to Renewal History."
+                            ),
+                            subtype_xmlid='mail.mt_note',
+                        )
         # Enforce: policy cannot be set to Active state unless premium is paid.
         # This only applies to explicit state changes (not on create).
         if vals.get('state') == 'active':
@@ -829,25 +893,22 @@ class InsurancePolicy(models.Model):
         )
 
     def action_renew_policy(self):
-        """Open a new policy form pre-filled with this policy's details for renewal."""
+        """Open the renewal wizard to renew this policy in-place."""
         self.ensure_one()
-        ctx = {
-            'default_insurance_type_id': self.insurance_type_id.id,
-            'default_insurance_company_id': self.insurance_company_id.id,
-            'default_agent_id': self.agent_id.id if self.agent_id else False,
-            'default_policy_type': self.policy_type,
-            'default_floater_location_ids': [(6, 0, self.floater_location_ids.ids)],
-            'default_initial_sum_insured': self.initial_sum_insured,
-            'default_currency_id': self.currency_id.id,
-            'default_company_id': self.company_id.id,
-            'default_notes': self.notes or '',
-        }
+        if self.has_pending_renewal:
+            raise UserError(
+                "A renewal is already in progress for this policy. "
+                "Please complete the pending renewal payment and update the policy number first."
+            )
         return {
             'type': 'ir.actions.act_window',
             'name': 'Renew Policy',
-            'res_model': 'insurance.policy',
+            'res_model': 'insurance.policy.renew.wizard',
             'view_mode': 'form',
-            'context': ctx,
+            'target': 'new',
+            'context': {
+                'default_policy_id': self.id,
+            },
         }
 
     def deduct_from_balance(self, amount):
