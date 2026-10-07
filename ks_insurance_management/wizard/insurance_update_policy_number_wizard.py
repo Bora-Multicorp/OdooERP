@@ -68,8 +68,11 @@ class InsuranceUpdatePolicyNumberWizard(models.TransientModel):
 
         policy.with_context(from_renewal_update=True).write(update_vals)
 
-        # Mark renewal history row as updated
-        hist.write({'is_policy_number_updated': True})
+        # Mark renewal history row as updated and save fresh policy number
+        hist.write({
+            'is_policy_number_updated': True,
+            'new_policy_number': new_no,
+        })
 
         policy.message_post(
             body=_(
