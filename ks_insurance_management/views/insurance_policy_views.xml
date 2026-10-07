@@ -29,8 +29,8 @@
                   confirm="Mark this policy as Expired?"/>
           <field name="has_pending_renewal" invisible="1"/>
           <button name="action_renew_policy" string="Renew Policy" type="object"
-                  class="btn-success" invisible="state not in ('active', 'expired') or has_pending_renewal"/>
-          <field name="state" widget="statusbar" statusbar_visible="draft,active,expired"
+                  class="btn-success" invisible="state != 'expired'"/>
+          <field name="state" widget="statusbar" statusbar_visible="draft,active,expired,under_renewal"
                  readonly="False"/>
         </header>
         <sheet>
@@ -151,15 +151,17 @@
               <field name="renewal_history_ids" readonly="1">
                 <list create="0" delete="0">
                   <field name="expired_policy_number" string="Expired Policy No"/>
+                  <field name="new_policy_number" string="Updated Policy No" optional="show"/>
                   <field name="start_date" string="Expired Policy Start Date"/>
                   <field name="end_date" string="Expired Policy End Date"/>
                   <field name="description" string="Description"/>
                   <field name="policy_type" string="Policy Type" optional="show"/>
                   <field name="payment_id" string="Linked Payment" optional="show"/>
                   <field name="payment_state" string="Payment Status" widget="badge"
-                         decoration-success="payment_state == 'posted'"
-                         decoration-warning="payment_state in ('draft', 'in_process')"
-                         decoration-danger="payment_state == 'cancel'"/>
+                         decoration-success="payment_state in ('posted', 'paid')"
+                         decoration-info="payment_state == 'in_process'"
+                         decoration-warning="payment_state in ('draft', 'pending_approval')"
+                         decoration-danger="payment_state in ('cancel', 'canceled', 'rejected')"/>
                   <field name="can_update_policy_no" column_invisible="True"/>
                   <field name="is_policy_number_updated" column_invisible="True"/>
                   <button name="action_update_policy_number"
@@ -187,7 +189,7 @@
     <field name="name">insurance.policy.list</field>
     <field name="model">insurance.policy</field>
     <field name="arch" type="xml">
-      <list decoration-danger="state == 'expired'" decoration-success="state == 'active'" decoration-muted="state == 'draft'">
+      <list decoration-danger="state == 'expired'" decoration-success="state == 'active'" decoration-muted="state == 'draft'" decoration-warning="state == 'under_renewal'">
         <field name="policy_number"/>
         <field name="insurance_type_id"/><field name="insurance_category_id"/>
         <field name="policy_type"/><field name="insurance_company_id"/>
@@ -207,7 +209,8 @@
         <field name="state" widget="badge"
                decoration-muted="state == 'draft'"
                decoration-success="state == 'active'"
-               decoration-danger="state == 'expired'"/>
+               decoration-danger="state == 'expired'"
+               decoration-warning="state == 'under_renewal'"/>
       </list>
     </field>
   </record>
@@ -240,7 +243,8 @@
                 <strong class="text-truncate"><field name="policy_number"/></strong>
                 <field name="state" widget="badge"
                        decoration-success="state == 'active'"
-                       decoration-danger="state == 'expired'"/>
+                       decoration-danger="state == 'expired'"
+                       decoration-warning="state == 'under_renewal'"/>
               </div>
               <div class="text-muted small mb-1">
                 <field name="insurance_type_id"/>
@@ -305,6 +309,7 @@
         <field name="company_id" groups="base.group_multi_company"/>
         <filter name="active_policies" string="Active" domain="[('state','=','active')]"/>
         <filter name="expired_policies" string="Expired" domain="[('state','=','expired')]"/>
+        <filter name="under_renewal_policies" string="Under Renewal" domain="[('state','=','under_renewal')]"/>
         <separator/>
         <filter name="marine" string="Marine" domain="[('is_marine','=',True)]"/>
         <filter name="fire_burglary" string="Fire &amp; Burglary" domain="[('is_fire_burglary','=',True)]"/>
@@ -356,11 +361,13 @@
               <field name="insurance_type_id" readonly="1"/>
             </group>
             <group string="Renewal &amp; Payment">
+              <field name="new_policy_number" readonly="1" string="Updated Policy No"/>
               <field name="payment_id" readonly="1"/>
               <field name="payment_state" widget="badge"
-                     decoration-success="payment_state == 'posted'"
-                     decoration-warning="payment_state in ('draft', 'in_process')"
-                     decoration-danger="payment_state == 'cancel'"/>
+                     decoration-success="payment_state in ('posted', 'paid')"
+                     decoration-info="payment_state == 'in_process'"
+                     decoration-warning="payment_state in ('draft', 'pending_approval')"
+                     decoration-danger="payment_state in ('cancel', 'canceled', 'rejected')"/>
               <field name="renewal_premium" readonly="1"/>
               <field name="new_start_date" readonly="1"/>
               <field name="new_end_date" readonly="1"/>
@@ -396,7 +403,6 @@
               <field name="new_sum_insured" widget="monetary" options="{'currency_field': 'currency_id'}"/>
               <field name="new_start_date"/>
               <field name="new_expiry_date"/>
-              <field name="journal_id"/>
             </group>
           </group>
           <group>

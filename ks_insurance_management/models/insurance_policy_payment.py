@@ -244,10 +244,13 @@ class InsurancePolicyPayment(models.Model):
         self.ensure_one()
         policy = self.policy_id
         if self.payment_type == 'premium':
-            policy.write({
+            vals = {
                 'payment_status': 'paid',
                 'is_paid': True,
-            })
+            }
+            if policy.state == 'under_renewal':
+                vals['state'] = 'active'
+            policy.write(vals)
         elif self.payment_type == 'topup':
             old = policy.initial_sum_insured
             new = old + self.amount

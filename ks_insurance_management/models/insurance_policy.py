@@ -3,7 +3,7 @@
 import logging
 from datetime import timedelta
 
-from odoo import api, fields, models
+from odoo import api, fields, models, _
 from odoo.exceptions import UserError
 
 _logger = logging.getLogger(__name__)
@@ -177,10 +177,12 @@ class InsurancePolicy(models.Model):
         ('draft', 'Inactive'),
         ('active', 'Active'),
         ('expired', 'Expired'),
+        ('under_renewal', 'Under Renewal'),
     ], string='Status', default='draft', tracking=True,
         help='Inactive: policy created but premium not yet paid.\n'
              'Active: policy is valid and in force (set automatically after payment).\n'
-             'Expired: policy has passed its expiry date or was manually expired.',
+             'Expired: policy has passed its expiry date or was manually expired.\n'
+             'Under Renewal: policy renewal initiated, awaiting renewal payment and policy number update.',
     )
     payment_status = fields.Selection([
         ('draft', 'Draft'),
@@ -431,8 +433,10 @@ class InsurancePolicy(models.Model):
                 "Please configure one in Accounting → Configuration → Journals."
             )
 
+        is_renewal = bool(self.state == 'under_renewal' or self.has_pending_renewal)
+        payment_type_label = 'Top-up' if is_topup else ('Renewal Premium' if is_renewal else 'Premium')
         payment_label = (
-            f"Insurance {'Top-up' if is_topup else 'Premium'} — "
+            f"Insurance {payment_type_label} — "
             f"{self.policy_number}"
         )
         payment = self.env['account.payment'].create({
@@ -445,6 +449,7 @@ class InsurancePolicy(models.Model):
             'currency_id': self.currency_id.id,
             'is_insurance_payment': True,
             'is_topup': is_topup,
+            'is_renewal': is_renewal,
             'insurance_policy_id': self.id,
             # Populate insurance details from the linked policy
             'ins_company_id': self.company_id.id,
@@ -458,7 +463,15 @@ class InsurancePolicy(models.Model):
             'ins_floater_location_ids': [(6, 0, self.floater_location_ids.ids)],
         })
 
+        if is_renewal:
+            pending_hist = self.renewal_history_ids.filtered(
+                lambda r: not r.is_policy_number_updated and not r.payment_id
+            )
+            if pending_hist:
+                pending_hist[:1].payment_id = payment.id
+
         self.write({
+            'payment_ids': [(4, payment.id)],
             'payment_status': 'approved',
             'pending_topup_approver_id': False,
             'pending_payment_approver_id': False,
@@ -714,11 +727,11 @@ class InsurancePolicy(models.Model):
         for rec in self:
             rec.total_premium_paid = sum(rec.payment_ids.mapped('amount'))
 
-    @api.depends('renewal_history_ids.is_policy_number_updated', 'renewal_history_ids.payment_id.state')
+    @api.depends('state', 'renewal_history_ids.is_policy_number_updated', 'renewal_history_ids.payment_id.state')
     def _compute_has_pending_renewal(self):
         for rec in self:
             rec.has_pending_renewal = bool(
-                rec.renewal_history_ids.filtered(
+                rec.state == 'under_renewal' or rec.renewal_history_ids.filtered(
                     lambda r: not r.is_policy_number_updated and (not r.payment_id or r.payment_id.state != 'cancel')
                 )
             )
@@ -754,12 +767,17 @@ class InsurancePolicy(models.Model):
                     if not rec.can_update_policy_number:
                         raise UserError(
                             "Policy Number cannot be modified directly while payment is pending. "
-                            "It can only be updated once the renewal payment is marked as 'Paid'."
+                            "It can only be updated once the renewal payment is in 'In Process' or 'Paid' status."
                         )
                     # When updated directly in the field by the user:
                     pending = rec.renewal_history_ids.filtered(lambda r: r.can_update_policy_no)[:1]
                     if pending:
-                        pending.write({'is_policy_number_updated': True})
+                        pending.write({
+                            'is_policy_number_updated': True,
+                            'new_policy_number': vals['policy_number'],
+                        })
+                        if rec.state == 'under_renewal':
+                            vals['state'] = 'active'
                         rec.message_post(
                             body=(
                                 f"<b>Policy Renewed:</b> Policy number updated from <b>{rec.policy_number}</b> "
@@ -767,6 +785,12 @@ class InsurancePolicy(models.Model):
                             ),
                             subtype_xmlid='mail.mt_note',
                         )
+        # When payment is marked as paid on an under_renewal policy, move it to active stage
+        if (vals.get('is_paid') or vals.get('payment_status') == 'paid') and 'state' not in vals:
+            for rec in self:
+                if rec.state == 'under_renewal':
+                    vals['state'] = 'active'
+
         # Enforce: policy cannot be set to Active state unless premium is paid.
         # This only applies to explicit state changes (not on create).
         if vals.get('state') == 'active':
@@ -780,10 +804,19 @@ class InsurancePolicy(models.Model):
                     )
         return super().write(vals)
 
+    def read(self, fields=None, load='_classic_read'):
+        if not self.env.context.get('in_auto_activate'):
+            paid_renewals = self.filtered(lambda r: r.state == 'under_renewal' and r.is_paid)
+            if paid_renewals:
+                paid_renewals.sudo().with_context(in_auto_activate=True).write({'state': 'active'})
+        return super().read(fields=fields, load=load)
+
     # ── Actions ──────────────────────────────────────────────────────────────────────────
 
     def action_mark_expired(self):
         for rec in self:
+            if rec.state != 'active':
+                raise UserError(_("Only active policies can be marked as expired."))
             rec.state = 'expired'
             # sum_insured and balance_sum_insured are computed fields;
             # switching state to 'expired' causes them to return their zero/fallback values.
@@ -890,10 +923,10 @@ class InsurancePolicy(models.Model):
     def action_renew_policy(self):
         """Open the renewal wizard to renew this policy in-place."""
         self.ensure_one()
-        if self.has_pending_renewal:
+        if self.state == 'under_renewal' or self.has_pending_renewal:
             raise UserError(
-                "A renewal is already in progress for this policy. "
-                "Please complete the pending renewal payment and update the policy number first."
+                _("A renewal is already in progress for this policy. "
+                  "Please update the policy number for the pending renewal first before creating a new renewal.")
             )
         return {
             'type': 'ir.actions.act_window',
