@@ -68,13 +68,18 @@ class InsurancePolicyRenewalHistory(models.Model):
         string='Linked Payment',
         copy=False,
     )
-    payment_state = fields.Selection([
-        ('draft', 'Draft'),
-        ('in_process', 'In Process'),
-        ('posted', 'Paid'),
-        ('cancel', 'Cancelled'),
-    ], string='Payment Status', compute='_compute_payment_state', store=True, readonly=True)
+    payment_state = fields.Selection(
+        related='payment_id.state',
+        string='Payment Status',
+        store=True,
+        readonly=True,
+    )
 
+    new_policy_number = fields.Char(
+        string='Updated Policy No',
+        copy=False,
+        help='Fresh policy number assigned after renewal.',
+    )
     is_policy_number_updated = fields.Boolean(
         string='Policy Number Updated',
         default=False,
@@ -86,6 +91,16 @@ class InsurancePolicyRenewalHistory(models.Model):
         compute='_compute_can_update_policy_no',
     )
 
+    def read(self, fields=None, load='_classic_read'):
+        if not self.env.context.get('in_auto_populate_new_no'):
+            for rec in self:
+                if rec.is_policy_number_updated and not rec.new_policy_number and rec.policy_id:
+                    if rec.policy_id.policy_number != rec.expired_policy_number:
+                        rec.sudo().with_context(in_auto_populate_new_no=True).write({
+                            'new_policy_number': rec.policy_id.policy_number
+                        })
+        return super().read(fields=fields, load=load)
+
     @api.depends('insurance_type_id', 'policy_id', 'policy_id.insurance_type_id')
     def _compute_description(self):
         for rec in self:
@@ -95,11 +110,6 @@ class InsurancePolicyRenewalHistory(models.Model):
                 rec.description = rec.policy_id.insurance_type_id.name
             else:
                 rec.description = False
-
-    @api.depends('payment_id', 'payment_id.state')
-    def _compute_payment_state(self):
-        for rec in self:
-            rec.payment_state = rec.payment_id.state if rec.payment_id else False
 
     @api.depends(
         'is_policy_number_updated',
@@ -114,12 +124,14 @@ class InsurancePolicyRenewalHistory(models.Model):
                 rec.can_update_policy_no = False
                 continue
 
-            # Linked payment must be in 'Paid' status ('posted' in account.payment)
+            # Linked payment must be in 'In Process' or 'Paid' status ('in_process', 'posted', 'paid' in account.payment)
             if rec.payment_id:
-                rec.can_update_policy_no = (rec.payment_id.state == 'posted')
+                rec.can_update_policy_no = (rec.payment_id.state in ('in_process', 'posted', 'paid'))
             else:
                 rec.can_update_policy_no = bool(
-                    rec.policy_id and (rec.policy_id.payment_status == 'paid' or rec.policy_id.is_paid)
+                    rec.policy_id and (
+                        rec.policy_id.payment_status in ('in_process', 'approved', 'paid') or rec.policy_id.is_paid
+                    )
                 )
 
     def action_update_policy_number(self):
@@ -128,10 +140,11 @@ class InsurancePolicyRenewalHistory(models.Model):
             if self.is_policy_number_updated:
                 raise UserError(_("The policy number for this renewal has already been updated."))
             payment_status_label = self.payment_state or (self.policy_id.payment_status if self.policy_id else 'draft')
+            status_text = payment_status_label.replace('_', ' ').title() if payment_status_label else 'Draft'
             raise UserError(_(
                 "Cannot update policy number while linked payment is in '%s' status. "
-                "Update is only allowed when payment is marked as 'Paid'."
-            ) % (payment_status_label.title() if payment_status_label else 'Draft'))
+                "Update is only allowed when payment is in 'In Process' or 'Paid' status."
+            ) % status_text)
 
         return {
             'type': 'ir.actions.act_window',

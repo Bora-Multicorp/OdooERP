@@ -61,7 +61,7 @@ class InsurancePolicyRenewWizard(models.TransientModel):
     journal_id = fields.Many2one(
         'account.journal',
         string='Payment Journal',
-        required=True,
+        required=False,
         domain="[('type', 'in', ['bank', 'cash']), ('company_id', '=', company_id)]",
         help='Bank or Cash journal for the renewal payment.',
     )
@@ -96,22 +96,16 @@ class InsurancePolicyRenewWizard(models.TransientModel):
             raise UserError(_("Sum Insured must be greater than zero."))
         if self.new_expiry_date <= self.new_start_date:
             raise UserError(_("New Expiry Date must be after New Start Date."))
-        if not self.journal_id:
-            raise UserError(_("Please select a Payment Journal."))
 
         policy = self.policy_id
 
-        # Check if there is already an active/pending renewal
-        pending = policy.renewal_history_ids.filtered(
-            lambda r: not r.is_policy_number_updated and (not r.payment_id or r.payment_id.state != 'cancel')
-        )
-        if pending:
+        if policy.state == 'under_renewal' or policy.has_pending_renewal:
             raise UserError(_(
                 "A renewal is already in progress for this policy. "
-                "Please complete the pending renewal payment and update the policy number first."
+                "Please update the policy number for the pending renewal first before creating a new renewal."
             ))
 
-        # 1. Create Renewal History record with expired policy details
+        # 1. Create Renewal History record with expired/previous policy details
         history = self.env['insurance.policy.renewal.history'].create({
             'policy_id': policy.id,
             'expired_policy_number': policy.policy_number,
@@ -127,54 +121,32 @@ class InsurancePolicyRenewWizard(models.TransientModel):
             'is_policy_number_updated': False,
         })
 
-        # 2. Insurer partner
-        partner = False
-        if policy.insurance_company_id:
-            partner = self.env['res.partner'].search([
-                ('name', '=', policy.insurance_company_id.name),
-            ], limit=1)
-            if not partner:
-                partner = self.env['res.partner'].sudo().create({
-                    'name': policy.insurance_company_id.name,
-                    'is_company': True,
-                    'supplier_rank': 1,
-                })
-
-        # 3. Create Draft account.payment
-        payment_vals = {
-            'payment_type': 'outbound',
-            'partner_type': 'supplier',
-            'partner_id': partner.id if partner else False,
-            'amount': self.renewal_premium,
-            'currency_id': policy.currency_id.id,
-            'journal_id': self.journal_id.id,
-            'date': fields.Date.today(),
-            'memo': f"Renewal Premium — {policy.policy_number}",
-            'company_id': policy.company_id.id,
-            'is_insurance_payment': True,
-            'is_renewal': True,
-            'insurance_policy_id': policy.id,
-        }
-        payment = self.env['account.payment'].create(payment_vals)
-
-        # Link payment
-        history.payment_id = payment.id
+        # 2. Update main policy: new dates, premium, sum insured, set under_renewal stage,
+        #    and mark is_paid as False till renewal payment request is paid
         policy.write({
-            'payment_ids': [(4, payment.id)],
+            'start_date': self.new_start_date,
+            'expiry_date': self.new_expiry_date,
+            'initial_sum_insured': self.new_sum_insured,
+            'premium': self.renewal_premium,
+            'state': 'under_renewal',
+            'is_paid': False,
             'payment_status': 'draft',
         })
 
         policy.message_post(
             body=_(
                 "<b>Policy Renewal Initiated:</b><br/>"
-                "• Expired Policy No: <b>%s</b><br/>"
-                "• Draft Renewal Payment: <b>%s</b> (₹%s)<br/>"
-                "• Policy details moved to <b>Renewal History</b> tab.<br/>"
-                "Policy number can be updated once the linked payment is marked as Paid."
+                "• Previous Policy No: <b>%s</b> moved to Renewal History.<br/>"
+                "• New Start Date: <b>%s</b> | New Expiry Date: <b>%s</b><br/>"
+                "• New Sum Insured: <b>₹%s</b> | Renewal Premium: <b>₹%s</b><br/>"
+                "• Policy moved to <b>Under Renewal</b> stage. Premium payment pending.<br/>"
+                "Submit payment request for approval to process payment."
             ) % (
-                policy.policy_number,
-                payment.name or 'Draft Payment',
-                f"{payment.amount:,.2f}",
+                history.expired_policy_number,
+                self.new_start_date,
+                self.new_expiry_date,
+                f"{self.new_sum_insured:,.2f}",
+                f"{self.renewal_premium:,.2f}",
             ),
             subtype_xmlid='mail.mt_note',
         )
