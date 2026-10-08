@@ -2,3 +2,5 @@
 from . import ecom_master
 from . import marketplace_master
 from . import purchase_order
+from . import stock_warehouse
+from . import stock_picking
