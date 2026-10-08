@@ -36,6 +36,39 @@ class StockMove(models.Model):
             # Mirrors product.template.is_mobile_category_selected (category or any ancestor flagged as mobile)
             move.hide_imei_fields = move.product_id.is_mobile_category_selected
 
+    is_dual_sim_mandatory = fields.Boolean(
+        string="Is Dual SIM Mandatory",
+        default=True,
+        tracking=True,
+    )
+    dual_sim_mode = fields.Selection(
+        [('on', 'On'), ('off', 'Off')],
+        string="Dual SIM",
+        compute='_compute_dual_sim_mode',
+        inverse='_inverse_dual_sim_mode',
+        tracking=True,
+    )
+
+    @api.depends('is_dual_sim_mandatory')
+    def _compute_dual_sim_mode(self):
+        for rec in self:
+            rec.dual_sim_mode = 'on' if rec.is_dual_sim_mandatory else 'off'
+
+    def _inverse_dual_sim_mode(self):
+        for rec in self:
+            rec.is_dual_sim_mandatory = (rec.dual_sim_mode == 'on')
+    is_product_dual_sim = fields.Boolean(
+        string="Is Product Dual SIM",
+        compute='_compute_is_product_dual_sim',
+    )
+
+    @api.depends('product_id', 'product_id.is_dual_sim', 'product_id.is_mobile_category_selected')
+    def _compute_is_product_dual_sim(self):
+        for rec in self:
+            rec.is_product_dual_sim = bool(
+                rec.product_id.is_mobile_category_selected and rec.product_id.is_dual_sim
+            )
+
     show_IMEI_field = fields.Boolean(string='Show IMEI Field 1', compute='_compute_show_imei_fields')
     show_IMEI_field2 = fields.Boolean(string='Show IMEI Field 2', compute='_compute_show_imei_fields')
 
@@ -197,6 +230,23 @@ class StockMove(models.Model):
                     update_vals['specs_made'] = specs_made.id
                 quants.sudo().write(update_vals)
         return res
+
+    def action_open_generate_imei_wizard(self):
+        self.ensure_one()
+        is_dual = bool(self.show_IMEI_field2 or self.is_product_dual_sim)
+        return {
+            "name": _("Generate IMEI"),
+            "type": "ir.actions.act_window",
+            "res_model": "stock.move.generate.imei.wizard",
+            "view_mode": "form",
+            "target": "new",
+            "context": {
+                "default_move_id": self.id,
+                "default_is_dual_sim": is_dual,
+                "default_is_imei1": True,
+                "default_is_imei2": is_dual and bool(self.is_dual_sim_mandatory),
+            },
+        }
 
     def action_open_upload_csv_wizard(self):
         self.ensure_one()
@@ -855,9 +905,12 @@ class StockMoveLine(models.Model):
 
         # 1. Validate IMEI number and Serial number
         for record in self:
+            is_dual_mandatory = bool(
+                record.move_id.show_IMEI_field2 and getattr(record.move_id, 'is_dual_sim_mandatory', True)
+            )
 
             # 1. Ensure IMEIs are not empty
-            if record.move_id.show_IMEI_field2:
+            if is_dual_mandatory:
                 if not record.imei or not record.imei2:
                     raise ValidationError(_('Please enter both IMEI numbers.'))
             elif record.move_id.show_IMEI_field:
@@ -865,16 +918,18 @@ class StockMoveLine(models.Model):
                     raise ValidationError(_('Please enter IMEI number.'))
 
             # 2. Validate IMEI format (15 digit number)
-            if record.move_id.show_IMEI_field2:
-                if not record.imei.isdigit() or len(record.imei) != 15 or not record.imei2.isdigit() or len(
+            if is_dual_mandatory:
+                if not record.imei or not record.imei.isdigit() or len(record.imei) != 15 or not record.imei2 or not record.imei2.isdigit() or len(
                         record.imei2) != 15:
                     raise ValidationError(_('IMEI number must be a 15-digit number.'))
             elif record.move_id.show_IMEI_field:
                 if not record.imei.isdigit() or len(record.imei) != 15:
                     raise ValidationError(_('IMEI number must be a 15-digit number.'))
+                if record.imei2 and (not record.imei2.isdigit() or len(record.imei2) != 15):
+                    raise ValidationError(_('IMEI 2 number must be a 15-digit number.'))
 
             # 3.1 Uniqueness of IMEI check in same lines
-            if record.move_id.show_IMEI_field2:
+            if is_dual_mandatory:
                 exist = self.search([('imei', '=', record.imei), ('id', '!=', record.id)], limit=1)
                 if exist:
                     raise ValidationError(
@@ -890,15 +945,24 @@ class StockMoveLine(models.Model):
                 exist = self.search([('imei2', '=', record.imei), ('id', '!=', record.id)], limit=1)
                 if exist:
                     raise ValidationError(
-                        _('IMEI number must be unique, the IMEI number(%s) is already used in another stock item.' % record.imei1))
+                        _('IMEI number must be unique, the IMEI number(%s) is already used in another stock item.' % record.imei))
             elif record.move_id.show_IMEI_field:
                 exist = self.search([('imei', '=', record.imei), ('id', '!=', record.id)], limit=1)
                 if exist:
                     raise ValidationError(
                         _('IMEI number must be unique, the IMEI number(%s) is already used in another stock item.' % record.imei))
+                if record.imei2:
+                    exist = self.search([('imei2', '=', record.imei2), ('id', '!=', record.id)], limit=1)
+                    if exist:
+                        raise ValidationError(
+                            _('IMEI number must be unique, the IMEI number(%s) is already used in another stock item.' % record.imei2))
+                    exist = self.search([('imei', '=', record.imei2), ('id', '!=', record.id)], limit=1)
+                    if exist:
+                        raise ValidationError(
+                            _('IMEI number must be unique, the IMEI number(%s) is already used in another stock item.' % record.imei2))
 
             # 3.2 Uniqueness of IMEI check in all other saved items
-            if record.move_id.show_IMEI_field2:
+            if is_dual_mandatory:
 
                 # check if brand is samsung or oneplus, as these two brands have imei1 and imei2 field's same value 
                 brand_record = record.sudo().product_id.product_tmpl_id.brand_id
@@ -940,6 +1004,16 @@ class StockMoveLine(models.Model):
                 if len(result_items) > 1:
                     raise ValidationError(
                         _('IMEI number must be unique, the IMEI number(%s) is already used in another stock item.' % record.imei))
+
+                if record.imei2:
+                    result_items2 = self.env['stock.quant'].search([
+                        '|',
+                        ('imei', '=', record.imei2),
+                        ('imei2', '=', record.imei2)
+                    ])
+                    if len(result_items2) > 1:
+                        raise ValidationError(
+                            _('IMEI number must be unique, the IMEI number(%s) is already used in another stock item.' % record.imei2))
 
             # 4.1 Uniqueness of Serial number check in stock quants
             results = self.env['stock.quant'].search([

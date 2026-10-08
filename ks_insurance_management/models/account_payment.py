@@ -15,6 +15,12 @@ class AccountPayment(models.Model):
         copy=False,
         help='True when this payment is for a policy top-up (coverage increase).',
     )
+    is_renewal = fields.Boolean(
+        string='Is Renewal',
+        default=False,
+        copy=False,
+        help='True when this payment is for a policy renewal.',
+    )
     is_insurance_payment = fields.Boolean(
         string='Insurance Payment',
         default=False,
@@ -172,6 +178,33 @@ class AccountPayment(models.Model):
             if rec.amount <= 0:
                 raise UserError("Amount must be greater than zero for insurance payments.")
 
+    @api.model_create_multi
+    def create(self, vals_list):
+        payments = super().create(vals_list)
+        for payment in payments:
+            if payment.insurance_policy_id:
+                policy = payment.insurance_policy_id
+                if payment.is_renewal or policy.state == 'under_renewal':
+                    pending_hist = policy.renewal_history_ids.filtered(
+                        lambda r: not r.is_policy_number_updated and not r.payment_id
+                    )
+                    if pending_hist:
+                        pending_hist[:1].payment_id = payment.id
+        return payments
+
+    def write(self, vals):
+        res = super().write(vals)
+        if vals.get('state') in ('posted', 'paid'):
+            for payment in self:
+                policy = payment.insurance_policy_id
+                if policy and policy.state == 'under_renewal':
+                    policy.write({
+                        'payment_status': 'paid',
+                        'is_paid': True,
+                        'state': 'active',
+                    })
+        return res
+
     # ── Override action_post to update policy on payment confirmation ─────────
 
     def action_post(self):
@@ -192,6 +225,13 @@ class AccountPayment(models.Model):
                     update_vals['premium'] = policy.pending_topup_premium
                     update_vals['pending_topup_premium'] = 0.0
                 policy.write(update_vals)
+            elif payment.is_renewal or policy.state == 'under_renewal':
+                # Renewal payment confirmed: mark paid and activate policy
+                policy.write({
+                    'payment_status': 'paid',
+                    'is_paid': True,
+                    'state': 'active',
+                })
             else:
                 # Regular premium payment confirmed: mark paid and activate policy
                 policy.write({

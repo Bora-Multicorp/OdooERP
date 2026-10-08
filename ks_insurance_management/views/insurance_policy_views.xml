@@ -25,14 +25,16 @@
                   class="btn-secondary"
                   invisible="state != 'active' or not is_paid or payment_status in ('requested', 'approved')"/>
           <button name="action_mark_expired" string="Mark as Expired" type="object"
-                  class="btn-danger" invisible="state == 'expired'"
+                  class="btn-danger" invisible="state != 'active'"
                   confirm="Mark this policy as Expired?"/>
+          <field name="has_pending_renewal" invisible="1"/>
           <button name="action_renew_policy" string="Renew Policy" type="object"
                   class="btn-success" invisible="state != 'expired'"/>
-          <field name="state" widget="statusbar" statusbar_visible="draft,active,expired"
+          <field name="state" widget="statusbar" statusbar_visible="draft,active,expired,under_renewal"
                  readonly="False"/>
         </header>
         <sheet>
+          <field name="is_policy_number_editable" invisible="1"/>
           <!-- Payment status ribbon -->
           <widget name="web_ribbon" title="Payment Pending" bg_color="text-bg-danger"
                   invisible="payment_status == 'paid'"/>
@@ -50,10 +52,10 @@
               <field name="payment_count" widget="statinfo" string="Payments"/>
             </button>
           </div>
-          <div class="oe_title"><h1><field name="policy_number" readonly="state != 'draft'"/></h1></div>
+          <div class="oe_title"><h1><field name="policy_number" readonly="not is_policy_number_editable"/></h1></div>
           <group>
             <group string="Policy Information">
-              <field name="policy_number" readonly="state != 'draft'"/>
+              <field name="policy_number" readonly="not is_policy_number_editable"/>
               <field name="insurance_type_id" readonly="state != 'draft'"/>
               <field name="insurance_category_id" readonly="1"/>
               <field name="policy_type" readonly="state != 'draft'"/>
@@ -145,6 +147,36 @@
                 </list>
               </field>
             </page>
+            <page string="Renewal History" name="renewal_history">
+              <field name="renewal_history_ids" readonly="1">
+                <list create="0" delete="0">
+                  <field name="expired_policy_number" string="Expired Policy No"/>
+                  <field name="new_policy_number" string="Updated Policy No" optional="show"/>
+                  <field name="start_date" string="Expired Policy Start Date"/>
+                  <field name="end_date" string="Expired Policy End Date"/>
+                  <field name="description" string="Description"/>
+                  <field name="policy_type" string="Policy Type" optional="show"/>
+                  <field name="payment_id" string="Linked Payment" optional="show"/>
+                  <field name="payment_state" string="Payment Status" widget="badge"
+                         decoration-success="payment_state in ('posted', 'paid')"
+                         decoration-info="payment_state == 'in_process'"
+                         decoration-warning="payment_state in ('draft', 'pending_approval')"
+                         decoration-danger="payment_state in ('cancel', 'canceled', 'rejected')"/>
+                  <field name="can_update_policy_no" column_invisible="True"/>
+                  <field name="is_policy_number_updated" column_invisible="True"/>
+                  <button name="action_update_policy_number"
+                          string="Update Policy No"
+                          type="object"
+                          class="btn-primary"
+                          invisible="not can_update_policy_no"/>
+                  <button name="action_update_policy_number"
+                          string="Update Policy No"
+                          type="object"
+                          class="btn-secondary text-muted opacity-50"
+                          invisible="can_update_policy_no"/>
+                </list>
+              </field>
+            </page>
             <page string="Notes"><field name="notes"/></page>
           </notebook>
         </sheet>
@@ -157,7 +189,7 @@
     <field name="name">insurance.policy.list</field>
     <field name="model">insurance.policy</field>
     <field name="arch" type="xml">
-      <list decoration-danger="state == 'expired'" decoration-success="state == 'active'" decoration-muted="state == 'draft'">
+      <list decoration-danger="state == 'expired'" decoration-success="state == 'active'" decoration-muted="state == 'draft'" decoration-warning="state == 'under_renewal'">
         <field name="policy_number"/>
         <field name="insurance_type_id"/><field name="insurance_category_id"/>
         <field name="policy_type"/><field name="insurance_company_id"/>
@@ -177,7 +209,8 @@
         <field name="state" widget="badge"
                decoration-muted="state == 'draft'"
                decoration-success="state == 'active'"
-               decoration-danger="state == 'expired'"/>
+               decoration-danger="state == 'expired'"
+               decoration-warning="state == 'under_renewal'"/>
       </list>
     </field>
   </record>
@@ -210,7 +243,8 @@
                 <strong class="text-truncate"><field name="policy_number"/></strong>
                 <field name="state" widget="badge"
                        decoration-success="state == 'active'"
-                       decoration-danger="state == 'expired'"/>
+                       decoration-danger="state == 'expired'"
+                       decoration-warning="state == 'under_renewal'"/>
               </div>
               <div class="text-muted small mb-1">
                 <field name="insurance_type_id"/>
@@ -275,6 +309,7 @@
         <field name="company_id" groups="base.group_multi_company"/>
         <filter name="active_policies" string="Active" domain="[('state','=','active')]"/>
         <filter name="expired_policies" string="Expired" domain="[('state','=','expired')]"/>
+        <filter name="under_renewal_policies" string="Under Renewal" domain="[('state','=','under_renewal')]"/>
         <separator/>
         <filter name="marine" string="Marine" domain="[('is_marine','=',True)]"/>
         <filter name="fire_burglary" string="Fire &amp; Burglary" domain="[('is_fire_burglary','=',True)]"/>
@@ -299,5 +334,108 @@
     <field name="view_mode">list,kanban,form</field>
     <field name="search_view_id" ref="insurance_policy_search_view"/>
     <field name="context">{'search_default_active_policies': 1}</field>
+  </record>
+
+  <!-- ══ Renewal History Form View ══════════════════════════════════════════════ -->
+  <record id="insurance_policy_renewal_history_form_view" model="ir.ui.view">
+    <field name="name">insurance.policy.renewal.history.form</field>
+    <field name="model">insurance.policy.renewal.history</field>
+    <field name="arch" type="xml">
+      <form string="Renewal History">
+        <header>
+          <field name="can_update_policy_no" invisible="1"/>
+          <button name="action_update_policy_number"
+                  string="Update Policy No"
+                  type="object"
+                  class="btn-primary"
+                  invisible="not can_update_policy_no"/>
+        </header>
+        <sheet>
+          <group>
+            <group string="Expired Policy Details">
+              <field name="expired_policy_number" readonly="1"/>
+              <field name="start_date" readonly="1"/>
+              <field name="end_date" readonly="1"/>
+              <field name="description" readonly="1"/>
+              <field name="policy_type" readonly="1"/>
+              <field name="insurance_type_id" readonly="1"/>
+            </group>
+            <group string="Renewal &amp; Payment">
+              <field name="new_policy_number" readonly="1" string="Updated Policy No"/>
+              <field name="payment_id" readonly="1"/>
+              <field name="payment_state" widget="badge"
+                     decoration-success="payment_state in ('posted', 'paid')"
+                     decoration-info="payment_state == 'in_process'"
+                     decoration-warning="payment_state in ('draft', 'pending_approval')"
+                     decoration-danger="payment_state in ('cancel', 'canceled', 'rejected')"/>
+              <field name="renewal_premium" readonly="1"/>
+              <field name="new_start_date" readonly="1"/>
+              <field name="new_end_date" readonly="1"/>
+              <field name="new_sum_insured" readonly="1"/>
+              <field name="is_policy_number_updated" readonly="1" widget="boolean_toggle"/>
+            </group>
+          </group>
+        </sheet>
+      </form>
+    </field>
+  </record>
+
+  <!-- ══ Renew Policy Wizard Form View ══════════════════════════════════════════ -->
+  <record id="insurance_policy_renew_wizard_form" model="ir.ui.view">
+    <field name="name">insurance.policy.renew.wizard.form</field>
+    <field name="model">insurance.policy.renew.wizard</field>
+    <field name="arch" type="xml">
+      <form string="Renew Insurance Policy">
+        <sheet>
+          <div class="oe_title">
+            <h2>Renew Policy: <field name="current_policy_number" class="oe_inline" readonly="1"/></h2>
+          </div>
+          <group>
+            <group string="Current Policy Details">
+              <field name="policy_id" invisible="1"/>
+              <field name="company_id" invisible="1"/>
+              <field name="currency_id" invisible="1"/>
+              <field name="insurance_type_id" readonly="1"/>
+              <field name="current_expiry_date" readonly="1"/>
+            </group>
+            <group string="Renewal Parameters">
+              <field name="renewal_premium" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+              <field name="new_sum_insured" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+              <field name="new_start_date"/>
+              <field name="new_expiry_date"/>
+            </group>
+          </group>
+          <group>
+            <field name="notes" placeholder="Any renewal notes or remarks..."/>
+          </group>
+        </sheet>
+        <footer>
+          <button name="action_confirm" string="Confirm Renewal" type="object" class="btn-primary"/>
+          <button string="Cancel" class="btn-secondary" special="cancel"/>
+        </footer>
+      </form>
+    </field>
+  </record>
+
+  <!-- ══ Update Policy Number Wizard Form View ══════════════════════════════════ -->
+  <record id="insurance_update_policy_number_wizard_form" model="ir.ui.view">
+    <field name="name">insurance.update.policy.number.wizard.form</field>
+    <field name="model">insurance.update.policy.number.wizard</field>
+    <field name="arch" type="xml">
+      <form string="Update Policy Number">
+        <sheet>
+          <group>
+            <field name="renewal_history_id" invisible="1"/>
+            <field name="policy_id" invisible="1"/>
+            <field name="old_policy_number" readonly="1" string="Expired Policy No"/>
+            <field name="new_policy_number" placeholder="Enter fresh / new policy number" required="1"/>
+          </group>
+        </sheet>
+        <footer>
+          <button name="action_confirm" string="Update Policy Number" type="object" class="btn-primary"/>
+          <button string="Cancel" class="btn-secondary" special="cancel"/>
+        </footer>
+      </form>
+    </field>
   </record>
 </odoo>
