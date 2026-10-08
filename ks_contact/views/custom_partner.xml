@@ -101,7 +101,7 @@
                             invisible="(vendor_type != 'regular' and not (is_customer and is_overseas)) or (not is_expired and not is_rejected and not has_expired_docs)"/>
                     <button name="action_submit_for_approval" string="Submit for Approval" type="object"
                             class="btn-primary"
-                            invisible="not is_vendor or approval_status != 'draft' or vendor_type == 'regular'"/>
+                            invisible="not is_vendor or approval_status != 'draft' or vendor_type == 'regular' or not vendor_type"/>
                     <button name="action_update_approvals" string="Update Approvals" type="object"
                             class="btn-warning"
                             invisible="not is_vendor or approval_status != 'to_approve' or is_approved or ks_is_approver"
@@ -142,7 +142,8 @@
                        widget="filterable_selection" options="{'blacklisted_values': ['exceptional']}"
                        required="is_vendor and not is_indian_company"/>
                 <field name="approval_status" invisible="not is_vendor" readonly="1"/>
-                <field name="is_customer" readonly="is_kyc" invisible="0"/>
+                <!-- <field name="is_customer" readonly="is_kyc" invisible="0"/> -->
+                <field name="is_customer" invisible="0"/>
                 <field name="is_overseas" invisible="not is_vendor and not is_customer" widget="boolean_toggle"/>
                 <field name="is_kyc" readonly="1"/>
                 <field name="is_approved" readonly="1" invisible="not is_approved"/>

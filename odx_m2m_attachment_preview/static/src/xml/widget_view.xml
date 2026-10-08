@@ -11,7 +11,7 @@
                 <div t-if="!props.readonly" class="oe_add">
                 <FileInput
                         acceptedFileExtensions="props.acceptedFileExtensions"
-                        multiUpload="true"
+                        multiUpload="multiUpload"
                         onUpload.bind="onFileUploaded"
                         resModel="props.record.resModel"
                         resId="props.record.data.id or 0"

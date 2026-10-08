@@ -9,15 +9,22 @@
                 <field name="payment_id" invisible="1"/>
                 <field name="available_approver_1_ids" invisible="1"/>
                 <field name="available_approver_2_ids" invisible="1"/>
-                <div class="alert alert-info" role="alert" style="margin:16px;">
+                <field name="ks_approval_mode" invisible="1"/>
+                <div class="alert alert-info" role="alert" style="margin:16px;" invisible="ks_approval_mode != 'two_way'">
                     <p><strong>Please select approvers for payment approval:</strong></p>
                     <p>Both approvers are mandatory. Approval process is sequential (Approver 1 must approve before Approver 2).</p>
+                </div>
+                <div class="alert alert-info" role="alert" style="margin:16px;" invisible="ks_approval_mode != 'single'">
+                    <p><strong>Please select approver for payment approval:</strong></p>
+                    <p>Single Level Approval: Only Approver 1 is required to approve.</p>
                 </div>
                 <group>
                     <field name="approver_1_id"
                            options="{'no_create': True}"
                            domain="[('id', 'in', available_approver_1_ids), ('share', '=', False), ('id', '!=', approver_2_id)]"/>
                     <field name="approver_2_id"
+                           invisible="ks_approval_mode == 'single'"
+                           required="ks_approval_mode == 'two_way'"
                            options="{'no_create': True}"
                            domain="[('id', 'in', available_approver_2_ids), ('share', '=', False), ('id', '!=', approver_1_id)]"/>
                 </group>
@@ -29,3 +36,4 @@
         </field>
     </record>
 </odoo>
+

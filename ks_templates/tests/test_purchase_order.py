@@ -135,5 +135,10 @@ class TestPurchaseOrder(KsTemplatesCommon):
         po_branch = self.purchase_order.copy({'company_id': branch_company.id, 'picking_type_id': False, 'dest_address_id': False})
         self.assertEqual(po_branch.get_ship_to_company_name(), 'Parent Test Company Ship')
 
+    def test_compute_ks_invoice_to(self):
+        """Test ks_invoice_to compute field returns the same value as get_bill_to_company_name()"""
+        self.assertEqual(self.purchase_order.ks_invoice_to, self.purchase_order.get_bill_to_company_name())
+
+
 
 

@@ -225,6 +225,7 @@ class ContactKYCApproval(models.Model):
         ('Pvt Ltd Co.', 'Pvt Ltd Co.'),
         ('LLP', 'LLP'),
         ('HUF(Karta)', 'HUF(Karta)'),
+        ('Public Limited', 'Public Limited'),
         ('Other', 'Other'),
     ], string="Constitution of Business")
 
@@ -1200,7 +1201,47 @@ class ContactKYCApproval(models.Model):
                 * confirmed → approval notifications
                 * rejected → rejection activities
         """
+        for single_att_field in ['shop_photos', 'shop_videos']:
+            if single_att_field in vals and isinstance(vals[single_att_field], list):
+                new_cmds = []
+                for cmd in vals[single_att_field]:
+                    if isinstance(cmd, (list, tuple)) and cmd[0] == 6 and len(cmd) > 2 and isinstance(cmd[2], list) and len(cmd[2]) > 1:
+                        new_cmds.append((6, cmd[1], [cmd[2][-1]]))
+                    else:
+                        new_cmds.append(cmd)
+                vals[single_att_field] = new_cmds
+
+        # Track old attachments for shop_photos and shop_videos to post log note on change
+        old_media_attachments = {}
+        if 'shop_photos' in vals or 'shop_videos' in vals:
+            for record in self:
+                old_media_attachments[record.id] = {
+                    'shop_photos': record.shop_photos,
+                    'shop_videos': record.shop_videos,
+                }
+
         res = super().write(vals)
+
+        # Post log note only if shop_photos or shop_videos changed
+        if old_media_attachments:
+            for record in self:
+                old_data = old_media_attachments.get(record.id)
+                if not old_data:
+                    continue
+                changes = []
+                if 'shop_photos' in vals and set(old_data['shop_photos'].ids) != set(record.shop_photos.ids):
+                    old_names = ", ".join(old_data['shop_photos'].mapped('name')) or _("None")
+                    new_names = ", ".join(record.shop_photos.mapped('name')) or _("None")
+                    changes.append(f"<li><b>Shop Photos</b>: {old_names} → {new_names}</li>")
+
+                if 'shop_videos' in vals and set(old_data['shop_videos'].ids) != set(record.shop_videos.ids):
+                    old_names = ", ".join(old_data['shop_videos'].mapped('name')) or _("None")
+                    new_names = ", ".join(record.shop_videos.mapped('name')) or _("None")
+                    changes.append(f"<li><b>Shop Videos</b>: {old_names} → {new_names}</li>")
+
+                if changes:
+                    body = Markup(f"<p>{_('Attachment updated:')}</p><ul>{''.join(changes)}</ul>")
+                    record.message_post(body=body, subtype_xmlid="mail.mt_note")
 
         # --- Attachments Management ---
         attachment_fields = [

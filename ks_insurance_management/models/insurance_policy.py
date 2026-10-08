@@ -3,7 +3,7 @@
 import logging
 from datetime import timedelta
 
-from odoo import api, fields, models
+from odoo import api, fields, models, _
 from odoo.exceptions import UserError
 
 _logger = logging.getLogger(__name__)
@@ -177,10 +177,12 @@ class InsurancePolicy(models.Model):
         ('draft', 'Inactive'),
         ('active', 'Active'),
         ('expired', 'Expired'),
+        ('under_renewal', 'Under Renewal'),
     ], string='Status', default='draft', tracking=True,
         help='Inactive: policy created but premium not yet paid.\n'
              'Active: policy is valid and in force (set automatically after payment).\n'
-             'Expired: policy has passed its expiry date or was manually expired.',
+             'Expired: policy has passed its expiry date or was manually expired.\n'
+             'Under Renewal: policy renewal initiated, awaiting renewal payment and policy number update.',
     )
     payment_status = fields.Selection([
         ('draft', 'Draft'),
@@ -258,6 +260,26 @@ class InsurancePolicy(models.Model):
              'Marine policies require monthly/weekly sales declarations; '
              'Fire & Burglary require inventory declarations.',
     )
+    renewal_history_ids = fields.One2many(
+        'insurance.policy.renewal.history',
+        'policy_id',
+        string='Renewal History',
+        help='History of previous policy terms and renewal payments.',
+    )
+    has_pending_renewal = fields.Boolean(
+        string='Has Pending Renewal',
+        compute='_compute_has_pending_renewal',
+        help='True if there is an in-progress renewal awaiting payment or policy number update.',
+    )
+    can_update_policy_number = fields.Boolean(
+        string='Can Update Policy Number',
+        compute='_compute_can_update_policy_number',
+        help='True if the latest renewal payment is paid and fresh policy number can be entered.',
+    )
+    is_policy_number_editable = fields.Boolean(
+        string='Is Policy Number Editable',
+        compute='_compute_is_policy_number_editable',
+    )
     pending_topup_amount = fields.Float(
         string='Pending Top-up Amount',
         default=0.0,
@@ -321,44 +343,47 @@ class InsurancePolicy(models.Model):
 
     def _notify_approver(self, approver, summary, note):
         """Create a To-Do activity on this policy for the approver."""
-        self.activity_schedule(
-            'mail.mail_activity_data_todo',
-            user_id=approver.user_id.id,
-            summary=summary,
-            note=note,
-        )
+        # self.activity_schedule(
+        #     'mail.mail_activity_data_todo',
+        #     user_id=approver.user_id.id,
+        #     summary=summary,
+        #     note=note,
+        # )
+        pass
 
     def _notify_banking_team(self, payment):
         """Create a To-Do activity on the payment for every accounting user."""
-        banking_group = self.env.ref('account.group_account_user', raise_if_not_found=False)
-        users = banking_group.users if banking_group else self.env['res.users'].browse(
-            self.env.ref('base.user_admin').id)
-        for user in users:
-            payment.activity_schedule(
-                'mail.mail_activity_data_todo',
-                user_id=user.id,
-                summary=f'Insurance Payment to Post — {self.policy_number}',
-                note=(
-                    f'A draft insurance payment has been created for policy '
-                    f'<b>{self.policy_number}</b> ({self.insurance_type_id.name}).<br/>'
-                    f'Amount: <b>₹{payment.amount:,.2f}</b><br/>'
-                    f'Please post this payment in the accounting system.'
-                ),
-            )
+        # banking_group = self.env.ref('account.group_account_user', raise_if_not_found=False)
+        # users = banking_group.users if banking_group else self.env['res.users'].browse(
+        #     self.env.ref('base.user_admin').id)
+        # for user in users:
+        #     payment.activity_schedule(
+        #         'mail.mail_activity_data_todo',
+        #         user_id=user.id,
+        #         summary=f'Insurance Payment to Post — {self.policy_number}',
+        #         note=(
+        #             f'A draft insurance payment has been created for policy '
+        #             f'<b>{self.policy_number}</b> ({self.insurance_type_id.name}).<br/>'
+        #             f'Amount: <b>₹{payment.amount:,.2f}</b><br/>'
+        #             f'Please post this payment in the accounting system.'
+        #         ),
+        #     )
+        pass
 
     def _notify_insurance_team(self):
         """Create a To-Do activity on this policy for every insurance user."""
-        ins_group = self.env.ref(
-            'ks_insurance_management.group_insurance_user', raise_if_not_found=False)
-        if not ins_group:
-            return
-        for user in ins_group.users:
-            self.activity_schedule(
-                'mail.mail_activity_data_todo',
-                user_id=user.id,
-                summary=f'Insurance Payment Completed — {self.policy_number}',
-                note=f'Payment for policy <b>{self.policy_number}</b> has been posted and confirmed.',
-            )
+        # ins_group = self.env.ref(
+        #     'ks_insurance_management.group_insurance_user', raise_if_not_found=False)
+        # if not ins_group:
+        #     return
+        # for user in ins_group.users:
+        #     self.activity_schedule(
+        #         'mail.mail_activity_data_todo',
+        #         user_id=user.id,
+        #         summary=f'Insurance Payment Completed — {self.policy_number}',
+        #         note=f'Payment for policy <b>{self.policy_number}</b> has been posted and confirmed.',
+        #     )
+        pass
 
     # ── Payment workflow actions ──────────────────────────────────────────────
 
@@ -408,8 +433,10 @@ class InsurancePolicy(models.Model):
                 "Please configure one in Accounting → Configuration → Journals."
             )
 
+        is_renewal = bool(self.state == 'under_renewal' or self.has_pending_renewal)
+        payment_type_label = 'Top-up' if is_topup else ('Renewal Premium' if is_renewal else 'Premium')
         payment_label = (
-            f"Insurance {'Top-up' if is_topup else 'Premium'} — "
+            f"Insurance {payment_type_label} — "
             f"{self.policy_number}"
         )
         payment = self.env['account.payment'].create({
@@ -422,6 +449,7 @@ class InsurancePolicy(models.Model):
             'currency_id': self.currency_id.id,
             'is_insurance_payment': True,
             'is_topup': is_topup,
+            'is_renewal': is_renewal,
             'insurance_policy_id': self.id,
             # Populate insurance details from the linked policy
             'ins_company_id': self.company_id.id,
@@ -435,7 +463,15 @@ class InsurancePolicy(models.Model):
             'ins_floater_location_ids': [(6, 0, self.floater_location_ids.ids)],
         })
 
+        if is_renewal:
+            pending_hist = self.renewal_history_ids.filtered(
+                lambda r: not r.is_policy_number_updated and not r.payment_id
+            )
+            if pending_hist:
+                pending_hist[:1].payment_id = payment.id
+
         self.write({
+            'payment_ids': [(4, payment.id)],
             'payment_status': 'approved',
             'pending_topup_approver_id': False,
             'pending_payment_approver_id': False,
@@ -696,6 +732,30 @@ class InsurancePolicy(models.Model):
         for rec in self:
             rec.total_premium_paid = sum(rec.payment_ids.mapped('amount'))
 
+    @api.depends('state', 'renewal_history_ids.is_policy_number_updated', 'renewal_history_ids.payment_id.state')
+    def _compute_has_pending_renewal(self):
+        for rec in self:
+            rec.has_pending_renewal = bool(
+                rec.state == 'under_renewal' or rec.renewal_history_ids.filtered(
+                    lambda r: not r.is_policy_number_updated and (not r.payment_id or r.payment_id.state != 'cancel')
+                )
+            )
+
+    @api.depends('renewal_history_ids.can_update_policy_no')
+    def _compute_can_update_policy_number(self):
+        for rec in self:
+            rec.can_update_policy_number = any(rec.renewal_history_ids.mapped('can_update_policy_no'))
+
+    @api.depends('state', 'can_update_policy_number', 'renewal_history_ids', 'is_paid')
+    def _compute_is_policy_number_editable(self):
+        for rec in self:
+            if rec.can_update_policy_number:
+                rec.is_policy_number_editable = True
+            elif rec.state == 'draft' and not rec.renewal_history_ids and not rec.is_paid:
+                rec.is_policy_number_editable = True
+            else:
+                rec.is_policy_number_editable = False
+
     # ── ORM overrides ────────────────────────────────────────────────────────────────────
 
     @api.model_create_multi
@@ -705,6 +765,37 @@ class InsurancePolicy(models.Model):
     # ── ORM overrides ─────────────────────────────────────────────────────────────────────
 
     def write(self, vals):
+        if 'policy_number' in vals and not self.env.context.get('from_renewal_update'):
+            for rec in self:
+                # If policy is already created/paid, only allow changing policy_number if renewal payment is paid
+                if rec.renewal_history_ids or rec.is_paid or rec.state != 'draft':
+                    if not rec.can_update_policy_number:
+                        raise UserError(
+                            "Policy Number cannot be modified directly while payment is pending. "
+                            "It can only be updated once the renewal payment is in 'In Process' or 'Paid' status."
+                        )
+                    # When updated directly in the field by the user:
+                    pending = rec.renewal_history_ids.filtered(lambda r: r.can_update_policy_no)[:1]
+                    if pending:
+                        pending.write({
+                            'is_policy_number_updated': True,
+                            'new_policy_number': vals['policy_number'],
+                        })
+                        if rec.state == 'under_renewal':
+                            vals['state'] = 'active'
+                        rec.message_post(
+                            body=(
+                                f"<b>Policy Renewed:</b> Policy number updated from <b>{rec.policy_number}</b> "
+                                f"to <b>{vals['policy_number']}</b>. Previous policy details moved to Renewal History."
+                            ),
+                            subtype_xmlid='mail.mt_note',
+                        )
+        # When payment is marked as paid on an under_renewal policy, move it to active stage
+        if (vals.get('is_paid') or vals.get('payment_status') == 'paid') and 'state' not in vals:
+            for rec in self:
+                if rec.state == 'under_renewal':
+                    vals['state'] = 'active'
+
         # Enforce: policy cannot be set to Active state unless premium is paid.
         # This only applies to explicit state changes (not on create).
         if vals.get('state') == 'active':
@@ -718,10 +809,19 @@ class InsurancePolicy(models.Model):
                     )
         return super().write(vals)
 
+    def read(self, fields=None, load='_classic_read'):
+        if not self.env.context.get('in_auto_activate'):
+            paid_renewals = self.filtered(lambda r: r.state == 'under_renewal' and r.is_paid)
+            if paid_renewals:
+                paid_renewals.sudo().with_context(in_auto_activate=True).write({'state': 'active'})
+        return super().read(fields=fields, load=load)
+
     # ── Actions ──────────────────────────────────────────────────────────────────────────
 
     def action_mark_expired(self):
         for rec in self:
+            if rec.state != 'active':
+                raise UserError(_("Only active policies can be marked as expired."))
             rec.state = 'expired'
             # sum_insured and balance_sum_insured are computed fields;
             # switching state to 'expired' causes them to return their zero/fallback values.
@@ -826,25 +926,22 @@ class InsurancePolicy(models.Model):
         )
 
     def action_renew_policy(self):
-        """Open a new policy form pre-filled with this policy's details for renewal."""
+        """Open the renewal wizard to renew this policy in-place."""
         self.ensure_one()
-        ctx = {
-            'default_insurance_type_id': self.insurance_type_id.id,
-            'default_insurance_company_id': self.insurance_company_id.id,
-            'default_agent_id': self.agent_id.id if self.agent_id else False,
-            'default_policy_type': self.policy_type,
-            'default_floater_location_ids': [(6, 0, self.floater_location_ids.ids)],
-            'default_initial_sum_insured': self.initial_sum_insured,
-            'default_currency_id': self.currency_id.id,
-            'default_company_id': self.company_id.id,
-            'default_notes': self.notes or '',
-        }
+        if self.state == 'under_renewal' or self.has_pending_renewal:
+            raise UserError(
+                _("A renewal is already in progress for this policy. "
+                  "Please update the policy number for the pending renewal first before creating a new renewal.")
+            )
         return {
             'type': 'ir.actions.act_window',
             'name': 'Renew Policy',
-            'res_model': 'insurance.policy',
+            'res_model': 'insurance.policy.renew.wizard',
             'view_mode': 'form',
-            'context': ctx,
+            'target': 'new',
+            'context': {
+                'default_policy_id': self.id,
+            },
         }
 
     def deduct_from_balance(self, amount):

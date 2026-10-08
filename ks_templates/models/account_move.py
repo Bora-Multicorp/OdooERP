@@ -95,6 +95,10 @@ class AccountMove(models.Model):
             move.ks_show_commercial_invoice = not (is_comp_indian and is_cust_indian)
             move.ks_show_domestic_tax_invoice = is_comp_indian and is_cust_indian
 
+    def get_extra_print_items(self):
+        """Override to remove standard Odoo 'PDF' extra print item from gear menu."""
+        return []
+
 
     # Bank details for invoice (copied from sale order ks_bank_id when invoice is created from SO)
     ks_bank_id = fields.Many2one(

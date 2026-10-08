@@ -296,7 +296,14 @@
                                         <strong>
                                             <t t-if="doc.incoterm">
                                                 [<t t-esc="doc.incoterm.code or ''"/>] <t t-esc="doc.incoterm.name or ''"/>
-                                                <t t-if="doc.incoterm_location">, <t t-esc="doc.incoterm_location or ''"/></t>
+                                            </t>
+                                            <t t-if="doc.incoterm_location">
+                                                <br t-if="doc.incoterm"/>
+                                                <t t-esc="doc.incoterm_location"/>
+                                            </t>
+                                            <t t-if="doc.ks_additional_terms_of_delivery">
+                                                <br t-if="doc.incoterm or doc.incoterm_location"/>
+                                                <t t-esc="doc.ks_additional_terms_of_delivery"/>
                                             </t>
                                         </strong>
                                     </td>

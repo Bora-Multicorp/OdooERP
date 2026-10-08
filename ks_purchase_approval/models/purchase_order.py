@@ -428,9 +428,9 @@ class PurchaseOrder(models.Model):
                     order.ks_can_edit = True
                     order.ks_qty_only_edit = False
                 elif order.ks_edit_approved and order.ks_edit_request_user_id == self.env.user:
-                    # Normal user with approved edit — qty only
+                    # Normal user with approved edit — full edit allowed
                     order.ks_can_edit = True
-                    order.ks_qty_only_edit = True
+                    order.ks_qty_only_edit = False
                 else:
                     order.ks_can_edit = False
                     order.ks_qty_only_edit = False
