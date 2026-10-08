@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Stock Picking / Transfer Form View Inheritance -->
+    <record id="view_picking_form_ecom" model="ir.ui.view">
+        <field name="name">stock.picking.form.ecom.marketplace</field>
+        <field name="model">stock.picking</field>
+        <field name="inherit_id" ref="stock.view_picking_form"/>
+        <field name="priority">25</field>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='origin']" position="after">
+                <field name="is_ecom_picking" invisible="1"/>
+                <field name="ecom_id"
+                       readonly="1"
+                       options="{'no_create': True, 'no_open': False}"/>
+                <field name="marketplace_id"
+                       invisible="not is_ecom_picking"
+                       readonly="1"
+                       options="{'no_create': True, 'no_open': False}"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Stock Picking / Transfer Tree / List View Inheritance -->
+    <record id="view_picking_tree_ecom" model="ir.ui.view">
+        <field name="name">stock.picking.tree.ecom.marketplace</field>
+        <field name="model">stock.picking</field>
+        <field name="inherit_id" ref="stock.vpicktree"/>
+        <field name="priority">25</field>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='origin']" position="after">
+                <field name="ecom_id" optional="show"/>
+                <field name="marketplace_id" optional="show"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Stock Picking / Transfer Search View Inheritance -->
+    <record id="view_picking_search_ecom" model="ir.ui.view">
+        <field name="name">stock.picking.search.ecom.marketplace</field>
+        <field name="model">stock.picking</field>
+        <field name="inherit_id" ref="stock.view_picking_internal_search"/>
+        <field name="priority">25</field>
+        <field name="arch" type="xml">
+            <xpath expr="//filter[@name='to_do_transfers']" position="before">
+                <filter name="filter_ecom" string="E-Com" domain="[('ecom_id', '!=', False)]"/>
+                <filter name="filter_marketplace" string="Marketplace" domain="[('marketplace_id', '!=', False)]"/>
+                <separator/>
+            </xpath>
+            <xpath expr="//field[@name='origin']" position="after">
+                <field name="ecom_id" string="E-Com" filter_domain="['|', ('ecom_id.name', 'ilike', self), ('ecom_id.code', 'ilike', self)]"/>
+                <field name="marketplace_id" string="Marketplace" filter_domain="['|', ('marketplace_id.name', 'ilike', self), ('marketplace_id.code', 'ilike', self)]"/>
+            </xpath>
+            <xpath expr="//group" position="inside">
+                <filter string="E-Com" name="group_by_ecom" domain="[]" context="{'group_by': 'ecom_id'}"/>
+                <filter string="Marketplace" name="group_by_marketplace" domain="[]" context="{'group_by': 'marketplace_id'}"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

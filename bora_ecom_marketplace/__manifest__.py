@@ -3,7 +3,7 @@
     'name': 'Bora E-Commerce & Marketplace',
     'version': '18.0.1.0.0',
     'category': 'Purchases',
-    'summary': 'E-Com & Marketplace master configuration, dynamic PO fields, and E-Commerce tracking',
+    'summary': 'E-Com & Marketplace master configuration, dynamic PO fields, warehouse defaulting, and E-Commerce tracking',
     'description': """
 Bora E-Commerce & Marketplace
 =============================
@@ -13,10 +13,10 @@ Key Features:
    - Enables users to view, monitor, and track all E-Commerce Purchase Orders and their current status.
 
 2. E-Com & Marketplace Fields on Purchase Order:
-   - Custom Many2one field 'E-Com' (bora.ecom.master) on Purchase Order form.
+   - Custom Many2one field 'Purpose' (bora.ecom.master) on Purchase Order form.
    - Identifies whether the PO is an E-Commerce PO based on selected category.
    - Custom Many2one field 'Marketplace' (bora.marketplace.master) on Purchase Order form.
-   - Dynamic visibility: Marketplace remains hidden by default and becomes visible below E-Com only when 'E-Commerce' is selected.
+   - Dynamic visibility: Marketplace remains hidden by default and becomes visible below Purpose only when 'E-Commerce' is selected.
    - Automatically hides and clears Marketplace when category changes to Domestic, Export, or another non-E-Commerce value.
    - Existing PO approval workflow and access rights are completely unaffected.
 
@@ -24,10 +24,19 @@ Key Features:
    - E-Com Master: Maintain business categories such as Domestic, E-Commerce, Export, and future categories.
    - Marketplace Master: Maintain marketplaces such as Amazon, Flipkart, and future marketplaces.
    - Preloaded default master data with secure access control for authorized users.
+
+4. E-Commerce Warehouse Configuration & PO Defaulting:
+   - Checkbox 'E-commerce warehouse' on Warehouse Configuration.
+   - When enabled, new RFQ/POs automatically default Deliver To to the first E-Commerce warehouse.
+
+5. Transfer / Receipt E-Com Synchronization:
+   - Automatically sets Purpose (ecom_id) and Marketplace on stock receipts/transfers created from E-Commerce Purchase Orders.
     """,
     'author': 'Bora',
     'depends': [
         'purchase',
+        'stock',
+        'purchase_stock',
     ],
     'data': [
         'security/ir.model.access.csv',
@@ -35,6 +44,8 @@ Key Features:
         'views/ecom_master_views.xml',
         'views/marketplace_master_views.xml',
         'views/purchase_order_views.xml',
+        'views/stock_warehouse_views.xml',
+        'views/stock_picking_views.xml',
         'views/menu_views.xml',
     ],
     'installable': True,
