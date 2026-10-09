@@ -10,7 +10,8 @@
             <xpath expr="//field[@name='currency_id'][1]" position="after">
                 <field name="is_ecom_po" invisible="1"/>
                 <field name="ecom_id"
-                       placeholder="Select E-Com Category..."
+                       placeholder="Select Purpose Category..."
+                       required="1"
                        options="{'no_create': True, 'no_open': False}"
                        readonly="state in ('cancel', 'done')"/>
                 <field name="marketplace_id"
@@ -58,16 +59,16 @@
         <field name="priority">25</field>
         <field name="arch" type="xml">
             <xpath expr="//filter[@name='my_Orders']" position="before">
-                <filter name="filter_ecom" string="E-Com" domain="[('ecom_id', '!=', False)]"/>
+                <filter name="filter_ecom" string="Purpose" domain="[('ecom_id', '!=', False)]"/>
                 <filter name="filter_marketplace" string="Marketplace" domain="[('marketplace_id', '!=', False)]"/>
                 <separator/>
             </xpath>
             <xpath expr="//field[@name='partner_id']" position="after">
-                <field name="ecom_id" string="E-Com" filter_domain="['|', ('ecom_id.name', 'ilike', self), ('ecom_id.code', 'ilike', self)]"/>
+                <field name="ecom_id" string="Purpose" filter_domain="['|', ('ecom_id.name', 'ilike', self), ('ecom_id.code', 'ilike', self)]"/>
                 <field name="marketplace_id" string="Marketplace" filter_domain="['|', ('marketplace_id.name', 'ilike', self), ('marketplace_id.code', 'ilike', self)]"/>
             </xpath>
             <xpath expr="//group" position="inside">
-                <filter string="E-Com" name="group_by_ecom" domain="[]" context="{'group_by': 'ecom_id'}"/>
+                <filter string="Purpose" name="group_by_ecom" domain="[]" context="{'group_by': 'ecom_id'}"/>
                 <filter string="Marketplace" name="group_by_marketplace" domain="[]" context="{'group_by': 'marketplace_id'}"/>
             </xpath>
         </field>
@@ -81,16 +82,16 @@
         <field name="priority">25</field>
         <field name="arch" type="xml">
             <xpath expr="//filter[@name='my_purchases']" position="before">
-                <filter name="filter_ecom" string="E-Com" domain="[('ecom_id', '!=', False)]"/>
+                <filter name="filter_ecom" string="Purpose" domain="[('ecom_id', '!=', False)]"/>
                 <filter name="filter_marketplace" string="Marketplace" domain="[('marketplace_id', '!=', False)]"/>
                 <separator/>
             </xpath>
             <xpath expr="//field[@name='partner_id']" position="after">
-                <field name="ecom_id" string="E-Com" filter_domain="['|', ('ecom_id.name', 'ilike', self), ('ecom_id.code', 'ilike', self)]"/>
+                <field name="ecom_id" string="Purpose" filter_domain="['|', ('ecom_id.name', 'ilike', self), ('ecom_id.code', 'ilike', self)]"/>
                 <field name="marketplace_id" string="Marketplace" filter_domain="['|', ('marketplace_id.name', 'ilike', self), ('marketplace_id.code', 'ilike', self)]"/>
             </xpath>
             <xpath expr="//group" position="inside">
-                <filter string="E-Com" name="group_by_ecom" domain="[]" context="{'group_by': 'ecom_id'}"/>
+                <filter string="Purpose" name="group_by_ecom" domain="[]" context="{'group_by': 'ecom_id'}"/>
                 <filter string="Marketplace" name="group_by_marketplace" domain="[]" context="{'group_by': 'marketplace_id'}"/>
             </xpath>
         </field>

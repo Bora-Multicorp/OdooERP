@@ -11,11 +11,11 @@
                 <field name="is_ecom_picking" invisible="1"/>
                 <field name="ecom_id"
                        readonly="1"
-                       options="{'no_create': True, 'no_open': False}"/>
+                       options="{'no_open': True, 'no_create': True}"/>
                 <field name="marketplace_id"
                        invisible="not is_ecom_picking"
                        readonly="1"
-                       options="{'no_create': True, 'no_open': False}"/>
+                       options="{'no_open': True, 'no_create': True}"/>
             </xpath>
         </field>
     </record>
