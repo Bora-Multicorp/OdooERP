@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import re
 from odoo import api, models, fields
 from odoo.tools import formatLang
 
@@ -638,6 +639,41 @@ class AccountMove(models.Model):
         
         return ''
 
+    def get_line_description(self, line):
+        """Return the line description showing part_code in square brackets instead
+        of default_code; if part_code is absent or null, show default_code in square brackets.
+        """
+        line = line.sudo()
+        name = (line.name or '').strip()
+        product = line.product_id.sudo() if line.product_id else False
+        if not product:
+            return line.name or ''
+
+        part_code = (getattr(product, 'part_code', False) or getattr(product.product_tmpl_id.sudo(), 'part_code', False) or '').strip()
+        default_code = (getattr(product, 'default_code', False) or getattr(product.product_tmpl_id.sudo(), 'default_code', False) or '').strip()
+
+        code = part_code or default_code
+        if not code:
+            return name or getattr(product, 'name', '') or ''
+
+        code_prefix = f"[{code}]"
+        if not name:
+            prod_name = (getattr(product, 'name', '') or '').strip()
+            return f"{code_prefix} {prod_name}" if prod_name else code_prefix
+
+        match = re.match(r'^\s*\[(.*?)\][ \t]*(.*)', name, re.DOTALL)
+        if match:
+            rest = match.group(2)
+            if rest.startswith('\n'):
+                return f"{code_prefix}{rest}"
+            elif rest:
+                return f"{code_prefix} {rest}"
+            else:
+                return code_prefix
+        else:
+            return f"{code_prefix} {name}"
+
+
     def get_printable_amount_total(self):
         """Return the total amount for printable lines (excluding advance/downpayment lines)."""
         self.ensure_one()
@@ -883,4 +919,12 @@ class AccountMove(models.Model):
             pass
         
         return bank_info
+
+
+class AccountMoveLine(models.Model):
+    _inherit = 'account.move.line'
+
+    def get_line_description(self):
+        return self.move_id.get_line_description(self)
+
 

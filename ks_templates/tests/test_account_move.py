@@ -208,4 +208,34 @@ class TestAccountMove(KsTemplatesCommon):
         self.assertFalse(inv.ks_is_customer_indian)
         self.assertTrue(inv.ks_show_commercial_invoice)
 
+    def test_get_line_description_with_part_code(self):
+        """Test get_line_description displays [part_code] when part_code is set"""
+        line = self.invoice.invoice_line_ids[0]
+        line.product_id.default_code = 'INV_DEF_1'
+        if hasattr(line.product_id, 'part_code'):
+            line.product_id.part_code = 'INV_PART_1'
+        elif hasattr(line.product_id.product_tmpl_id, 'part_code'):
+            line.product_id.product_tmpl_id.part_code = 'INV_PART_1'
+
+        line.name = '[INV_DEF_1] Invoice Line Description'
+        desc = self.invoice.get_line_description(line)
+        self.assertTrue(desc.startswith('[INV_PART_1]'))
+        self.assertIn('Invoice Line Description', desc)
+        self.assertEqual(line.get_line_description(), desc)
+
+    def test_get_line_description_fallback_default_code(self):
+        """Test get_line_description falls back to [default_code] when part_code is absent or null"""
+        line = self.invoice.invoice_line_ids[0]
+        line.product_id.default_code = 'INV_DEF_2'
+        if hasattr(line.product_id, 'part_code'):
+            line.product_id.part_code = False
+        if hasattr(line.product_id.product_tmpl_id, 'part_code'):
+            line.product_id.product_tmpl_id.part_code = False
+
+        line.name = '[INV_DEF_2] Invoice Line Description'
+        desc = self.invoice.get_line_description(line)
+        self.assertTrue(desc.startswith('[INV_DEF_2]'))
+        self.assertIn('Invoice Line Description', desc)
+        self.assertEqual(line.get_line_description(), desc)
+
 
