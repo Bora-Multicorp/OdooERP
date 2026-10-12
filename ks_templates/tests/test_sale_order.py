@@ -103,3 +103,33 @@ class TestSaleOrder(KsTemplatesCommon):
         iban = sale_order.get_company_iban()
         self.assertEqual(iban, '')
 
+    def test_get_line_description_with_part_code(self):
+        """Test get_line_description displays [part_code] when part_code is set"""
+        line = self.sale_order.order_line[0]
+        line.product_id.default_code = 'SO_DEF_1'
+        if hasattr(line.product_id, 'part_code'):
+            line.product_id.part_code = 'SO_PART_1'
+        elif hasattr(line.product_id.product_tmpl_id, 'part_code'):
+            line.product_id.product_tmpl_id.part_code = 'SO_PART_1'
+
+        line.name = '[SO_DEF_1] Sale Order Line Item'
+        desc = self.sale_order.get_line_description(line)
+        self.assertTrue(desc.startswith('[SO_PART_1]'))
+        self.assertIn('Sale Order Line Item', desc)
+        self.assertEqual(line.get_line_description(), desc)
+
+    def test_get_line_description_fallback_default_code(self):
+        """Test get_line_description falls back to [default_code] when part_code is absent or null"""
+        line = self.sale_order.order_line[0]
+        line.product_id.default_code = 'SO_DEF_2'
+        if hasattr(line.product_id, 'part_code'):
+            line.product_id.part_code = False
+        if hasattr(line.product_id.product_tmpl_id, 'part_code'):
+            line.product_id.product_tmpl_id.part_code = False
+
+        line.name = '[SO_DEF_2] Sale Order Line Item'
+        desc = self.sale_order.get_line_description(line)
+        self.assertTrue(desc.startswith('[SO_DEF_2]'))
+        self.assertIn('Sale Order Line Item', desc)
+        self.assertEqual(line.get_line_description(), desc)
+

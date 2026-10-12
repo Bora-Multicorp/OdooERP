@@ -203,7 +203,7 @@
                                         <tr>
                                             <td style="border-left:1px solid #000; border-right:1px solid #000; padding:3px; text-align:center; vertical-align:top;" t-esc="line_num"/>
                                             <td style="border-right:1px solid #000; padding:3px; vertical-align:top;">
-                                                <strong><t t-esc="line.product_id.name or line.name or ''"/></strong>
+                                                <strong><t t-esc="doc.get_line_description(line)"/></strong>
                                                 <!-- CGST sub-row -->
                                                 <t t-if="l_cgst_rate">
                                                     <br/><br/>

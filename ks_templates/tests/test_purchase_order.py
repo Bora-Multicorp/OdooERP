@@ -139,6 +139,47 @@ class TestPurchaseOrder(KsTemplatesCommon):
         """Test ks_invoice_to compute field returns the same value as get_bill_to_company_name()"""
         self.assertEqual(self.purchase_order.ks_invoice_to, self.purchase_order.get_bill_to_company_name())
 
+    def test_get_line_description_with_part_code(self):
+        """Test get_line_description displays [part_code] when part_code is set"""
+        line = self.purchase_order.order_line[0]
+        line.product_id.default_code = 'DEF_CODE_1'
+        if hasattr(line.product_id, 'part_code'):
+            line.product_id.part_code = 'PART_CODE_1'
+        elif hasattr(line.product_id.product_tmpl_id, 'part_code'):
+            line.product_id.product_tmpl_id.part_code = 'PART_CODE_1'
+
+        line.name = '[DEF_CODE_1] Test Product Description'
+        desc = self.purchase_order.get_line_description(line)
+        self.assertTrue(desc.startswith('[PART_CODE_1]'))
+        self.assertIn('Test Product Description', desc)
+        self.assertEqual(line.get_line_description(), desc)
+
+    def test_get_line_description_fallback_default_code(self):
+        """Test get_line_description falls back to [default_code] when part_code is absent or null"""
+        line = self.purchase_order.order_line[0]
+        line.product_id.default_code = 'DEF_CODE_2'
+        if hasattr(line.product_id, 'part_code'):
+            line.product_id.part_code = False
+        if hasattr(line.product_id.product_tmpl_id, 'part_code'):
+            line.product_id.product_tmpl_id.part_code = False
+
+        line.name = '[DEF_CODE_2] Test Product Description'
+        desc = self.purchase_order.get_line_description(line)
+        self.assertTrue(desc.startswith('[DEF_CODE_2]'))
+        self.assertIn('Test Product Description', desc)
+        self.assertEqual(line.get_line_description(), desc)
+
+    def test_get_line_description_no_brackets_in_name(self):
+        """Test get_line_description prepends [part_code] even if line.name has no brackets"""
+        line = self.purchase_order.order_line[0]
+        line.product_id.default_code = 'DEF_CODE_3'
+        if hasattr(line.product_id, 'part_code'):
+            line.product_id.part_code = 'PART_CODE_3'
+
+        line.name = 'Simple Product Name'
+        desc = self.purchase_order.get_line_description(line)
+        self.assertEqual(desc, '[PART_CODE_3] Simple Product Name')
+
 
 
 
