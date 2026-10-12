@@ -133,3 +133,36 @@ class TestSaleOrder(KsTemplatesCommon):
         self.assertIn('Sale Order Line Item', desc)
         self.assertEqual(line.get_line_description(), desc)
 
+    def test_get_line_description_variant_with_template_part_code(self):
+        """Test variant item displays template's part_code when variant part_code is absent/null"""
+        line = self.sale_order.order_line[0]
+        line.product_id.default_code = 'VAR_DEF_SO'
+        if hasattr(line.product_id, 'part_code'):
+            line.product_id.part_code = False
+        if hasattr(line.product_id.product_tmpl_id, 'part_code'):
+            line.product_id.product_tmpl_id.part_code = 'TMPL_PART_SO'
+
+        line.name = '[VAR_DEF_SO] Variant SO Line Description'
+        desc = self.sale_order.get_line_description(line)
+        self.assertTrue(desc.startswith('[TMPL_PART_SO]'))
+        self.assertIn('Variant SO Line Description', desc)
+        self.assertEqual(line.get_line_description(), desc)
+
+    def test_get_line_description_variant_fallback_to_variant_default_code(self):
+        """Test variant item falls back to variant's default_code when neither variant nor template has part_code"""
+        line = self.sale_order.order_line[0]
+        line.product_id.default_code = 'VAR_DEF_SO_2'
+        if hasattr(line.product_id.product_tmpl_id, 'default_code'):
+            line.product_id.product_tmpl_id.default_code = 'TMPL_DEF_SO_2'
+        if hasattr(line.product_id, 'part_code'):
+            line.product_id.part_code = False
+        if hasattr(line.product_id.product_tmpl_id, 'part_code'):
+            line.product_id.product_tmpl_id.part_code = False
+
+        line.name = '[VAR_DEF_SO_2] Variant SO Line Description'
+        desc = self.sale_order.get_line_description(line)
+        self.assertTrue(desc.startswith('[VAR_DEF_SO_2]'))
+        self.assertIn('Variant SO Line Description', desc)
+        self.assertEqual(line.get_line_description(), desc)
+
+

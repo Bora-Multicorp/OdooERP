@@ -40,5 +40,7 @@ class SaleOrderLine(models.Model):
         return values
 
     def get_line_description(self):
-        return self.order_id.get_line_description(self)
+        if self.order_id:
+            return self.order_id.get_line_description(self)
+        return self.name or ''
 
