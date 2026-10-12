@@ -260,6 +260,8 @@ class SaleOrder(models.Model):
     def get_line_description(self, line):
         """Return the line description showing part_code in square brackets instead
         of default_code; if part_code is absent or null, show default_code in square brackets.
+        If item is a variant and its template has part_code available, show part_code for variant item too,
+        else show default_code of the variant.
         """
         line = line.sudo()
         name = (line.name or '').strip()
@@ -267,16 +269,31 @@ class SaleOrder(models.Model):
         if not product:
             return line.name or ''
 
-        part_code = (getattr(product, 'part_code', False) or getattr(product.product_tmpl_id.sudo(), 'part_code', False) or '').strip()
-        default_code = (getattr(product, 'default_code', False) or getattr(product.product_tmpl_id.sudo(), 'default_code', False) or '').strip()
+        tmpl = product.product_tmpl_id.sudo() if (hasattr(product, 'product_tmpl_id') and product.product_tmpl_id) else False
+
+        # 1. Check variant's part_code, then fallback to template's part_code
+        part_code = (getattr(product, 'part_code', False) or '').strip()
+        if not part_code and tmpl:
+            part_code = (getattr(tmpl, 'part_code', False) or '').strip()
+
+        # 2. Check variant's default_code, then fallback to template's default_code
+        default_code = (getattr(product, 'default_code', False) or '').strip()
+        if not default_code and tmpl:
+            default_code = (getattr(tmpl, 'default_code', False) or '').strip()
 
         code = part_code or default_code
+        if code.startswith('[') and code.endswith(']'):
+            code = code[1:-1].strip()
+
         if not code:
-            return name or getattr(product, 'name', '') or ''
+            return name or getattr(product, 'display_name', False) or getattr(product, 'name', '') or ''
 
         code_prefix = f"[{code}]"
         if not name:
-            prod_name = (getattr(product, 'name', '') or '').strip()
+            prod_name = (getattr(product, 'display_name', False) or getattr(product, 'name', '') or '').strip()
+            match = re.match(r'^\s*\[(.*?)\][ \t]*(.*)', prod_name, re.DOTALL)
+            if match:
+                prod_name = match.group(2).strip()
             return f"{code_prefix} {prod_name}" if prod_name else code_prefix
 
         match = re.match(r'^\s*\[(.*?)\][ \t]*(.*)', name, re.DOTALL)
@@ -290,6 +307,7 @@ class SaleOrder(models.Model):
                 return code_prefix
         else:
             return f"{code_prefix} {name}"
+
 
     def _get_tax_type(self, tax):
         """Return 'cgst', 'sgst', 'igst', or '' for a single tax."""
