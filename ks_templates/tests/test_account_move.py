@@ -238,4 +238,37 @@ class TestAccountMove(KsTemplatesCommon):
         self.assertIn('Invoice Line Description', desc)
         self.assertEqual(line.get_line_description(), desc)
 
+    def test_get_line_description_variant_with_template_part_code(self):
+        """Test variant item displays template's part_code when variant part_code is absent/null"""
+        line = self.invoice.invoice_line_ids[0]
+        line.product_id.default_code = 'VAR_DEF_INV'
+        if hasattr(line.product_id, 'part_code'):
+            line.product_id.part_code = False
+        if hasattr(line.product_id.product_tmpl_id, 'part_code'):
+            line.product_id.product_tmpl_id.part_code = 'TMPL_PART_INV'
+
+        line.name = '[VAR_DEF_INV] Variant Invoice Line Description'
+        desc = self.invoice.get_line_description(line)
+        self.assertTrue(desc.startswith('[TMPL_PART_INV]'))
+        self.assertIn('Variant Invoice Line Description', desc)
+        self.assertEqual(line.get_line_description(), desc)
+
+    def test_get_line_description_variant_fallback_to_variant_default_code(self):
+        """Test variant item falls back to variant's default_code when neither variant nor template has part_code"""
+        line = self.invoice.invoice_line_ids[0]
+        line.product_id.default_code = 'VAR_DEF_INV_2'
+        if hasattr(line.product_id.product_tmpl_id, 'default_code'):
+            line.product_id.product_tmpl_id.default_code = 'TMPL_DEF_INV_2'
+        if hasattr(line.product_id, 'part_code'):
+            line.product_id.part_code = False
+        if hasattr(line.product_id.product_tmpl_id, 'part_code'):
+            line.product_id.product_tmpl_id.part_code = False
+
+        line.name = '[VAR_DEF_INV_2] Variant Invoice Line Description'
+        desc = self.invoice.get_line_description(line)
+        self.assertTrue(desc.startswith('[VAR_DEF_INV_2]'))
+        self.assertIn('Variant Invoice Line Description', desc)
+        self.assertEqual(line.get_line_description(), desc)
+
+
 
