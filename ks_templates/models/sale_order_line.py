@@ -38,3 +38,7 @@ class SaleOrderLine(models.Model):
         if self.made_in_country_id:
             values['made_in_country_id'] = self.made_in_country_id.id
         return values
+
+    def get_line_description(self):
+        return self.order_id.get_line_description(self)
+

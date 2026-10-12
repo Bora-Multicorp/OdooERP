@@ -218,7 +218,7 @@
                         <tr>
                             <td style="border:1px solid #000; padding:4px; text-align:center;" t-esc="line_num"/>
                             <td style="border:1px solid #000; padding:4px;">
-                                <t t-esc="line.name or ''"/>
+                                <t t-esc="doc.get_line_description(line)"/>
                                 <t t-if="l_cgst_rate"><br/><em><strong>Output CGST @ <t t-esc="doc.format_rate(l_cgst_rate)"/>%</strong></em></t>
                                 <t t-if="l_sgst_rate"><br/><em><strong>Output SGST @ <t t-esc="doc.format_rate(l_sgst_rate)"/>%</strong></em></t>
                                 <t t-if="l_igst_rate"><br/><em><strong>Output IGST @ <t t-esc="doc.format_rate(l_igst_rate)"/>%</strong></em></t>
