@@ -35,6 +35,7 @@
                 <t t-set="inv_bank" t-value="doc.ks_bank_id"/>
                 <t t-set="inr_rate" t-value="doc.get_invoice_inr_rate()"/>
                 <t t-set="inr_currency" t-value="env['res.currency'].search([('name', '=', 'INR')], limit=1)"/>
+                <t t-set="is_dubai_hk" t-value="doc.is_dubai_or_hk_company()"/>
 
                 <table style="width:100%; border-collapse:collapse; border-color:white;">
                     <tr>
@@ -51,7 +52,7 @@
 
                     <!-- COMPANY INFO + INVOICE DETAILS ROW -->
                     <tr>
-                        <td style="width:55%; vertical-align:top; border:1px solid #000; padding:6px;" colspan="4">
+                        <td style="width:55%; vertical-align:top; border:1px solid #000; padding:6px;" t-att-colspan="3 if is_dubai_hk else 4">
                             <strong t-esc="doc.company_id.name or ''"/><br/>
                             <t t-if="doc.company_id.partner_id.street" t-esc="doc.company_id.partner_id.street"/><br/>
                             <t t-if="doc.company_id.partner_id.street2" t-esc="doc.company_id.partner_id.street2"/><br/>
@@ -93,7 +94,7 @@
                                 <br/>PAN : <t t-esc="doc.partner_id.l10n_in_pan"/>
                             </t>
                         </td>
-                        <td style="width:45%; vertical-align:top; padding:0; border:1px solid #000;" colspan="4">
+                        <td style="width:45%; vertical-align:top; padding:0; border:1px solid #000;" t-att-colspan="3 if is_dubai_hk else 4">
                             <table style="width:100%; border-collapse:collapse; border-color:white;">
                                 <tr>
                                     <td style="border-right:1px solid #000; padding:1px;">Invoice No.</td>
@@ -227,10 +228,10 @@
                     <tr>
                         <th style="border:1px solid #000; padding:4px; text-align:center; background-color:#f0f0f0; width:5%;">Sl No.</th>
                         <th style="border:1px solid #000; padding:4px; text-align:left; background-color:#f0f0f0; width:28%;">Description of Goods</th>
-                        <th style="border:1px solid #000; padding:4px; text-align:right; background-color:#f0f0f0; width:9%;">HSN/SAC</th>
+                        <th t-if="not is_dubai_hk" style="border:1px solid #000; padding:4px; text-align:right; background-color:#f0f0f0; width:9%;">HSN/SAC</th>
                         <th style="border:1px solid #000; padding:4px; text-align:right; background-color:#f0f0f0; width:10%;">Quantity</th>
                         <th style="border:1px solid #000; padding:4px; text-align:right; background-color:#f0f0f0; width:12%;">Rate</th>
-                        <th style="border:1px solid #000; padding:4px; text-align:right; background-color:#f0f0f0; width:14%;">Rate (Incl. Tax)</th>
+                        <th t-if="not is_dubai_hk" style="border:1px solid #000; padding:4px; text-align:right; background-color:#f0f0f0; width:14%;">Rate (Incl. Tax)</th>
                         <th style="border:1px solid #000; padding:4px; text-align:center; background-color:#f0f0f0; width:6%;">Per</th>
                         <th style="border:1px solid #000; padding:4px; text-align:right; background-color:#f0f0f0; width:16%;">Amount</th>
                     </tr>
@@ -246,7 +247,7 @@
                                 <t t-set="made_in_country" t-value="(line.sale_line_ids and line.sale_line_ids[0].made_in_country_id) or (line.purchase_line_id and line.purchase_line_id.made_in_country_id) or (line.product_id and line.product_id.product_tmpl_id.made_country)"/>
                                 <t t-if="made_in_country"><br/><t t-esc="'Made in ' + (made_in_country.name or '')"/></t>
                             </td>
-                            <td style="border:1px solid #000; padding:4px; text-align:right;">
+                            <td t-if="not is_dubai_hk" style="border:1px solid #000; padding:4px; text-align:right;">
                                 <t t-esc="doc.get_line_hsn_code(line)"/>
                             </td>
                             <td style="border:1px solid #000; padding:4px; text-align:right;">
@@ -255,7 +256,7 @@
                             <td style="border:1px solid #000; padding:4px; text-align:right;">
                                 INR <t t-esc="doc.format_number(line.price_unit * inr_rate, digits=2)"/>
                             </td>
-                            <td style="border:1px solid #000; padding:4px; text-align:right;">
+                            <td t-if="not is_dubai_hk" style="border:1px solid #000; padding:4px; text-align:right;">
                                 INR <t t-esc="doc.format_number(line.price_unit_incl * inr_rate, digits=2)"/>
                             </td>
                             <td style="border:1px solid #000; padding:4px; text-align:center;" t-esc="line.product_uom_id.name or 'pcs'"/>
@@ -267,7 +268,7 @@
 
                     <!-- SUBTOTAL ROW -->
                     <tr>
-                        <td style="border:1px solid #000; padding:4px;" colspan="7"></td>
+                        <td style="border:1px solid #000; padding:4px;" t-att-colspan="5 if is_dubai_hk else 7"></td>
                         <td style="border:1px solid #000; padding:4px; text-align:right;">
                             INR <t t-esc="doc.format_number(total_untaxed * inr_rate, digits=2)"/>
                         </td>
@@ -279,12 +280,12 @@
                         <td style="border:1px solid #000; padding:4px; text-align:right;">
                             OUTPUT IGST @<t t-esc="doc.format_number(igst_rate, digits=0)"/>%
                         </td>
-                        <td style="border:1px solid #000; padding:4px;"></td>
+                        <td t-if="not is_dubai_hk" style="border:1px solid #000; padding:4px;"></td>
                         <td style="border:1px solid #000; padding:4px;"></td>
                         <td style="border:1px solid #000; padding:4px; text-align:right;">
                             <t t-esc="doc.format_number(igst_rate, digits=0)"/>
                         </td>
-                        <td style="border:1px solid #000; padding:4px;"></td>
+                        <td t-if="not is_dubai_hk" style="border:1px solid #000; padding:4px;"></td>
                         <td style="border:1px solid #000; padding:4px; text-align:center;">%</td>
                         <td style="border:1px solid #000; padding:4px; text-align:right;">
                             INR <t t-esc="doc.format_number(total_untaxed * inr_rate * igst_rate / 100.0, digits=2)"/>
@@ -295,12 +296,12 @@
                     <tr>
                         <td style="border:1px solid #000; padding:4px;"></td>
                         <td style="border:1px solid #000; padding:4px;"><strong>Total</strong></td>
-                        <td style="border:1px solid #000; padding:4px;"></td>
+                        <td t-if="not is_dubai_hk" style="border:1px solid #000; padding:4px;"></td>
                         <td style="border:1px solid #000; padding:4px; text-align:right;">
                             <strong><t t-esc="doc.format_number(total_qty, digits=2)"/> pcs</strong>
                         </td>
                         <td style="border:1px solid #000; padding:4px;"></td>
-                        <td style="border:1px solid #000; padding:4px;"></td>
+                        <td t-if="not is_dubai_hk" style="border:1px solid #000; padding:4px;"></td>
                         <td style="border:1px solid #000; padding:4px;"></td>
                         <td style="border:1px solid #000; padding:4px; text-align:left;">
                             <strong>INR <t t-esc="doc.format_number((doc.amount_untaxed + doc.amount_tax) * inr_rate, digits=2)"/></strong>
@@ -309,7 +310,7 @@
 
                     <!-- AMOUNT IN WORDS ROW -->
                     <tr>
-                        <td style="border:1px solid #000; padding:6px;" colspan="8">
+                        <td style="border:1px solid #000; padding:6px;" t-att-colspan="6 if is_dubai_hk else 8">
                             Amount Chargeable (in words)<br/>
                             <strong>
                                 <t t-esc="doc.get_amount_in_words_currency(total_amount * inr_rate, inr_currency)"/>
@@ -319,7 +320,7 @@
 
                     <!-- TAX SUMMARY ROW -->
                     <tr>
-                        <td style="border:1px solid #000; padding:0;" colspan="8">
+                        <td style="border:1px solid #000; padding:0;" t-att-colspan="6 if is_dubai_hk else 8">
                             <table style="width:100%; border-collapse:collapse; font-size:11px;">
                                 <tr>
                                     <td style="width:40%; border-right:1px solid #000; border-bottom:1px solid #000; padding:4px;" rowspan="2">HSN/SAC</td>
@@ -359,7 +360,7 @@
 
                     <!-- TAX AMOUNT IN WORDS ROW -->
                     <tr>
-                        <td style="border:1px solid #000; padding:6px;" colspan="8">
+                        <td style="border:1px solid #000; padding:6px;" t-att-colspan="6 if is_dubai_hk else 8">
                             Tax Amount (in words):<br/>
                             <strong>
                                 <t t-esc="doc.get_amount_in_words_inr(total_inr_tax)"/>
@@ -369,7 +370,7 @@
 
                     <!-- REMARKS + DECLARATION + BANK DETAILS + SIGNATORY ROW -->
                     <tr>
-                        <td style="vertical-align:top; padding:6px; border:1px solid #000;" colspan="4">
+                        <td style="vertical-align:top; padding:6px; border:1px solid #000;" t-att-colspan="3 if is_dubai_hk else 4">
                             <t t-if="gst_sale and gst_sale.ks_remarks">
                                 <strong>Remarks</strong><br/>
                                 <t t-esc="gst_sale.ks_remarks"/><br/><br/>
@@ -384,7 +385,7 @@
                                 <span t-out="tc_content"/>
                             </t>
                         </td>
-                        <td style="vertical-align:top; padding:6px; border:1px solid #000;" colspan="4">
+                        <td style="vertical-align:top; padding:6px; border:1px solid #000;" t-att-colspan="3 if is_dubai_hk else 4">
                             <p style="font-weight:bold; margin:0 0 4px 0;">Company's Bank Details</p>
                             <span><strong>Bank Name:</strong> <t t-esc="inv_bank.name if inv_bank else ''"/></span><br/>
                             <span><strong>A/c No.:</strong> <t t-esc="inv_bank.bic if inv_bank else ''"/></span><br/>
@@ -405,7 +406,7 @@
 
                     <!-- COMPUTER GENERATED ROW -->
                     <tr>
-                        <td style="border:1px solid #000; padding:4px; text-align:center; font-size:10px;" colspan="8">
+                        <td style="border:1px solid #000; padding:4px; text-align:center; font-size:10px;" t-att-colspan="6 if is_dubai_hk else 8">
                             This is a Computer Generated Invoice
                         </td>
                     </tr>

@@ -44,6 +44,7 @@
                 <t t-set="total_tax"    t-value="total_cgst + total_sgst + total_igst"/>
                 <t t-set="is_igst_only" t-value="total_igst > 0 and total_cgst == 0 and total_sgst == 0"/>
                 <t t-set="grand_total"  t-value="subtotal + total_tax"/>
+                <t t-set="is_dubai_hk"  t-value="doc.is_dubai_or_hk_company()"/>
 
                 <!-- TITLE -->
                 <div style="text-align:center; font-weight:bold; font-size:15px; font-family:Arial,sans-serif; margin-bottom:2px;">PROFORMA INVOICE</div>
@@ -179,10 +180,10 @@
                                     <tr>
                                         <th style="border:1px solid #000; padding:3px; text-align:center; width:4%;">Sl<br/>No.</th>
                                         <th style="border:1px solid #000; padding:3px; text-align:center; width:23%;">Description of Goods</th>
-                                        <th style="border:1px solid #000; padding:3px; text-align:center; width:9%;">HSN/SAC</th>
+                                        <th t-if="not is_dubai_hk" style="border:1px solid #000; padding:3px; text-align:center; width:9%;">HSN/SAC</th>
                                         <th style="border:1px solid #000; padding:3px; text-align:center; width:9%;">Quantity</th>
                                         <th style="border:1px solid #000; padding:3px; text-align:center; width:11%;">Rate</th>
-                                        <th style="border:1px solid #000; padding:3px; text-align:center; width:13%;">Rate (Incl. Tax)</th>
+                                        <th t-if="not is_dubai_hk" style="border:1px solid #000; padding:3px; text-align:center; width:13%;">Rate (Incl. Tax)</th>
                                         <th style="border:1px solid #000; padding:3px; text-align:center; width:5%;">per</th>
                                         <th style="border:1px solid #000; padding:3px; text-align:center; width:7%;">Disc. %</th>
                                         <th style="border:1px solid #000; padding:3px; text-align:right; width:19%;">Amount</th>
@@ -220,7 +221,7 @@
                                                     <em><strong>Output IGST @ <t t-esc="doc.format_rate(l_igst_rate)"/>%</strong></em>
                                                 </t>
                                             </td>
-                                            <td style="border-right:1px solid #000; padding:3px; text-align:center; vertical-align:top;" t-esc="doc.get_line_hsn_code(line)"/>
+                                            <td t-if="not is_dubai_hk" style="border-right:1px solid #000; padding:3px; text-align:center; vertical-align:top;" t-esc="doc.get_line_hsn_code(line)"/>
                                             <td style="border-right:1px solid #000; padding:3px; text-align:center; vertical-align:top;">
                                                 <t t-esc="doc.format_number(line.product_uom_qty, digits=0)"/>
                                             </td>
@@ -230,7 +231,7 @@
                                                 <t t-if="l_sgst_rate"><br/><em><strong><t t-esc="doc.format_rate(l_sgst_rate)"/></strong></em></t>
                                                 <t t-if="l_igst_rate"><br/><br/><em><strong><t t-esc="doc.format_rate(l_igst_rate)"/></strong></em></t>
                                             </td>
-                                            <td style="border-right:1px solid #000; padding:3px; text-align:right; vertical-align:top;">
+                                            <td t-if="not is_dubai_hk" style="border-right:1px solid #000; padding:3px; text-align:right; vertical-align:top;">
                                                 <t t-esc="doc.format_number(line.price_unit_incl, digits=2)"/>
                                                 <t t-if="l_cgst_rate"><br/><br/><em><strong><t t-esc="doc.format_rate(l_cgst_rate)"/></strong></em></t>
                                                 <t t-if="l_sgst_rate"><br/><em><strong><t t-esc="doc.format_rate(l_sgst_rate)"/></strong></em></t>
@@ -255,10 +256,10 @@
                                     </t>
                                     <!-- TOTAL ROW -->
                                     <tr>
-                                        <td style="border:1px solid #000; padding:3px; text-align:right;" colspan="3"><strong>Total</strong></td>
+                                        <td style="border:1px solid #000; padding:3px; text-align:right;" t-att-colspan="2 if is_dubai_hk else 3"><strong>Total</strong></td>
                                         <td style="border:1px solid #000; padding:3px; text-align:center;"><strong><t t-esc="doc.format_number(total_qty, digits=0)"/> NOS</strong></td>
                                         <td style="border:1px solid #000; padding:3px;"></td>
-                                        <td style="border:1px solid #000; padding:3px;"></td>
+                                        <td t-if="not is_dubai_hk" style="border:1px solid #000; padding:3px;"></td>
                                         <td style="border:1px solid #000; padding:3px;"></td>
                                         <td style="border:1px solid #000; padding:3px;"></td>
                                         <td style="border:1px solid #000; padding:3px; text-align:right;"><strong>INR <t t-esc="doc.format_number(grand_total, digits=2)"/></strong></td>
@@ -430,7 +431,7 @@
 
         <!-- Step 3b: Replace Rate (Incl. Tax) column (line.price_unit_incl) td with INR value -->
         <xpath expr="//td[strong/t[@t-esc='doc.format_number(line.price_unit_incl, digits=2)']]" position="replace">
-            <td style="border:1px solid #000; padding:4px; text-align:right;">
+            <td t-if="not doc.is_dubai_or_hk_company()" style="border:1px solid #000; padding:4px; text-align:right;">
                 <strong>
                     INR
                     <t t-esc="doc.format_number(line.price_unit_incl * inr_rate, digits=2)"/>
