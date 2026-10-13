@@ -36,6 +36,7 @@
         <t t-call="web.html_container">
             <t t-foreach="docs" t-as="doc">
                 <t t-set="doc" t-value="doc.with_context(lang=doc.partner_id.lang)"/>
+                <t t-set="is_dubai_hk" t-value="doc.is_dubai_or_hk_company()"/>
 
                 <style>
                     @page {
@@ -340,10 +341,10 @@
                                     <tr>
                                         <th style="border:1px solid #000; padding:4px; text-align:center; background-color:#f0f0f0; font-weight:bold; font-size:10pt; width:5%;">Sl No.</th>
                                         <th style="border:1px solid #000; padding:4px; text-align:left; background-color:#f0f0f0; font-weight:bold; font-size:10pt; width:30%;">Description of Goods</th>
-                                        <th style="border:1px solid #000; padding:4px; text-align:center; background-color:#f0f0f0; font-weight:bold; font-size:10pt; width:10%;">HSN/SAC</th>
+                                        <th t-if="not is_dubai_hk" style="border:1px solid #000; padding:4px; text-align:center; background-color:#f0f0f0; font-weight:bold; font-size:10pt; width:10%;">HSN/SAC</th>
                                         <th style="border:1px solid #000; padding:4px; text-align:right; background-color:#f0f0f0; font-weight:bold; font-size:10pt; width:10%;">Quantity</th>
                                         <th style="border:1px solid #000; padding:4px; text-align:right; background-color:#f0f0f0; font-weight:bold; font-size:10pt; width:12%;">Rate</th>
-                                        <th style="border:1px solid #000; padding:4px; text-align:right; background-color:#f0f0f0; font-weight:bold; font-size:10pt; width:14%;">Rate (Incl. Tax)</th>
+                                        <th t-if="not is_dubai_hk" style="border:1px solid #000; padding:4px; text-align:right; background-color:#f0f0f0; font-weight:bold; font-size:10pt; width:14%;">Rate (Incl. Tax)</th>
                                         <th style="border:1px solid #000; padding:4px; text-align:center; background-color:#f0f0f0; font-weight:bold; font-size:10pt; width:5%;">per</th>
                                         <th style="border:1px solid #000; padding:4px; text-align:right; background-color:#f0f0f0; font-weight:bold; font-size:10pt; width:14%;">Amount</th>
                                     </tr>
@@ -361,12 +362,12 @@
                                                     <br/><span style="margin-left: 1em;"><t t-esc="'Made in ' + (made_in_country.name or '')"/></span>
                                                 </t>
                                             </td>
-                                            <td style="border:1px solid #000; padding:4px; text-align:center;" t-esc="doc.get_line_hsn_code(line)"/>
+                                            <td t-if="not is_dubai_hk" style="border:1px solid #000; padding:4px; text-align:center;" t-esc="doc.get_line_hsn_code(line)"/>
                                             <td style="border:1px solid #000; padding:4px; text-align:right;" t-esc="doc.format_number(line.product_uom_qty, digits=0)"/>
                                             <td style="border:1px solid #000; padding:4px; text-align:right;">
                                                 <strong><t t-esc="doc.currency_id.symbol or '$'"/> <t t-esc="doc.format_number(line.price_unit, digits=2)"/></strong>
                                             </td>
-                                            <td style="border:1px solid #000; padding:4px; text-align:right;">
+                                            <td t-if="not is_dubai_hk" style="border:1px solid #000; padding:4px; text-align:right;">
                                                 <strong><t t-esc="doc.currency_id.symbol or '$'"/> <t t-esc="doc.format_number(line.price_unit_incl, digits=2)"/></strong>
                                             </td>
                                             <td style="border:1px solid #000; padding:4px; text-align:center;" t-esc="line.product_uom.name or 'pcs'"/>
@@ -379,10 +380,10 @@
                                     <tr>
                                         <td style="border:1px solid #000; padding:4px; text-align:center;"></td>
                                         <td style="border:1px solid #000; padding:4px;"><strong>Total</strong></td>
-                                        <td style="border:1px solid #000; padding:4px; text-align:center;"></td>
+                                        <td t-if="not is_dubai_hk" style="border:1px solid #000; padding:4px; text-align:center;"></td>
                                         <td style="border:1px solid #000; padding:4px; text-align:right;"><strong><t t-esc="doc.format_number(total_qty, digits=0)"/> pcs</strong></td>
                                         <td style="border:1px solid #000; padding:4px; text-align:right;"></td>
-                                        <td style="border:1px solid #000; padding:4px; text-align:right;"></td>
+                                        <td t-if="not is_dubai_hk" style="border:1px solid #000; padding:4px; text-align:right;"></td>
                                         <td style="border:1px solid #000; padding:4px; text-align:center;"></td>
                                         <td style="border:1px solid #000; padding:4px; text-align:right;"><strong><t t-esc="doc.currency_id.symbol or '$'"/> <t t-esc="doc.format_number(total_usd, digits=2)"/></strong></td>
                                     </tr>
@@ -421,7 +422,7 @@
                                 <t t-esc="doc.currency_id.symbol or doc.currency_id.name"/>
                                 <t t-esc="doc.format_number(total_invoice_amount, digits=2)"/>
                                 &amp;nbsp;@&amp;nbsp;
-                                <t t-esc="doc.format_number(doc.rate, digits=2)"/>
+                                <t t-esc="doc.format_number(doc.rate, digits=4)"/>
                                 <t t-esc="doc.ks_exchange_currency_id.name"/>/<t t-esc="doc.currency_id.symbol or doc.currency_id.name"/>
                                 &amp;nbsp;=&amp;nbsp;
                                 <t t-esc="doc.format_number(doc.exchanged_amount, digits=2)"/>

@@ -257,6 +257,26 @@ class SaleOrder(models.Model):
             pass
         return ''
 
+    def is_dubai_or_hk_company(self):
+        """Return True if company country is Dubai (AE) or Hong Kong (HK)."""
+        if not self:
+            comp = self.env.company
+        else:
+            comp = self[0].company_id or self.env.company
+        country = comp.country_id or (comp.partner_id and comp.partner_id.country_id) if comp else False
+        code = (country.code or getattr(comp, 'country_code', '') or '').strip().upper() if country or comp else ''
+        name = (country.name or '').strip().lower() if country else ''
+        if code in ('AE', 'HK'):
+            return True
+        if any(k in name for k in ('dubai', 'emirates', 'hong kong', 'hongkong', 'uae')):
+            return True
+        state_name = (comp.partner_id.state_id.name or '').strip().lower() if comp and comp.partner_id and comp.partner_id.state_id else ''
+        if 'dubai' in state_name or 'hong kong' in state_name or 'hongkong' in state_name:
+            return True
+        return False
+
+    is_dubai_or_hongkong_company = is_dubai_or_hk_company
+
     def get_line_description(self, line):
         """Return the line description showing part_code in square brackets instead
         of default_code; if part_code is absent or null, show default_code in square brackets.
