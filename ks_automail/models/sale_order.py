@@ -203,7 +203,8 @@ class SaleOrder(models.Model):
                 # Get auto-send setting (from config or manual override)
                 auto_send = order.ks_auto_send_confirmation
                 if auto_send and not order.ks_email_confirmed_sent:
-                    order._send_confirmation_email()
+                    pass
+                    # order._send_confirmation_email()
         
         return result
 
