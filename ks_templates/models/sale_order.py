@@ -153,6 +153,8 @@ class SaleOrder(models.Model):
             return ''
         if currency.name == 'INR':
             return self.get_amount_in_words_inr(amount)
+        if currency.name == 'AED':
+            return self.get_amount_in_words_aed(amount)
         try:
             return currency.amount_to_text(amount) or ''
         except Exception:
