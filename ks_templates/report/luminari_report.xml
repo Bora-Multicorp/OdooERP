@@ -263,7 +263,29 @@
             <t t-if="lum_inv_currency and lum_comp_currency and lum_inv_currency != lum_comp_currency">
                 <t t-set="lum_converted_amount" t-value="lum_inv_currency._convert(lum_total_amount, lum_comp_currency, doc.company_id, lum_conversion_date, round=True)"/>
             </t>
-            <t t-if="lum_inv_currency and lum_comp_currency and lum_inv_currency != lum_comp_currency">
+            <t t-set="is_customer_dubai_hk" t-value="doc.is_dubai_or_hk_customer()"/>
+            <t t-set="aed_info" t-value="doc.get_aed_conversion_info() if is_customer_dubai_hk else {}"/>
+            <t t-set="curr_sym" t-value="lum_inv_currency.symbol or lum_inv_currency.name"/>
+
+            <t t-if="is_customer_dubai_hk and lum_inv_currency.name != 'AED'">
+            <tr>
+                <td style="border:1px solid #000; padding:4px; text-align:right;" t-att-colspan="6 if is_dubai_hk else 8">
+                    <strong>
+                        Total Invoice Amount in AED
+                        &amp;nbsp;
+                        <t t-esc="curr_sym"/>
+                        <t t-esc="doc.format_number(lum_total_amount, digits=2)"/>
+                        &amp;nbsp;@&amp;nbsp;
+                        <t t-esc="aed_info['rate_formatted']"/>
+                        AED/<t t-esc="curr_sym"/>
+                        &amp;nbsp;=&amp;nbsp;
+                        <t t-esc="doc.format_number(aed_info['aed_amount'], digits=2)"/>
+                        AED
+                    </strong>
+                </td>
+            </tr>
+            </t>
+            <t t-elif="lum_inv_currency and lum_comp_currency and lum_inv_currency != lum_comp_currency">
             <tr>
                 <td style="border:1px solid #000; padding:4px; text-align:right;" t-att-colspan="6 if is_dubai_hk else 8">
                     <strong>
@@ -279,7 +301,12 @@
                 <td style="border:1px solid #000; padding:6px;" t-att-colspan="6 if is_dubai_hk else 8">
                     Amount Chargeable (in words)<br/>
                     <strong>
-                        <t t-set="invoice_amount_words" t-value="doc.get_amount_in_words_currency(lum_total_amount, lum_inv_currency)"/>
+                        <t t-if="is_customer_dubai_hk">
+                            <t t-set="invoice_amount_words" t-value="aed_info['aed_amount_words']"/>
+                        </t>
+                        <t t-else="">
+                            <t t-set="invoice_amount_words" t-value="doc.get_amount_in_words_currency(lum_total_amount, lum_inv_currency)"/>
+                        </t>
                         <t t-esc="invoice_amount_words or ''"/>
                     </strong>
                 </td>
