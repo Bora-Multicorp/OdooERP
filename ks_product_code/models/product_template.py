@@ -238,26 +238,42 @@ class ProductTemplateInternalRef(models.Model):
         )
 
         if not variants:
-            code = self._generate_sku(self.id)
-            code = self._resolve_cross_product_conflict(code, set(), self.name)
-            self.with_context(skip_sku_duplicate_check=True).default_code = code
+            if not self.default_code or self.env.context.get('force_sku_regen'):
+                code = self._generate_sku(self.id)
+                code = self._resolve_cross_product_conflict(code, set(), self.name)
+                self.with_context(skip_sku_duplicate_check=True).default_code = code
             _logger.info(
                 "[SKU-PERF] tmpl=%s '%s' single-code path took %.2fs",
                 self.id, self.name, time.monotonic() - t0,
             )
             return
 
-        # Step 1 — generate all codes first (no writes)
+        # Skip default_code assignment/generation for older/existing variants that already have a code.
+        # Only assign/generate for new variants (or variants without default_code), unless force_sku_regen is set.
+        if not self.env.context.get('force_sku_regen'):
+            variants_to_assign = variants.filtered(lambda v: not v.default_code)
+        else:
+            variants_to_assign = variants
+
+        if not variants_to_assign:
+            _logger.info(
+                "[SKU-PERF] tmpl=%s '%s' all %d variants already have default_code; skipping SKU generation",
+                self.id, self.name, len(variants),
+            )
+            return
+
+        # Step 1 — generate codes for target variants only (no writes)
         t1 = time.monotonic()
-        new_codes = {v.id: self._generate_sku(v.id) for v in variants}
+        new_codes = {v.id: self._generate_sku(v.id) for v in variants_to_assign}
         _logger.info(
-            "[SKU-PERF] tmpl=%s '%s' step1 generate (%d variants) took %.2fs",
-            self.id, self.name, len(variants), time.monotonic() - t1,
+            "[SKU-PERF] tmpl=%s '%s' step1 generate (%d variants to assign out of %d total) took %.2fs",
+            self.id, self.name, len(variants_to_assign), len(variants), time.monotonic() - t1,
         )
 
         # Step 2 — intra-template collision resolution (auto-disambiguate)
         t2 = time.monotonic()
-        seen = {}   # code → vid of first variant that claimed it
+        seen = {v.default_code: v.id for v in variants if v.default_code and v.id not in new_codes}
+        all_template_codes = set(seen.keys()) | set(new_codes.values())
         for vid in list(new_codes.keys()):
             code = new_codes[vid]
             if not code:
@@ -274,8 +290,9 @@ class ProductTemplateInternalRef(models.Model):
                            'a': va.display_name, 'b': vb.display_name}
                     )
                 new_codes[vid] = self._disambiguate_intra(
-                    code, vb, set(new_codes.values())
+                    code, vb, all_template_codes
                 )
+                all_template_codes.add(new_codes[vid])
             seen[new_codes[vid]] = vid
         _logger.info(
             "[SKU-PERF] tmpl=%s '%s' step2 intra-collision took %.2fs",
@@ -284,15 +301,14 @@ class ProductTemplateInternalRef(models.Model):
 
         # Step 3 — cross-product collision resolution
         t3 = time.monotonic()
-        taken_globally = set()
-        name_words = (self.name or '').split()
+        taken_globally = set(v.default_code for v in variants if v.default_code and v.id not in new_codes)
         for vid in sorted(new_codes.keys()):
             code = new_codes[vid]
             if not code:
                 continue
             tv = time.monotonic()
             resolved = self._resolve_cross_product_conflict(
-                code, taken_globally, self.name, own_ids=list(new_codes.keys())
+                code, taken_globally, self.name, own_ids=variants.ids
             )
             dtv = time.monotonic() - tv
             if dtv > 0.5:
@@ -305,17 +321,17 @@ class ProductTemplateInternalRef(models.Model):
             taken_globally.add(resolved)
         _logger.info(
             "[SKU-PERF] tmpl=%s '%s' step3 cross-product (%d variants) took %.2fs",
-            self.id, self.name, len(variants), time.monotonic() - t3,
+            self.id, self.name, len(variants_to_assign), time.monotonic() - t3,
         )
 
-        # Step 4 — write all codes, per-row constraint suppressed
+        # Step 4 — write codes for target variants only, per-row constraint suppressed
         t4 = time.monotonic()
         ctx = dict(self.env.context, skip_sku_duplicate_check=True)
-        for variant in variants:
+        for variant in variants_to_assign:
             variant.with_context(**ctx).default_code = new_codes[variant.id]
         _logger.info(
-            "[SKU-PERF] tmpl=%s '%s' step4 write took %.2fs, total %.2fs",
-            self.id, self.name, time.monotonic() - t4, time.monotonic() - t0,
+            "[SKU-PERF] tmpl=%s '%s' step4 write (%d variants) took %.2fs, total %.2fs",
+            self.id, self.name, len(variants_to_assign), time.monotonic() - t4, time.monotonic() - t0,
         )
 
     def _disambiguate_intra(self, base_code, variant, all_codes):
@@ -693,5 +709,8 @@ class ProductTemplateInternalRef(models.Model):
         extra_triggers = {'brand_id', 'categ_id', 'part_code', 'accessory_group'}
         if any(f in vals for f in extra_triggers):
             for rec in self:
-                rec._generate_and_assign_sku()
+                ctx = dict(self.env.context)
+                if 'part_code' in vals:
+                    ctx['force_sku_regen'] = True
+                rec.with_context(**ctx)._generate_and_assign_sku()
         return res
