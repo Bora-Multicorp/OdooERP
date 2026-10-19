@@ -341,15 +341,31 @@ class InsurancePolicy(models.Model):
         """True if the current user is an Insurance Administrator."""
         return self.env.user.has_group('ks_insurance_management.group_insurance_admin')
 
-    def _notify_approver(self, approver, summary, note):
-        """Create a To-Do activity on this policy for the approver."""
-        # self.activity_schedule(
-        #     'mail.mail_activity_data_todo',
-        #     user_id=approver.user_id.id,
-        #     summary=summary,
-        #     note=note,
-        # )
-        pass
+    def _notify_approver(self, approver, summary=None, note=None):
+        """Create an activity on this policy for the approver."""
+        for rec in self:
+            user = approver.user_id if hasattr(approver, 'user_id') and approver.user_id else approver
+            if not user:
+                continue
+            act_type = self.env.ref(
+                'bora_insurance_approval.mail_activity_data_insurance_approval',
+                raise_if_not_found=False
+            )
+            act_type_xmlid = 'bora_insurance_approval.mail_activity_data_insurance_approval' if act_type else 'mail.mail_activity_data_todo'
+            # Clear any existing approval activities on this policy for this user
+            old_acts = rec.activity_ids.filtered(
+                lambda a: a.user_id == user and (
+                    (act_type and a.activity_type_id == act_type)
+                    or a.activity_type_id == self.env.ref('mail.mail_activity_data_todo', raise_if_not_found=False)
+                )
+            )
+            old_acts.unlink()
+            rec.activity_schedule(
+                act_type_xmlid=act_type_xmlid,
+                user_id=user.id,
+                summary=summary or _('Insurance Approval required'),
+                note=note or _('Insurance Approval requested for Policy %s.') % rec.policy_number,
+            )
 
     def _notify_banking_team(self, payment):
         """Create a To-Do activity on the payment for every accounting user."""
@@ -478,8 +494,11 @@ class InsurancePolicy(models.Model):
         })
 
         # Mark approver's activity as done
+        act_types = ['mail.mail_activity_data_todo']
+        if self.env.ref('bora_insurance_approval.mail_activity_data_insurance_approval', raise_if_not_found=False):
+            act_types.append('bora_insurance_approval.mail_activity_data_insurance_approval')
         self.activity_feedback(
-            ['mail.mail_activity_data_todo'],
+            act_types,
             feedback=f'Approved by {self.env.user.name}',
         )
 
@@ -532,8 +551,11 @@ class InsurancePolicy(models.Model):
         })
         self.write(vals)
 
+        act_types = ['mail.mail_activity_data_todo']
+        if self.env.ref('bora_insurance_approval.mail_activity_data_insurance_approval', raise_if_not_found=False):
+            act_types.append('bora_insurance_approval.mail_activity_data_insurance_approval')
         self.activity_feedback(
-            ['mail.mail_activity_data_todo'],
+            act_types,
             feedback=f'Rejected by {self.env.user.name}',
         )
         self.message_post(
