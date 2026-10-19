@@ -94,12 +94,14 @@
               <field name="cover_amount_words" readonly="1"/>
               <field name="topup_amount" widget="monetary"
                      options="{'currency_field': 'currency_id'}"/>
+              <field name="topup_amount_words" readonly="1"/>
               <field name="new_sum_insured" readonly="1" widget="monetary"
                      options="{'currency_field': 'currency_id'}"
                      string="New Sum Insured (Preview)"/>
               <field name="premium" widget="monetary"
                      options="{'currency_field': 'currency_id'}"
                      string="Premium (Incl. GST)"/>
+              <field name="new_premium_percentage" readonly="1"/>
               <field name="approver_id" options="{'no_create': True}"/>
             </group>
           </group>
