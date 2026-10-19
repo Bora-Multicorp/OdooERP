@@ -7,13 +7,36 @@ class PurchaseOrder(models.Model):
     _inherit = 'purchase.order'
     
     @api.model
+    def _is_dubai_company(self, company=None):
+        """Return True if company is based in Dubai / UAE."""
+        comp = company or self.env.company
+        if not comp:
+            return False
+        country = comp.country_id or (comp.partner_id and comp.partner_id.country_id)
+        code = (country.code or getattr(comp, 'country_code', '') or '').strip().upper() if (country or comp) else ''
+        name = (country.name or '').strip().lower() if country else ''
+        state_name = (comp.partner_id.state_id.name or '').strip().lower() if (comp.partner_id and comp.partner_id.state_id) else ''
+        city = (comp.partner_id.city or getattr(comp, 'city', '') or '').strip().lower()
+        if code == 'AE':
+            return True
+        if any(k in name for k in ('dubai', 'emirates', 'uae')):
+            return True
+        if 'dubai' in state_name or 'dubai' in city:
+            return True
+        return False
+
+    @api.model
     def _default_ks_zone(self):
-        company = self.env.company
-        # Indian company defaults to 'india'
+        company_id = self._context.get('default_company_id')
+        company = self.env['res.company'].browse(company_id) if company_id else self.env.company
+        # Dubai companies default to 'dafza'
+        if self._is_dubai_company(company):
+            return 'dafza'
+        # Indian companies default to 'india'
         if company.country_id and company.country_id.code == 'IN':
             return 'india'
-        # Overseas companies have no default (user chooses manually)
-        return False
+        # Overseas non-Dubai companies default to first available option 'russia'
+        return 'russia'
 
     ks_zone = fields.Selection([
             ('russia', 'Russia'),
@@ -40,10 +63,16 @@ class PurchaseOrder(models.Model):
         if self.company_id:
             is_overseas = self.company_id.country_id.code != 'IN' if self.company_id.country_id else False
             if is_overseas:
-                if self.ks_zone in ['india', 'dubai', 'sez']:
-                    self.ks_zone = False
+                is_dubai = self._is_dubai_company(self.company_id)
+                if not self.ks_zone or self.ks_zone in ['india', 'dubai', 'sez']:
+                    self.ks_zone = 'dafza' if is_dubai else 'russia'
+                elif not is_dubai and self.ks_zone == 'dafza':
+                    self.ks_zone = 'russia'
+                elif is_dubai and self.ks_zone == 'russia':
+                    self.ks_zone = 'dafza'
             else:
-                if self.ks_zone in ['dafza', 'mainland', 'export', 'other']:
+                prev_overseas = bool(self._origin.company_id and self._origin.company_id.country_id and self._origin.company_id.country_id.code != 'IN') if self._origin else False
+                if not self.ks_zone or self.ks_zone in ['dafza', 'mainland', 'export', 'other'] or prev_overseas or self.ks_zone == 'russia':
                     self.ks_zone = 'india'
 
     @api.depends('company_id', 'company_id.country_id')
