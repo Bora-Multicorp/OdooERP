@@ -164,7 +164,7 @@
       <xpath expr="//header/button[last()]" position="after">
         <button name="action_open_insurance_popup" string="Add Insurance Details"
                 type="object" class="btn-secondary"
-                invisible="is_insurance_payment or state != 'draft'"/>
+                invisible="not is_insurance_payment or insurance_popup_done or state != 'draft'"/>
       </xpath>
     </field>
   </record>
