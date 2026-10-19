@@ -50,16 +50,53 @@ class InsurancePolicyPaymentWizard(models.TransientModel):
         required=True,
         help='Amount to add to the current sum insured.',
     )
+    topup_amount_words = fields.Char(
+        string='Top-up Amount (in words)',
+        compute='_compute_topup_amount_words',
+        readonly=True,
+    )
     new_sum_insured = fields.Float(
         string='New Sum Insured',
         compute='_compute_new_sum_insured',
         help='Preview of the sum insured after this top-up is applied.',
     )
+    new_premium_percentage = fields.Float(
+        string='Premium % (Preview)',
+        compute='_compute_new_premium_percentage',
+        digits=(16, 2),
+        readonly=True,
+        help='Preview of Premium as a percentage of the New Sum Insured.',
+    )
+
+    @api.depends('topup_amount', 'currency_id')
+    def _compute_topup_amount_words(self):
+        for rec in self:
+            try:
+                from num2words import num2words
+                if not rec.topup_amount:
+                    rec.topup_amount_words = ''
+                    continue
+                currency_name = rec.currency_id.currency_unit_label or rec.currency_id.name or ''
+                lang = 'en_IN' if rec.currency_id.name == 'INR' else 'en'
+                rec.topup_amount_words = (
+                    num2words(int(rec.topup_amount), lang=lang).title()
+                    + (f' {currency_name} Only' if currency_name else ' Only')
+                )
+            except Exception:
+                rec.topup_amount_words = ''
 
     @api.depends('current_sum_insured', 'topup_amount')
     def _compute_new_sum_insured(self):
         for rec in self:
             rec.new_sum_insured = (rec.current_sum_insured or 0.0) + (rec.topup_amount or 0.0)
+
+    @api.depends('premium', 'new_sum_insured', 'topup_amount', 'current_sum_insured')
+    def _compute_new_premium_percentage(self):
+        for rec in self:
+            rec.new_premium_percentage = (
+                (rec.premium / rec.new_sum_insured * 100.0)
+                if rec.new_sum_insured else 0.0
+            )
 
     @api.model
     def default_get(self, fields_list):
