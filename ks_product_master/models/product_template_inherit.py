@@ -77,9 +77,11 @@ class ProductTemplateInherit(models.Model):
             [('product_tmpl_id', '=', self.id)])
         if variants:
             for variant in variants:
-                variant.default_code = self._generate_sku(variant.id)
+                if not variant.default_code or self.env.context.get('force_sku_regen'):
+                    variant.default_code = self._generate_sku(variant.id)
         else:
-            self.default_code = self._generate_sku(self.id)
+            if not self.default_code or self.env.context.get('force_sku_regen'):
+                self.default_code = self._generate_sku(self.id)
 
     def _generate_sku(self, varient_id):
         self.ensure_one()
