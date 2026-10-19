@@ -41,7 +41,18 @@ class InsurancePaymentRequestWizard(models.TransientModel):
                     f"Use 'Top Up Addon' to increase coverage."
                 )
 
-            policy.write({'payment_status': 'requested', 'pending_payment_approver_id': approver.id})
+            vals = {'payment_status': 'requested', 'pending_payment_approver_id': approver.id}
+            if 'bora_insurance_pm1_id' in policy._fields:
+                vals.update({
+                    'bora_insurance_pm1_id': approver.user_id.id if approver.user_id else False,
+                    'bora_insurance_pm2_id': False,
+                    'bora_insurance_pm1_approved': False,
+                    'bora_insurance_pm2_approved': False,
+                    'bora_insurance_request_user_id': self.env.user.id,
+                    'bora_insurance_request_date': fields.Datetime.now(),
+                    'bora_insurance_request_reason': f'Premium payment of ₹{policy.premium:,.2f}',
+                })
+            policy.write(vals)
             policy._notify_approver(
                 approver,
                 summary=f'Insurance Payment Approval — {policy.policy_number}',

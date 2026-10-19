@@ -102,12 +102,23 @@ class InsurancePolicyPaymentWizard(models.TransientModel):
         approver = self.approver_id
 
         # Store pending topup and premium; actual update happens in account_payment.action_post
-        policy.write({
+        vals = {
             'pending_topup_amount': self.topup_amount,
             'pending_topup_premium': self.premium,
             'pending_topup_approver_id': approver.id,
             'payment_status': 'requested',
-        })
+        }
+        if 'bora_insurance_pm1_id' in policy._fields:
+            vals.update({
+                'bora_insurance_pm1_id': approver.user_id.id if approver.user_id else False,
+                'bora_insurance_pm2_id': False,
+                'bora_insurance_pm1_approved': False,
+                'bora_insurance_pm2_approved': False,
+                'bora_insurance_request_user_id': self.env.user.id,
+                'bora_insurance_request_date': fields.Datetime.now(),
+                'bora_insurance_request_reason': f'Top-up of ₹{self.topup_amount:,.2f}',
+            })
+        policy.write(vals)
 
         new_sum_insured = policy.initial_sum_insured + self.topup_amount
         policy._notify_approver(
