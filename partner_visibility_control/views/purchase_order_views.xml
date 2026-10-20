@@ -26,7 +26,7 @@
 
             <xpath expr="//field[@name='partner_id'][@widget='res_partner_many2one']"
                    position="attributes">
-                <attribute name="domain">['|', '&amp;', ('vendor_type', '=', 'regular'), ('kyc_details.state', '=', 'confirmed'), '&amp;', ('vendor_type', '!=', 'regular'), ('is_approved', '=', True)]</attribute>
+                <attribute name="domain">['|', '&amp;', ('vendor_type', '=', 'regular'), ('kyc_details.state', 'in', ['confirmed', 'pending']), '&amp;', ('vendor_type', '!=', 'regular'), ('is_approved', '=', True)]</attribute>
                 <attribute name="context">{'res_partner_search_mode': 'supplier', 'show_vat': True, 'filter_by_purchase_executive': True}</attribute>
             </xpath>
 
