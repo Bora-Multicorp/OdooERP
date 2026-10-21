@@ -37,6 +37,7 @@
         <t t-set="purchase_order" t-value="doc.get_purchase_order_info()"/>
         <t t-set="consignee_partner" t-value="doc.partner_shipping_id or doc.partner_id"/>
         <t t-set="is_dubai_hk" t-value="doc.is_dubai_or_hk_company()"/>
+        <t t-set="total_qty" t-value="doc.get_printable_total_qty()"/>
 
         <!-- SINGLE UNIFIED TABLE -->
         <table style="width:100%; border-collapse:collapse; border:1px solid #000; font-size:11px;">
@@ -213,12 +214,9 @@
 
             <!-- PRODUCT LINES -->
             <t t-set="line_num" t-value="0"/>
-            <t t-set="total_qty" t-value="0"/>
+            <t t-set="total_qty" t-value="doc.get_printable_total_qty()"/>
             <t t-foreach="doc.get_printable_invoice_lines()" t-as="line">
                 <t t-set="line_num" t-value="line_num + 1"/>
-                <t t-if="not doc.is_transfer_or_cash_handling_charge(line)">
-                    <t t-set="total_qty" t-value="total_qty + line.quantity"/>
-                </t>
                 <tr>
                     <td style="border:1px solid #000; padding:4px; text-align:center;" t-esc="line_num"/>
                     <td style="border:1px solid #000; padding:4px;">
@@ -250,8 +248,13 @@
 
             <!-- TOTAL ROW -->
             <tr>
-                <td t-att-colspan="5 if is_dubai_hk else 7" style="border:1px solid #000; padding:4px; text-align:right;"><strong>Total</strong></td>
-
+                <td style="border:1px solid #000; padding:4px; text-align:center;"></td>
+                <td style="border:1px solid #000; padding:4px;"><strong>Total</strong></td>
+                <td t-if="not is_dubai_hk" style="border:1px solid #000; padding:4px; text-align:center;"></td>
+                <td style="border:1px solid #000; padding:4px; text-align:right;"><strong><t t-esc="doc.format_number(total_qty, digits=0)"/> pcs</strong></td>
+                <td style="border:1px solid #000; padding:4px; text-align:right;"></td>
+                <td t-if="not is_dubai_hk" style="border:1px solid #000; padding:4px; text-align:right;"></td>
+                <td style="border:1px solid #000; padding:4px; text-align:center;"></td>
                 <td style="border:1px solid #000; padding:4px; text-align:right;">
                     <strong><t t-esc="doc.currency_id.symbol or '$'"/> <t t-esc="doc.format_number(doc.get_printable_amount_total(), digits=2)"/></strong>
                 </td>
