@@ -28,18 +28,18 @@ class PurchaseOrderLine(models.Model):
         product = self.product_id
         if product:
             code = (product.default_code or '').strip().upper()
-            if code in ('CASH-HANDLING', 'TRANSFER-CHARGES') or 'CASH-HANDLING' in code or 'TRANSFER-CHARGES' in code:
+            if code in ('CASH-HANDLING', 'TRANSFER-CHARGES', 'TRANSFER-CHARGE') or 'CASH-HANDLING' in code or 'TRANSFER-CHARGES' in code or 'TRANSFER-CHARGE' in code:
                 return True
             pname = (product.name or '').strip().upper()
-            if 'CASH HANDLING' in pname or 'TRANSFER CHARGES' in pname:
+            if 'CASH HANDLING' in pname or 'TRANSFER CHARGE' in pname or 'TRANSFER CHARGES' in pname:
                 return True
             tmpl = getattr(product, 'product_tmpl_id', False)
             if tmpl:
                 tname = (tmpl.name or '').strip().upper()
-                if 'CASH HANDLING' in tname or 'TRANSFER CHARGES' in tname:
+                if 'CASH HANDLING' in tname or 'TRANSFER CHARGE' in tname or 'TRANSFER CHARGES' in tname:
                     return True
         lname = (self.name or '').strip().upper()
-        if 'CASH HANDLING' in lname or 'TRANSFER CHARGES' in lname:
+        if 'CASH HANDLING' in lname or 'TRANSFER CHARGE' in lname or 'TRANSFER CHARGES' in lname:
             return True
         return False
 
