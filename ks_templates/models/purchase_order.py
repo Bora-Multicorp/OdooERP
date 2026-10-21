@@ -581,5 +581,54 @@ class PurchaseOrder(models.Model):
         else:
             return f"{code_prefix} {name}"
 
+    def is_dubai_or_hk_company(self):
+        """Return True if company country is Dubai (AE) or Hong Kong (HK)."""
+        if not self:
+            comp = self.env.company
+        else:
+            comp = self[0].company_id or self.env.company
+        country = comp.country_id or (comp.partner_id and comp.partner_id.country_id) if comp else False
+        code = (country.code or getattr(comp, 'country_code', '') or '').strip().upper() if country or comp else ''
+        name = (country.name or '').strip().lower() if country else ''
+        if code in ('AE', 'HK'):
+            return True
+        if any(k in name for k in ('dubai', 'emirates', 'hong kong', 'hongkong', 'uae')):
+            return True
+        state_name = (comp.partner_id.state_id.name or '').strip().lower() if comp and comp.partner_id and comp.partner_id.state_id else ''
+        if 'dubai' in state_name or 'hong kong' in state_name or 'hongkong' in state_name:
+            return True
+    is_dubai_or_hongkong_company = is_dubai_or_hk_company
+
+    def is_transfer_or_cash_handling_charge(self, line):
+        """Check if PO line is Transfer Charges or Cash Handling Charges."""
+        if not line:
+            return False
+        if hasattr(line, 'is_transfer_or_cash_handling_charge'):
+            return line.is_transfer_or_cash_handling_charge()
+        product = getattr(line, 'product_id', False)
+        if product:
+            code = (getattr(product, 'default_code', '') or '').strip().upper()
+            if code in ('CASH-HANDLING', 'TRANSFER-CHARGES') or 'CASH-HANDLING' in code or 'TRANSFER-CHARGES' in code:
+                return True
+            pname = (getattr(product, 'name', '') or '').strip().upper()
+            if 'CASH HANDLING' in pname or 'TRANSFER CHARGES' in pname:
+                return True
+            tmpl = getattr(product, 'product_tmpl_id', False)
+            if tmpl:
+                tname = (getattr(tmpl, 'name', '') or '').strip().upper()
+                if 'CASH HANDLING' in tname or 'TRANSFER CHARGES' in tname:
+                    return True
+        lname = (getattr(line, 'name', '') or '').strip().upper()
+        if 'CASH HANDLING' in lname or 'TRANSFER CHARGES' in lname:
+            return True
+        return False
+
+    def get_printable_total_qty(self):
+        """Return total quantity of printable PO lines, excluding Transfer and Cash Handling Charges."""
+        self.ensure_one()
+        return sum(
+            line.product_qty for line in self.get_printable_order_lines()
+            if not self.is_transfer_or_cash_handling_charge(line)
+        )
 
 

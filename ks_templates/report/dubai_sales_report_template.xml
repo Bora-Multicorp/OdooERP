@@ -331,7 +331,7 @@
                     <!-- Product Table Row -->
                     <tr>
                         <td style="border:1px solid #000; padding:0;" colspan="2">
-                            <t t-set="total_qty" t-value="sum(line.product_uom_qty for line in doc.get_printable_order_lines())"/>
+                            <t t-set="total_qty" t-value="doc.get_printable_total_qty()"/>
                             <t t-set="total_usd" t-value="doc.get_printable_amount_total()"/>
                             <t t-set="exchange_rate" t-value="3.676"/>
                             <t t-set="total_aed" t-value="total_usd * exchange_rate"/>
@@ -361,8 +361,12 @@
                                                     <br/><span style="margin-left: 1em;"><t t-esc="'Made in ' + (made_in_country.name or '')"/></span>
                                                 </t>
                                             </td>
-                                            <td style="border:1px solid #000; padding:4px; text-align:center;" t-esc="doc.get_line_hsn_code(line)"/>
-                                            <td style="border:1px solid #000; padding:4px; text-align:right;" t-esc="doc.format_number(line.product_uom_qty, digits=0)"/>
+                                            <td t-if="not is_dubai_hk" style="border:1px solid #000; padding:4px; text-align:center;" t-esc="doc.get_line_hsn_code(line)"/>
+                                            <td style="border:1px solid #000; padding:4px; text-align:right;">
+                                                <t t-if="not doc.is_transfer_or_cash_handling_charge(line)">
+                                                    <t t-esc="doc.format_number(line.product_uom_qty, digits=0)"/>
+                                                </t>
+                                            </td>
                                             <td style="border:1px solid #000; padding:4px; text-align:right;">
                                                 <strong><t t-esc="doc.currency_id.symbol or '$'"/> <t t-esc="doc.format_number(line.price_unit, digits=2)"/></strong>
                                             </td>

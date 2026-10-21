@@ -270,5 +270,101 @@ class TestAccountMove(KsTemplatesCommon):
         self.assertIn('Variant Invoice Line Description', desc)
         self.assertEqual(line.get_line_description(), desc)
 
+    def test_is_dubai_or_hk_customer(self):
+        """Test is_dubai_or_hk_customer with Dubai, HK, and other customers"""
+        country_ae = self.env.ref('base.ae', raise_if_not_found=False) or self.env['res.country'].search([('code', '=', 'AE')], limit=1)
+        country_hk = self.env.ref('base.hk', raise_if_not_found=False) or self.env['res.country'].search([('code', '=', 'HK')], limit=1)
+
+        # 1. Dubai customer
+        dubai_partner = self.env['res.partner'].create({
+            'name': 'Dubai Customer',
+            'country_id': country_ae.id if country_ae else False,
+            'city': 'Dubai',
+        })
+        self.invoice.partner_id = dubai_partner
+        self.assertTrue(self.invoice.is_dubai_or_hk_customer())
+
+        # 2. Hong Kong customer
+        hk_partner = self.env['res.partner'].create({
+            'name': 'Hong Kong Customer',
+            'country_id': country_hk.id if country_hk else False,
+            'city': 'Hong Kong',
+        })
+        self.invoice.partner_id = hk_partner
+        self.assertTrue(self.invoice.is_dubai_or_hk_customer())
+
+        # 3. Russian/Other customer
+        self.invoice.partner_id = self.customer
+        self.assertFalse(self.invoice.is_dubai_or_hk_customer())
+
+    def test_get_aed_conversion_info(self):
+        """Test get_aed_conversion_info calculation, rate formatting, and words"""
+        country_ae = self.env.ref('base.ae', raise_if_not_found=False) or self.env['res.country'].search([('code', '=', 'AE')], limit=1)
+        usd_currency = self.env.ref('base.USD', raise_if_not_found=False) or self.env['res.currency'].search([('name', '=', 'USD')], limit=1)
+
+        dubai_partner = self.env['res.partner'].create({
+            'name': 'Dubai Customer',
+            'country_id': country_ae.id if country_ae else False,
+            'city': 'Dubai',
+        })
+        self.invoice.partner_id = dubai_partner
+        if usd_currency:
+            self.invoice.currency_id = usd_currency
+
+        # Set line amount: 9,250.00
+        self.invoice.invoice_line_ids[0].quantity = 1.0
+        self.invoice.invoice_line_ids[0].price_unit = 9250.00
+        # Set manual rate = 3.674
+        self.invoice.rate = 3.674
+
+        aed_info = self.invoice.get_aed_conversion_info()
+        self.assertEqual(aed_info['rate'], 3.674)
+        self.assertEqual(aed_info['rate_formatted'], '3.674')
+        self.assertAlmostEqual(aed_info['aed_amount'], 33984.50, places=2)
+        self.assertIn('UAE Dirham', aed_info['aed_amount_words'])
+        self.assertIn('fils', aed_info['aed_amount_words'].lower())
+        self.assertIn('Only', aed_info['aed_amount_words'])
+
+    def test_transfer_and_cash_handling_charges_identification_and_total_qty(self):
+        """Test Transfer Charges and Cash Handling Charges detection and total quantity calculation on account.move."""
+        reg_line = self.invoice.invoice_line_ids[0]
+        reg_line.quantity = 10.0
+        self.assertFalse(reg_line.is_transfer_or_cash_handling_charge())
+        self.assertFalse(self.invoice.is_transfer_or_cash_handling_charge(reg_line))
+
+        # Transfer charge line
+        transfer_product = self.env['product.product'].create({
+            'name': 'TRANSFER CHARGES',
+            'default_code': 'TRANSFER-CHARGES',
+            'type': 'service',
+        })
+        transfer_line = self.env['account.move.line'].create({
+            'move_id': self.invoice.id,
+            'product_id': transfer_product.id,
+            'name': 'Transfer Charges (100 USD Flat)',
+            'quantity': 1.0,
+            'price_unit': 100.0,
+        })
+        self.assertTrue(transfer_line.is_transfer_or_cash_handling_charge())
+        self.assertTrue(self.invoice.is_transfer_or_cash_handling_charge(transfer_line))
+
+        # Cash handling charge line
+        cash_product = self.env['product.product'].create({
+            'name': 'CASH HANDLING CHARGES',
+            'default_code': 'CASH-HANDLING',
+            'type': 'service',
+        })
+        cash_line = self.env['account.move.line'].create({
+            'move_id': self.invoice.id,
+            'product_id': cash_product.id,
+            'name': 'Cash Handling Charges (1.2% - AED)',
+            'quantity': 1.0,
+            'price_unit': 50.0,
+        })
+        self.assertTrue(cash_line.is_transfer_or_cash_handling_charge())
+        self.assertTrue(self.invoice.is_transfer_or_cash_handling_charge(cash_line))
+
+        # Total qty should only count regular line (10.0), excluding the 1.0 + 1.0 charges
+        self.assertEqual(self.invoice.get_printable_total_qty(), 10.0)
 
 

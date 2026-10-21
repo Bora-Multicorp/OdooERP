@@ -529,3 +529,37 @@ class SaleOrder(models.Model):
             pass
         return ''
 
+    def is_transfer_or_cash_handling_charge(self, line):
+        """Check if line is Transfer Charges or Cash Handling Charges."""
+        if not line:
+            return False
+        if hasattr(line, 'is_transfer_or_cash_handling_charge'):
+            return line.is_transfer_or_cash_handling_charge()
+        if getattr(line, 'is_cash_handling_charge', False) or getattr(line, 'is_transfer_charge', False):
+            return True
+        product = getattr(line, 'product_id', False)
+        if product:
+            code = (getattr(product, 'default_code', '') or '').strip().upper()
+            if code in ('CASH-HANDLING', 'TRANSFER-CHARGES') or 'CASH-HANDLING' in code or 'TRANSFER-CHARGES' in code:
+                return True
+            pname = (getattr(product, 'name', '') or '').strip().upper()
+            if 'CASH HANDLING' in pname or 'TRANSFER CHARGES' in pname:
+                return True
+            tmpl = getattr(product, 'product_tmpl_id', False)
+            if tmpl:
+                tname = (getattr(tmpl, 'name', '') or '').strip().upper()
+                if 'CASH HANDLING' in tname or 'TRANSFER CHARGES' in tname:
+                    return True
+        lname = (getattr(line, 'name', '') or '').strip().upper()
+        if 'CASH HANDLING' in lname or 'TRANSFER CHARGES' in lname:
+            return True
+        return False
+
+    def get_printable_total_qty(self):
+        """Return total quantity of printable order lines, excluding Transfer and Cash Handling Charges."""
+        self.ensure_one()
+        return sum(
+            line.product_uom_qty for line in self.get_printable_order_lines()
+            if not self.is_transfer_or_cash_handling_charge(line)
+        )
+

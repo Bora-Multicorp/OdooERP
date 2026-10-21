@@ -938,6 +938,165 @@ class AccountMove(models.Model):
         
         return bank_info
 
+    def is_dubai_or_hk_company(self):
+        """Return True if company country is Dubai (AE) or Hong Kong (HK)."""
+        if not self:
+            comp = self.env.company
+        else:
+            comp = self[0].company_id or self.env.company
+        country = comp.country_id or (comp.partner_id and comp.partner_id.country_id) if comp else False
+        code = (country.code or getattr(comp, 'country_code', '') or '').strip().upper() if country or comp else ''
+        name = (country.name or '').strip().lower() if country else ''
+        if code in ('AE', 'HK'):
+            return True
+        if any(k in name for k in ('dubai', 'emirates', 'hong kong', 'hongkong', 'uae')):
+            return True
+        state_name = (comp.partner_id.state_id.name or '').strip().lower() if comp and comp.partner_id and comp.partner_id.state_id else ''
+        if 'dubai' in state_name or 'hong kong' in state_name or 'hongkong' in state_name:
+            return True
+        return False
+
+    is_dubai_or_hongkong_company = is_dubai_or_hk_company
+
+    def is_dubai_or_hk_customer(self):
+        """Return True if customer country/state/city is Dubai/UAE (AE) or Hong Kong (HK)."""
+        self.ensure_one()
+        partners = []
+        if self.partner_id:
+            partners.extend([
+                self.partner_id,
+                self.partner_id.commercial_partner_id,
+                self.partner_id.parent_id,
+            ])
+        if getattr(self, 'partner_shipping_id', None):
+            partners.append(self.partner_shipping_id)
+        if getattr(self, 'sale_order_id', None) and self.sale_order_id.partner_id:
+            partners.extend([
+                self.sale_order_id.partner_id,
+                self.sale_order_id.partner_id.commercial_partner_id,
+                getattr(self.sale_order_id, 'partner_shipping_id', None),
+            ])
+
+        for partner in filter(None, partners):
+            country = partner.country_id
+            code = (country.code or '').strip().upper() if country else ''
+            name = (country.name or '').strip().lower() if country else ''
+            if code in ('AE', 'HK'):
+                return True
+            if any(k in name for k in ('dubai', 'emirates', 'hong kong', 'hongkong', 'uae')):
+                return True
+            state_name = (partner.state_id.name or '').strip().lower() if partner.state_id else ''
+            if 'dubai' in state_name or 'hong kong' in state_name or 'hongkong' in state_name:
+                return True
+            city_name = (partner.city or '').strip().lower()
+            if 'dubai' in city_name or 'hong kong' in city_name or 'hongkong' in city_name:
+                return True
+        return False
+
+    def get_aed_conversion_info(self):
+        """Calculate AED conversion info for Commercial Invoice when customer is from Dubai or Hong Kong."""
+        self.ensure_one()
+        aed_currency = self.env['res.currency'].search([('name', '=', 'AED')], limit=1)
+        if not aed_currency:
+            aed_currency = self.env['res.currency'].search([('symbol', '=', 'AED')], limit=1)
+
+        total_amount = self.get_printable_amount_total()
+        inv_currency = self.currency_id
+
+        # 1. Resolve exchange rate to AED
+        rate = 0.0
+        # Check move's own rate
+        if getattr(self, 'rate', 0.0) and self.rate > 0:
+            rate = self.rate
+        # Check linked sale order's rate
+        elif getattr(self, 'sale_order_id', None) and getattr(self.sale_order_id, 'rate', 0.0) and self.sale_order_id.rate > 0:
+            rate = self.sale_order_id.rate
+        # Check ks_exchange_rate
+        elif getattr(self, 'ks_exchange_rate', 0.0) and self.ks_exchange_rate > 0:
+            rate = self.ks_exchange_rate
+        elif getattr(self, 'sale_order_id', None) and getattr(self.sale_order_id, 'ks_exchange_rate', 0.0) and self.sale_order_id.ks_exchange_rate > 0:
+            rate = self.sale_order_id.ks_exchange_rate
+
+        # If rate not found or is 0, check currency conversion rate
+        if (not rate or rate <= 0) and inv_currency and aed_currency:
+            if inv_currency == aed_currency:
+                rate = 1.0
+            else:
+                conversion_date = self.invoice_date or self.date or fields.Date.today()
+                try:
+                    c_rate = self.env['res.currency']._get_conversion_rate(
+                        from_currency=inv_currency,
+                        to_currency=aed_currency,
+                        company=self.company_id,
+                        date=conversion_date,
+                    )
+                    if c_rate and c_rate > 0 and c_rate != 1.0:
+                        rate = c_rate
+                except Exception:
+                    pass
+
+        # Fallback to standard 3.67 for USD if still not set
+        if (not rate or rate <= 0) and (not inv_currency or inv_currency.name == 'USD'):
+            rate = 3.67
+
+        # 2. Compute AED amount
+        if inv_currency == aed_currency:
+            aed_amount = total_amount
+        else:
+            aed_amount = round(total_amount * rate, 2)
+
+        # 3. Format rate nicely (e.g. 3.67 or 3.674)
+        if round(rate, 2) == round(rate, 4):
+            rate_formatted = self.format_number(rate, digits=2)
+        else:
+            rate_formatted = formatLang(self.env, rate, digits=4).rstrip('0').rstrip('.')
+
+        # 4. Amount in words in AED
+        aed_amount_words = self.get_amount_in_words_aed(aed_amount)
+
+        return {
+            'aed_currency': aed_currency,
+            'rate': rate,
+            'rate_formatted': rate_formatted,
+            'aed_amount': aed_amount,
+            'aed_amount_words': aed_amount_words,
+        }
+
+    def is_transfer_or_cash_handling_charge(self, line):
+        """Check if invoice line is Transfer Charges or Cash Handling Charges."""
+        if not line:
+            return False
+        if hasattr(line, 'is_transfer_or_cash_handling_charge'):
+            return line.is_transfer_or_cash_handling_charge()
+        if hasattr(line, 'sale_line_ids') and line.sale_line_ids:
+            for sl in line.sale_line_ids:
+                if getattr(sl, 'is_cash_handling_charge', False) or getattr(sl, 'is_transfer_charge', False):
+                    return True
+        product = getattr(line, 'product_id', False)
+        if product:
+            code = (getattr(product, 'default_code', '') or '').strip().upper()
+            if code in ('CASH-HANDLING', 'TRANSFER-CHARGES') or 'CASH-HANDLING' in code or 'TRANSFER-CHARGES' in code:
+                return True
+            pname = (getattr(product, 'name', '') or '').strip().upper()
+            if 'CASH HANDLING' in pname or 'TRANSFER CHARGES' in pname:
+                return True
+            tmpl = getattr(product, 'product_tmpl_id', False)
+            if tmpl:
+                tname = (getattr(tmpl, 'name', '') or '').strip().upper()
+                if 'CASH HANDLING' in tname or 'TRANSFER CHARGES' in tname:
+                    return True
+        lname = (getattr(line, 'name', '') or '').strip().upper()
+        if 'CASH HANDLING' in lname or 'TRANSFER CHARGES' in lname:
+            return True
+        return False
+
+    def get_printable_total_qty(self):
+        """Return total quantity of printable invoice lines, excluding Transfer and Cash Handling Charges."""
+        self.ensure_one()
+        return sum(
+            line.quantity for line in self.get_printable_invoice_lines()
+            if not self.is_transfer_or_cash_handling_charge(line)
+        )
 
 class AccountMoveLine(models.Model):
     _inherit = 'account.move.line'
@@ -946,5 +1105,30 @@ class AccountMoveLine(models.Model):
         if self.move_id:
             return self.move_id.get_line_description(self)
         return self.name or ''
+
+    def is_transfer_or_cash_handling_charge(self):
+        """Check if this invoice line is Transfer Charges or Cash Handling Charges."""
+        self.ensure_one()
+        if hasattr(self, 'sale_line_ids') and self.sale_line_ids:
+            for sl in self.sale_line_ids:
+                if getattr(sl, 'is_cash_handling_charge', False) or getattr(sl, 'is_transfer_charge', False):
+                    return True
+        product = self.product_id
+        if product:
+            code = (product.default_code or '').strip().upper()
+            if code in ('CASH-HANDLING', 'TRANSFER-CHARGES') or 'CASH-HANDLING' in code or 'TRANSFER-CHARGES' in code:
+                return True
+            pname = (product.name or '').strip().upper()
+            if 'CASH HANDLING' in pname or 'TRANSFER CHARGES' in pname:
+                return True
+            tmpl = getattr(product, 'product_tmpl_id', False)
+            if tmpl:
+                tname = (tmpl.name or '').strip().upper()
+                if 'CASH HANDLING' in tname or 'TRANSFER CHARGES' in tname:
+                    return True
+        lname = (self.name or '').strip().upper()
+        if 'CASH HANDLING' in lname or 'TRANSFER CHARGES' in lname:
+            return True
+        return False
 
 
