@@ -208,4 +208,38 @@ class TestSaleOrder(KsTemplatesCommon):
         # Total qty should only count regular line (5.0), excluding the 1.0 + 1.0 charges
         self.assertEqual(self.sale_order.get_printable_total_qty(), 5.0)
 
+        # Singular variations
+        transfer_prod_singular = self.env['product.product'].create({
+            'name': 'TRANSFER CHARGE',
+            'default_code': 'TRANSFER-CHARGE',
+            'type': 'service',
+        })
+        transfer_line_singular = self.env['sale.order.line'].create({
+            'order_id': self.sale_order.id,
+            'product_id': transfer_prod_singular.id,
+            'name': 'Transfer Charge (80 USD)',
+            'product_uom_qty': 2.0,
+            'price_unit': 80.0,
+        })
+        self.assertTrue(transfer_line_singular.is_transfer_or_cash_handling_charge())
+        self.assertTrue(self.sale_order.is_transfer_or_cash_handling_charge(transfer_line_singular))
+
+        cash_prod_singular = self.env['product.product'].create({
+            'name': 'Cash Handling Charge',
+            'default_code': 'CASH-HANDLING-FEE',
+            'type': 'service',
+        })
+        cash_line_singular = self.env['sale.order.line'].create({
+            'order_id': self.sale_order.id,
+            'product_id': cash_prod_singular.id,
+            'name': 'Cash Handling Charge (1%)',
+            'product_uom_qty': 3.0,
+            'price_unit': 40.0,
+        })
+        self.assertTrue(cash_line_singular.is_transfer_or_cash_handling_charge())
+        self.assertTrue(self.sale_order.is_transfer_or_cash_handling_charge(cash_line_singular))
+
+        # Total qty should still only count regular line (5.0)
+        self.assertEqual(self.sale_order.get_printable_total_qty(), 5.0)
+
 
