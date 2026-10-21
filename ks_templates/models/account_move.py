@@ -1064,6 +1064,42 @@ class AccountMove(models.Model):
             'aed_amount_words': aed_amount_words,
         }
 
+    def is_transfer_or_cash_handling_charge(self, line):
+        """Check if invoice line is Transfer Charges or Cash Handling Charges."""
+        if not line:
+            return False
+        if hasattr(line, 'is_transfer_or_cash_handling_charge'):
+            return line.is_transfer_or_cash_handling_charge()
+        if hasattr(line, 'sale_line_ids') and line.sale_line_ids:
+            for sl in line.sale_line_ids:
+                if getattr(sl, 'is_cash_handling_charge', False) or getattr(sl, 'is_transfer_charge', False):
+                    return True
+        product = getattr(line, 'product_id', False)
+        if product:
+            code = (getattr(product, 'default_code', '') or '').strip().upper()
+            if code in ('CASH-HANDLING', 'TRANSFER-CHARGES') or 'CASH-HANDLING' in code or 'TRANSFER-CHARGES' in code:
+                return True
+            pname = (getattr(product, 'name', '') or '').strip().upper()
+            if 'CASH HANDLING' in pname or 'TRANSFER CHARGES' in pname:
+                return True
+            tmpl = getattr(product, 'product_tmpl_id', False)
+            if tmpl:
+                tname = (getattr(tmpl, 'name', '') or '').strip().upper()
+                if 'CASH HANDLING' in tname or 'TRANSFER CHARGES' in tname:
+                    return True
+        lname = (getattr(line, 'name', '') or '').strip().upper()
+        if 'CASH HANDLING' in lname or 'TRANSFER CHARGES' in lname:
+            return True
+        return False
+
+    def get_printable_total_qty(self):
+        """Return total quantity of printable invoice lines, excluding Transfer and Cash Handling Charges."""
+        self.ensure_one()
+        return sum(
+            line.quantity for line in self.get_printable_invoice_lines()
+            if not self.is_transfer_or_cash_handling_charge(line)
+        )
+
 
 class AccountMoveLine(models.Model):
     _inherit = 'account.move.line'
@@ -1072,5 +1108,30 @@ class AccountMoveLine(models.Model):
         if self.move_id:
             return self.move_id.get_line_description(self)
         return self.name or ''
+
+    def is_transfer_or_cash_handling_charge(self):
+        """Check if this invoice line is Transfer Charges or Cash Handling Charges."""
+        self.ensure_one()
+        if hasattr(self, 'sale_line_ids') and self.sale_line_ids:
+            for sl in self.sale_line_ids:
+                if getattr(sl, 'is_cash_handling_charge', False) or getattr(sl, 'is_transfer_charge', False):
+                    return True
+        product = self.product_id
+        if product:
+            code = (product.default_code or '').strip().upper()
+            if code in ('CASH-HANDLING', 'TRANSFER-CHARGES') or 'CASH-HANDLING' in code or 'TRANSFER-CHARGES' in code:
+                return True
+            pname = (product.name or '').strip().upper()
+            if 'CASH HANDLING' in pname or 'TRANSFER CHARGES' in pname:
+                return True
+            tmpl = getattr(product, 'product_tmpl_id', False)
+            if tmpl:
+                tname = (tmpl.name or '').strip().upper()
+                if 'CASH HANDLING' in tname or 'TRANSFER CHARGES' in tname:
+                    return True
+        lname = (self.name or '').strip().upper()
+        if 'CASH HANDLING' in lname or 'TRANSFER CHARGES' in lname:
+            return True
+        return False
 
 

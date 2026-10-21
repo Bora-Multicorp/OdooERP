@@ -216,7 +216,9 @@
             <t t-set="total_qty" t-value="0"/>
             <t t-foreach="doc.get_printable_invoice_lines()" t-as="line">
                 <t t-set="line_num" t-value="line_num + 1"/>
-                <t t-set="total_qty" t-value="total_qty + line.quantity"/>
+                <t t-if="not doc.is_transfer_or_cash_handling_charge(line)">
+                    <t t-set="total_qty" t-value="total_qty + line.quantity"/>
+                </t>
                 <tr>
                     <td style="border:1px solid #000; padding:4px; text-align:center;" t-esc="line_num"/>
                     <td style="border:1px solid #000; padding:4px;">
@@ -229,7 +231,9 @@
                     </td>
                     <td t-if="not is_dubai_hk" style="border:1px solid #000; padding:4px; text-align:center;"><t t-esc="doc.get_line_hsn_code(line)"/></td>
                     <td style="border:1px solid #000; padding:4px; text-align:right;">
-                        <strong><t t-esc="doc.format_number(line.quantity, digits=0)"/> pcs</strong>
+                        <t t-if="not doc.is_transfer_or_cash_handling_charge(line)">
+                            <strong><t t-esc="doc.format_number(line.quantity, digits=0)"/> pcs</strong>
+                        </t>
                     </td>
                     <td style="border:1px solid #000; padding:4px; text-align:right;">
                         <strong><t t-esc="doc.currency_id.symbol or '$'"/> <t t-esc="doc.format_number(line.price_unit, digits=2)"/></strong>
