@@ -44,3 +44,26 @@ class SaleOrderLine(models.Model):
             return self.order_id.get_line_description(self)
         return self.name or ''
 
+    def is_transfer_or_cash_handling_charge(self):
+        """Check if this line is Transfer Charges or Cash Handling Charges."""
+        self.ensure_one()
+        if getattr(self, 'is_cash_handling_charge', False) or getattr(self, 'is_transfer_charge', False):
+            return True
+        product = self.product_id
+        if product:
+            code = (product.default_code or '').strip().upper()
+            if code in ('CASH-HANDLING', 'TRANSFER-CHARGES') or 'CASH-HANDLING' in code or 'TRANSFER-CHARGES' in code:
+                return True
+            pname = (product.name or '').strip().upper()
+            if 'CASH HANDLING' in pname or 'TRANSFER CHARGES' in pname:
+                return True
+            tmpl = getattr(product, 'product_tmpl_id', False)
+            if tmpl:
+                tname = (tmpl.name or '').strip().upper()
+                if 'CASH HANDLING' in tname or 'TRANSFER CHARGES' in tname:
+                    return True
+        lname = (self.name or '').strip().upper()
+        if 'CASH HANDLING' in lname or 'TRANSFER CHARGES' in lname:
+            return True
+        return False
+

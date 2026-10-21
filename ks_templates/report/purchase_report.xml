@@ -35,7 +35,7 @@
         <t t-set="doc" t-value="doc.sudo()"/>
 
         <!-- Variables -->
-        <t t-set="total_qty" t-value="sum(line.product_qty for line in doc.get_printable_order_lines())"/>
+        <t t-set="total_qty" t-value="doc.get_printable_total_qty()"/>
         <t t-set="total_usd" t-value="doc.amount_untaxed + doc.amount_tax"/>
         <t t-set="invoice_currency" t-value="doc.currency_id.sudo()"/>
         <t t-set="company_currency" t-value="doc.company_id.sudo().currency_id.sudo()"/>
@@ -201,7 +201,9 @@
                         <t t-if="made_in_country"><br/><t t-esc="'Made in ' + (made_in_country.name or '')"/></t>
                     </td>
                     <td style="border:1px solid #000; padding:4px; text-align:right;">
-                        <t t-esc="doc.format_number(line.product_qty, digits=0)"/>
+                        <t t-if="not doc.is_transfer_or_cash_handling_charge(line)">
+                            <t t-esc="doc.format_number(line.product_qty, digits=0)"/>
+                        </t>
                     </td>
                     <td style="border:1px solid #000; padding:4px; text-align:right;">
                         <t t-esc="doc.currency_id.symbol or '$'"/> <t t-esc="doc.format_number(line.price_unit, digits=2)"/>

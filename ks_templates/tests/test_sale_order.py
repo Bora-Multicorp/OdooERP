@@ -165,4 +165,47 @@ class TestSaleOrder(KsTemplatesCommon):
         self.assertIn('Variant SO Line Description', desc)
         self.assertEqual(line.get_line_description(), desc)
 
+    def test_transfer_and_cash_handling_charges_identification_and_total_qty(self):
+        """Test Transfer Charges and Cash Handling Charges detection and total quantity calculation."""
+        # Regular line
+        reg_line = self.sale_order.order_line[0]
+        reg_line.product_uom_qty = 5.0
+        self.assertFalse(reg_line.is_transfer_or_cash_handling_charge())
+        self.assertFalse(self.sale_order.is_transfer_or_cash_handling_charge(reg_line))
+
+        # Transfer charge line
+        transfer_product = self.env['product.product'].create({
+            'name': 'TRANSFER CHARGES',
+            'default_code': 'TRANSFER-CHARGES',
+            'type': 'service',
+        })
+        transfer_line = self.env['sale.order.line'].create({
+            'order_id': self.sale_order.id,
+            'product_id': transfer_product.id,
+            'name': 'Transfer Charges (100 USD Flat)',
+            'product_uom_qty': 1.0,
+            'price_unit': 100.0,
+        })
+        self.assertTrue(transfer_line.is_transfer_or_cash_handling_charge())
+        self.assertTrue(self.sale_order.is_transfer_or_cash_handling_charge(transfer_line))
+
+        # Cash handling charge line
+        cash_product = self.env['product.product'].create({
+            'name': 'CASH HANDLING CHARGES',
+            'default_code': 'CASH-HANDLING',
+            'type': 'service',
+        })
+        cash_line = self.env['sale.order.line'].create({
+            'order_id': self.sale_order.id,
+            'product_id': cash_product.id,
+            'name': 'Cash Handling Charges (1.2% - AED)',
+            'product_uom_qty': 1.0,
+            'price_unit': 50.0,
+        })
+        self.assertTrue(cash_line.is_transfer_or_cash_handling_charge())
+        self.assertTrue(self.sale_order.is_transfer_or_cash_handling_charge(cash_line))
+
+        # Total qty should only count regular line (5.0), excluding the 1.0 + 1.0 charges
+        self.assertEqual(self.sale_order.get_printable_total_qty(), 5.0)
+
 
