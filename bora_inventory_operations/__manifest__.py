@@ -2,12 +2,13 @@
 {
     'name': 'Bora Inventory Operations',
     'version': '18.0.1.0.0',
-    'summary': 'Inventory operations custom enhancements including Latest Purchase Price field',
+    'summary': 'Inventory operations custom enhancements including Latest Purchase Price and Latest Sales Price fields',
     'category': 'Inventory/Inventory',
     'author': 'Bora Multicorp',
     'depends': [
         'stock',
         'purchase',
+        'sale',
     ],
     'data': [
         'views/product_product_views.xml',
