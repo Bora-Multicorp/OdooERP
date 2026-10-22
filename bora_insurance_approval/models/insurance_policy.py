@@ -192,6 +192,10 @@ class InsurancePolicy(models.Model):
 
             # Schedule activity for PM1
             rec._create_insurance_approval_activity(pm1_user, 'Confirm')
+            rec._send_approval_bus_notification(
+                pm1_user,
+                approval_type='topup' if rec.pending_topup_amount > 0 else 'insurance',
+            )
 
             msg = _(
                 'Insurance approval requested by <b>%s</b>.<br/>'
@@ -227,6 +231,10 @@ class InsurancePolicy(models.Model):
                 if is_dual and rec.bora_insurance_pm2_id:
                     # Create PM2 activity
                     rec._create_insurance_approval_activity(rec.bora_insurance_pm2_id, 'Confirm')
+                    rec._send_approval_bus_notification(
+                        rec.bora_insurance_pm2_id,
+                        approval_type='topup' if rec.pending_topup_amount > 0 else 'insurance',
+                    )
                     msg = _('Approved by Approver 1 (%s). Now awaiting Approver 2 (%s) approval.') % (
                         current_user.name, rec.bora_insurance_pm2_id.name
                     )
@@ -296,6 +304,19 @@ class InsurancePolicy(models.Model):
             }
             payment = rec.env['account.payment'].create(payment_vals)
 
+            if is_topup and hasattr(rec, 'topup_ids') and rec.topup_ids:
+                pending_topups = rec.topup_ids.filtered(
+                    lambda t: not t.payment_id and t.state in ('draft', 'pending', 'approved')
+                )
+                if pending_topups:
+                    pending_topups[:1].write({
+                        'payment_id': payment.id,
+                        'payment_date': payment.date,
+                        'state': 'approved',
+                        'approved_by': self.env.user.id,
+                        'approved_date': fields.Datetime.now(),
+                    })
+
             rec.write({
                 'payment_status': 'approved',
                 'payment_ids': [(4, payment.id)],
@@ -337,6 +358,8 @@ class InsurancePolicy(models.Model):
                     'pending_topup_amount': 0.0,
                     'topup_flag': bool(completed_topups),
                 })
+                if hasattr(rec, 'topup_ids') and rec.topup_ids:
+                    rec.topup_ids.filtered(lambda t: t.state in ('draft', 'pending')).write({'state': 'rejected'})
 
             vals.update({
                 'payment_status': 'paid' if rec.is_paid else 'draft',
@@ -363,18 +386,39 @@ class InsurancePolicy(models.Model):
     # ─────────────────────────────────────────────────────────────────────────
     def _create_insurance_approval_activity(self, user, action_name='Confirm'):
         self.ensure_one()
-        activity_type = self.env.ref(
-            'bora_insurance_approval.mail_activity_data_insurance_approval',
-            raise_if_not_found=False
+        is_topup = bool(
+            self.pending_topup_amount > 0 or (
+                hasattr(self, 'topup_ids') and self.topup_ids.filtered(lambda t: t.state == 'pending')
+            )
         )
-        act_type_id = activity_type.id if activity_type else self.env.ref('mail.mail_activity_data_todo').id
+        if is_topup:
+            activity_type = self.env.ref(
+                'bora_insurance_approval.mail_activity_data_insurance_topup_approval',
+                raise_if_not_found=False
+            )
+            act_type_id = activity_type.id if activity_type else (
+                self.env.ref('bora_insurance_approval.mail_activity_data_insurance_approval', raise_if_not_found=False).id
+                if self.env.ref('bora_insurance_approval.mail_activity_data_insurance_approval', raise_if_not_found=False)
+                else self.env.ref('mail.mail_activity_data_todo').id
+            )
+            summary = _('Top-up Approval required')
+            note = _('Top-up Approval requested for Policy %s.') % self.policy_number
+        else:
+            activity_type = self.env.ref(
+                'bora_insurance_approval.mail_activity_data_insurance_approval',
+                raise_if_not_found=False
+            )
+            act_type_id = activity_type.id if activity_type else self.env.ref('mail.mail_activity_data_todo').id
+            summary = _('Insurance Approval required')
+            note = _('Insurance Approval requested for Policy %s.') % self.policy_number
+
         self.env['mail.activity'].create({
             'activity_type_id': act_type_id,
-            'note': _('Insurance Approval requested for Policy %s.') % self.policy_number,
+            'note': note,
             'res_id': self.id,
             'res_model_id': self.env.ref('ks_insurance_management.model_insurance_policy').id,
             'user_id': user.id,
-            'summary': _('Insurance Approval required'),
+            'summary': summary,
         })
 
     def _bora_unlink_user_activity(self, user):

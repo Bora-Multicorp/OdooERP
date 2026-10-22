@@ -102,12 +102,12 @@
                      options="{'currency_field': 'currency_id'}"
                      string="Premium (Incl. GST)"/>
               <field name="new_premium_percentage" readonly="1"/>
-              <field name="approver_id" options="{'no_create': True}"/>
+              <field name="approver_id" string="Top-up Approver" options="{'no_create': True}"/>
             </group>
           </group>
         </sheet>
         <footer>
-          <button name="action_confirm" string="Confirm Top-up"
+          <button name="action_confirm" string="Submit"
                   type="object" class="btn-primary"/>
           <button string="Cancel" class="btn-secondary" special="cancel"/>
         </footer>

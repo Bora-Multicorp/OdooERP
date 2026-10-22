@@ -34,6 +34,7 @@
         'data/insurance_cron.xml',
         'data/insurance_mail_templates.xml',
         'views/insurance_type_views.xml',
+        'views/insurance_topup_views.xml',
         'views/insurance_policy_views.xml',
         'views/insurance_declaration_views.xml',
         'views/insurance_policy_payment_views.xml',

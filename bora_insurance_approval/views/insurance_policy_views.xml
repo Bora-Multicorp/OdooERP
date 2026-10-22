@@ -14,15 +14,15 @@
                 <field name="bora_is_insurance_dual_approval" invisible="1"/>
             </xpath>
 
-            <!-- Update Approve Payment button visibility -->
+            <!-- Update Approve Payment button visibility (hidden for top-up requests) -->
             <xpath expr="//button[@name='action_approve_payment']" position="attributes">
-                <attribute name="invisible">payment_status != 'requested' or not bora_show_insurance_approve_button</attribute>
+                <attribute name="invisible">payment_status != 'requested' or not bora_show_insurance_approve_button or pending_topup_amount &gt; 0</attribute>
                 <attribute name="confirm">Approve this approval request?</attribute>
             </xpath>
 
-            <!-- Update Reject Payment button visibility & remove confirmation popup (handled by wizard) -->
+            <!-- Update Reject Payment button visibility & remove confirmation popup (handled by wizard, hidden for top-up requests) -->
             <xpath expr="//button[@name='action_reject_payment']" position="attributes">
-                <attribute name="invisible">payment_status != 'requested' or not bora_show_insurance_reject_button</attribute>
+                <attribute name="invisible">payment_status != 'requested' or not bora_show_insurance_reject_button or pending_topup_amount &gt; 0</attribute>
                 <attribute name="confirm"/>
             </xpath>
 
