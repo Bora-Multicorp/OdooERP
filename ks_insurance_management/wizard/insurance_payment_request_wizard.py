@@ -63,6 +63,8 @@ class InsurancePaymentRequestWizard(models.TransientModel):
                     f'Requested by: <b>{self.env.user.name}</b><br/>'
                     f'Please approve or reject this request.'
                 ),
+                approval_type='insurance',
+                extra_info={'premium': policy.premium},
             )
             policy.message_post(
                 body=(

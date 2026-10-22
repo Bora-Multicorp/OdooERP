@@ -241,11 +241,11 @@ class InsurancePolicy(models.Model):
         help='All premium payments linked to this policy. '
              'New top-up or renewal payments can be linked here.',
     )
-    # topup_ids = fields.One2many(
-    #     'insurance.topup',
-    #     'policy_id',
-    #     string='Top-up History',
-    # )
+    topup_ids = fields.One2many(
+        'insurance.topup',
+        'policy_id',
+        string='Top-up History',
+    )
     total_premium_paid = fields.Float(
         string='Total Premium Paid',
         compute='_compute_total_premium',
@@ -308,6 +308,33 @@ class InsurancePolicy(models.Model):
         compute='_compute_is_pending_approver',
         store=False,
     )
+    can_review_topup_approval = fields.Boolean(
+        compute='_compute_can_review_topup_approval',
+        string='Can Review Top-up Approval',
+    )
+    pending_activity_type = fields.Selection([
+        ('new_policy', 'New Policy Approval'),
+        ('topup', 'Top-up Approval'),
+        ('renewal', 'Renewal Approval'),
+    ], string='Pending Activity', compute='_compute_pending_activity_type', store=True, tracking=True)
+
+    @api.depends('payment_status', 'pending_topup_amount', 'state', 'topup_ids.state')
+    def _compute_pending_activity_type(self):
+        for rec in self:
+            if rec.payment_status == 'requested':
+                has_pending_topup = bool(
+                    rec.pending_topup_amount > 0 or (
+                        hasattr(rec, 'topup_ids') and any(t.state == 'pending' for t in rec.topup_ids)
+                    )
+                )
+                if has_pending_topup:
+                    rec.pending_activity_type = 'topup'
+                elif rec.state == 'under_renewal':
+                    rec.pending_activity_type = 'renewal'
+                else:
+                    rec.pending_activity_type = 'new_policy'
+            else:
+                rec.pending_activity_type = False
 
     @api.depends('pending_topup_approver_id', 'pending_payment_approver_id')
     @api.depends_context('uid')
@@ -317,6 +344,22 @@ class InsurancePolicy(models.Model):
             rec.is_pending_approver = bool(
                 approver and approver.user_id.id == self.env.uid
             )
+
+    @api.depends_context('uid')
+    @api.depends('payment_status', 'pending_topup_amount', 'is_pending_approver')
+    def _compute_can_review_topup_approval(self):
+        for rec in self:
+            can = False
+            if rec.payment_status == 'requested' and rec.pending_topup_amount > 0:
+                if rec._is_insurance_admin():
+                    can = True
+                elif hasattr(rec, 'bora_show_insurance_approve_button') and (rec.bora_show_insurance_approve_button or rec.bora_show_insurance_reject_button):
+                    can = True
+                elif rec.is_pending_approver:
+                    can = True
+                elif any(t.can_approve_reject for t in rec.topup_ids.filtered(lambda x: x.state == 'pending')):
+                    can = True
+            rec.can_review_topup_approval = can
 
     payment_count = fields.Integer(
         string='Payments',
@@ -338,34 +381,118 @@ class InsurancePolicy(models.Model):
         ], limit=1)
 
     def _is_insurance_admin(self):
-        """True if the current user is an Insurance Administrator."""
-        return self.env.user.has_group('ks_insurance_management.group_insurance_admin')
+        """True if the current user is an Insurance Administrator or system admin."""
+        return (
+            self.env.user.has_group('ks_insurance_management.group_insurance_admin')
+            or self.env.user._is_admin()
+        )
 
-    def _notify_approver(self, approver, summary=None, note=None):
-        """Create an activity on this policy for the approver."""
+    def _send_approval_bus_notification(self, approver_or_user, approval_type=None, extra_info=None):
+        """Send a real-time web bus notification to the approval authority.
+        approval_type: 'insurance' or 'topup'. Auto-detected from pending_topup_amount if omitted.
+        """
+        for rec in self:
+            user = approver_or_user
+            if hasattr(approver_or_user, 'user_id'):
+                user = approver_or_user.user_id
+            if not user or not user.partner_id:
+                continue
+
+            is_topup = (approval_type == 'topup') if approval_type else bool(rec.pending_topup_amount > 0)
+
+            if is_topup:
+                amount = (extra_info.get('amount') if extra_info else None) or rec.pending_topup_amount
+                new_sum = (rec.initial_sum_insured or 0.0) + (amount or 0.0)
+                title = _("Top-up Approval Required: %s") % rec.policy_number
+                msg = _(
+                    "Top-up approval request submitted for Insurance Policy %(policy)s by %(user)s.\n"
+                    "Top-up Amount: ₹%(amount)s | New Sum Insured: ₹%(new_sum)s"
+                ) % {
+                    'policy': rec.policy_number,
+                    'user': self.env.user.name,
+                    'amount': f"{amount:,.2f}" if amount else "0.00",
+                    'new_sum': f"{new_sum:,.2f}" if new_sum else "0.00",
+                }
+            else:
+                premium = (extra_info.get('premium') if extra_info else None) or rec.premium
+                title = _("Insurance Approval Required: %s") % rec.policy_number
+                msg = _(
+                    "Insurance payment approval requested for Policy %(policy)s (%(type)s) by %(user)s.\n"
+                    "Premium Amount: ₹%(premium)s"
+                ) % {
+                    'policy': rec.policy_number,
+                    'type': rec.insurance_type_id.name or '',
+                    'user': self.env.user.name,
+                    'premium': f"{premium:,.2f}" if premium else "0.00",
+                }
+
+            try:
+                self.env['bus.bus']._sendone(
+                    user.partner_id,
+                    'simple_notification',
+                    {
+                        'type': 'warning',
+                        'title': title,
+                        'message': msg,
+                        'sticky': True,
+                    },
+                )
+            except Exception:
+                pass
+
+    def _notify_approver(self, approver, summary=None, note=None, approval_type=None, extra_info=None):
+        """Create an activity on this policy for the approver and send a bus notification."""
         for rec in self:
             user = approver.user_id if hasattr(approver, 'user_id') and approver.user_id else approver
             if not user:
                 continue
-            act_type = self.env.ref(
-                'bora_insurance_approval.mail_activity_data_insurance_approval',
-                raise_if_not_found=False
-            )
-            act_type_xmlid = 'bora_insurance_approval.mail_activity_data_insurance_approval' if act_type else 'mail.mail_activity_data_todo'
-            # Clear any existing approval activities on this policy for this user
-            old_acts = rec.activity_ids.filtered(
-                lambda a: a.user_id == user and (
-                    (act_type and a.activity_type_id == act_type)
-                    or a.activity_type_id == self.env.ref('mail.mail_activity_data_todo', raise_if_not_found=False)
+
+            is_topup = (approval_type == 'topup') if approval_type else bool(
+                rec.pending_topup_amount > 0 or (
+                    hasattr(rec, 'topup_ids') and any(t.state == 'pending' for t in rec.topup_ids)
                 )
+            )
+
+            if is_topup:
+                act_type = self.env.ref(
+                    'bora_insurance_approval.mail_activity_data_insurance_topup_approval',
+                    raise_if_not_found=False
+                )
+                act_type_xmlid = 'bora_insurance_approval.mail_activity_data_insurance_topup_approval' if act_type else 'mail.mail_activity_data_todo'
+                default_summary = _('Top-up Approval required')
+                default_note = _('Top-up Approval requested for Policy %s.') % rec.policy_number
+            else:
+                act_type = self.env.ref(
+                    'bora_insurance_approval.mail_activity_data_insurance_approval',
+                    raise_if_not_found=False
+                )
+                act_type_xmlid = 'bora_insurance_approval.mail_activity_data_insurance_approval' if act_type else 'mail.mail_activity_data_todo'
+                default_summary = _('Insurance Approval required')
+                default_note = _('Insurance Approval requested for Policy %s.') % rec.policy_number
+
+            # Clear any existing approval activities on this policy for this user
+            all_act_xmlids = [
+                'bora_insurance_approval.mail_activity_data_insurance_approval',
+                'bora_insurance_approval.mail_activity_data_insurance_topup_approval',
+                'mail.mail_activity_data_todo',
+            ]
+            all_act_type_ids = [
+                self.env.ref(xid, raise_if_not_found=False).id
+                for xid in all_act_xmlids
+                if self.env.ref(xid, raise_if_not_found=False)
+            ]
+
+            old_acts = rec.activity_ids.filtered(
+                lambda a: a.user_id == user and (a.activity_type_id.id in all_act_type_ids)
             )
             old_acts.unlink()
             rec.activity_schedule(
                 act_type_xmlid=act_type_xmlid,
                 user_id=user.id,
-                summary=summary or _('Insurance Approval required'),
-                note=note or _('Insurance Approval requested for Policy %s.') % rec.policy_number,
+                summary=summary or default_summary,
+                note=note or default_note,
             )
+            rec._send_approval_bus_notification(user, approval_type='topup' if is_topup else 'insurance', extra_info=extra_info)
 
     def _notify_banking_team(self, payment):
         """Create a To-Do activity on the payment for every accounting user."""
@@ -486,6 +613,19 @@ class InsurancePolicy(models.Model):
             if pending_hist:
                 pending_hist[:1].payment_id = payment.id
 
+        if is_topup:
+            pending_topup = self.topup_ids.filtered(
+                lambda t: not t.payment_id and t.state in ('draft', 'pending')
+            )
+            if pending_topup:
+                pending_topup[:1].write({
+                    'payment_id': payment.id,
+                    'payment_date': payment.date,
+                    'state': 'approved',
+                    'approved_by': self.env.user.id,
+                    'approved_date': fields.Datetime.now(),
+                })
+
         self.write({
             'payment_ids': [(4, payment.id)],
             'payment_status': 'approved',
@@ -497,6 +637,8 @@ class InsurancePolicy(models.Model):
         act_types = ['mail.mail_activity_data_todo']
         if self.env.ref('bora_insurance_approval.mail_activity_data_insurance_approval', raise_if_not_found=False):
             act_types.append('bora_insurance_approval.mail_activity_data_insurance_approval')
+        if self.env.ref('bora_insurance_approval.mail_activity_data_insurance_topup_approval', raise_if_not_found=False):
+            act_types.append('bora_insurance_approval.mail_activity_data_insurance_topup_approval')
         self.activity_feedback(
             act_types,
             feedback=f'Approved by {self.env.user.name}',
@@ -542,6 +684,9 @@ class InsurancePolicy(models.Model):
                 'pending_topup_amount': 0.0,
                 'topup_flag': bool(completed_topups),
             })
+            pending_topups = self.topup_ids.filtered(lambda t: t.state in ('draft', 'pending'))
+            if pending_topups:
+                pending_topups.write({'state': 'rejected'})
 
         vals.update({
             'payment_status': 'paid' if self.is_paid else 'draft',
@@ -554,6 +699,8 @@ class InsurancePolicy(models.Model):
         act_types = ['mail.mail_activity_data_todo']
         if self.env.ref('bora_insurance_approval.mail_activity_data_insurance_approval', raise_if_not_found=False):
             act_types.append('bora_insurance_approval.mail_activity_data_insurance_approval')
+        if self.env.ref('bora_insurance_approval.mail_activity_data_insurance_topup_approval', raise_if_not_found=False):
+            act_types.append('bora_insurance_approval.mail_activity_data_insurance_topup_approval')
         self.activity_feedback(
             act_types,
             feedback=f'Rejected by {self.env.user.name}',
@@ -577,6 +724,26 @@ class InsurancePolicy(models.Model):
             'name': 'Top Up Addon',
             'res_model': 'insurance.policy.payment.wizard',
             'view_mode': 'form',
+            'target': 'new',
+            'context': {'default_policy_id': self.id},
+        }
+
+    def action_open_topup_approval_wizard(self):
+        """Open the top-up details wizard so approver authority can review and approve/reject."""
+        self.ensure_one()
+        topup = self.topup_ids.filtered(lambda t: t.state in ('draft', 'pending'))[:1]
+        if not topup:
+            topup = self.topup_ids.filtered(lambda t: t.state == 'approved' and not t.payment_id)[:1]
+        if not topup:
+            raise UserError(_("No pending top-up request found for this policy."))
+        view_id = self.env.ref('ks_insurance_management.insurance_topup_details_wizard_form', raise_if_not_found=False)
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Approve / Reject Top-up'),
+            'res_model': 'insurance.topup',
+            'res_id': topup.id,
+            'view_mode': 'form',
+            'views': [(view_id.id if view_id else False, 'form')],
             'target': 'new',
             'context': {'default_policy_id': self.id},
         }
@@ -830,6 +997,38 @@ class InsurancePolicy(models.Model):
                         f"request and approval process first."
                     )
         return super().write(vals)
+
+    def _sync_existing_topup_records(self):
+        """Idempotently sync top-up records for legacy payments if any (one-off helper)."""
+        Topup = self.env['insurance.topup'].sudo()
+        for policy in self:
+            for payment in policy.payment_ids.filtered('is_topup'):
+                existing = policy.topup_ids.filtered(
+                    lambda t: t.payment_id == payment or (not t.payment_id and t.amount == payment.amount)
+                )
+                if existing:
+                    if not existing[0].payment_id:
+                        existing[0].write({
+                            'payment_id': payment.id,
+                            'payment_date': payment.date,
+                            'state': 'approved' if payment.state in ('posted', 'paid') else existing[0].state,
+                        })
+                else:
+                    state = 'approved' if payment.state in ('posted', 'paid') else (
+                        'rejected' if payment.state == 'cancel' else 'pending'
+                    )
+                    Topup.create({
+                        'policy_id': policy.id,
+                        'current_sum_insured': policy.initial_sum_insured,
+                        'amount': payment.amount,
+                        'premium': payment.amount,
+                        'payment_id': payment.id,
+                        'payment_date': payment.date,
+                        'date': payment.date or fields.Date.today(),
+                        'state': state,
+                        'approver_id': policy.pending_topup_approver_id.id if policy.pending_topup_approver_id else (policy.pending_payment_approver_id.id if policy.pending_payment_approver_id else False),
+                        'notes': f'Top-up linked to payment {payment.name or payment.id}',
+                    })
 
     def read(self, fields=None, load='_classic_read'):
         if not self.env.context.get('in_auto_activate'):
