@@ -190,6 +190,16 @@ class AccountPayment(models.Model):
                     )
                     if pending_hist:
                         pending_hist[:1].payment_id = payment.id
+                if payment.is_topup:
+                    pending_topup = policy.topup_ids.filtered(
+                        lambda t: not t.payment_id and t.state in ('draft', 'pending', 'approved')
+                    )
+                    if pending_topup:
+                        pending_topup[:1].write({
+                            'payment_id': payment.id,
+                            'payment_date': payment.date,
+                            'state': 'approved',
+                        })
         return payments
 
     def write(self, vals):
@@ -225,6 +235,10 @@ class AccountPayment(models.Model):
                     update_vals['premium'] = policy.pending_topup_premium
                     update_vals['pending_topup_premium'] = 0.0
                 policy.write(update_vals)
+                topups = policy.topup_ids.filtered(lambda t: t.payment_id == payment)
+                if topups:
+                    policy.topup_ids.filtered(lambda t: t.id not in topups.ids and t.is_latest).write({'is_latest': False})
+                    topups.write({'state': 'approved', 'is_latest': True})
             elif payment.is_renewal or policy.state == 'under_renewal':
                 # Renewal payment confirmed: mark paid and activate policy
                 policy.write({

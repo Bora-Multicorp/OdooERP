@@ -7,3 +7,4 @@ from . import insurance_policy_payment_wizard
 from . import insurance_payment_request_wizard
 from . import insurance_policy_renew_wizard
 from . import insurance_update_policy_number_wizard
+from . import insurance_topup_wizard

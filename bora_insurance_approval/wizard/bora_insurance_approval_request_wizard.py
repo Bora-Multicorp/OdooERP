@@ -191,5 +191,9 @@ class BoraInsuranceApprovalRequestWizard(models.TransientModel):
                 policy._bora_unlink_user_activity(policy.bora_insurance_pm1_id)
                 if policy.bora_insurance_pm2_id:
                     policy._create_insurance_approval_activity(policy.bora_insurance_pm2_id, 'Confirm')
+                    policy._send_approval_bus_notification(
+                        policy.bora_insurance_pm2_id,
+                        approval_type='topup' if policy.pending_topup_amount > 0 else 'insurance',
+                    )
 
         return {'type': 'ir.actions.act_window_close'}

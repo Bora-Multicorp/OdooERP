@@ -40,7 +40,7 @@ class InsurancePolicyPaymentWizard(models.TransientModel):
         related='policy_id.expiry_date', string='Expiry Date', readonly=True)
     approver_id = fields.Many2one(
         'insurance.payment.approver',
-        string='Payment Approver',
+        string='Top-up Approver',
         required=True,
         domain="[('company_id', '=', company_id)]",
         help='Select the approver who will approve this top-up payment.',
@@ -157,6 +157,21 @@ class InsurancePolicyPaymentWizard(models.TransientModel):
             })
         policy.write(vals)
 
+        # Create Top-up request record
+        self.env['insurance.topup'].create({
+            'policy_id': policy.id,
+            'current_sum_insured': policy.initial_sum_insured,
+            'amount': self.topup_amount,
+            'topup_amount_words': self.topup_amount_words,
+            'new_sum_insured': self.new_sum_insured,
+            'premium': self.premium,
+            'new_premium_percentage': self.new_premium_percentage,
+            'approver_id': approver.id,
+            'date': fields.Date.today(),
+            'state': 'pending',
+            'notes': f'Top-up of ₹{self.topup_amount:,.2f} requested by {self.env.user.name}',
+        })
+
         new_sum_insured = policy.initial_sum_insured + self.topup_amount
         policy._notify_approver(
             approver,
@@ -167,8 +182,10 @@ class InsurancePolicyPaymentWizard(models.TransientModel):
                 f'New Sum Insured (after payment): <b>₹{new_sum_insured:,.2f}</b><br/>'
                 f'Updated Premium (Incl. GST): <b>₹{self.premium:,.2f}</b><br/>'
                 f'Requested by: <b>{self.env.user.name}</b><br/>'
-                f'Please approve the corresponding payment.'
+                f'Please view the topup details and approve the corresponding request.'
             ),
+            approval_type='topup',
+            extra_info={'amount': self.topup_amount, 'premium': self.premium},
         )
 
         policy.message_post(

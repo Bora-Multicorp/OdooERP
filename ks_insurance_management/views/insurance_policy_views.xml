@@ -11,15 +11,22 @@
                   class="btn-primary"
                   invisible="payment_status in ('requested', 'approved', 'paid')"/>
           <field name="is_pending_approver" invisible="1"/>
-          <!-- Approval buttons: shown only to the selected approver when request is pending -->
+          <field name="pending_topup_amount" invisible="1"/>
+          <field name="can_review_topup_approval" invisible="1"/>
+          <!-- Approval buttons: shown only to the selected approver when request is pending and NOT a top-up -->
           <button name="action_approve_payment" string="Approve" type="object"
                   class="btn-success"
-                  invisible="payment_status != 'requested' or not is_pending_approver"
+                  invisible="payment_status != 'requested' or not is_pending_approver or pending_topup_amount &gt; 0"
                   confirm="Approve this approval request and create a draft payment?"/>
           <button name="action_reject_payment" string="Reject" type="object"
                   class="btn-danger"
-                  invisible="payment_status != 'requested' or not is_pending_approver"
+                  invisible="payment_status != 'requested' or not is_pending_approver or pending_topup_amount &gt; 0"
                   confirm="Reject this payment request?"/>
+          <!-- Top-up Review & Approval button: opens wizard with topup details to approve or reject -->
+          <button name="action_open_topup_approval_wizard" string="Approve / Reject Top-up" type="object"
+                  class="btn-success"
+                  invisible="not can_review_topup_approval"
+                  icon="fa-check-square-o"/>
           <!-- Top Up Addon: only on active + paid policies -->
           <button name="action_topup_addon" string="Top Up Addon" type="object"
                   class="btn-secondary"
@@ -128,7 +135,7 @@
                 </list>
               </field>
             </page>
-            <page string="Top-up History">
+            <page string="Payment History" name="payment_history">
               <field name="payment_ids" readonly="1"
                      domain="[('is_topup', '=', True)]">
                 <list>
@@ -145,6 +152,96 @@
                          decoration-success="state == 'posted'"
                          decoration-warning="state == 'draft'"/>
                 </list>
+              </field>
+            </page>
+            <page string="Top-up History" name="topup_history">
+              <field name="topup_ids" readonly="1">
+                <list create="0" delete="0"
+                      decoration-success="state == 'approved'"
+                      decoration-danger="state == 'rejected'"
+                      decoration-warning="state == 'pending'"
+                      decoration-info="state == 'draft'">
+                  <field name="name" string="Top-up No"/>
+                  <field name="date" string="Request Date"/>
+                  <field name="current_sum_insured" string="Sum Insured Before"/>
+                  <field name="amount" string="Top-up Amount"/>
+                  <field name="new_sum_insured" string="Sum Insured After"/>
+                  <field name="premium" string="Premium (Incl. GST)"/>
+                  <field name="approver_id" string="Approver"/>
+                  <field name="payment_id" string="Linked Payment" optional="show"/>
+                  <field name="state" widget="badge" string="Status"
+                         decoration-success="state == 'approved'"
+                         decoration-danger="state == 'rejected'"
+                         decoration-warning="state == 'pending'"
+                         decoration-info="state == 'draft'"/>
+                  <button name="action_view_topup_details"
+                          string="View Details"
+                          type="object"
+                          class="btn-primary"
+                          icon="fa-eye"/>
+                </list>
+                <form string="Top-up Details">
+                  <header>
+                    <field name="can_approve_reject" invisible="1"/>
+                    <button name="action_approve" string="Approve" type="object"
+                            class="btn-success" invisible="not can_approve_reject"
+                            confirm="Are you sure you want to approve this top-up request?"/>
+                    <button name="action_reject" string="Reject" type="object"
+                            class="btn-danger" invisible="not can_approve_reject"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,pending,approved,rejected"/>
+                  </header>
+                  <sheet>
+                    <div class="oe_title">
+                      <h2>Top-up Request: <field name="name" class="oe_inline" readonly="1"/></h2>
+                    </div>
+                    <group>
+                      <group string="Policy Details">
+                        <field name="policy_id" readonly="1"/>
+                        <field name="insurance_type_id" readonly="1"/>
+                        <field name="company_id" readonly="1"/>
+                        <field name="insurance_company_id" readonly="1"/>
+                        <field name="agent_id" readonly="1"/>
+                        <field name="expiry_date" readonly="1"/>
+                      </group>
+                      <group string="Top-up Details">
+                        <field name="currency_id" invisible="1"/>
+                        <field name="date" readonly="1" string="Request Date"/>
+                        <field name="current_sum_insured" readonly="1" widget="monetary"
+                               options="{'currency_field': 'currency_id'}"
+                               string="Current Sum Insured"/>
+                        <field name="cover_amount_words" readonly="1"/>
+                        <field name="amount" readonly="1" widget="monetary"
+                               options="{'currency_field': 'currency_id'}"
+                               string="Top-up Amount"/>
+                        <field name="topup_amount_words" readonly="1"/>
+                        <field name="new_sum_insured" readonly="1" widget="monetary"
+                               options="{'currency_field': 'currency_id'}"
+                               string="New Sum Insured"/>
+                        <field name="premium" readonly="1" widget="monetary"
+                               options="{'currency_field': 'currency_id'}"
+                               string="Premium (Incl. GST)"/>
+                        <field name="new_premium_percentage" readonly="1"/>
+                        <field name="approver_id" readonly="1"/>
+                        <field name="approved_by" readonly="1" invisible="not approved_by"/>
+                        <field name="approved_date" readonly="1" invisible="not approved_date"/>
+                        <field name="payment_id" readonly="1"/>
+                        <field name="payment_date" readonly="1"/>
+                      </group>
+                    </group>
+                    <group string="Notes" invisible="not notes">
+                      <field name="notes" readonly="1" nolabel="1"/>
+                    </group>
+                  </sheet>
+                  <footer>
+                    <button name="action_approve" string="Approve" type="object"
+                            class="btn-success" invisible="not can_approve_reject"
+                            confirm="Are you sure you want to approve this top-up request?"/>
+                    <button name="action_reject" string="Reject" type="object"
+                            class="btn-danger" invisible="not can_approve_reject"/>
+                    <button string="Close" class="btn-secondary" special="cancel"/>
+                  </footer>
+                </form>
               </field>
             </page>
             <page string="Renewal History" name="renewal_history">
@@ -189,10 +286,22 @@
     <field name="name">insurance.policy.list</field>
     <field name="model">insurance.policy</field>
     <field name="arch" type="xml">
-      <list decoration-danger="state == 'expired'" decoration-success="state == 'active'" decoration-muted="state == 'draft'" decoration-warning="state == 'under_renewal'">
+      <list decoration-danger="state == 'expired'"
+            decoration-info="pending_activity_type == 'topup'"
+            decoration-warning="pending_activity_type in ('new_policy', 'renewal') or state == 'under_renewal'"
+            decoration-success="state == 'active' and not pending_activity_type"
+            decoration-muted="state == 'draft' and not pending_activity_type">
         <field name="policy_number"/>
         <field name="insurance_type_id"/><field name="insurance_category_id"/>
         <field name="policy_type"/><field name="insurance_company_id"/>
+        <field name="pending_activity_type" string="Activity Type" widget="badge"
+               decoration-info="pending_activity_type == 'topup'"
+               decoration-warning="pending_activity_type == 'new_policy'"
+               decoration-danger="pending_activity_type == 'renewal'"
+               optional="show"/>
+        <field name="pending_topup_amount" string="Pending Top-up"
+               optional="show"
+               invisible="pending_topup_amount == 0"/>
         <field name="agent_id"/>
         <field name="initial_sum_insured" string="Sum Insured"/>
         <field name="sum_insured" string="Remaining Sum Insured" optional="show"/>
@@ -211,6 +320,7 @@
                decoration-success="state == 'active'"
                decoration-danger="state == 'expired'"
                decoration-warning="state == 'under_renewal'"/>
+        <field name="activity_ids" widget="list_activity" optional="show"/>
       </list>
     </field>
   </record>
@@ -317,9 +427,13 @@
         <separator/>
         <filter name="expiring_30" string="Expiring in 30 Days"
                 domain="[('state','=','active'),('expiry_date','&lt;=', (context_today() + relativedelta(days=30)).strftime('%Y-%m-%d')),('expiry_date','&gt;=',context_today().strftime('%Y-%m-%d'))]"/>
+        <separator/>
+        <filter name="pending_topup_approval" string="Pending Top-up Approval" domain="[('pending_activity_type','=','topup')]"/>
+        <filter name="pending_new_policy_approval" string="Pending New Policy Approval" domain="[('pending_activity_type','=','new_policy')]"/>
         <group expand="0" string="Group By">
           <filter name="grp_type" string="Insurance Type" context="{'group_by':'insurance_type_id'}"/>
           <filter name="grp_cat" string="Category" context="{'group_by':'insurance_category_id'}"/>
+          <filter name="grp_pending_activity" string="Pending Activity" context="{'group_by':'pending_activity_type'}"/>
           <filter name="grp_state" string="Status" context="{'group_by':'state'}"/>
           <filter name="grp_company" string="Company" context="{'group_by':'company_id'}"/>
           <filter name="grp_insurer" string="Insurer" context="{'group_by':'insurance_company_id'}"/>
