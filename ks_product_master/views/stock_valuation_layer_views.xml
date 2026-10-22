@@ -9,6 +9,24 @@
                 <xpath expr="//field[@name='value']" position="after">
                     <field name="value_usd" string="USD" optional="show"/>
                     <field name="usd_currency_id" column_invisible="True"/>
+                    <field name="latest_purchase_price" string="Latest Purchase Price" optional="hide"/>
+                    <field name="latest_sales_price" string="Latest Sales Price" optional="show"/>
+                    <field name="latest_sales_price_value" string="Latest Sales Price Value" optional="show" sum="Total Latest Sales Price Value"/>
+                </xpath>
+            </field>
+        </record>
+
+        <record id="view_stock_valuation_layer_report_tree_inherit" model="ir.ui.view">
+            <field name="name">stock.valuation.layer.report.tree.inherit.sales.price</field>
+            <field name="model">stock.valuation.layer</field>
+            <field name="inherit_id" ref="stock_account.stock_valuation_layer_report_tree"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='value']" position="after">
+                    <field name="value_usd" string="USD" optional="show"/>
+                    <field name="usd_currency_id" column_invisible="True"/>
+                    <field name="latest_purchase_price" string="Latest Purchase Price" optional="hide"/>
+                    <field name="latest_sales_price" string="Latest Sales Price" optional="show"/>
+                    <field name="latest_sales_price_value" string="Latest Sales Price Value" optional="show" sum="Total Latest Sales Price Value"/>
                 </xpath>
             </field>
         </record>
