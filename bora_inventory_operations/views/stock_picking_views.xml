@@ -52,7 +52,6 @@
                     <group name="pickup_inspection" string="Inspection at Pick-up point" col="3">
                         <group>
                             <field name="fresh_activated" widget="radio" required="1" readonly="state in ('done', 'cancel')"/>
-                            <field name="fresh_activated_remark" placeholder="Remark for Fresh/Activated..." readonly="state in ('done', 'cancel')"/>
                         </group>
                         <group>
                             <field name="loose_master" widget="radio" required="1" readonly="state in ('done', 'cancel')"/>
@@ -60,6 +59,7 @@
                         <group>
                             <field name="inspection_condition" widget="radio" required="1" readonly="state in ('done', 'cancel')"/>
                         </group>
+                        <field name="fresh_activated_remark" placeholder="Remark for Fresh/Activated..." readonly="state in ('done', 'cancel')"/>
                     </group>
 
                     <group string="Additional details" name="pickup_additional_details">
