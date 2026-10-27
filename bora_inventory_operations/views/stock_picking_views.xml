@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_picking_form_inherit_pickup_details" model="ir.ui.view">
+        <field name="name">stock.picking.form.inherit.pickup.details</field>
+        <field name="model">stock.picking</field>
+        <field name="inherit_id" ref="stock.view_picking_form"/>
+        <field name="priority" eval="30"/>
+        <field name="arch" type="xml">
+            <!-- Place Pick-Up Date below scheduled date and above date_deadline -->
+            <xpath expr="//field[@name='date_deadline']" position="before">
+                <field name="pickup_date" readonly="state in ['cancel', 'done']"/>
+            </xpath>
+
+            <!-- Hide original carrier_data group in Additional Info page to avoid duplication -->
+            <xpath expr="//group[@name='carrier_data']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+
+            <!-- Add new Pick-up Details page to notebook before Additional Info -->
+            <xpath expr="//notebook/page[last()]" position="before">
+                <page string="Pick-up Details" name="pickup_details">
+                    <group>
+                        <group name="carrier_data_pickup" string="Shipping Information">
+                            <field name="is_return_picking" invisible="1"/>
+                            <field name="carrier_id" string="Carrier/Transporter" readonly="state in ('done', 'cancel')" options="{'no_create': True, 'no_open': True}" required="pickup_date"/>
+                            <field name="delivery_type" invisible="True"/>
+                            <label for="carrier_tracking_ref" string="Tracking Reference/Docket Number"/>
+                            <div name="tracking">
+                                <field name="carrier_tracking_ref" class="oe_inline text-break" required="pickup_date"/>
+                                <button type="object" class="oe_link" icon="oi-arrow-right" confirm="Cancelling a delivery may not be undoable. Are you sure you want to continue?" name="cancel_shipment" string="Cancel" invisible="not carrier_tracking_ref or delivery_type in ['fixed', 'base_on_rule'] or not delivery_type or state != 'done'"/>
+                            </div>
+                            <field name="docket_lr_copy" widget="many2many_attachment_preview" options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 1}" readonly="state in ('done', 'cancel')"/>
+                            <field name="amount" readonly="state in ('done', 'cancel')"/>
+                            <label for="weight" string="Weight"/>
+                            <div>
+                                <field name="weight" class="oe_inline"/>
+                                <field name="weight_uom_name" nolabel="1" class="oe_inline" style="margin-left:5px"/>
+                            </div>
+                            <label for="shipping_weight" string="Weight for shipping"/>
+                            <div>
+                                <field name="shipping_weight" class="oe_inline"/>
+                                <field name="weight_uom_name" nolabel="1" class="oe_inline" style="margin-left:5px"/>
+                            </div>
+                        </group>
+                        <group name="pickup_documents" string="Documents">
+                            <field name="e_invoice" widget="many2many_attachment_preview" options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 1}" readonly="state in ('done', 'cancel')"/>
+                            <field name="eway_bill" widget="many2many_attachment_preview" options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 1}" readonly="state in ('done', 'cancel')"/>
+                            <field name="imei_sheet" widget="many2many_binary" options="{'number_of_files': 1}" readonly="state in ('done', 'cancel')"/>
+                        </group>
+                    </group>
+
+                    <group name="pickup_inspection" string="Inspection at Pick-up point" col="3">
+                        <group>
+                            <field name="fresh_activated" widget="radio" required="1" readonly="state in ('done', 'cancel')"/>
+                            <field name="fresh_activated_remark" placeholder="Remark for Fresh/Activated..." readonly="state in ('done', 'cancel')"/>
+                        </group>
+                        <group>
+                            <field name="loose_master" widget="radio" required="1" readonly="state in ('done', 'cancel')"/>
+                        </group>
+                        <group>
+                            <field name="inspection_condition" widget="radio" required="1" readonly="state in ('done', 'cancel')"/>
+                        </group>
+                    </group>
+
+                    <group string="Additional details" name="pickup_additional_details">
+                        <field name="additional_details" nolabel="1" placeholder="Define additional details..." widget="html" readonly="state in ('done', 'cancel')"/>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>
