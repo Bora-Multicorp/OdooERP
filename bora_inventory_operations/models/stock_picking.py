@@ -102,7 +102,7 @@ class StockPicking(models.Model):
     @api.constrains('pickup_date', 'carrier_id', 'carrier_tracking_ref', 'fresh_activated', 'loose_master', 'inspection_condition')
     def _check_pickup_details_mandatory_fields(self):
         for picking in self:
-            if picking.pickup_date:
+            if picking.picking_type_code == 'incoming' and picking.pickup_date:
                 if not picking.carrier_id:
                     raise ValidationError(_("Carrier/Transporter is required when Pick-Up Date is set."))
                 if not picking.carrier_tracking_ref:
