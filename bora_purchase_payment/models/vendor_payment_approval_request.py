@@ -90,7 +90,8 @@ class VendorPaymentApprovalRequest(models.Model):
             'date': fields.Date.context_today(self),
             'ks_purchase_order_id': po.id if po else False,
             'payment_approval_request_id': self.id,
-            'ks_payment_approved': True,
+            'ks_payment_approved': False,
+            'request_user_id': self.request_user_id.id if self.request_user_id else self.env.user.id,
             'memo': memo,
             'journal_id': journal.id,
         }

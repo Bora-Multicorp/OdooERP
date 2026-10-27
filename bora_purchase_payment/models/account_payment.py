@@ -1,7 +1,11 @@
 # -*- coding: utf-8 -*-
 
+import logging
+
 from odoo import api, fields, models, _
 from odoo.exceptions import UserError
+
+_logger = logging.getLogger(__name__)
 
 
 class AccountPayment(models.Model):
@@ -13,6 +17,12 @@ class AccountPayment(models.Model):
         copy=False,
         help='The Payment Approval Request linked to this payment',
         index=True,
+    )
+    ks_payment_done_notified = fields.Boolean(
+        string='Payment Done Notification Sent',
+        default=False,
+        copy=False,
+        help='Technical field to prevent duplicate activity notifications upon payment completion.',
     )
 
     def action_view_payment_approval_request(self):
@@ -80,8 +90,6 @@ class AccountPayment(models.Model):
                 self.currency_id = req.currency_id.id
             self.payment_type = 'outbound'
             self.partner_type = 'supplier'
-            if req.state == 'approved':
-                self.ks_payment_approved = True
 
     @api.onchange('ks_purchase_order_id')
     def _onchange_ks_purchase_order_id(self):
@@ -98,10 +106,6 @@ class AccountPayment(models.Model):
     def create(self, vals_list):
         for vals in vals_list:
             req_id = vals.get('payment_approval_request_id')
-            if req_id and not vals.get('ks_payment_approved'):
-                req = self.env['vendor.payment.approval.request'].browse(req_id)
-                if req.exists() and req.state == 'approved':
-                    vals['ks_payment_approved'] = True
             po_id = vals.get('ks_purchase_order_id')
             if req_id and not po_id:
                 req = self.env['vendor.payment.approval.request'].browse(req_id)
@@ -130,19 +134,196 @@ class AccountPayment(models.Model):
                             vals['payment_method_line_id'] = outbound[0].id
         return super().create(vals_list)
 
+    def write(self, vals):
+        res = super().write(vals)
+        if vals.get('state') in ('in_process', 'paid'):
+            for payment in self:
+                if not payment.ks_payment_done_notified:
+                    payment._create_payment_done_activities()
+        return res
+
+    def action_draft(self):
+        res = super().action_draft()
+        self.write({'ks_payment_done_notified': False})
+        return res
+
     def action_post(self):
         for payment in self:
+            if payment.state == 'pending_approval':
+                raise UserError(_('This payment is pending approval and cannot be posted yet.'))
             if payment.state == 'draft' and not payment.ks_payment_approved:
-                if payment.payment_approval_request_id and payment.payment_approval_request_id.state == 'approved':
-                    payment.ks_payment_approved = True
+                if self.env.context.get('skip_payment_approval'):
                     continue
-                po = payment.ks_purchase_order_id or (payment.payment_approval_request_id and payment.payment_approval_request_id.purchase_order_id)
-                if po:
-                    has_req = self.env['vendor.payment.approval.request'].search([
-                        ('purchase_order_id', '=', po.id),
-                        ('state', '=', 'approved'),
-                    ], limit=1)
-                    if has_req:
-                        payment.ks_payment_approved = True
-                        continue
-        return super().action_post()
+                return payment.action_submit_and_open_wizard()
+        res = super(AccountPayment, self.with_context(skip_payment_approval=True)).action_post()
+        for payment in self:
+            if payment.state in ('in_process', 'paid') and not payment.ks_payment_done_notified:
+                payment._create_payment_done_activities()
+        return res
+
+    def _do_approve(self, reason):
+        res = super()._do_approve(reason)
+        for payment in self:
+            if payment.state in ('in_process', 'paid') and not payment.ks_payment_done_notified:
+                payment._create_payment_done_activities()
+        return res
+
+    def _create_payment_done_activities(self):
+        """Create activities for PO followers and Payment Approval Request followers/approvers
+        when payment transitions to 'in_process'."""
+        for payment in self:
+            if payment.ks_payment_done_notified:
+                continue
+
+            po = payment.ks_purchase_order_id
+            if not po and payment.payment_approval_request_id:
+                po = payment.payment_approval_request_id.purchase_order_id
+            if not po and hasattr(payment, '_ks_get_linked_purchase_order'):
+                po = payment._ks_get_linked_purchase_order()
+
+            req = payment.payment_approval_request_id
+            if not req and po:
+                req = self.env['vendor.payment.approval.request'].search([
+                    ('purchase_order_id', '=', po.id)
+                ], order='id desc', limit=1)
+
+            # If no PO and no Req, nothing to notify
+            if not po and not req:
+                payment.ks_payment_done_notified = True
+                continue
+
+            # Format activity details
+            currency_symbol = payment.currency_id.symbol or payment.currency_id.name or ''
+            formatted_amount = f"{currency_symbol} {payment.amount:,.2f}".strip()
+            po_name = po.name if po else _('N/A')
+
+            req_name = _('N/A')
+            if req:
+                req_name = f"Request #{req.id}"
+                if req.purchase_order_id and req.purchase_order_id.name:
+                    req_name += f" ({req.purchase_order_id.name})"
+                elif req.display_name:
+                    req_name += f" ({req.display_name})"
+
+            payment_name = payment.name or _('Draft Payment')
+            vendor_name = payment.partner_id.display_name or (po.partner_id.display_name if po else _('N/A'))
+            payment_date = str(payment.date or fields.Date.context_today(payment))
+
+            summary = _('Vendor Payment Done: %s') % (po.name if po else payment_name)
+            note = _(
+                "<p><strong>Vendor Payment has been processed and is now in process.</strong></p>"
+                "<ul>"
+                "<li><strong>Purchase Order:</strong> %s</li>"
+                "<li><strong>Payment Request:</strong> %s</li>"
+                "<li><strong>Payment Reference:</strong> %s</li>"
+                "<li><strong>Vendor:</strong> %s</li>"
+                "<li><strong>Payment Amount:</strong> %s</li>"
+                "<li><strong>Payment Date:</strong> %s</li>"
+                "</ul>"
+            ) % (
+                po_name,
+                req_name,
+                payment_name,
+                vendor_name,
+                formatted_amount,
+                payment_date,
+            )
+
+            todo_type = self.env.ref('mail.mail_activity_data_todo', raise_if_not_found=False)
+            activity_type_id = todo_type.id if todo_type else False
+
+            # 1. Create an activity for all followers of the same Purchase Order
+            if po:
+                po_users = po.message_follower_ids.mapped('partner_id.user_ids').filtered(
+                    lambda u: u.active and not u.share
+                )
+                if po.user_id and po.user_id.active and not po.user_id.share:
+                    po_users |= po.user_id
+
+                for user in po_users:
+                    existing = po.activity_ids.filtered(
+                        lambda a: a.user_id == user and (payment_name in (a.summary or '') or (a.note and payment_name in a.note))
+                    )
+                    if not existing:
+                        try:
+                            po.activity_schedule(
+                                activity_type_id=activity_type_id,
+                                user_id=user.id,
+                                summary=summary,
+                                note=note,
+                            )
+                        except Exception as e:
+                            _logger.warning("Failed to schedule payment done activity on PO %s for user %s: %s", po.id, user.id, e)
+
+                try:
+                    po.message_post(
+                        body=note,
+                        subject=summary,
+                    )
+                except Exception as e:
+                    _logger.warning("Failed to post payment done message on PO %s: %s", po.id, e)
+
+            # 2. Create an activity for all followers and approvers of the Payment Approval Request
+            if req:
+                req_users = req.message_follower_ids.mapped('partner_id.user_ids').filtered(
+                    lambda u: u.active and not u.share
+                )
+                req_users |= req.approval_line_ids.mapped('user_id').filtered(
+                    lambda u: u.active and not u.share
+                )
+                if req.assigned_approver_id and req.assigned_approver_id.active and not req.assigned_approver_id.share:
+                    req_users |= req.assigned_approver_id
+                if req.request_user_id and req.request_user_id.active and not req.request_user_id.share:
+                    req_users |= req.request_user_id
+                req_users |= payment.approval_line_ids.mapped('user_id').filtered(
+                    lambda u: u.active and not u.share
+                )
+                if payment.request_user_id and payment.request_user_id.active and not payment.request_user_id.share:
+                    req_users |= payment.request_user_id
+
+                for user in req_users:
+                    existing = req.activity_ids.filtered(
+                        lambda a: a.user_id == user and (payment_name in (a.summary or '') or (a.note and payment_name in a.note))
+                    )
+                    if not existing:
+                        try:
+                            req.activity_schedule(
+                                activity_type_id=activity_type_id,
+                                user_id=user.id,
+                                summary=summary,
+                                note=note,
+                            )
+                        except Exception as e:
+                            _logger.warning("Failed to schedule payment done activity on Request %s for user %s: %s", req.id, user.id, e)
+
+                try:
+                    req.message_post(
+                        body=note,
+                        subject=summary,
+                    )
+                except Exception as e:
+                    _logger.warning("Failed to post payment done message on Request %s: %s", req.id, e)
+
+            elif payment.approval_line_ids:
+                payment_approvers = payment.approval_line_ids.mapped('user_id').filtered(
+                    lambda u: u.active and not u.share
+                )
+                if payment.request_user_id and payment.request_user_id.active and not payment.request_user_id.share:
+                    payment_approvers |= payment.request_user_id
+
+                for user in payment_approvers:
+                    existing = payment.activity_ids.filtered(
+                        lambda a: a.user_id == user and (payment_name in (a.summary or '') or (a.note and payment_name in a.note))
+                    )
+                    if not existing:
+                        try:
+                            payment.activity_schedule(
+                                activity_type_id=activity_type_id,
+                                user_id=user.id,
+                                summary=summary,
+                                note=note,
+                            )
+                        except Exception as e:
+                            _logger.warning("Failed to schedule payment done activity on payment %s for user %s: %s", payment.id, user.id, e)
+
+            payment.ks_payment_done_notified = True
