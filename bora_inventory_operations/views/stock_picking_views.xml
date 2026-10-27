@@ -6,27 +6,27 @@
         <field name="inherit_id" ref="stock.view_picking_form"/>
         <field name="priority" eval="30"/>
         <field name="arch" type="xml">
-            <!-- Place Pick-Up Date below scheduled date and above date_deadline -->
+            <!-- Place Pick-Up Date below scheduled date and above date_deadline (Receipts only) -->
             <xpath expr="//field[@name='date_deadline']" position="before">
-                <field name="pickup_date" readonly="state in ['cancel', 'done']"/>
+                <field name="pickup_date" invisible="picking_type_code != 'incoming'" readonly="state in ['cancel', 'done']"/>
             </xpath>
 
-            <!-- Hide original carrier_data group in Additional Info page to avoid duplication -->
+            <!-- Hide original carrier_data group in Additional Info page when Receipts to avoid duplication -->
             <xpath expr="//group[@name='carrier_data']" position="attributes">
-                <attribute name="invisible">1</attribute>
+                <attribute name="invisible">picking_type_code == 'incoming'</attribute>
             </xpath>
 
-            <!-- Add new Pick-up Details page to notebook before Additional Info -->
+            <!-- Add new Pick-up Details page to notebook before Additional Info (Receipts only) -->
             <xpath expr="//notebook/page[last()]" position="before">
-                <page string="Pick-up Details" name="pickup_details">
+                <page string="Pick-up Details" name="pickup_details" invisible="picking_type_code != 'incoming'">
                     <group>
                         <group name="carrier_data_pickup" string="Shipping Information">
                             <field name="is_return_picking" invisible="1"/>
-                            <field name="carrier_id" string="Carrier/Transporter" readonly="state in ('done', 'cancel')" options="{'no_create': True, 'no_open': True}" required="pickup_date"/>
+                            <field name="carrier_id" string="Carrier/Transporter" readonly="state in ('done', 'cancel')" options="{'no_create': True, 'no_open': True}" required="pickup_date and picking_type_code == 'incoming'"/>
                             <field name="delivery_type" invisible="True"/>
                             <label for="carrier_tracking_ref" string="Tracking Reference/Docket Number"/>
                             <div name="tracking">
-                                <field name="carrier_tracking_ref" class="oe_inline text-break" required="pickup_date"/>
+                                <field name="carrier_tracking_ref" class="oe_inline text-break" required="pickup_date and picking_type_code == 'incoming'"/>
                                 <button type="object" class="oe_link" icon="oi-arrow-right" confirm="Cancelling a delivery may not be undoable. Are you sure you want to continue?" name="cancel_shipment" string="Cancel" invisible="not carrier_tracking_ref or delivery_type in ['fixed', 'base_on_rule'] or not delivery_type or state != 'done'"/>
                             </div>
                             <field name="docket_lr_copy" widget="many2many_attachment_preview" options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 1}" readonly="state in ('done', 'cancel')"/>
@@ -51,15 +51,17 @@
 
                     <group name="pickup_inspection" string="Inspection at Pick-up point" col="3">
                         <group>
-                            <field name="fresh_activated" widget="radio" required="1" readonly="state in ('done', 'cancel')"/>
+                            <field name="fresh_activated" widget="radio" required="picking_type_code == 'incoming'" readonly="state in ('done', 'cancel')"/>
+                            <field name="fresh_activated_remark" placeholder="Remark for Fresh/Activated..." readonly="state in ('done', 'cancel')"/>
                         </group>
                         <group>
-                            <field name="loose_master" widget="radio" required="1" readonly="state in ('done', 'cancel')"/>
+                            <field name="loose_master" widget="radio" required="picking_type_code == 'incoming'" readonly="state in ('done', 'cancel')"/>
+                            <field name="loose_master_remark" placeholder="Remark for Loose/Master..." readonly="state in ('done', 'cancel')"/>
                         </group>
                         <group>
-                            <field name="inspection_condition" widget="radio" required="1" readonly="state in ('done', 'cancel')"/>
+                            <field name="inspection_condition" widget="radio" required="picking_type_code == 'incoming'" readonly="state in ('done', 'cancel')"/>
+                            <field name="inspection_condition_remark" placeholder="Remark for Inspection Condition..." readonly="state in ('done', 'cancel')"/>
                         </group>
-                        <field name="fresh_activated_remark" placeholder="Remark for Fresh/Activated..." readonly="state in ('done', 'cancel')"/>
                     </group>
 
                     <group string="Additional details" name="pickup_additional_details">
