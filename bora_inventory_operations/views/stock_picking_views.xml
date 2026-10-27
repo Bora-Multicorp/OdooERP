@@ -51,15 +51,15 @@
 
                     <group name="pickup_inspection" string="Inspection at Pick-up point" col="3">
                         <group>
-                            <field name="fresh_activated" widget="radio" required="picking_type_code == 'incoming'" readonly="state in ('done', 'cancel')"/>
+                            <field name="fresh_activated" widget="radio" required="pickup_date and picking_type_code == 'incoming'" readonly="state in ('done', 'cancel')"/>
                             <field name="fresh_activated_remark" placeholder="Remark for Fresh/Activated..." readonly="state in ('done', 'cancel')"/>
                         </group>
                         <group>
-                            <field name="loose_master" widget="radio" required="picking_type_code == 'incoming'" readonly="state in ('done', 'cancel')"/>
+                            <field name="loose_master" widget="radio" required="pickup_date and picking_type_code == 'incoming'" readonly="state in ('done', 'cancel')"/>
                             <field name="loose_master_remark" placeholder="Remark for Loose/Master..." readonly="state in ('done', 'cancel')"/>
                         </group>
                         <group>
-                            <field name="inspection_condition" widget="radio" required="picking_type_code == 'incoming'" readonly="state in ('done', 'cancel')"/>
+                            <field name="inspection_condition" widget="radio" required="pickup_date and picking_type_code == 'incoming'" readonly="state in ('done', 'cancel')"/>
                             <field name="inspection_condition_remark" placeholder="Remark for Inspection Condition..." readonly="state in ('done', 'cancel')"/>
                         </group>
                     </group>
