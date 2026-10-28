@@ -142,10 +142,170 @@ class AccountPayment(models.Model):
                     payment._create_payment_done_activities()
         return res
 
+    @api.depends('state', 'approval_line_ids.state', 'approval_line_ids.user_id')
+    @api.depends_context('uid')
+    def _compute_ks_can_approve(self):
+        current_user = self.env.user
+        for rec in self:
+            if rec.state != 'pending_approval':
+                rec.ks_can_approve = False
+                continue
+            my_line = rec.approval_line_ids.filtered(
+                lambda l: l.user_id == current_user and l.state == 'pending'
+            )
+            rec.ks_can_approve = bool(my_line) or current_user.has_group('base.group_system')
+
     def action_draft(self):
         res = super().action_draft()
         self.write({'ks_payment_done_notified': False})
         return res
+
+    def action_submit_and_open_wizard(self):
+        """Submit the payment for Banking Approval directly to all configured approvers
+        without showing a wizard."""
+        self.ensure_one()
+        if self.state != 'draft':
+            raise UserError(_('Only draft payments can be submitted for approval.'))
+        if self.amount <= 0:
+            raise UserError(_('Payment amount should be greater than 0.'))
+
+        config = self.env['banking.approval.config'].sudo().get_config()
+        if not config:
+            raise UserError(_(
+                'No active Banking Authorised Approvers configuration found.\n'
+                'Please configure approvers in Accounting > Configuration > Banking Authorised Approvers.'
+            ))
+
+        approvers = config.get_all_approvers()
+        if not approvers:
+            raise UserError(_(
+                'No approvers found in the active Banking Authorised Approvers configuration.\n'
+                'Please assign approver users in Accounting > Configuration > Banking Authorised Approvers.'
+            ))
+
+        # Build approval lines for all configured approvers
+        lines = [(5, 0, 0)]
+        seq = 10
+        for user in approvers:
+            app_type = 'approver1'
+            if (
+                config.ks_approval_mode == 'two_way'
+                and user in config.ks_approver_2_ids
+                and user not in config.ks_approver_1_ids
+            ):
+                app_type = 'approver2'
+            lines.append((0, 0, {
+                'user_id': user.id,
+                'approver_type': app_type,
+                'sequence': seq,
+                'state': 'pending',
+            }))
+            seq += 10
+
+        self.write({
+            'state': 'pending_approval',
+            'request_user_id': self.env.user.id,
+            'request_date': fields.Datetime.now(),
+            'approval_line_ids': lines,
+            'ks_payment_approved': False,
+            'approve_reason': False,
+            'reject_reason': False,
+            'reject_user_id': False,
+            'reject_date': False,
+        })
+
+        # Create To-Do activity for all approvers
+        self._create_banking_approval_activities(approvers)
+
+        approver_names = ", ".join(approvers.mapped('name'))
+        self.message_post(
+            body=_(
+                'Payment submitted for approval to Banking Authorised Approver(s): <b>%s</b>.'
+            ) % approver_names,
+            subject=_('Payment Submitted for Approval'),
+        )
+        return True
+
+    def _create_banking_approval_activities(self, approvers):
+        """Create a To-Do activity on this payment for each configured approver."""
+        self.ensure_one()
+        self._cancel_other_payment_approval_activities()
+
+        todo_type = self.env.ref('mail.mail_activity_data_todo', raise_if_not_found=False)
+        activity_type_id = todo_type.id if todo_type else False
+
+        currency_symbol = self.currency_id.symbol or self.currency_id.name or ''
+        formatted_amount = f"{currency_symbol} {self.amount:,.2f}".strip()
+        display_ref = self.name or (self.ks_purchase_order_id and self.ks_purchase_order_id.name) or _('Draft Payment')
+        vendor_name = self.partner_id.display_name or _('N/A')
+        memo = self.memo or _('N/A')
+        date_str = str(self.date or fields.Date.context_today(self))
+
+        summary = _('Banking Payment Approval: %s') % display_ref
+        note = _(
+            "<p><strong>Payment Approval Request</strong></p>"
+            "<ul>"
+            "<li><strong>Payment:</strong> %s</li>"
+            "<li><strong>Partner / Vendor:</strong> %s</li>"
+            "<li><strong>Amount:</strong> %s</li>"
+            "<li><strong>Memo:</strong> %s</li>"
+            "<li><strong>Date:</strong> %s</li>"
+            "<li><strong>Requested By:</strong> %s</li>"
+            "</ul>"
+        ) % (
+            display_ref,
+            vendor_name,
+            formatted_amount,
+            memo,
+            date_str,
+            self.env.user.name,
+        )
+
+        for user in approvers:
+            try:
+                self.activity_schedule(
+                    act_type_xmlid='mail.mail_activity_data_todo',
+                    activity_type_id=activity_type_id,
+                    user_id=user.id,
+                    summary=summary,
+                    note=note,
+                )
+            except Exception as e:
+                _logger.warning("Failed to schedule approval activity on payment %s for user %s: %s", self.id, user.id, e)
+
+    def _mark_payment_approval_activity_done(self, user, feedback=''):
+        """Mark the approval to-do activity for the given user as done."""
+        activities = self.env['mail.activity'].sudo().search([
+            ('res_model', '=', 'account.payment'),
+            ('res_id', '=', self.id),
+            ('user_id', '=', user.id),
+        ]).filtered(lambda a: 'Payment Approval' in (a.summary or ''))
+        for act in activities:
+            try:
+                act.with_context(skip_activity_approval_hook=True).action_feedback(feedback=feedback)
+            except Exception as e:
+                _logger.warning("Could not mark activity %s done: %s", act.id, e)
+                try:
+                    act.unlink()
+                except Exception:
+                    pass
+
+    def _cancel_other_payment_approval_activities(self, excluded_user=None):
+        """Cancel (unlink) approval to-do activities on this payment for other users."""
+        domain = [
+            ('res_model', '=', 'account.payment'),
+            ('res_id', '=', self.id),
+        ]
+        if excluded_user:
+            domain.append(('user_id', '!=', excluded_user.id))
+        activities = self.env['mail.activity'].sudo().search(domain).filtered(
+            lambda a: 'Payment Approval' in (a.summary or '')
+        )
+        if activities:
+            try:
+                activities.unlink()
+            except Exception as e:
+                _logger.warning("Failed to unlink approval activities on payment %s: %s", self.id, e)
 
     def action_post(self):
         for payment in self:
@@ -162,10 +322,121 @@ class AccountPayment(models.Model):
         return res
 
     def _do_approve(self, reason):
-        res = super()._do_approve(reason)
+        """Approve this payment. If any one configured approver approves, the payment
+        is approved, remaining lines are cancelled, the approver's activity is marked done,
+        and other approvers' activities are cancelled automatically."""
+        self.ensure_one()
+        if self.state != 'pending_approval':
+            raise UserError(_('Only pending payments can be approved.'))
+        current_user = self.env.user
+        my_line = self.approval_line_ids.filtered(
+            lambda l: l.user_id == current_user and l.state == 'pending'
+        )[:1]
+        if not my_line and current_user.has_group('base.group_system'):
+            my_line = self.approval_line_ids.filtered(lambda l: l.state == 'pending')[:1]
+        if not my_line:
+            raise UserError(_('You are not an approver for this payment, or it has already been processed.'))
+
+        # 1. Mark this approver's line as approved
+        my_line.write({
+            'state': 'approved',
+            'remark': reason or '',
+            'action_date': fields.Datetime.now(),
+        })
+
+        # 2. Cancel all remaining pending approval lines
+        remaining_lines = self.approval_line_ids.filtered(
+            lambda l: l.state == 'pending' and l.id != my_line.id
+        )
+        if remaining_lines:
+            remaining_lines.write({
+                'state': 'cancelled',
+                'remark': _('Approval no longer required (approved by %s)') % current_user.name,
+            })
+
+        # 3. Mark the approver's to-do activity as done
+        self._mark_payment_approval_activity_done(
+            current_user,
+            feedback=_('Payment Approved: %s') % (reason or _('Approved'))
+        )
+
+        # 4. Cancel all other approvers' to-do activities automatically
+        self._cancel_other_payment_approval_activities(excluded_user=current_user)
+
+        # 5. Set payment approved and restore to draft for posting
+        self.write({
+            'ks_payment_approved': True,
+            'approve_reason': reason or '',
+            'state': 'draft',
+        })
+
+        self.message_post(
+            body=_('Payment approved by <b>%s</b>. Reason: %s') % (current_user.name, reason or _('None')),
+            subject=_('Payment Approved'),
+        )
+
+        # 6. Post payment
+        res = super(AccountPayment, self.with_context(skip_payment_approval=True)).action_post()
+
+        # 7. Post-approval notifications (e.g. for PO/req followers)
         for payment in self:
             if payment.state in ('in_process', 'paid') and not payment.ks_payment_done_notified:
                 payment._create_payment_done_activities()
+
+        return res
+
+    def _do_reject(self, reason):
+        """Reject this payment. Marks line rejected, cancels remaining lines,
+        marks approver activity done, and cancels other activities."""
+        self.ensure_one()
+        if self.state != 'pending_approval':
+            raise UserError(_('Only pending payments can be rejected.'))
+        current_user = self.env.user
+        my_line = self.approval_line_ids.filtered(
+            lambda l: l.user_id == current_user and l.state == 'pending'
+        )[:1]
+        if not my_line and current_user.has_group('base.group_system'):
+            my_line = self.approval_line_ids.filtered(lambda l: l.state == 'pending')[:1]
+        if not my_line:
+            raise UserError(_('You are not an approver for this payment, or it has already been processed.'))
+
+        my_line.write({
+            'state': 'rejected',
+            'remark': reason or '',
+            'action_date': fields.Datetime.now(),
+        })
+        remaining_lines = self.approval_line_ids.filtered(
+            lambda l: l.state == 'pending' and l.id != my_line.id
+        )
+        if remaining_lines:
+            remaining_lines.write({
+                'state': 'cancelled',
+                'remark': _('Payment rejected by %s') % current_user.name,
+            })
+
+        self._mark_payment_approval_activity_done(
+            current_user,
+            feedback=_('Payment Rejected: %s') % (reason or _('Rejected'))
+        )
+        self._cancel_other_payment_approval_activities(excluded_user=current_user)
+
+        self.write({
+            'state': 'rejected',
+            'reject_reason': reason or '',
+            'reject_user_id': current_user.id,
+            'reject_date': fields.Datetime.now(),
+        })
+
+        self.message_post(
+            body=_('Payment was <b>rejected</b> by %s. Reason: %s') % (current_user.name, reason or _('None')),
+            subject=_('Payment Rejected'),
+        )
+        return True
+
+    def action_reset_to_draft(self):
+        res = super().action_reset_to_draft()
+        for payment in self:
+            payment._cancel_other_payment_approval_activities()
         return res
 
     @api.model
