@@ -168,6 +168,39 @@ class AccountPayment(models.Model):
                 payment._create_payment_done_activities()
         return res
 
+    @api.model
+    def _get_or_create_processed_activity_type(self):
+        """Get or dynamically duplicate/create the 'Processed' activity type from 'To-Do'."""
+        processed_type = self.env.ref('bora_purchase_payment.mail_activity_data_processed', raise_if_not_found=False)
+        if not processed_type:
+            processed_type = self.env['mail.activity.type'].sudo().search([('name', '=', 'Processed')], limit=1)
+        if not processed_type:
+            todo_type = self.env.ref('mail.mail_activity_data_todo', raise_if_not_found=False)
+            vals = {
+                'name': 'Processed',
+                'icon': todo_type.icon if todo_type else 'fa-check',
+                'sequence': (todo_type.sequence + 1) if todo_type else 13,
+                'category': todo_type.category if todo_type else 'default',
+                'delay_count': 0,
+                'delay_unit': todo_type.delay_unit if todo_type else 'days',
+                'chaining_type': todo_type.chaining_type if todo_type else 'suggest',
+                'active': True,
+            }
+            processed_type = self.env['mail.activity.type'].sudo().create(vals)
+            data_rec = self.env['ir.model.data'].sudo().search([
+                ('module', '=', 'bora_purchase_payment'),
+                ('name', '=', 'mail_activity_data_processed'),
+            ], limit=1)
+            if not data_rec:
+                self.env['ir.model.data'].sudo().create({
+                    'module': 'bora_purchase_payment',
+                    'name': 'mail_activity_data_processed',
+                    'model': 'mail.activity.type',
+                    'res_id': processed_type.id,
+                    'noupdate': True,
+                })
+        return processed_type
+
     def _create_payment_done_activities(self):
         """Create activities for PO followers and Payment Approval Request followers/approvers
         when payment transitions to 'in_process'."""
@@ -207,6 +240,7 @@ class AccountPayment(models.Model):
 
             payment_name = payment.name or _('Draft Payment')
             vendor_name = payment.partner_id.display_name or (po.partner_id.display_name if po else _('N/A'))
+            payment_memo = payment.memo or _('N/A')
             payment_date = str(payment.date or fields.Date.context_today(payment))
 
             summary = _('Vendor Payment Done: %s') % (po.name if po else payment_name)
@@ -218,6 +252,7 @@ class AccountPayment(models.Model):
                 "<li><strong>Payment Reference:</strong> %s</li>"
                 "<li><strong>Vendor:</strong> %s</li>"
                 "<li><strong>Payment Amount:</strong> %s</li>"
+                "<li><strong>Memo:</strong> %s</li>"
                 "<li><strong>Payment Date:</strong> %s</li>"
                 "</ul>"
             ) % (
@@ -226,11 +261,13 @@ class AccountPayment(models.Model):
                 payment_name,
                 vendor_name,
                 formatted_amount,
+                payment_memo,
                 payment_date,
             )
 
-            todo_type = self.env.ref('mail.mail_activity_data_todo', raise_if_not_found=False)
-            activity_type_id = todo_type.id if todo_type else False
+            processed_type = self._get_or_create_processed_activity_type()
+            activity_type_id = processed_type.id if processed_type else False
+            act_type_xmlid = 'bora_purchase_payment.mail_activity_data_processed' if processed_type else 'mail.mail_activity_data_todo'
 
             # 1. Create an activity for all followers of the same Purchase Order
             if po:
@@ -247,6 +284,7 @@ class AccountPayment(models.Model):
                     if not existing:
                         try:
                             po.activity_schedule(
+                                act_type_xmlid=act_type_xmlid,
                                 activity_type_id=activity_type_id,
                                 user_id=user.id,
                                 summary=summary,
@@ -288,6 +326,7 @@ class AccountPayment(models.Model):
                     if not existing:
                         try:
                             req.activity_schedule(
+                                act_type_xmlid=act_type_xmlid,
                                 activity_type_id=activity_type_id,
                                 user_id=user.id,
                                 summary=summary,
@@ -318,6 +357,7 @@ class AccountPayment(models.Model):
                     if not existing:
                         try:
                             payment.activity_schedule(
+                                act_type_xmlid=act_type_xmlid,
                                 activity_type_id=activity_type_id,
                                 user_id=user.id,
                                 summary=summary,
