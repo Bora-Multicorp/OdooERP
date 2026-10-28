@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_banking_approval_config_user,banking.approval.config.user,model_banking_approval_config,account.group_account_user,1,0,0,0
+access_banking_approval_config_manager,banking.approval.config.manager,model_banking_approval_config,account.group_account_manager,1,1,1,1
+access_banking_approval_config_system,banking.approval.config.system,model_banking_approval_config,base.group_system,1,1,1,1
