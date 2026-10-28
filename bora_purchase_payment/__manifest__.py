@@ -11,6 +11,7 @@
         'ks_purchase_advance_payment',
     ],
     'data': [
+        'data/mail_activity_data.xml',
         'views/vendor_payment_approval_request_views.xml',
         'views/account_payment_views.xml',
         'views/purchase_order_views.xml',
