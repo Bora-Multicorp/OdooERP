@@ -40,7 +40,7 @@
                         string="Request For Payment"
                         class="btn-secondary"
                         invisible="state not in ('purchase', 'done')"
-                        help="Request payment approval. Approval type is set automatically: 'With Bill' if a posted vendor bill exists, otherwise 'Advance Payment'."/>
+                        help="Request payment approval. Approval type is set automatically: 'Regular' if a posted vendor bill exists, otherwise 'Advance'."/>
                 <button name="action_create_advance_payment"
                         type="object"
                         string="Create Advance Payment"

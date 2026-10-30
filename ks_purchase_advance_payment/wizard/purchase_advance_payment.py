@@ -248,15 +248,15 @@ class PurchaseAdvancePayment(models.TransientModel):
         if not self.purchase_order_id.has_approved_advance_payment_request:
             raise UserError(
                 _(
-                    'Advance payment is not allowed until a "Payment approval without bill" request for this Purchase Order is approved. '
-                    'Please create a Payment Approval Request (Request Advance Payment Approval) and get it approved first.'
+                    'Advance payment is not allowed until a payment approval request (Advance or Part Payment) for this Purchase Order is approved. '
+                    'Please create a Payment Approval Request and get it approved first.'
                 )
             )
 
         # Restrict payment to approved advance amount minus what has already been paid
         order = self.purchase_order_id
         approved_requests = order.payment_approval_request_ids.filtered(
-            lambda r: r.state == 'approved' and r.approval_type == 'without_bill'
+            lambda r: r.state == 'approved' and r.approval_type in ('advance', 'part_payment', 'without_bill')
         )
         total_approved = sum(approved_requests.mapped('amount_for_approval'))
         already_paid = order.ks_advance_payment_amount+order.ks_advance_payment_in_payment_amount or 0.0

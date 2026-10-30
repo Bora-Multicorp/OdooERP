@@ -87,14 +87,14 @@ class AccountMove(models.Model):
         for po in pos:
             try:
                 existing = po.payment_approval_request_ids.filtered(
-                    lambda r: r.state in ('draft', 'pending_approval') and r.approval_type == 'with_bill'
+                    lambda r: r.state in ('draft', 'pending_approval') and r.approval_type in ('regular', 'with_bill')
                 )[:1]
                 if existing:
                     created_or_existing |= existing
                 else:
                     req = self.env['vendor.payment.approval.request'].create({
                         'purchase_order_id': po.id,
-                        'approval_type': 'with_bill',
+                        'approval_type': 'regular',
                     })
                     created_or_existing |= req
             except Exception as e:

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from odoo import api, fields, models, _
 from odoo.exceptions import UserError, ValidationError
-from odoo.tools import float_compare
+from odoo.tools import float_compare, is_html_empty
 
 
 class VendorPaymentApprovalRequest(models.Model):
@@ -20,14 +20,14 @@ class VendorPaymentApprovalRequest(models.Model):
     )
     approval_type = fields.Selection(
         [
-            ('without_bill', 'Payment approval without bill for purchase'),
-            ('with_bill', 'Payment approval with bill for purchase'),
+            ('regular', 'Regular'),
+            ('advance', 'Advance'),
+            ('part_payment', 'Part Payment'),
         ],
         string='Approval Type',
         required=True,
-        default='without_bill',
+        default='regular',
         copy=False,
-        help='Set automatically from PO: with bill if vendor bill exists, otherwise without bill.',
     )
     state = fields.Selection(
         [
@@ -103,10 +103,9 @@ class VendorPaymentApprovalRequest(models.Model):
         readonly=True,
         ondelete='set null',
     )
-    rest_after_payment = fields.Boolean(
-        string='Rest After Payment',
-        default=False,
-        help='If checked, supporting documents are not required for approval.',
+    remark = fields.Html(
+        string='Remark',
+        copy=False,
     )
     ks_can_approve = fields.Boolean(
         compute='_compute_ks_can_approve',
@@ -162,10 +161,56 @@ class VendorPaymentApprovalRequest(models.Model):
             if po_id and not vals.get('approval_type'):
                 po = self.env['purchase.order'].browse(po_id)
                 if po.exists():
-                    vals['approval_type'] = 'with_bill' if po.has_vendor_bill else 'without_bill'
+                    vals['approval_type'] = 'regular' if po.has_vendor_bill else 'advance'
         requests = super().create(vals_list)
         requests._create_payment_tracker_records()
         return requests
+
+    @api.constrains('approval_type', 'remark')
+    def _check_remark_for_part_payment(self):
+        for rec in self:
+            if rec.approval_type == 'part_payment' and is_html_empty(rec.remark):
+                raise ValidationError(_('Remark is required when Approval Type is Part Payment.'))
+
+    def _validate_required_documents(self):
+        """Validate required supporting documents according to approval_type:
+        - Regular: 'Vendor Invoice' document required.
+        - Advance: 'Vendor Invoice' or 'Other' document required.
+        - Part Payment: 'Vendor Invoice' or 'Other' document required.
+        """
+        for rec in self:
+            attached_types = {
+                d.document_type
+                for d in rec.document_ids
+                if d.document_attachment and d.document_type
+            }
+            if rec.approval_type in ('regular', 'with_bill'):
+                if 'vendor_invoice' not in attached_types:
+                    raise ValidationError(
+                        _("Supporting document validation failed for %s:\n"
+                          "A 'Vendor Invoice' document with attachment is required for Regular approval.")
+                        % (rec.display_name or rec.purchase_order_id.name or _('this request'))
+                    )
+            elif rec.approval_type in ('advance', 'without_bill'):
+                if not attached_types.intersection({'vendor_invoice', 'other'}):
+                    raise ValidationError(
+                        _("Supporting document validation failed for %s:\n"
+                          "A 'Vendor Invoice' or 'Other' document with attachment is required for Advance approval.")
+                        % (rec.display_name or rec.purchase_order_id.name or _('this request'))
+                    )
+            elif rec.approval_type == 'part_payment':
+                if not attached_types.intersection({'vendor_invoice', 'other'}):
+                    raise ValidationError(
+                        _("Supporting document validation failed for %s:\n"
+                          "A 'Vendor Invoice' or 'Other' document with attachment is required for Part Payment approval.")
+                        % (rec.display_name or rec.purchase_order_id.name or _('this request'))
+                    )
+
+    @api.constrains('state', 'approval_type', 'document_ids')
+    def _check_required_documents_constraint(self):
+        for rec in self:
+            if rec.state in ('pending_approval', 'approved'):
+                rec._validate_required_documents()
 
     @api.constrains('amount_for_approval', 'purchase_order_id', 'state')
     def _check_total_amount_within_po_total(self):
@@ -241,6 +286,9 @@ class VendorPaymentApprovalRequest(models.Model):
             raise UserError(_('Only draft requests can be submitted.'))
         if self.amount_for_approval <= 0:
             raise UserError(_('Amount for Approval should be greater than 0.'))
+        if self.approval_type == 'part_payment' and is_html_empty(self.remark):
+            raise ValidationError(_('Remark is required when Approval Type is Part Payment.'))
+        self._validate_required_documents()
         return {
             'name': _('Send for Approval'),
             'type': 'ir.actions.act_window',
@@ -258,14 +306,9 @@ class VendorPaymentApprovalRequest(models.Model):
         for rec in self:
             if rec.state != 'draft':
                 raise UserError(_('Only draft requests can be submitted.'))
-            if rec.approval_type == 'with_bill' and not rec.purchase_order_id.has_vendor_bill:
-                raise UserError(
-                    _(
-                        'Cannot submit "Payment approval with bill" request: Purchase Order %s does not have a posted vendor bill yet. '
-                        'Create and validate a vendor bill for this PO first.'
-                    )
-                    % rec.purchase_order_id.name
-                )
+            if rec.approval_type == 'part_payment' and is_html_empty(rec.remark):
+                raise ValidationError(_('Remark is required when Approval Type is Part Payment.'))
+            rec._validate_required_documents()
             config = self.env['vendor.payment.approval.config'].get_config()
             if not config:
                 raise UserError(
@@ -321,18 +364,9 @@ class VendorPaymentApprovalRequest(models.Model):
                 raise UserError(
                     _('You are not the current approver for this request or it is not your turn yet.')
                 )
-            if not rec.rest_after_payment:
-                required_types = {'vendor_invoice', 'eway_bill', 'lr_docket', 'imei_sheet'}
-                attached = {d.document_type for d in rec.document_ids if d.document_attachment}
-                missing = required_types - attached
-                if missing:
-                    type_labels = dict(
-                        self.env['vendor.payment.approval.document']._fields['document_type'].selection
-                    )
-                    raise UserError(
-                        _('The following documents with attachments are required before approving:\n%s')
-                        % '\n'.join('• ' + type_labels.get(t, t) for t in sorted(missing))
-                    )
+            if rec.approval_type == 'part_payment' and is_html_empty(rec.remark):
+                raise ValidationError(_('Remark is required when Approval Type is Part Payment.'))
+            rec._validate_required_documents()
         return {
             'name': _('Approve Payment Request'),
             'type': 'ir.actions.act_window',
@@ -364,6 +398,9 @@ class VendorPaymentApprovalRequest(models.Model):
         self.ensure_one()
         if self.state != 'pending_approval':
             raise UserError(_('Only pending requests can be approved.'))
+        if self.approval_type == 'part_payment' and is_html_empty(self.remark):
+            raise ValidationError(_('Remark is required when Approval Type is Part Payment.'))
+        self._validate_required_documents()
         current_user = self.env.user
         my_line = self.approval_line_ids.filtered(
             lambda l: l.user_id == current_user and l.state == 'pending'
@@ -680,7 +717,6 @@ class VendorPaymentApprovalDocument(models.Model):
         [
             ('vendor_invoice', 'Vendor Invoice'),
             ('eway_bill', 'E-Way Bill'),
-            ('lr_docket', 'LR / Docket'),
             ('imei_sheet', 'IMEI Sheet'),
             ('other', 'Other'),
         ],

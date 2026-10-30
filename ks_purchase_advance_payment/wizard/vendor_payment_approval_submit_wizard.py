@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from odoo import api, fields, models, _
-from odoo.exceptions import UserError
+from odoo.exceptions import UserError, ValidationError
+from odoo.tools import is_html_empty
 
 
 class VendorPaymentApprovalSubmitWizard(models.TransientModel):
@@ -151,6 +152,9 @@ class VendorPaymentApprovalSubmitWizard(models.TransientModel):
             raise UserError(_('No approval request or payment specified.'))
         if req.state != 'draft':
             raise UserError(_('Only draft requests can be submitted.'))
+        if req.approval_type == 'part_payment' and is_html_empty(req.remark):
+            raise ValidationError(_('Remark is required when Approval Type is Part Payment.'))
+        req._validate_required_documents()
         if req.approval_type == 'with_bill' and not req.purchase_order_id.has_vendor_bill:
             raise UserError(_(
                 'Cannot submit "Payment approval with bill": '
