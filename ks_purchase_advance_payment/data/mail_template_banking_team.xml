@@ -38,8 +38,9 @@
                     <tr>
                         <td style="padding:8px 12px;font-weight:bold;border:1px solid #ddd;">Approval Type</td>
                         <td style="padding:8px 12px;border:1px solid #ddd;">
-                            <t t-if="object.approval_type == 'without_bill'">Advance Payment (Without Bill)</t>
-                            <t t-elif="object.approval_type == 'with_bill'">Payment with Bill</t>
+                            <t t-if="object.approval_type in ('regular', 'with_bill')">Regular</t>
+                            <t t-elif="object.approval_type in ('advance', 'without_bill')">Advance</t>
+                            <t t-elif="object.approval_type == 'part_payment'">Part Payment</t>
                             <t t-else=""><t t-out="object.approval_type"/></t>
                         </td>
                     </tr>

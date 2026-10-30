@@ -61,16 +61,16 @@ class PurchaseOrder(models.Model):
         for order in self:
             requests = order.payment_approval_request_ids
             order.has_approved_advance_payment_request = any(
-                r.state == 'approved' and r.approval_type == 'without_bill' for r in requests
+                r.state == 'approved' and r.approval_type in ('advance', 'part_payment', 'without_bill') for r in requests
             )
             order.has_approved_bill_payment_request = any(
-                r.state == 'approved' and r.approval_type == 'with_bill' for r in requests
+                r.state == 'approved' and r.approval_type in ('regular', 'part_payment', 'with_bill') for r in requests
             )
             order.has_any_advance_request = any(
-                r.state != 'rejected' and r.approval_type == 'without_bill' for r in requests
+                r.state != 'rejected' and r.approval_type in ('advance', 'part_payment', 'without_bill') for r in requests
             )
             order.has_any_bill_request = any(
-                r.state != 'rejected' and r.approval_type == 'with_bill' for r in requests
+                r.state != 'rejected' and r.approval_type in ('regular', 'part_payment', 'with_bill') for r in requests
             )
 
     @api.depends('payment_approval_request_ids')
@@ -79,11 +79,11 @@ class PurchaseOrder(models.Model):
             order.payment_approval_request_count = len(order.payment_approval_request_ids)
 
     def action_create_payment_approval_request(self):
-        """Create a new payment approval request. Type is set from PO (with bill if vendor bill exists, else without bill)."""
+        """Create a new payment approval request. Type is set from PO (regular if vendor bill exists, else advance)."""
         self.ensure_one()
         if self.state not in ('purchase', 'done'):
             raise UserError(_('Only confirmed or locked Purchase Orders can request payment approval.'))
-        approval_type = 'with_bill' if self.has_vendor_bill else 'without_bill'
+        approval_type = 'regular' if self.has_vendor_bill else 'advance'
         request = self.env['vendor.payment.approval.request'].create({
             'purchase_order_id': self.id,
             'approval_type': approval_type,
@@ -99,14 +99,14 @@ class PurchaseOrder(models.Model):
 
     def action_bulk_request_payment(self):
         """Bulk: create payment approval requests for selected confirmed POs.
-        Approval type is set per PO: 'with_bill' if a posted vendor bill exists, else 'without_bill'.
+        Approval type is set per PO: 'regular' if a posted vendor bill exists, else 'advance'.
         """
         orders = self.filtered(lambda o: o.state in ('purchase', 'done'))
         if not orders:
             raise UserError(_('No confirmed or locked Purchase Orders selected.'))
         created = self.env['vendor.payment.approval.request']
         for order in orders:
-            approval_type = 'with_bill' if order.has_vendor_bill else 'without_bill'
+            approval_type = 'regular' if order.has_vendor_bill else 'advance'
             req = self.env['vendor.payment.approval.request'].create({
                 'purchase_order_id': order.id,
                 'approval_type': approval_type,
