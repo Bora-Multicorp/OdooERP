@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="mail_activity_data_processed" model="mail.activity.type">
+        <field name="name">Processed</field>
+        <field name="icon">fa-check</field>
+        <field name="sequence">13</field>
+        <field name="category">default</field>
+        <field name="delay_count">0</field>
+        <field name="delay_unit">days</field>
+        <field name="chaining_type">suggest</field>
+        <field name="active" eval="True"/>
+    </record>
+</odoo>
