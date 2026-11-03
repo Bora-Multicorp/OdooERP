@@ -119,6 +119,9 @@
             <xpath expr="//header//button[@name='action_post']" position="attributes">
                 <attribute name="invisible">1</attribute>
             </xpath>
+            <xpath expr="//header//button[@name='action_draft']" position="attributes">
+                <attribute name="invisible">state in ('draft', 'pending_approval', 'rejected')</attribute>
+            </xpath>
             <xpath expr="//field[@name='state']" position="attributes">
                 <attribute name="statusbar_visible">draft,pending_approval,in_process,paid</attribute>
             </xpath>
