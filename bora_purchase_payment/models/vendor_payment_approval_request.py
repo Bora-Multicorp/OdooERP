@@ -90,8 +90,7 @@ class VendorPaymentApprovalRequest(models.Model):
             'date': fields.Date.context_today(self),
             'ks_purchase_order_id': po.id if po else False,
             'payment_approval_request_id': self.id,
-            'ks_payment_approved': False,
-            'request_user_id': self.request_user_id.id if self.request_user_id else self.env.user.id,
+            'ks_payment_approved': True,
             'memo': memo,
             'journal_id': journal.id,
         }
@@ -100,7 +99,7 @@ class VendorPaymentApprovalRequest(models.Model):
             payment_vals['payment_method_line_id'] = outbound_methods[0].id
         if destination_account:
             payment_vals['destination_account_id'] = destination_account.id
-        if self.approval_type in ('regular', 'part_payment', 'with_bill') and self.vendor_bill_id:
+        if self.approval_type == 'with_bill' and self.vendor_bill_id:
             payment_vals['ref'] = self.vendor_bill_id.name or (po.name if po else '')
             payment_vals['invoice_ids'] = [(6, 0, [self.vendor_bill_id.id])]
 

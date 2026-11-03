@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_account_payment_form_inherit_bora_payment" model="ir.ui.view">
+        <field name="name">account.payment.form.inherit.bora.payment</field>
+        <field name="model">account.payment</field>
+        <field name="inherit_id" ref="account.view_account_payment_form"/>
+        <field name="priority">30</field>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <field name="ks_payment_approved" invisible="1"/>
+            </xpath>
+            <xpath expr="//header//button[@name='action_post']" position="attributes">
+                <attribute name="invisible">state != 'draft' or not ks_payment_approved</attribute>
+            </xpath>
+            <xpath expr="//header//button[@name='action_submit_and_open_wizard']" position="attributes">
+                <attribute name="invisible">state != 'draft' or ks_payment_approved</attribute>
+            </xpath>
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_view_payment_approval_request"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-check-square-o"
+                        invisible="not payment_approval_request_id">
+                    <div class="o_stat_info">
+                        <span class="o_stat_text">Approval Request</span>
+                    </div>
+                </button>
+            </xpath>
+            <xpath expr="//field[@name='ks_purchase_order_id']" position="after">
+                <field name="payment_approval_request_id"
+                       string="Payment Approval Request"
+                       readonly="state != 'draft'"
+                       invisible="not payment_approval_request_id and state != 'draft'"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

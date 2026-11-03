@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_vendor_payment_approval_request_form_inherit_payment" model="ir.ui.view">
+        <field name="name">vendor.payment.approval.request.form.inherit.payment</field>
+        <field name="model">vendor.payment.approval.request</field>
+        <field name="inherit_id" ref="ks_purchase_advance_payment.view_vendor_payment_approval_request_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <field name="payment_count" invisible="1"/>
+                <field name="payment_id" invisible="1"/>
+            </xpath>
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_view_vendor_payment" type="object" class="oe_stat_button"
+                        icon="fa-money" invisible="payment_count == 0">
+                    <field name="payment_count" widget="statinfo" string="Payment"/>
+                </button>
+            </xpath>
+            <xpath expr="//field[@name='vendor_bill_id']" position="after">
+                <field name="payment_id" readonly="1" invisible="not payment_id"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_vendor_payment_approval_request_search_inherit_bora" model="ir.ui.view">
+        <field name="name">vendor.payment.approval.request.search.inherit.bora</field>
+        <field name="model">vendor.payment.approval.request</field>
+        <field name="inherit_id" ref="ks_purchase_advance_payment.view_vendor_payment_approval_request_search"/>
+        <field name="arch" type="xml">
+            <xpath expr="//filter[@name='filter_without_bill']" position="attributes">
+                <attribute name="string">Payment Without Bill</attribute>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_vendor_payment_approval_request_list_inherit_bora" model="ir.ui.view">
+        <field name="name">vendor.payment.approval.request.list.inherit.bora</field>
+        <field name="model">vendor.payment.approval.request</field>
+        <field name="inherit_id" ref="ks_purchase_advance_payment.view_vendor_payment_approval_request_list"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='amount_for_approval']" position="after">
+                <field name="payment_id" string="Vendor Payment" optional="show"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

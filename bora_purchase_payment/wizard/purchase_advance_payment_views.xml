@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_purchase_advance_payment_inherit_bora" model="ir.ui.view">
+        <field name="name">purchase.advance.payment.form.inherit.bora</field>
+        <field name="model">purchase.advance.payment</field>
+        <field name="inherit_id" ref="ks_purchase_advance_payment.view_purchase_advance_payment"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="attributes">
+                <attribute name="string">Create Payment</attribute>
+            </xpath>
+        </field>
+    </record>
+</odoo>
