@@ -268,6 +268,22 @@ class AccountPayment(models.Model):
         self.activity_unlink(['mail.mail_activity_data_todo'])
         return True
 
+    def action_draft(self):
+        for rec in self:
+            if rec.state in ('pending_approval', 'rejected'):
+                return rec.action_reset_to_draft()
+        res = super().action_draft()
+        self.write({
+            'ks_payment_approved': False,
+            'approval_line_ids': [(5, 0, 0)],
+            'approve_reason': False,
+            'reject_reason': False,
+            'reject_user_id': False,
+            'reject_date': False,
+        })
+        self.activity_unlink(['mail.mail_activity_data_todo'])
+        return res
+
     def action_post(self):
         for payment in self:
             if payment.state == 'pending_approval':
