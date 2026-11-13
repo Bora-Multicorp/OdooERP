@@ -6,13 +6,37 @@
         <field name="inherit_id" ref="stock.view_picking_form"/>
         <field name="priority" eval="30"/>
         <field name="arch" type="xml">
+            <!-- Stat button for Shipment Bill in button box -->
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_view_vendor_bill" type="object" class="oe_stat_button" icon="fa-pencil-square-o" invisible="not vendor_bill_id or picking_type_code != 'incoming'">
+                    <div class="o_stat_info">
+                        <span class="o_stat_text">Shipment Bill</span>
+                    </div>
+                </button>
+            </xpath>
+
             <!-- Place Pick-Up Date below scheduled date and above date_deadline (Receipts only) -->
             <xpath expr="//field[@name='date_deadline']" position="before">
                 <field name="pickup_date" invisible="picking_type_code != 'incoming'" readonly="state in ['cancel', 'done']"/>
             </xpath>
 
-            <!-- Hide original carrier_data group in Additional Info page when Receipts to avoid duplication -->
-            <xpath expr="//group[@name='carrier_data']" position="attributes">
+            <!-- In Additional Info: Keep Carrier visible, but hide duplicate tracking and weight fields on Receipts as they are in Pick-up Details -->
+            <xpath expr="//group[@name='carrier_data']//label[@for='carrier_tracking_ref']" position="attributes">
+                <attribute name="invisible">picking_type_code == 'incoming'</attribute>
+            </xpath>
+            <xpath expr="//group[@name='carrier_data']//div[@name='tracking']" position="attributes">
+                <attribute name="invisible">picking_type_code == 'incoming'</attribute>
+            </xpath>
+            <xpath expr="//group[@name='carrier_data']//label[@for='weight']" position="attributes">
+                <attribute name="invisible">picking_type_code == 'incoming'</attribute>
+            </xpath>
+            <xpath expr="//group[@name='carrier_data']/div[field[@name='weight']]" position="attributes">
+                <attribute name="invisible">picking_type_code == 'incoming'</attribute>
+            </xpath>
+            <xpath expr="//group[@name='carrier_data']//label[@for='shipping_weight']" position="attributes">
+                <attribute name="invisible">picking_type_code == 'incoming'</attribute>
+            </xpath>
+            <xpath expr="//group[@name='carrier_data']/div[field[@name='shipping_weight']]" position="attributes">
                 <attribute name="invisible">picking_type_code == 'incoming'</attribute>
             </xpath>
 
@@ -22,7 +46,7 @@
                     <group>
                         <group name="carrier_data_pickup" string="Shipping Information">
                             <field name="is_return_picking" invisible="1"/>
-                            <field name="carrier_id" string="Carrier/Transporter" readonly="state in ('done', 'cancel')" options="{'no_create': True, 'no_open': True}" required="pickup_date and picking_type_code == 'incoming'"/>
+                            <field name="transporter_id" string="Transporter" readonly="state in ('done', 'cancel')" options="{'no_create': True}" required="pickup_date and picking_type_code == 'incoming'"/>
                             <field name="delivery_type" invisible="True"/>
                             <label for="carrier_tracking_ref" string="Tracking Reference/Docket Number"/>
                             <div name="tracking">
@@ -30,7 +54,12 @@
                                 <button type="object" class="oe_link" icon="oi-arrow-right" confirm="Cancelling a delivery may not be undoable. Are you sure you want to continue?" name="cancel_shipment" string="Cancel" invisible="not carrier_tracking_ref or delivery_type in ['fixed', 'base_on_rule'] or not delivery_type or state != 'done'"/>
                             </div>
                             <field name="docket_lr_copy" widget="many2many_attachment_preview" options="{'accepted_file_extensions': 'image/*, .pdf', 'number_of_files': 1}" readonly="state in ('done', 'cancel')"/>
-                            <field name="amount" readonly="state in ('done', 'cancel')"/>
+                            <label for="amount" string="Amount"/>
+                            <div class="o_row">
+                                <field name="amount" readonly="state in ('done', 'cancel')" class="oe_inline"/>
+                                <button name="action_create_vendor_bill" string="Create Shipment Bill" type="object" class="btn-primary" style="white-space: nowrap;" invisible="picking_type_code != 'incoming' or state in ('done', 'cancel')"/>
+                            </div>
+                            <field name="vendor_bill_id" invisible="1"/>
                             <label for="weight" string="Weight"/>
                             <div>
                                 <field name="weight" class="oe_inline"/>
