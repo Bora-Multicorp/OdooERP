@@ -267,12 +267,14 @@ class StockPicking(models.Model):
         self.vendor_bill_id = bill.id
 
         return {
-            'name': _('Vendor Bill'),
-            'type': 'ir.actions.act_window',
-            'res_model': 'account.move',
-            'res_id': bill.id,
-            'view_mode': 'form',
-            'target': 'current',
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': _('Vendor bill Ready'),
+                'message': _('Vendor bill Ready'),
+                'type': 'success',
+                'sticky': False,
+            }
         }
 
     def action_view_vendor_bill(self):
