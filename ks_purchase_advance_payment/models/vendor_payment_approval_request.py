@@ -235,13 +235,25 @@ class VendorPaymentApprovalRequest(models.Model):
             if not po:
                 continue
 
-            # Original PO total = product lines only, excluding advance deduction lines
-            original_lines = po.order_line.filtered(
+            # Original PO total: po.amount_total already accounts for rounding (e.g. ks_round_off) and taxes.
+            # If advance deduction lines exist on the PO, restore the amounts deducted by them.
+            deduction_lines = po.order_line.filtered(
                 lambda l: not l.display_type
                           and l.product_id
-                          and l.product_id.id not in adv_variant_ids
+                          and l.product_id.id in adv_variant_ids
             )
-            original_total = sum(original_lines.mapped('price_total'))
+            deduction_amount = sum(abs(l.price_total) for l in deduction_lines)
+            original_total = (po.amount_total or 0.0) + deduction_amount
+
+            # Fallback if amount_total is 0 but lines exist
+            if not original_total:
+                original_lines = po.order_line.filtered(
+                    lambda l: not l.display_type
+                              and l.product_id
+                              and l.product_id.id not in adv_variant_ids
+                )
+                original_total = sum(original_lines.mapped('price_total')) - getattr(po, 'ks_round_off', 0.0)
+
             if not original_total:
                 continue
 
