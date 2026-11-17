@@ -306,5 +306,25 @@ class TestSaleOrder(KsTemplatesCommon):
         self.assertEqual(inv_direct.type_of_sale, 'direct')
         self.assertTrue(inv_direct.name.startswith('BTPL/DIRECT/'))
 
+        # Test changing dropdown multiple times on existing draft sale order
+        # Change 1: from DIRECT to HIGH SEAS SALE
+        so_direct.type_of_sale = 'high_seas_sale'
+        so_direct._onchange_type_of_sale()
+        self.assertTrue(so_direct.name.startswith('BTPL/HSS/'), f"Expected BTPL/HSS/ but got {so_direct.name}")
+
+        # Change 2: from HIGH SEAS SALE to IGCR via write
+        so_direct.write({'type_of_sale': 'igcr'})
+        self.assertTrue(so_direct.name.startswith('BTPL/IGCR/'), f"Expected BTPL/IGCR/ but got {so_direct.name}")
+
+        # Change 3: from IGCR back to DIRECT
+        so_direct.write({'type_of_sale': 'direct'})
+        self.assertTrue(so_direct.name.startswith('BTPL/DIRECT/'), f"Expected BTPL/DIRECT/ but got {so_direct.name}")
+
+        # Test changing dropdown multiple times on existing draft invoice
+        inv_direct.write({'type_of_sale': 'high_seas_sale'})
+        self.assertTrue(inv_direct.name.startswith('BTPL/HSS/'), f"Expected BTPL/HSS/ but got {inv_direct.name}")
+        inv_direct.write({'type_of_sale': 'igcr'})
+        self.assertTrue(inv_direct.name.startswith('BTPL/IGCR/'), f"Expected BTPL/IGCR/ but got {inv_direct.name}")
+
 
 

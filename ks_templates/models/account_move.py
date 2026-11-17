@@ -65,17 +65,16 @@ class AccountMove(models.Model):
     @api.depends('invoice_line_ids.sale_line_ids.order_id.type_of_sale')
     def _compute_type_of_sale(self):
         for move in self:
-            if not move.type_of_sale:
-                sale_type = False
-                for line in move.invoice_line_ids:
-                    for sale_line in line.sale_line_ids:
-                        if sale_line.order_id.type_of_sale:
-                            sale_type = sale_line.order_id.type_of_sale
-                            break
-                    if sale_type:
+            sale_type = False
+            for line in move.invoice_line_ids:
+                for sale_line in line.sale_line_ids:
+                    if sale_line.order_id.type_of_sale:
+                        sale_type = sale_line.order_id.type_of_sale
                         break
                 if sale_type:
-                    move.type_of_sale = sale_type
+                    break
+            if sale_type:
+                move.type_of_sale = sale_type
 
     def _is_target_type_of_sale_company(self, company_id=None):
         """Check if company is BORA TECHNOVATION PRIVATE LIMITED or Energy Sector."""
@@ -168,6 +167,22 @@ class AccountMove(models.Model):
 
         return seq.next_by_id(sequence_date=seq_date)
 
+    @api.onchange('type_of_sale')
+    def _onchange_type_of_sale(self):
+        if self.state == 'draft' and self.type_of_sale and self.move_type in ('out_invoice', 'out_refund'):
+            company_id = self.company_id.id or self.env.company.id
+            if self._is_target_type_of_sale_company(company_id):
+                target_tag = {
+                    'high_seas_sale': 'HSS',
+                    'igcr': 'IGCR',
+                    'direct': 'DIRECT',
+                }.get(self.type_of_sale)
+                if not self.name or self.name in ('/', 'New') or (target_tag and f"/{target_tag}/" not in self.name):
+                    seq_date = self.invoice_date or self.date
+                    new_name = self._get_invoice_sequence_next(self.type_of_sale, company_id=company_id, seq_date=seq_date)
+                    if new_name:
+                        self.name = new_name
+
     @api.model_create_multi
     def create(self, vals_list):
         for vals in vals_list:
@@ -175,7 +190,13 @@ class AccountMove(models.Model):
                 company_id = vals.get('company_id') or self.env.company.id
                 sale_type = vals.get('type_of_sale')
                 if sale_type and self._is_target_type_of_sale_company(company_id):
-                    if not vals.get('name') or vals.get('name') in ('/', 'New'):
+                    target_tag = {
+                        'high_seas_sale': 'HSS',
+                        'igcr': 'IGCR',
+                        'direct': 'DIRECT',
+                    }.get(sale_type)
+                    name = vals.get('name')
+                    if not name or name in ('/', 'New') or (target_tag and f"/{target_tag}/" not in name):
                         seq_date = fields.Date.to_date(vals.get('invoice_date') or vals.get('date'))
                         new_name = self._get_invoice_sequence_next(sale_type, company_id=company_id, seq_date=seq_date)
                         if new_name:
@@ -186,12 +207,18 @@ class AccountMove(models.Model):
         res = super().write(vals)
         if 'type_of_sale' in vals and vals['type_of_sale']:
             for move in self:
-                if move.state == 'draft' and (not move.name or move.name in ('/', 'New')):
-                    if move.move_type in ('out_invoice', 'out_refund') and move._is_target_type_of_sale_company(move.company_id.id):
-                        seq_date = move.invoice_date or move.date
-                        new_name = move._get_invoice_sequence_next(vals['type_of_sale'], company_id=move.company_id.id, seq_date=seq_date)
-                        if new_name:
-                            move.write({'name': new_name})
+                if move.state == 'draft' and move.move_type in ('out_invoice', 'out_refund'):
+                    if move._is_target_type_of_sale_company(move.company_id.id):
+                        target_tag = {
+                            'high_seas_sale': 'HSS',
+                            'igcr': 'IGCR',
+                            'direct': 'DIRECT',
+                        }.get(vals['type_of_sale'])
+                        if not move.name or move.name in ('/', 'New') or (target_tag and f"/{target_tag}/" not in move.name):
+                            seq_date = move.invoice_date or move.date
+                            new_name = move._get_invoice_sequence_next(vals['type_of_sale'], company_id=move.company_id.id, seq_date=seq_date)
+                            if new_name:
+                                super(AccountMove, move).write({'name': new_name})
         return res
 
     def _post(self, soft=True):
