@@ -57,7 +57,9 @@ class KsTemplatesCommon(TransactionCase):
         # Create product
         cls.product = cls.env['product.product'].create({
             'name': 'Test Product',
-            'type': 'product',
+            'type': 'consu',
+            'is_storable': True,
+            'company_id': cls.company.id,
             'sale_ok': True,
             'purchase_ok': True,
             'list_price': 100.0,
@@ -86,9 +88,13 @@ class KsTemplatesCommon(TransactionCase):
         })
         
         # Create purchase order
+        picking_type = cls.env['stock.picking.type'].search([('code', '=', 'incoming'), ('company_id', '=', cls.company.id)], limit=1)
+        if not picking_type:
+            picking_type = cls.env['stock.picking.type'].search([('code', '=', 'incoming')], limit=1)
         cls.purchase_order = cls.env['purchase.order'].with_company(cls.company).create({
             'partner_id': cls.supplier.id,
             'company_id': cls.company.id,
+            'picking_type_id': picking_type.id if picking_type else False,
             'order_line': [(0, 0, {
                 'product_id': cls.product.id,
                 'product_qty': 5.0,
