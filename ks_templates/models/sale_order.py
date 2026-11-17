@@ -141,13 +141,39 @@ class SaleOrder(models.Model):
 
         return seq.next_by_id(sequence_date=seq_date)
 
+    @api.onchange('type_of_sale')
+    def _onchange_type_of_sale(self):
+        if self.state in ('draft', 'sent', False) and self.type_of_sale:
+            company_id = self.company_id.id or self.env.company.id
+            if self._is_target_type_of_sale_company(company_id):
+                target_tag = {
+                    'high_seas_sale': 'HSS',
+                    'igcr': 'IGCR',
+                    'direct': 'DIRECT',
+                }.get(self.type_of_sale)
+                if not self.name or self.name in ('New', '/') or self.name.startswith('S') or (target_tag and f"/{target_tag}/" not in self.name):
+                    seq_date = fields.Datetime.context_timestamp(
+                        self, fields.Datetime.to_datetime(self.date_order)
+                    ) if self.date_order else None
+                    new_name = self._get_sale_order_sequence_next(
+                        self.type_of_sale, company_id=company_id, seq_date=seq_date
+                    )
+                    if new_name:
+                        self.name = new_name
+
     @api.model_create_multi
     def create(self, vals_list):
         for vals in vals_list:
-            if vals.get('name', 'New') == 'New' or vals.get('name') in ('/', False):
-                company_id = vals.get('company_id') or self.env.company.id
-                sale_type = vals.get('type_of_sale')
-                if sale_type and self._is_target_type_of_sale_company(company_id):
+            company_id = vals.get('company_id') or self.env.company.id
+            sale_type = vals.get('type_of_sale')
+            if sale_type and self._is_target_type_of_sale_company(company_id):
+                target_tag = {
+                    'high_seas_sale': 'HSS',
+                    'igcr': 'IGCR',
+                    'direct': 'DIRECT',
+                }.get(sale_type)
+                name = vals.get('name')
+                if not name or name in ('/', 'New', False) or (target_tag and f"/{target_tag}/" not in name):
                     seq_date = fields.Datetime.context_timestamp(
                         self, fields.Datetime.to_datetime(vals['date_order'])
                     ) if 'date_order' in vals else None
@@ -162,8 +188,13 @@ class SaleOrder(models.Model):
         res = super().write(vals)
         if 'type_of_sale' in vals and vals['type_of_sale']:
             for order in self:
-                if order.state in ('draft', 'sent') and (not order.name or order.name == 'New' or order.name.startswith('S')):
-                    if order._is_target_type_of_sale_company(order.company_id.id):
+                if order.state in ('draft', 'sent') and order._is_target_type_of_sale_company(order.company_id.id):
+                    target_tag = {
+                        'high_seas_sale': 'HSS',
+                        'igcr': 'IGCR',
+                        'direct': 'DIRECT',
+                    }.get(vals['type_of_sale'])
+                    if not order.name or order.name in ('New', '/') or order.name.startswith('S') or (target_tag and f"/{target_tag}/" not in order.name):
                         seq_date = fields.Datetime.context_timestamp(
                             self, fields.Datetime.to_datetime(order.date_order)
                         ) if order.date_order else None
@@ -171,7 +202,7 @@ class SaleOrder(models.Model):
                             vals['type_of_sale'], company_id=order.company_id.id, seq_date=seq_date
                         )
                         if new_name:
-                            order.write({'name': new_name})
+                            super(SaleOrder, order).write({'name': new_name})
         return res
 
     def _prepare_invoice(self):
