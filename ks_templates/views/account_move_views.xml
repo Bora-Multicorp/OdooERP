@@ -14,6 +14,7 @@
                     <field name="ks_show_domestic_tax_invoice" invisible="1"/>
                     <field name="ks_is_company_indian" invisible="1"/>
                     <field name="ks_is_customer_indian" invisible="1"/>
+                    <field name="ks_export_invoice_pdf_report" invisible="1"/>
                 </xpath>
 
                 <!-- Add custom fields to Other Information tab -->
@@ -29,6 +30,8 @@
                     <field name="ks_city_port_of_loading" placeholder="City / Port of Loading"/>
                     <field name="ks_city_port_of_discharge" placeholder="City / Port of Discharge"/>
                     <field name="ks_bank_id" placeholder="Bank Information (from Sale Order)"/>
+                    <field name="ks_export_invoice_pdf_report" placeholder="Export invoice pdf report"/>
+                    <field name="ks_additional_terms_of_delivery" placeholder="Additional Terms of Delivery"/>
                 </xpath>
             </field>
         </record>

@@ -64,6 +64,22 @@ patch(FormController.prototype, {
                     return showDomesticTaxInvoice !== undefined ? Boolean(showDomesticTaxInvoice) : (isCompIndian && isCustIndian);
                 }
 
+                // Export Invoice PDF report selection:
+                // If a specific export invoice report is selected on the move, show that matching report.
+                if (label.includes("export invoice")) {
+                    const exportChoice = this.model.root.data.ks_export_invoice_pdf_report;
+                    if (exportChoice) {
+                        const isChoiceInr = exportChoice.endsWith("_inr");
+                        const isLabelInr = label.endsWith("inr") || label.includes(" inr");
+                        if (exportChoice.includes("without_gst")) {
+                            return label.includes("without gst") && isChoiceInr === isLabelInr;
+                        }
+                        if (exportChoice.includes("with_gst")) {
+                            return label.includes("with gst") && !label.includes("without gst") && isChoiceInr === isLabelInr;
+                        }
+                    }
+                }
+
                 if (isIndiaZone) {
                     // India zone: show "With GST Report"
                     return label.includes("with gst");

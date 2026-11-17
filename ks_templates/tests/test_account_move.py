@@ -35,10 +35,14 @@ class TestAccountMove(KsTemplatesCommon):
         self.invoice.ks_place_of_receipt_by_shipper = 'MUMBAI'
         self.invoice.ks_city_port_of_loading = 'MUMBAI PORT'
         self.invoice.ks_city_port_of_discharge = 'NEW YORK PORT'
+        self.invoice.ks_additional_terms_of_delivery = 'FOB MUMBAI TERMS'
+        self.invoice.ks_export_invoice_pdf_report = 'export_invoice_with_gst'
         
         self.assertEqual(self.invoice.ks_delivery_note, 'DN001')
         self.assertEqual(self.invoice.ks_supplier_reference, 'SUP001')
         self.assertEqual(self.invoice.ks_vessel_flight_no, 'VESSEL001')
+        self.assertEqual(self.invoice.ks_additional_terms_of_delivery, 'FOB MUMBAI TERMS')
+        self.assertEqual(self.invoice.ks_export_invoice_pdf_report, 'export_invoice_with_gst')
 
     def test_get_amount_in_words_aed_integer(self):
         """Test get_amount_in_words_aed with integer amount"""

@@ -42,6 +42,13 @@ class SaleOrder(models.Model):
         for order in self:
             order.ks_can_edit = order.state in ('draft', 'sent')
 
+    def _prepare_invoice(self):
+        """Pass additional terms of delivery and related delivery fields from sale order to invoice."""
+        invoice_vals = super()._prepare_invoice()
+        if self.ks_additional_terms_of_delivery:
+            invoice_vals['ks_additional_terms_of_delivery'] = self.ks_additional_terms_of_delivery
+        return invoice_vals
+
     @api.depends('order_line.price_subtotal', 'order_line.price_tax', 'ks_apply_round_off')
     def _compute_ks_round_off(self):
         for order in self:
