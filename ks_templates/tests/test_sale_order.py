@@ -242,4 +242,69 @@ class TestSaleOrder(KsTemplatesCommon):
         # Total qty should still only count regular line (5.0)
         self.assertEqual(self.sale_order.get_printable_total_qty(), 5.0)
 
+    def test_type_of_sale_and_sequence_generation(self):
+        """Test type_of_sale selection and custom sequence generation for SO and invoice"""
+        company_bora = self.env['res.company'].create({
+            'name': 'BORA TECHNOVATION PRIVATE LIMITED-Energy Sector',
+        })
+        # Ensure sale journal exists for invoice creation in company_bora
+        self.env['account.journal'].create({
+            'name': 'Customer Invoices Bora',
+            'type': 'sale',
+            'code': 'SINV',
+            'company_id': company_bora.id,
+        })
+        partner = self.env['res.partner'].create({
+            'name': 'Customer Test Bora',
+            'company_id': company_bora.id,
+        })
+
+        # Test High Seas Sale
+        so_hss = self.env['sale.order'].create({
+            'partner_id': partner.id,
+            'company_id': company_bora.id,
+            'type_of_sale': 'high_seas_sale',
+        })
+        self.assertEqual(so_hss.type_of_sale, 'high_seas_sale')
+        self.assertTrue(so_hss.name.startswith('BTPL/HSS/'))
+        self.assertTrue(so_hss.name.endswith('/001'))
+
+        inv_vals_hss = so_hss._prepare_invoice()
+        self.assertEqual(inv_vals_hss.get('type_of_sale'), 'high_seas_sale')
+        inv_hss = self.env['account.move'].create(inv_vals_hss)
+        self.assertEqual(inv_hss.type_of_sale, 'high_seas_sale')
+        self.assertTrue(inv_hss.name.startswith('BTPL/HSS/'))
+        self.assertNotIn('/PI/', inv_hss.name)
+
+        # Test IGCR
+        so_igcr = self.env['sale.order'].create({
+            'partner_id': partner.id,
+            'company_id': company_bora.id,
+            'type_of_sale': 'igcr',
+        })
+        self.assertEqual(so_igcr.type_of_sale, 'igcr')
+        self.assertTrue(so_igcr.name.startswith('BTPL/IGCR/'))
+        self.assertTrue(so_igcr.name.endswith('/001'))
+
+        inv_vals_igcr = so_igcr._prepare_invoice()
+        inv_igcr = self.env['account.move'].create(inv_vals_igcr)
+        self.assertEqual(inv_igcr.type_of_sale, 'igcr')
+        self.assertTrue(inv_igcr.name.startswith('BTPL/IGCR/'))
+
+        # Test Direct
+        so_direct = self.env['sale.order'].create({
+            'partner_id': partner.id,
+            'company_id': company_bora.id,
+            'type_of_sale': 'direct',
+        })
+        self.assertEqual(so_direct.type_of_sale, 'direct')
+        self.assertTrue(so_direct.name.startswith('BTPL/DIRECT/'))
+        self.assertTrue(so_direct.name.endswith('/001'))
+
+        inv_vals_direct = so_direct._prepare_invoice()
+        inv_direct = self.env['account.move'].create(inv_vals_direct)
+        self.assertEqual(inv_direct.type_of_sale, 'direct')
+        self.assertTrue(inv_direct.name.startswith('BTPL/DIRECT/'))
+
+
 

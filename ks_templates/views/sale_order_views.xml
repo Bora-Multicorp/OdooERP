@@ -23,6 +23,7 @@
                 <!-- Add fields to Other Information tab -->
                 <xpath expr="//page[@name='other_information']/group" position="inside">
                     <group string="Additional Information">
+                        <field name="type_of_sale" readonly="not ks_can_edit or ks_qty_only_edit"/>
                         <field name="ks_other_reference" placeholder="Other Reference(s)" readonly="not ks_can_edit or ks_qty_only_edit"/>
                         <field name="ks_despatched_through" placeholder="Despatch through" readonly="not ks_can_edit or ks_qty_only_edit"/>
                         <field name="ks_city_port_of_discharge" placeholder="Destination" readonly="not ks_can_edit or ks_qty_only_edit"/>

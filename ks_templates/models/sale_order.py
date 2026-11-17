@@ -23,6 +23,16 @@ class SaleOrder(models.Model):
     )
 
     # Additional sale order information fields
+    type_of_sale = fields.Selection(
+        selection=[
+            ('high_seas_sale', 'HIGH SEAS SALE'),
+            ('igcr', 'IGCR'),
+            ('direct', 'DIRECT'),
+        ],
+        string='Type of Sale',
+        copy=False,
+        tracking=True,
+    )
     ks_other_reference = fields.Char(string='Other Reference(s)')
     ks_additional_terms_of_delivery = fields.Char(string='Additional Terms of Delivery')
     ks_despatched_through = fields.Char(string='Despatch through')
@@ -42,11 +52,135 @@ class SaleOrder(models.Model):
         for order in self:
             order.ks_can_edit = order.state in ('draft', 'sent')
 
+    def _is_target_type_of_sale_company(self, company_id=None):
+        """Check if company is BORA TECHNOVATION PRIVATE LIMITED or Energy Sector."""
+        if company_id:
+            company = self.env['res.company'].browse(company_id)
+        elif hasattr(self, 'company_id') and self.company_id:
+            company = self.company_id
+        else:
+            company = self.env.company
+        cname = (company.name or '').upper().strip()
+        return (
+            'BORA TECHNOVATION PRIVATE LIMITED-ENERGY SECTOR' in cname
+            or 'BORA TECHNOVATION PRIVATE LIMITED' in cname
+            or 'ENERGY SECTOR' in cname
+        )
+
+    def _get_sale_order_sequence_next(self, sale_type, company_id=None, seq_date=None):
+        company = self.env['res.company'].browse(company_id) if company_id else self.company_id
+        if not company:
+            company = self.env.company
+
+        type_map = {
+            'high_seas_sale': {
+                'code': 'sale.order.hss',
+                'name': f"Sales Order (HSS)- {company.name}",
+                'keywords': ['HSS', 'HIGH SEAS'],
+                'prefix': 'BTPL/HSS/%(y)s/PI/',
+            },
+            'igcr': {
+                'code': 'sale.order.igcr',
+                'name': f"Sales Order (IGCR)- {company.name}",
+                'keywords': ['IGCR'],
+                'prefix': 'BTPL/IGCR/%(y)s/PI/',
+            },
+            'direct': {
+                'code': 'sale.order.direct',
+                'name': f"Sales Order (DIRECT)- {company.name}",
+                'keywords': ['DIRECT'],
+                'prefix': 'BTPL/DIRECT/%(y)s/PI/',
+            },
+        }
+        info = type_map.get(sale_type)
+        if not info:
+            return False
+
+        Sequence = self.env['ir.sequence'].sudo()
+        # 1. Look for sequence by specific code
+        seq = Sequence.search([
+            ('code', '=', info['code']),
+            ('company_id', 'in', [company.id, False]),
+        ], order='company_id desc', limit=1)
+
+        # 2. Look for sequence by code 'sale.order' matching keywords (e.g. user-configured in UI)
+        if not seq:
+            domain = [
+                ('code', '=', 'sale.order'),
+                ('company_id', 'in', [company.id, False]),
+            ]
+            for kw in info['keywords']:
+                seq = Sequence.search(domain + ['|', ('name', 'ilike', kw), ('prefix', 'ilike', kw)], order='company_id desc', limit=1)
+                if seq:
+                    break
+
+        # 3. Look for sequence by any code matching keywords for company (must NOT be account sequence)
+        if not seq:
+            domain = [
+                ('company_id', 'in', [company.id, False]),
+                ('code', 'not ilike', 'account'),
+                ('name', 'not ilike', 'Invoice'),
+            ]
+            for kw in info['keywords']:
+                seq = Sequence.search(domain + ['|', ('name', 'ilike', kw), ('prefix', 'ilike', kw)], order='company_id desc', limit=1)
+                if seq:
+                    break
+
+        # 4. If sequence doesn't exist yet, auto-create it in ir.sequence
+        if not seq:
+            seq = Sequence.create({
+                'name': info['name'],
+                'code': info['code'],
+                'company_id': company.id,
+                'prefix': info['prefix'],
+                'padding': 3,
+                'number_increment': 1,
+                'number_next_actual': 1,
+                'implementation': 'standard',
+            })
+
+        return seq.next_by_id(sequence_date=seq_date)
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        for vals in vals_list:
+            if vals.get('name', 'New') == 'New' or vals.get('name') in ('/', False):
+                company_id = vals.get('company_id') or self.env.company.id
+                sale_type = vals.get('type_of_sale')
+                if sale_type and self._is_target_type_of_sale_company(company_id):
+                    seq_date = fields.Datetime.context_timestamp(
+                        self, fields.Datetime.to_datetime(vals['date_order'])
+                    ) if 'date_order' in vals else None
+                    new_name = self._get_sale_order_sequence_next(
+                        sale_type, company_id=company_id, seq_date=seq_date
+                    )
+                    if new_name:
+                        vals['name'] = new_name
+        return super().create(vals_list)
+
+    def write(self, vals):
+        res = super().write(vals)
+        if 'type_of_sale' in vals and vals['type_of_sale']:
+            for order in self:
+                if order.state in ('draft', 'sent') and (not order.name or order.name == 'New' or order.name.startswith('S')):
+                    if order._is_target_type_of_sale_company(order.company_id.id):
+                        seq_date = fields.Datetime.context_timestamp(
+                            self, fields.Datetime.to_datetime(order.date_order)
+                        ) if order.date_order else None
+                        new_name = order._get_sale_order_sequence_next(
+                            vals['type_of_sale'], company_id=order.company_id.id, seq_date=seq_date
+                        )
+                        if new_name:
+                            order.write({'name': new_name})
+        return res
+
     def _prepare_invoice(self):
-        """Pass additional terms of delivery and related delivery fields from sale order to invoice."""
+        """Pass additional terms of delivery and type of sale from sale order to invoice."""
         invoice_vals = super()._prepare_invoice()
         if self.ks_additional_terms_of_delivery:
             invoice_vals['ks_additional_terms_of_delivery'] = self.ks_additional_terms_of_delivery
+        if self.type_of_sale:
+            invoice_vals['type_of_sale'] = self.type_of_sale
         return invoice_vals
 
     @api.depends('order_line.price_subtotal', 'order_line.price_tax', 'ks_apply_round_off')

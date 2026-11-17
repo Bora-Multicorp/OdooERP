@@ -19,6 +19,7 @@
 
                 <!-- Add custom fields to Other Information tab -->
                 <xpath expr="//group[@name='sale_info_group']" position="inside">
+                    <field name="type_of_sale" readonly="1"/>
                     <field name="ks_delivery_note" placeholder="Delivery Note"/>
                     <field name="ks_supplier_reference" placeholder="Supplier's Reference"/>
                     <field name="ks_reference_no_date" placeholder="Reference No. &amp; Date"/>

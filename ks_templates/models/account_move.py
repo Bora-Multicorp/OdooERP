@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import re
-from odoo import api, models, fields
+from odoo import api, models, fields, _
 from odoo.tools import formatLang
 
 
@@ -8,6 +8,18 @@ class AccountMove(models.Model):
     _inherit = 'account.move'
 
     # Additional invoice information fields
+    type_of_sale = fields.Selection(
+        selection=[
+            ('high_seas_sale', 'HIGH SEAS SALE'),
+            ('igcr', 'IGCR'),
+            ('direct', 'DIRECT'),
+        ],
+        string='Type of Sale',
+        compute='_compute_type_of_sale',
+        store=True,
+        readonly=True,
+        copy=False,
+    )
     ks_delivery_note = fields.Char(string='Delivery Note')
     ks_supplier_reference = fields.Char(string="Supplier's Reference")
     ks_reference_no_date = fields.Char(string='Reference No. & Date')
@@ -49,6 +61,177 @@ class AccountMove(models.Model):
         compute='_compute_ks_commercial_invoice_visibility',
         store=True
     )
+
+    @api.depends('invoice_line_ids.sale_line_ids.order_id.type_of_sale')
+    def _compute_type_of_sale(self):
+        for move in self:
+            if not move.type_of_sale:
+                sale_type = False
+                for line in move.invoice_line_ids:
+                    for sale_line in line.sale_line_ids:
+                        if sale_line.order_id.type_of_sale:
+                            sale_type = sale_line.order_id.type_of_sale
+                            break
+                    if sale_type:
+                        break
+                if sale_type:
+                    move.type_of_sale = sale_type
+
+    def _is_target_type_of_sale_company(self, company_id=None):
+        """Check if company is BORA TECHNOVATION PRIVATE LIMITED or Energy Sector."""
+        if company_id:
+            company = self.env['res.company'].browse(company_id)
+        elif hasattr(self, 'company_id') and self.company_id:
+            company = self.company_id
+        else:
+            company = self.env.company
+        cname = (company.name or '').upper().strip()
+        return (
+            'BORA TECHNOVATION PRIVATE LIMITED-ENERGY SECTOR' in cname
+            or 'BORA TECHNOVATION PRIVATE LIMITED' in cname
+            or 'ENERGY SECTOR' in cname
+        )
+
+    def _get_invoice_sequence_next(self, sale_type, company_id=None, seq_date=None):
+        company = self.env['res.company'].browse(company_id) if company_id else self.company_id
+        if not company:
+            company = self.env.company
+
+        type_map = {
+            'high_seas_sale': {
+                'code': 'account.move.hss',
+                'name': f"Customer Invoice (HSS)- {company.name}",
+                'keywords': ['HSS', 'HIGH SEAS'],
+                'prefix': 'BTPL/HSS/%(y)s/',
+            },
+            'igcr': {
+                'code': 'account.move.igcr',
+                'name': f"Customer Invoice (IGCR)- {company.name}",
+                'keywords': ['IGCR'],
+                'prefix': 'BTPL/IGCR/%(y)s/',
+            },
+            'direct': {
+                'code': 'account.move.direct',
+                'name': f"Customer Invoice (DIRECT)- {company.name}",
+                'keywords': ['DIRECT'],
+                'prefix': 'BTPL/DIRECT/%(y)s/',
+            },
+        }
+        info = type_map.get(sale_type)
+        if not info:
+            return False
+
+        Sequence = self.env['ir.sequence'].sudo()
+        # 1. Search by specific code
+        seq = Sequence.search([
+            ('code', '=', info['code']),
+            ('company_id', 'in', [company.id, False]),
+        ], order='company_id desc', limit=1)
+
+        # 2. Search by code 'account.move' matching keywords (must NOT contain PI in prefix)
+        if not seq:
+            domain = [
+                ('code', 'in', ['account.move', 'account.invoice']),
+                ('company_id', 'in', [company.id, False]),
+                ('prefix', 'not ilike', 'PI'),
+            ]
+            for kw in info['keywords']:
+                seq = Sequence.search(domain + ['|', ('name', 'ilike', kw), ('prefix', 'ilike', kw)], order='company_id desc', limit=1)
+                if seq:
+                    break
+
+        # 3. Search by any sequence matching keywords for company (must NOT be sale sequence)
+        if not seq:
+            domain = [
+                ('company_id', 'in', [company.id, False]),
+                ('code', 'not ilike', 'sale'),
+                ('prefix', 'not ilike', 'PI'),
+                ('name', 'not ilike', 'Sale'),
+            ]
+            for kw in info['keywords']:
+                seq = Sequence.search(domain + ['|', ('name', 'ilike', kw), ('prefix', 'ilike', kw)], order='company_id desc', limit=1)
+                if seq:
+                    break
+
+        # 4. If sequence doesn't exist yet, auto-create it
+        if not seq:
+            seq = Sequence.create({
+                'name': info['name'],
+                'code': info['code'],
+                'company_id': company.id,
+                'prefix': info['prefix'],
+                'padding': 4,
+                'number_increment': 1,
+                'number_next_actual': 1,
+                'implementation': 'standard',
+            })
+
+        return seq.next_by_id(sequence_date=seq_date)
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        for vals in vals_list:
+            if vals.get('move_type') in ('out_invoice', 'out_refund'):
+                company_id = vals.get('company_id') or self.env.company.id
+                sale_type = vals.get('type_of_sale')
+                if sale_type and self._is_target_type_of_sale_company(company_id):
+                    if not vals.get('name') or vals.get('name') in ('/', 'New'):
+                        seq_date = fields.Date.to_date(vals.get('invoice_date') or vals.get('date'))
+                        new_name = self._get_invoice_sequence_next(sale_type, company_id=company_id, seq_date=seq_date)
+                        if new_name:
+                            vals['name'] = new_name
+        return super().create(vals_list)
+
+    def write(self, vals):
+        res = super().write(vals)
+        if 'type_of_sale' in vals and vals['type_of_sale']:
+            for move in self:
+                if move.state == 'draft' and (not move.name or move.name in ('/', 'New')):
+                    if move.move_type in ('out_invoice', 'out_refund') and move._is_target_type_of_sale_company(move.company_id.id):
+                        seq_date = move.invoice_date or move.date
+                        new_name = move._get_invoice_sequence_next(vals['type_of_sale'], company_id=move.company_id.id, seq_date=seq_date)
+                        if new_name:
+                            move.write({'name': new_name})
+        return res
+
+    def _post(self, soft=True):
+        for move in self:
+            if move.move_type in ('out_invoice', 'out_refund') and move.type_of_sale:
+                if move._is_target_type_of_sale_company(move.company_id.id):
+                    if not move.name or move.name in ('/', 'New'):
+                        seq_date = move.invoice_date or move.date
+                        new_name = move._get_invoice_sequence_next(move.type_of_sale, company_id=move.company_id.id, seq_date=seq_date)
+                        if new_name:
+                            move.name = new_name
+        return super()._post(soft=soft)
+
+    def _get_starting_sequence(self):
+        self.ensure_one()
+        if self.type_of_sale and self._is_target_type_of_sale_company(self.company_id.id):
+            move_date = self.date or self.invoice_date or fields.Date.context_today(self)
+            year_part = move_date.strftime('%y')
+            if self.type_of_sale == 'high_seas_sale':
+                return f"BTPL/HSS/{year_part}/0000"
+            elif self.type_of_sale == 'igcr':
+                return f"BTPL/IGCR/{year_part}/0000"
+            elif self.type_of_sale == 'direct':
+                return f"BTPL/DIRECT/{year_part}/0000"
+        return super()._get_starting_sequence()
+
+    def _get_last_sequence(self, relaxed=False, with_prefix=None):
+        self.ensure_one()
+        if self.type_of_sale and self._is_target_type_of_sale_company(self.company_id.id) and with_prefix is None:
+            move_date = self.date or self.invoice_date or fields.Date.context_today(self)
+            year_part = move_date.strftime('%y')
+            prefix_map = {
+                'high_seas_sale': f"BTPL/HSS/{year_part}/",
+                'igcr': f"BTPL/IGCR/{year_part}/",
+                'direct': f"BTPL/DIRECT/{year_part}/",
+            }
+            target_prefix = prefix_map.get(self.type_of_sale)
+            if target_prefix:
+                return super()._get_last_sequence(relaxed=relaxed, with_prefix=target_prefix)
+        return super()._get_last_sequence(relaxed=relaxed, with_prefix=with_prefix)
 
     @api.depends(
         'invoice_line_ids.sale_line_ids.order_id.ks_zone',
