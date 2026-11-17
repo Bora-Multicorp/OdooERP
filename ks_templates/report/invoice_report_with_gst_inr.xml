@@ -7,7 +7,7 @@
         <field name="report_name">ks_templates.with_gst_invoice_inr_report</field>
         <field name="report_file">ks_templates.with_gst_invoice_inr_report</field>
         <field name="print_report_name">'Export Invoice With GST INR - %s' % (object.name)</field>
-        <field name="domain">['&amp;', ('currency_id.name', '!=', 'INR'), ('ks_zone', '!=', 'india')]</field>
+        <field name="domain">['|', ('ks_export_invoice_pdf_report', '=', 'export_invoice_with_gst_inr'), '&amp;', ('currency_id.name', '!=', 'INR'), ('ks_zone', '!=', 'india')]</field>
         <field name="binding_model_id" ref="account.model_account_move"/>
         <field name="paperformat_id" ref="paperformat_with_gst_invoice"/>
         <field name="binding_type">report</field>
@@ -205,7 +205,7 @@
                                 </tr>
                                 <tr>
                                     <td style="border-right:1px solid #000; padding:1px;"><strong>Country:</strong></td>
-                                    <td style="padding:1px;" colspan="3"><t t-esc="doc.company_id.country_id.name or ''"/></td>
+                                    <td style="padding:1px;" colspan="3"><t t-esc="(delivery_partner and delivery_partner.country_id and delivery_partner.country_id.name) or (doc.partner_shipping_id and doc.partner_shipping_id.country_id and doc.partner_shipping_id.country_id.name) or (doc.partner_id and doc.partner_id.country_id and doc.partner_id.country_id.name) or ''"/></td>
                                 </tr>
                                 <tr>
                                     <td style="border-top:1px solid #000; padding:1px;" colspan="3"><strong>Terms of Delivery</strong></td>
@@ -216,6 +216,11 @@
                                             <t t-if="gst_sale and gst_sale.incoterm">
                                                 [<t t-esc="gst_sale.incoterm.code or ''"/>] <t t-esc="gst_sale.incoterm.name or ''"/>
                                                 <t t-if="gst_sale.incoterm_location">, <t t-esc="gst_sale.incoterm_location or ''"/></t>
+                                            </t>
+                                            <t t-set="additional_terms" t-value="doc.ks_additional_terms_of_delivery or (gst_sale and gst_sale.ks_additional_terms_of_delivery)"/>
+                                            <t t-if="additional_terms">
+                                                <br t-if="gst_sale and (gst_sale.incoterm or gst_sale.incoterm_location)"/>
+                                                <t t-esc="additional_terms"/>
                                             </t>
                                         </strong>
                                     </td>

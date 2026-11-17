@@ -18,6 +18,16 @@ class AccountMove(models.Model):
     ks_place_of_receipt_by_shipper = fields.Char(string='Place of Receipt by Shipper')
     ks_city_port_of_loading = fields.Char(string='City / Port of Loading')
     ks_city_port_of_discharge = fields.Char(string='City / Port of Discharge')
+    ks_additional_terms_of_delivery = fields.Char(string='Additional Terms of Delivery')
+    ks_export_invoice_pdf_report = fields.Selection(
+        selection=[
+            ('export_invoice_with_gst', 'Export Invoice With GST'),
+            ('export_invoice_with_gst_inr', 'Export Invoice With GST INR'),
+            ('export_invoice_without_gst', 'Export Invoice Without GST'),
+            ('export_invoice_without_gst_inr', 'Export Invoice Without GST INR'),
+        ],
+        string='Export invoice pdf report',
+    )
     ks_zone = fields.Char(string='Zone', compute='_compute_ks_zone', store=True)
     ks_is_company_indian = fields.Boolean(
         string='Is Company Indian',
@@ -64,10 +74,10 @@ class AccountMove(models.Model):
                 pass
             if not zone:
                 comp_country = move.company_id.country_id or (move.company_id.partner_id and move.company_id.partner_id.country_id)
-                cust_country = (move.partner_id and move.partner_id.country_id) or \
+                cust_country = (move.partner_shipping_id and move.partner_shipping_id.country_id) or \
+                               (move.partner_id and move.partner_id.country_id) or \
                                (move.partner_id and move.partner_id.commercial_partner_id and move.partner_id.commercial_partner_id.country_id) or \
-                               (move.partner_id and move.partner_id.parent_id and move.partner_id.parent_id.country_id) or \
-                               (move.partner_shipping_id and move.partner_shipping_id.country_id)
+                               (move.partner_id and move.partner_id.parent_id and move.partner_id.parent_id.country_id)
                 if comp_country and comp_country.code == 'IN' and cust_country and cust_country.code == 'IN':
                     zone = 'india'
             move.ks_zone = zone
@@ -85,10 +95,10 @@ class AccountMove(models.Model):
             comp_country = move.company_id.country_id or (move.company_id.partner_id and move.company_id.partner_id.country_id)
             is_comp_indian = bool(comp_country and comp_country.code == 'IN')
 
-            cust_country = (move.partner_id and move.partner_id.country_id) or \
+            cust_country = (move.partner_shipping_id and move.partner_shipping_id.country_id) or \
+                           (move.partner_id and move.partner_id.country_id) or \
                            (move.partner_id and move.partner_id.commercial_partner_id and move.partner_id.commercial_partner_id.country_id) or \
-                           (move.partner_id and move.partner_id.parent_id and move.partner_id.parent_id.country_id) or \
-                           (move.partner_shipping_id and move.partner_shipping_id.country_id)
+                           (move.partner_id and move.partner_id.parent_id and move.partner_id.parent_id.country_id)
             is_cust_indian = bool(cust_country and cust_country.code == 'IN')
 
             move.ks_is_company_indian = is_comp_indian
