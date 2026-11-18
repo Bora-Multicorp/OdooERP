@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_move_form_inherit_purchase_tds" model="ir.ui.view">
+        <field name="name">account.move.form.inherit.purchase.tds</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_move_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//sheet" position="before">
+                <field name="purchase_tds_count" invisible="1"/>
+                <div class="alert alert-info d-flex align-items-center justify-content-between mb-2 py-2" role="alert" invisible="move_type != 'in_invoice' or purchase_tds_count == 0">
+                    <div>
+                        <i class="fa fa-info-circle me-2"/>
+                        <span>
+                            <b>Purchase Order TDS Applied:</b> Base:
+                            <field name="po_tds_base" widget="monetary" readonly="1" class="fw-bold"/> |
+                            TDS Amount:
+                            <field name="po_tds_amount" widget="monetary" readonly="1" class="fw-bold"/> |
+                            Tax: <field name="po_tds_tax_id" readonly="1"/>
+                            <span invisible="not po_tds_section"> (<field name="po_tds_section" readonly="1"/>)</span>
+                        </span>
+                    </div>
+                    <button name="action_view_purchase_tds" string="View TDS" type="object" class="btn btn-sm btn-info ms-3 text-nowrap"/>
+                </div>
+            </xpath>
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_view_purchase_tds"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-money"
+                        invisible="move_type != 'in_invoice' or purchase_tds_count == 0">
+                    <field name="purchase_tds_count"
+                           widget="statinfo"
+                           string="PO TDS"/>
+                </button>
+            </xpath>
+        </field>
+    </record>
+</odoo>

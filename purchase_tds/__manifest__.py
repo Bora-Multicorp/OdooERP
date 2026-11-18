@@ -14,12 +14,13 @@ This module extends Indian withholding tax (TDS) capabilities to Purchase Orders
     "website": "https://sunarctechnologies.com/",
     "category": "Purchase",
     "version": "1.0",
-    "depends": ["product", "purchase", "l10n_in_withholding"],
+    "depends": ["product", "purchase", "account", "l10n_in_withholding"],
     "data": [
         "security/ir.model.access.csv",
         "wizard/purchase_tds_wizard_views.xml",
         "views/purchase_tds_views.xml",
-        "views/purchase_views.xml"
+        "views/purchase_views.xml",
+        "views/account_move_views.xml",
     ],
     "installable": True,
     "application": False,

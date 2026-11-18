@@ -5,6 +5,13 @@
         <field name="model">purchase.order</field>
         <field name="inherit_id" ref="purchase.purchase_order_form"/>
         <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <button name="action_deduct_tds"
+                        string="Deduct TDS"
+                        type="object"
+                        class="btn-primary"
+                        invisible="not tds_eligible_warning and not tds_mismatch_warning"/>
+            </xpath>
             <xpath expr="//sheet" position="before">
                 <div class="alert alert-info d-flex align-items-center justify-content-between mb-2 py-2" role="alert" invisible="not tds_eligible_warning">
                     <div>

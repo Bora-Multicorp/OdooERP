@@ -93,13 +93,18 @@ class PurchaseTDSWizard(models.TransientModel):
             raise ValidationError(_("Please enter a valid TDS Base Amount."))
         if self.amount <= 0:
             raise ValidationError(_("TDS Amount must be greater than zero."))
-        self.env['purchase.tds'].create({
+        bills = self.purchase_id.invoice_ids.filtered(lambda m: m.move_type == 'in_invoice' and m.state != 'cancel')
+        linked_bill = bills.sorted(key=lambda b: b.id, reverse=True)[0] if bills else False
+        tds_vals = {
             'purchase_id': self.purchase_id.id,
             'date': self.date,
             'tax_id': self.tax_id.id,
             'base': self.base,
             'reference': self.reference,
-        })
+        }
+        if linked_bill:
+            tds_vals['bill_id'] = linked_bill.id
+        self.env['purchase.tds'].create(tds_vals)
         self.purchase_id.write({"tds_tax_id": self.tax_id.id})
         return {'type': 'ir.actions.act_window_close'}
 
