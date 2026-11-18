@@ -102,10 +102,10 @@ class PurchaseOrder(models.Model):
             'base_amount': 0.0,
             'tax': False,
             'root_company': root_company,
-            'prior_orders': self.env['purchase.order'],
+            'prior_bills': self.env['account.move'],
             'section_194q': False,
             'consider_amount': 'untaxed_amount',
-            'amount_label': _("(Excl. Tax)"),
+            'amount_label': _("(Incl. GST for bills, Untaxed for current PO)"),
         }
 
         if self.state == 'cancel' or not self.partner_id or self.amount_untaxed <= 0:
@@ -132,46 +132,45 @@ class PurchaseOrder(models.Model):
         res['threshold'] = threshold
         res['section_194q'] = section_194q
 
-        # 3. Find prior qualifying POs across main company and all sub-companies using sudo()
-        domain = [
-            ("company_id", "child_of", root_company.id),
-            ("state", "!=", "cancel"),
-            ("date_order", ">=", fiscalyear_start_date),
-            ("date_order", "<=", fiscalyear_end_date),
-        ]
+        # 3. Find prior vendor bills (draft + posted) across main company and all sub-companies using sudo()
+        # Value to be taken as total amount including GST
         vendor_pan = commercial_partner.l10n_in_pan or (
             commercial_partner.vat and len(commercial_partner.vat) >= 12 and commercial_partner.vat[2:12]
         )
+        domain = [
+            ("company_id", "child_of", root_company.id),
+            ("move_type", "in", ["in_invoice", "in_refund"]),
+            ("state", "in", ["draft", "posted"]),
+            ("date", ">=", fiscalyear_start_date),
+            ("date", "<=", fiscalyear_end_date),
+        ]
         if vendor_pan:
             domain += [
                 "|",
-                ("partner_id.commercial_partner_id.l10n_in_pan", "=", vendor_pan),
-                ("partner_id.commercial_partner_id", "=", commercial_partner.id),
+                ("commercial_partner_id.l10n_in_pan", "=", vendor_pan),
+                ("commercial_partner_id", "=", commercial_partner.id),
             ]
         else:
-            domain.append(("partner_id.commercial_partner_id", "=", commercial_partner.id))
+            domain.append(("commercial_partner_id", "=", commercial_partner.id))
 
-        all_po_in_fy = self.env['purchase.order'].sudo().search(domain, order="date_order asc, id asc")
+        # Exclude bills that are already linked to this PO to prevent double counting
+        linked_bill_ids = self.invoice_ids.ids
+        if linked_bill_ids:
+            domain.append(("id", "not in", linked_bill_ids))
 
-        # Prior POs are all orders preceding this order in the fiscal year
-        current_date_order = self.date_order or fields.Datetime.now()
-        origin_id = self._origin.id if hasattr(self, '_origin') and self._origin else self.id
-        prior_orders = all_po_in_fy.filtered(lambda po: po.id != origin_id and (
-            (po.date_order < current_date_order) or
-            (po.date_order == current_date_order and (not origin_id or po.id < origin_id))
-        ))
-        res['prior_orders'] = prior_orders
+        prior_bills = self.env['account.move'].sudo().search(domain, order="date asc, id asc")
+        res['prior_bills'] = prior_bills
 
-        consider_amount = (section_194q and section_194q.consider_amount) or 'untaxed_amount'
-        res['consider_amount'] = consider_amount
-        res['amount_label'] = _("(Incl. Tax)") if consider_amount == 'total_amount' else _("(Excl. Tax)")
+        # Cumulative purchase from vendor bills: total amount including GST
+        prior_total = sum(
+            bill.amount_total if bill.move_type == 'in_invoice' else -bill.amount_total
+            for bill in prior_bills
+        )
+        if prior_total < 0:
+            prior_total = 0.0
 
-        if consider_amount == 'total_amount':
-            prior_total = sum(prior_orders.mapped("amount_total"))
-            current_total = self.amount_total
-        else:
-            prior_total = sum(prior_orders.mapped("amount_untaxed"))
-            current_total = self.amount_untaxed
+        # Current order value: untaxed amount
+        current_total = self.amount_untaxed
 
         cumulative_total = prior_total + current_total
         res['prior_total'] = prior_total
@@ -249,10 +248,14 @@ class PurchaseOrder(models.Model):
             if calc['eligible'] and not order.tds_ids:
                 order.tds_eligible_warning = _(
                     "This Purchase Order is eligible for TDS deduction under Section (ACT 1961) 194Q. "
-                    "Cumulative purchases in FY across under Company: %(company)s: %(symbol)s %(cumulative)s (Threshold: %(symbol)s %(threshold)s). "
+                    "Prior vendor bills across %(company)s (Incl. GST): %(symbol)s %(prior)s. "
+                    "Current Order (Untaxed): %(symbol)s %(current)s. "
+                    "Cumulative Total: %(symbol)s %(cumulative)s (Threshold: %(symbol)s %(threshold)s). "
                     "Expected TDS Base: %(symbol)s %(base)s.",
                     company=calc['root_company'].name,
                     symbol=currency_symbol,
+                    prior=f"{calc['prior_total']:,.2f}",
+                    current=f"{calc['current_total']:,.2f}",
                     cumulative=f"{calc['cumulative_total']:,.2f}",
                     threshold=f"{calc['threshold']:,.2f}",
                     base=f"{calc['base_amount']:,.2f}",
@@ -288,14 +291,13 @@ class PurchaseOrder(models.Model):
             currency_symbol = self.currency_id.symbol or ""
             raise UserError(_(
                 "TDS under Section (ACT 1961) 194Q is not applicable.\n\n"
-                "• Prior purchases across %(company)s group (%(count)d order(s)) %(label)s: %(symbol)s %(prior)s\n"
-                "• Current PO untaxed amount %(label)s: %(symbol)s %(current)s\n"
-                "• Cumulative purchases in FY %(label)s: %(symbol)s %(cumulative)s\n"
+                "• Prior vendor bills across %(company)s group (%(count)d bill(s)) (Incl. GST): %(symbol)s %(prior)s\n"
+                "• Current PO untaxed amount: %(symbol)s %(current)s\n"
+                "• Cumulative purchases in FY: %(symbol)s %(cumulative)s\n"
                 "• Section 194Q Threshold: %(symbol)s %(threshold)s\n\n"
                 "The cumulative total does not exceed the threshold limit of %(symbol)s %(threshold)s.",
                 company=calc['root_company'].name,
-                count=len(calc['prior_orders']),
-                label=calc['amount_label'],
+                count=len(calc['prior_bills']),
                 symbol=currency_symbol,
                 prior=f"{calc['prior_total']:,.2f}",
                 current=f"{calc['current_total']:,.2f}",
@@ -317,12 +319,17 @@ class PurchaseOrder(models.Model):
         base_amount = calc['base_amount']
 
         # Auto-create or update purchase.tds entry
+        bills = self.invoice_ids.filtered(lambda m: m.move_type == 'in_invoice' and m.state != 'cancel')
+        linked_bill = bills.sorted(key=lambda b: b.id, reverse=True)[0] if bills else False
+
         tds_vals = {
             "date": self.date_order.date() if self.date_order else fields.Date.context_today(self),
             "tax_id": tax.id,
             "base": base_amount,
             "reference": _("TDS 194Q of %s", self.name),
         }
+        if linked_bill:
+            tds_vals["bill_id"] = linked_bill.id
 
         is_new = not bool(self.tds_ids)
         if self.tds_ids:
@@ -353,7 +360,9 @@ class PurchaseOrder(models.Model):
                 "<li><b>TDS Base Amount (Excl. Tax):</b> %(symbol)s %(base)s</li>"
                 "<li><b>TDS Amount:</b> %(symbol)s %(amount)s</li>"
                 "<li><b>Net Payable:</b> %(symbol)s %(net_payable)s</li>"
-                "<li><b>Cumulative FY Purchases across %(company)s:</b> %(symbol)s %(cumulative)s</li>"
+                "<li><b>Prior Vendor Bills (Incl. GST):</b> %(symbol)s %(prior)s</li>"
+                "<li><b>Current PO Untaxed:</b> %(symbol)s %(current)s</li>"
+                "<li><b>Cumulative Purchases across %(company)s:</b> %(symbol)s %(cumulative)s</li>"
                 "</ul>"
             ) % {
                 "title": chatter_title,
@@ -362,6 +371,8 @@ class PurchaseOrder(models.Model):
                 "base": f"{base_amount:,.2f}",
                 "amount": f"{tds_entry.amount:,.2f}",
                 "net_payable": f"{self.amount_net_payable:,.2f}",
+                "prior": f"{calc['prior_total']:,.2f}",
+                "current": f"{calc['current_total']:,.2f}",
                 "company": calc['root_company'].name,
                 "cumulative": f"{calc['cumulative_total']:,.2f}",
             },
@@ -374,12 +385,16 @@ class PurchaseOrder(models.Model):
                 "title": _("TDS Deducted Successfully"),
                 "message": _(
                     "Section: (ACT 1961) 194Q\n"
-                    "Cumulative Total (%(count)d prior order(s) across %(company)s) (Excl. Tax): %(symbol)s %(cumulative)s\n"
+                    "Prior Vendor Bills (%(count)d bill(s) across %(company)s) (Incl. GST): %(symbol)s %(prior)s\n"
+                    "Current Order (Untaxed): %(symbol)s %(current)s\n"
+                    "Cumulative Total: %(symbol)s %(cumulative)s\n"
                     "TDS Base Amount (Excl. Tax): %(symbol)s %(base)s\n"
                     "Tax: %(tax)s\n"
                     "TDS Amount: %(symbol)s %(amount)s",
-                    count=len(calc['prior_orders']),
+                    count=len(calc['prior_bills']),
                     company=calc['root_company'].name,
+                    prior=f"{calc['prior_total']:,.2f}",
+                    current=f"{calc['current_total']:,.2f}",
                     cumulative=f"{calc['cumulative_total']:,.2f}",
                     base=f"{base_amount:,.2f}",
                     tax=tax.name,
@@ -394,4 +409,16 @@ class PurchaseOrder(models.Model):
                 },
             },
         }
+
+    def action_create_invoice(self):
+        res = super().action_create_invoice()
+        for order in self:
+            if order.tds_ids:
+                bills = order.invoice_ids.filtered(lambda m: m.move_type == 'in_invoice' and m.state != 'cancel')
+                if bills:
+                    latest_bill = bills.sorted(key=lambda b: b.id, reverse=True)[0]
+                    unlinked_tds = order.tds_ids.filtered(lambda t: not t.bill_id)
+                    if unlinked_tds:
+                        unlinked_tds.write({'bill_id': latest_bill.id})
+        return res
 

@@ -9,6 +9,13 @@ class PurchaseTDS(models.Model):
     _rec_name = 'reference'
 
     purchase_id = fields.Many2one('purchase.order', required=True, ondelete='cascade')
+    bill_id = fields.Many2one(
+        'account.move',
+        string="Vendor Bill",
+        domain="[('move_type', '=', 'in_invoice')]",
+        copy=False,
+        help="Vendor Bill linked to this TDS deduction.",
+    )
     date = fields.Date(string='Date', required=True)
     tax_id = fields.Many2one('account.tax', required=True)
     base = fields.Monetary(string="Base Amount")
