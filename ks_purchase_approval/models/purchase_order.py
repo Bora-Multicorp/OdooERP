@@ -175,6 +175,10 @@ class PurchaseOrder(models.Model):
 
     @api.depends('company_id', 'bill_to_id')
     def _compute_bill_to_partner_ids(self):
+        purchase_group = self.env.ref('purchase.group_purchase_user', raise_if_not_found=False)
+        purchase_users = purchase_group.users if purchase_group else self.env['res.users']
+        exec_user_ids = list(set(purchase_users.ids + ([self.env.uid] if self.env.uid else [])))
+
         for order in self:
             company = (order.company_id or self.env.company).sudo()
             partner_ids = set()
@@ -182,19 +186,35 @@ class PurchaseOrder(models.Model):
                 # 1. Selected company main contact
                 if company.partner_id:
                     partner_ids.add(company.partner_id.id)
+                    if hasattr(company.partner_id, 'purchase_executive_ids') and exec_user_ids:
+                        missing_uids = [uid for uid in exec_user_ids if uid not in company.partner_id.purchase_executive_ids.ids]
+                        if missing_uids:
+                            company.partner_id.sudo().write({
+                                'purchase_executive_ids': [(4, uid) for uid in missing_uids]
+                            })
 
                 # 2. Selected company warehouse contacts
                 warehouses = self.env['stock.warehouse'].sudo().search([('company_id', '=', company.id)])
                 for wh in warehouses:
                     if wh.partner_id and wh.partner_id != company.partner_id:
                         partner_ids.add(wh.partner_id.id)
+                        if hasattr(wh.partner_id, 'purchase_executive_ids') and exec_user_ids:
+                            missing_uids = [uid for uid in exec_user_ids if uid not in wh.partner_id.purchase_executive_ids.ids]
+                            if missing_uids:
+                                wh.partner_id.sudo().write({
+                                    'purchase_executive_ids': [(4, uid) for uid in missing_uids]
+                                })
                     else:
                         # Auto-create and link dedicated partner contact for warehouse if missing or sharing company partner
-                        wh_partner = self.env['res.partner'].sudo().create({
+                        partner_vals = {
                             'name': wh.name,
                             'company_id': company.id,
                             'type': 'contact',
-                        })
+                        }
+                        if hasattr(self.env['res.partner'], 'purchase_executive_ids') and exec_user_ids:
+                            partner_vals['purchase_executive_ids'] = [(6, 0, exec_user_ids)]
+
+                        wh_partner = self.env['res.partner'].sudo().create(partner_vals)
                         wh.sudo().write({'partner_id': wh_partner.id})
                         partner_ids.add(wh_partner.id)
 
