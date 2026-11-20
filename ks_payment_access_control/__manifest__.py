@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'KS Payment Access Control',
-    'version': '18.0.1.0.1',
+    'version': '18.0.1.0.2',
     'summary': 'Restrict Payments menu and access to specific security group',
     'description': """
         KS Payment Access Control

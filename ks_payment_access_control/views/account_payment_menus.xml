@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <data>
-        <!-- Hide Customer Payments menu for users not in KS Payment Access group -->
-        <!-- Use (6, 0, [...]) to replace all groups with only KS Payment Access group -->
+        <!-- Hide Customer Payments menu for users not in KS Payment Access group or System Administrators -->
+        <!-- Use (6, 0, [...]) to replace all groups with only KS Payment Access group and System Administrators -->
         <record id="account.menu_action_account_payments_receivable" model="ir.ui.menu">
-            <field name="groups_id" eval="[(6, 0, [ref('ks_payment_access_control.group_ks_payment_access')])]"/>
+            <field name="groups_id" eval="[(6, 0, [ref('ks_payment_access_control.group_ks_payment_access'), ref('base.group_system')])]"/>
         </record>
         
-        <!-- Hide Vendor Payments menu for users not in KS Payment Access group -->
-        <!-- Use (6, 0, [...]) to replace all groups with only KS Payment Access group -->
+        <!-- Hide Vendor Payments menu for users not in KS Payment Access group or System Administrators -->
+        <!-- Use (6, 0, [...]) to replace all groups with only KS Payment Access group and System Administrators -->
         <record id="account.menu_action_account_payments_payable" model="ir.ui.menu">
-            <field name="groups_id" eval="[(6, 0, [ref('ks_payment_access_control.group_ks_payment_access')])]"/>
+            <field name="groups_id" eval="[(6, 0, [ref('ks_payment_access_control.group_ks_payment_access'), ref('base.group_system')])]"/>
         </record>
     </data>
 </odoo>
