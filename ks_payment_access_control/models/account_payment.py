@@ -13,8 +13,8 @@ class AccountPayment(models.Model):
         Override to restrict payment access to KS Payment Access group only.
         This prevents direct URL access even if menu is hidden.
         """
-        # Superuser always has access
-        if self.env.su:
+        # Superuser and System Administrators always have access
+        if self.env.su or self.env.user.has_group('base.group_system'):
             return super().check_access_rights(operation, raise_exception)
         
         # Check if user has KS Payment Access group
@@ -37,7 +37,7 @@ class AccountPayment(models.Model):
         Override to check KS Payment Access group for record-level access.
         This prevents direct URL access to specific payment records.
         """
-        if not self.env.su:
+        if not self.env.su and not self.env.user.has_group('base.group_system'):
             has_payment_access = self.env.user.has_group('ks_payment_access_control.group_ks_payment_access')
             if not has_payment_access:
                 raise AccessError(_('You do not have permission to access this payment.'))
@@ -46,7 +46,7 @@ class AccountPayment(models.Model):
     @api.model_create_multi
     def create(self, vals_list):
         """Override create to check KS Payment Access group"""
-        if not self.env.su:
+        if not self.env.su and not self.env.user.has_group('base.group_system'):
             has_payment_access = self.env.user.has_group('ks_payment_access_control.group_ks_payment_access')
             if not has_payment_access:
                 raise AccessError(_('You do not have permission to create payments.'))
@@ -54,7 +54,7 @@ class AccountPayment(models.Model):
 
     def write(self, values):
         """Override write to check KS Payment Access group"""
-        if not self.env.su:
+        if not self.env.su and not self.env.user.has_group('base.group_system'):
             has_payment_access = self.env.user.has_group('ks_payment_access_control.group_ks_payment_access')
             if not has_payment_access:
                 raise AccessError(_('You do not have permission to modify payments.'))
@@ -62,7 +62,7 @@ class AccountPayment(models.Model):
 
     def unlink(self):
         """Override unlink to check KS Payment Access group"""
-        if not self.env.su:
+        if not self.env.su and not self.env.user.has_group('base.group_system'):
             has_payment_access = self.env.user.has_group('ks_payment_access_control.group_ks_payment_access')
             if not has_payment_access:
                 raise AccessError(_('You do not have permission to delete payments.'))
