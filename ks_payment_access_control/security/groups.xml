@@ -8,6 +8,11 @@
             <field name="category_id" ref="base.module_category_hidden"/>
             <field name="comment">Users in this group can view the Payments menu and have read/write access to account.payment records. Users not in this group cannot see the Payments menu and cannot access payments via direct URL. This group is hidden from the user form dropdown.</field>
         </record>
+
+        <!-- Automatically grant KS Payment Access to System Administrators -->
+        <record id="base.group_system" model="res.groups">
+            <field name="implied_ids" eval="[(4, ref('ks_payment_access_control.group_ks_payment_access'))]"/>
+        </record>
     </data>
 </odoo>
 
