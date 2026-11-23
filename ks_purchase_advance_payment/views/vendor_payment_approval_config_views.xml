@@ -34,6 +34,9 @@
                                 </group>
                                 <group string="Approver 2 Users" 
                                        invisible="ks_approval_mode == 'single'">
+                                    <field name="display_all_user_checkbox"
+                                           widget="radio"
+                                           options="{'horizontal': true}"/>
                                     <field name="ks_approver_2_ids" 
                                            widget="many2many_tags"
                                            options="{'no_create': True}"
@@ -67,6 +70,7 @@
                 <field name="name"/>
                 <field name="active" widget="boolean_toggle"/>
                 <field name="ks_approval_mode"/>
+                <field name="display_all_user_checkbox" optional="show"/>
                 <field name="ks_approver_1_ids" widget="many2many_tags"/>
                 <field name="ks_approver_2_ids" widget="many2many_tags" optional="show"/>
             </list>

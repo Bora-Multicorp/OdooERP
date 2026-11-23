@@ -49,6 +49,11 @@ class VendorPaymentApprovalConfig(models.Model):
         string='Approvers 2',
         help='Second approvers for vendor payment approval requests (select one when requesting approval, required for two level approval mode)',
     )
+    display_all_user_checkbox = fields.Selection([
+        ('yes', 'Yes'),
+        ('no', 'No'),
+    ], string='Display All User checkbox', default='no', required=True,
+       help='Once enabled, "Send for Approval" wizard will display "Send to all user" checkbox.')
 
     active = fields.Boolean(default=True)
 
@@ -105,6 +110,11 @@ class VendorPaymentApprovalConfig(models.Model):
         """Check if two-way approval mode is enabled"""
         self.ensure_one()
         return self.ks_approval_mode == 'two_way'
+
+    def is_display_all_user(self):
+        """Check if Display All User checkbox is enabled"""
+        self.ensure_one()
+        return self.display_all_user_checkbox in ('yes', 'true', True)
 
     @api.model
     def get_approval_mode(self):
