@@ -173,17 +173,27 @@ class AccountPayment(models.Model):
         }
 
     def _notify_next_approver(self):
-        """Assign activity to the first pending approver."""
+        """Assign activity to pending approvers of the current pending stage."""
         self.ensure_one()
-        next_line = self.approval_line_ids.filtered(lambda l: l.state == 'pending').sorted('sequence')[:1]
-        if next_line and next_line.user_id:
-            display_ref = self.name or (self.ks_purchase_order_id and self.ks_purchase_order_id.name) or _('Draft Payment')
-            self.activity_schedule(
-                'mail.mail_activity_data_todo',
-                user_id=next_line.user_id.id,
-                note=_('Payment approval requested for %s.') % display_ref,
-                summary=_('Payment Approval: %s') % display_ref,
-            )
+        pending_lines = self.approval_line_ids.filtered(lambda l: l.state == 'pending')
+        if not pending_lines:
+            return
+        next_seq = min(pending_lines.mapped('sequence'))
+        next_lines = pending_lines.filtered(lambda l: l.sequence == next_seq)
+        display_ref = self.name or (self.ks_purchase_order_id and self.ks_purchase_order_id.name) or _('Draft Payment')
+        todo_type = self.env.ref('mail.mail_activity_data_todo', raise_if_not_found=False)
+        for line in next_lines:
+            if line.user_id:
+                existing_act = self.activity_ids.filtered(
+                    lambda a: (not todo_type or a.activity_type_id == todo_type) and a.user_id == line.user_id
+                )
+                if not existing_act:
+                    self.activity_schedule(
+                        'mail.mail_activity_data_todo',
+                        user_id=line.user_id.id,
+                        note=_('Payment approval requested for %s.') % display_ref,
+                        summary=_('Payment Approval: %s') % display_ref,
+                    )
 
     def _do_approve(self, reason):
         """Approve this payment (called from wizard). Current user must be next approver."""
@@ -209,9 +219,19 @@ class AccountPayment(models.Model):
             'remark': reason or '',
             'action_date': fields.Datetime.now(),
         })
+        # Cancel other pending lines at the same level (e.g. if send to all was used)
+        other_pending_same_level = self.approval_line_ids.filtered(
+            lambda l: l.id != my_line.id and l.approver_type == my_line.approver_type and l.state == 'pending'
+        )
+        if other_pending_same_level:
+            other_pending_same_level.write({
+                'state': 'cancelled',
+                'remark': _('Approved by %s') % current_user.name,
+                'action_date': fields.Datetime.now(),
+            })
+        self.activity_unlink(['mail.mail_activity_data_todo'])
         next_pending = self.approval_line_ids.filtered(lambda l: l.state == 'pending').sorted('sequence')[:1]
         if not next_pending:
-            self.activity_unlink(['mail.mail_activity_data_todo'])
             self.write({
                 'ks_payment_approved': True,
                 'approve_reason': reason,
@@ -219,7 +239,6 @@ class AccountPayment(models.Model):
             })
             return super().action_post()
         else:
-            self.activity_unlink(['mail.mail_activity_data_todo'])
             self._notify_next_approver()
         return True
 

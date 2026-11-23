@@ -11,15 +11,18 @@
                 <field name="available_approver_2_ids" invisible="1"/>
                 <field name="ks_pm1_already_approved" invisible="1"/>
                 <field name="ks_approval_mode" invisible="1"/>
+                <field name="display_all_user_checkbox" invisible="1"/>
                 <field name="ks_approval_info" widget="html" readonly="1" nolabel="1"/>
                 <group>
                     <field name="approver_1_id"
                            options="{'no_create': True}"
                            domain="[('id', 'in', available_approver_1_ids), ('share', '=', False), ('id', '!=', approver_2_id)]"
                            readonly="ks_pm1_already_approved"/>
+                    <field name="send_to_all_user"
+                           invisible="ks_approval_mode == 'single' or not display_all_user_checkbox"/>
                     <field name="approver_2_id"
-                           invisible="ks_approval_mode == 'single'"
-                           required="ks_approval_mode == 'two_way'"
+                           invisible="ks_approval_mode == 'single' or (display_all_user_checkbox and send_to_all_user)"
+                           required="ks_approval_mode == 'two_way' and (not display_all_user_checkbox or not send_to_all_user)"
                            options="{'no_create': True}"
                            domain="[('id', 'in', available_approver_2_ids), ('share', '=', False), ('id', '!=', approver_1_id)]"/>
                 </group>
