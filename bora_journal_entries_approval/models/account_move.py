@@ -30,6 +30,10 @@ class AccountMove(models.Model):
     bora_je_request_date = fields.Datetime(string='Request Date', copy=False)
 
     # ── Computed UI fields ────────────────────────────────────────────────────
+    bora_is_journal_entry = fields.Boolean(
+        compute='_compute_bora_is_journal_entry',
+        string='Is Journal Entry For Approval',
+    )
     bora_is_je_pm_user = fields.Boolean(compute='_compute_bora_je_pm_user')
     bora_is_je_admin = fields.Boolean(compute='_compute_bora_je_admin')
     bora_is_je_dual_approval = fields.Boolean(compute='_compute_bora_je_dual_approval')
@@ -61,7 +65,12 @@ class AccountMove(models.Model):
         )
 
     def _is_journal_entry(self):
-        return self.move_type == 'entry'
+        self.ensure_one()
+        return (
+            self.move_type == 'entry'
+            and self.journal_id.type != 'bank'
+            and not self.origin_payment_id
+        )
 
     def _is_je_admin_user(self):
         """Returns True if the current user is a system administrator."""
@@ -70,12 +79,19 @@ class AccountMove(models.Model):
     # ─────────────────────────────────────────────────────────────────────────
     # Computed fields
     # ─────────────────────────────────────────────────────────────────────────
+    @api.depends('move_type', 'journal_id', 'journal_id.type', 'origin_payment_id')
+    def _compute_bora_is_journal_entry(self):
+        for rec in self:
+            rec.bora_is_journal_entry = rec._is_journal_entry()
+
+    @api.depends('move_type', 'journal_id', 'journal_id.type', 'origin_payment_id')
     @api.depends_context('uid')
     def _compute_bora_je_admin(self):
         is_admin = self._is_je_admin_user()
         for rec in self:
             rec.bora_is_je_admin = is_admin if rec._is_journal_entry() else False
 
+    @api.depends('move_type', 'journal_id', 'journal_id.type', 'origin_payment_id', 'company_id')
     @api.depends_context('uid')
     def _compute_bora_je_pm_user(self):
         for rec in self:
@@ -85,7 +101,7 @@ class AccountMove(models.Model):
             else:
                 rec.bora_is_je_pm_user = False
 
-    @api.depends('state')
+    @api.depends('state', 'move_type', 'journal_id', 'journal_id.type', 'origin_payment_id', 'company_id')
     def _compute_bora_je_dual_approval(self):
         for rec in self:
             if rec._is_journal_entry() and rec._has_je_approval_config():
@@ -94,7 +110,7 @@ class AccountMove(models.Model):
                 rec.bora_is_je_dual_approval = False
 
     @api.depends(
-        'state', 'move_type',
+        'state', 'move_type', 'journal_id', 'journal_id.type', 'origin_payment_id',
         'bora_is_je_pm_user',
         'bora_je_pm1_id', 'bora_je_pm2_id',
         'bora_je_pm1_approved', 'bora_je_pm2_approved',
@@ -108,7 +124,7 @@ class AccountMove(models.Model):
             rec.bora_show_je_reject_button = False
             rec.bora_show_je_update_button = False
 
-            if not rec._is_journal_entry():
+            if not rec._is_journal_entry() and rec.state != 'journal_entry_approval_pending':
                 continue
 
             is_admin = rec._is_je_admin_user()
@@ -146,10 +162,25 @@ class AccountMove(models.Model):
     # ─────────────────────────────────────────────────────────────────────────
     def action_post(self):
         """Intercept Post for journal entries that require approval.
-        Only applies to move_type == 'entry' (pure journal entries).
-        Vendor bills, debit notes and other move types are handled by their
-        respective approval modules.
+        Only applies to pure journal entries (move_type == 'entry', non-bank journal, not payments).
+        Bank journals and payments proceed directly with standard posting without approval.
         """
+        # If any non-eligible moves (e.g. bank payments) are stuck in approval pending, restore them to draft first
+        stuck_non_je = self.filtered(lambda m: not m._is_journal_entry() and m.state == 'journal_entry_approval_pending')
+        if stuck_non_je:
+            stuck_non_je.write({
+                'state': 'draft',
+                'bora_je_pm1_id': False,
+                'bora_je_pm2_id': False,
+                'bora_je_pm1_approved': False,
+                'bora_je_pm2_approved': False,
+                'bora_je_request_user_id': False,
+                'bora_je_request_date': False,
+                'bora_je_pre_approval_state': False,
+            })
+            for m in stuck_non_je:
+                m._bora_cancel_je_activities()
+
         # Validate journal entry date up-front
         for move in self:
             if move._is_journal_entry() and not move.invoice_date and not move.date:
@@ -186,6 +217,32 @@ class AccountMove(models.Model):
             return je_needing_approval[0]._bora_open_je_approval_wizard()
 
         return res
+
+    def _compute_show_reset_to_draft_button(self):
+        super()._compute_show_reset_to_draft_button()
+        for move in self:
+            if move.state == 'journal_entry_approval_pending':
+                move.show_reset_to_draft_button = True
+
+    def button_draft(self):
+        moves_in_pending = self.filtered(lambda m: m.state == 'journal_entry_approval_pending')
+        if moves_in_pending:
+            moves_in_pending.write({
+                'state': 'draft',
+                'bora_je_pm1_id': False,
+                'bora_je_pm2_id': False,
+                'bora_je_pm1_approved': False,
+                'bora_je_pm2_approved': False,
+                'bora_je_request_user_id': False,
+                'bora_je_request_date': False,
+                'bora_je_pre_approval_state': False,
+            })
+            for m in moves_in_pending:
+                m._bora_cancel_je_activities()
+        other_moves = self - moves_in_pending
+        if other_moves:
+            return super(AccountMove, other_moves).button_draft()
+        return True
 
     def _bora_open_je_approval_wizard(self, is_update=False):
         view_id = self.env.ref(
