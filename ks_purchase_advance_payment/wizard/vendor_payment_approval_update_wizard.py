@@ -22,6 +22,15 @@ class VendorPaymentApprovalUpdateWizard(models.TransientModel):
         ('single', 'Single Level Approval'),
         ('two_way', 'Two Level Approval'),
     ], string='Approval Mode', compute='_compute_available_approvers')
+    display_all_user_checkbox = fields.Boolean(
+        string='Display All User Checkbox',
+        compute='_compute_available_approvers',
+    )
+    send_to_all_user = fields.Boolean(
+        string='Send to all user',
+        default=True,
+        help='If checked, sends approval request to all configured Approver 2 users and any one can approve.',
+    )
     approver_1_id = fields.Many2one(
         'res.users',
         string='Approver 1',
@@ -57,6 +66,8 @@ class VendorPaymentApprovalUpdateWizard(models.TransientModel):
         active_id = self.env.context.get('active_id')
         request_id = self.env.context.get('default_request_id')
         payment_id = self.env.context.get('default_payment_id') or (active_id if active_model == 'account.payment' else False)
+        Config = self.env['vendor.payment.approval.config'].sudo().get_config()
+        display_all = Config.is_display_all_user() if (Config and hasattr(Config, 'is_display_all_user')) else (Config.display_all_user_checkbox in ('yes', 'true', True) if Config else False)
 
         if payment_id:
             pay = self.env['account.payment'].browse(payment_id)
@@ -74,10 +85,15 @@ class VendorPaymentApprovalUpdateWizard(models.TransientModel):
                 if existing_pm1:
                     res['approver_1_id'] = existing_pm1.user_id.id
             existing_pm2 = pay.approval_line_ids.filtered(
-                lambda l: l.approver_type == 'approver2'
-            )[:1]
-            if existing_pm2:
-                res['approver_2_id'] = existing_pm2.user_id.id
+                lambda l: l.approver_type == 'approver2' and l.state in ('pending', 'approved')
+            )
+            if len(existing_pm2) > 1 and display_all:
+                res['send_to_all_user'] = True
+            elif len(existing_pm2) == 1:
+                res['send_to_all_user'] = False
+                res['approver_2_id'] = existing_pm2[0].user_id.id
+            else:
+                res['send_to_all_user'] = bool(display_all and Config and Config.ks_approval_mode == 'two_way')
         elif request_id or active_model == 'vendor.payment.approval.request':
             req = self.env['vendor.payment.approval.request'].browse(request_id or active_id)
             res['request_id'] = req.id
@@ -94,10 +110,15 @@ class VendorPaymentApprovalUpdateWizard(models.TransientModel):
                 if existing_pm1:
                     res['approver_1_id'] = existing_pm1.user_id.id
             existing_pm2 = req.approval_line_ids.filtered(
-                lambda l: l.approver_type == 'approver2'
-            )[:1]
-            if existing_pm2:
-                res['approver_2_id'] = existing_pm2.user_id.id
+                lambda l: l.approver_type == 'approver2' and l.state in ('pending', 'approved')
+            )
+            if len(existing_pm2) > 1 and display_all:
+                res['send_to_all_user'] = True
+            elif len(existing_pm2) == 1:
+                res['send_to_all_user'] = False
+                res['approver_2_id'] = existing_pm2[0].user_id.id
+            else:
+                res['send_to_all_user'] = bool(display_all and Config and Config.ks_approval_mode == 'two_way')
         return res
 
     @api.depends('request_id', 'payment_id')
@@ -107,14 +128,22 @@ class VendorPaymentApprovalUpdateWizard(models.TransientModel):
             app1_users = Config.ks_approver_1_ids
             app2_users = Config.ks_approver_2_ids
             mode = Config.ks_approval_mode
+            display_all = Config.is_display_all_user() if hasattr(Config, 'is_display_all_user') else Config.display_all_user_checkbox in ('yes', 'true', True)
         else:
             app1_users = self.env['res.users']
             app2_users = self.env['res.users']
             mode = 'two_way'
+            display_all = False
         for rec in self:
             rec.available_approver_1_ids = app1_users
             rec.available_approver_2_ids = app2_users
             rec.ks_approval_mode = mode
+            rec.display_all_user_checkbox = display_all
+
+    @api.onchange('send_to_all_user')
+    def _onchange_send_to_all_user(self):
+        if self.send_to_all_user:
+            self.approver_2_id = False
 
     @api.depends('request_id', 'payment_id', 'ks_pm1_already_approved', 'ks_approval_mode')
     def _compute_approval_info(self):
@@ -168,10 +197,14 @@ class VendorPaymentApprovalUpdateWizard(models.TransientModel):
 
         Config = self.env['vendor.payment.approval.config'].sudo().get_config()
         is_two_way = Config.is_two_way_approval() if Config else True
+        display_all = Config.is_display_all_user() if (Config and hasattr(Config, 'is_display_all_user')) else (Config.display_all_user_checkbox in ('yes', 'true', True) if Config else False)
 
         if not self.approver_1_id:
             raise UserError(_('Approver 1 is required.'))
-        if is_two_way:
+
+        is_all_approver_2 = is_two_way and display_all and self.send_to_all_user
+
+        if is_two_way and not is_all_approver_2:
             if not self.approver_2_id:
                 raise UserError(_('Approver 2 is required.'))
             if self.approver_1_id == self.approver_2_id:
@@ -189,20 +222,38 @@ class VendorPaymentApprovalUpdateWizard(models.TransientModel):
 
         target.activity_unlink(['mail.mail_activity_data_todo'])
 
+        if is_all_approver_2:
+            app2_users = Config.ks_approver_2_ids.filtered(lambda u: u.id != self.approver_1_id.id) or Config.ks_approver_2_ids
+            if not app2_users:
+                raise UserError(_('No Approver 2 users configured in settings.'))
+
         if preserve_pm1 and is_two_way:
             target.approval_line_ids.filtered(
                 lambda l: l.approver_type == 'approver2'
             ).write({'state': 'cancelled', 'remark': _('Approver updated by %s') % self.env.user.name})
-            vals = {
-                'user_id': self.approver_2_id.id,
-                'approver_type': 'approver2',
-                'sequence': 20,
-            }
-            if self.payment_id:
-                vals['payment_id'] = self.payment_id.id
+            if is_all_approver_2:
+                for user in app2_users:
+                    vals = {
+                        'user_id': user.id,
+                        'approver_type': 'approver2',
+                        'sequence': 20,
+                    }
+                    if self.payment_id:
+                        vals['payment_id'] = self.payment_id.id
+                    else:
+                        vals['request_id'] = self.request_id.id
+                    self.env['vendor.payment.approval.line'].create(vals)
             else:
-                vals['request_id'] = self.request_id.id
-            self.env['vendor.payment.approval.line'].create(vals)
+                vals = {
+                    'user_id': self.approver_2_id.id,
+                    'approver_type': 'approver2',
+                    'sequence': 20,
+                }
+                if self.payment_id:
+                    vals['payment_id'] = self.payment_id.id
+                else:
+                    vals['request_id'] = self.request_id.id
+                self.env['vendor.payment.approval.line'].create(vals)
             target.message_post(
                 body=_('Approval request updated by %s. Approver 1 (%s) approval preserved; only Approver 2 updated.')
                 % (self.env.user.name, self.approver_1_id.name),
@@ -214,8 +265,12 @@ class VendorPaymentApprovalUpdateWizard(models.TransientModel):
                 (5, 0, 0),
                 (0, 0, {'user_id': self.approver_1_id.id, 'approver_type': 'approver1', 'sequence': 10}),
             ]
-            if is_two_way and self.approver_2_id:
-                lines.append((0, 0, {'user_id': self.approver_2_id.id, 'approver_type': 'approver2', 'sequence': 20}))
+            if is_two_way:
+                if is_all_approver_2:
+                    for user in app2_users:
+                        lines.append((0, 0, {'user_id': user.id, 'approver_type': 'approver2', 'sequence': 20}))
+                elif self.approver_2_id:
+                    lines.append((0, 0, {'user_id': self.approver_2_id.id, 'approver_type': 'approver2', 'sequence': 20}))
             target.sudo().write({'approval_line_ids': lines})
             target.message_post(
                 body=_('Approval request updated by %s. Previous approvers cancelled.') % self.env.user.name,

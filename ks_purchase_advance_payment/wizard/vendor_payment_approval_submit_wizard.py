@@ -22,6 +22,15 @@ class VendorPaymentApprovalSubmitWizard(models.TransientModel):
         ('single', 'Single Level Approval'),
         ('two_way', 'Two Level Approval'),
     ], string='Approval Mode', compute='_compute_available_approvers')
+    display_all_user_checkbox = fields.Boolean(
+        string='Display All User Checkbox',
+        compute='_compute_available_approvers',
+    )
+    send_to_all_user = fields.Boolean(
+        string='Send to all user',
+        default=True,
+        help='If checked, notification will be sent to all configured Approver 2 users and any one can approve.',
+    )
     approver_1_id = fields.Many2one(
         'res.users',
         string='Approver 1',
@@ -68,11 +77,17 @@ class VendorPaymentApprovalSubmitWizard(models.TransientModel):
 
         Config = self.env['vendor.payment.approval.config'].sudo().get_config()
         if Config:
+            display_all = Config.is_display_all_user() if hasattr(Config, 'is_display_all_user') else Config.display_all_user_checkbox in ('yes', 'true', True)
+            if Config.ks_approval_mode == 'two_way' and display_all:
+                res['send_to_all_user'] = True
+            else:
+                res['send_to_all_user'] = False
+
             if ('approver_1_id' not in res or not res.get('approver_1_id')) and Config.ks_approver_1_ids:
                 if len(Config.ks_approver_1_ids) == 1:
                     res['approver_1_id'] = Config.ks_approver_1_ids[0].id
             if ('approver_2_id' not in res or not res.get('approver_2_id')) and Config.ks_approver_2_ids:
-                if Config.ks_approval_mode == 'two_way' and len(Config.ks_approver_2_ids) == 1:
+                if Config.ks_approval_mode == 'two_way' and not res.get('send_to_all_user') and len(Config.ks_approver_2_ids) == 1:
                     res['approver_2_id'] = Config.ks_approver_2_ids[0].id
         return res
 
@@ -83,22 +98,32 @@ class VendorPaymentApprovalSubmitWizard(models.TransientModel):
             app1_users = Config.ks_approver_1_ids
             app2_users = Config.ks_approver_2_ids
             mode = Config.ks_approval_mode
+            display_all = Config.is_display_all_user() if hasattr(Config, 'is_display_all_user') else Config.display_all_user_checkbox in ('yes', 'true', True)
         else:
             app1_users = self.env['res.users']
             app2_users = self.env['res.users']
             mode = 'two_way'
+            display_all = False
         for rec in self:
             rec.available_approver_1_ids = app1_users
             rec.available_approver_2_ids = app2_users
             rec.ks_approval_mode = mode
+            rec.display_all_user_checkbox = display_all
 
-    @api.constrains('approver_1_id', 'approver_2_id')
+    @api.constrains('approver_1_id', 'approver_2_id', 'send_to_all_user')
     def _check_approvers_different(self):
         Config = self.env['vendor.payment.approval.config'].sudo().get_config()
         is_two_way = Config.is_two_way_approval() if Config else True
+        display_all = Config.is_display_all_user() if (Config and hasattr(Config, 'is_display_all_user')) else (Config.display_all_user_checkbox in ('yes', 'true', True) if Config else False)
         for rec in self:
-            if is_two_way and rec.approver_1_id and rec.approver_2_id and rec.approver_1_id == rec.approver_2_id:
-                raise UserError(_('Approver 1 and Approver 2 must be different users.'))
+            if is_two_way and not (display_all and rec.send_to_all_user):
+                if rec.approver_1_id and rec.approver_2_id and rec.approver_1_id == rec.approver_2_id:
+                    raise UserError(_('Approver 1 and Approver 2 must be different users.'))
+
+    @api.onchange('send_to_all_user')
+    def _onchange_send_to_all_user(self):
+        if self.send_to_all_user:
+            self.approver_2_id = False
 
     @api.onchange('approver_1_id')
     def _onchange_approver_1(self):
@@ -112,10 +137,14 @@ class VendorPaymentApprovalSubmitWizard(models.TransientModel):
         if not Config:
             raise UserError(_('No active Vendor Payment Approval Configuration found.'))
         is_two_way = Config.is_two_way_approval()
+        display_all = Config.is_display_all_user() if hasattr(Config, 'is_display_all_user') else Config.display_all_user_checkbox in ('yes', 'true', True)
 
         if not self.approver_1_id:
             raise UserError(_('Approver 1 is required.'))
-        if is_two_way:
+
+        is_all_approver_2 = is_two_way and display_all and self.send_to_all_user
+
+        if is_two_way and not is_all_approver_2:
             if not self.approver_2_id:
                 raise UserError(_('Approver 2 is required.'))
             if self.approver_1_id == self.approver_2_id:
@@ -129,12 +158,23 @@ class VendorPaymentApprovalSubmitWizard(models.TransientModel):
                 'sequence': 10,
             }),
         ]
-        if is_two_way and self.approver_2_id:
-            lines.append((0, 0, {
-                'user_id': self.approver_2_id.id,
-                'approver_type': 'approver2',
-                'sequence': 20,
-            }))
+        if is_two_way:
+            if is_all_approver_2:
+                app2_users = Config.ks_approver_2_ids.filtered(lambda u: u.id != self.approver_1_id.id) or Config.ks_approver_2_ids
+                if not app2_users:
+                    raise UserError(_('No Approver 2 users configured in settings.'))
+                for user in app2_users:
+                    lines.append((0, 0, {
+                        'user_id': user.id,
+                        'approver_type': 'approver2',
+                        'sequence': 20,
+                    }))
+            elif self.approver_2_id:
+                lines.append((0, 0, {
+                    'user_id': self.approver_2_id.id,
+                    'approver_type': 'approver2',
+                    'sequence': 20,
+                }))
 
         if self.payment_id:
             pay = self.payment_id

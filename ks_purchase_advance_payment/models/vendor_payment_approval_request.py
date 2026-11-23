@@ -231,7 +231,7 @@ class VendorPaymentApprovalRequest(models.Model):
         for rec in self:
             if rec.state == 'rejected':
                 continue
-            po = rec.purchase_order_id
+            po = rec.sudo().purchase_order_id
             if not po:
                 continue
 
@@ -344,11 +344,21 @@ class VendorPaymentApprovalRequest(models.Model):
                 }),
             ]
             if is_two_way:
-                lines.append((0, 0, {
-                    'user_id': config.ks_approver_2_ids[0].id,
-                    'approver_type': 'approver2',
-                    'sequence': 20,
-                }))
+                display_all = config.is_display_all_user() if hasattr(config, 'is_display_all_user') else config.display_all_user_checkbox in ('yes', 'true', True)
+                if display_all:
+                    app2_users = config.ks_approver_2_ids.filtered(lambda u: u.id != config.ks_approver_1_ids[0].id) or config.ks_approver_2_ids
+                    for u in app2_users:
+                        lines.append((0, 0, {
+                            'user_id': u.id,
+                            'approver_type': 'approver2',
+                            'sequence': 20,
+                        }))
+                else:
+                    lines.append((0, 0, {
+                        'user_id': config.ks_approver_2_ids[0].id,
+                        'approver_type': 'approver2',
+                        'sequence': 20,
+                    }))
             rec.sudo().write({
                 'state': 'pending_approval',
                 'approval_line_ids': lines,
@@ -357,17 +367,27 @@ class VendorPaymentApprovalRequest(models.Model):
         return True
 
     def _notify_next_approver(self):
-        """Assign activity to the first pending approver."""
+        """Assign activity to pending approvers of the current pending stage."""
         self.ensure_one()
-        next_line = self.approval_line_ids.filtered(lambda l: l.state == 'pending').sorted('sequence')[:1]
-        if next_line and next_line.user_id:
-            type_label = dict(self._fields['approval_type'].selection).get(self.approval_type, self.approval_type)
-            self.activity_schedule(
-                'mail.mail_activity_data_todo',
-                user_id=next_line.user_id.id,
-                note=_('Vendor payment approval (%s) requested for PO %s.') % (type_label, self.purchase_order_id.name),
-                summary=_('Vendor Payment Approval: %s') % self.purchase_order_id.name,
-            )
+        pending_lines = self.approval_line_ids.filtered(lambda l: l.state == 'pending')
+        if not pending_lines:
+            return
+        next_seq = min(pending_lines.mapped('sequence'))
+        next_lines = pending_lines.filtered(lambda l: l.sequence == next_seq)
+        type_label = dict(self._fields['approval_type'].selection).get(self.approval_type, self.approval_type)
+        todo_type = self.env.ref('mail.mail_activity_data_todo', raise_if_not_found=False)
+        for line in next_lines:
+            if line.user_id:
+                existing_act = self.activity_ids.filtered(
+                    lambda a: (not todo_type or a.activity_type_id == todo_type) and a.user_id == line.user_id
+                )
+                if not existing_act:
+                    self.activity_schedule(
+                        'mail.mail_activity_data_todo',
+                        user_id=line.user_id.id,
+                        note=_('Vendor payment approval (%s) requested for PO %s.') % (type_label, self.purchase_order_id.name),
+                        summary=_('Vendor Payment Approval: %s') % self.purchase_order_id.name,
+                    )
 
     def action_approve_wizard(self):
         """Open approve wizard. Only the current approver-in-turn may proceed."""
@@ -432,17 +452,26 @@ class VendorPaymentApprovalRequest(models.Model):
             'remark': reason or '',
             'action_date': fields.Datetime.now(),
         })
+        # Cancel other pending lines at the same level (e.g. if send to all was used)
+        other_pending_same_level = self.approval_line_ids.filtered(
+            lambda l: l.id != my_line.id and l.approver_type == my_line.approver_type and l.state == 'pending'
+        )
+        if other_pending_same_level:
+            other_pending_same_level.write({
+                'state': 'cancelled',
+                'remark': _('Approved by %s') % current_user.name,
+                'action_date': fields.Datetime.now(),
+            })
+        self.activity_unlink(['mail.mail_activity_data_todo'])
         next_pending = self.approval_line_ids.filtered(lambda l: l.state == 'pending').sorted('sequence')[:1]
         if not next_pending:
-            self.write({
+            self.sudo().write({
                 'state': 'approved',
                 'approve_reason': reason,
             })
-            self.activity_unlink(['mail.mail_activity_data_todo'])
             self._notify_banking_team()
             self._create_payment_tracker_records()
         else:
-            self.activity_unlink(['mail.mail_activity_data_todo'])
             self._notify_next_approver()
         return True
 
