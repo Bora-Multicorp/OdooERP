@@ -11,7 +11,10 @@
                     <div>
                         <i class="fa fa-info-circle me-2"/>
                         <span>
-                            <b>Purchase Order TDS Applied:</b> Base:
+                            <b>Purchase Order TDS Applied:</b>
+                            <span invisible="not po_tds_purchase_id"> PO: <field name="po_tds_purchase_id" readonly="1" class="fw-bold"/> |</span>
+                            <span invisible="not po_tds_reference"> Ref: <field name="po_tds_reference" readonly="1"/> |</span>
+                            Base:
                             <field name="po_tds_base" widget="monetary" readonly="1" class="fw-bold"/> |
                             TDS Amount:
                             <field name="po_tds_amount" widget="monetary" readonly="1" class="fw-bold"/> |
@@ -32,6 +35,17 @@
                            widget="statinfo"
                            string="PO TDS"/>
                 </button>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_move_form_inherit_purchase_tds_withholding_button" model="ir.ui.view">
+        <field name="name">account.move.form.inherit.purchase.tds.withholding.button</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="l10n_in_withholding.account_move_view_form_inherit_l10n_in_withholding"/>
+        <field name="arch" type="xml">
+            <xpath expr="//button[@name='%(l10n_in_withholding.l10n_in_withholding_entry_form_action)d']" position="attributes">
+                <attribute name="invisible">country_code != 'IN' or move_type not in ('out_invoice', 'in_invoice', 'out_refund', 'in_refund') or (move_type in ('in_invoice', 'in_refund') and state not in ('draft', 'bill_approval_pending', 'posted')) or (move_type in ('out_invoice', 'out_refund') and state != 'posted')</attribute>
             </xpath>
         </field>
     </record>
