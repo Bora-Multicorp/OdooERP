@@ -39,6 +39,7 @@
                         <group string="Request Details">
                             <field name="approval_type" readonly="state != 'draft'" options="{'no_create': True}"/>
 <!--                            <field name="assigned_approver_id" readonly="state != 'draft'" options="{'no_create': True}"/>-->
+                            <field name="purchase_tds_amount" widget="monetary" readonly="1"/>
                             <field name="amount_for_approval" widget="monetary" readonly="state != 'draft'"/>
                             <field name="request_user_id"/>
                             <field name="request_date"/>
@@ -107,6 +108,7 @@
                 <field name="partner_id" string="Vendor" optional="show"/>
                 <field name="approval_type"/>
                 <field name="po_amount_total" string="PO Total" optional="show"/>
+                <field name="purchase_tds_amount" string="Purchase TDS Amount" optional="show"/>
                 <field name="amount_for_approval" string="Amount for Approval" optional="show"/>
                 <field name="currency_id" column_invisible="1"/>
                 <field name="state" widget="badge"/>

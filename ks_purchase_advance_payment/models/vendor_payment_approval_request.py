@@ -90,6 +90,13 @@ class VendorPaymentApprovalRequest(models.Model):
         tracking=True,
         help='The user responsible for approving this request. Only this user can click Approve.',
     )
+    purchase_tds_amount = fields.Monetary(
+        string='Purchase TDS Amount',
+        related='purchase_order_id.amount_tds',
+        readonly=True,
+        currency_field='currency_id',
+        store=True,
+    )
     amount_for_approval = fields.Monetary(
         string='Amount for Approval',
         currency_field='currency_id',
@@ -153,15 +160,28 @@ class VendorPaymentApprovalRequest(models.Model):
             else:
                 rec.ks_can_approve = True
 
+    @api.onchange('purchase_order_id')
+    def _onchange_purchase_order_id(self):
+        if self.purchase_order_id:
+            po = self.purchase_order_id
+            if not self.approval_type:
+                self.approval_type = 'regular' if po.has_vendor_bill else 'advance'
+            net_payable = getattr(po, 'amount_net_payable', None)
+            self.amount_for_approval = net_payable if net_payable is not None else po.amount_total
+
     @api.model_create_multi
     def create(self, vals_list):
-        """Set approval_type from PO when not provided."""
+        """Set approval_type and amount_for_approval from PO when not provided."""
         for vals in vals_list:
             po_id = vals.get('purchase_order_id')
-            if po_id and not vals.get('approval_type'):
+            if po_id:
                 po = self.env['purchase.order'].browse(po_id)
                 if po.exists():
-                    vals['approval_type'] = 'regular' if po.has_vendor_bill else 'advance'
+                    if not vals.get('approval_type'):
+                        vals['approval_type'] = 'regular' if po.has_vendor_bill else 'advance'
+                    if 'amount_for_approval' not in vals or not vals.get('amount_for_approval'):
+                        net_payable = getattr(po, 'amount_net_payable', None)
+                        vals['amount_for_approval'] = net_payable if net_payable is not None else po.amount_total
         requests = super().create(vals_list)
         requests._create_payment_tracker_records()
         return requests

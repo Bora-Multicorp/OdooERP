@@ -84,9 +84,12 @@ class PurchaseOrder(models.Model):
         if self.state not in ('purchase', 'done'):
             raise UserError(_('Only confirmed or locked Purchase Orders can request payment approval.'))
         approval_type = 'regular' if self.has_vendor_bill else 'advance'
+        net_payable = getattr(self, 'amount_net_payable', None)
+        amount_for_approval = net_payable if net_payable is not None else self.amount_total
         request = self.env['vendor.payment.approval.request'].create({
             'purchase_order_id': self.id,
             'approval_type': approval_type,
+            'amount_for_approval': amount_for_approval,
         })
         return {
             'name': _('Payment Approval Request'),
@@ -107,9 +110,12 @@ class PurchaseOrder(models.Model):
         created = self.env['vendor.payment.approval.request']
         for order in orders:
             approval_type = 'regular' if order.has_vendor_bill else 'advance'
+            net_payable = getattr(order, 'amount_net_payable', None)
+            amount_for_approval = net_payable if net_payable is not None else order.amount_total
             req = self.env['vendor.payment.approval.request'].create({
                 'purchase_order_id': order.id,
                 'approval_type': approval_type,
+                'amount_for_approval': amount_for_approval,
             })
             created |= req
         if len(created) == 1:
