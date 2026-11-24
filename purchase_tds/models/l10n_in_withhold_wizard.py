@@ -9,13 +9,28 @@ import odoo.addons.l10n_in_withholding.wizard.l10n_in_withhold_wizard as orig_wi
 class L10nInWithholdWizard(models.TransientModel):
     _inherit = 'l10n_in.withhold.wizard'
 
+    def _default_date(self):
+        active_model = self._context.get('active_model')
+        active_ids = self._context.get('active_ids', [])
+        if active_model == 'account.move' and active_ids:
+            move = self.env['account.move'].browse(active_ids[0])
+            move._link_purchase_tds()
+            if move.purchase_tds_ids and move.purchase_tds_ids[0].date:
+                return move.purchase_tds_ids[0].date
+        return fields.Date.context_today(self)
+
+    date = fields.Date(
+        string="Date",
+        default=_default_date,
+    )
+
     @api.model
     def default_get(self, fields_list):
         active_model = self._context.get('active_model')
         active_ids = self._context.get('active_ids', [])
         if active_model == 'account.move' and active_ids and len(active_ids) == 1:
             active_record = self.env['account.move'].browse(active_ids[0])
-            if active_record.move_type in ('in_invoice', 'in_refund') and active_record.state in ('draft', 'bill_approval_pending'):
+            if active_record.move_type in ('in_invoice', 'in_refund'):
                 # Bypass the state == 'posted' UserError check in l10n_in_withholding
                 result = super(orig_wizard.L10nInWithholdWizard, self).default_get(fields_list)
                 ref_name = active_record.name if (active_record.name and active_record.name != '/') else (active_record.ref or _("Draft Bill"))
@@ -27,6 +42,7 @@ class L10nInWithholdWizard(models.TransientModel):
 
                 if active_record.purchase_tds_ids:
                     po_tds = active_record.purchase_tds_ids[0]
+                    # Always populate date from purchase.tds
                     if po_tds.date:
                         result['date'] = po_tds.date
                     if po_tds.reference and (not active_record.name or active_record.name == '/'):
@@ -45,26 +61,6 @@ class L10nInWithholdWizard(models.TransientModel):
                 return result
 
         result = super().default_get(fields_list)
-        if active_model == 'account.move' and active_ids and len(active_ids) == 1:
-            active_record = self.env['account.move'].browse(active_ids[0])
-            if active_record.move_type in ('in_invoice', 'in_refund'):
-                active_record._link_purchase_tds()
-                if active_record.purchase_tds_ids and not result.get('withhold_line_ids'):
-                    lines = []
-                    for tds in active_record.purchase_tds_ids:
-                        base = active_record.amount_untaxed if active_record.amount_untaxed > 0 else tds.base
-                        tax = tds.tax_id
-                        calc_amount = self.env['l10n_in.withhold.wizard.line']._tax_compute_all_helper(base, tax) if tax else 0.0
-                        lines.append(Command.create({
-                            'tax_id': tax.id,
-                            'base': base,
-                            'amount': calc_amount,
-                        }))
-                    result['withhold_line_ids'] = lines
-                if active_record.purchase_tds_ids:
-                    po_tds = active_record.purchase_tds_ids[0]
-                    if po_tds.date and not result.get('date'):
-                        result['date'] = po_tds.date
         return result
 
     def action_create_and_post_withhold(self):
