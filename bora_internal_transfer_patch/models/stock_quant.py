@@ -24,6 +24,12 @@ class StockQuant(models.Model):
             if not is_mobile or record.location_id.usage not in ('internal', 'transit'):
                 continue
 
+            # If writing off or zeroing out stock in inventory adjustment, do not block
+            if getattr(record, 'inventory_quantity_set', False) and record.inventory_quantity <= 0:
+                continue
+            if record.quantity <= 0 and not getattr(record, 'inventory_quantity_set', False):
+                continue
+
             # Ensure IMEIs are not empty
             if record.imei and record.imei2:
                 if not record.imei.isdigit() or len(record.imei) != 15:

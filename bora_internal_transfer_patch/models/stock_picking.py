@@ -23,9 +23,9 @@ class StockPicking(models.Model):
 
             for line in lines:
                 lot_str = (line.lot_name or '').strip() or (line.lot_id and line.lot_id.name)
-                if lot_str:
+                if lot_str and not is_outgoing:
                     # 1. Stock quant check FIRST (Existing stock item)
-                    dq = [('company_id', '=', company_id), ('lot_id.name', '=', lot_str)]
+                    dq = [('company_id', '=', company_id), ('quantity', '>', 0), ('location_id.usage', '=', 'internal'), ('lot_id.name', '=', lot_str)]
                     if line.lot_id:
                         dq.append(('lot_id', '!=', line.lot_id.id))
                     quant_exist = self.env['stock.quant'].search(dq)
@@ -37,8 +37,8 @@ class StockPicking(models.Model):
                         raise ValidationError(_('Serial number (%s) is already used in another line item in this wizard.') % lot_str)
                     seen_lots.add(lot_str)
 
-                    # 3. Database check: search saved stock.move.line records in DB
-                    d = [('company_id', '=', company_id), ('id', '!=', line._origin.id if line._origin else line.id), '|', ('lot_name', '=', lot_str), ('lot_id.name', '=', lot_str)]
+                    # 3. Database check: search saved stock.move.line records in DB for this picking
+                    d = [('company_id', '=', company_id), ('picking_id', '=', picking.id), ('id', '!=', line._origin.id if line._origin else line.id), '|', ('lot_name', '=', lot_str), ('lot_id.name', '=', lot_str)]
                     if line.lot_id:
                         d.append(('lot_id', '!=', line.lot_id.id))
                     exist = self.env['stock.move.line'].search(d, limit=1)
@@ -55,7 +55,7 @@ class StockPicking(models.Model):
                             raise ValidationError(_('IMEI 1 (%s) is already used in another line item.') % imei1)
                         seen_imeis.add(imei1)
 
-                        d1 = [('company_id', '=', company_id), ('id', '!=', line._origin.id if line._origin else line.id), '|', ('imei', '=', imei1), ('imei2', '=', imei1)]
+                        d1 = [('company_id', '=', company_id), ('picking_id', '=', picking.id), ('id', '!=', line._origin.id if line._origin else line.id), '|', ('imei', '=', imei1), ('imei2', '=', imei1)]
                         d1_q = [('company_id', '=', company_id), ('quantity', '>', 0), ('location_id.usage', '=', 'internal'), '|', ('imei', '=', imei1), ('imei2', '=', imei1)]
                         if line.lot_id:
                             d1.append(('lot_id', '!=', line.lot_id.id))
@@ -80,7 +80,7 @@ class StockPicking(models.Model):
                             raise ValidationError(_('IMEI 2 (%s) is already used in another line item.') % imei2)
                         seen_imeis.add(imei2)
 
-                        d2 = [('company_id', '=', company_id), ('id', '!=', line._origin.id if line._origin else line.id), '|', ('imei', '=', imei2), ('imei2', '=', imei2)]
+                        d2 = [('company_id', '=', company_id), ('picking_id', '=', picking.id), ('id', '!=', line._origin.id if line._origin else line.id), '|', ('imei', '=', imei2), ('imei2', '=', imei2)]
                         d2_q = [('company_id', '=', company_id), ('quantity', '>', 0), ('location_id.usage', '=', 'internal'), '|', ('imei', '=', imei2), ('imei2', '=', imei2)]
                         if line.lot_id:
                             d2.append(('lot_id', '!=', line.lot_id.id))

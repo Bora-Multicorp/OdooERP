@@ -811,14 +811,19 @@ class StockMoveLine(models.Model):
         product_id = vals.get('product_id') if isinstance(vals.get('product_id'), int) else (
             record.product_id.id if record else False)
 
+        move = record.move_id or (self.env['stock.move'].browse(vals['move_id']) if vals.get('move_id') else False)
+        is_scrap = bool(move and (move.scrapped or move.location_dest_id.scrap_location or move.location_dest_id.usage in ('inventory', 'customer', 'production')))
+        is_dest_not_internal = bool(move and move.location_id.usage == 'internal' and move.location_dest_id.usage != 'internal')
+
         picking_type_code = None
-        if record and record.move_id and record.move_id.picking_id:
-            picking_type_code = record.move_id.picking_id.picking_type_id.code
-        elif vals.get('move_id'):
-            move = self.env['stock.move'].browse(vals['move_id'])
-            if move.picking_id:
-                picking_type_code = move.picking_id.picking_type_id.code
-        is_outgoing = picking_type_code == 'outgoing'
+        if move and move.picking_id:
+            picking_type_code = move.picking_id.picking_type_id.code
+        is_outgoing = (picking_type_code == 'outgoing') or is_scrap or is_dest_not_internal
+
+        if is_scrap or is_dest_not_internal:
+            return
+
+        company_id = vals.get('company_id') or (record.company_id.id if record else False) or (move.company_id.id if move else False) or self.env.company.id
 
         # Validate IMEI 1
         if imei:
@@ -827,6 +832,9 @@ class StockMoveLine(models.Model):
 
             # Check stock existence and product mismatch
             quant = self.env['stock.quant'].search([
+                ('company_id', '=', company_id),
+                ('quantity', '>', 0),
+                ('location_id.usage', '=', 'internal'),
                 '|', ('imei', '=', imei), ('imei2', '=', imei)
             ])
 
@@ -839,10 +847,18 @@ class StockMoveLine(models.Model):
                         _('IMEI 1 (%s) is not valid for this product. It belongs to: %s.') % (imei, matched_product))
             else:
                 # Incoming/Internal duplicate checks
-                exist = self.search([('imei', '=', imei), ('id', 'not in', self.ids)], limit=1)
-                if exist:
-                    raise ValidationError(_('IMEI 1 (%s) is already used in another stock line.') % imei)
-                if len(quant) > 1:
+                if move and move.picking_id:
+                    exist = self.search([
+                        ('company_id', '=', company_id),
+                        ('imei', '=', imei),
+                        ('id', 'not in', self.ids),
+                        ('picking_id', '=', move.picking_id.id)
+                    ], limit=1)
+                    if exist:
+                        raise ValidationError(_('IMEI 1 (%s) is already used in another line of this receipt.') % imei)
+                if record.lot_id:
+                    quant = quant.filtered(lambda q: q.lot_id.id != record.lot_id.id)
+                if quant:
                     raise ValidationError(_('IMEI 1 (%s) is already allocated in stock.') % imei)
 
         # Validate IMEI 2
@@ -852,6 +868,9 @@ class StockMoveLine(models.Model):
 
             # Check stock existence and product mismatch
             quant = self.env['stock.quant'].search([
+                ('company_id', '=', company_id),
+                ('quantity', '>', 0),
+                ('location_id.usage', '=', 'internal'),
                 '|', ('imei', '=', imei2), ('imei2', '=', imei2)
             ])
 
@@ -864,10 +883,18 @@ class StockMoveLine(models.Model):
                         _('IMEI 2 (%s) is not valid for this product. It belongs to: %s.') % (imei2, matched_product))
             else:
                 # Incoming/Internal duplicate checks
-                exist = self.search([('imei2', '=', imei2), ('id', 'not in', self.ids)], limit=1)
-                if exist:
-                    raise ValidationError(_('IMEI 2 (%s) is already used in another stock line.') % imei2)
-                if len(quant) > 1:
+                if move and move.picking_id:
+                    exist = self.search([
+                        ('company_id', '=', company_id),
+                        ('imei2', '=', imei2),
+                        ('id', 'not in', self.ids),
+                        ('picking_id', '=', move.picking_id.id)
+                    ], limit=1)
+                    if exist:
+                        raise ValidationError(_('IMEI 2 (%s) is already used in another line of this receipt.') % imei2)
+                if record.lot_id:
+                    quant = quant.filtered(lambda q: q.lot_id.id != record.lot_id.id)
+                if quant:
                     raise ValidationError(_('IMEI 2 (%s) is already allocated in stock.') % imei2)
 
         # IMEI 1 and IMEI 2 must differ (except Samsung/OnePlus)
@@ -878,13 +905,26 @@ class StockMoveLine(models.Model):
                 raise ValidationError(_('IMEI 1 and IMEI 2 must be different.'))
 
         # Validate Serial/Lot number
-        if lot_name:
-            quant = self.env['stock.quant'].search([('lot_id.name', '=', lot_name)])
-            if len(quant) > 0:
+        if lot_name and not is_outgoing:
+            quant = self.env['stock.quant'].search([
+                ('company_id', '=', company_id),
+                ('quantity', '>', 0),
+                ('location_id.usage', '=', 'internal'),
+                ('lot_id.name', '=', lot_name)
+            ])
+            if record.lot_id:
+                quant = quant.filtered(lambda q: q.lot_id.id != record.lot_id.id)
+            if quant:
                 raise ValidationError(_('Serial number (%s) is already used in another stock item.') % lot_name)
-            exist = self.search([('lot_name', '=', lot_name), ('id', 'not in', self.ids)], limit=1)
-            if exist:
-                raise ValidationError(_('Serial number (%s) is already used in another saved line.') % lot_name)
+            if move and move.picking_id:
+                exist = self.search([
+                    ('company_id', '=', company_id),
+                    ('lot_name', '=', lot_name),
+                    ('id', 'not in', self.ids),
+                    ('picking_id', '=', move.picking_id.id)
+                ], limit=1)
+                if exist:
+                    raise ValidationError(_('Serial number (%s) is already used in another line of this receipt.') % lot_name)
 
     def create(self, vals_list):
         records_vals = [vals_list] if isinstance(vals_list, dict) else vals_list
@@ -899,12 +939,23 @@ class StockMoveLine(models.Model):
         return super().write(vals)
 
     def validate_imei_and_serial_number(self):
-        # some time it shows None
-        # if self._context.get('active_model') != 'purchase.order':
-        #     return 
-
         # 1. Validate IMEI number and Serial number
         for record in self:
+            qty = getattr(record, 'quantity', 0.0) or getattr(record, 'qty_done', 0.0)
+            if qty <= 0:
+                continue
+
+            move = record.move_id
+            is_scrap = bool(move and (move.scrapped or move.location_dest_id.scrap_location or move.location_dest_id.usage in ('inventory', 'customer', 'production')))
+            is_dest_not_internal = bool(move and move.location_id.usage == 'internal' and move.location_dest_id.usage != 'internal')
+            picking_type_code = move.picking_id.picking_type_id.code if (move and move.picking_id) else None
+            is_outgoing = (picking_type_code == 'outgoing') or is_scrap or is_dest_not_internal
+
+            if is_outgoing or is_scrap:
+                continue
+
+            company_id = record.company_id.id or (move.company_id.id if move else False) or self.env.company.id
+
             is_dual_mandatory = bool(
                 record.move_id.show_IMEI_field2 and getattr(record.move_id, 'is_dual_sim_mandatory', True)
             )
@@ -928,40 +979,41 @@ class StockMoveLine(models.Model):
                 if record.imei2 and (not record.imei2.isdigit() or len(record.imei2) != 15):
                     raise ValidationError(_('IMEI 2 number must be a 15-digit number.'))
 
-            # 3.1 Uniqueness of IMEI check in same lines
-            if is_dual_mandatory:
-                exist = self.search([('imei', '=', record.imei), ('id', '!=', record.id)], limit=1)
-                if exist:
-                    raise ValidationError(
-                        _('IMEI number must be unique, the IMEI number(%s) is already used in another stock item.' % record.imei))
-                exist = self.search([('imei2', '=', record.imei2), ('id', '!=', record.id)], limit=1)
-                if exist:
-                    raise ValidationError(
-                        _('IMEI number must be unique, the IMEI number(%s) is already used in another stock item.' % record.imei2))
-                exist = self.search([('imei', '=', record.imei2), ('id', '!=', record.id)], limit=1)
-                if exist:
-                    raise ValidationError(
-                        _('IMEI number must be unique, the IMEI number(%s) is already used in another stock item.' % record.imei2))
-                exist = self.search([('imei2', '=', record.imei), ('id', '!=', record.id)], limit=1)
-                if exist:
-                    raise ValidationError(
-                        _('IMEI number must be unique, the IMEI number(%s) is already used in another stock item.' % record.imei))
-            elif record.move_id.show_IMEI_field:
-                exist = self.search([('imei', '=', record.imei), ('id', '!=', record.id)], limit=1)
-                if exist:
-                    raise ValidationError(
-                        _('IMEI number must be unique, the IMEI number(%s) is already used in another stock item.' % record.imei))
-                if record.imei2:
-                    exist = self.search([('imei2', '=', record.imei2), ('id', '!=', record.id)], limit=1)
+            # 3.1 Uniqueness of IMEI check in same picking
+            if move and move.picking_id:
+                if is_dual_mandatory:
+                    exist = self.search([('company_id', '=', company_id), ('picking_id', '=', move.picking_id.id), ('imei', '=', record.imei), ('id', '!=', record.id)], limit=1)
                     if exist:
                         raise ValidationError(
-                            _('IMEI number must be unique, the IMEI number(%s) is already used in another stock item.' % record.imei2))
-                    exist = self.search([('imei', '=', record.imei2), ('id', '!=', record.id)], limit=1)
+                            _('IMEI number must be unique, the IMEI number(%s) is already used in another line of this receipt.' % record.imei))
+                    exist = self.search([('company_id', '=', company_id), ('picking_id', '=', move.picking_id.id), ('imei2', '=', record.imei2), ('id', '!=', record.id)], limit=1)
                     if exist:
                         raise ValidationError(
-                            _('IMEI number must be unique, the IMEI number(%s) is already used in another stock item.' % record.imei2))
+                            _('IMEI number must be unique, the IMEI number(%s) is already used in another line of this receipt.' % record.imei2))
+                    exist = self.search([('company_id', '=', company_id), ('picking_id', '=', move.picking_id.id), ('imei', '=', record.imei2), ('id', '!=', record.id)], limit=1)
+                    if exist:
+                        raise ValidationError(
+                            _('IMEI number must be unique, the IMEI number(%s) is already used in another line of this receipt.' % record.imei2))
+                    exist = self.search([('company_id', '=', company_id), ('picking_id', '=', move.picking_id.id), ('imei2', '=', record.imei), ('id', '!=', record.id)], limit=1)
+                    if exist:
+                        raise ValidationError(
+                            _('IMEI number must be unique, the IMEI number(%s) is already used in another line of this receipt.' % record.imei))
+                elif record.move_id.show_IMEI_field:
+                    exist = self.search([('company_id', '=', company_id), ('picking_id', '=', move.picking_id.id), ('imei', '=', record.imei), ('id', '!=', record.id)], limit=1)
+                    if exist:
+                        raise ValidationError(
+                            _('IMEI number must be unique, the IMEI number(%s) is already used in another line of this receipt.' % record.imei))
+                    if record.imei2:
+                        exist = self.search([('company_id', '=', company_id), ('picking_id', '=', move.picking_id.id), ('imei2', '=', record.imei2), ('id', '!=', record.id)], limit=1)
+                        if exist:
+                            raise ValidationError(
+                                _('IMEI number must be unique, the IMEI number(%s) is already used in another line of this receipt.' % record.imei2))
+                        exist = self.search([('company_id', '=', company_id), ('picking_id', '=', move.picking_id.id), ('imei', '=', record.imei2), ('id', '!=', record.id)], limit=1)
+                        if exist:
+                            raise ValidationError(
+                                _('IMEI number must be unique, the IMEI number(%s) is already used in another line of this receipt.' % record.imei2))
 
-            # 3.2 Uniqueness of IMEI check in all other saved items
+            # 3.2 Uniqueness of IMEI check in active stock quants
             if is_dual_mandatory:
 
                 # check if brand is samsung or oneplus, as these two brands have imei1 and imei2 field's same value 
@@ -977,57 +1029,89 @@ class StockMoveLine(models.Model):
                             f"Both IMEI numbers must be different for product '{record.sudo().product_id.product_tmpl_id.name}'")
 
                 imei_results = self.env['stock.quant'].search([
+                    ('company_id', '=', company_id),
+                    ('quantity', '>', 0),
+                    ('location_id.usage', '=', 'internal'),
                     '|',
                     ('imei', '=', record.imei),
                     ('imei2', '=', record.imei)
                 ])
+                if record.lot_id:
+                    imei_results = imei_results.filtered(lambda q: q.lot_id.id != record.lot_id.id)
                 imei2_results = self.env['stock.quant'].search([
+                    ('company_id', '=', company_id),
+                    ('quantity', '>', 0),
+                    ('location_id.usage', '=', 'internal'),
                     '|',
                     ('imei', '=', record.imei2),
                     ('imei2', '=', record.imei2)
                 ])
+                if record.lot_id:
+                    imei2_results = imei2_results.filtered(lambda q: q.lot_id.id != record.lot_id.id)
 
-                if len(imei_results) > 1:
+                if len(imei_results) > 0:
                     raise ValidationError(
                         _('IMEI number must be unique, the IMEI number(%s) is already used in another stock item.' % record.imei))
-                if len(imei2_results) > 1:
+                if len(imei2_results) > 0:
                     raise ValidationError(
                         _('IMEI number must be unique, the IMEI number(%s) is already used in another stock item.' % record.imei2))
 
             elif record.move_id.show_IMEI_field:
                 result_items = self.env['stock.quant'].search([
+                    ('company_id', '=', company_id),
+                    ('quantity', '>', 0),
+                    ('location_id.usage', '=', 'internal'),
                     '|',
                     ('imei', '=', record.imei),
                     ('imei2', '=', record.imei)
                 ])
+                if record.lot_id:
+                    result_items = result_items.filtered(lambda q: q.lot_id.id != record.lot_id.id)
 
-                if len(result_items) > 1:
+                if len(result_items) > 0:
                     raise ValidationError(
                         _('IMEI number must be unique, the IMEI number(%s) is already used in another stock item.' % record.imei))
 
                 if record.imei2:
                     result_items2 = self.env['stock.quant'].search([
+                        ('company_id', '=', company_id),
+                        ('quantity', '>', 0),
+                        ('location_id.usage', '=', 'internal'),
                         '|',
                         ('imei', '=', record.imei2),
                         ('imei2', '=', record.imei2)
                     ])
-                    if len(result_items2) > 1:
+                    if record.lot_id:
+                        result_items2 = result_items2.filtered(lambda q: q.lot_id.id != record.lot_id.id)
+                    if len(result_items2) > 0:
                         raise ValidationError(
                             _('IMEI number must be unique, the IMEI number(%s) is already used in another stock item.' % record.imei2))
 
             # 4.1 Uniqueness of Serial number check in stock quants
-            results = self.env['stock.quant'].search([
-                ('lot_id.name', '=', record.lot_name)
-            ])
-            if len(results) > 0:
-                raise ValidationError(
-                    _('Serial number (%s) is already used in another stock item.') % record.lot_name)
+            if record.lot_name:
+                results = self.env['stock.quant'].search([
+                    ('company_id', '=', company_id),
+                    ('quantity', '>', 0),
+                    ('location_id.usage', '=', 'internal'),
+                    ('lot_id.name', '=', record.lot_name)
+                ])
+                if record.lot_id:
+                    results = results.filtered(lambda q: q.lot_id.id != record.lot_id.id)
+                if len(results) > 0:
+                    raise ValidationError(
+                        _('Serial number (%s) is already used in another stock item.') % record.lot_name)
 
-            # 4.2 Uniqueness of Serial number check in same lines
-            exist = self.search([('lot_name', '=', record.lot_name), ('id', '!=', record.id)], limit=1)
-            if exist:
-                raise ValidationError(
-                    _('Serial number (%s) is already used in another saved line.') % record.lot_name)
+                # 4.2 Uniqueness of Serial number check in same picking
+                if move and move.picking_id:
+                    exist = self.search([
+                        ('company_id', '=', company_id),
+                        ('picking_id', '=', move.picking_id.id),
+                        ('lot_name', '=', record.lot_name),
+                        ('id', '!=', record.id)
+                    ], limit=1)
+                    if exist:
+                        raise ValidationError(
+                            _('Serial number (%s) is already used in another line of this receipt.') % record.lot_name)
 
     @api.constrains('imei', 'imei2')
     def _constrains_validate_imei(self):
@@ -1035,11 +1119,16 @@ class StockMoveLine(models.Model):
             if not record.move_id:
                 continue
 
-            picking_type_code = (
-                record.move_id.picking_id.picking_type_id.code
-                if record.move_id.picking_id else None
-            )
-            is_outgoing = picking_type_code == 'outgoing'
+            move = record.move_id
+            is_scrap = bool(move and (move.scrapped or move.location_dest_id.scrap_location or move.location_dest_id.usage in ('inventory', 'customer', 'production')))
+            is_dest_not_internal = bool(move and move.location_id.usage == 'internal' and move.location_dest_id.usage != 'internal')
+            picking_type_code = move.picking_id.picking_type_id.code if (move and move.picking_id) else None
+            is_outgoing = (picking_type_code == 'outgoing') or is_scrap or is_dest_not_internal
+
+            if is_outgoing or is_scrap:
+                continue
+
+            company_id = record.company_id.id or (move.company_id.id if move else False) or self.env.company.id
 
             if record.move_id.show_IMEI_field2:
                 if record.imei and (not record.imei.isdigit() or len(record.imei) != 15):
@@ -1052,35 +1141,68 @@ class StockMoveLine(models.Model):
                         raise ValidationError(_('IMEI 1 and IMEI 2 must be different.'))
                 if not is_outgoing:
                     if record.imei:
-                        exist = self.search([('imei', '=', record.imei), ('id', '!=', record.id)], limit=1)
-                        if exist:
-                            raise ValidationError(_('IMEI 1 (%s) is already used in another stock item.') % record.imei)
+                        if move.picking_id:
+                            exist = self.search([
+                                ('company_id', '=', company_id),
+                                ('picking_id', '=', move.picking_id.id),
+                                ('imei', '=', record.imei),
+                                ('id', '!=', record.id)
+                            ], limit=1)
+                            if exist:
+                                raise ValidationError(_('IMEI 1 (%s) is already used in another line of this receipt.') % record.imei)
                         quant = self.env['stock.quant'].search([
+                            ('company_id', '=', company_id),
+                            ('quantity', '>', 0),
+                            ('location_id.usage', '=', 'internal'),
                             '|', ('imei', '=', record.imei), ('imei2', '=', record.imei)
                         ])
-                        if len(quant) > 1:
+                        if record.lot_id:
+                            quant = quant.filtered(lambda q: q.lot_id.id != record.lot_id.id)
+                        if quant:
                             raise ValidationError(_('IMEI 1 (%s) is already used in stock.') % record.imei)
                     if record.imei2:
-                        exist = self.search([('imei2', '=', record.imei2), ('id', '!=', record.id)], limit=1)
-                        if exist:
-                            raise ValidationError(_('IMEI 2 (%s) is already used in another stock item.') % record.imei2)
+                        if move.picking_id:
+                            exist = self.search([
+                                ('company_id', '=', company_id),
+                                ('picking_id', '=', move.picking_id.id),
+                                ('imei2', '=', record.imei2),
+                                ('id', '!=', record.id)
+                            ], limit=1)
+                            if exist:
+                                raise ValidationError(_('IMEI 2 (%s) is already used in another line of this receipt.') % record.imei2)
                         quant = self.env['stock.quant'].search([
+                            ('company_id', '=', company_id),
+                            ('quantity', '>', 0),
+                            ('location_id.usage', '=', 'internal'),
                             '|', ('imei', '=', record.imei2), ('imei2', '=', record.imei2)
                         ])
-                        if len(quant) > 1:
+                        if record.lot_id:
+                            quant = quant.filtered(lambda q: q.lot_id.id != record.lot_id.id)
+                        if quant:
                             raise ValidationError(_('IMEI 2 (%s) is already used in stock.') % record.imei2)
 
             elif record.move_id.show_IMEI_field:
                 if record.imei and (not record.imei.isdigit() or len(record.imei) != 15):
                     raise ValidationError(_('IMEI must be a 15-digit number.'))
                 if not is_outgoing and record.imei:
-                    exist = self.search([('imei', '=', record.imei), ('id', '!=', record.id)], limit=1)
-                    if exist:
-                        raise ValidationError(_('IMEI (%s) is already used in another stock item.') % record.imei)
+                    if move.picking_id:
+                        exist = self.search([
+                            ('company_id', '=', company_id),
+                            ('picking_id', '=', move.picking_id.id),
+                            ('imei', '=', record.imei),
+                            ('id', '!=', record.id)
+                        ], limit=1)
+                        if exist:
+                            raise ValidationError(_('IMEI (%s) is already used in another line of this receipt.') % record.imei)
                     quant = self.env['stock.quant'].search([
+                        ('company_id', '=', company_id),
+                        ('quantity', '>', 0),
+                        ('location_id.usage', '=', 'internal'),
                         '|', ('imei', '=', record.imei), ('imei2', '=', record.imei)
                     ])
-                    if len(quant) > 1:
+                    if record.lot_id:
+                        quant = quant.filtered(lambda q: q.lot_id.id != record.lot_id.id)
+                    if quant:
                         raise ValidationError(_('IMEI (%s) is already used in stock.') % record.imei)
 
     @api.constrains('lot_name')
@@ -1088,11 +1210,38 @@ class StockMoveLine(models.Model):
         for record in self:
             if not record.lot_name:
                 continue
-            quant = self.env['stock.quant'].search([('lot_id.name', '=', record.lot_name)])
+            move = record.move_id
+            is_scrap = bool(move and (move.scrapped or move.location_dest_id.scrap_location or move.location_dest_id.usage in ('inventory', 'customer', 'production')))
+            is_dest_not_internal = bool(move and move.location_id.usage == 'internal' and move.location_dest_id.usage != 'internal')
+            picking_type_code = move.picking_id.picking_type_id.code if (move and move.picking_id) else None
+            is_outgoing = (picking_type_code == 'outgoing') or is_scrap or is_dest_not_internal
+
+            if is_outgoing or is_scrap:
+                continue
+
+            company_id = record.company_id.id or (move.company_id.id if move else False) or self.env.company.id
+
+            quant = self.env['stock.quant'].search([
+                ('company_id', '=', company_id),
+                ('quantity', '>', 0),
+                ('location_id.usage', '=', 'internal'),
+                ('lot_id.name', '=', record.lot_name)
+            ])
+            if record.lot_id:
+                quant = quant.filtered(lambda q: q.lot_id.id != record.lot_id.id)
             if len(quant) > 0:
                 raise ValidationError(
                     _('Serial number (%s) is already used in another stock item.') % record.lot_name)
-            exist = self.search([('lot_name', '=', record.lot_name), ('id', '!=', record.id)], limit=1)
+            if move and move.picking_id:
+                exist = self.search([
+                    ('company_id', '=', company_id),
+                    ('picking_id', '=', move.picking_id.id),
+                    ('lot_name', '=', record.lot_name),
+                    ('id', '!=', record.id)
+                ], limit=1)
+                if exist:
+                    raise ValidationError(
+                        _('Serial number (%s) is already used in another saved line.') % record.lot_name)
             if exist:
                 raise ValidationError(
                     _('Serial number (%s) is already used in another saved line.') % record.lot_name)

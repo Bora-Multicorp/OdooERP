@@ -148,7 +148,13 @@ class StockQuantInherit(models.Model):
             if tracking != 'none' and not record.lot_id.id:
                 raise ValidationError(_('Please enter serial number.'))
 
-            if not is_mobile:
+            if not is_mobile or record.location_id.usage not in ('internal', 'transit'):
+                continue
+
+            # If writing off or zeroing out stock in inventory adjustment, do not block
+            if getattr(record, 'inventory_quantity_set', False) and record.inventory_quantity <= 0:
+                continue
+            if record.quantity <= 0 and not getattr(record, 'inventory_quantity_set', False):
                 continue
 
             # Ensure IMEIs are not empty
@@ -172,7 +178,7 @@ class StockQuantInherit(models.Model):
 
                 # check if brand is samsung or oneplus, as these two brands have imei1 and imei2 field's same value 
                 brand_record = record.product_id.product_tmpl_id.brand_id
-                brand_name = brand_record.name
+                brand_name = brand_record.name if brand_record else ''
                 is_brand_samsung_or_oneplus = False
                 if brand_name and (brand_name.lower() == 'samsung' or brand_name.lower() == 'oneplus'):
                     is_brand_samsung_or_oneplus = True
@@ -182,33 +188,57 @@ class StockQuantInherit(models.Model):
                         raise ValidationError(
                             f"Both IMEI numbers must be different for product '{record.product_id.product_tmpl_id.name}'")
 
-                imei_results = self.env['stock.quant'].search([
+                domain_imei = [
+                    ('company_id', '=', record.company_id.id),
                     ('id', '!=', record.id),
+                    ('quantity', '>', 0),
+                    ('location_id.usage', '=', 'internal'),
                     '|',
                     ('imei', '=', record.imei),
                     ('imei2', '=', record.imei)
-                ])
-                imei2_results = self.env['stock.quant'].search([
+                ]
+                domain_imei2 = [
+                    ('company_id', '=', record.company_id.id),
                     ('id', '!=', record.id),
+                    ('quantity', '>', 0),
+                    ('location_id.usage', '=', 'internal'),
                     '|',
                     ('imei', '=', record.imei2),
                     ('imei2', '=', record.imei2)
-                ])
+                ]
+                if record.lot_id:
+                    domain_imei.append(('lot_id', '!=', record.lot_id.id))
+                    domain_imei2.append(('lot_id', '!=', record.lot_id.id))
+                if record.lot_id and record.lot_id.name:
+                    domain_imei.append(('lot_id.name', '!=', record.lot_id.name))
+                    domain_imei2.append(('lot_id.name', '!=', record.lot_id.name))
 
-                if len(imei_results) > 1:
+                imei_results = self.env['stock.quant'].search(domain_imei)
+                imei2_results = self.env['stock.quant'].search(domain_imei2)
+
+                if len(imei_results) > 0:
                     raise ValidationError(
                         _('IMEI number must be unique, the IMEI number(%s) is already used in another stock item.' % record.imei))
-                if len(imei2_results) > 1:
+                if len(imei2_results) > 0:
                     raise ValidationError(
                         _('IMEI number must be unique, the IMEI number(%s) is already used in another stock item.' % record.imei2))
 
             else:
-                result_items = self.env['stock.quant'].search([
+                domain_single = [
+                    ('company_id', '=', record.company_id.id),
                     ('id', '!=', record.id),
+                    ('quantity', '>', 0),
+                    ('location_id.usage', '=', 'internal'),
                     '|',
                     ('imei', '=', record.imei),
                     ('imei2', '=', record.imei)
-                ])
+                ]
+                if record.lot_id:
+                    domain_single.append(('lot_id', '!=', record.lot_id.id))
+                if record.lot_id and record.lot_id.name:
+                    domain_single.append(('lot_id.name', '!=', record.lot_id.name))
+
+                result_items = self.env['stock.quant'].search(domain_single)
 
                 if len(result_items) > 0:
                     raise ValidationError(
