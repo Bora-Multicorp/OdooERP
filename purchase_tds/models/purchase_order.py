@@ -90,7 +90,15 @@ class PurchaseOrder(models.Model):
     def _get_tds_expected_calculation(self):
         self.ensure_one()
         company = self.company_id
-        root_company = company.root_id or company
+        # Resolve root company by traversing up the parent hierarchy
+        root_company = company
+        while root_company.parent_id:
+            root_company = root_company.parent_id
+
+        # Find all group companies: parent company + all child branch companies
+        group_companies = self.env['res.company'].sudo().search([
+            ('id', 'child_of', root_company.id)
+        ])
         commercial_partner = self.partner_id.commercial_partner_id
 
         res = {
@@ -102,6 +110,7 @@ class PurchaseOrder(models.Model):
             'base_amount': 0.0,
             'tax': False,
             'root_company': root_company,
+            'group_companies': group_companies,
             'prior_bills': self.env['account.move'],
             'section_194q': False,
             'consider_amount': 'untaxed_amount',
@@ -132,13 +141,13 @@ class PurchaseOrder(models.Model):
         res['threshold'] = threshold
         res['section_194q'] = section_194q
 
-        # 3. Find prior vendor bills (draft + posted) across main company and all sub-companies using sudo()
+        # 3. Find prior vendor bills (draft + posted) across parent and all branch companies
         # Value to be taken as total amount including GST
         vendor_pan = commercial_partner.l10n_in_pan or (
             commercial_partner.vat and len(commercial_partner.vat) >= 12 and commercial_partner.vat[2:12]
         )
         domain = [
-            ("company_id", "child_of", root_company.id),
+            ("company_id", "in", group_companies.ids),
             ("move_type", "in", ["in_invoice", "in_refund"]),
             ("state", "in", ["draft", "posted"]),
             ("date", ">=", fiscalyear_start_date),
@@ -147,7 +156,9 @@ class PurchaseOrder(models.Model):
         if vendor_pan:
             domain += [
                 "|",
+                "|",
                 ("commercial_partner_id.l10n_in_pan", "=", vendor_pan),
+                ("commercial_partner_id.vat", "ilike", vendor_pan),
                 ("commercial_partner_id", "=", commercial_partner.id),
             ]
         else:
@@ -187,15 +198,16 @@ class PurchaseOrder(models.Model):
             res['eligible'] = False
             res['base_amount'] = 0.0
 
-        # Find tax
+        # Find tax (priority: current company, then parent/group companies)
+        company_ids = [company.id] + [cid for cid in group_companies.ids if cid != company.id]
         tax = self.env["account.tax"].search([
-            ("company_id", "in", [company.id, root_company.id]),
+            ("company_id", "in", company_ids),
             ("name", "=ilike", "0.1% TDS 194Q P%"),
         ], limit=1)
 
         if not tax and section_194q:
             tax = self.env["account.tax"].search([
-                ("company_id", "in", [company.id, root_company.id]),
+                ("company_id", "in", company_ids),
                 ("l10n_in_section_id", "=", section_194q.id),
                 "|",
                 ("l10n_in_tds_tax_type", "=", "purchase"),
@@ -204,7 +216,7 @@ class PurchaseOrder(models.Model):
 
         if not tax:
             tax = self.env["account.tax"].search([
-                ("company_id", "in", [company.id, root_company.id]),
+                ("company_id", "in", company_ids),
                 ("name", "ilike", "194Q"),
                 ("name", "not ilike", " 194Q S"),
                 "|",
