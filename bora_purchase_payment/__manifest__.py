@@ -13,6 +13,7 @@
     'data': [
         'security/ir.model.access.csv',
         'data/mail_activity_data.xml',
+        'data/ir_cron_data.xml',
         'views/banking_approval_config_views.xml',
         'views/vendor_payment_approval_request_views.xml',
         'views/account_payment_views.xml',
