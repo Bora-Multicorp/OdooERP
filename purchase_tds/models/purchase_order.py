@@ -115,6 +115,7 @@ class PurchaseOrder(models.Model):
             'section_194q': False,
             'consider_amount': 'untaxed_amount',
             'amount_label': _("(Incl. GST for bills, Untaxed for current PO)"),
+            'vendor_pan': False,
         }
 
         if self.state == 'cancel' or not self.partner_id or self.amount_untaxed <= 0:
@@ -142,10 +143,29 @@ class PurchaseOrder(models.Model):
         res['section_194q'] = section_194q
 
         # 3. Find prior vendor bills (draft + posted) across parent and all branch companies
+        # Match across all vendors sharing the same PAN (Vendor A + Vendor B with same PAN)
         # Value to be taken as total amount including GST
-        vendor_pan = commercial_partner.l10n_in_pan or (
-            commercial_partner.vat and len(commercial_partner.vat) >= 12 and commercial_partner.vat[2:12]
+        partner = self.partner_id
+        vendor_pan = (
+            partner.l10n_in_pan
+            or commercial_partner.l10n_in_pan
+            or (partner.vat and len(partner.vat) >= 12 and partner.vat[2:12])
+            or (commercial_partner.vat and len(commercial_partner.vat) >= 12 and commercial_partner.vat[2:12])
         )
+        if vendor_pan:
+            vendor_pan = str(vendor_pan).strip().upper()
+
+        all_partner_ids = {partner.id, commercial_partner.id}
+        if vendor_pan:
+            res['vendor_pan'] = vendor_pan
+            # Find all partner records with this PAN (Vendor A, Vendor B, branches, etc.)
+            same_pan_partners = self.env['res.partner'].sudo().search([
+                '|',
+                ('l10n_in_pan', '=', vendor_pan),
+                ('vat', 'ilike', vendor_pan),
+            ])
+            all_partner_ids |= set(same_pan_partners.ids) | set(same_pan_partners.commercial_partner_id.ids)
+
         domain = [
             ("company_id", "in", group_companies.ids),
             ("move_type", "in", ["in_invoice", "in_refund"]),
@@ -157,12 +177,18 @@ class PurchaseOrder(models.Model):
             domain += [
                 "|",
                 "|",
+                "|",
+                ("commercial_partner_id", "in", list(all_partner_ids)),
+                ("partner_id", "in", list(all_partner_ids)),
                 ("commercial_partner_id.l10n_in_pan", "=", vendor_pan),
                 ("commercial_partner_id.vat", "ilike", vendor_pan),
-                ("commercial_partner_id", "=", commercial_partner.id),
             ]
         else:
-            domain.append(("commercial_partner_id", "=", commercial_partner.id))
+            domain += [
+                "|",
+                ("commercial_partner_id", "in", list(all_partner_ids)),
+                ("partner_id", "in", list(all_partner_ids)),
+            ]
 
         # Exclude bills that are already linked to this PO to prevent double counting
         linked_bill_ids = self.invoice_ids.ids
@@ -258,12 +284,14 @@ class PurchaseOrder(models.Model):
 
             # Case 1: PO is eligible for TDS under Section 194Q, but TDS has not been deducted yet
             if calc['eligible'] and not order.tds_ids:
+                pan_text = f" (Vendor PAN: {calc['vendor_pan']})" if calc.get('vendor_pan') else ""
                 order.tds_eligible_warning = _(
-                    "This Purchase Order is eligible for TDS deduction under Section (ACT 1961) 194Q. "
-                    "Prior vendor bills across %(company)s (Incl. GST): %(symbol)s %(prior)s. "
+                    "This Purchase Order is eligible for TDS deduction under Section (ACT 1961) 194Q%(pan_text)s. "
+                    "Prior vendor bills across %(company)s group (Incl. GST): %(symbol)s %(prior)s. "
                     "Current Order (Untaxed): %(symbol)s %(current)s. "
                     "Cumulative Total: %(symbol)s %(cumulative)s (Threshold: %(symbol)s %(threshold)s). "
                     "Expected TDS Base: %(symbol)s %(base)s.",
+                    pan_text=pan_text,
                     company=calc['root_company'].name,
                     symbol=currency_symbol,
                     prior=f"{calc['prior_total']:,.2f}",
@@ -364,10 +392,12 @@ class PurchaseOrder(models.Model):
         # Log in Purchase Order Chatter
         currency_symbol = self.currency_id.symbol or ""
         chatter_title = _("TDS (ACT 1961) 194Q Deducted") if is_new else _("TDS (ACT 1961) 194Q Recomputed")
+        pan_line = f"<li><b>Vendor PAN:</b> {calc['vendor_pan']}</li>" if calc.get('vendor_pan') else ""
         self.message_post(
             body=Markup(
                 "<b>%(title)s</b><br/>"
                 "<ul>"
+                "%(pan_line)s"
                 "<li><b>Tax:</b> %(tax)s</li>"
                 "<li><b>TDS Base Amount (Excl. Tax):</b> %(symbol)s %(base)s</li>"
                 "<li><b>TDS Amount:</b> %(symbol)s %(amount)s</li>"
@@ -378,6 +408,7 @@ class PurchaseOrder(models.Model):
                 "</ul>"
             ) % {
                 "title": chatter_title,
+                "pan_line": Markup(pan_line),
                 "tax": tax.display_name,
                 "symbol": currency_symbol,
                 "base": f"{base_amount:,.2f}",
@@ -390,6 +421,7 @@ class PurchaseOrder(models.Model):
             },
             subtype_xmlid="mail.mt_note",
         )
+        pan_info = f"Vendor PAN: {calc['vendor_pan']}\n" if calc.get('vendor_pan') else ""
         return {
             "type": "ir.actions.client",
             "tag": "display_notification",
@@ -397,12 +429,14 @@ class PurchaseOrder(models.Model):
                 "title": _("TDS Deducted Successfully"),
                 "message": _(
                     "Section: (ACT 1961) 194Q\n"
+                    "%(pan_info)s"
                     "Prior Vendor Bills (%(count)d bill(s) across %(company)s) (Incl. GST): %(symbol)s %(prior)s\n"
                     "Current Order (Untaxed): %(symbol)s %(current)s\n"
                     "Cumulative Total: %(symbol)s %(cumulative)s\n"
                     "TDS Base Amount (Excl. Tax): %(symbol)s %(base)s\n"
                     "Tax: %(tax)s\n"
                     "TDS Amount: %(symbol)s %(amount)s",
+                    pan_info=pan_info,
                     count=len(calc['prior_bills']),
                     company=calc['root_company'].name,
                     prior=f"{calc['prior_total']:,.2f}",
