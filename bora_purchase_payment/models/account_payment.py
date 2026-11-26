@@ -24,6 +24,11 @@ class AccountPayment(models.Model):
         copy=False,
         help='Technical field to prevent duplicate activity notifications upon payment completion.',
     )
+    ks_in_process_datetime = fields.Datetime(
+        string='In Process Datetime',
+        copy=False,
+        help='Technical field recording when payment state changed to in_process/paid.',
+    )
 
     def action_view_payment_approval_request(self):
         """Open the linked payment approval request."""
@@ -135,11 +140,9 @@ class AccountPayment(models.Model):
         return super().create(vals_list)
 
     def write(self, vals):
+        if vals.get('state') in ('in_process', 'paid') and not vals.get('ks_in_process_datetime'):
+            vals['ks_in_process_datetime'] = fields.Datetime.now()
         res = super().write(vals)
-        if vals.get('state') in ('in_process', 'paid'):
-            for payment in self:
-                if not payment.ks_payment_done_notified:
-                    payment._create_payment_done_activities()
         return res
 
     @api.depends('state', 'approval_line_ids.state', 'approval_line_ids.user_id')
@@ -157,7 +160,10 @@ class AccountPayment(models.Model):
 
     def action_draft(self):
         res = super().action_draft()
-        self.write({'ks_payment_done_notified': False})
+        self.write({
+            'ks_payment_done_notified': False,
+            'ks_in_process_datetime': False,
+        })
         return res
 
     def action_submit_and_open_wizard(self):
@@ -317,8 +323,8 @@ class AccountPayment(models.Model):
                 return payment.action_submit_and_open_wizard()
         res = super(AccountPayment, self.with_context(skip_payment_approval=True)).action_post()
         for payment in self:
-            if payment.state in ('in_process', 'paid') and not payment.ks_payment_done_notified:
-                payment._create_payment_done_activities()
+            if payment.state in ('in_process', 'paid') and not payment.ks_in_process_datetime:
+                payment.ks_in_process_datetime = fields.Datetime.now()
         return res
 
     def _do_approve(self, reason):
@@ -378,10 +384,10 @@ class AccountPayment(models.Model):
         # 6. Post payment
         res = super(AccountPayment, self.with_context(skip_payment_approval=True)).action_post()
 
-        # 7. Post-approval notifications (e.g. for PO/req followers)
+        # 7. Record in_process timestamp for delayed 20-min notification
         for payment in self:
-            if payment.state in ('in_process', 'paid') and not payment.ks_payment_done_notified:
-                payment._create_payment_done_activities()
+            if payment.state in ('in_process', 'paid') and not payment.ks_in_process_datetime:
+                payment.ks_in_process_datetime = fields.Datetime.now()
 
         return res
 
@@ -540,19 +546,13 @@ class AccountPayment(models.Model):
             activity_type_id = processed_type.id if processed_type else False
             act_type_xmlid = 'bora_purchase_payment.mail_activity_data_processed' if processed_type else 'mail.mail_activity_data_todo'
 
-            # 1. When a Purchase Order exists, create the activity and notification on the PO form instead of the approval form
+            # 1. PURCHASE ORDER FORM: Activities & chatter message for PO followers
             if po:
                 po_users = po.message_follower_ids.mapped('partner_id.user_ids').filtered(
                     lambda u: u.active and not u.share
                 )
                 if po.user_id and po.user_id.active and not po.user_id.share:
                     po_users |= po.user_id
-                if po.create_uid and po.create_uid.active and not po.create_uid.share:
-                    po_users |= po.create_uid
-                if req and req.request_user_id and req.request_user_id.active and not req.request_user_id.share:
-                    po_users |= req.request_user_id
-                elif payment.request_user_id and payment.request_user_id.active and not payment.request_user_id.share:
-                    po_users |= payment.request_user_id
 
                 for user in po_users:
                     existing = po.activity_ids.filtered(
@@ -580,8 +580,8 @@ class AccountPayment(models.Model):
                 except Exception as e:
                     _logger.warning("Failed to post payment done message on PO %s: %s", po.id, e)
 
-            # 2. Only if NO Purchase Order is linked, fallback to Payment Approval Request or Payment
-            elif req:
+            # 2. APPROVAL REQUEST FORM: Activities & chatter message for Request followers & approvers
+            if req:
                 req_users = req.message_follower_ids.mapped('partner_id.user_ids').filtered(
                     lambda u: u.active and not u.share
                 )
@@ -622,7 +622,7 @@ class AccountPayment(models.Model):
                 except Exception as e:
                     _logger.warning("Failed to post payment done message on Request %s: %s", req.id, e)
 
-            elif payment.approval_line_ids:
+            elif not po and payment.approval_line_ids:
                 payment_approvers = payment.approval_line_ids.mapped('user_id').filtered(
                     lambda u: u.active and not u.share
                 )
@@ -646,3 +646,29 @@ class AccountPayment(models.Model):
                             _logger.warning("Failed to schedule payment done activity on payment %s for user %s: %s", payment.id, user.id, e)
 
             payment.ks_payment_done_notified = True
+
+    @api.model
+    def _cron_send_delayed_payment_done_activities(self):
+        """Send payment done activities and chatter notifications 20 minutes after state transitioned to in_process."""
+        from datetime import timedelta
+        cutoff = fields.Datetime.now() - timedelta(minutes=20)
+        # Backfill any existing in_process/paid payment without a timestamp
+        missing_ts = self.search([
+            ('state', 'in', ('in_process', 'paid')),
+            ('ks_payment_done_notified', '=', False),
+            ('ks_in_process_datetime', '=', False),
+        ])
+        for p in missing_ts:
+            p.ks_in_process_datetime = p.write_date or fields.Datetime.now()
+
+        payments = self.search([
+            ('state', 'in', ('in_process', 'paid')),
+            ('ks_payment_done_notified', '=', False),
+            ('ks_in_process_datetime', '!=', False),
+            ('ks_in_process_datetime', '<=', cutoff),
+        ])
+        for payment in payments:
+            try:
+                payment._create_payment_done_activities()
+            except Exception as e:
+                _logger.warning("Error running delayed payment done activities for payment %s: %s", payment.id, e)
