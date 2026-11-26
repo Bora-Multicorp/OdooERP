@@ -541,6 +541,7 @@ class AccountPayment(models.Model):
             act_type_xmlid = 'bora_purchase_payment.mail_activity_data_processed' if processed_type else 'mail.mail_activity_data_todo'
 
             # 1. Create an activity for all followers of the same Purchase Order
+            po_users = self.env['res.users']
             if po:
                 po_users = po.message_follower_ids.mapped('partner_id.user_ids').filtered(
                     lambda u: u.active and not u.share
@@ -590,6 +591,10 @@ class AccountPayment(models.Model):
                 if payment.request_user_id and payment.request_user_id.active and not payment.request_user_id.share:
                     req_users |= payment.request_user_id
 
+                # Also include all PO followers and buyer in Payment Approval Request activities
+                if po and po_users:
+                    req_users |= po_users
+
                 for user in req_users:
                     existing = req.activity_ids.filtered(
                         lambda a: a.user_id == user and (payment_name in (a.summary or '') or (a.note and payment_name in a.note))
@@ -606,10 +611,24 @@ class AccountPayment(models.Model):
                         except Exception as e:
                             _logger.warning("Failed to schedule payment done activity on Request %s for user %s: %s", req.id, user.id, e)
 
+                # Subscribe PO follower partners to the Payment Request chatter
+                if po:
+                    po_partners = po.message_follower_ids.mapped('partner_id')
+                    if po_partners:
+                        try:
+                            req.message_subscribe(partner_ids=po_partners.ids)
+                        except Exception as e:
+                            _logger.warning("Failed to subscribe PO followers to Request %s: %s", req.id, e)
+
+                partner_ids_to_notify = []
+                if po:
+                    partner_ids_to_notify = po.message_follower_ids.mapped('partner_id').ids
+
                 try:
                     req.message_post(
                         body=note,
                         subject=summary,
+                        partner_ids=partner_ids_to_notify,
                     )
                 except Exception as e:
                     _logger.warning("Failed to post payment done message on Request %s: %s", req.id, e)
