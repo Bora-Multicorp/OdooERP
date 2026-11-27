@@ -221,14 +221,7 @@ class AccountPayment(models.Model):
                 if payment.state == 'draft' and not payment.ks_insurance_draft_notified and (payment.is_insurance_payment or payment.insurance_policy_id):
                     payment._notify_insurance_draft_payment()
         if vals.get('state') in ('posted', 'paid'):
-            for payment in self:
-                policy = payment.insurance_policy_id
-                if policy and policy.state == 'under_renewal':
-                    policy.write({
-                        'payment_status': 'paid',
-                        'is_paid': True,
-                        'state': 'active',
-                    })
+            self._apply_payment_confirmed()
         return res
 
     def _notify_insurance_draft_payment(self):
@@ -353,8 +346,7 @@ class AccountPayment(models.Model):
 
     # ── Override action_post to update policy on payment confirmation ─────────
 
-    def action_post(self):
-        result = super().action_post()
+    def _apply_payment_confirmed(self):
         for payment in self:
             policy = payment.insurance_policy_id
             if not policy:
@@ -378,19 +370,26 @@ class AccountPayment(models.Model):
             elif payment.is_renewal or policy.state == 'under_renewal':
                 # Renewal payment confirmed: mark paid and activate policy
                 policy.write({
-                    'payment_status': 'paid',
+                    'payment_status': 'approved',
                     'is_paid': True,
                     'state': 'active',
                 })
             else:
-                # Regular premium payment confirmed: mark paid and activate policy
-                policy.write({
-                    'payment_status': 'paid',
+                # Regular premium payment confirmed: mark paid, activate policy, and set start_date to payment date
+                policy_vals = {
+                    'payment_status': 'approved',
                     'is_paid': True,
                     'state': 'active',
-                })
+                }
+                if payment.date:
+                    policy_vals['start_date'] = payment.date
+                policy.write(policy_vals)
             # Notify the insurance team
             policy._notify_insurance_team()
+
+    def action_post(self):
+        result = super().action_post()
+        self._apply_payment_confirmed()
         return result
 
     # ── Insurance Details popup (existing popup wizard flow) ──────────────────

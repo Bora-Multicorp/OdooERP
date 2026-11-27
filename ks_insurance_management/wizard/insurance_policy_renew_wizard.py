@@ -50,7 +50,7 @@ class InsurancePolicyRenewWizard(models.TransientModel):
     )
     new_expiry_date = fields.Date(
         string='New Expiry Date',
-        required=True,
+        required=False,
         help='Expiry date for the renewed policy period.',
     )
     new_sum_insured = fields.Float(
@@ -79,7 +79,7 @@ class InsurancePolicyRenewWizard(models.TransientModel):
                 res['new_sum_insured'] = policy.initial_sum_insured
                 start_date = (policy.expiry_date + timedelta(days=1)) if policy.expiry_date else fields.Date.today()
                 res['new_start_date'] = start_date
-                res['new_expiry_date'] = start_date + timedelta(days=365)
+                res['new_expiry_date'] = False
                 journal = self.env['account.journal'].search([
                     ('type', 'in', ['bank', 'cash']),
                     ('company_id', '=', policy.company_id.id),
@@ -94,7 +94,7 @@ class InsurancePolicyRenewWizard(models.TransientModel):
             raise UserError(_("Renewal Premium must be greater than zero."))
         if self.new_sum_insured <= 0:
             raise UserError(_("Sum Insured must be greater than zero."))
-        if self.new_expiry_date <= self.new_start_date:
+        if self.new_expiry_date and self.new_expiry_date <= self.new_start_date:
             raise UserError(_("New Expiry Date must be after New Start Date."))
 
         policy = self.policy_id
@@ -116,7 +116,7 @@ class InsurancePolicyRenewWizard(models.TransientModel):
             'description': policy.insurance_type_id.name,
             'renewal_premium': self.renewal_premium,
             'new_start_date': self.new_start_date,
-            'new_end_date': self.new_expiry_date,
+            'new_end_date': self.new_expiry_date or False,
             'new_sum_insured': self.new_sum_insured,
             'is_policy_number_updated': False,
         })
@@ -125,7 +125,7 @@ class InsurancePolicyRenewWizard(models.TransientModel):
         #    and mark is_paid as False till renewal payment request is paid
         policy.write({
             'start_date': self.new_start_date,
-            'expiry_date': self.new_expiry_date,
+            'expiry_date': self.new_expiry_date or False,
             'initial_sum_insured': self.new_sum_insured,
             'premium': self.renewal_premium,
             'state': 'under_renewal',
@@ -133,18 +133,19 @@ class InsurancePolicyRenewWizard(models.TransientModel):
             'payment_status': 'draft',
         })
 
+        exp_line = f" | New Expiry Date: <b>{self.new_expiry_date}</b>" if self.new_expiry_date else ""
         policy.message_post(
             body=_(
                 "<b>Policy Renewal Initiated:</b><br/>"
                 "• Previous Policy No: <b>%s</b> moved to Renewal History.<br/>"
-                "• New Start Date: <b>%s</b> | New Expiry Date: <b>%s</b><br/>"
+                "• New Start Date: <b>%s</b>%s<br/>"
                 "• New Sum Insured: <b>₹%s</b> | Renewal Premium: <b>₹%s</b><br/>"
                 "• Policy moved to <b>Under Renewal</b> stage. Premium payment pending.<br/>"
                 "Submit payment request for approval to process payment."
             ) % (
                 history.expired_policy_number,
                 self.new_start_date,
-                self.new_expiry_date,
+                exp_line,
                 f"{self.new_sum_insured:,.2f}",
                 f"{self.renewal_premium:,.2f}",
             ),

@@ -258,6 +258,7 @@ class InsurancePolicy(models.Model):
         """Execute final approval logic (creating payment and updating status)."""
         for rec in self:
             is_topup = bool(rec.pending_topup_amount > 0 or rec.pending_topup_premium > 0)
+            is_renewal = bool(rec.state == 'under_renewal' or rec.has_pending_renewal)
             amount = rec.pending_topup_premium if (is_topup and rec.pending_topup_premium) else rec.premium
             if not amount:
                 raise UserError(_(
@@ -301,8 +302,16 @@ class InsurancePolicy(models.Model):
                 'is_insurance_payment': True,
                 'insurance_policy_id': rec.id,
                 'is_topup': is_topup,
+                'is_renewal': is_renewal,
             }
             payment = rec.env['account.payment'].create(payment_vals)
+
+            if is_renewal and hasattr(rec, 'renewal_history_ids') and rec.renewal_history_ids:
+                pending_hist = rec.renewal_history_ids.filtered(
+                    lambda r: not r.is_policy_number_updated and not r.payment_id
+                )
+                if pending_hist:
+                    pending_hist[:1].payment_id = payment.id
 
             if is_topup and hasattr(rec, 'topup_ids') and rec.topup_ids:
                 pending_topups = rec.topup_ids.filtered(

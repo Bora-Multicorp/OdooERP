@@ -167,7 +167,7 @@ class InsurancePolicy(models.Model):
     )
     expiry_date = fields.Date(
         string='Expiry Date',
-        required=True,
+        required=False,
         tracking=True,
         help='Date on which this policy expires. '
              'An automated job checks daily and marks policies as Expired. '
@@ -275,6 +275,12 @@ class InsurancePolicy(models.Model):
         string='Can Update Policy Number',
         compute='_compute_can_update_policy_number',
         help='True if the latest renewal payment is paid and fresh policy number can be entered.',
+    )
+    show_update_policy_number_and_date = fields.Boolean(
+        string='Show Update Policy Number and Date',
+        compute='_compute_show_update_policy_number_and_date',
+        help='Visible when payment is approved/paid, is_paid=True, state=Active, and expiry_date is null. '
+             'Hides permanently once policy number and expiry date are updated.',
     )
     is_policy_number_editable = fields.Boolean(
         string='Is Policy Number Editable',
@@ -921,6 +927,45 @@ class InsurancePolicy(models.Model):
         for rec in self:
             rec.can_update_policy_number = any(rec.renewal_history_ids.mapped('can_update_policy_no'))
 
+    @api.depends('payment_status', 'is_paid', 'state', 'expiry_date', 'topup_flag', 'renewal_history_ids')
+    def _compute_show_update_policy_number_and_date(self):
+        for rec in self:
+            # Conditions to show button:
+            # 1) payment status to be in Approved status (or paid)
+            # 2) is_paid = TRUE
+            # 3) policy status = Active
+            # 4) expiry date is null
+            # In case of top-up payment, this button won't be visible.
+            rec.show_update_policy_number_and_date = bool(
+                rec.state == 'active'
+                and rec.is_paid
+                and rec.payment_status in ('approved', 'paid')
+                and not rec.expiry_date
+                and not rec.topup_flag
+            )
+
+    def action_open_update_policy_and_date_wizard(self):
+        """Open popup to enter policy number and expiry date."""
+        self.ensure_one()
+        context = {
+            'default_policy_id': self.id,
+            'default_old_policy_number': self.policy_number,
+            'default_new_policy_number': self.policy_number if self.policy_number not in ('new policy', 'Draft', 'New') else '',
+        }
+        pending_hist = self.renewal_history_ids.filtered(lambda r: not r.is_policy_number_updated)[:1]
+        if pending_hist:
+            context['default_renewal_history_id'] = pending_hist.id
+            if pending_hist.expired_policy_number:
+                context['default_old_policy_number'] = pending_hist.expired_policy_number
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Update Policy Number and Date'),
+            'res_model': 'insurance.update.policy.number.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': context,
+        }
+
     @api.depends('state', 'can_update_policy_number', 'renewal_history_ids', 'is_paid')
     def _compute_is_policy_number_editable(self):
         for rec in self:
@@ -970,6 +1015,16 @@ class InsurancePolicy(models.Model):
             for rec in self:
                 if rec.state == 'under_renewal':
                     vals['state'] = 'active'
+
+        # When regular premium payment for a new policy is marked is_paid = True, set start_date as payment date
+        if vals.get('is_paid') and not vals.get('start_date'):
+            for rec in self:
+                if not rec.has_pending_renewal and rec.state != 'under_renewal':
+                    payment = rec.payment_ids.filtered(lambda p: not p.is_topup and p.state in ('posted', 'paid'))[:1]
+                    if not payment:
+                        payment = rec.payment_ids.filtered(lambda p: not p.is_topup)[:1]
+                    if payment and payment.date:
+                        vals['start_date'] = payment.date
 
         # Enforce: policy cannot be set to Active state unless premium is paid.
         # This only applies to explicit state changes (not on create).
