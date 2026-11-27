@@ -495,23 +495,9 @@ class InsurancePolicy(models.Model):
             rec._send_approval_bus_notification(user, approval_type='topup' if is_topup else 'insurance', extra_info=extra_info)
 
     def _notify_banking_team(self, payment):
-        """Create a To-Do activity on the payment for every accounting user."""
-        # banking_group = self.env.ref('account.group_account_user', raise_if_not_found=False)
-        # users = banking_group.users if banking_group else self.env['res.users'].browse(
-        #     self.env.ref('base.user_admin').id)
-        # for user in users:
-        #     payment.activity_schedule(
-        #         'mail.mail_activity_data_todo',
-        #         user_id=user.id,
-        #         summary=f'Insurance Payment to Post — {self.policy_number}',
-        #         note=(
-        #             f'A draft insurance payment has been created for policy '
-        #             f'<b>{self.policy_number}</b> ({self.insurance_type_id.name}).<br/>'
-        #             f'Amount: <b>₹{payment.amount:,.2f}</b><br/>'
-        #             f'Please post this payment in the accounting system.'
-        #         ),
-        #     )
-        pass
+        """Notify Approver 2 users of Global Vendor Payment Approval Configuration for this draft payment."""
+        if payment and hasattr(payment, '_notify_insurance_draft_payment'):
+            payment._notify_insurance_draft_payment()
 
     def _notify_insurance_team(self):
         """Create a To-Do activity on this policy for every insurance user."""

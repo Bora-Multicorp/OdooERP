@@ -115,6 +115,19 @@
     </field>
   </record>
 
+  <!-- ══ Payment list view inherit to add memo column ═════════════════════════ -->
+
+  <record id="view_account_payment_list_inherit_insurance_memo" model="ir.ui.view">
+    <field name="name">account.payment.list.inherit.insurance.memo</field>
+    <field name="model">account.payment</field>
+    <field name="inherit_id" ref="account.view_account_payment_tree"/>
+    <field name="arch" type="xml">
+      <xpath expr="//field[@name='name']" position="after">
+        <field name="memo" string="Memo" optional="show"/>
+      </xpath>
+    </field>
+  </record>
+
   <!-- ══ Menu action: all insurance payments (account.payment) ═══════════════════════════ -->
 
   <record id="action_insurance_policy_payment" model="ir.actions.act_window">

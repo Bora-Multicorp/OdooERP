@@ -130,7 +130,9 @@
             <page string="Payments">
               <field name="payment_ids" readonly="1">
                 <list>
-                  <field name="name"/><field name="date"/>
+                  <field name="name"/>
+                  <field name="memo" string="Memo"/>
+                  <field name="date"/>
                   <field name="amount"/><field name="state"/>
                 </list>
               </field>
@@ -140,6 +142,7 @@
                      domain="[('is_topup', '=', True)]">
                 <list>
                   <field name="name"/>
+                  <field name="memo" string="Memo"/>
                   <field name="ins_type_id" string="Insurance Type"/>
                   <field name="ins_company_id" string="Company Name"/>
                   <field name="ins_insurance_company_id" string="Insurance Company"/>
