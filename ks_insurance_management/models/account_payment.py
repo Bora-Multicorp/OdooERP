@@ -1,7 +1,11 @@
 # -*- coding: utf-8 -*-
 
-from odoo import api, fields, models
+import logging
+
+from odoo import _, api, fields, models
 from odoo.exceptions import UserError
+
+_logger = logging.getLogger(__name__)
 
 
 class AccountPayment(models.Model):
@@ -35,6 +39,12 @@ class AccountPayment(models.Model):
         string='Insurance Policy',
         copy=False,
         help='The insurance policy linked to this payment.',
+    )
+    ks_insurance_draft_notified = fields.Boolean(
+        string='Approver 2 Notified for Draft Payment',
+        default=False,
+        copy=False,
+        help='Technical field to prevent duplicate draft payment notifications to Approver 2 users.',
     )
 
     # ── Fields used by the Insurance Details popup (payment → new policy) ─────
@@ -200,10 +210,16 @@ class AccountPayment(models.Model):
                             'payment_date': payment.date,
                             'state': 'approved',
                         })
+            if payment.state == 'draft' and (payment.is_insurance_payment or payment.insurance_policy_id):
+                payment._notify_insurance_draft_payment()
         return payments
 
     def write(self, vals):
         res = super().write(vals)
+        if vals.get('is_insurance_payment') or vals.get('insurance_policy_id'):
+            for payment in self:
+                if payment.state == 'draft' and not payment.ks_insurance_draft_notified and (payment.is_insurance_payment or payment.insurance_policy_id):
+                    payment._notify_insurance_draft_payment()
         if vals.get('state') in ('posted', 'paid'):
             for payment in self:
                 policy = payment.insurance_policy_id
@@ -214,6 +230,126 @@ class AccountPayment(models.Model):
                         'state': 'active',
                     })
         return res
+
+    def _notify_insurance_draft_payment(self):
+        """Notify all users configured in Approver 2 Users of Global Vendor Payment Approval Configuration
+        when a new draft insurance payment is created/generated automatically.
+        """
+        if 'vendor.payment.approval.config' not in self.env:
+            return
+        config_model = self.env['vendor.payment.approval.config']
+
+        config = config_model.sudo().search([('active', '=', True)], limit=1)
+        if not config or not config.ks_approver_2_ids:
+            return
+
+        approver_2_users = config.ks_approver_2_ids.filtered(lambda u: u.active and not u.share)
+        if not approver_2_users:
+            return
+
+        todo_type = self.env.ref('mail.mail_activity_data_todo', raise_if_not_found=False)
+        approver_2_partners = approver_2_users.mapped('partner_id')
+
+        for payment in self:
+            if payment.state != 'draft' or payment.ks_insurance_draft_notified:
+                continue
+            if not (payment.is_insurance_payment or payment.insurance_policy_id):
+                continue
+
+            policy = payment.insurance_policy_id
+            policy_num = policy.policy_number if policy and policy.policy_number else ''
+            ins_type_name = payment.ins_type_id.name or (policy.insurance_type_id.name if policy and policy.insurance_type_id else '')
+            company_name = payment.ins_company_id.name or payment.company_id.name or ''
+            partner_name = payment.partner_id.name or (policy.insurance_company_id.name if policy and policy.insurance_company_id else '')
+            memo_val = payment.memo or ''
+
+            display_name = payment.name or memo_val or _('Draft Payment')
+            summary = _('Insurance Draft Payment: %s') % display_name
+            policy_line = f" for policy <b>{policy_num}</b>" if policy_num else ""
+            if ins_type_name:
+                policy_line += f" ({ins_type_name})"
+
+            note = _(
+                'A new draft insurance payment <b>%(payment)s</b> has been generated%(policy_line)s.<br/>'
+                '<b>Company:</b> %(company)s<br/>'
+                '<b>Vendor / Insurance Company:</b> %(partner)s<br/>'
+                '<b>Amount:</b> ₹%(amount)s<br/>'
+                '<b>Memo:</b> %(memo)s'
+            ) % {
+                'payment': display_name,
+                'policy_line': policy_line,
+                'company': company_name,
+                'partner': partner_name,
+                'amount': f"{payment.amount:,.2f}",
+                'memo': memo_val,
+            }
+
+            plain_message = _(
+                'Draft insurance payment %(payment)s created for ₹%(amount)s%(policy_info)s. Memo: %(memo)s'
+            ) % {
+                'payment': display_name,
+                'amount': f"{payment.amount:,.2f}",
+                'policy_info': f" (Policy: {policy_num})" if policy_num else "",
+                'memo': memo_val,
+            }
+
+            # 1. Schedule Activity for Approver 2 users on the payment
+            for user in approver_2_users:
+                existing_act = payment.activity_ids.filtered(
+                    lambda a: a.user_id == user and (not todo_type or a.activity_type_id == todo_type)
+                )
+                if not existing_act:
+                    try:
+                        payment.activity_schedule(
+                            'mail.mail_activity_data_todo',
+                            user_id=user.id,
+                            summary=summary,
+                            note=note,
+                        )
+                    except Exception as e:
+                        _logger.warning("Failed to schedule activity for Approver 2 user %s on payment %s: %s", user.id, payment.id, e)
+
+                # 2. Real-time Bus Notification for Approver 2 users
+                try:
+                    self.env['bus.bus']._sendone(
+                        user.partner_id,
+                        'simple_notification',
+                        {
+                            'type': 'info',
+                            'title': summary,
+                            'message': plain_message,
+                            'sticky': True,
+                        },
+                    )
+                except Exception as e:
+                    _logger.warning("Failed to send bus notification to user %s: %s", user.id, e)
+
+            # 3. Post Chatter Message on payment record
+            try:
+                payment.message_post(
+                    body=note,
+                    subject=summary,
+                    partner_ids=approver_2_partners.ids,
+                    message_type='notification',
+                    subtype_xmlid='mail.mt_comment',
+                )
+            except Exception as e:
+                _logger.warning("Failed to post message on payment %s: %s", payment.id, e)
+
+            # 4. Post Chatter Message on linked insurance policy
+            if policy:
+                try:
+                    policy.message_post(
+                        body=note,
+                        subject=summary,
+                        partner_ids=approver_2_partners.ids,
+                        message_type='notification',
+                        subtype_xmlid='mail.mt_comment',
+                    )
+                except Exception as e:
+                    _logger.warning("Failed to post message on policy %s: %s", policy.id, e)
+
+            payment.ks_insurance_draft_notified = True
 
     # ── Override action_post to update policy on payment confirmation ─────────
 

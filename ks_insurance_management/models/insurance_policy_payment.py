@@ -272,17 +272,9 @@ class InsurancePolicyPayment(models.Model):
             )
 
     def _notify_banking_team(self, payment):
-        """Assign a To-Do activity to every user in the accounting group."""
-        # banking_group = self.env.ref('account.group_account_user', raise_if_not_found=False)
-        # users = banking_group.users if banking_group else self.env['res.users']
-        # if not users:
-        #     users = self.env.ref('base.user_admin')
-        #
-        # label = 'Top-up' if self.payment_type == 'topup' else 'Premium'
-        # policy_ref = self.policy_id.policy_number
-        # pay_ref = payment.name or getattr(payment, 'memo', '') or self.name
-        # note = (
-        #     f'Insurance {label.lower()} request <b>{self.name}</b> has been approved.<br/>'
+        """Notify Approver 2 users of Global Vendor Payment Approval Configuration for this draft payment."""
+        if payment and hasattr(payment, '_notify_insurance_draft_payment'):
+            payment._notify_insurance_draft_payment()
         #     f'Policy: <b>{policy_ref}</b><br/>'
         #     f'Please post the following draft payment:<br/>'
         #     f'• {pay_ref} (\u20b9{self.amount:,.2f})<br/>'
