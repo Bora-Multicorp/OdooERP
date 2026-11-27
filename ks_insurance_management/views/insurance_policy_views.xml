@@ -35,6 +35,12 @@
                   class="btn-danger" invisible="state != 'active'"
                   confirm="Mark this policy as Expired?"/>
           <field name="has_pending_renewal" invisible="1"/>
+          <field name="show_update_policy_number_and_date" invisible="1"/>
+          <button name="action_open_update_policy_and_date_wizard"
+                  string="Update policy number and date"
+                  type="object"
+                  class="btn-primary"
+                  invisible="not show_update_policy_number_and_date"/>
           <button name="action_renew_policy" string="Renew Policy" type="object"
                   class="btn-success" invisible="state != 'expired'"/>
           <field name="state" widget="statusbar" statusbar_visible="draft,active,expired,under_renewal"
@@ -44,9 +50,9 @@
           <field name="is_policy_number_editable" invisible="1"/>
           <!-- Payment status ribbon -->
           <widget name="web_ribbon" title="Payment Pending" bg_color="text-bg-danger"
-                  invisible="payment_status == 'paid'"/>
+                  invisible="is_paid"/>
           <widget name="web_ribbon" title="Paid" bg_color="text-bg-success"
-                  invisible="payment_status != 'paid'"/>
+                  invisible="not is_paid"/>
           <div class="oe_button_box" name="button_box">
             <button class="oe_stat_button" type="object"
                     name="action_view_declarations" icon="fa-file-text"
@@ -95,7 +101,7 @@
                      invisible="not is_fire_burglary"/>
               <field name="total_premium_paid" readonly="1"/>
               <field name="start_date" readonly="state != 'draft'"/>
-              <field name="expiry_date" readonly="state != 'draft'"/>
+              <field name="expiry_date" readonly="state != 'draft'" invisible="not expiry_date"/>
               <field name="tolerance_percent"
                      invisible="not is_marine and not is_fire_burglary"
                      readonly="state != 'draft'"/>
@@ -519,7 +525,7 @@
               <field name="renewal_premium" widget="monetary" options="{'currency_field': 'currency_id'}"/>
               <field name="new_sum_insured" widget="monetary" options="{'currency_field': 'currency_id'}"/>
               <field name="new_start_date"/>
-              <field name="new_expiry_date"/>
+              <field name="new_expiry_date" invisible="1"/>
             </group>
           </group>
           <group>
@@ -539,17 +545,22 @@
     <field name="name">insurance.update.policy.number.wizard.form</field>
     <field name="model">insurance.update.policy.number.wizard</field>
     <field name="arch" type="xml">
-      <form string="Update Policy Number">
+      <form string="Update Policy Details">
         <sheet>
           <group>
             <field name="renewal_history_id" invisible="1"/>
             <field name="policy_id" invisible="1"/>
-            <field name="old_policy_number" readonly="1" string="Expired Policy No"/>
-            <field name="new_policy_number" placeholder="Enter fresh / new policy number" required="1"/>
+            <field name="old_policy_number" readonly="1" string="Expired Policy No"
+                   invisible="not renewal_history_id"/>
+            <field name="old_policy_number" readonly="1" string="Current Policy No"
+                   invisible="renewal_history_id or not old_policy_number"/>
+            <field name="new_policy_number" placeholder="Enter fresh / new policy number" required="1"
+                   string="Policy Number"/>
+            <field name="new_expiry_date" required="1" string="Expiry Date"/>
           </group>
         </sheet>
         <footer>
-          <button name="action_confirm" string="Update Policy Number" type="object" class="btn-primary"/>
+          <button name="action_confirm" string="Update Policy Details" type="object" class="btn-primary"/>
           <button string="Cancel" class="btn-secondary" special="cancel"/>
         </footer>
       </form>
